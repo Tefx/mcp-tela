@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CapabilityToken",
+  "description": "Short-lived capability token. Issued by nervus at dispatch time, passed to anima via --token-file, presented to tela at MCP connection time via clientInfo.capability_token.",
+  "type": "object",
+  "required": ["token_id", "tools_profile", "issued_at", "expires_at", "signature"],
+  "properties": {
+    "token_id": {
+      "type": "string",
+      "pattern": "^tok_",
+      "description": "Unique token identifier. Prefixed with 'tok_' for log readability."
+    },
+    "tools_profile": {
+      "type": "string",
+      "description": "tela profile name this token grants access to"
+    },
+    "persona_ref": {
+      "type": "string",
+      "description": "PersonaSpec spec_id this token is bound to"
+    },
+    "instance_id": {
+      "type": "string",
+      "description": "Agent instance this token is bound to. One token per instance."
+    },
+    "budget": {
+      "type": "integer",
+      "description": "Token budget ceiling. tela can enforce per-call budget tracking.",
+      "minimum": 0
+    },
+    "max_depth": {
+      "type": "integer",
+      "description": "Maximum sub-agent depth this token permits",
+      "minimum": 0
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Token issuance time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Token expiration time. tela rejects expired tokens."
+    },
+    "signature": {
+      "type": "string",
+      "description": "HMAC-SHA256 signature. Input: canonical JSON of all fields except 'signature' (sorted keys, no whitespace). Shared secret between nervus and tela."
+    }
+  },
+  "additionalProperties": false
+}
