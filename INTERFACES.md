@@ -177,6 +177,25 @@ When `auth.mode` is set to `open`:
 - Suitable for standalone use with Claude Code, Cursor, or any MCP client
   that does not supply tokens.
 
+### Comma-Separated Profile Values
+
+In open mode, `profile` metadata may contain comma-separated values (e.g., `"filesystem,shell"`).
+tela resolves this by merging the tool patterns from all named profiles:
+
+```yaml
+profiles:
+  filesystem:
+    - "fs.*"
+  shell:
+    - "shell.*"
+```
+
+When `profile: "filesystem,shell"`, the bound profile becomes the union of both:
+`["fs.*", "shell.*"]`.
+
+**Backward Compatibility:** Single profile names (non-comma) continue to work unchanged.
+tela gracefully handles both formats without requiring configuration changes.
+
 ---
 
 ## F. _meta Handling
