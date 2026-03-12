@@ -279,7 +279,7 @@ its original JSON Schema from the downstream server.
 ### tools/call
 
 Forwards the tool call to the appropriate downstream server. If the
-requested tool is not compatible with the bound persona/profile declaration,
+requested tool is not compatible with the bound profile declaration,
 the call is rejected with `AUTHZ_DENY`.
 
 ### tela.profiles
@@ -325,8 +325,8 @@ Client                          tela                      Downstream
   |                              |                            |
   |-- connect(token) ----------->|                            |
   |                              |-- validate(HMAC + expiry)  |
-  |                              |-- bind persona/profile     |
-  |                              |   context from token       |
+  |                              |-- bind profile context     |
+  |                              |   from token               |
   |<-- tools/list (filtered) ----|                            |
   |                              |                            |
   |-- tools/call(tool, args) --->|                            |
@@ -339,8 +339,8 @@ Client                          tela                      Downstream
 1. Client sends MCP `initialize` with the capability token in
    `clientInfo.capability_token` (the full CapabilityToken JSON object).
 2. tela validates the token: HMAC signature check, expiry check.
-3. tela binds the corresponding persona/profile context from token metadata.
-4. Client receives `tools/list` containing only tools allowed by the bound declaration.
+3. tela binds the corresponding profile from token metadata (`tools_profile` field).
+4. Client receives `tools/list` containing only tools allowed by the bound profile.
 5. On `tools/call`: tela checks the tool is allowed under the bound declaration, forwards
     to the downstream server, returns the result. The token is NOT
     re-sent on each call — it is a per-connection credential.

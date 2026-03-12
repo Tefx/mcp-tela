@@ -1,7 +1,7 @@
 # tela
 
 MCP aggregation gateway. Connects downstream MCP servers and exposes them as a
-single upstream MCP endpoint with persona-aware tool filtering and policy
+single upstream MCP endpoint with profile-based tool filtering and policy
 enforcement.
 
 ## Features
