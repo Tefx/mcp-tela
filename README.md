@@ -1,16 +1,17 @@
 # tela
 
-MCP aggregation gateway. Connects N downstream MCP servers (stdio and SSE)
-and exposes them as a single upstream MCP endpoint with role-based profile
-filtering.
+MCP aggregation gateway. Connects downstream MCP servers and exposes them as a
+single upstream MCP endpoint with persona-aware tool filtering and policy
+enforcement.
 
 ## Features
 
 - Aggregate multiple MCP servers behind one endpoint
-- Profile-based tool filtering (agents see only what they need)
-- Capability token authentication (HMAC + TTL) or open mode
+- Server-is-family tool mapping with per-tool overrides
+- Per-tool-family posture filtering and side-effect policy enforcement
+- Capability token authentication (HMAC + TTL, dual-key rotation) or open mode
 - Structured audit logging (L1/L2/L3)
-- Hot-reloadable YAML configuration
+- Hot reload of downstream tool lists and configuration
 - Standard MCP stdio transport
 
 ## Quick start
@@ -27,21 +28,33 @@ servers:
   fs:
     command: "mcp-fs"
     args: ["--root", "/workspace"]
+  my-custom-fs:
+    command: "my-fs-server"
+    family: filesystem            # explicit family override
   github:
     url: "sse://localhost:3001"
 
 profiles:
   coder:
-    - "fs.*"
-    - "sandbox.run"
-    - "github.read_pr"
+    tools:
+      filesystem: read_write
+      shell: read_only
+      git: read_only
+    tool_overrides:
+      filesystem:
+        delete_file: deny
+    side_effect_policy: allow
   reviewer:
-    - "fs.read_file"
-    - "github.*"
+    tools:
+      filesystem: read_only
+      git: read_only
+    side_effect_policy: read_only
 
 auth:
   mode: open        # open | token
-  secret: "${TELA_SECRET}"
+  secrets:
+    - "${TELA_SECRET}"            # primary
+    - "${TELA_SECRET_PREVIOUS}"   # secondary (optional, for rotation)
 
 audit:
   level: L2         # L1 | L2 | L3

@@ -16,16 +16,11 @@
     },
     "persona_ref": {
       "type": "string",
-      "description": "PersonaSpec spec_id this token is bound to"
+      "description": "Reference to a PersonaSpec. May be an id (e.g. 'code-reviewer'), an id@digest_prefix (e.g. 'code-reviewer@a1b2c3d4'), or a file path."
     },
     "instance_id": {
       "type": "string",
       "description": "Agent instance this token is bound to. One token per instance."
-    },
-    "budget": {
-      "type": "integer",
-      "description": "Token budget ceiling. tela can enforce per-call budget tracking.",
-      "minimum": 0
     },
     "max_depth": {
       "type": "integer",

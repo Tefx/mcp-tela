@@ -37,6 +37,12 @@ errors:
   VARIABLE_UNRESOLVED:
     code: 103
     description: "Unresolved variable in prompt text"
+  COMPONENT_NOT_FOUND:
+    code: 105
+    description: "Component referenced in assembly not found"
+  COMPONENT_CONFLICT:
+    code: 106
+    description: "Multiple components set the same scalar field without explicit override"
 
   # --- tela (MCP gateway) ---
   AUTHZ_DENY:
@@ -51,6 +57,12 @@ errors:
   TOKEN_EXPIRED:
     code: 203
     description: "Capability token TTL exceeded"
+  TOOL_CONFLICT:
+    code: 204
+    description: "Two downstream servers expose tools with the same name"
+  TOOL_UNCLASSIFIED:
+    code: 205
+    description: "Tool has no posture classification and default_posture is none (deny)"
   DOWNSTREAM_ERROR:
     code: 210
     description: "Downstream MCP server returned error"

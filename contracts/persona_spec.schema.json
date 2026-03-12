@@ -1,91 +1,81 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PersonaSpec",
-  "description": "Agent capability specification. Compiled by larva from YAML persona definitions into canonical JSON.",
+  "description": "Canonical persona definition artifact. Validated, assembled, and registered by larva. Consumed by anima (runtime), nervus (dispatch), and tela (policy enforcement).",
   "type": "object",
-  "required": ["name", "system_prompt", "model", "spec_version"],
+  "required": ["id", "description", "prompt", "model", "tools", "spec_version"],
   "properties": {
-    "name": {
+    "id": {
       "type": "string",
-      "description": "Human-readable persona name"
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Stable canonical persona identity. Flat kebab-case, no namespaces in v1. Used by registry, resolution, promotion, and dispatch references."
     },
-    "base": {
+    "description": {
       "type": "string",
-      "description": "Parent persona for inheritance. Resolved recursively by larva."
+      "minLength": 1,
+      "description": "Short operational summary of the persona's purpose and capability boundary. For humans and orchestrators, not a second prompt."
     },
-    "system_prompt": {
+    "prompt": {
       "type": "string",
-      "description": "Fully resolved system prompt after template expansion and inheritance merge"
+      "minLength": 1,
+      "description": "Fully composed executable prompt text. This is the final baked artifact, not a template. Assembly may exist upstream but canonical PersonaSpec stores the result."
     },
     "model": {
       "type": "string",
-      "description": "Primary LLM model identifier, e.g. 'claude-sonnet-4-20250514'"
+      "minLength": 1,
+      "description": "Default model identifier, e.g. 'claude-sonnet-4-20250514'. Model selection is part of persona execution identity."
     },
-    "tools_profile": {
-      "type": "string",
-      "description": "tela profile name. Determines which MCP tools this agent can access."
+    "tools": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["none", "read_only", "read_write", "destructive"]
+      },
+      "description": "Map of tool_family -> posture. Each key is a stable, provider-agnostic tool-surface identifier. Each value is the maximum intended posture for that tool family. Empty map is valid but triggers a warning."
     },
-    "node": {
-      "type": "string",
-      "description": "Target execution node. Used by nervus for dispatch routing."
-    },
-    "sandbox": {
-      "type": "string",
-      "enum": ["docker", "bubblewrap", "none"],
-      "description": "Sandbox strategy for agent execution"
-    },
-    "scratchpad_ref": {
-      "type": "string",
-      "description": "Logical scratchpad reference (not a filesystem path). Resolved by anima at runtime."
-    },
-    "scratchpad_policy": {
+    "model_params": {
       "type": "object",
       "properties": {
-        "mode": {
-          "type": "string",
-          "enum": ["append", "overwrite", "versioned"],
-          "description": "Write mode for scratchpad"
-        },
-        "max_size": {
-          "type": "string",
-          "description": "Maximum scratchpad size, e.g. '1MB'"
-        },
-        "format": {
-          "type": "string",
-          "description": "Expected content format, e.g. 'markdown', 'json'"
-        },
-        "retention": {
-          "type": "string",
-          "description": "Retention policy, e.g. '7d', 'forever'"
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Per-turn max output tokens."
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true,
+      "description": "Provider-specific LLM inference parameters. additionalProperties allows provider-specific params (e.g. top_k, frequency_penalty)."
     },
-    "budget": {
-      "type": "integer",
-      "description": "Token budget limit. Enforced by anima runtime.",
-      "minimum": 0
+    "side_effect_policy": {
+      "type": "string",
+      "enum": ["allow", "approval_required", "read_only"],
+      "description": "Global default side-effect posture. 'allow' = no gate, 'approval_required' = human approval for mutations, 'read_only' = no mutations permitted. tela combines this with per-tool postures at runtime."
     },
     "can_spawn": {
       "oneOf": [
         { "type": "boolean" },
-        { "type": "array", "items": { "type": "string" } }
+        {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
       ],
       "default": false,
-      "description": "Spawn permission. false = forbidden, true = any persona, list of strings = only named personas allowed."
+      "description": "Spawn capability boundary. false/omitted = no spawn. true = spawn allowed, targets are a runtime concern. string[] = spawn restricted to listed canonical persona ids."
     },
-    "spec_id": {
+    "compaction_prompt": {
       "type": "string",
-      "description": "Stable identifier. Survives prompt edits; changes only on structural mutation."
-    },
-    "spec_digest": {
-      "type": "string",
-      "description": "SHA-256 of canonical (sorted-key, no-whitespace) JSON output"
+      "description": "Persona-specific prompt for context compaction/summarization. Optional but changes execution behavior."
     },
     "spec_version": {
       "type": "string",
       "const": "0.1.0",
-      "description": "Schema version (semver). All consumers must reject unknown versions."
+      "description": "Schema version envelope (semver). All consumers must reject unknown versions."
+    },
+    "spec_digest": {
+      "type": "string",
+      "description": "SHA-256 of canonical JSON (sorted keys, no whitespace, spec_digest excluded from input). Computed by larva; optional in raw input, always present in larva output."
     }
   },
   "additionalProperties": false
