@@ -1262,6 +1262,42 @@ phases:
     depends_on:
     - config.impl.implement-config-authority
     agent: integration-verifier
+  - id: config.impl.gate
+    name: Gate config.impl
+    status: pending
+    description: 'Gate review: Verify config authority phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Shared config authority affects all later open-mode runtime work.
+
+      cross_cutting_focus:
+
+      - precedence is centralized
+
+      - token-mode fail-closed behavior preserved
+
+      - no runtime binding leakage into config-only phase
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- All config.impl steps completed successfully
+
+      - Evidence collected and reviewed
+
+      - No unresolved blockers in authority semantics
+
+      - Ready for open_mode.contract'
+    evidence_template: "## Gate Review Report\n- Reviewed steps:\n  - config.impl.implement-config-authority\n\
+      \  - config.impl.verify-config-authority\n- Central authority confirmed: pass/fail\n\
+      - Fail-closed behavior confirmed: pass/fail\n- Decision: OPEN | BLOCKED"
+    depends_on:
+    - config.impl.implement-config-authority
+    - config.impl.verify-config-authority
+    agent: gate-reviewer
 - id: open_mode.contract
   name: open_mode.contract
   status: locked
