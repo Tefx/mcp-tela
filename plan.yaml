@@ -1655,3 +1655,83 @@ phases:
     depends_on:
     - open_mode.runtime.integrate-cli-default-profile-wiring
     agent: python-executor
+  - id: open_mode.runtime.verify-open-mode-runtime
+    name: Verify open-mode runtime
+    status: pending
+    description: "As an INDEPENDENT TESTER (integration-verifier), validate the open-mode\
+      \ runtime from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS, not to\
+      \ confirm it works.\n\nstep_type: verification\nagent_source: default\nIndependence\
+      \ Level: L2\nspec_refs:\n  - docs/DESIGN.md#5.2 commands/start.py -- tela start\n\
+      \  - docs/DESIGN.md#7.2 Open Mode\n  - docs/DESIGN.md#8.1 Startup Sequence\n\
+      \  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n  - ../opifex/design/requirements.md#R7.\
+      \ Capability tokens, not ambient authority.\ntouch_paths:\n  - src/tela/commands/start.py\n\
+      \  - src/tela/shell/gateway.py\n  - src/tela/shell/upstream.py\nharness_refs:\n\
+      \  - tests/integration/test_open_mode.py\n  - tests/integration/test_end_to_end.py\n\
+      \  - tests/shell/test_upstream.py\nTest for:\n- Happy path: actual open-mode\
+      \ startup and initialize binding succeed without a token when an explicit default\
+      \ profile resolves\n- Edge cases: CLI default overrides config default; unique\
+      \ config default works without CLI override\n- Error scenarios: no default,\
+      \ multiple defaults, unknown CLI-selected profile, token metadata ignored in\
+      \ open mode\n- Consumer-boundary conformance: CLI/startup state, gateway runtime\
+      \ state, and upstream initialize all interpret the same resolved default-profile\
+      \ fact consistently from the shared fixture or contract snapshot\nDocument ALL\
+      \ findings. A test that discovers issues is a SUCCESS.\nA test that finds nothing\
+      \ must justify the coverage achieved.\n\nREALISM CHECK:\n- Provide at least\
+      \ one seam-level real path proof with actual command/output, not only mock-heavy\
+      \ tests.\n- If related tests retain >=10 mocks, justify remaining mocks and\
+      \ show why the real-path proof closes the seam risk."
+    verification: '- L2 evidence includes at least one real-path command/output for
+      CLI -> gateway -> initialize
+
+      - Evidence proves CLI, gateway, and upstream no longer re-derive default-profile
+      choice independently
+
+      - Missing/ambiguous/unknown default cases are exercised and findings recorded
+
+      - Verdict recorded as PASS, ISSUES_FOUND, or INCOMPLETE'
+    evidence_template: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: src/tela/commands/start.py:CLI -> src/tela/shell/gateway.py:startup
+      -> src/tela/shell/upstream.py:initialize
+
+
+      **Exact command executed**:
+
+      ```
+
+      <paste actual command, not "tests pass">
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr, not summary>
+
+      ```
+
+
+      **Remaining mocks in related tests**: <count>
+
+
+      **Justification for remaining mocks**: <why acceptable>
+
+
+      **Verification**: This proves the seam works end-to-end.
+
+
+      ## Conformance Check
+
+      - Shared fixture/contract snapshot: <path>
+
+      - CLI resolved profile fact matches gateway state: yes/no
+
+      - Gateway state matches initialize binding: yes/no
+
+      - Independent re-derivation remains: yes/no'
+    depends_on:
+    - open_mode.runtime.freeze-for-l2
+    agent: integration-verifier
