@@ -596,3 +596,6 @@ phases:
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
   status: pending
+- id: config.contract
+  name: config.contract
+  status: pending
