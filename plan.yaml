@@ -1867,7 +1867,9 @@ phases:
   - gateway.test
 - id: audit.contract
   name: audit.contract
-  status: pending
+  status: locked
+  depends_on:
+  - gateway.runtime
 - id: audit.test
   name: audit.test
   status: pending
