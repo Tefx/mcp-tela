@@ -12,11 +12,11 @@ context: Implementation plan for tela.
 phases:
 - id: meta.discovery
   name: meta.discovery
-  status: pending
+  status: in_progress
   steps:
   - id: meta.discovery.audit-authoritative-planning-basis
     name: Audit authoritative planning basis
-    status: pending
+    status: claimed
     description: Verify that `docs/DESIGN.md` and `docs/INTERFACES.md` are the authoritative
       local planning basis, with `../opifex/design/tela-clean-gateway.md`, `../opifex/design/architecture.md`,
       `../opifex/design/requirements.md`, and `INVAR.md` used only as supporting inputs.
@@ -49,6 +49,8 @@ phases:
     - ../opifex/design/architecture.md
     - ../opifex/design/requirements.md
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-16T20:34:16.625897+00:00'
   - id: meta.discovery.check-preserved-runtime-boundaries
     name: Check preserved runtime boundaries
     status: pending
