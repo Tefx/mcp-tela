@@ -167,7 +167,7 @@ phases:
       n- explicit no-change or follow-up params\"}"
 - id: meta.prep
   name: meta.prep
-  status: in_progress
+  status: done
   depends_on:
   - meta.discovery
   steps:
@@ -235,7 +235,7 @@ phases:
       \ payload required for this evidence step."
   - id: meta.prep.define-planning-rubric
     name: Define planning rubric
-    status: claimed
+    status: done
     description: 'Codify the downstream implementation-planning rubric inside plan
       evidence and plan mutations: dependency integrity reporting, concrete agent
       assignment, acceptance-only contract steps, contract -> test -> implementation
@@ -270,9 +270,29 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-16T20:43:05.176158+00:00'
+    done_at: '2026-03-16T20:44:27.954329+00:00'
+    evidence: "Artifact:\n- downstream planning rubric\n  - Dependency integrity reporting:\
+      \ explicit `depends_on`, no cycles, Core/Shell boundary adherence, shared-file\
+      \ serialization risk reporting.\n  - Concrete agent assignment: each implementation\
+      \ step requires concrete agent identity and affinity-aware routing.\n  - Acceptance-only\
+      \ contract steps: Core requires `@pre`/`@post` + doctest before implementation;\
+      \ Shell returns `Result[T, E]`.\n  - Contract -> test -> implementation ordering\
+      \ for non-trivial work: contracts first, then tests, then implementation.\n\
+      \  - No docs-as-deliverable drift: evidence is deliverable for meta/planning\
+      \ steps; code+tests+evidence for implementation.\n  - Additional gates: cycle\
+      \ checks, Core no-I/O imports, `invar guard` compliance, profile/catalog boundary\
+      \ adherence, open-mode explicit profile binding.\n\nVerification:\n- dependency\
+      \ check result\n  - PASS: refs readable (`docs/DESIGN.md`, `docs/INTERFACES.md`,\
+      \ `INVAR.md`, `../opifex/design/tela-clean-gateway.md`, `../opifex/design/requirements.md`).\n\
+      \  - PASS: no blocking conflicts for rubric requirements.\n  - PASS: contract/test/implementation\
+      \ sequencing aligns across referenced sources.\n- gate and sequencing coverage\n\
+      \  - PASS: dependency completeness and cycle checks included.\n  - PASS: contract-first/test-before-implementation\
+      \ gating included.\n  - PASS: no-docs-deliverable drift prevention included.\n\
+      \nPlan mutation payload:\n- explicit no-change\n  - No `vectl_mutate` payload\
+      \ required; rubric captured as step evidence for downstream planning."
 - id: meta.plan_creation
   name: meta.plan_creation
-  status: locked
+  status: pending
   depends_on:
   - meta.prep
   steps:
