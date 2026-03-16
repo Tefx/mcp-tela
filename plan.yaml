@@ -1224,6 +1224,44 @@ phases:
 
       - Out-of-scope runtime wiring left for open_mode.runtime: yes/no'
     agent: python-senior
+  - id: config.impl.verify-config-authority
+    name: Verify config authority
+    status: pending
+    description: "As an INDEPENDENT TESTER (integration-verifier), validate the configuration\
+      \ authority behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
+      \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
+      Independence Level: L1\nspec_refs:\n  - docs/DESIGN.md#4.2 core/config.py --\
+      \ Configuration Parsing\n  - docs/INTERFACES.md#H. Open Mode (standalone, no\
+      \ token)\ntouch_paths:\n  - src/tela/core/config.py\n  - src/tela/shell/config_loader.py\n\
+      \  - src/tela/commands/start.py\nharness_refs:\n  - tests/core/test_config.py\n\
+      \  - tests/shell/test_config_loader.py\nTest for:\n- Happy path: explicit CLI\
+      \ default profile and unique config default both resolve correctly\n- Edge cases:\
+      \ token/open mode transitions, config with exactly one default profile, profiles\
+      \ without defaults\n- Error scenarios: no default in open mode, multiple defaults,\
+      \ unknown CLI-selected profile, token mode with empty secrets\n- Coverage objective:\
+      \ prove config authority is centralized and not re-derived elsewhere\nDocument\
+      \ ALL findings. A test that discovers issues is a SUCCESS.\nA test that finds\
+      \ nothing must justify the coverage achieved."
+    verification: '- Independent tester executes focused config tests and reports
+      findings
+
+      - Evidence shows central authority helper/path used consistently
+
+      - Missing/ambiguous default rejection is exercised directly
+
+      - Verdict recorded as PASS, ISSUES_FOUND, or INCOMPLETE with justification'
+    evidence_template: "## Verification Report\n**Tester**: integration-verifier\n\
+      **Scope**: config authority\n**Independence Level**: L1\n\n### Test Execution\n\
+      - Commands executed:\n  ```\n  <exact commands>\n  ```\n- Output summary: <key\
+      \ results>\n\n### Issues Found\n| Severity | Description | Location | Reproduction\
+      \ |\n| --- | --- | --- | --- |\n| blocker | <issue> | <file:line or behavior>\
+      \ | <steps> |\n\n### Coverage Assessment\n- CLI override precedence verified:\
+      \ yes/no\n- Missing default rejection verified: yes/no\n- Ambiguous default\
+      \ rejection verified: yes/no\n- Token secret failure verified: yes/no\n\n###\
+      \ Verdict\n- PASS | ISSUES_FOUND | INCOMPLETE"
+    depends_on:
+    - config.impl.implement-config-authority
+    agent: integration-verifier
 - id: open_mode.contract
   name: open_mode.contract
   status: locked
