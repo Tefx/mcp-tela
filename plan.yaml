@@ -1735,3 +1735,75 @@ phases:
     depends_on:
     - open_mode.runtime.freeze-for-l2
     agent: integration-verifier
+  - id: open_mode.runtime.gate
+    name: Gate open_mode.runtime
+    status: pending
+    description: 'Gate review: Verify open_mode.runtime phase completion.
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Phase touches runnable CLI/server surfaces and initialize-time binding semantics.
+
+      - Phase contains multiple integration-tagged steps and an L2 runtime verification.
+
+      - Gate must reject handler-only completion without runnable entrypoint proof.
+
+      cross_cutting_focus:
+
+      - CLI/startup and initialize use one resolved default-profile fact
+
+      - open-mode rejects missing or ambiguous defaults instead of guessing
+
+      - runnable surface evidence includes actual launch/invocation command
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- All phase steps completed successfully
+
+      - Runnable-surface evidence identifies the entrypoint/startup path and exact
+      invocation command
+
+      - At least one documented open-mode request/initialize reaches the real runtime
+      entrypoint end-to-end
+
+      - Cross-surface conformance evidence shows CLI, gateway, and upstream share
+      one resolved default-profile fact
+
+      - No unresolved blockers; ready for downstream runtime planning that depends
+      on open mode'
+    evidence_template: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: open_mode.runtime
+
+
+      ### Runnable Surface Check
+
+      - Entrypoint identified: yes/no
+
+      - Exact launch command present: yes/no
+
+      - Real initialize path exercised end-to-end: yes/no
+
+
+      ### Conformance Check
+
+      - CLI/gateway/upstream share one resolved default-profile fact: yes/no
+
+      - Independent re-derivation absent: yes/no
+
+
+      ### Decision
+
+      - OPEN | BLOCKED'
+    depends_on:
+    - open_mode.runtime.implement-default-profile-resolution
+    - open_mode.runtime.implement-open-mode-initialize-binding
+    - open_mode.runtime.integrate-cli-default-profile-wiring
+    - open_mode.runtime.freeze-for-l2
+    - open_mode.runtime.verify-open-mode-runtime
+    agent: gate-reviewer
