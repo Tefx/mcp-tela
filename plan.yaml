@@ -1020,6 +1020,38 @@ phases:
   status: locked
   depends_on:
   - config.contract
+  steps:
+  - id: config.test.add-config-authority-regressions
+    name: Add config authority regressions
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.2\
+      \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#9.1 tela.yaml\
+      \ Structure\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#H.\
+      \ Open Mode (standalone, no token)\n  - ../opifex/design/requirements.md#R7.\
+      \ Capability tokens, not ambient authority.\ntouch_paths:\n  - tests/core/test_config.py\n\
+      \  - tests/shell/test_config_loader.py\nharness_refs:\n  - tests/core/test_config.py\n\
+      \  - tests/shell/test_config_loader.py\nconflict_rationale: Tests define the\
+      \ executable acceptance boundary for config authority; implementation must not\
+      \ begin until these cases exist.\nTasks:\n- Add focused tests for raw config\
+      \ parsing and validation of `auth.mode=open`, `ProfileConfig.default`, and explicit\
+      \ `--default-profile` precedence inputs.\n- Cover failure cases: token mode\
+      \ without secrets, open mode with no default, open mode with multiple defaults,\
+      \ and CLI-selected profile missing from config.\n- Add at least one contract-aligned\
+      \ doctest target for any new Core helper introduced by the contract phase.\n\
+      - Keep this step test-only: minimal fixtures/helpers allowed, no product implementation.\n"
+    verification: '- Targeted tests exist for success path and each config-authority
+      failure mode
+
+      - Tests encode `--default-profile` wins over config default
+
+      - No product code beyond test fixtures/helpers
+
+      - Test names make open-mode rejection reasons discoverable'
+    evidence_template: "## Test Evidence\n- Added tests: <exact test ids>\n- Covered\
+      \ failure modes:\n  - missing default profile\n  - multiple default profiles\n\
+      \  - token mode missing secrets\n  - unknown CLI default profile\n- Doctest\
+      \ target added: <function>"
+    agent: python-executor
 - id: config.impl
   name: config.impl
   status: locked
