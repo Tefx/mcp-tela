@@ -44,7 +44,7 @@ servers:
 
   # SSE downstream -- tela connects as a client
   github:
-    url: "sse://localhost:3001"
+    url: "http://localhost:3001/sse"
 
 profiles:
   coder:
@@ -99,7 +99,7 @@ servers:
 
   # SSE downstream
   github:
-    url: "sse://localhost:3001"
+    url: "http://localhost:3001/sse"
 ```
 
 Rules:
@@ -202,19 +202,21 @@ the configuration. If no matching profile exists, deny with `PROFILE_NOT_FOUND`.
 Does the tool's family exist in the bound profile's `tools` map? If not,
 deny with `AUTHZ_DENY`.
 
-### 4. Posture check
+### 4. Tool override check
+
+If the profile has a `tool_overrides` entry for this specific tool: apply it.
+- `deny`: short-circuit the chain with DENY.
+- `allow`: skip steps 5-6 (explicit allow bypasses posture and side-effect checks).
+- no override: continue to step 5.
+
+### 5. Posture check
 
 If posture classification is available for the tool: is the tool's posture
 <= the profile's posture ceiling for that family? If exceeded, deny with
 `AUTHZ_DENY` (posture_exceeded).
 
-If no classification is available: the tool passes family admission but is
-subject to `default_posture` (which defaults to `none` = deny).
-
-### 5. Tool override check
-
-If the profile has a `tool_overrides` entry for this specific tool: apply it
-(`deny` or `allow`), overriding the posture check result from step 4.
+If no classification is available: the tool is subject to the server's
+`default_posture` (which defaults to `none` = deny).
 
 ### 6. Side-effect check
 
