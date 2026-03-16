@@ -695,6 +695,52 @@ phases:
   status: locked
   depends_on:
   - meta.review
+  steps:
+  - id: config.contract.define-config-authority-contracts
+    name: Define config authority contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
+      spec_refs:\n  - docs/DESIGN.md#4.1 core/models.py -- Data Models\n  - docs/DESIGN.md#4.2\
+      \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#5.2 commands/start.py\
+      \ -- tela start\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#H.\
+      \ Open Mode (standalone, no token)\n  - ../opifex/design/tela-clean-gateway.md#Profile\
+      \ Selection\n  - ../opifex/design/requirements.md#R7. Capability tokens, not\
+      \ ambient authority.\ntouch_paths:\n  - src/tela/core/models.py\n  - src/tela/core/config.py\n\
+      \  - src/tela/shell/config_loader.py\n  - src/tela/commands/start.py\nharness_refs:\n\
+      \  - tests/core/test_models.py\n  - tests/core/test_config.py\nconflict_rationale:\
+      \ Shared config schema, validation rules, and CLI default-profile precedence\
+      \ make this the authority step for all downstream config/open-mode work; serialize\
+      \ all later config/open-mode steps behind it.\nTasks:\n- Define acceptance-only\
+      \ signatures, model fields, and docstring/doctest stubs for config authority\
+      \ surfaces, including `ProfileConfig.default`, open-mode default-profile precedence,\
+      \ and validation entry points.\n- Keep local config as runtime source of truth;\
+      \ docs are not deliverables.\n- Preserve Invar boundaries: pure parsing/validation\
+      \ contracts in Core, environment/file reads in Shell only.\n- Scope includes\
+      \ contract shapes for `parse_config(...)`, `validate_config(...)`, and any helper\
+      \ needed to resolve open-mode default profile without implementation logic.\n\
+      - Non-goals: no runtime gateway wiring, no request handling, no completed CLI\
+      \ behavior.\n"
+    verification: '- Contract artifacts contain only signatures/type definitions/docstrings/stubs;
+      no business logic
+
+      - Contract explicitly defines `--default-profile` precedence over unique `default:
+      true`
+
+      - Contract states rejection behavior for missing or ambiguous open-mode defaults
+
+      - Core contract files include planned `@pre`/`@post` + doctest placeholders
+      per INVAR'
+    evidence_template: '## Contract Evidence
+
+      - Updated signatures/stubs: <paths>
+
+      - Open-mode authority rules captured: <bullet list>
+
+      - Invar contract placeholders added: <functions>
+
+      - No implementation logic added: yes/no'
+    agent: python-senior
 - id: config.test
   name: config.test
   status: locked
