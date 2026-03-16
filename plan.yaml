@@ -1852,6 +1852,52 @@ phases:
   status: locked
   depends_on:
   - open_mode.runtime
+  steps:
+  - id: gateway.contract.define-runtime-boundary-contracts
+    name: Define runtime boundary contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
+      spec_refs:\n  - docs/DESIGN.md#4.9 shell/gateway.py -- Gateway Lifecycle\n \
+      \ - docs/DESIGN.md#4.10 shell/downstream.py -- Downstream Server Management\n\
+      \  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n  - docs/DESIGN.md#5.2\
+      \ commands/start.py -- tela start\n  - docs/DESIGN.md#8.1 Startup Sequence\n\
+      \  - docs/DESIGN.md#8.2 Tool Call Flow\n  - docs/INTERFACES.md#A. CLI Interface\n\
+      \  - docs/INTERFACES.md#F. MCP Server Interface (upstream)\n  - INVAR.md\ntouch_paths:\n\
+      \  - src/tela/commands/start.py\n  - src/tela/shell/gateway.py\n  - src/tela/shell/downstream.py\n\
+      \  - src/tela/shell/upstream.py\n  - src/tela/core/models.py\nharness_refs:\n\
+      \  - tests/shell/test_gateway.py\n  - tests/shell/test_downstream.py\n  - tests/shell/test_upstream.py\n\
+      \  - tests/integration/test_end_to_end.py\nconflict_rationale: `commands/start.py`,\
+      \ `shell/gateway.py`, and `shell/upstream.py` are already serialized by the\
+      \ sibling open-mode plan; this phase must preserve those boundaries and define\
+      \ the remaining lifecycle/runtime contracts before any shared-file implementation\
+      \ resumes.\nTasks:\n- Define acceptance-only runtime contracts for CLI start\
+      \ -> gateway startup -> downstream connect/enumerate -> upstream tools/list\
+      \ and tools/call routing.\n- Preserve deployability-bearing terms: CLI, gateway,\
+      \ MCP server, stdio, optional SSE, startup, shutdown, connection context.\n\
+      - Keep open-mode assumptions as inputs only; do not redefine default-profile\
+      \ binding logic already planned in sibling phases.\n- Make shell-owned seams\
+      \ explicit for process/network/file I/O and keep pure policy logic out of this\
+      \ contract step.\n- Non-goals: no audit implementation, no reload implementation,\
+      \ no completed runtime behavior.\n"
+    verification: '- Contract artifacts are signatures/stubs only with no runtime
+      logic
+
+      - CLI/server/gateway/upstream/downstream boundaries remain explicit
+
+      - Sibling open-mode assumption is treated as an input dependency, not re-planned
+
+      - Shell/Core ownership respects INVAR'
+    evidence_template: '## Contract Evidence
+
+      - Runtime contract stubs: <paths>
+
+      - Preserved runtime boundaries: <list>
+
+      - Open-mode assumptions treated as dependency only: yes/no
+
+      - No implementation logic added: yes/no'
+    agent: python-senior
 - id: reload.contract
   name: reload.contract
   status: locked
