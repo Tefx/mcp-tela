@@ -1847,3 +1847,6 @@ phases:
     - open_mode.runtime.freeze-for-l2
     - open_mode.runtime.verify-open-mode-runtime
     agent: gate-reviewer
+- id: gateway.contract
+  name: gateway.contract
+  status: pending
