@@ -77,7 +77,7 @@ phases:
       \ non-blocking."
   - id: meta.discovery.check-preserved-runtime-boundaries
     name: Check preserved runtime boundaries
-    status: pending
+    status: claimed
     description: Confirm that deployability-bearing runtime terms and ownership remain
       preserved across the planning basis, including `CLI`, `server`, `gateway`, `MCP
       server`, `stdio`, `SSE`, `startup`, `shutdown`, token-mode initialize binding,
@@ -112,6 +112,8 @@ phases:
     depends_on:
     - meta.discovery.audit-authoritative-planning-basis
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-16T20:38:10.647471+00:00'
 - id: meta.prep
   name: meta.prep
   status: locked
