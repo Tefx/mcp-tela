@@ -1516,3 +1516,57 @@ phases:
 
       - Duplicate precedence logic removed/avoided: yes/no'
     agent: python-executor
+  - id: open_mode.runtime.implement-open-mode-initialize-binding
+    name: Implement open-mode initialize binding
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
+      \  - docs/DESIGN.md#7.2 Open Mode\n  - docs/INTERFACES.md#H. Open Mode (standalone,\
+      \ no token)\n  - ../opifex/design/requirements.md#R7. Capability tokens, not\
+      \ ambient authority.\ntouch_paths:\n  - src/tela/shell/upstream.py\n  - src/tela/core/models.py\n\
+      harness_refs:\n  - tests/shell/test_upstream.py\n  - tests/integration/test_open_mode.py\n\
+      conflict_rationale: This step owns the initialize-time binding path and depends\
+      \ on the shared default-profile resolution semantics from the prior step.\n\
+      Tasks:\n- Implement open-mode initialize handling that requires no token, binds\
+      \ the resolved explicit default profile, and rejects missing/ambiguous defaults\
+      \ without guessing.\n- Keep token-mode initialize semantics intact and separate.\n\
+      - Use the shared resolved default-profile fact instead of re-deriving profile\
+      \ choice inside initialize.\nIntegration path exercised: CLI/gateway-resolved\
+      \ open-mode profile -> upstream initialize binding -> ConnectionContext.profile_name\n\
+      Out-of-scope guardrail:\n- No transport startup, downstream connection management,\
+      \ or audit implementation beyond what tests require.\nevidence_template_hint:\n\
+      \  source: shared resolved default profile\n  sink: upstream initialize binding\n\
+      \  signal: integration (source-sink + multi-module)\n"
+    verification: '- Main path: initialize succeeds in open mode without token when
+      resolved profile is explicit
+
+      - Failure path: initialize rejects when resolved profile is unavailable or ambiguous
+
+      - Proof: ConnectionContext profile matches the shared resolved fact, not a separately
+      derived value'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name that invokes source through sink>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: shared default-profile resolution -> upstream initialize
+      binding'
+    depends_on:
+    - open_mode.runtime.implement-default-profile-resolution
+    agent: python-executor
