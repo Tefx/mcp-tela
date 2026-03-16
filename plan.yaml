@@ -1391,6 +1391,43 @@ phases:
   status: locked
   depends_on:
   - open_mode.contract
+  steps:
+  - id: open_mode.test.add-open-mode-contract-and-integration-tests
+    name: Add open-mode contract and integration tests
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#7.2\
+      \ Open Mode\n  - docs/DESIGN.md#8.1 Startup Sequence\n  - docs/INTERFACES.md#A.\
+      \ CLI Interface\n  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n\
+      \  - ../opifex/design/requirements.md#R7. Capability tokens, not ambient authority.\n\
+      touch_paths:\n  - tests/shell/test_upstream.py\n  - tests/integration/test_open_mode.py\n\
+      \  - tests/integration/test_end_to_end.py\nharness_refs:\n  - tests/integration/test_open_mode.py\n\
+      \  - tests/shell/test_upstream.py\nconflict_rationale: Open-mode tests must\
+      \ encode CLI-to-initialize semantics before runtime code lands; this avoids\
+      \ later guessing across shared runtime surfaces.\nTasks:\n- Add tests for default-profile\
+      \ precedence from CLI to runtime binding.\n- Add tests for initialize success\
+      \ in open mode with no token when an explicit default profile resolves.\n- Add\
+      \ tests for initialize rejection when no explicit default profile resolves or\
+      \ multiple defaults exist.\n- Add a conformance fixture proving CLI, gateway,\
+      \ and upstream use the same resolved default profile fact rather than re-deriving\
+      \ it independently.\n- Keep step test-only; mocks may exist but must leave room\
+      \ for a later real-path proof.\n"
+    verification: '- Test suite defines CLI precedence, initialize success, initialize
+      rejection, and shared-fact conformance cases
+
+      - At least one integration-oriented test path spans CLI/start configuration
+      into open-mode initialize binding
+
+      - No product implementation added beyond minimal fixtures/helpers'
+    evidence_template: '## Test Evidence
+
+      - Added tests: <exact ids>
+
+      - Shared conformance fixture: <path>
+
+      - CLI -> initialize path covered: yes/no
+
+      - Rejection cases covered: yes/no'
+    agent: python-executor
 - id: open_mode.runtime
   name: open_mode.runtime
   status: locked
