@@ -2061,6 +2061,60 @@ phases:
 
       - Shared entrypoint wiring untouched: yes/no'
     agent: python-executor
+  - id: gateway.runtime.implement-upstream-routing
+    name: Implement upstream routing
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
+      \  - docs/DESIGN.md#6.1 tools/list\n  - docs/DESIGN.md#6.2 tools/call\n  - docs/DESIGN.md#8.2\
+      \ Tool Call Flow\n  - docs/INTERFACES.md#F. MCP Server Interface (upstream)\n\
+      touch_paths:\n  - src/tela/shell/upstream.py\n  - src/tela/core/enforcement.py\n\
+      \  - src/tela/core/token.py\n  - src/tela/core/errors.py\n  - src/tela/core/models.py\n\
+      harness_refs:\n  - tests/shell/test_upstream.py\n  - tests/integration/test_end_to_end.py\n\
+      conflict_rationale: This step owns request-path runtime behavior while avoiding\
+      \ shared CLI/gateway startup files; later integration step will wire the handler\
+      \ into the runnable server lifecycle.\nTasks:\n- Implement upstream tools/list\
+      \ filtering, tools/call forwarding, error mapping, and connection-context updates.\n\
+      - Consume prior config/open-mode planning outputs as preconditions for connection\
+      \ binding; do not reimplement open-mode default selection.\n- Preserve `_meta`\
+      \ hold/strip semantics as runtime behavior input, but defer audit emission details\
+      \ to `audit.runtime`.\nIntegration path exercised: bound connection context\
+      \ -> tools/list/tools/call -> downstream manager -> MCP result/error\nOut-of-scope\
+      \ guardrail:\n- No gateway startup/shutdown orchestration\n- No audit writer\
+      \ implementation\n- No reload notifications\n"
+    verification: '- Main path: upstream runtime tests pass for tools/list filtering
+      and tools/call forwarding
+
+      - Failure path: focused regressions cover denied tool access and downstream
+      error propagation
+
+      - Proof: `_meta` is stripped before forwarding and audit-specific write behavior
+      remains deferred'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name that invokes source through sink>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: upstream handler -> downstream manager -> result/error return'
+    depends_on:
+    - gateway.runtime.implement-downstream-manager
+    agent: python-executor
 - id: audit.contract
   name: audit.contract
   status: locked
