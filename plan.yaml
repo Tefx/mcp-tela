@@ -1570,3 +1570,56 @@ phases:
     depends_on:
     - open_mode.runtime.implement-default-profile-resolution
     agent: python-executor
+  - id: open_mode.runtime.integrate-cli-default-profile-wiring
+    name: Integrate CLI default-profile wiring
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#8.1\
+      \ Startup Sequence\n  - docs/INTERFACES.md#A. CLI Interface\n  - docs/INTERFACES.md#H.\
+      \ Open Mode (standalone, no token)\ntouch_paths:\n  - src/tela/cli.py\n  - src/tela/commands/start.py\n\
+      \  - src/tela/shell/gateway.py\nharness_refs:\n  - tests/integration/test_open_mode.py\n\
+      \  - tests/integration/test_end_to_end.py\nconflict_rationale: This is the serial\
+      \ integration step for shared runtime wiring; keep registry/entrypoint changes\
+      \ out of earlier steps to reduce merge and coordination risk.\nTasks:\n- Wire\
+      \ `tela start --default-profile` through the runtime entrypoint into gateway/open-mode\
+      \ startup state.\n- Preserve runnable surface semantics: `tela start` remains\
+      \ the launch path; stdio default and optional SSE remain visible runtime behaviors.\n\
+      - Ensure CLI/startup passes a single resolved default-profile input into runtime\
+      \ consumers rather than letting downstream surfaces infer independently.\nIntegration\
+      \ path exercised: CLI entrypoint -> start command -> gateway startup config\
+      \ -> open-mode binding consumers\nOut-of-scope guardrail:\n- No unrelated CLI/status/profiles/audit\
+      \ command work.\n"
+    verification: '- Main path: `tela start --default-profile <name>` drives runtime
+      startup with the expected bound profile
+
+      - Failure path: startup or initialize rejects invalid default-profile inputs
+      cleanly
+
+      - Proof: no sibling CLI/runtime path computes open-mode profile selection independently
+      of the shared authority path'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name that invokes source through sink>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: CLI entrypoint -> start command -> gateway startup config
+      -> open-mode binding'
+    depends_on:
+    - open_mode.runtime.implement-open-mode-initialize-binding
+    agent: python-executor
