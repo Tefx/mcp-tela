@@ -741,6 +741,52 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+  - id: config.contract.gate
+    name: Gate config.contract
+    status: pending
+    description: 'Gate review: Verify config authority contract phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Contract-first phase defines the acceptance boundary for later test and implementation
+      work.
+
+      - Review must block any contract step that leaks product logic.
+
+      cross_cutting_focus:
+
+      - local config remains the runtime source of truth
+
+      - open-mode default profile precedence is explicit and unambiguous
+
+      - Core vs Shell ownership follows INVAR
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Contract step completed with acceptance-only artifacts
+
+      - Evidence is specific and shows no implementation leakage
+
+      - Open-mode default-profile precedence and rejection semantics are explicit
+
+      - Ready for config.test'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: config.contract.define-config-authority-contracts
+
+      - Contract purity: pass/fail
+
+      - Authority semantics explicit: pass/fail
+
+      - Invar ownership preserved: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - config.contract.define-config-authority-contracts
+    agent: gate-reviewer
 - id: config.test
   name: config.test
   status: locked
