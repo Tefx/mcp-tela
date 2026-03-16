@@ -445,6 +445,14 @@ phases:
       Plan mutation payload:
 
       - vectl_mutate params or explicit no-change'
+    refs:
+    - plan.yaml
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - INVAR.md
+    - ../opifex/design/tela-clean-gateway.md
+    - ../opifex/design/architecture.md
+    - ../opifex/design/requirements.md
     depends_on:
     - meta.review.review-implementation-plan-conformance
     - meta.review.review-implementation-plan-quality
