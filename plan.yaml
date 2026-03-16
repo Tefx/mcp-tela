@@ -169,6 +169,36 @@ phases:
 
       - vectl_mutate params or explicit no-change'
     agent: vectl-planner
+  - id: meta.plan_creation.create-gateway-runtime-implementation-plan
+    name: Create gateway runtime implementation plan
+    status: pending
+    description: Produce the executable vectl implementation plan for gateway lifecycle,
+      upstream/downstream runtime, audit, and reload work while preserving CLI/server/gateway/MCP
+      server/runtime boundaries. The output must be vectl plan mutations only; docs
+      are not deliverables.
+    verification: 'Return: (1) dependency check result against completed discovery/prep
+      phases and sibling config/open-mode planning assumptions, (2) explicit contract
+      -> test -> implementation gate check, (3) shared-file serialization or dependency
+      risks, and (4) exact vectl_mutate-ready implementation-plan payload or explicit
+      no-change.'
+    evidence_template: 'Artifact:
+
+      - gateway/runtime implementation-plan payload
+
+
+      Verification:
+
+      - dependency check result
+
+      - contract/test/implementation gate check
+
+      - shared-file serialization assessment
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    agent: vectl-planner
 - id: meta.review
   name: meta.review
   status: locked
