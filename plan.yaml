@@ -1348,6 +1348,44 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+  - id: open_mode.contract.gate
+    name: Gate open_mode.contract
+    status: pending
+    description: 'Gate review: Verify open-mode runtime contract phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Runnable surface contract must cover CLI, startup, initialize, and binding
+      rejection semantics before tests/implementation.
+
+      cross_cutting_focus:
+
+      - no profile selection via client metadata in open mode
+
+      - runtime boundary preserved across CLI/gateway/upstream
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Contract step completed with runtime/entrypoint semantics explicit
+
+      - Evidence shows acceptance-only artifacts and no implementation leakage
+
+      - Ready for open_mode.test'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: open_mode.contract.define-open-mode-runtime-contracts
+
+      - Runnable surface preserved: pass/fail
+
+      - Open-mode binding semantics explicit: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - open_mode.contract.define-open-mode-runtime-contracts
+    agent: gate-reviewer
 - id: open_mode.test
   name: open_mode.test
   status: locked
