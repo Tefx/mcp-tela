@@ -1854,7 +1854,9 @@ phases:
   - open_mode.runtime
 - id: reload.contract
   name: reload.contract
-  status: pending
+  status: locked
+  depends_on:
+  - audit.runtime
 - id: gateway.test
   name: gateway.test
   status: locked
