@@ -1855,7 +1855,9 @@ phases:
   status: pending
 - id: gateway.test
   name: gateway.test
-  status: pending
+  status: locked
+  depends_on:
+  - gateway.contract
 - id: gateway.runtime
   name: gateway.runtime
   status: pending
