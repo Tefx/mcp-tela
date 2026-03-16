@@ -16,7 +16,7 @@ phases:
   steps:
   - id: meta.discovery.audit-authoritative-planning-basis
     name: Audit authoritative planning basis
-    status: claimed
+    status: done
     description: Verify that `docs/DESIGN.md` and `docs/INTERFACES.md` are the authoritative
       local planning basis, with `../opifex/design/tela-clean-gateway.md`, `../opifex/design/architecture.md`,
       `../opifex/design/requirements.md`, and `INVAR.md` used only as supporting inputs.
@@ -51,6 +51,30 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-16T20:34:16.625897+00:00'
+    done_at: '2026-03-16T20:37:50.793991+00:00'
+    evidence: "Artifact:\n- authoritative vs supporting source map\n  - Authoritative\
+      \ local planning basis:\n    - `docs/DESIGN.md:3` + `docs/DESIGN.md:4` + `docs/DESIGN.md:67`\
+      \ define accepted design scope and module decomposition.\n    - `docs/INTERFACES.md:3`\
+      \ + `docs/INTERFACES.md:36` + `docs/INTERFACES.md:307` define co-authoritative\
+      \ external CLI/config/MCP contracts.\n  - Supporting inputs only:\n    - `INVAR.md:3`\
+      \ + `INVAR.md:20` are implementation-governance constraints, not planning deliverables.\n\
+      \    - `/Users/tefx/Projects/opifex/design/tela-clean-gateway.md:6` + `:345`\
+      \ provide supporting upstream rationale.\n    - `/Users/tefx/Projects/opifex/design/architecture.md:47`\
+      \ + `:295` provide supporting system-context architecture.\n    - `/Users/tefx/Projects/opifex/design/requirements.md:36`\
+      \ + `:45` provide supporting requirement constraints.\n  - Deliverable confirmation:\
+      \ no docs file treated as the deliverable; this audit evidence is the deliverable.\n\
+      \nVerification:\n- dependency check result\n  - PASS: required local and supporting\
+      \ inputs were readable; opifex refs resolved under `/Users/tefx/Projects/opifex/design/`.\n\
+      \  - PASS: step is self-contained; no vectl mutation required to determine source\
+      \ authority.\n  - PASS: no dependency block prevents concluding local authority\
+      \ = `docs/DESIGN.md` + `docs/INTERFACES.md`.\n- source conflict assessment\n\
+      \  - Blocking conflicts: none.\n  - Non-blocking conflicts:\n    - `docs/DESIGN.md:6`\
+      \ does not list `INVAR.md`, while step asks to treat `INVAR.md` as supporting\
+      \ input.\n    - Upstream `/Users/tefx/Projects/opifex/design/architecture.md:53`\
+      \ mentions idempotency emphasis not elevated in local authoritative docs.\n\n\
+      Plan mutation payload:\n- explicit no-change\n  - No `vectl_mutate` payload\
+      \ recommended because hierarchy is already determinable and observed drift is\
+      \ non-blocking."
   - id: meta.discovery.check-preserved-runtime-boundaries
     name: Check preserved runtime boundaries
     status: pending
