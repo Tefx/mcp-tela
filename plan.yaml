@@ -1473,3 +1473,46 @@ phases:
   status: locked
   depends_on:
   - open_mode.test
+  steps:
+  - id: open_mode.runtime.implement-default-profile-resolution
+    name: Implement default-profile resolution
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#7.2\
+      \ Open Mode\n  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n  -\
+      \ ../opifex/design/tela-clean-gateway.md#Profile Selection\ntouch_paths:\n \
+      \ - src/tela/commands/start.py\n  - src/tela/core/config.py\n  - src/tela/core/models.py\n\
+      harness_refs:\n  - tests/core/test_config.py\n  - tests/integration/test_open_mode.py\n\
+      conflict_rationale: This is the authority consumer for CLI precedence and must\
+      \ land before initialize binding and gateway wiring.\nFailure-mode checklist:\n\
+      - explicit clear / null overwrite semantics for absent `--default-profile` remain\
+      \ distinct from a provided value\n- missing explicit default profile rejects\
+      \ rather than guessing\n- multiple config defaults reject deterministically\n\
+      - stale-definition vs new-state precedence uses the shared config authority\
+      \ helper\n- unknown CLI-selected profile rejects deterministically\nState semantics:\n\
+      - last-writer-wins: CLI `--default-profile` overrides unique config default\n\
+      - preserve exactly: clients still cannot choose profile via connection metadata\
+      \ in open mode\n- backward-compatible legacy behavior: token mode path remains\
+      \ unaffected\nOut-of-scope guardrail:\n- gateway startup orchestration and upstream\
+      \ initialize handling are deferred to sibling runtime steps\nTasks:\n- Implement\
+      \ runtime consumption of the shared config authority helper for default-profile\
+      \ resolution.\n- Keep changes bounded to the default-profile resolution seam\
+      \ and referenced tests.\n"
+    verification: '- Main path: targeted tests prove explicit CLI profile and unique
+      config default resolve correctly
+
+      - Failure path: focused regressions cover no default, multiple defaults, and
+      unknown CLI profile
+
+      - Proof: runtime resolution reuses the shared authority helper instead of duplicating
+      precedence logic'
+    evidence_template: '## Implementation Evidence
+
+      - Shared helper consumer(s): <paths>
+
+      - Main-path command/output: <exact>
+
+      - Failure-path command/output: <exact>
+
+      - Duplicate precedence logic removed/avoided: yes/no'
+    agent: python-executor
