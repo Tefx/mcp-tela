@@ -372,7 +372,7 @@ phases:
     agent: vectl-planner
   - id: meta.plan_creation.create-cross-repo-alignment-plan
     name: Create cross-repo alignment plan
-    status: pending
+    status: claimed
     description: Produce the executable vectl plan for residual cross-repo docs/contracts
       alignment against `../opifex` without creating product implementation work.
       The output must be vectl plan mutations only; docs are not deliverables.
@@ -404,6 +404,8 @@ phases:
     - ../opifex/design/architecture.md
     - ../opifex/design/requirements.md
     agent: vectl-planner
+    claimed_by: vectl-planner
+    claimed_at: '2026-03-16T20:44:52.228572+00:00'
 - id: meta.review
   name: meta.review
   status: locked
