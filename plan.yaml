@@ -608,3 +608,6 @@ phases:
 - id: open_mode.contract
   name: open_mode.contract
   status: pending
+- id: open_mode.test
+  name: open_mode.test
+  status: pending
