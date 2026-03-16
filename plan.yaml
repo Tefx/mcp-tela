@@ -602,7 +602,9 @@ phases:
   - meta.review
 - id: config.contract
   name: config.contract
-  status: pending
+  status: locked
+  depends_on:
+  - meta.review
 - id: config.test
   name: config.test
   status: pending
