@@ -622,7 +622,9 @@ phases:
   - config.impl
 - id: open_mode.test
   name: open_mode.test
-  status: pending
+  status: locked
+  depends_on:
+  - open_mode.contract
 - id: open_mode.runtime
   name: open_mode.runtime
   status: pending
