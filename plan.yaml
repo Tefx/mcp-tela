@@ -1859,3 +1859,6 @@ phases:
 - id: gateway.runtime
   name: gateway.runtime
   status: pending
+- id: audit.contract
+  name: audit.contract
+  status: pending
