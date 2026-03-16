@@ -12,7 +12,7 @@ context: Implementation plan for tela.
 phases:
 - id: meta.discovery
   name: meta.discovery
-  status: in_progress
+  status: done
   steps:
   - id: meta.discovery.audit-authoritative-planning-basis
     name: Audit authoritative planning basis
@@ -77,7 +77,7 @@ phases:
       \ non-blocking."
   - id: meta.discovery.check-preserved-runtime-boundaries
     name: Check preserved runtime boundaries
-    status: claimed
+    status: done
     description: Confirm that deployability-bearing runtime terms and ownership remain
       preserved across the planning basis, including `CLI`, `server`, `gateway`, `MCP
       server`, `stdio`, `SSE`, `startup`, `shutdown`, token-mode initialize binding,
@@ -114,9 +114,60 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-16T20:38:10.647471+00:00'
+    done_at: '2026-03-16T20:40:19.951944+00:00'
+    evidence: "Artifact:\n- runtime term ledger update\n  - Preserved runtime boundary\
+      \ terms across planning basis:\n    - `CLI`: `docs/DESIGN.md:25`, `docs/DESIGN.md:1116`,\
+      \ `docs/INTERFACES.md:3`\n    - `server`: `docs/DESIGN.md:12`, `docs/DESIGN.md:840`,\
+      \ `docs/DESIGN.md:1426`, `docs/INTERFACES.md:40`\n    - `gateway`: `docs/DESIGN.md:12`,\
+      \ `docs/DESIGN.md:797`, `docs/DESIGN.md:1143`, `/Users/tefx/Projects/opifex/design/tela-clean-gateway.md:10`,\
+      \ `/Users/tefx/Projects/opifex/design/architecture.md:47`\n    - `MCP server`:\
+      \ `docs/DESIGN.md:798`, `docs/DESIGN.md:1203`, `docs/INTERFACES.md:307`, `/Users/tefx/Projects/opifex/design/architecture.md:34`\n\
+      \    - `stdio`: `docs/DESIGN.md:1143`, `docs/DESIGN.md:222`, `docs/DESIGN.md:840`,\
+      \ `docs/DESIGN.md:1365`, `docs/INTERFACES.md:40`\n    - `SSE`: `docs/DESIGN.md:224`,\
+      \ `docs/DESIGN.md:840`, `docs/DESIGN.md:1365`, `docs/INTERFACES.md:45`, `docs/DESIGN.md:1144`\n\
+      \    - `startup`: `docs/DESIGN.md:821`, `docs/DESIGN.md:864`, `docs/DESIGN.md:1352`,\
+      \ `docs/INTERFACES.md:116`\n    - `shutdown`: `docs/DESIGN.md:798`, `docs/DESIGN.md:825`,\
+      \ `docs/DESIGN.md:869`\n    - token-mode initialize binding: `docs/DESIGN.md:919`,\
+      \ `docs/DESIGN.md:1275`, `docs/INTERFACES.md:231`, `docs/INTERFACES.md:377`,\
+      \ `/Users/tefx/Projects/opifex/design/tela-clean-gateway.md:205`, `/Users/tefx/Projects/opifex/design/requirements.md:61`\n\
+      \    - open mode explicit profile binding: `docs/DESIGN.md:923`, `docs/DESIGN.md:1316`,\
+      \ `docs/INTERFACES.md:428`, `/Users/tefx/Projects/opifex/design/tela-clean-gateway.md:206`,\
+      \ `/Users/tefx/Projects/opifex/design/architecture.md:378`, `/Users/tefx/Projects/opifex/design/requirements.md:61`\n\
+      \  - Result: PASS for deployability-bearing runtime term and ownership preservation.\n\
+      \  - Deliverable confirmation: no docs file treated as deliverable; this audit\
+      \ evidence is the deliverable.\n\nVerification:\n- dependency check result\n\
+      \  - PASS against upstream discovery hierarchy (`docs/DESIGN.md` + `docs/INTERFACES.md`\
+      \ authoritative; opifex docs supporting).\n  - PASS: no additional dependency\
+      \ on vectl state or doc edits required.\n- semantic conflict assessment\n  -\
+      \ Blocking conflict detected:\n    - `docs/DESIGN.md:487` and `docs/DESIGN.md:507`\
+      \ describe a `7-step enforcement chain` including token validation/profile lookup.\n\
+      \    - `docs/INTERFACES.md:231` and `/Users/tefx/Projects/opifex/design/tela-clean-gateway.md:277`\
+      \ treat token validation/profile lookup as initialize-time binding and per-call\
+      \ enforcement as `4-step` (family admission, tool override, posture, side-effect).\n\
+      \    - This is blocking because it changes runtime ownership boundaries.\n \
+      \ - Non-blocking drift:\n    - CLI deployment detail around stdio+optional SSE\
+      \ in `docs/DESIGN.md:1143` is additive.\n    - Idempotency emphasis in `/Users/tefx/Projects/opifex/design/architecture.md:53`\
+      \ is supporting, not boundary-changing for this step.\n\nPlan mutation payload:\n\
+      - vectl_mutate params\n  - {\"action\":\"add-step\",\"phase_id\":\"meta.discovery\"\
+      ,\"step_id\":\"meta.discovery.reconcile-enforcement-runtime-wording\",\"name\"\
+      :\"Reconcile enforcement runtime wording\",\"description\":\"Resolve the blocking\
+      \ semantic conflict between 7-step enforcement wording in docs/DESIGN.md and\
+      \ 4-step per-call enforcement wording with initialize-time token/profile binding\
+      \ in docs/INTERFACES.md and supporting opifex docs. Preserve runtime ownership\
+      \ that token validation and open-mode profile binding occur at connection initialize\
+      \ time, while per-call enforcement remains family admission, tool override,\
+      \ posture, and side-effect.\",\"refs\":[\"docs/DESIGN.md\",\"docs/INTERFACES.md\"\
+      ,\"../opifex/design/tela-clean-gateway.md\",\"../opifex/design/architecture.md\"\
+      ,\"../opifex/design/requirements.md\"],\"verification\":\"Confirm a single canonical\
+      \ enforcement wording is used across planning basis; explicitly separate initialize-time\
+      \ binding from per-call enforcement; verify no deployability-bearing runtime\
+      \ ownership changes.\",\"evidence_template\":\"Artifact:\\n- reconciled enforcement\
+      \ wording decision\\n\\nVerification:\\n- initialize-time vs per-call boundary\
+      \ confirmation\\n- remaining semantic conflict check\\n\\nPlan mutation payload:\\\
+      n- explicit no-change or follow-up params\"}"
 - id: meta.prep
   name: meta.prep
-  status: locked
+  status: pending
   depends_on:
   - meta.discovery
   steps:
