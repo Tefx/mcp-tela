@@ -107,6 +107,35 @@ phases:
 
       - vectl_mutate params or explicit no-change'
     agent: doc-reviewer
+  - id: meta.prep.define-planning-rubric
+    name: Define planning rubric
+    status: pending
+    description: 'Codify the downstream implementation-planning rubric inside plan
+      evidence and plan mutations: dependency integrity reporting, concrete agent
+      assignment, acceptance-only contract steps, contract -> test -> implementation
+      ordering for non-trivial work, and no docs-as-deliverable drift.'
+    verification: 'Return: (1) rubric checks for downstream planners, (2) dependency
+      check result, and (3) exact vectl_mutate-ready downstream payload or explicit
+      no-change. Explicitly include dependency completeness, cycle checks, and contract
+      -> test -> implementation gating requirements.'
+    evidence_template: 'Artifact:
+
+      - downstream planning rubric
+
+
+      Verification:
+
+      - dependency check result
+
+      - gate and sequencing coverage
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    depends_on:
+    - meta.prep.summarize-profile-catalog-boundaries
+    agent: doc-reviewer
 - id: meta.plan_creation
   name: meta.plan_creation
   status: locked
