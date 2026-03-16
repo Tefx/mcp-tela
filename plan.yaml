@@ -607,7 +607,9 @@ phases:
   - meta.review
 - id: config.test
   name: config.test
-  status: pending
+  status: locked
+  depends_on:
+  - config.contract
 - id: config.impl
   name: config.impl
   status: pending
