@@ -600,6 +600,96 @@ phases:
     the meta review phase completing before any cross-repo alignment work can start.
   depends_on:
   - meta.review
+  steps:
+  - id: cross_repo_alignment.audit-residual-opifex-drift
+    name: Audit residual opifex drift
+    status: pending
+    description: 'Docs/contracts-only scope. Compare `docs/DESIGN.md`, `docs/INTERFACES.md`,
+      `contracts/capability_token.schema.json`, `contracts/meta.schema.json`, and
+      `contracts/errors.yaml` against `../opifex/design/tela-clean-gateway.md`, `../opifex/design/architecture.md`,
+      and `../opifex/design/requirements.md` to produce the residual alignment list.
+
+
+      Spec refs:
+
+      - `docs/DESIGN.md` sections 1-2, 6-10
+
+      - `docs/INTERFACES.md` sections B, D, F, G, H, I, J
+
+      - `../opifex/design/tela-clean-gateway.md` Core Position, Inputs to Tela, Profile
+      Selection, Token Threat Model, Resolved Design Decisions
+
+      - `../opifex/design/architecture.md` tela overview, composition contract, side_effect_policy
+      flow
+
+      - `../opifex/design/requirements.md` R5-R8, R15-R16
+
+
+      Touch paths:
+
+      - `../opifex/design/tela-clean-gateway.md`
+
+      - `../opifex/design/architecture.md`
+
+      - `../opifex/design/requirements.md`
+
+      - `contracts/capability_token.schema.json`
+
+      - `contracts/meta.schema.json`
+
+      - `contracts/errors.yaml`
+
+
+      Conflict rationale:
+
+      - Serializes all cross-repo contract/doc surfaces through one audit so later
+      edits do not fork truth.
+
+      - Treat local tela docs/contracts as authoritative unless the audit finds an
+      actual local contract defect.
+
+      - Phase-level dependency on `meta.review` preserves the meta-plan freeze before
+      this non-meta work begins.
+
+
+      Step type: review
+
+      Agent source: default
+
+      Contract -> test -> implementation applicability: N/A for this phase unless
+      the audit proves a contract-file change is required; this step must state that
+      conclusion explicitly.
+
+      Docs/contracts-only scope check:
+
+      - Allowed outputs: residual mismatch list, no-change confirmation, or contract-only
+      correction recommendation.
+
+      - Forbidden outputs: product code tasks, runtime wiring, CLI/server implementation,
+      or tests for product behavior.
+
+
+      Known risks:
+
+      - `../opifex/design/architecture.md` currently advertises tela `idempotency
+      enforcement`; audit must confirm whether that is stale relative to local authoritative
+      tela docs/contracts.
+
+      - Do not erase runtime-bearing terms (`gateway`, `MCP server`, `stdio`, `SSE`,
+      `initialize`, `shutdown`, `open mode`) while aligning prose.'
+    verification: '- Evidence includes dependency check result against completed `meta.discovery`
+      and `meta.prep` phases plus explicit statement that the phase stays blocked
+      on `meta.review`
+
+      - Evidence lists each residual mismatch as `opifex-doc-update`, `local-contract-update`,
+      or `no-change`
+
+      - Evidence explicitly states whether contract -> test -> implementation is N/A
+      or newly applicable
+
+      - Evidence explicitly confirms docs/contracts-only scope with no product implementation
+      work'
+    agent: software-architect
 - id: config.contract
   name: config.contract
   status: locked
