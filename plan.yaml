@@ -1168,6 +1168,62 @@ phases:
   status: locked
   depends_on:
   - config.test
+  steps:
+  - id: config.impl.implement-config-authority
+    name: Implement config authority
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.1 core/models.py -- Data Models\n  - docs/DESIGN.md#4.2\
+      \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#4.13 shell/config_loader.py\
+      \ -- Config File I/O\n  - docs/DESIGN.md#5.2 commands/start.py -- tela start\n\
+      \  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#H.\
+      \ Open Mode (standalone, no token)\n  - ../opifex/design/tela-clean-gateway.md#Profile\
+      \ Selection\n  - ../opifex/design/requirements.md#R7. Capability tokens, not\
+      \ ambient authority.\ntouch_paths:\n  - src/tela/core/models.py\n  - src/tela/core/config.py\n\
+      \  - src/tela/shell/config_loader.py\n  - src/tela/commands/start.py\nharness_refs:\n\
+      \  - tests/core/test_config.py\n  - tests/shell/test_config_loader.py\nconflict_rationale:\
+      \ This step owns the shared config authority surfaces and must land before any\
+      \ open-mode runtime wiring can consume them.\nFailure-mode checklist:\n- missing-file\
+      \ fallback behavior for config path remains shell-owned and explicit\n- explicit\
+      \ clear / null overwrite semantics for CLI `--default-profile` vs config default\
+      \ are defined and tested\n- stale-definition vs new-state precedence: CLI flag\
+      \ last-writer-wins over config-marked default for open mode\n- partial parse/validation\
+      \ failure returns deterministic config errors instead of guessed profile binding\n\
+      - invalid token-mode secret configuration still fails closed\nState semantics:\n\
+      - last-writer-wins: CLI `--default-profile` overrides config `default: true`\
+      \ when open mode is active\n- preserve exactly: local config remains runtime\
+      \ source of truth for profiles and default markers\n- backward-compatible legacy\
+      \ behavior: token mode still requires secrets and ignores open-mode-only defaults\
+      \ unless explicitly used by runtime binding\nOut-of-scope guardrail:\n- Runtime\
+      \ initialize wiring and connection binding are deferred to open_mode.runtime\n\
+      - No gateway lifecycle or downstream transport implementation in this step\n\
+      Tasks:\n- Implement the contract-defined config models and validation helpers\
+      \ for explicit open-mode default selection.\n- Implement core parsing/validation\
+      \ plus shell config-loader handoff needed to expose resolved config authority\
+      \ to runtime callers.\n- Keep Core pure and Shell responsible for environment/file\
+      \ reads per INVAR.\n- Update or add the exact regression tests named in config.test.\n"
+    verification: '- Main path: targeted config parsing/validation tests pass for
+      token and open modes
+
+      - Failure path: regression tests cover missing default, ambiguous default, missing
+      token secrets, and unknown CLI override profile
+
+      - Proof: no alternative open-mode default selection path remains outside the
+      configured authority helper(s)
+
+      - Invar evidence: Core functions have `@pre`/`@post` and doctests before implementation'
+    evidence_template: '## Implementation Evidence
+
+      - Authority helper(s): <paths/functions>
+
+      - Main-path tests: <exact command + output>
+
+      - Failure-path tests: <exact command + output>
+
+      - Call sites now use shared authority helper: <list>
+
+      - Out-of-scope runtime wiring left for open_mode.runtime: yes/no'
+    agent: python-senior
 - id: open_mode.contract
   name: open_mode.contract
   status: locked
