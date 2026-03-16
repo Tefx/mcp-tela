@@ -1303,6 +1303,51 @@ phases:
   status: locked
   depends_on:
   - config.impl
+  steps:
+  - id: open_mode.contract.define-open-mode-runtime-contracts
+    name: Define open-mode runtime contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
+      spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
+      \  - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#7.2\
+      \ Open Mode\n  - docs/INTERFACES.md#A. CLI Interface\n  - docs/INTERFACES.md#H.\
+      \ Open Mode (standalone, no token)\n  - ../opifex/design/tela-clean-gateway.md#Profile\
+      \ Selection\n  - ../opifex/design/requirements.md#R7. Capability tokens, not\
+      \ ambient authority.\ntouch_paths:\n  - src/tela/commands/start.py\n  - src/tela/shell/gateway.py\n\
+      \  - src/tela/shell/upstream.py\n  - src/tela/core/models.py\nharness_refs:\n\
+      \  - tests/shell/test_upstream.py\n  - tests/integration/test_open_mode.py\n\
+      conflict_rationale: Open mode is a runnable external surface (`tela start` +\
+      \ MCP initialize); contract work must cover runtime entrypoint and external\
+      \ binding semantics before implementation.\nruntime_contract:\n- entrypoint:\
+      \ `tela start [--config PATH] [--port PORT] [--default-profile NAME]`\n- transport:\
+      \ stdio by default, optional SSE when `--port` is supplied\n- initialize behavior:\
+      \ no token required in open mode; connection binds to explicit resolved default\
+      \ profile\n- rejection behavior: missing or ambiguous default profile rejects\
+      \ initialize instead of guessing\nTasks:\n- Define acceptance-only interfaces/stubs\
+      \ for runtime binding between CLI start options, gateway startup config, and\
+      \ upstream initialize profile resolution.\n- Preserve deployability-bearing\
+      \ runtime semantics: CLI/startup, MCP initialize, and connection binding stay\
+      \ explicit; do not narrow this to internal helpers only.\n- Non-goals: no completed\
+      \ gateway runtime, no transport startup logic, no implemented request handling.\n"
+    verification: '- Contract artifacts remain acceptance-only and cover CLI/startup,
+      initialize, and rejection semantics
+
+      - Contract explicitly states clients cannot choose profile via connection metadata
+      in open mode
+
+      - Contract keeps runtime/entrypoint boundary visible, not collapsed into module-only
+      work'
+    evidence_template: '## Contract Evidence
+
+      - Runtime contract stubs: <paths>
+
+      - Entry point/initalize surfaces covered: <list>
+
+      - Rejection semantics explicit: yes/no
+
+      - No implementation logic added: yes/no'
+    agent: python-senior
 - id: open_mode.test
   name: open_mode.test
   status: locked
