@@ -259,3 +259,29 @@ phases:
 
       - vectl_mutate params or explicit no-change'
     agent: software-architect
+  - id: meta.review.review-implementation-plan-quality
+    name: Review implementation-plan quality
+    status: pending
+    description: Review produced implementation plans for completeness, dependency
+      integrity, concrete agent assignment, evidence quality, and no implementation
+      leakage at the meta layer. The output is follow-up vectl plan mutations or explicit
+      no-change; docs are not deliverables.
+    verification: 'Return: (1) dependency check result against completed meta.plan_creation
+      outputs, (2) quality findings including cycle/dependency completeness checks,
+      and (3) exact vectl_mutate-ready corrections or explicit no-change.'
+    evidence_template: 'Artifact:
+
+      - quality review result
+
+
+      Verification:
+
+      - dependency check result
+
+      - quality and dependency findings
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    agent: doc-reviewer
