@@ -1889,4 +1889,6 @@ phases:
   - reload.contract
 - id: reload.runtime
   name: reload.runtime
-  status: pending
+  status: locked
+  depends_on:
+  - reload.test
