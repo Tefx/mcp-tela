@@ -151,6 +151,12 @@ phases:
       Plan mutation payload:
 
       - vectl_mutate params or explicit no-change'
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - INVAR.md
+    - ../opifex/design/tela-clean-gateway.md
+    - ../opifex/design/requirements.md
     depends_on:
     - meta.prep.summarize-profile-catalog-boundaries
     agent: doc-reviewer
