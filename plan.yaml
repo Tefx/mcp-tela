@@ -599,3 +599,6 @@ phases:
 - id: config.contract
   name: config.contract
   status: pending
+- id: config.test
+  name: config.test
+  status: pending
