@@ -1052,6 +1052,45 @@ phases:
       \  - token mode missing secrets\n  - unknown CLI default profile\n- Doctest\
       \ target added: <function>"
     agent: python-executor
+  - id: config.test.gate
+    name: Gate config.test
+    status: pending
+    description: 'Gate review: Verify config authority test phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Test phase must prove acceptance is executable before product code lands.
+
+      cross_cutting_focus:
+
+      - failure-path coverage for open-mode default resolution
+
+      - no product implementation leakage into tests
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Config authority test step completed
+
+      - Failure modes and precedence cases are encoded in tests
+
+      - Evidence is specific and ready for config.impl
+
+      - No unresolved blockers in test design'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: config.test.add-config-authority-regressions
+
+      - Acceptance coverage sufficient: pass/fail
+
+      - Failure-path coverage sufficient: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - config.test.add-config-authority-regressions
+    agent: gate-reviewer
 - id: config.impl
   name: config.impl
   status: locked
