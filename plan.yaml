@@ -281,13 +281,15 @@ phases:
   - id: meta.review.review-implementation-plan-conformance
     name: Review implementation-plan conformance
     status: pending
-    description: Review produced implementation plans for conformance to the settled
-      tela boundaries, including runtime terms, profile authority, `open mode` rules,
-      and core/shell ownership. The output is follow-up vectl plan mutations or explicit
-      no-change; docs are not deliverables.
-    verification: 'Return: (1) dependency check result against completed meta.plan_creation
-      outputs, (2) conformance findings across all produced implementation plans,
-      and (3) exact vectl_mutate-ready corrections or explicit no-change.'
+    description: Review all produced implementation plans from `meta.plan_creation`
+      for conformance to the settled tela boundaries, including runtime terms, profile
+      authority, `open mode` rules, and core/shell ownership. This review must explicitly
+      cover the config/open-mode plan, gateway/runtime plan, and cross-repo alignment
+      plan. The output is follow-up vectl plan mutations or explicit no-change; docs
+      are not deliverables.
+    verification: 'Return: (1) dependency check result against completed `meta.plan_creation`
+      outputs, (2) explicit conformance findings for each of the three produced implementation
+      plans, and (3) exact vectl_mutate-ready corrections or explicit no-change.'
     evidence_template: 'Artifact:
 
       - conformance review result
@@ -303,6 +305,13 @@ phases:
       Plan mutation payload:
 
       - vectl_mutate params or explicit no-change'
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - INVAR.md
+    - ../opifex/design/tela-clean-gateway.md
+    - ../opifex/design/architecture.md
+    - ../opifex/design/requirements.md
     agent: software-architect
   - id: meta.review.review-implementation-plan-quality
     name: Review implementation-plan quality
