@@ -1985,6 +1985,42 @@ phases:
 
       - Runtime readiness path fixture: <path>'
     agent: python-executor
+  - id: gateway.test.gate
+    name: Gate gateway.test
+    status: pending
+    description: 'Gate review: Verify gateway runtime test phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Runtime lifecycle tests define acceptance for shared entrypoint and handler
+      surfaces before implementation.
+
+      cross_cutting_focus:
+
+      - startup fail-fast cases exist
+
+      - runtime readiness path exists
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Runtime lifecycle tests completed
+
+      - Acceptance covers startup, downstream registry, and upstream routing
+
+      - Ready for gateway.runtime'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: gateway.test.add-runtime-lifecycle-tests
+
+      - Acceptance coverage sufficient: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - gateway.test.add-runtime-lifecycle-tests
+    agent: gate-reviewer
 - id: gateway.runtime
   name: gateway.runtime
   status: locked
