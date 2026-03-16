@@ -1862,7 +1862,9 @@ phases:
   - gateway.contract
 - id: gateway.runtime
   name: gateway.runtime
-  status: pending
+  status: locked
+  depends_on:
+  - gateway.test
 - id: audit.contract
   name: audit.contract
   status: pending
