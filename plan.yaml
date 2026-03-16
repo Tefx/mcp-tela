@@ -313,3 +313,32 @@ phases:
     - meta.review.review-implementation-plan-conformance
     - meta.review.review-implementation-plan-quality
     agent: software-architect
+  - id: meta.review.synthesize-cross-plan-dependencies
+    name: Synthesize cross-plan dependencies
+    status: pending
+    description: Synthesize dependencies, sequencing constraints, and shared-file
+      serialization requirements across all produced implementation plans. The output
+      is vectl plan mutations or explicit no-change only; docs are not deliverables.
+    verification: 'Return: (1) cross-plan dependency synthesis, (2) dependency check
+      result, (3) shared-file and phase-order constraints, and (4) exact vectl_mutate-ready
+      corrections or explicit no-change.'
+    evidence_template: 'Artifact:
+
+      - cross-plan dependency synthesis
+
+
+      Verification:
+
+      - dependency check result
+
+      - sequencing and serialization findings
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    depends_on:
+    - meta.review.review-implementation-plan-conformance
+    - meta.review.review-implementation-plan-quality
+    - meta.review.audit-out-of-order-results
+    agent: software-architect
