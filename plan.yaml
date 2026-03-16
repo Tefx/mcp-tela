@@ -141,6 +141,34 @@ phases:
   status: locked
   depends_on:
   - meta.prep
+  steps:
+  - id: meta.plan_creation.create-config-and-open-mode-implementation-plan
+    name: Create config and open-mode implementation plan
+    status: pending
+    description: Produce the executable vectl implementation plan for config authority
+      and `open mode` binding work. The output must be vectl plan mutations only,
+      with explicit dependency checks and contract -> test -> implementation ordering
+      for non-trivial work; docs are not deliverables.
+    verification: 'Return: (1) dependency check result against completed discovery/prep
+      phases, (2) explicit contract -> test -> implementation gate check, and (3)
+      exact vectl_mutate-ready implementation-plan payload or explicit no-change.
+      Every produced downstream step must name a concrete agent.'
+    evidence_template: 'Artifact:
+
+      - config/open-mode implementation-plan payload
+
+
+      Verification:
+
+      - dependency check result
+
+      - contract/test/implementation gate check
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    agent: vectl-planner
 - id: meta.review
   name: meta.review
   status: locked
