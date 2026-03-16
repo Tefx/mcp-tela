@@ -173,7 +173,7 @@ phases:
   steps:
   - id: meta.prep.summarize-profile-catalog-boundaries
     name: Summarize profile-catalog boundaries
-    status: claimed
+    status: done
     description: 'Extract the planning-relevant profile and catalog boundary rules:
       shipped catalog ownership by tela, local config as runtime authority, explicit
       `open mode` binding, `--default-profile` precedence, and no connection-metadata
@@ -206,6 +206,33 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-16T20:40:37.992047+00:00'
+    done_at: '2026-03-16T20:42:34.710687+00:00'
+    evidence: "Artifact:\n- planning boundary summary\n  - Shipped catalog ownership\
+      \ by tela:\n    - `docs/INTERFACES.md:148-164`, `../opifex/design/tela-clean-gateway.md:210-223`\n\
+      \    - tela ships catalog v1 profiles (`read_only`, `fetch_external`, `modify_local`,\
+      \ `send_external`, `orchestrate`, `execute_safe`, `execute_full`), names are\
+      \ behavioral boundaries, `execute_full` reserved/non-implicit.\n  - Local config\
+      \ as runtime authority:\n    - `docs/INTERFACES.md:163-164`, `docs/DESIGN.md:189`,\
+      \ `../opifex/design/tela-clean-gateway.md:39,222`\n    - `tela.yaml` is runtime\
+      \ source of truth; shipped profiles are templates materialized into local config.\n\
+      \  - Explicit open mode binding:\n    - `docs/INTERFACES.md:428-444`, `../opifex/design/tela-clean-gateway.md:206`,\
+      \ `../opifex/design/requirements.md:61`\n    - open mode removes token delivery\
+      \ only; profile binding remains mandatory.\n  - `--default-profile` precedence:\n\
+      \    - `docs/INTERFACES.md:436-438`, `../opifex/design/tela-clean-gateway.md:206`,\
+      \ `../opifex/design/requirements.md:61`\n    - precedence: CLI `--default-profile`\
+      \ > `default: true`; ambiguity or missing default rejects connection.\n  - No\
+      \ connection-metadata profile selection:\n    - `docs/INTERFACES.md:438-439`,\
+      \ `../opifex/design/tela-clean-gateway.md:206-207`, `../opifex/design/requirements.md:61`\n\
+      \    - open mode does not allow metadata-based profile picking.\n  - Deliverable\
+      \ confirmation: no docs file treated as deliverable; this evidence is the deliverable.\n\
+      \nVerification:\n- dependency check result\n  - PASS: refs readable and consistent\
+      \ with discovery hierarchy.\n  - PASS: no blocking source conflicts on profile/catalog\
+      \ boundaries.\n- runtime authority and catalog ownership checks\n  - PASS: tela-owned\
+      \ shipped catalog confirmed.\n  - PASS: local config runtime authority confirmed.\n\
+      \  - PASS: open-mode explicit binding confirmed.\n  - PASS: `--default-profile`\
+      \ precedence confirmed.\n  - PASS: no connection-metadata profile selection\
+      \ confirmed.\n\nPlan mutation payload:\n- explicit no-change\n  - No `vectl_mutate`\
+      \ payload required for this evidence step."
   - id: meta.prep.define-planning-rubric
     name: Define planning rubric
     status: pending
