@@ -13,6 +13,35 @@ phases:
 - id: meta.discovery
   name: meta.discovery
   status: pending
+  steps:
+  - id: meta.discovery.audit-authoritative-planning-basis
+    name: Audit authoritative planning basis
+    status: pending
+    description: Verify that `docs/DESIGN.md` and `docs/INTERFACES.md` are the authoritative
+      local planning basis, with `../opifex/design/tela-clean-gateway.md`, `../opifex/design/architecture.md`,
+      `../opifex/design/requirements.md`, and `INVAR.md` used only as supporting inputs.
+      The deliverable is step evidence plus any needed vectl plan mutation payload
+      or explicit no-change, never docs files.
+    verification: 'Return: (1) authoritative vs supporting source map, (2) dependency
+      check result for this step, (3) blocking vs non-blocking source conflicts, and
+      (4) exact vectl_mutate-ready follow-up payload or explicit no-change. Confirm
+      no docs file is treated as the deliverable.'
+    evidence_template: 'Artifact:
+
+      - authoritative vs supporting source map
+
+
+      Verification:
+
+      - dependency check result
+
+      - source conflict assessment
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    agent: software-architect
 - id: meta.prep
   name: meta.prep
   status: locked
