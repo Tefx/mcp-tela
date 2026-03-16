@@ -800,6 +800,92 @@ phases:
     depends_on:
     - cross_repo_alignment.audit-residual-opifex-drift
     agent: doc-reviewer
+  - id: cross_repo_alignment.verify-docs-contracts-only-alignment
+    name: Verify docs/contracts-only alignment
+    status: pending
+    description: 'As an independent reviewer, validate that `cross_repo_alignment.align-opifex-docs-to-authoritative-contracts`
+      closed the audited residual mismatches without expanding into product implementation
+      work.
+
+
+      Spec refs:
+
+      - same authoritative refs as the audit step
+
+
+      Touch paths under review:
+
+      - `../opifex/design/tela-clean-gateway.md`
+
+      - `../opifex/design/architecture.md`
+
+      - `../opifex/design/requirements.md`
+
+      - optionally `contracts/*` only if the audit explicitly required contract correction
+
+
+      Review focus:
+
+      - cross-repo truth now matches local authoritative tela docs/contracts
+
+      - no stale idempotency-enforcement claim remains unless backed by an actual
+      authoritative contract
+
+      - runtime/deployability-bearing terms remain preserved
+
+      - product code scope did not expand
+
+
+      Step type: verification
+
+      Agent source: default
+
+      Independence Level: L1'
+    verification: '- Independent evidence confirms every audited mismatch is either
+      closed or explicitly retained with justification
+
+      - Review confirms changed paths are docs/contracts only
+
+      - Review explicitly states contract -> test -> implementation applicability
+      result
+
+      - Review explicitly confirms no product implementation work was introduced'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: software-architect
+
+      **Scope**: cross-repo docs/contracts alignment only
+
+      **Independence Level**: L1
+
+
+      ### Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+      | blocker/should_fix/suggestion | <fill> | <file> | <steps> |
+
+
+      ### Required checks
+
+      - dependency check result against completed discovery/prep phases
+
+      - docs/contracts-only scope confirmation
+
+      - contract -> test -> implementation applicability statement
+
+      - exact files touched or explicit `no-change`
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE'
+    depends_on:
+    - cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
+    agent: software-architect
 - id: config.contract
   name: config.contract
   status: locked
