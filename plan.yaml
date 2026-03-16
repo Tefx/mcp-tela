@@ -690,6 +690,116 @@ phases:
       - Evidence explicitly confirms docs/contracts-only scope with no product implementation
       work'
     agent: software-architect
+  - id: cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
+    name: Align opifex docs to authoritative tela contracts
+    status: pending
+    description: 'Apply only the residual docs/contracts alignment identified by `cross_repo_alignment.audit-residual-opifex-drift`.
+
+
+      Primary expected touch paths:
+
+      - `../opifex/design/architecture.md`
+
+      - `../opifex/design/tela-clean-gateway.md`
+
+      - `../opifex/design/requirements.md`
+
+
+      Authoritative refs (read-first, do not drift from):
+
+      - `docs/DESIGN.md`
+
+      - `docs/INTERFACES.md`
+
+      - `contracts/capability_token.schema.json`
+
+      - `contracts/meta.schema.json`
+
+      - `contracts/errors.yaml`
+
+
+      Scope guardrails:
+
+      - Docs/contracts only; no `src/**`, `tests/**`, CLI wiring, gateway runtime,
+      or product implementation edits.
+
+      - If the audit classified every item as `no-change`, record explicit no-change
+      evidence and leave files untouched.
+
+      - If a contract-file change was explicitly classified as required, limit edits
+      to `contracts/*` and the minimum matching opifex prose needed to keep cross-repo
+      truth aligned.
+
+
+      Implementation note:
+
+      - Remove or correct stale opifex claims that conflict with the authoritative
+      tela docs/contracts, including any unsupported claim that tela currently enforces
+      tool-call idempotency via `_meta.idempotency_key`, while preserving accepted
+      statements about `_meta` audit capture/stripping, profile-only enforcement,
+      initialize-time token binding, and explicit open-mode profile binding.
+
+
+      Step type: implementation
+
+      Agent source: default
+
+      Tags: integration (source: local authoritative docs/contracts -> sink: `../opifex/design/*.md`)'
+    verification: '- Changed files are limited to `../opifex/design/*.md` and, only
+      if the audit explicitly required it, `contracts/*`
+
+      - Updated prose matches the local authoritative tela docs/contracts for `_meta`,
+      token binding, profile-only scope, and open-mode rules
+
+      - Evidence includes before/after mismatch closure for every audited residual
+      item
+
+      - Evidence explicitly states whether contract -> test -> implementation remained
+      N/A or became applicable due to a contract-file correction'
+    evidence_template: '## Cross-Repo Alignment Evidence
+
+
+      **Dependency check**:
+
+      - `meta.discovery`: completed
+
+      - `meta.prep`: completed
+
+      - `meta.review`: phase dependency must remain satisfied before execution
+
+
+      **Files changed**:
+
+      ```
+
+      <paste exact paths or `no-change`>
+
+      ```
+
+
+      **Residual mismatches closed**:
+
+      - <mismatch> -> <how corrected>
+
+
+      **Docs/contracts-only scope check**:
+
+      - Confirm no product implementation paths changed
+
+      - Confirm no runtime code deliverables were created
+
+
+      **Contract/test/implementation applicability**:
+
+      - <N/A or why a contract-file correction made it applicable>
+
+
+      **Remaining ambiguity**:
+
+      - <none or list>'
+    depends_on:
+    - cross_repo_alignment.audit-residual-opifex-drift
+    agent: doc-reviewer
 - id: config.contract
   name: config.contract
   status: locked
