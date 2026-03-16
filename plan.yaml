@@ -2026,6 +2026,41 @@ phases:
   status: locked
   depends_on:
   - gateway.test
+  steps:
+  - id: gateway.runtime.implement-downstream-manager
+    name: Implement downstream manager
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.10 shell/downstream.py -- Downstream Server Management\n\
+      \  - docs/DESIGN.md#4.6 core/family.py -- Family Mapping\n  - docs/DESIGN.md#4.7\
+      \ core/conflict.py -- Tool Conflict Detection\n  - docs/DESIGN.md#8.1 Startup\
+      \ Sequence\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\ntouch_paths:\n\
+      \  - src/tela/shell/downstream.py\n  - src/tela/core/family.py\n  - src/tela/core/classification.py\n\
+      \  - src/tela/core/conflict.py\n  - src/tela/core/models.py\nharness_refs:\n\
+      \  - tests/shell/test_downstream.py\n  - tests/integration/test_end_to_end.py\n\
+      conflict_rationale: Keep downstream implementation isolated from shared entrypoint\
+      \ wiring so the later gateway integration step is the only step that touches\
+      \ runtime registries and startup orchestration.\nTasks:\n- Implement downstream\
+      \ connection lifecycle, tool enumeration, resolved tool registry construction,\
+      \ and lookup helpers.\n- Preserve fail-fast tool conflict detection at startup.\n\
+      - Keep transport/process/network I/O in Shell; pure family/classification/conflict\
+      \ logic stays in Core.\nOut-of-scope guardrail:\n- No CLI/start command wiring\n\
+      - No audit emission\n- No hot-reload runtime updates\n"
+    verification: '- Main path: downstream manager tests pass for connect/enumerate/lookup/disconnect
+
+      - Failure path: regression test covers tool conflict detection during startup
+
+      - Proof: shared startup entrypoint wiring remains deferred to `gateway.runtime.integrate-gateway-lifecycle`'
+    evidence_template: '## Implementation Evidence
+
+      - Downstream manager paths: <functions>
+
+      - Main-path command/output: <exact>
+
+      - Conflict failure-path command/output: <exact>
+
+      - Shared entrypoint wiring untouched: yes/no'
+    agent: python-executor
 - id: audit.contract
   name: audit.contract
   status: locked
