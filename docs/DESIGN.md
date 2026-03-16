@@ -3,7 +3,7 @@
 **Status**: Accepted
 **Scope**: Module decomposition, inter-module interfaces, and data contracts for mcp-tela.
 **Non-scope**: Internal implementation details, algorithms, storage layouts.
-**Source documents**: INTERFACES.md, opifex/design/tela-clean-gateway.md, opifex/design/architecture.md, contracts/*.
+**Source documents**: docs/INTERFACES.md, opifex/design/tela-clean-gateway.md, opifex/design/architecture.md, contracts/*.
 
 ---
 
@@ -1705,7 +1705,7 @@ Full gateway tests with real (test) downstream servers.
    `connection_id` in `ConnectionContext` is an implementation detail.
 
 4. **Audit log rotation**: Whether tela should handle audit log rotation or defer
-   to external tools (logrotate) is not specified in INTERFACES.md. Current design
+   to external tools (logrotate) is not specified in docs/INTERFACES.md. Current design
    assumes external rotation.
 
 5. **Graceful shutdown protocol**: The exact shutdown sequence (stop accepting
