@@ -199,6 +199,34 @@ phases:
 
       - vectl_mutate params or explicit no-change'
     agent: vectl-planner
+  - id: meta.plan_creation.create-cross-repo-alignment-plan
+    name: Create cross-repo alignment plan
+    status: pending
+    description: Produce the executable vectl plan for residual cross-repo docs/contracts
+      alignment against `../opifex` without creating product implementation work.
+      The output must be vectl plan mutations only; docs are not deliverables.
+    verification: 'Return: (1) dependency check result against completed discovery/prep
+      phases, (2) explicit statement that contract -> test -> implementation is N/A
+      or applicable, (3) docs/contracts-only scope check, and (4) exact vectl_mutate-ready
+      implementation-plan payload or explicit no-change.'
+    evidence_template: 'Artifact:
+
+      - cross-repo alignment-plan payload
+
+
+      Verification:
+
+      - dependency check result
+
+      - docs/contracts-only scope check
+
+      - contract/test/implementation applicability
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    agent: vectl-planner
 - id: meta.review
   name: meta.review
   status: locked
