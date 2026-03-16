@@ -595,7 +595,11 @@ phases:
     agent: gate-reviewer
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
-  status: pending
+  status: locked
+  context: Meta-planned from authoritative tela docs/contracts; phase is blocked on
+    the meta review phase completing before any cross-repo alignment work can start.
+  depends_on:
+  - meta.review
 - id: config.contract
   name: config.contract
   status: pending
