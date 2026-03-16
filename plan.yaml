@@ -292,13 +292,13 @@ phases:
       \ required; rubric captured as step evidence for downstream planning."
 - id: meta.plan_creation
   name: meta.plan_creation
-  status: pending
+  status: in_progress
   depends_on:
   - meta.prep
   steps:
   - id: meta.plan_creation.create-config-and-open-mode-implementation-plan
     name: Create config and open-mode implementation plan
-    status: pending
+    status: claimed
     description: Produce the executable vectl implementation plan for config authority
       and `open mode` binding work. The output must be vectl plan mutations only,
       with explicit dependency checks and contract -> test -> implementation ordering
@@ -329,6 +329,8 @@ phases:
     - ../opifex/design/tela-clean-gateway.md
     - ../opifex/design/requirements.md
     agent: vectl-planner
+    claimed_by: vectl-planner
+    claimed_at: '2026-03-16T20:44:48.003979+00:00'
   - id: meta.plan_creation.create-gateway-runtime-implementation-plan
     name: Create gateway runtime implementation plan
     status: pending
