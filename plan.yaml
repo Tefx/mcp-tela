@@ -42,6 +42,37 @@ phases:
 
       - vectl_mutate params or explicit no-change'
     agent: software-architect
+  - id: meta.discovery.check-preserved-runtime-boundaries
+    name: Check preserved runtime boundaries
+    status: pending
+    description: Confirm that deployability-bearing runtime terms and ownership remain
+      preserved across the planning basis, including `CLI`, `server`, `gateway`, `MCP
+      server`, `stdio`, `SSE`, `startup`, `shutdown`, token-mode initialize binding,
+      and `open mode` explicit profile binding. The deliverable is step evidence plus
+      vectl plan mutation payload or explicit no-change, not docs output.
+    verification: 'Return: (1) runtime-boundary preservation check, (2) dependency
+      check result against upstream discovery, (3) any blocking semantic conflicts
+      such as 7-step vs 4-step enforcement wording, and (4) exact vectl_mutate-ready
+      follow-up payload or explicit no-change. Confirm no docs file is treated as
+      the deliverable.'
+    evidence_template: 'Artifact:
+
+      - runtime term ledger update
+
+
+      Verification:
+
+      - dependency check result
+
+      - semantic conflict assessment
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    depends_on:
+    - meta.discovery.audit-authoritative-planning-basis
+    agent: software-architect
 - id: meta.prep
   name: meta.prep
   status: locked
