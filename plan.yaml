@@ -235,7 +235,7 @@ phases:
       \ payload required for this evidence step."
   - id: meta.prep.define-planning-rubric
     name: Define planning rubric
-    status: pending
+    status: claimed
     description: 'Codify the downstream implementation-planning rubric inside plan
       evidence and plan mutations: dependency integrity reporting, concrete agent
       assignment, acceptance-only contract steps, contract -> test -> implementation
@@ -268,6 +268,8 @@ phases:
     depends_on:
     - meta.prep.summarize-profile-catalog-boundaries
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-16T20:43:05.176158+00:00'
 - id: meta.plan_creation
   name: meta.plan_creation
   status: locked
