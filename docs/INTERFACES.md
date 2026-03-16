@@ -4,7 +4,7 @@
 
 All commands support `--json` for machine-readable output.
 
-### `tela start [--config path] [--port port]`
+### `tela start [--config path] [--port port] [--default-profile name]`
 
 Start the MCP gateway. Reads configuration from `tela.yaml` (or the path
 given by `--config`). Runs as an MCP stdio server by default. When `--port`
@@ -145,6 +145,52 @@ tools within a family, overriding the family posture ceiling. In the example
 above, the `coder` profile grants `read_write` to the `filesystem` family
 but explicitly denies the `delete_file` tool.
 
+### Prebuilt Profile Catalog (v1)
+
+tela may ship a small prebuilt profile catalog for common operator choices.
+These names describe behavioral boundaries, not human roles.
+
+| Profile | Intent |
+|---------|--------|
+| `read_only` | Read local resources only. No mutation, sending, or execution. |
+| `fetch_external` | Read local resources and fetch external information without sending externally. |
+| `modify_local` | Modify local content or structure without broad external or privileged execution. |
+| `send_external` | Send or submit content to external systems without full privileged execution. |
+| `orchestrate` | Coordinate multi-step flows across tools and results without full privileged execution. |
+| `execute_safe` | Execute ordinary non-privileged actions across local and remote boundaries. |
+| `execute_full` | Execute high-risk or privileged actions. Never use as an implicit default. |
+
+These shipped profiles are templates. Deployment-local configuration remains the
+runtime source of truth.
+
+#### Capability Comparison
+
+Value definitions:
+
+- `Yes`: core capability of this profile
+- `No`: explicitly excluded
+- `Optional`: may be included depending on deployment-specific tool configuration
+- `Limited`: restricted subset only, not broad or unrestricted access
+
+| Profile | Local read | External fetch | Local modify | External send | Coordination | Execution | Privileged execution |
+|---------|------------|----------------|--------------|---------------|-------------------------|------------------|---------------------|
+| `read_only` | Yes | No | No | No | No | No | No |
+| `fetch_external` | Yes | Yes | No | No | No | No | No |
+| `modify_local` | Yes | Optional | Yes | No | No | Limited | No |
+| `send_external` | Yes | Yes | Limited | Yes | No | Limited | No |
+| `orchestrate` | Yes | Yes | Limited | Limited | Yes | Limited | No |
+| `execute_safe` | Yes | Yes | Yes | Limited | Yes | Yes | No |
+| `execute_full` | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+
+#### Boundary Notes
+
+- `modify_local`: may change local content or local structure. It does not imply
+  broad external submission or privileged execution.
+- `orchestrate`: may sequence tools and combine intermediate results across a
+  multi-step flow, but it does not by itself imply full privileged execution.
+- `execute_safe`: may run ordinary bounded actions across local and remote
+  surfaces, but excludes privileged or high-risk execution.
+
 ### Audit Levels
 
 | Level | Recorded |
@@ -182,34 +228,25 @@ ensures that new or unexpected tools cannot bypass policy silently.
 
 ## D. Enforcement Layers
 
-Every `tools/call` request passes through a 7-step enforcement chain.
-Any layer that denies short-circuits the chain immediately.
+CapabilityToken validation is a connection-bind operation, not a per-call one.
+During MCP `initialize` / connection establishment, tela validates the token
+signature, expiry, and `tools_profile`, then binds the resulting profile to the
+connection context. Every `tools/call` request then passes through this 4-step
+enforcement chain:
 
-### 1. Token validation
-
-Verify HMAC signature (dual-key: try primary secret, then secondary),
-expiry (`expires_at`), and `tools_profile` binding. Identity fields
-(`persona_ref`, `instance_id`) are verified at connection time against the
-token payload, not re-checked per-call.
-
-### 2. Profile lookup
-
-Resolve the `tools_profile` value from the token to a profile definition in
-the configuration. If no matching profile exists, deny with `PROFILE_NOT_FOUND`.
-
-### 3. Family admission
+### 1. Family admission
 
 Does the tool's family exist in the bound profile's `tools` map? If not,
 deny with `AUTHZ_DENY`.
 
-### 4. Tool override check
+### 2. Tool override check
 
 If the profile has a `tool_overrides` entry for this specific tool: apply it.
 - `deny`: short-circuit the chain with DENY.
-- `allow`: skip steps 5-6 (explicit allow bypasses posture and side-effect checks).
-- no override: continue to step 5.
+- `allow`: skip steps 3-4 (explicit allow bypasses posture and side-effect checks).
+- no override: continue to step 3.
 
-### 5. Posture check
+### 3. Posture check
 
 If posture classification is available for the tool: is the tool's posture
 <= the profile's posture ceiling for that family? If exceeded, deny with
@@ -218,7 +255,7 @@ If posture classification is available for the tool: is the tool's posture
 If no classification is available: the tool is subject to the server's
 `default_posture` (which defaults to `none` = deny).
 
-### 6. Side-effect check
+### 4. Side-effect check
 
 If the tool's effective posture > `read_only` and the profile's
 `side_effect_policy` is `read_only`: deny with `AUTHZ_DENY`.
@@ -226,10 +263,8 @@ If the tool's effective posture > `read_only` and the profile's
 Note: `approval_required` does not exist in tela profiles. Approval gating
 is enforced by anima before the call reaches tela.
 
-### 7. Effective policy
-
-The final decision combines all layers above. The tool call is forwarded to
-the downstream server only if every layer permits it.
+The tool call is forwarded to the downstream server only if every layer above
+permits it.
 
 ---
 
@@ -325,8 +360,9 @@ Triggers:
 ```
 Client                          tela                      Downstream
   |                              |                            |
-  |-- connect(token) ----------->|                            |
-  |                              |-- validate(HMAC + expiry)  |
+  |-- initialize(token) -------->|                            |
+  |                              |-- validate(HMAC + expiry   |
+  |                              |   + tools_profile)         |
   |                              |-- bind profile context     |
   |                              |   from token               |
   |<-- tools/list (filtered) ----|                            |
@@ -340,12 +376,27 @@ Client                          tela                      Downstream
 
 1. Client sends MCP `initialize` with the capability token in
    `clientInfo.capability_token` (the full CapabilityToken JSON object).
-2. tela validates the token: HMAC signature check, expiry check.
-3. tela binds the corresponding profile from token metadata (`tools_profile` field).
+2. tela validates the token at connection time: HMAC signature, expiry, and
+   `tools_profile`.
+3. tela binds the corresponding profile from token metadata (`tools_profile` field)
+   into the connection context.
 4. Client receives `tools/list` containing only tools allowed by the bound profile.
 5. On `tools/call`: tela checks the tool is allowed under the bound declaration, forwards
-    to the downstream server, returns the result. The token is NOT
-    re-sent on each call — it is a per-connection credential.
+    to the downstream server, returns the result. The token is NOT re-validated
+    on each call and is NOT re-sent on each call — it is a per-connection credential.
+
+### Token Delivery
+
+The primary token carrier is explicit connection-time metadata on `initialize`:
+`clientInfo.capability_token`.
+
+If framework behavior prevents that carrier, the documented fallback order is:
+
+1. a custom `clientInfo` field preserved through `initialize`
+2. post-initialize `tela/authenticate`
+3. a stdio-only environment carrier such as `TELA_TOKEN`
+
+Verifying carrier mechanics is implementation work, not a planning blocker.
 
 ### Token Structure
 
@@ -366,10 +417,11 @@ Required fields: `token_id`, `tools_profile`, `issued_at`, `expires_at`, `signat
 Optional fields: `persona_ref`, `instance_id`, `max_depth`.
 
 tela uses `tools_profile` to bind the connection to a profile, `issued_at`/`expires_at`
-for expiry check, and `signature` for HMAC validation. `persona_ref` and `instance_id`
-are verified at connection time against the token payload for identity binding.
-Per-call `_meta` fields are recorded in the audit log for correlation, not used
-for security verification. Optional fields are recorded in the audit log.
+for expiry check, and `signature` for HMAC validation during `initialize` /
+connection establishment. `persona_ref` and `instance_id` are verified at
+connection time against the token payload for identity binding. Per-call `_meta`
+fields are recorded in the audit log for correlation, not used for security
+verification. Optional fields are recorded in the audit log.
 
 ---
 
@@ -378,12 +430,24 @@ for security verification. Optional fields are recorded in the audit log.
 When `auth.mode` is set to `open`:
 
 - No capability token is required on connect.
-- The profile is determined by connection metadata, or falls back to the
-  profile marked `default: true` in configuration (or `--default-profile` CLI flag).
-- If no default profile is explicitly configured, tela rejects the connection.
-  tela never implicitly selects a profile by config ordering.
+- tela still binds every connection to a profile; open mode removes token
+  delivery, not profile-based enforcement.
+- Profile selection is explicit and local to the tela instance:
+  - `--default-profile` CLI flag wins if provided.
+  - Otherwise, the profile marked `default: true` in configuration is used.
+- Clients do not select profiles in open mode via connection metadata.
+- If no explicit default profile is available, or if multiple profiles are
+  marked `default: true`, tela rejects the connection instead of guessing.
+- tela never implicitly selects a profile by config ordering.
 - Suitable for standalone use with Claude Code, Cursor, or any MCP client
-  that does not supply tokens.
+  that does not supply tokens, provided the operator configures an explicit
+  open-mode profile.
+
+Recommended open-mode defaults:
+
+- safest default: `read_only`
+- practical default for day-to-day standalone use: `execute_safe`
+- never use as an implicit default: `execute_full`
 
 ---
 

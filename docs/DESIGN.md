@@ -240,6 +240,26 @@ class ProfileConfig(BaseModel):
     side_effect_policy: SideEffectPolicy = SideEffectPolicy.ALLOW
     default: bool = False                                  # for open mode
 
+# Prebuilt profile catalog (v1)
+# Names describe behavioral boundaries rather than professions.
+# tela owns the shipped catalog; deployments materialize chosen profiles into local config.
+# - read_only: inspect local state only
+# - fetch_external: inspect local state and fetch external information
+# - modify_local: change local content or structure
+# - send_external: send or submit content to external systems
+# - orchestrate: coordinate multi-step flows and tool chaining
+# - execute_safe: execute ordinary non-privileged actions
+# - execute_full: execute privileged or high-risk actions; never an implicit default
+#
+# Capability sketch:
+# - read_only: local read only
+# - fetch_external: local read + external fetch
+# - modify_local: local read + local modification; external fetch optional; no broad external send
+# - send_external: local/external read + external send; not a privileged tier
+# - orchestrate: multi-step coordination across tools/results; not a privileged tier by itself
+# - execute_safe: bounded execution without privileged/high-risk actions
+# - execute_full: privileged/high-risk execution
+
 # --- Auth Configuration ---
 
 class AuthConfig(BaseModel):
@@ -400,6 +420,7 @@ def validate_config(config: TelaConfig) -> list[str]:
     Checks:
     - Profile tool families reference valid names (warning, not error)
     - At most one profile has default=True
+    - --default-profile, if provided, references an existing profile
     - Auth mode=token requires at least one secret
     - Server configs have either command or url (not both, not neither)
 
@@ -899,7 +920,7 @@ class UpstreamHandler(Protocol):
 
         In token mode: extract capability_token from clientInfo,
         validate token, bind profile.
-        In open mode: use default profile.
+        In open mode: bind an explicit default profile.
 
         Returns ConnectionContext on success.
         """
@@ -1300,13 +1321,29 @@ Client                          tela                         Downstream
   |-- initialize() ------------->|                               |
   |                              |-- no token required           |
   |                              |-- resolve default profile     |
-  |                              |   (default:true or            |
-  |                              |    --default-profile flag)    |
-  |                              |   [no default? -> reject]     |
+  |                              |   (--default-profile wins;    |
+  |                              |    else exactly one           |
+  |                              |    default:true profile)      |
+  |                              |   [none/ambiguous? -> reject] |
   |<-- initialize response ------|                               |
   |                              |                               |
   (... same as token mode for tools/list and tools/call ...)
 ```
+
+Open-mode profile guidance:
+
+- safest default: `read_only`
+- practical standalone default: `execute_safe`
+- forbidden as an implicit default: `execute_full`
+
+Prebuilt profile boundary clarifications:
+
+- `modify_local` covers local content edits and local structural changes. It is
+  the default local-mutation tier and should not imply broad external send.
+- `orchestrate` covers sequencing, delegation, and multi-step tool composition.
+  It is a control-shape tier, not a privileged execution tier.
+- `execute_safe` covers ordinary bounded execution across local and remote
+  surfaces, excluding privileged, high-risk, or explicitly elevated actions.
 
 ---
 
@@ -1617,9 +1654,12 @@ These invariants MUST hold at all times. Violation of any invariant is a bug.
    is the ONLY way dual-key works -- secondary is never used for signing.
 4. **`_meta` stripping**: `_meta` is ALWAYS removed from tool call arguments before
    forwarding to downstream servers, regardless of content or context.
-5. **No implicit profile**: In open mode with no `default: true` profile and no
-   `--default-profile` flag, connections are REJECTED. tela never selects a profile
-   implicitly by config ordering.
+5. **No implicit profile**: In open mode, every connection MUST bind to an explicit
+   profile. `--default-profile` overrides config. Without that flag, exactly one
+   profile may have `default: true`. If none are configured, or multiple profiles
+   are marked default, connections are REJECTED. tela never selects a profile
+   implicitly by config ordering, and upstream clients do not choose profiles via
+   connection metadata.
 
 ### Operational Invariants
 
