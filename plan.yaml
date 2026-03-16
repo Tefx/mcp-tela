@@ -1877,7 +1877,9 @@ phases:
   - audit.contract
 - id: audit.runtime
   name: audit.runtime
-  status: pending
+  status: locked
+  depends_on:
+  - audit.test
 - id: reload.test
   name: reload.test
   status: pending
