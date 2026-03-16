@@ -1428,6 +1428,46 @@ phases:
 
       - Rejection cases covered: yes/no'
     agent: python-executor
+  - id: open_mode.test.gate
+    name: Gate open_mode.test
+    status: pending
+    description: 'Gate review: Verify open-mode test phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Runtime tests must define the executable acceptance boundary before runtime
+      implementation.
+
+      cross_cutting_focus:
+
+      - CLI/startup to initialize coverage exists
+
+      - shared-fact conformance fixture exists
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Open-mode test step completed
+
+      - Runtime success and rejection cases are encoded in tests
+
+      - Shared-fact conformance fixture exists for later verification
+
+      - Ready for open_mode.runtime'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: open_mode.test.add-open-mode-contract-and-integration-tests
+
+      - Runtime acceptance encoded: pass/fail
+
+      - Conformance fixture present: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - open_mode.test.add-open-mode-contract-and-integration-tests
+    agent: gate-reviewer
 - id: open_mode.runtime
   name: open_mode.runtime
   status: locked
