@@ -627,4 +627,6 @@ phases:
   - open_mode.contract
 - id: open_mode.runtime
   name: open_mode.runtime
-  status: pending
+  status: locked
+  depends_on:
+  - open_mode.test
