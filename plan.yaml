@@ -1898,6 +1898,44 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+  - id: gateway.contract.gate
+    name: Gate gateway.contract
+    status: pending
+    description: 'Gate review: Verify gateway runtime contract phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Runnable gateway surfaces require explicit lifecycle and runtime contracts
+      before tests or implementation.
+
+      cross_cutting_focus:
+
+      - CLI/startup/runtime boundaries remain explicit
+
+      - open-mode work is referenced as prior input, not duplicated
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Contract step completed with acceptance-only artifacts
+
+      - Runtime entrypoint and lifecycle boundaries are explicit
+
+      - Ready for gateway.test'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: gateway.contract.define-runtime-boundary-contracts
+
+      - Contract purity: pass/fail
+
+      - Runtime boundaries preserved: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - gateway.contract.define-runtime-boundary-contracts
+    agent: gate-reviewer
 - id: reload.contract
   name: reload.contract
   status: locked
