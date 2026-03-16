@@ -593,3 +593,6 @@ phases:
     - meta.review.audit-out-of-order-results
     - meta.review.synthesize-cross-plan-dependencies
     agent: gate-reviewer
+- id: cross_repo_alignment
+  name: Cross-Repo Docs and Contract Alignment
+  status: pending
