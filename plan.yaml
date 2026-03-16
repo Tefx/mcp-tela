@@ -9,3 +9,7 @@
 version: 1
 project: tela
 context: Implementation plan for tela.
+phases:
+- id: meta.discovery
+  name: meta.discovery
+  status: pending
