@@ -342,3 +342,35 @@ phases:
     - meta.review.review-implementation-plan-quality
     - meta.review.audit-out-of-order-results
     agent: software-architect
+  - id: meta.review.gate
+    name: Gate meta planning completion
+    status: pending
+    description: Final meta gate before any non-meta execution planning proceeds.
+      Confirm that conformance, quality, out-of-order audit, and cross-plan dependency
+      synthesis are complete and that the resulting implementation plans are ready
+      for execution planning.
+    verification: 'Return: (1) final dependency check result, (2) readiness decision
+      for downstream non-meta planning, and (3) exact vectl_mutate-ready corrections
+      or explicit no-change. Reject if docs were treated as deliverables or if dependency
+      integrity is incomplete.'
+    evidence_template: 'Artifact:
+
+      - meta review gate result
+
+
+      Verification:
+
+      - dependency check result
+
+      - readiness decision
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    depends_on:
+    - meta.review.review-implementation-plan-conformance
+    - meta.review.review-implementation-plan-quality
+    - meta.review.audit-out-of-order-results
+    - meta.review.synthesize-cross-plan-dependencies
+    agent: gate-reviewer
