@@ -1850,3 +1850,6 @@ phases:
 - id: gateway.contract
   name: gateway.contract
   status: pending
+- id: reload.contract
+  name: reload.contract
+  status: pending
