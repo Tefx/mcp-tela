@@ -167,13 +167,13 @@ phases:
       n- explicit no-change or follow-up params\"}"
 - id: meta.prep
   name: meta.prep
-  status: pending
+  status: in_progress
   depends_on:
   - meta.discovery
   steps:
   - id: meta.prep.summarize-profile-catalog-boundaries
     name: Summarize profile-catalog boundaries
-    status: pending
+    status: claimed
     description: 'Extract the planning-relevant profile and catalog boundary rules:
       shipped catalog ownership by tela, local config as runtime authority, explicit
       `open mode` binding, `--default-profile` precedence, and no connection-metadata
@@ -204,6 +204,8 @@ phases:
     - ../opifex/design/tela-clean-gateway.md
     - ../opifex/design/requirements.md
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-16T20:40:37.992047+00:00'
   - id: meta.prep.define-planning-rubric
     name: Define planning rubric
     status: pending
