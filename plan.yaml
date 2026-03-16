@@ -285,3 +285,31 @@ phases:
 
       - vectl_mutate params or explicit no-change'
     agent: doc-reviewer
+  - id: meta.review.audit-out-of-order-results
+    name: Audit out-of-order results
+    status: pending
+    description: If any meta work was executed out of dependency order, classify each
+      result as rerun-required, keep-with-review, or risk-only. This is a plan control
+      step and produces vectl plan mutations or explicit no-change only.
+    verification: 'Return: (1) prior out-of-order execution audit, (2) per-step classification,
+      (3) dependency check result, and (4) exact vectl_mutate-ready rerun/review corrections
+      or explicit no-change.'
+    evidence_template: 'Artifact:
+
+      - out-of-order audit
+
+
+      Verification:
+
+      - dependency check result
+
+      - per-step rerun/keep/risk classification
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    depends_on:
+    - meta.review.review-implementation-plan-conformance
+    - meta.review.review-implementation-plan-quality
+    agent: software-architect
