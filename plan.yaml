@@ -78,6 +78,35 @@ phases:
   status: locked
   depends_on:
   - meta.discovery
+  steps:
+  - id: meta.prep.summarize-profile-catalog-boundaries
+    name: Summarize profile-catalog boundaries
+    status: pending
+    description: 'Extract the planning-relevant profile and catalog boundary rules:
+      shipped catalog ownership by tela, local config as runtime authority, explicit
+      `open mode` binding, `--default-profile` precedence, and no connection-metadata
+      profile selection. The deliverable is planning evidence plus vectl plan mutation
+      payload or explicit no-change, not docs output.'
+    verification: 'Return: (1) profile/catalog boundary summary for planning use,
+      (2) dependency check result against discovery outputs, and (3) exact vectl_mutate-ready
+      downstream payload or explicit no-change. Confirm no docs file is treated as
+      the deliverable.'
+    evidence_template: 'Artifact:
+
+      - planning boundary summary
+
+
+      Verification:
+
+      - dependency check result
+
+      - runtime authority and catalog ownership checks
+
+
+      Plan mutation payload:
+
+      - vectl_mutate params or explicit no-change'
+    agent: doc-reviewer
 - id: meta.plan_creation
   name: meta.plan_creation
   status: locked
