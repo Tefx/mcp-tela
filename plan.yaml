@@ -886,6 +886,38 @@ phases:
     depends_on:
     - cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
     agent: software-architect
+  - id: cross_repo_alignment.freeze-for-gate
+    name: Freeze snapshot for cross-repo alignment gate
+    status: pending
+    description: 'Freeze step required before the gate review.
+
+
+      Freeze requirements:
+
+      - record `git rev-parse HEAD`
+
+      - record `git status --short` and confirm clean snapshot for the alignment worktree
+
+      - declare environment/repo roots used for the comparison (`mcp-tela` worktree
+      and `../opifex`)
+
+      - state that no further code or doc changes are allowed until `cross_repo_alignment.gate`
+      completes
+
+
+      Step type: review
+
+      Agent source: default'
+    verification: '- Evidence includes HEAD commit
+
+      - Evidence includes clean worktree confirmation
+
+      - Evidence includes environment declaration
+
+      - Evidence states freeze is in effect until gate review completes'
+    depends_on:
+    - cross_repo_alignment.verify-docs-contracts-only-alignment
+    agent: software-architect
 - id: config.contract
   name: config.contract
   status: locked
