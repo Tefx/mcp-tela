@@ -392,7 +392,7 @@ phases:
     agent: vectl-planner
   - id: meta.plan_creation.create-cross-repo-alignment-plan
     name: Create cross-repo alignment plan
-    status: claimed
+    status: done
     description: Produce the executable vectl plan for residual cross-repo docs/contracts
       alignment against `../opifex` without creating product implementation work.
       The output must be vectl plan mutations only; docs are not deliverables.
@@ -426,6 +426,24 @@ phases:
     agent: vectl-planner
     claimed_by: vectl-planner
     claimed_at: '2026-03-16T20:44:52.228572+00:00'
+    done_at: '2026-03-16T20:55:00.057038+00:00'
+    evidence: "Artifact:\n- cross-repo alignment plan phase applied via `vectl_vectl_mutate`:\n\
+      \  - phase: `cross_repo_alignment`\n  - steps: `cross_repo_alignment.audit-residual-opifex-drift`,\
+      \ `cross_repo_alignment.align-opifex-docs-to-authoritative-contracts`, `cross_repo_alignment.verify-docs-contracts-only-alignment`,\
+      \ `cross_repo_alignment.freeze-for-gate`, `cross_repo_alignment.gate`\n- Scope\
+      \ constrained to docs/contracts surfaces only; no product implementation work.\n\
+      \nVerification:\n- dependency check result\n  - `meta.discovery`: done.\n  -\
+      \ `meta.prep`: done.\n  - phase dependency set: `cross_repo_alignment` depends\
+      \ on `meta.review`.\n  - `vectl_validate`: valid, 0 errors, 0 warnings.\n- contract/test/implementation\
+      \ applicability\n  - Marked N/A for docs/contracts-only phase unless audit proves\
+      \ an actual `contracts/*` correction is required.\n- docs/contracts-only scope\
+      \ check\n  - Allowed paths: `../opifex/design/*.md` and conditionally `contracts/*`\
+      \ only if audit-justified.\n  - Forbidden scope: `src/**`, `tests/**`, runtime/CLI/gateway/server\
+      \ implementation.\n\nPlan mutation payload:\n- applied via `vectl_vectl_mutate`:\n\
+      \  - `add-phase` + `edit-phase(depends_on=meta.review)`\n  - `add-step` entries\
+      \ above with concrete agents and gate criteria\n- note: step-level dependency\
+      \ on `meta.review.gate` not accepted by mutate API; phase-level dependency on\
+      \ `meta.review` used and plan validates cleanly."
 - id: meta.review
   name: meta.review
   status: locked
