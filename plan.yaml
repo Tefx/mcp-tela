@@ -918,6 +918,78 @@ phases:
     depends_on:
     - cross_repo_alignment.verify-docs-contracts-only-alignment
     agent: software-architect
+  - id: cross_repo_alignment.gate
+    name: Gate cross-repo alignment phase
+    status: pending
+    description: 'Gate review: verify the cross-repo docs/contracts alignment phase
+      is complete and stayed within non-product scope.
+
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Cross-repo truth alignment spans authoritative local docs/contracts and referenced
+      opifex design docs
+
+      - Known risk of stale tela idempotency-enforcement language in opifex architecture
+      summary
+
+
+      cross_cutting_focus:
+
+      - profile-only boundary remains consistent across repos
+
+      - `_meta` semantics stay audit-and-strip, not unsupported runtime guarantees
+
+      - open-mode/default-profile rules remain explicit and consistent
+
+      - no product implementation work leaked into the phase
+
+
+      Step type: gate
+
+      Agent source: default'
+    verification: '- All phase steps completed successfully
+
+      - Evidence collected and reviewed
+
+      - Docs/contracts-only scope preserved
+
+      - Contract -> test -> implementation applicability documented as N/A unless
+      an actual contract-file correction justified otherwise
+
+      - No unresolved blockers remain
+
+      - Phase is ready for any downstream execution planning without product-code
+      drift'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: cross_repo_alignment
+
+
+      ### Mandatory checks
+
+      - [ ] dependency check against completed discovery/prep phases present
+
+      - [ ] docs/contracts-only scope check present
+
+      - [ ] contract -> test -> implementation applicability statement present
+
+      - [ ] exact changed paths or explicit `no-change` present
+
+      - [ ] no product implementation work introduced
+
+
+      ### Decision
+
+      - OPEN | BLOCKED'
+    depends_on:
+    - cross_repo_alignment.freeze-for-gate
+    agent: gate-reviewer
 - id: config.contract
   name: config.contract
   status: locked
