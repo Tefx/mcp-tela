@@ -1946,6 +1946,45 @@ phases:
   status: locked
   depends_on:
   - gateway.contract
+  steps:
+  - id: gateway.test.add-runtime-lifecycle-tests
+    name: Add runtime lifecycle tests
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.9\
+      \ shell/gateway.py -- Gateway Lifecycle\n  - docs/DESIGN.md#4.10 shell/downstream.py\
+      \ -- Downstream Server Management\n  - docs/DESIGN.md#4.11 shell/upstream.py\
+      \ -- Upstream MCP Handler\n  - docs/DESIGN.md#8.1 Startup Sequence\n  - docs/DESIGN.md#8.2\
+      \ Tool Call Flow\n  - docs/INTERFACES.md#F. MCP Server Interface (upstream)\n\
+      touch_paths:\n  - tests/shell/test_gateway.py\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_upstream.py\n  - tests/integration/test_end_to_end.py\n\
+      harness_refs:\n  - tests/shell/test_gateway.py\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_upstream.py\n  - tests/integration/test_end_to_end.py\n\
+      conflict_rationale: These tests define the executable lifecycle boundary before\
+      \ product code touches shared runtime files again.\nTasks:\n- Add tests for\
+      \ startup fail-fast on config errors and tool conflicts.\n- Add tests for downstream\
+      \ connect/enumerate/disconnect behavior and tool registry lookup.\n- Add tests\
+      \ for upstream tools/list filtering inputs and tools/call forwarding/error propagation\
+      \ excluding audit-specific assertions.\n- Add at least one integration-oriented\
+      \ path from CLI/startup into runtime readiness using the shared runtime fixture.\n\
+      - Keep this step test-only; no product implementation.\n"
+    verification: '- Tests exist for startup, tool conflict failure, downstream registry
+      behavior, and upstream call routing
+
+      - At least one integration-oriented runtime readiness path is encoded
+
+      - No product implementation beyond fixtures/helpers'
+    evidence_template: '## Test Evidence
+
+      - Added tests: <exact ids>
+
+      - Startup fail-fast covered: yes/no
+
+      - Downstream registry covered: yes/no
+
+      - Upstream call routing covered: yes/no
+
+      - Runtime readiness path fixture: <path>'
+    agent: python-executor
 - id: gateway.runtime
   name: gateway.runtime
   status: locked
