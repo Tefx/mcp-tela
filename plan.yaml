@@ -298,7 +298,7 @@ phases:
   steps:
   - id: meta.plan_creation.create-config-and-open-mode-implementation-plan
     name: Create config and open-mode implementation plan
-    status: claimed
+    status: done
     description: Produce the executable vectl implementation plan for config authority
       and `open mode` binding work. The output must be vectl plan mutations only,
       with explicit dependency checks and contract -> test -> implementation ordering
@@ -331,6 +331,26 @@ phases:
     agent: vectl-planner
     claimed_by: vectl-planner
     claimed_at: '2026-03-16T20:44:48.003979+00:00'
+    done_at: '2026-03-16T20:54:50.571935+00:00'
+    evidence: "Artifact:\n- config/open-mode implementation plan applied via `vectl_vectl_mutate`.\n\
+      - Added phases: `config.contract`, `config.test`, `config.impl`, `open_mode.contract`,\
+      \ `open_mode.test`, `open_mode.runtime`.\n- Added contract->test->implementation\
+      \ step chains with concrete agents and gate/verify steps.\n\nVerification:\n\
+      - dependency check result\n  - `meta.discovery`: done.\n  - `meta.prep`: done.\n\
+      \  - dependency chain preserved: `meta.review -> config.contract -> config.test\
+      \ -> config.impl -> open_mode.contract -> open_mode.test -> open_mode.runtime`.\n\
+      \  - `vectl_vectl_validate`: valid, 0 errors, 0 warnings.\n- contract/test/implementation\
+      \ gate check\n  - Config track: `config.contract.define-config-authority-contracts`\
+      \ -> `config.test.add-config-authority-regressions` -> `config.impl.implement-config-authority`.\n\
+      \  - Open-mode track: `open_mode.contract.define-open-mode-runtime-contracts`\
+      \ -> `open_mode.test.add-open-mode-contract-and-integration-tests` -> runtime\
+      \ implementation steps.\n  - Gate steps present per phase and independent verification\
+      \ via `integration-verifier`; gate reviews via `gate-reviewer`.\n\nPlan mutation\
+      \ payload:\n- applied via `vectl_vectl_mutate`:\n  - `add-phase`: config/open_mode\
+      \ phases above\n  - `edit-phase`: dependency chain wiring above\n  - `add-step`:\
+      \ config contract/test/impl, open_mode contract/test/runtime with explicit step\
+      \ IDs, dependencies, verification, and concrete agents\n- no docs deliverables\
+      \ added."
   - id: meta.plan_creation.create-gateway-runtime-implementation-plan
     name: Create gateway runtime implementation plan
     status: pending
