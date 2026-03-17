@@ -8602,7 +8602,7 @@ phases:
       Note: INVAR.md:79 still has returns.result (out of scope).'
   - id: fix2.docs.gate
     name: gate
-    status: pending
+    status: claimed
     description: 'Gate review: Verify DESIGN.md documentation drift phase completion.
 
 
@@ -8624,6 +8624,8 @@ phases:
     depends_on:
     - fix2.docs.verify-docs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:59:51.652919+00:00'
 - id: fix2.reload-stubs
   name: 'Fix Pass 2: Reload, Digest, Stubs, and Wiring (Issues 5, 12-13, 21-23, 26)'
   status: locked
