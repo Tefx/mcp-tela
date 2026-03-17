@@ -3128,7 +3128,7 @@ phases:
       - `uv run pytest -q` -> 104 passed'
 - id: gateway.runtime
   name: gateway.runtime
-  status: in_progress
+  status: done
   depends_on:
   - gateway.test
   steps:
@@ -3596,7 +3596,7 @@ phases:
       **Verdict: PASS**'
   - id: gateway.runtime.gate
     name: Gate gateway.runtime
-    status: claimed
+    status: done
     description: 'Gate review: Verify gateway.runtime phase completion.
 
       review_depth: THOROUGH
@@ -3666,9 +3666,67 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:09:43.311906+00:00'
+    done_at: '2026-03-17T08:10:08.081692+00:00'
+    evidence: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: gateway.runtime
+
+      **Review depth**: THOROUGH
+
+
+      ### Runnable Surface Check
+
+      - Entrypoint identified: yes (`src/tela/cli.py:main`)
+
+      - Exact launch command present: yes (`tela start --config <path> [--port PORT]
+      [--default-profile NAME]`)
+
+      - Real end-to-end path exercised: yes (9-step seam proof: CLI -> start -> gateway
+      -> downstream registry -> upstream filter -> enforce -> strip_meta -> status
+      -> shutdown)
+
+
+      ### Conformance Check
+
+      - CLI/gateway/upstream/downstream share one runtime fact set: yes (DownstreamRegistry
+      module-level instance)
+
+      - Independent re-derivation absent: yes
+
+
+      ### Phase Steps Review
+
+      1. `implement-downstream-manager`: Core classification/family/conflict + Shell
+      DownstreamRegistry
+
+      2. `implement-upstream-routing`: Core enforcement chain + Shell filter_tools_for_profile/strip_meta/enforce_tool_call
+
+      3. `integrate-gateway-lifecycle`: GatewayRuntime state, gateway_start/shutdown/status/connections
+
+      4. `freeze-for-l2`: Snapshot at 3ab012a
+
+      5. `verify-gateway-runtime`: L2 PASS with full seam proof and failure paths
+
+      6. `gate`: This review
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 160 passed
+
+      - `uv run invar guard --all` -> passed (0 errors, 18 warnings)
+
+      - Failure paths: tool conflict, family denial, posture denial all verified
+
+
+      ### Decision
+
+      - OPEN'
 - id: audit.contract
   name: audit.contract
-  status: locked
+  status: pending
   depends_on:
   - gateway.runtime
   steps:
