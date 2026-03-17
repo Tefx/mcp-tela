@@ -471,6 +471,7 @@ MCP clients (agents) may include a `_meta` field in tool call arguments
 | Code | Meaning |
 |------|---------|
 | `AUTHZ_DENY` | Tool call rejected -- not in bound profile |
+| `AUTH_RATE_LIMITED` | Authentication requests are temporarily rate limited |
 | `PROFILE_NOT_FOUND` | Requested profile does not exist in configuration |
 | `TOKEN_INVALID` | Token HMAC signature verification failed |
 | `TOKEN_EXPIRED` | Token `expires_at` is in the past |

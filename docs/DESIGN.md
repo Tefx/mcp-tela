@@ -1519,6 +1519,7 @@ All tela error codes are in the 200-299 range (from `contracts/errors.yaml`):
 | TOKEN_EXPIRED | Token TTL exceeded | 203 |
 | TOOL_CONFLICT | Duplicate tool names | 204 |
 | TOOL_UNCLASSIFIED | No posture, default deny | 205 |
+| AUTH_RATE_LIMITED | Authentication temporarily throttled | 206 |
 | DOWNSTREAM_ERROR | Downstream server error | 210 |
 | DOWNSTREAM_UNAVAILABLE | Downstream unreachable | 211 |
 

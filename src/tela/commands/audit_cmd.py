@@ -13,6 +13,7 @@ from tela.shell.config_loader import Result
 
 # @invar:allow dead_export: CLI entrypoint is wired by the command framework.
 # @invar:allow shell_result: CLI handler returns int exit code per POSIX convention.
+# @shell_complexity: command must handle query errors and two output formats.
 def audit_command(
     since: str | None = None,
     limit: int = 100,
@@ -21,6 +22,8 @@ def audit_command(
     """Query and display audit log entries.
 
     Examples:
+        >>> from tela.shell.audit import clear_audit_entries
+        >>> clear_audit_entries()
         >>> audit_command(limit=0)
         0
 
@@ -36,6 +39,7 @@ def audit_command(
 
     if result.is_err:
         import sys
+
         print(f"error: {result.error}", file=sys.stderr)
         return 1
 
@@ -44,11 +48,14 @@ def audit_command(
 
     if json_output:
         import json
+
         for entry in entries:
             print(entry.model_dump_json())
     else:
         for entry in entries:
             verdict = entry.verdict.value.upper()
-            print(f"[{entry.timestamp}] {verdict} {entry.tool_name} ({entry.server_name}) profile={entry.profile_name}")
+            print(
+                f"[{entry.timestamp}] {verdict} {entry.tool_name} ({entry.server_name}) profile={entry.profile_name}"
+            )
 
     return 0

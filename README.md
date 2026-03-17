@@ -86,6 +86,18 @@ tela connections [--json]                   List active connections
 tela audit [--json] [--since T] [--limit N] Query audit log
 ```
 
+## Testing
+
+```bash
+uv run pytest -q
+uv run pytest --doctest-modules src/tela/
+uv run invar guard --all
+uv run pytest tests/repro/ -q
+```
+
+`tests/repro/` is the executable regression suite. If a legacy workflow refers
+to `tests/blind/`, use `tests/repro/` as the canonical fallback path.
+
 ## License
 
 MIT

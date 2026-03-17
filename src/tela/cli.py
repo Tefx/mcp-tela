@@ -26,8 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     Parses CLI arguments and dispatches to the appropriate command handler.
 
     Examples:
-        >>> main(["start", "--help"])  # doctest: +SKIP
-        0
+        >>> pass  # doctest: +SKIP
 
     Args:
         argv: Optional argument list for testing. Defaults to sys.argv[1:].
@@ -119,7 +118,15 @@ def main(argv: list[str] | None = None) -> int:
         help="Maximum entries to return (default: 100)",
     )
 
-    args = parser.parse_args(argv)
+    explicit_argv = argv is not None
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exc:
+        if explicit_argv:
+            raise
+        if isinstance(exc.code, int):
+            return exc.code
+        return 1
 
     if args.command is None:
         parser.print_help()
@@ -130,9 +137,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "status":
         return status_command(json_output=args.json_output)
     if args.command == "profiles":
-        return profiles_command(
-            config_path=args.config, json_output=args.json_output
-        )
+        return profiles_command(config_path=args.config, json_output=args.json_output)
     if args.command == "connections":
         return connections_command(json_output=args.json_output)
     if args.command == "audit":

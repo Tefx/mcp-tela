@@ -28,6 +28,7 @@ class ConfigContractError(Exception):
 
 # Stable error code constants per DESIGN.md
 AUTHZ_DENY: str = "AUTHZ_DENY"
+AUTH_RATE_LIMITED: str = "AUTH_RATE_LIMITED"
 PROFILE_NOT_FOUND: str = "PROFILE_NOT_FOUND"
 TOKEN_INVALID: str = "TOKEN_INVALID"
 TOKEN_EXPIRED: str = "TOKEN_EXPIRED"

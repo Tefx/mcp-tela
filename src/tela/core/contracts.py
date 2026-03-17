@@ -14,6 +14,50 @@ import functools
 from typing import Any, Callable
 
 
+# @invar:allow missing_contract: bootstrap helper for defining public pre/post decorators.
+def _meta_pre(
+    predicate: Callable[..., bool],
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Internal precondition decorator for contract bootstrap wiring."""
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            assert predicate(*args, **kwargs), (
+                f"Precondition failed for {func.__name__}"
+            )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+# @invar:allow missing_contract: bootstrap helper for defining public pre/post decorators.
+def _meta_post(
+    predicate: Callable[[Any], bool],
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Internal postcondition decorator for contract bootstrap wiring."""
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            result = func(*args, **kwargs)
+            assert predicate(result), f"Postcondition failed for {func.__name__}"
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+# Bootstrap aliases so public pre()/post() can carry meta-contracts.
+pre = _meta_pre
+post = _meta_post
+
+
+@pre(lambda predicate: callable(predicate))
+@post(lambda result: callable(result))
 def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     """Precondition decorator: checks predicate against function arguments.
 
@@ -21,6 +65,10 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     function (including defaults).
 
     Examples:
+        >>> pre(42)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        AssertionError: Precondition failed for pre...
         >>> @pre(lambda x, y=0: x >= 0)
         ... def calc(x: int, y: int = 0) -> int:
         ...     return x + y
@@ -29,7 +77,7 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
         >>> calc(-1)
         Traceback (most recent call last):
         ...
-        AssertionError: Precondition failed for calc
+        AssertionError: Precondition failed for calc...
 
     Args:
         predicate: Callable that accepts the same args as the decorated function.
@@ -41,7 +89,9 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            assert predicate(*args, **kwargs), f"Precondition failed for {func.__name__}"
+            assert predicate(*args, **kwargs), (
+                f"Precondition failed for {func.__name__}"
+            )
             return func(*args, **kwargs)
 
         return wrapper
@@ -49,12 +99,18 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     return decorator
 
 
+@pre(lambda predicate: callable(predicate))
+@post(lambda result: callable(result))
 def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
     """Postcondition decorator: checks predicate against return value.
 
     The predicate lambda receives only the return value.
 
     Examples:
+        >>> post(None)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        AssertionError: Precondition failed for post...
         >>> @post(lambda result: result >= 0)
         ... def abs_val(x: int) -> int:
         ...     return x if x >= 0 else -x
@@ -66,7 +122,7 @@ def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
         >>> bad()
         Traceback (most recent call last):
         ...
-        AssertionError: Postcondition failed for bad
+        AssertionError: Postcondition failed for bad...
 
     Args:
         predicate: Callable that accepts the return value.

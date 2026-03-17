@@ -14,6 +14,8 @@ from tela.shell.config_loader import load_config
 
 # @invar:allow dead_export: CLI entrypoint is wired by the command framework.
 # @invar:allow shell_result: CLI handler returns int exit code per POSIX convention.
+# @invar:allow shell_complexity: command supports both JSON and human-readable listing flows.
+# @shell_complexity: command provides dual-format output plus error reporting branches.
 def profiles_command(config_path: str = "tela.yaml", json_output: bool = False) -> int:
     """List configured profiles.
 
