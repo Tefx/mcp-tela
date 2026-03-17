@@ -27,6 +27,32 @@ tela start --config tela.yaml
 
 For a more complete walkthrough, see `docs/USAGE.md`.
 
+## 5-minute quickstart
+
+If you only want a local gateway running as fast as possible:
+
+```bash
+pip install -e .
+cp tela.yaml.example tela.yaml
+tela start --config tela.yaml --default-profile developer
+```
+
+Then wire your MCP host to launch:
+
+```json
+{
+  "mcpServers": {
+    "tela": {
+      "command": "tela",
+      "args": ["start", "--config", "tela.yaml", "--default-profile", "developer"]
+    }
+  }
+}
+```
+
+Use this for local stdio-based development. Switch to `--port 8080` when you
+want one shared SSE gateway for multiple agents.
+
 ## Configuration at a glance
 
 tela reads a single YAML config file. The top-level sections are:
@@ -229,10 +255,13 @@ to `tests/blind/`, use `tests/repro/` as the canonical fallback path.
 
 ## Documentation
 
-- `tela.yaml.example`: detailed configuration example
-- `docs/USAGE.md`: detailed user guide
-- `docs/DESIGN.md`: implementation and architecture detail
-- `docs/INTERFACES.md`: external behavior and contract surface
+- Start here:
+  - `README.md`: project overview and quickstart
+  - `docs/USAGE.md`: operator guide and deployment patterns
+- Reference docs:
+  - `tela.yaml.example`: commented configuration template
+  - `docs/INTERFACES.md`: CLI and config contract surface
+  - `docs/DESIGN.md`: architecture and implementation detail
 
 ## License
 

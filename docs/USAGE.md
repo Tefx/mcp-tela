@@ -14,6 +14,16 @@ Use tela when you want to:
 - centralize audit logging
 - share a single gateway across multiple agents
 
+## Documentation map
+
+Use the docs in this order:
+
+- `README.md`: quickest way to understand what tela is and how to launch it
+- `docs/USAGE.md`: operator guide, deployment patterns, and worked examples
+- `tela.yaml.example`: fully commented configuration template
+- `docs/INTERFACES.md`: CLI and configuration contract reference
+- `docs/DESIGN.md`: architecture and implementation detail
+
 ## Mental model
 
 At runtime, tela works like this:
@@ -349,6 +359,32 @@ Then point multiple clients at the same network endpoint using your client's
 SSE or remote MCP configuration model.
 
 The exact client-side format depends on the MCP host application.
+
+### Example: generic SSE client configuration
+
+Many MCP hosts use a URL-based remote server definition. In those cases, point
+the client at the shared tela endpoint you started with `--port`.
+
+Conceptually, the configuration looks like this:
+
+```text
+name: tela
+transport: sse
+url: http://localhost:8080/sse
+```
+
+If your host supports headers or auth metadata, attach whatever that host uses
+to carry your token-mode credentials.
+
+### Example: shared internal gateway pattern
+
+```text
+gateway process: tela start --config tela.yaml --port 8080
+client endpoint: http://gateway-host:8080/sse
+```
+
+This is the recommended shape when multiple agents should share one tela
+instance instead of each launching its own stdio child process.
 
 ### Practical client guidance
 
