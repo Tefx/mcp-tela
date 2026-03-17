@@ -2429,6 +2429,37 @@ phases:
   status: locked
   depends_on:
   - audit.contract
+  steps:
+  - id: audit.test.add-audit-runtime-tests
+    name: Add audit runtime tests
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.12\
+      \ shell/audit.py -- Audit Log Writer\n  - docs/DESIGN.md#10.1 Error Propagation\
+      \ Rules\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#J.\
+      \ Error Codes\ntouch_paths:\n  - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
+      \  - tests/shell/test_upstream.py\nharness_refs:\n  - tests/shell/test_audit.py\n\
+      \  - tests/integration/test_audit_levels.py\nconflict_rationale: Test the cross-cutting\
+      \ audit seam before shared upstream integration resumes.\nTasks:\n- Add tests\
+      \ for L1/L2/L3 audit entry construction and parameter-hash/content filtering.\n\
+      - Add tests for denied-call vs downstream-error vs success field semantics.\n\
+      - Add tests for upstream audit emission trigger points using minimal fixtures.\n\
+      - Keep this step test-only; no product implementation.\n"
+    verification: '- Tests exist for audit level filtering and outcome-specific field
+      semantics
+
+      - Upstream emission points are encoded in tests
+
+      - No product implementation beyond helpers/fixtures'
+    evidence_template: '## Test Evidence
+
+      - Added tests: <exact ids>
+
+      - Audit levels covered: yes/no
+
+      - Outcome semantics covered: yes/no
+
+      - Upstream emission points covered: yes/no'
+    agent: python-executor
 - id: audit.runtime
   name: audit.runtime
   status: locked
