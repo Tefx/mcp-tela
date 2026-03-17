@@ -6697,7 +6697,7 @@ phases:
   steps:
   - id: fix.low.code.l1-l3-l5-fix-import-violations-redundant-params-misplaced-pure-functions
     name: 'L1+L3+L5: Fix import violations, redundant params, misplaced pure functions'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/cli.py (L1:\
       \ imports from shell/gateway.py violates DESIGN.md rule #5)\n  - src/tela/core/enforcement.py\
       \ (L3: tool_name param redundant with tool.name)\n  - src/tela/shell/upstream.py\
@@ -6725,6 +6725,8 @@ phases:
     - src/tela/core/enforcement.py
     - src/tela/shell/upstream.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:55:33.306008+00:00'
   - id: fix.low.code.l11-l12-l13-add-init-py-remove-unused-import-remove-ghost-telaerror
     name: 'L11+L12+L13: Add __init__.py, remove unused import, remove ghost TelaError'
     status: claimed
