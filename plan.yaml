@@ -3863,13 +3863,13 @@ phases:
       6. `uv run pytest -q` -> 174 passed, `uv run invar guard --changed` -> 0 errors'
 - id: audit.test
   name: audit.test
-  status: pending
+  status: in_progress
   depends_on:
   - audit.contract
   steps:
   - id: audit.test.add-audit-runtime-tests
     name: Add audit runtime tests
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.12\
       \ shell/audit.py -- Audit Log Writer\n  - docs/DESIGN.md#10.1 Error Propagation\
       \ Rules\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#J.\
@@ -3897,6 +3897,8 @@ phases:
 
       - Upstream emission points covered: yes/no'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T08:29:57.757457+00:00'
   - id: audit.test.gate
     name: Gate audit.test
     status: pending
