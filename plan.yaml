@@ -9018,7 +9018,7 @@ phases:
       suite passed. connections_cmd.py and status_cmd.py doctests include stdout output.
 - id: fix2.upstream-split
   name: 'Fix Pass 2: Upstream.py DX Threshold Split (Issue 14)'
-  status: in_progress
+  status: done
   depends_on:
   - fix2.reload-stubs
   steps:
@@ -9123,7 +9123,7 @@ phases:
       - Verification step produced no plan mutations.'
   - id: fix2.upstream-split.gate
     name: gate
-    status: claimed
+    status: done
     description: 'Gate review: Verify upstream.py split phase completion.
 
 
@@ -9149,9 +9149,22 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T14:00:18.987664+00:00'
+    done_at: '2026-03-17T14:06:18.129657+00:00'
+    evidence: "Artifact:\n- PR: N/A (review-only gate)\n\nVerification:\n- Run: `wc\
+      \ -l src/tela/shell/upstream.py` -> 299 lines (under 300 threshold)\n- Run:\
+      \ `uv run pytest -q` -> 315 passed\n- Run: import checks for `tela.shell.upstream_utils`\
+      \ extracted symbols and `tela.shell.upstream` handlers -> imports OK\n- Run:\
+      \ `git diff 34caad4^..34caad4` -> reported pure extraction/no behavior change\n\
+      - Run: targeted upstream tests -> 33/33 passed\n\nSpec link:\n- fix2.upstream-split\
+      \ (Issue 14, upstream.py DX threshold split)\n\nFindings:\n- blocker: []\n-\
+      \ should_fix: []\n- suggestion:\n  - Pre-existing lint warning: unused import\
+      \ `get_tool_server` in `src/tela/shell/upstream.py:26` (reported as predating\
+      \ this split)\n- tech_debt:\n  - Remove unused import from earlier H3-era changes\
+      \ in a future cleanup step\n\nGate decision: PASS; ready for final retest chain\
+      \ (`retest2.full.*`)."
 - id: retest2.full
   name: 'Retest Pass 2: Full Regression and Verification Suite'
-  status: locked
+  status: pending
   depends_on:
   - fix2.concurrency
   - fix2.contracts
