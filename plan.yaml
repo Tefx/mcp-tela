@@ -1747,13 +1747,13 @@ phases:
       \ ready for `open_mode.contract`.\n\nPlan mutation payload:\n- explicit no-change"
 - id: open_mode.contract
   name: open_mode.contract
-  status: pending
+  status: in_progress
   depends_on:
   - config.impl
   steps:
   - id: open_mode.contract.define-open-mode-runtime-contracts
     name: Define open-mode runtime contracts
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
@@ -1795,6 +1795,8 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T06:47:01.977688+00:00'
   - id: open_mode.contract.gate
     name: Gate open_mode.contract
     status: pending
