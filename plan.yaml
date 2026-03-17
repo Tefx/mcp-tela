@@ -10195,3 +10195,11 @@ phases:
     verification: All 8 protocols PASS. Zero STUB_MODULE. Zero PHANTOM dependencies.
       Zero STALE_HATCH.
     agent: wiring-auditor
+  - id: rt.final_gate.integration
+    name: Full P1-P9 integration verification
+    status: pending
+    description: Full P1-P9 integration verification.
+    verification: All 9 protocols PASS. P9 ALIVE.
+    depends_on:
+    - rt.final_gate.wiring
+    agent: integration-verifier
