@@ -10042,6 +10042,25 @@ phases:
   status: locked
   depends_on:
   - rt.cli_start
+  steps:
+  - id: rt.doctests.impl
+    name: Replace pass doctests with real ones
+    status: pending
+    description: 'Replace all `>>> pass  # doctest: +SKIP` in upstream.py and cli.py
+      with real doctests that exercise the functions.'
+    verification: Zero pass-only doctests in src/. All doctests pass. grep '>>> pass'
+      src/ returns nothing.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Doctests replaced: count
+
+      Verification: grep output showing zero pass doctests + pytest --doctest-modules
+      output
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: rt.e2e
   name: End-to-End Integration Tests
   status: locked
