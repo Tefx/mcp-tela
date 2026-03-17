@@ -5757,3 +5757,30 @@ phases:
     - src/tela/core/config.py
     - src/tela/shell/upstream.py
     agent: python-executor
+  - id: fix.medium.config.m1-shell-result-convention
+    name: 'M1: Audit and fix shell_result convention bypasses'
+    status: pending
+    description: "step_type: implementation\nspec_refs:\n  - INVAR.md (Shell zone\
+      \ rules: returns Result[T, E])\ntouch_paths:\n  - src/tela/shell/*.py (15+ @invar:allow\
+      \ shell_result annotations)\nharness_refs:\n  - tests/shell/*.py\nconflict_rationale:\
+      \ Depends on M2/M3 completing first (Result type location changes).\n\nProblem:\n\
+      - Shell Result convention is systematically bypassed via `@invar:allow shell_result`\
+      \ (15+ uses)\n- Many are legitimate (CLI exit codes, pure data shaping), but\
+      \ some should return Result\n\nTasks:\n1. Audit every `@invar:allow shell_result`\
+      \ annotation in shell/*.py\n2. For each, determine if bypass is justified:\n\
+      \   - CLI exit code returns: JUSTIFIED (POSIX convention)\n   - Pure data shaping\
+      \ (no I/O): JUSTIFIED (but consider moving to Core)\n   - Functions that can\
+      \ fail with I/O: MUST return Result\n3. Remove unjustified bypasses and wrap\
+      \ returns in Result\n4. Document remaining justified bypasses with clear reasoning\n\
+      5. Also addresses L5 (pure functions in Shell that should be in Core)\n\nCovers:\
+      \ M1, partially L5"
+    verification: '- Each @invar:allow shell_result is audited and justified or removed
+
+      - Functions that can fail return Result
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    depends_on:
+    - fix.medium.config.m2-m3-relocate-result-type-and-consolidate-error-models
+    agent: python-executor
