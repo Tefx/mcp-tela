@@ -9936,6 +9936,29 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+  - id: rt.cli_start.sse
+    name: Wire SSE transport
+    status: pending
+    description: Wire SSE transport when --port is provided. Start HTTP SSE server
+      on specified port. Process must stay alive and accept SSE connections.
+    verification: tela start --port 8080 binds port and accepts SSE connections. test_liveness.py
+      test_sse_binds_port passes.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - SSE server binds port: yes/no
+
+      - SSE connection accepted: yes/no
+
+      - test_liveness.py SSE test passes: yes/no
+
+      Gaps/Notes:'
+    depends_on:
+    - rt.cli_start.stdio
+    agent: python-senior
 - id: rt.reload_wire
   name: Wire Hot Reload
   status: locked
