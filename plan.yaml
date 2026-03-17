@@ -474,7 +474,7 @@ phases:
       \ `meta.review` used and plan validates cleanly."
 - id: meta.review
   name: meta.review
-  status: in_progress
+  status: done
   depends_on:
   - meta.plan_creation
   steps:
@@ -801,7 +801,7 @@ phases:
       \ mutations required."
   - id: meta.review.regate-enforcement-wording-conflict
     name: Re-test and re-gate enforcement wording reconciliation
-    status: claimed
+    status: done
     description: 'Independent re-gate after `meta.review.fix-enforcement-wording-conflict`.
 
 
@@ -833,9 +833,22 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T05:56:11.018026+00:00'
+    done_at: '2026-03-17T05:58:52.149890+00:00'
+    evidence: "Artifact:\n- regate review result: PASS.\n\nVerification:\n- canonical\
+      \ wording consistency check\n  - PASS: exactly one canonical wording remains\
+      \ in plan-facing descriptions:\n    - initialize-time token/profile binding\
+      \ at `initialize`/connection bind\n    - per-call 4-step enforcement (family\
+      \ admission, tool override, posture, side-effect)\n  - PASS: no plan-facing\
+      \ description treats token validation/profile lookup as per-call steps.\n- dependency\
+      \ and scope check\n  - PASS: chain preserved `meta.review.gate` -> `meta.review.fix-enforcement-wording-conflict`\
+      \ -> `meta.review.regate-enforcement-wording-conflict`.\n  - PASS: reconciliation\
+      \ work explicitly represented by `meta.review.fix-enforcement-wording-conflict`.\n\
+      \  - PASS: meta/planning-only scope preserved; docs are references, not deliverables.\n\
+      \nPlan mutation payload:\n- explicit no-change\n  - no additional `vectl_mutate`\
+      \ corrections required."
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
-  status: locked
+  status: pending
   context: Meta-planned from authoritative tela docs/contracts; phase is blocked on
     the meta review phase completing before any cross-repo alignment work can start.
   depends_on:
@@ -1232,7 +1245,7 @@ phases:
     agent: gate-reviewer
 - id: config.contract
   name: config.contract
-  status: locked
+  status: pending
   depends_on:
   - meta.review
   steps:
