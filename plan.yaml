@@ -10318,6 +10318,35 @@ phases:
   status: locked
   depends_on:
   - cap.test
+  steps:
+  - id: cap.impl.models
+    name: Update ProfileConfig in models.py
+    status: pending
+    description: 'Update ProfileConfig in models.py: add capabilities as the primary
+      field, keep tools as deprecated alias during migration, remove SideEffectPolicy
+      enum, remove side_effect_policy field from ProfileConfig. Use Pydantic model_validator
+      or field alias for dual-field support.'
+    verification: 'ProfileConfig(capabilities={''fs'': Posture.READ_WRITE}) works.
+      ProfileConfig(tools={''fs'': Posture.READ_WRITE}) works (migration). SideEffectPolicy
+      enum removed. invar guard passes.'
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - capabilities= accepted: yes/no
+
+      - tools= accepted (migration): yes/no
+
+      - SideEffectPolicy removed: yes/no
+
+      - side_effect_policy removed: yes/no
+
+      - invar guard: pass/fail
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
