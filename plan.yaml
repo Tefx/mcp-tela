@@ -6963,13 +6963,13 @@ phases:
     agent: gate-reviewer
 - id: fix.low.tests
   name: 'Low Fixes: Test Quality (L17, L19, L20)'
-  status: pending
+  status: in_progress
   depends_on:
   - fix.high
   steps:
   - id: fix.low.tests.l17-fix-reload-tools-digest-to-use-sha-256
     name: 'L17: Fix reload tools_digest to use SHA-256'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/reload.py\n\
       harness_refs:\n  - tests/shell/test_reload.py\n\nProblem:\n- reload.py computes\
       \ tools_digest as raw concatenation of tool names: `':'.join(tool_names)`\n\
@@ -6988,6 +6988,8 @@ phases:
     refs:
     - src/tela/shell/reload.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:55:30.384917+00:00'
   - id: fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
     name: 'L19: Replace source-text model tests with behavioral tests'
     status: pending
