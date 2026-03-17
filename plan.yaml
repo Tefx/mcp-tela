@@ -6918,7 +6918,7 @@ phases:
       - L7: click and rich declared but never imported'
   - id: fix.low.docs.l8-l9-l10-l18-fix-readme-and-add-license
     name: 'L8+L9+L10+L18: Fix README and add LICENSE'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - README.md (L8: invalid\
       \ sse:// URL; L9: pip install claim)\n  - CLAUDE.md, AGENTS.md, GEMINI.md (L10:\
       \ identical files)\n  - LICENSE (L18: missing, README claims MIT)\n\nTasks:\n\
@@ -6942,6 +6942,8 @@ phases:
     - README.md
     - CLAUDE.md
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-17T10:55:31.371788+00:00'
   - id: fix.low.docs.gate
     name: 'Gate: Low docs fixes'
     status: pending
