@@ -3863,7 +3863,7 @@ phases:
       6. `uv run pytest -q` -> 174 passed, `uv run invar guard --changed` -> 0 errors'
 - id: audit.test
   name: audit.test
-  status: in_progress
+  status: done
   depends_on:
   - audit.contract
   steps:
@@ -3923,7 +3923,7 @@ phases:
       - Commit: 516bd27 (worktree), merged as b5b45f6'
   - id: audit.test.gate
     name: Gate audit.test
-    status: claimed
+    status: done
     description: 'Gate review: Verify audit runtime test phase completion.
 
       review_depth: STANDARD
@@ -3958,9 +3958,33 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:31:37.804036+00:00'
+    done_at: '2026-03-17T08:31:48.323670+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: audit.test.add-audit-runtime-tests
+
+      - Acceptance coverage sufficient: pass
+
+      - Decision: OPEN
+
+
+      ### Coverage
+
+      - Level filtering: L1 (2 tests), L2 (1 test), L3 (1 test)
+
+      - Meta at all levels: 1 test (iterates all AuditLevel values)
+
+      - Outcome semantics: denied (2 tests), allowed success (1), downstream error
+      (1)
+
+      - Upstream emission: 3 tests (allowed shape, denied shape, strip_meta trigger)
+
+      - Total: 14 new tests, 186 total passing
+
+      - No product implementation in test files'
 - id: audit.runtime
   name: audit.runtime
-  status: locked
+  status: pending
   depends_on:
   - audit.test
   steps:
