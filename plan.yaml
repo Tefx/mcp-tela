@@ -6055,3 +6055,8 @@ phases:
     - fix.low.code.l11-l12-l13-add-init-py-remove-unused-import-remove-ghost-telaerror
     - fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
     agent: gate-reviewer
+- id: fix.low.docs
+  name: 'Low Fixes: Docs and Config (L2, L4, L6-L10, L18)'
+  status: locked
+  depends_on:
+  - fix.high
