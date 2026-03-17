@@ -3301,7 +3301,7 @@ phases:
       \ 0d11919 (worktree), merged as dad1a73"
   - id: gateway.runtime.integrate-gateway-lifecycle
     name: Integrate gateway lifecycle
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#4.9 shell/gateway.py -- Gateway Lifecycle\n \
       \ - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#8.1\
@@ -3355,6 +3355,21 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:05:47.553779+00:00'
+    done_at: '2026-03-17T08:08:11.816217+00:00'
+    evidence: "## Integration Evidence\n\n**Command or test exercising the full path**:\n\
+      ```\nuv run pytest -q tests/shell/test_gateway.py -v\n```\n\n**Actual output**:\n\
+      ```\n22 passed\n```\n\n**Path exercised**: CLI/start -> gateway lifecycle ->\
+      \ upstream/downstream runtime\n\n### Changes\n- `src/tela/shell/gateway.py`:\
+      \ Replaced stubs with implementations\n  - `gateway_start`: Loads TelaConfig,\
+      \ calls `connect_all`, stores GatewayRuntime state\n  - `gateway_shutdown`:\
+      \ Calls `disconnect_all`, clears state\n  - `gateway_status`: Returns GatewayStatus\
+      \ from registry and runtime state\n  - `gateway_connections`: Returns active\
+      \ connections list\n  - Added `GatewayRuntime` dataclass for mutable state\n\
+      - `tests/shell/test_gateway.py`: 22 tests (7 new lifecycle behavior tests)\n\
+      \n### Verification\n- `uv run pytest -q` -> 160 passed\n- `uv run invar guard\
+      \ --changed` -> passed (0 errors)\n- Startup fail-fast on tool conflict preserved\n\
+      - Shared runtime files (start.py, cli.py) untouched\n- Commit: 0e2e66d (worktree),\
+      \ merged as eb5d492"
   - id: gateway.runtime.freeze-for-l2
     name: Freeze for gateway L2 verification
     status: pending
