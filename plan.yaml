@@ -7299,7 +7299,7 @@ phases:
       \ correctly. No architecture violations. No unjustified escape hatches."
   - id: retest.regression.gate
     name: 'Gate: Regression test suite'
-    status: pending
+    status: claimed
     description: 'Gate review: Confirm regression suite and invar guard are clean.
 
 
@@ -7315,6 +7315,8 @@ phases:
     - retest.regression.run-full-pytest-suite-all-existing-tests
     - retest.regression.run-invar-guard-for-architecture-verification
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:06:23.500404+00:00'
 - id: retest.repro
   name: Black-Box Repro Verification
   status: locked
