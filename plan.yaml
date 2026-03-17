@@ -8665,3 +8665,8 @@ phases:
     depends_on:
     - fix2.reload-stubs.verify-reload-stubs
     agent: gate-reviewer
+- id: fix2.doctests
+  name: 'Fix Pass 2: Doctest Pytest Assertion Rewriting (Issues 19-20, 27-28)'
+  status: pending
+  depends_on:
+  - retest.final
