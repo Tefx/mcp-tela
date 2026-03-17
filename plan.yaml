@@ -6547,3 +6547,120 @@ phases:
   status: locked
   depends_on:
   - retest.repro
+  steps:
+  - id: retest.final.clean-env-smoke-test
+    name: Clean environment smoke test
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+
+      Run a clean-environment smoke test to confirm the project is fully functional.
+
+
+      Steps:
+
+      1. Run in a fresh worktree or clean checkout (no cached .pyc, no stale state)
+
+      2. `uv sync` -- install all dependencies fresh
+
+      3. `uv run pytest -q` -- full test suite
+
+      4. `uv run pytest --doctest-modules src/tela/` -- all doctests
+
+      5. `uv run pytest tests/repro/ -q` -- all repro tests
+
+      6. `uv run invar guard --all` -- full architecture verification
+
+      7. `uv run tela --help` -- CLI help works
+
+      8. `uv run tela start --help` -- start help works
+
+      9. `uv run tela audit --help` -- audit help works
+
+      10. `uv run tela status --help` -- status help works
+
+
+      All commands must succeed. Any failure blocks the final gate.'
+    verification: '- All tests pass in clean environment
+
+      - All CLI subcommands show help
+
+      - invar guard clean
+
+      - No cached/stale state issues'
+    evidence_template: '## Clean Environment Smoke Test
+
+
+      **Environment**: <Python version, OS, fresh worktree/checkout>
+
+      **Timestamp**: <ISO 8601>
+
+
+      ### Dependency Install
+
+      ```
+
+      <uv sync output>
+
+      ```
+
+
+      ### Test Suite
+
+      ```
+
+      <uv run pytest -q output>
+
+      ```
+
+
+      ### Doctests
+
+      ```
+
+      <uv run pytest --doctest-modules output>
+
+      ```
+
+
+      ### Repro Tests
+
+      ```
+
+      <uv run pytest tests/repro/ -q output>
+
+      ```
+
+
+      ### Invar Guard
+
+      ```
+
+      <uv run invar guard --all output>
+
+      ```
+
+
+      ### CLI Smoke
+
+      ```
+
+      <uv run tela --help output>
+
+      <uv run tela start --help output>
+
+      <uv run tela audit --help output>
+
+      <uv run tela status --help output>
+
+      ```
+
+
+      ### Verdict
+
+      - [ ] ALL CLEAN
+
+      - [ ] ISSUES FOUND'
+    agent: integration-verifier
