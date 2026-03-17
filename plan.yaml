@@ -2280,6 +2280,76 @@ phases:
     depends_on:
     - gateway.runtime.freeze-for-l2
     agent: integration-verifier
+  - id: gateway.runtime.gate
+    name: Gate gateway.runtime
+    status: pending
+    description: 'Gate review: Verify gateway.runtime phase completion.
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Phase touches runnable CLI/server/gateway/MCP surfaces.
+
+      - Phase contains integration-tagged steps and L2 runtime verification.
+
+      - Gate must reject handler-only completion without real entrypoint proof.
+
+      cross_cutting_focus:
+
+      - startup/shutdown command and transport behavior remain runnable
+
+      - gateway/upstream/downstream share one runtime registry fact set
+
+      - fail-fast startup semantics remain intact
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- All phase steps completed successfully
+
+      - Runnable-surface evidence identifies the entrypoint/startup path and exact
+      invocation command
+
+      - At least one documented request reaches the real runtime entrypoint end-to-end
+
+      - Cross-surface conformance evidence shows CLI, gateway, upstream, and downstream
+      share one resolved runtime fact set
+
+      - No unresolved blockers; ready for audit.contract'
+    evidence_template: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: gateway.runtime
+
+
+      ### Runnable Surface Check
+
+      - Entrypoint identified: yes/no
+
+      - Exact launch command present: yes/no
+
+      - Real end-to-end path exercised: yes/no
+
+
+      ### Conformance Check
+
+      - CLI/gateway/upstream/downstream share one runtime fact set: yes/no
+
+      - Independent re-derivation absent: yes/no
+
+
+      ### Decision
+
+      - OPEN | BLOCKED'
+    depends_on:
+    - gateway.runtime.implement-downstream-manager
+    - gateway.runtime.implement-upstream-routing
+    - gateway.runtime.integrate-gateway-lifecycle
+    - gateway.runtime.freeze-for-l2
+    - gateway.runtime.verify-gateway-runtime
+    agent: gate-reviewer
 - id: audit.contract
   name: audit.contract
   status: locked
