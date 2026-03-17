@@ -10417,27 +10417,23 @@ phases:
   - id: cap.shell.tests
     name: Update shell and integration tests
     status: pending
-    description: Update all shell-layer tests and integration tests to use capabilities
-      format. Update test fixtures, conftest.py helpers. Fix any repro tests that
-      reference old format.
+    description: Update ALL shell-layer tests, integration tests, and repro tests
+      to use capabilities format. Update test fixtures and conftest.py helpers. Fix
+      tests/repro/test_medium.py and tests/repro/conftest.py SideEffectPolicy imports.
+      Migration-testing code may still reference side_effect_policy to test the migration
+      path.
     verification: All 316+ tests pass. No test constructs ProfileConfig with tools=
       without also testing migration. grep 'side_effect_policy' in tests/ returns
       only migration-testing code.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Tests updated: count
-
-      Verification:
-
-      - Full test suite: pass/fail (count)
-
-      - side_effect_policy in tests: only in migration tests
-
-      - invar guard: pass/fail
-
-      Gaps/Notes:'
+    evidence_template: 'Commit hash(es):\nFiles changed:\nTests updated: count\ngrep
+      -rn ''side_effect_policy'' tests/ output (should only be migration tests):\ngrep
+      -rn ''SideEffectPolicy'' tests/ output (should only be migration tests):\npytest
+      -x output (last 20 lines):\nGaps/Notes:'
+    refs:
+    - tests/shell/
+    - tests/integration/
+    - tests/repro/test_medium.py
+    - tests/repro/conftest.py
     depends_on:
     - cap.shell.upstream
     agent: python-executor
