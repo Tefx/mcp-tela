@@ -9995,6 +9995,14 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+  - id: rt.reload_wire.gate
+    name: Gate review
+    status: pending
+    description: Gate review for hot reload wiring.
+    verification: Quick Gate. W1 shows zero DEAD exports in reload.py.
+    depends_on:
+    - rt.reload_wire.impl
+    agent: gate-reviewer
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
   status: locked
