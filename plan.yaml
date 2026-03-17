@@ -9765,3 +9765,8 @@ phases:
   status: locked
   depends_on:
   - rt.e2e
+- id: rt.doc_sync
+  name: Documentation Sync
+  status: locked
+  depends_on:
+  - rt.liveness
