@@ -6103,7 +6103,7 @@ phases:
   steps:
   - id: fix.medium.audit.m5-m6-fix-audit-timestamp-and-bounded-store
     name: 'M5+M6: Fix audit timestamp and bounded store'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/audit.py\n\
       harness_refs:\n  - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
       \nProblem M5:\n- Audit timestamp uses string comparison for filtering (`e.timestamp\
@@ -6136,6 +6136,41 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:38:43.931867+00:00'
+    done_at: '2026-03-17T10:48:14.896405+00:00'
+    evidence: 'Artifact:
+
+      - Commit: a1c5693
+
+
+      Files changed:
+
+      - src/tela/shell/audit.py
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_audit.py tests/integration/test_audit_levels.py
+      -v -> 30 passed
+
+      - Run: uv run pytest -q -> 295 passed, 2 failed (pre-existing repro)
+
+      - datetime.fromisoformat comparison replaces string comparison
+
+      - deque(maxlen=10000) replaces unbounded list
+
+      - audit_set_max_entries allows configuration
+
+
+      Spec link:
+
+      - M5: Audit timestamp uses string comparison
+
+      - M6: In-memory audit store is unbounded
+
+
+      Gaps/Notes:
+
+      - None'
   - id: fix.medium.audit.m7-m9-wire-fastmcp-and-implement-on-config-changed
     name: 'M7+M9: Wire fastmcp and implement on_config_changed'
     status: pending
