@@ -9755,6 +9755,30 @@ phases:
   status: locked
   depends_on:
   - rt.env_field
+  steps:
+  - id: rt.downstream.contract
+    name: Design fastmcp client integration pattern
+    status: pending
+    description: Design the fastmcp client integration pattern. Define how connect_all
+      will spawn stdio servers (using ServerConfig.command/args/env) and connect to
+      SSE servers (using ServerConfig.url). Define session lifecycle, error handling,
+      and the _clients dict structure that maps server_name to fastmcp client sessions.
+    verification: Contract document or code comments describing the integration pattern.
+      No @invar:allow dead_export for new code.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Contract decisions:
+
+      - Client session type:
+
+      - Lifecycle pattern:
+
+      - Error handling:
+
+      Gaps/Notes:'
+    agent: python-senior
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
