@@ -10574,3 +10574,23 @@ phases:
     - docs/ADR-003-gateway-capability-only-profiles.md
     - docs/MIGRATION-003-capability-only-profiles.md
     agent: doc-reviewer
+  - id: cap.spec.design-md
+    name: Update DESIGN.md to target state
+    status: pending
+    description: 'Update DESIGN.md to reflect the post-migration target state per
+      ADR-003. Changes: (a) Replace 7-step enforcement chain with: initialize-time
+      preconditions (token, profile) + 3-step per-call chain (family admission, tool
+      override, posture ceiling), (b) Replace all profile examples from tools:+side_effect_policy:
+      to capabilities: format, (c) Remove SideEffectPolicy from model descriptions,
+      (d) Update Section 9.1 (profiles), Section 4.4 (enforcement), Section 6 (classification
+      interactions), Section 13 (invariants), Section 14 (decision log). This update
+      defines the implementation target - implementation code MUST match this document.'
+    verification: grep -n 'side_effect_policy' docs/DESIGN.md returns only historical/ADR
+      references. Enforcement chain described as 3 per-call steps. All profile examples
+      use capabilities:.
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -n ''side_effect_policy''
+      docs/DESIGN.md output:\ngrep -c ''capabilities:'' docs/DESIGN.md output:\nSections
+      updated: list\nGaps/Notes:'
+    depends_on:
+    - cap.spec.finalize-adr-003-and-migration-003
+    agent: python-senior
