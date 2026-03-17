@@ -6843,3 +6843,31 @@ phases:
     depends_on:
     - retest.final.clean-env-smoke-test
     agent: integration-verifier
+  - id: retest.final.gate
+    name: 'FINAL GATE: All findings fixed and verified'
+    status: pending
+    description: "FINAL GATE: Release gate for the entire 5-agent review fix plan.\n\
+      \nreview_depth: THOROUGH\nreview_depth_rationale:\n  - This is the final release\
+      \ gate for 39 findings across 10 phases\n  - Must confirm no finding was missed\n\
+      \  - Must confirm no regression introduced\n  - Must confirm architecture integrity\
+      \ preserved\n\nYOU ARE THE FINAL QUALITY GATE. Your job is to BLOCK release\
+      \ if:\n1. Any finding remains unaddressed\n2. Any regression exists in the test\
+      \ suite\n3. Any invar guard violation exists\n4. Any CLI subcommand is non-functional\n\
+      5. Any audit entry fails to persist\n6. Any contract is vacuous or missing\n\
+      \nReview all evidence from:\n- fix.blockers through fix.low.tests (fix phases)\n\
+      - retest.regression (regression suite)\n- retest.repro (repro tests)\n- retest.final.clean-env-smoke-test\
+      \ (clean environment)\n- retest.final.findings-coverage-audit (coverage checklist)"
+    verification: '- All 39 findings fixed and verified
+
+      - All tests pass (existing + repro)
+
+      - invar guard clean
+
+      - CLI fully functional
+
+      - No regressions
+
+      - Release approved'
+    depends_on:
+    - retest.final.findings-coverage-audit
+    agent: gate-reviewer
