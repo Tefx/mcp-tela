@@ -5601,7 +5601,7 @@ phases:
       ### Verdict: PASS'
   - id: fix.blockers.gate
     name: 'Gate: Blocker fixes (B1-B4)'
-    status: pending
+    status: claimed
     description: "Gate review: Verify blocker fix phase completion and quality.\n\n\
       review_depth: THOROUGH\nreview_depth_rationale:\n  - Phase fixes 4 blockers\
       \ affecting core CLI, audit, config, and reload\n  - All touches state semantics\
@@ -5622,6 +5622,8 @@ phases:
     depends_on:
     - fix.blockers.verify-blocker-fixes
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T10:38:09.899677+00:00'
 - id: fix.high
   name: High-Severity Fixes (H1-H4)
   status: locked
