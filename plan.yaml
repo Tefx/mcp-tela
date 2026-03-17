@@ -10251,6 +10251,15 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+  - id: cap.contract.gate
+    name: Quick gate review
+    status: pending
+    description: ''
+    verification: 'Quick Gate: E1+E4. Contracts are non-vacuous and match ADR-003
+      spec.'
+    depends_on:
+    - cap.contract.define
+    agent: gate-reviewer
 - id: cap.test
   name: Tests for Migration and New Schema
   status: locked
