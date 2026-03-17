@@ -10455,27 +10455,31 @@ phases:
   - id: cap.docs.update
     name: Update documentation
     status: pending
-    description: Update DESIGN.md (enforcement chain description, profile examples),
-      INTERFACES.md (profile schema, enforcement steps), tela.yaml.example (profile
-      format), tela.yaml (local test config). Remove side_effect_policy from all docs.
-      Add migration notes referencing ADR-003.
+    description: 'Update ALL documentation: DESIGN.md (enforcement chain 3-step description,
+      profile examples — 17+ locations), INTERFACES.md (profile schema, tela.profiles
+      response, enforcement steps — 7 locations), USAGE.md (profile examples — 5 locations),
+      README.md (any profile examples), tela.yaml.example (all profile examples —
+      10 locations), tela.yaml (local test config). Remove side_effect_policy from
+      all docs except ADR-003 and MIGRATION-003 (historical). Ensure enforcement chain
+      described as 3 per-call steps consistently.'
     verification: grep 'side_effect_policy' in docs/ returns only ADR-003 and MIGRATION-003
       (historical). All profile examples use capabilities format. Enforcement chain
       described as 3 core steps.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Verification:
-
-      - side_effect_policy in docs (non-ADR): 0
-
-      - Profile examples use capabilities: yes/no
-
-      - Enforcement steps documented: count
-
-      Gaps/Notes:'
-    agent: python-executor
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -rn ''side_effect_policy''
+      docs/ output (should only be ADR-003 and MIGRATION-003):\ngrep -rn ''side_effect_policy''
+      tela.yaml.example output:\ngrep -rn ''side_effect_policy'' README.md output:\nEnforcement
+      step count in DESIGN.md: 3 per-call\nEnforcement step count in INTERFACES.md:
+      3 per-call\nGaps/Notes:'
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - README.md
+    - tela.yaml.example
+    - tela.yaml
+    - docs/ADR-003-gateway-capability-only-profiles.md
+    - docs/MIGRATION-003-capability-only-profiles.md
+    agent: python-senior
   - id: cap.docs.gate
     name: Gate review
     status: pending
