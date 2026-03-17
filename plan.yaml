@@ -8115,3 +8115,6 @@ phases:
 
 
       Verdict: PASS. Plan complete. All review findings fixed and verified.'
+- id: fix2.concurrency
+  name: 'Fix Pass 2: Concurrency and Lock Gaps (Issues 1-4)'
+  status: pending
