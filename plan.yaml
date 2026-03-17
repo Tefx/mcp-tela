@@ -10061,6 +10061,14 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+  - id: rt.doctests.gate
+    name: Gate review
+    status: pending
+    description: Gate review for doctests phase.
+    verification: Quick Gate. B5 resolved. Zero pass doctests.
+    depends_on:
+    - rt.doctests.impl
+    agent: gate-reviewer
 - id: rt.e2e
   name: End-to-End Integration Tests
   status: locked
