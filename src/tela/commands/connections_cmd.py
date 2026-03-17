@@ -18,6 +18,7 @@ def connections_command(json_output: bool = False) -> int:
 
     Examples:
         >>> connections_command()
+        No active connections.
         0
 
     Args:

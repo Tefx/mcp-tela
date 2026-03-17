@@ -18,6 +18,11 @@ def status_command(json_output: bool = False) -> int:
 
     Examples:
         >>> status_command()
+        uptime: 0.0s
+        servers: 0 (none)
+        connections: 0
+        profiles: 0
+        tool_calls: 0
         0
 
     Args:
