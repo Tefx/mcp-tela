@@ -8,6 +8,8 @@ integration step; this implementation provides the registry and lookup layer.
 
 from __future__ import annotations
 
+import asyncio
+
 from tela.core.conflict import ToolConflict, detect_conflicts
 from tela.core.family import resolve_tools
 from tela.core.models import ResolvedTool, ServerConfig, TelaError
@@ -82,6 +84,7 @@ class DownstreamRegistry:
 
 # Module-level registry instance
 _registry = DownstreamRegistry()
+_registry_lock = asyncio.Lock()
 
 
 # @invar:allow dead_export: registry accessor used by tests and gateway integration.
@@ -125,23 +128,24 @@ async def connect_all(
         ``Result[None, str]`` on success, or error string if conflicts detected.
     """
 
-    _registry.clear()
-
-    all_resolved: dict[str, list[ResolvedTool]] = {}
-
-    for server_name, server_config in servers.items():
-        raw_tools = (tool_lists or {}).get(server_name, [])
-        resolved = resolve_tools(server_name, server_config, raw_tools)
-        all_resolved[server_name] = resolved
-        _registry.register(server_name, resolved)
-
-    conflicts = detect_conflicts(all_resolved)
-    if conflicts:
+    async with _registry_lock:
         _registry.clear()
-        conflict_desc = "; ".join(
-            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
-        )
-        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+
+        all_resolved: dict[str, list[ResolvedTool]] = {}
+
+        for server_name, server_config in servers.items():
+            raw_tools = (tool_lists or {}).get(server_name, [])
+            resolved = resolve_tools(server_name, server_config, raw_tools)
+            all_resolved[server_name] = resolved
+            _registry.register(server_name, resolved)
+
+        conflicts = detect_conflicts(all_resolved)
+        if conflicts:
+            _registry.clear()
+            conflict_desc = "; ".join(
+                f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
+            )
+            return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
 
     return Result(value=None)
 
@@ -162,7 +166,8 @@ async def disconnect_all() -> Result[None, str]:
         ``Result[None, str]`` always succeeds.
     """
 
-    _registry.clear()
+    async with _registry_lock:
+        _registry.clear()
     return Result(value=None)
 
 

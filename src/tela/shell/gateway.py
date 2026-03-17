@@ -7,6 +7,7 @@ Transport startup (stdio/SSE MCP server) is deferred.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -55,6 +56,7 @@ class GatewayRuntime:
 
 # Module-level runtime state
 _runtime = GatewayRuntime()
+_runtime_lock = asyncio.Lock()
 
 
 # @invar:allow dead_export: runtime accessor used by tests and gateway integration.

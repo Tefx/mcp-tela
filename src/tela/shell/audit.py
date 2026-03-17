@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
+import asyncio
 from collections import deque
 from pathlib import Path
 
@@ -116,6 +117,7 @@ def build_audit_entry(
 
 _audit_entries: deque[AuditEntry] = deque(maxlen=10000)
 _AUDIT_MAX_ENTRIES: int = 10000
+_audit_lock = asyncio.Lock()
 _audit_log_path: Path | None = None
 _audit_level: AuditLevel = AuditLevel.L2
 
@@ -267,7 +269,8 @@ async def audit_query(
     Returns:
         Result[list[AuditEntry], str] with matching entries.
     """
-    entries = list(_audit_entries)
+    async with _audit_lock:
+        entries = list(_audit_entries)
     if since is not None:
         try:
             since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
