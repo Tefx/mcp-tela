@@ -1198,7 +1198,7 @@ phases:
       \ required from verification."
   - id: cross_repo_alignment.freeze-for-gate
     name: Freeze snapshot for cross-repo alignment gate
-    status: pending
+    status: claimed
     description: 'Freeze step required before the gate review.
 
 
@@ -1228,6 +1228,8 @@ phases:
     depends_on:
     - cross_repo_alignment.verify-docs-contracts-only-alignment
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T06:24:57.703408+00:00'
   - id: cross_repo_alignment.gate
     name: Gate cross-repo alignment phase
     status: pending
