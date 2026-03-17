@@ -2907,7 +2907,7 @@ phases:
   steps:
   - id: reload.contract.define-reload-runtime-contracts
     name: Define reload runtime contracts
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3\
@@ -2938,6 +2938,30 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T08:39:06.776638+00:00'
+    done_at: '2026-03-17T08:40:04.348457+00:00'
+    evidence: '## Contract Evidence
+
+      - Reload contract stubs: src/tela/shell/reload.py (on_tools_changed, on_server_reconnect,
+      on_config_changed)
+
+      - No-drop invariant explicit: yes (documented in module docstring and each function
+      docstring)
+
+      - No implementation logic added: yes (all stubs raise NotImplementedError)
+
+
+      ### Tests
+
+      - tests/shell/test_reload.py: 3 tests (all stubs verified)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 193 passed
+
+      - `uv run invar guard --changed` -> 0 errors
+
+      - Commit: 73a83ed, merged as 1d78d07'
   - id: reload.contract.gate
     name: Gate reload.contract
     status: pending
