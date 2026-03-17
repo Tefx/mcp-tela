@@ -5652,7 +5652,7 @@ phases:
       Commits: d94df04, 5df75ba, af49774, ac731a3'
 - id: fix.high
   name: High-Severity Fixes (H1-H4)
-  status: in_progress
+  status: done
   depends_on:
   - fix.blockers
   steps:
@@ -6168,7 +6168,7 @@ phases:
       ### Verdict: PASS'
   - id: fix.high.gate
     name: 'Gate: High-severity fixes (H1-H4)'
-    status: claimed
+    status: done
     description: "Gate review: Verify high-severity fix phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale:\n  - H1 changes contract enforcement semantics\
       \ across all Core modules\n  - H3 replaces 8 stubs with real implementations\
@@ -6189,6 +6189,33 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T10:49:31.546502+00:00'
+    done_at: '2026-03-17T10:49:39.584576+00:00'
+    evidence: 'Gate: High-Severity Fixes (H1-H4) PASSED
+
+
+      All 4 high-severity implementation steps completed with evidence.
+
+      Independent verification step (fix.high.verify-high-fixes) passed with L2 independence.
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 295 passed, 2 pre-existing repro failures (no regressions)
+
+      - Run: uv run invar guard -> 0 errors
+
+      - H1: Real contract decorators enforced at runtime
+
+      - H2: asyncio.Lock guards on all module singletons
+
+      - H3: All 8 NotImplementedError stubs implemented
+
+      - H4: HMAC-SHA256 token validation with dual-key rotation
+
+      - 5 previously-failing repro tests now pass (token module tests)
+
+
+      Commits: 8f66c0c, a03f217, eb57672, eb930db'
 - id: fix.medium.config
   name: 'Medium Fixes: Config and Wiring (M1-M4, M8, M10)'
   status: pending
@@ -6602,7 +6629,7 @@ phases:
     agent: gate-reviewer
 - id: fix.low.docs
   name: 'Low Fixes: Docs and Config (L2, L4, L6-L10, L18)'
-  status: locked
+  status: pending
   depends_on:
   - fix.high
   steps:
@@ -6700,7 +6727,7 @@ phases:
     agent: gate-reviewer
 - id: fix.low.tests
   name: 'Low Fixes: Test Quality (L17, L19, L20)'
-  status: locked
+  status: pending
   depends_on:
   - fix.high
   steps:
