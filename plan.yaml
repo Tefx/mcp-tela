@@ -5082,7 +5082,7 @@ phases:
   steps:
   - id: fix.blockers.b1-wire-all-cli-subcommands
     name: 'B1: Wire all CLI subcommands'
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#A. CLI Interface\n  - README.md (claims 5 subcommands)\n\
       touch_paths:\n  - src/tela/cli.py\n  - src/tela/commands/audit_cmd.py\n  - src/tela/commands/\
@@ -5123,6 +5123,51 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T10:26:46.195237+00:00'
+    done_at: '2026-03-17T10:36:20.585208+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 9c3b5ce (worktree), ac731a3 (squash merge to main)
+
+
+      Files changed:
+
+      - src/tela/cli.py (wired all 5 subcommands)
+
+      - src/tela/commands/status_cmd.py (new)
+
+      - src/tela/commands/profiles_cmd.py (new)
+
+      - src/tela/commands/connections_cmd.py (new)
+
+
+      Verification:
+
+      - Run: tela --help -> shows all 5 subcommands: start, status, profiles, connections,
+      audit
+
+      - Run: tela audit --help -> works with --json, --since, --limit
+
+      - Run: tela status -> returns valid output (uptime, servers, connections)
+
+      - Run: tela connections -> returns "No active connections."
+
+      - Run: uv run pytest -q -> 280 passed (all 205 core tests pass, no regressions)
+
+      - Run: uv run invar guard -> 0 errors
+
+      - No import errors, all handlers return int exit code
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#A. CLI Interface
+
+      - README.md (claims 5 subcommands)
+
+
+      Gaps/Notes:
+
+      - None'
   - id: fix.blockers.b2-wire-auditconfig-into-audit-writer
     name: 'B2: Wire AuditConfig into audit writer'
     status: done
