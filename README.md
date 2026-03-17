@@ -17,7 +17,7 @@ enforcement.
 ## Quick start
 
 ```bash
-pip install mcp-tela
+pip install -e .
 tela start --config tela.yaml
 ```
 
@@ -32,7 +32,7 @@ servers:
     command: "my-fs-server"
     family: filesystem            # explicit family override
   github:
-    url: "sse://localhost:3001"
+    url: "http://localhost:3001/sse"
 
 profiles:
   coder:
