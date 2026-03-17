@@ -2500,6 +2500,36 @@ phases:
   status: locked
   depends_on:
   - audit.test
+  steps:
+  - id: audit.runtime.implement-audit-entry-building
+    name: Implement audit entry building
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.12 shell/audit.py -- Audit Log Writer\n  - docs/DESIGN.md#10.1\
+      \ Error Propagation Rules\n  - docs/INTERFACES.md#J. Error Codes\ntouch_paths:\n\
+      \  - src/tela/shell/audit.py\n  - src/tela/core/models.py\nharness_refs:\n \
+      \ - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
+      conflict_rationale: Keep audit entry construction isolated from the shared upstream\
+      \ integration file; `shell/upstream.py` is reserved for the later integration\
+      \ step.\nTasks:\n- Implement audit entry construction and level filtering semantics\
+      \ for denied, downstream error, and successful calls.\n- Preserve `_meta` recording\
+      \ semantics and outcome-specific field behavior.\nOut-of-scope guardrail:\n\
+      - No upstream handler integration yet\n- No reload warning emission\n"
+    verification: '- Main path: audit entry construction tests pass across L1/L2/L3
+
+      - Failure path: tests cover denied vs downstream-error field differences
+
+      - Proof: shared upstream file remains untouched until the integration step'
+    evidence_template: '## Implementation Evidence
+
+      - Audit entry builders: <functions>
+
+      - Main-path command/output: <exact>
+
+      - Failure-path command/output: <exact>
+
+      - Upstream integration deferred: yes/no'
+    agent: python-executor
 - id: reload.test
   name: reload.test
   status: locked
