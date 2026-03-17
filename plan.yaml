@@ -5660,3 +5660,24 @@ phases:
     - fix.high.h3-implement-notimplementederror-contract-stubs
     - fix.high.h4-implement-core-token-py-for-hmac-token-validation
     agent: integration-verifier
+  - id: fix.high.gate
+    name: 'Gate: High-severity fixes (H1-H4)'
+    status: pending
+    description: "Gate review: Verify high-severity fix phase completion.\n\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale:\n  - H1 changes contract enforcement semantics\
+      \ across all Core modules\n  - H3 replaces 8 stubs with real implementations\
+      \ (high integration risk)\n  - H4 introduces new security-relevant module (token\
+      \ validation)\n\ncross_cutting_focus:\n  - Contract decorators enforcing across\
+      \ ALL core modules, not just ones touched\n  - No NotImplementedError remaining\
+      \ anywhere in shell/\n  - Token validation integrated with upstream initialize\
+      \ path"
+    verification: '- All high-severity fixes complete with evidence
+
+      - No regressions
+
+      - invar guard clean
+
+      - Gate reviewer is independent of all implementation agents'
+    depends_on:
+    - fix.high.verify-high-fixes
+    agent: gate-reviewer
