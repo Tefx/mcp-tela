@@ -6427,7 +6427,7 @@ phases:
       - None'
   - id: fix.medium.audit.m7-m9-wire-fastmcp-and-implement-on-config-changed
     name: 'M7+M9: Wire fastmcp and implement on_config_changed'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/reload.py\
       \ (M9: on_config_changed stub)\n  - pyproject.toml (M7: verify fastmcp dependency)\n\
       \  - src/tela/shell/upstream.py (M7: import fastmcp where needed)\n  - src/tela/shell/downstream.py\
@@ -6460,6 +6460,8 @@ phases:
     - src/tela/shell/downstream.py
     - pyproject.toml
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:49:58.211879+00:00'
   - id: fix.medium.audit.verify
     name: Verify medium audit fixes (M5-M7, M9)
     status: pending
