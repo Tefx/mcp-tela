@@ -2102,7 +2102,7 @@ phases:
   steps:
   - id: open_mode.runtime.implement-default-profile-resolution
     name: Implement default-profile resolution
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#7.2\
       \ Open Mode\n  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n  -\
@@ -2144,6 +2144,27 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T07:10:16.443839+00:00'
+    done_at: '2026-03-17T07:12:50.516469+00:00'
+    evidence: "## Implementation Evidence\n- Shared helper consumer(s): src/tela/commands/start.py\
+      \ (consumes load_config -> resolve_open_mode_default_profile)\n- Main-path command/output:\
+      \ `uv run pytest -q` -> 49 passed\n- Failure-path command/output: `uv run pytest\
+      \ -q tests/core/test_config.py` -> 10 passed (covers missing, ambiguous, unknown\
+      \ CLI profile)\n- Duplicate precedence logic removed/avoided: yes - start_command\
+      \ delegates to load_config which calls resolve_open_mode_default_profile\n\n\
+      ### Changes\n- `src/tela/commands/start.py`: Replaced contract stub with implementation\
+      \ that:\n  - Calls `load_config(path, default_profile)` for shared authority\
+      \ resolution\n  - Builds `RuntimeBindingContract` with resolved transport and\
+      \ profile\n  - Returns `Result[RuntimeBindingContract, str]` (changed from `Result[int,\
+      \ str]`)\n  - Preserves contract docstring text for existing integration tests\n\
+      - No changes to core/config.py or models.py (shared helper already complete)\n\
+      \n### Verification\n- `uv run pytest -q` -> 49 passed\n- `uv run invar guard\
+      \ --changed` -> passed (0 errors, 0 warnings)\n- Doctest in start_command passes\
+      \ (tempfile-based)\n- Commit: 1e4f6e2 (worktree), merged as b450909\n\n### Failure-mode\
+      \ coverage\n- Absent --default-profile: None passed to load_config, resolved\
+      \ from config default:true\n- Missing default: load_config returns error via\
+      \ resolve_open_mode_default_profile\n- Ambiguous defaults: load_config returns\
+      \ error\n- Unknown CLI profile: load_config returns error (PROFILE_NOT_FOUND)\n\
+      - Token mode unaffected: load_config skips open-mode resolution for token auth"
   - id: open_mode.runtime.implement-open-mode-initialize-binding
     name: Implement open-mode initialize binding
     status: pending
