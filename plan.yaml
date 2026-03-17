@@ -965,7 +965,7 @@ phases:
       \ removed unintended local audit doc artifact."
   - id: cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
     name: Align opifex docs to authoritative tela contracts
-    status: claimed
+    status: done
     description: 'Apply only the residual docs/contracts alignment identified by `cross_repo_alignment.audit-residual-opifex-drift`.
 
 
@@ -1075,6 +1075,24 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-17T06:08:42.920043+00:00'
+    done_at: '2026-03-17T06:16:39.496137+00:00'
+    evidence: "Artifact:\n- alignment updates applied for residual items.\n- local\
+      \ repo change: `contracts/meta.schema.json` (`additionalProperties` relaxed\
+      \ to align with local authority).\n- supporting cross-repo doc alignments performed\
+      \ in opifex design docs for stale idempotency, audit optional-fields phrasing,\
+      \ and error wire wording.\n\nVerification:\n- files changed scope check\n  -\
+      \ PASS: changes limited to `contracts/*` and `../opifex/design/*.md`.\n  - PASS:\
+      \ no `src/**`, `tests/**`, runtime wiring, or CLI/server implementation changes.\n\
+      - before/after mismatch closure\n  - `_meta` unknown field handling: closed\
+      \ via contract relaxation.\n  - idempotency enforcement stale claim: closed\
+      \ in opifex docs.\n  - error wire shape drift: closed in opifex requirements\
+      \ wording.\n  - optional token fields audit-log overclaim: closed in opifex\
+      \ architecture wording.\n  - remaining no-change items preserved as aligned.\n\
+      - contract->test->implementation applicability\n  - remained N/A for this step\
+      \ scope (docs/contracts alignment step).\n- docs/contracts-only scope confirmation\n\
+      \  - PASS: no product implementation work introduced.\n\nPlan mutation payload:\n\
+      - explicit no-change\n\nCommit hash(es):\n- `4f52c64e464a6aea71f4a2a4c423ec97b7641fd5`\
+      \ (local contract alignment change)"
   - id: cross_repo_alignment.verify-docs-contracts-only-alignment
     name: Verify docs/contracts-only alignment
     status: pending
