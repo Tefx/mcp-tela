@@ -8327,7 +8327,7 @@ phases:
       non-fragile. 315 passed, 4 doctests passed.'
   - id: fix2.contracts.gate
     name: gate
-    status: pending
+    status: claimed
     description: 'Gate review: Verify contract and validation fix phase completion.
 
 
@@ -8351,6 +8351,8 @@ phases:
     depends_on:
     - fix2.contracts.verify-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:58:22.700825+00:00'
 - id: fix2.public-api
   name: 'Fix Pass 2: Public API Exposure and Entry Points (Issues 15-17, 24)'
   status: in_progress
