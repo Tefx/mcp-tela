@@ -1,8 +1,7 @@
 """CLI entrypoint for tela.
 
-Wires ``tela start`` with ``--config``, ``--port``, and ``--default-profile``
-options into the runtime startup path. Other commands (status, profiles, audit)
-are out of scope for this step.
+Wires all five subcommands (start, status, profiles, connections, audit)
+into the argparse-based CLI dispatcher per INTERFACES.md.
 """
 
 from __future__ import annotations
@@ -10,7 +9,11 @@ from __future__ import annotations
 import argparse
 import sys
 
+from tela.commands.audit_cmd import audit_command
+from tela.commands.connections_cmd import connections_command
+from tela.commands.profiles_cmd import profiles_command
 from tela.commands.start import start_command
+from tela.commands.status_cmd import status_command
 from tela.shell.gateway import bind_gateway_startup
 
 
@@ -21,7 +24,6 @@ def main(argv: list[str] | None = None) -> int:
     """Main CLI entrypoint for tela.
 
     Parses CLI arguments and dispatches to the appropriate command handler.
-    Currently only ``tela start`` is implemented.
 
     Examples:
         >>> main(["start", "--help"])  # doctest: +SKIP
@@ -40,6 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     subparsers = parser.add_subparsers(dest="command")
 
+    # --- start ---
     start_parser = subparsers.add_parser("start", help="Start the tela gateway")
     start_parser.add_argument(
         "--config",
@@ -58,6 +61,64 @@ def main(argv: list[str] | None = None) -> int:
         help="Open-mode default profile override",
     )
 
+    # --- status ---
+    status_parser = subparsers.add_parser("status", help="Show gateway status")
+    status_parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        default=False,
+        help="Output in JSON format",
+    )
+
+    # --- profiles ---
+    profiles_parser = subparsers.add_parser("profiles", help="List configured profiles")
+    profiles_parser.add_argument(
+        "--config",
+        default="tela.yaml",
+        help="Path to configuration file (default: tela.yaml)",
+    )
+    profiles_parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        default=False,
+        help="Output in JSON format",
+    )
+
+    # --- connections ---
+    connections_parser = subparsers.add_parser(
+        "connections", help="List active upstream connections"
+    )
+    connections_parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        default=False,
+        help="Output in JSON format",
+    )
+
+    # --- audit ---
+    audit_parser = subparsers.add_parser("audit", help="Query audit log")
+    audit_parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        default=False,
+        help="Output in JSON format",
+    )
+    audit_parser.add_argument(
+        "--since",
+        default=None,
+        help="ISO-8601 timestamp or relative duration filter",
+    )
+    audit_parser.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="Maximum entries to return (default: 100)",
+    )
+
     args = parser.parse_args(argv)
 
     if args.command is None:
@@ -66,6 +127,18 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "start":
         return _handle_start(args)
+    if args.command == "status":
+        return status_command(json_output=args.json_output)
+    if args.command == "profiles":
+        return profiles_command(
+            config_path=args.config, json_output=args.json_output
+        )
+    if args.command == "connections":
+        return connections_command(json_output=args.json_output)
+    if args.command == "audit":
+        return audit_command(
+            since=args.since, limit=args.limit, json_output=args.json_output
+        )
 
     parser.print_help()
     return 1
