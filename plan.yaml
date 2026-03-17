@@ -3799,7 +3799,7 @@ phases:
       - Commit: 2d8a818 (worktree), merged as 54ba771'
   - id: audit.contract.gate
     name: Gate audit.contract
-    status: pending
+    status: claimed
     description: 'Gate review: Verify audit runtime contract phase completion.
 
       review_depth: STANDARD
@@ -3833,6 +3833,8 @@ phases:
     depends_on:
     - audit.contract.define-audit-runtime-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T08:29:35.641893+00:00'
 - id: audit.test
   name: audit.test
   status: locked
