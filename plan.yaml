@@ -8764,3 +8764,34 @@ phases:
   status: locked
   depends_on:
   - fix2.reload-stubs
+  steps:
+  - id: fix2.upstream-split.split-upstream
+    name: split-upstream
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#shell-layer\ntouch_paths:\n  - src/tela/shell/upstream.py\n\
+      \  - src/tela/shell/ (possible new file for extracted functions)\n  - src/tela/shell/__init__.py\n\
+      harness_refs:\n  - tests/\nconflict_rationale: Depends on fix2.reload-stubs\
+      \ because that phase modifies upstream.py (notify_tools_changed stub).\n\n##\
+      \ Issue 14: upstream.py exceeds 300-line DX threshold (417 lines)\n\nSplit upstream.py\
+      \ into cohesive modules. Suggested decomposition:\n1. Keep MCP session/connection\
+      \ handling in upstream.py\n2. Extract tool enumeration/call handling to a new\
+      \ module (e.g., upstream_tools.py or tool_handler.py)\n3. Extract notification/event\
+      \ handling if substantial\n\nRules:\n- All public API surface must remain importable\
+      \ from same paths (update __init__.py exports)\n- No behavioral changes -- pure\
+      \ refactoring\n- All existing tests must pass unchanged\n- All imports across\
+      \ the codebase must still resolve\n\nGrep hint: `grep -rn 'from tela.shell.upstream\
+      \ import\\|from tela.shell import.*upstream' src/ tests/`\n\n## Completion Criteria\n\
+      - upstream.py is under 300 lines\n- All extracted functions are importable from\
+      \ their new location\n- All existing callers still work (update imports if needed)\n\
+      - No test failures\n\n## Gate Preview (what the gate WILL reject)\n1. upstream.py\
+      \ still over 300 lines\n2. Any broken import across codebase\n3. Behavioral\
+      \ changes disguised as refactoring"
+    verification: '- wc -l src/tela/shell/upstream.py shows under 300
+
+      - grep for all upstream imports shows no broken references
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    agent: python-senior
