@@ -8670,3 +8670,37 @@ phases:
   status: pending
   depends_on:
   - retest.final
+  steps:
+  - id: fix2.doctests.fix-doctest-assertion-rewriting
+    name: fix-doctest-assertion-rewriting
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - INVAR.md (contract requirements)\ntouch_paths:\n  - src/tela/core/contracts.py\n\
+      \  - conftest.py or pyproject.toml (pytest config)\nharness_refs:\n  - tests/\n\
+      conflict_rationale: Only this step touches contracts.py doctests.\n\nFix doctest\
+      \ failures caused by pytest assertion rewriting:\n\n## Issues 19, 27-28: contracts.py\
+      \ doctests fail\n- `contracts.py::pre` doctest (line 29) and `contracts.py::post`\
+      \ doctest (line 66) fail\n- Root cause: pytest assertion rewriting interferes\
+      \ with the decorator behavior\n- Fix options (choose the most robust):\n  1.\
+      \ Add `# doctest: +ELLIPSIS` and adjust expected output\n  2. Add `collect_ignore`\
+      \ in conftest.py for contracts.py doctests\n  3. Use `pytest.ini` / `pyproject.toml`\
+      \ to configure `--doctest-modules` exclusion for contracts.py\n  4. Rewrite\
+      \ doctests to not depend on assertion behavior (preferred if possible)\n  5.\
+      \ Add `import pytest; pytest.register_assert_rewrite` exclusion\n- Grep hint:\
+      \ `grep -n 'doctest\\|>>>' src/tela/core/contracts.py`\n\n## Issue 20: connections_cmd.py\
+      \ and status_cmd.py doctests\n- These were reported as already fixed on main\
+      \ for cmd doctests\n- Verify they still pass after contracts.py fix\n- Grep\
+      \ hint: `grep -n '>>>' src/tela/commands/connections_cmd.py src/tela/commands/status_cmd.py`\n\
+      \n## Completion Criteria\n- `uv run pytest --doctest-modules src/tela/core/contracts.py`\
+      \ passes (0 failures)\n- All other doctests still pass\n- Fix does not suppress\
+      \ legitimate test failures\n\n## Gate Preview (what the gate WILL reject)\n\
+      1. Doctests still failing\n2. Fix that blanket-disables doctest collection (too\
+      \ broad)"
+    verification: '- uv run pytest --doctest-modules src/tela/core/contracts.py passes
+
+      - uv run pytest --doctest-modules passes overall (0 doctest failures)
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    agent: python-executor
