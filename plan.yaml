@@ -8340,7 +8340,7 @@ phases:
   steps:
   - id: fix2.public-api.fix-api-exposure
     name: fix-api-exposure
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#A. CLI Interface\n  - docs/DESIGN.md#core-layer\ntouch_paths:\n\
       \  - src/tela/core/config.py\n  - src/tela/core/__init__.py\n  - src/tela/__init__.py\n\
@@ -8381,6 +8381,14 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T11:51:36.607347+00:00'
+    done_at: '2026-03-17T11:55:11.582886+00:00'
+    evidence: "## Evidence (from python-executor subagent)\nFiles changed:\n  - src/tela/core/config.py\
+      \ (added expand_env_vars = _expand_env_token alias)\n  - src/tela/__main__.py\
+      \ (new file, enables python -m tela)\n  - src/tela/core/errors.py (added 9 error\
+      \ code constants)\n  - src/tela/shell/downstream.py (removed unused ToolConflict\
+      \ import)\nVerification:\n  - uv run pytest -q: 311 passed\n  - uv run python\
+      \ -m tela --help: exit 0\nCommit: c29c95b, merged to main via fast-forward\n\
+      Gaps/Notes: none"
   - id: fix2.public-api.verify-api
     name: verify-api
     status: pending
