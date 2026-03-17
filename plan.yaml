@@ -8759,3 +8759,8 @@ phases:
     depends_on:
     - fix2.doctests.verify-doctests
     agent: gate-reviewer
+- id: fix2.upstream-split
+  name: 'Fix Pass 2: Upstream.py DX Threshold Split (Issue 14)'
+  status: locked
+  depends_on:
+  - fix2.reload-stubs
