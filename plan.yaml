@@ -8223,3 +8223,46 @@ phases:
   status: pending
   depends_on:
   - retest.final
+  steps:
+  - id: fix2.contracts.fix-tautological-and-validation
+    name: fix-tautological-and-validation
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/INTERFACES.md#B. Configuration\n  - INVAR.md (contract requirements)\n\
+      touch_paths:\n  - src/tela/core/config.py\nharness_refs:\n  - tests/core/test_config.py\n\
+      conflict_rationale: Only this step touches config.py contracts.\n\nFix THREE\
+      \ contract/validation issues in core/config.py:\n\n## Issue 6: Tautological\
+      \ contracts (MEDIUM)\nLines 27, 85, 88, 164, 282 contain contracts that always\
+      \ pass:\n- `len(value) >= 0` — always true for any sequence\n- `result is not\
+      \ Ellipsis` — always true for normal return values  \n- `result in (True, False)`\
+      \ — always true for bool return type\nFix: Replace with meaningful contracts\
+      \ that actually constrain behavior.\n- `len(value) >= 0` -> check for actual\
+      \ content validity (e.g., non-empty where required)\n- `result is not Ellipsis`\
+      \ -> check for meaningful result structure\n- `result in (True, False)` -> check\
+      \ for semantic meaning (e.g., result implies valid config)\nGrep hint: `grep\
+      \ -n 'len(value) >= 0\\|is not Ellipsis\\|in (True, False)' src/tela/core/config.py`\n\
+      \n## Issue 18: Missing command/url validation (LOW)\n`validate_config` does\
+      \ not check that each server has `command` or `url`.\nPer INTERFACES.md, a server\
+      \ entry MUST have either `command` (for stdio) or `url` (for SSE).\nFix: Add\
+      \ validation that each server has at least one of command/url.\nAdd test: config\
+      \ with server missing both command and url should fail validation.\n\n## Issue\
+      \ 25: Fragile postcondition format coupling (LOW)\n`validate_config` postcondition\
+      \ `all(\":\" in error ...)` is fragile format coupling.\nFix: Replace with a\
+      \ postcondition that checks error list is a list of strings without coupling\
+      \ to colon format.\n\n## Completion Criteria\n- ALL tautological contracts replaced\
+      \ with meaningful ones\n- validate_config rejects server entries missing both\
+      \ command and url\n- Postcondition no longer couples to error message format\n\
+      - All existing tests pass plus new test for command/url validation\n\n## Gate\
+      \ Preview (what the gate WILL reject)\n1. Any remaining tautological contract\
+      \ (identity lambda, always-true check)\n2. Server without command/url still\
+      \ passing validation\n3. New contracts that are themselves vacuous"
+    verification: '- No tautological contracts remain in config.py (grep evidence)
+
+      - validate_config rejects server missing command+url (test evidence)
+
+      - Postcondition is not format-coupled
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    agent: python-senior
