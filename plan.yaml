@@ -6036,3 +6036,22 @@ phases:
     - src/tela/core/models.py
     - src/tela/core/config.py
     agent: python-executor
+  - id: fix.low.code.gate
+    name: 'Gate: Low code quality fixes'
+    status: pending
+    description: 'Gate review: Verify low-severity code quality fixes.
+
+
+      review_depth: QUICK
+
+      Covers: L1, L3, L5, L11-L16, L21'
+    verification: '- All low code fixes complete
+
+      - No regressions
+
+      - invar guard clean'
+    depends_on:
+    - fix.low.code.l1-l3-l5-fix-import-violations-redundant-params-misplaced-pure-functions
+    - fix.low.code.l11-l12-l13-add-init-py-remove-unused-import-remove-ghost-telaerror
+    - fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
+    agent: gate-reviewer
