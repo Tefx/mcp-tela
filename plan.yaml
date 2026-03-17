@@ -2201,6 +2201,85 @@ phases:
     depends_on:
     - gateway.runtime.integrate-gateway-lifecycle
     agent: python-executor
+  - id: gateway.runtime.verify-gateway-runtime
+    name: Verify gateway runtime
+    status: pending
+    description: "As an INDEPENDENT TESTER (integration-verifier), validate the gateway\
+      \ lifecycle and runtime from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
+      \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
+      Independence Level: L2\nspec_refs:\n  - docs/DESIGN.md#4.9 shell/gateway.py\
+      \ -- Gateway Lifecycle\n  - docs/DESIGN.md#4.10 shell/downstream.py -- Downstream\
+      \ Server Management\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP\
+      \ Handler\n  - docs/DESIGN.md#8.1 Startup Sequence\n  - docs/DESIGN.md#8.2 Tool\
+      \ Call Flow\n  - docs/INTERFACES.md#A. CLI Interface\n  - docs/INTERFACES.md#F.\
+      \ MCP Server Interface (upstream)\ntouch_paths:\n  - src/tela/commands/start.py\n\
+      \  - src/tela/shell/gateway.py\n  - src/tela/shell/downstream.py\n  - src/tela/shell/upstream.py\n\
+      harness_refs:\n  - tests/shell/test_gateway.py\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_upstream.py\n  - tests/integration/test_end_to_end.py\n\
+      Test for:\n- Happy path: actual startup initializes downstreams, exposes runtime\
+      \ readiness, and forwards at least one request end-to-end\n- Edge cases: stdio\
+      \ default path, optional SSE path when configured, connection status surfaces\
+      \ remain coherent\n- Error scenarios: startup fail-fast on config/tool conflict,\
+      \ downstream unavailable, denied tool call propagation\n- Consumer-boundary\
+      \ conformance: CLI/startup state, gateway status, upstream handler, and downstream\
+      \ registry interpret the same resolved tool ownership and readiness facts consistently\n\
+      Document ALL findings. A test that discovers issues is a SUCCESS.\nA test that\
+      \ finds nothing must justify the coverage achieved.\n\nREALISM CHECK:\n- Provide\
+      \ at least one seam-level real path proof with actual command/output, not only\
+      \ mock-heavy tests.\n- If related tests retain >=10 mocks, justify remaining\
+      \ mocks and show why the real-path proof closes the seam risk."
+    verification: '- L2 evidence includes at least one real-path command/output for
+      CLI/start -> gateway -> downstream -> upstream
+
+      - Evidence proves CLI, gateway, upstream, and downstream share one runtime registry/readiness
+      fact set
+
+      - Failure-path cases are exercised and findings recorded
+
+      - Verdict recorded as PASS, ISSUES_FOUND, or INCOMPLETE'
+    evidence_template: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: src/tela/commands/start.py:CLI -> src/tela/shell/gateway.py:lifecycle
+      -> src/tela/shell/downstream.py:registry -> src/tela/shell/upstream.py:handler
+
+
+      **Exact command executed**:
+
+      ```
+
+      <paste actual command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+
+      **Remaining mocks in related tests**: <count>
+
+
+      **Justification for remaining mocks**: <why acceptable>
+
+
+      ## Conformance Check
+
+      - Shared runtime fixture: <path>
+
+      - CLI/startup matches gateway status: yes/no
+
+      - Gateway status matches upstream/downstream registry facts: yes/no
+
+      - Independent re-derivation remains: yes/no'
+    depends_on:
+    - gateway.runtime.freeze-for-l2
+    agent: integration-verifier
 - id: audit.contract
   name: audit.contract
   status: locked
