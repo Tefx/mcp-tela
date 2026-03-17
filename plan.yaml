@@ -1700,7 +1700,7 @@ phases:
       \ found.\n- verdict\n  - PASS\n\nPlan mutation payload:\n- explicit no-change"
   - id: config.impl.gate
     name: Gate config.impl
-    status: pending
+    status: claimed
     description: 'Gate review: Verify config authority phase completion.
 
       review_depth: STANDARD
@@ -1734,6 +1734,8 @@ phases:
     - config.impl.implement-config-authority
     - config.impl.verify-config-authority
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T06:43:23.071159+00:00'
 - id: open_mode.contract
   name: open_mode.contract
   status: locked
