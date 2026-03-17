@@ -1253,7 +1253,7 @@ phases:
   steps:
   - id: config.contract.define-config-authority-contracts
     name: Define config authority contracts
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.1 core/models.py -- Data Models\n  - docs/DESIGN.md#4.2\
@@ -1298,6 +1298,24 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T05:59:47.908900+00:00'
+    done_at: '2026-03-17T06:07:54.228854+00:00'
+    evidence: "Artifact:\n- Updated signatures/stubs in:\n  - `src/tela/core/models.py`\n\
+      \  - `src/tela/core/config.py`\n  - `src/tela/shell/config_loader.py`\n  - `src/tela/commands/start.py`\n\
+      \  - `tests/core/test_models.py`\n  - `tests/core/test_config.py`\n- Open-mode\
+      \ authority rules captured:\n  - `ProfileConfig.default` contract surface added.\n\
+      \  - precedence contract: `--default-profile` > unique `default=True`.\n  -\
+      \ rejection contracts for missing/ambiguous/unknown open-mode default profiles.\n\
+      - Invar contract placeholders added on Core contract surfaces (`@pre`/`@post`\
+      \ + doctest placeholders).\n- No implementation logic added beyond contract\
+      \ scaffolding.\n\nVerification:\n- Commits:\n  - `a7b4131b09ffb740b1c91812700f86bcc5946350`\n\
+      \  - `fa83426ad29b0bfc82df743b245df783e8f1450a`\n- Run: `invar_guard(...changed=true)`\
+      \ -> passed (0 errors, 0 warnings)\n- Run: `uv run --with pytest pytest -q tests/core/test_models.py\
+      \ tests/core/test_config.py` -> `5 passed in 0.03s`\n- Contract artifacts remain\
+      \ signature/type/docstring/stub oriented; no runtime gateway wiring or request\
+      \ handling implemented.\n\nSpec link:\n- `docs/DESIGN.md` config/open-mode authority\
+      \ sections\n- `docs/INTERFACES.md` open mode and configuration sections\n- `INVAR.md`\n\
+      \nGaps/Notes:\n- `src/tela/shell/config_loader.py` includes explicit `@invar:allow\
+      \ dead_export` as contract-step stub escape hatch until runtime caller lands."
   - id: config.contract.gate
     name: Gate config.contract
     status: pending
