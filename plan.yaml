@@ -5079,3 +5079,159 @@ phases:
 - id: fix.blockers
   name: Blocker Fixes (B1-B4)
   status: pending
+  steps:
+  - id: fix.blockers.b1-wire-all-cli-subcommands
+    name: 'B1: Wire all CLI subcommands'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/INTERFACES.md#A. CLI Interface\n  - README.md (claims 5 subcommands)\n\
+      touch_paths:\n  - src/tela/cli.py\n  - src/tela/commands/audit_cmd.py\n  - src/tela/commands/\
+      \ (new: status_cmd.py, profiles_cmd.py, connections_cmd.py)\nharness_refs:\n\
+      \  - tests/integration/test_end_to_end.py\nconflict_rationale: Only this step\
+      \ touches cli.py argparse registration.\n\nProblem:\n- cli.py only registers\
+      \ the `start` subcommand via argparse\n- audit_cmd.py exists but is never wired\
+      \ into the CLI\n- `tela status`, `tela profiles`, `tela connections`, `tela\
+      \ audit` are all unusable\n- README claims 5 subcommands but only `start` works\n\
+      \nTasks:\n1. Add argparse subparsers for: status, profiles, connections, audit\n\
+      2. Wire `audit_command` from `commands/audit_cmd.py` into the `audit` subparser\n\
+      3. Create command handlers for status (calls `gateway_status()`), profiles (lists\
+      \ configured profiles), connections (calls `gateway_connections()`)\n4. Each\
+      \ handler returns int exit code per POSIX convention\n5. Add `--json` flag to\
+      \ status/profiles/connections/audit for JSON output\n\nPattern: Follow existing\
+      \ `_handle_start` pattern in cli.py\n\n## Gate Preview (what the gate WILL reject)\n\
+      1. Any subcommand that is registered but not callable\n2. Missing `--help` for\
+      \ any subcommand\n3. JSON output that contains ANSI escapes\n\nWARNING: Do NOT\
+      \ touch gateway.py or downstream.py shared registries -- only wire CLI dispatch."
+    verification: '- All 5 subcommands registered and callable: start, status, profiles,
+      connections, audit
+
+      - `tela --help` shows all subcommands
+
+      - `tela audit --help` works
+
+      - `tela status` returns valid output (or graceful error if gateway not started)
+
+      - No import errors
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/cli.py
+    - src/tela/commands/audit_cmd.py
+    - docs/INTERFACES.md
+    agent: python-senior
+  - id: fix.blockers.b2-wire-auditconfig-into-audit-writer
+    name: 'B2: Wire AuditConfig into audit writer'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.11 shell/audit.py -- Audit Log Writer\n  - docs/INTERFACES.md#Audit\
+      \ Configuration\ntouch_paths:\n  - src/tela/shell/audit.py\n  - src/tela/shell/gateway.py\n\
+      harness_refs:\n  - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
+      conflict_rationale: Serialized after B1 to avoid concurrent cli.py touches.\n\
+      \nProblem:\n- `AuditConfig.level` and `AuditConfig.output` are parsed into config\
+      \ but never consumed\n- `_audit_log_path` is always `None` -- `audit_write`\
+      \ never persists to disk\n- Audit log is in-memory only, lost on restart\n\n\
+      Tasks:\n1. Add `audit_init(config: AuditConfig) -> Result[None, str]` to `shell/audit.py`\n\
+      \   - Sets `_audit_log_path` from `config.output` (expand `~`)\n   - Sets module-level\
+      \ `_audit_level` from `config.level`\n   - Creates parent directory if needed\n\
+      2. Call `audit_init` from `gateway_start()` after config is loaded\n3. Use `_audit_level`\
+      \ in `build_audit_entry` to filter by configured level\n4. Ensure `audit_close()`\
+      \ flushes any buffered writes\n\nState semantics:\n- `_audit_log_path` is last-writer-wins\
+      \ (set once at startup)\n- `_audit_level` is last-writer-wins (set once at startup)\n\
+      - Backward-compatible: if `audit_init` is never called, behavior is unchanged\
+      \ (in-memory only)\n\nFailure-mode checklist:\n- Missing parent directory for\
+      \ audit output path\n- Permission denied on audit file\n- `~` expansion in output\
+      \ path\n- Relative vs absolute path behavior"
+    verification: '- audit_init sets _audit_log_path correctly with ~ expansion
+
+      - audit_write persists entries to JSONL file on disk
+
+      - audit_close flushes buffered writes
+
+      - Configured audit level is respected
+
+      - uv run pytest tests/shell/test_audit.py -v passes
+
+      - uv run pytest tests/integration/test_audit_levels.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/audit.py
+    - src/tela/shell/gateway.py
+    - src/tela/core/models.py
+    agent: python-senior
+  - id: fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
+    name: 'B3: Fix parse_config name injection from dict keys'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/INTERFACES.md#B. Configuration (tela.yaml) -- YAML key IS the server/profile\
+      \ name\ntouch_paths:\n  - src/tela/core/config.py\nharness_refs:\n  - tests/core/test_config.py\n\
+      conflict_rationale: Single file, no overlap with other steps.\n\nProblem:\n\
+      - INTERFACES.md specifies that the YAML key IS the server/profile name\n- parse_config\
+      \ passes raw dict to TelaConfig.model_validate without injecting `name` from\
+      \ dict keys\n- ServerConfig and ProfileConfig require `name` field\n- All tests\
+      \ pass because fixtures manually add redundant `name` field\n- Any real YAML\
+      \ config following docs will get `ValidationError: name Field required`\n\n\
+      Tasks:\n1. In `parse_config()`, after env expansion and before `model_validate`:\n\
+      \   - Iterate `expanded['servers']` dict and inject `name` from key into each\
+      \ value dict\n   - Iterate `expanded['profiles']` dict and inject `name` from\
+      \ key into each value dict\n2. Add test cases that use real YAML format (without\
+      \ explicit `name` field)\n3. Verify existing tests still pass (backward compatible\
+      \ with explicit name)\n\nFile: src/tela/core/config.py\nFunction: parse_config(raw,\
+      \ env_vars) -> TelaConfig\nLine: ~138 (before model_validate call)\n\nPattern:\n\
+      ```python\nfor section in ('servers', 'profiles'):\n    if section in expanded\
+      \ and isinstance(expanded[section], dict):\n        for key, value in expanded[section].items():\n\
+      \            if isinstance(value, dict) and 'name' not in value:\n         \
+      \       value['name'] = key\n```"
+    verification: '- Config without explicit `name` field parses successfully
+
+      - Config with explicit `name` field still works (backward compatible)
+
+      - Real YAML from INTERFACES.md examples parses without ValidationError
+
+      - uv run pytest tests/core/test_config.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/core/config.py
+    - docs/INTERFACES.md
+    agent: python-executor
+  - id: fix.blockers.b4-fix-hot-reload-rollback-isolation
+    name: 'B4: Fix hot reload rollback isolation'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.12 shell/reload.py -- Hot Reload Orchestration\n  - docs/DESIGN.md#No-drop-connection\
+      \ invariant\ntouch_paths:\n  - src/tela/shell/reload.py\n  - src/tela/shell/downstream.py\n\
+      harness_refs:\n  - tests/integration/test_hot_reload.py\n  - tests/shell/test_reload.py\n\
+      conflict_rationale: Serialized with B2 because both touch registry state.\n\n\
+      Problem:\n- When server 'custom' reload is rejected due to conflict, server\
+      \ 'fs' tools are also lost\n- `get_tool_server('read_file')` returns `None`\
+      \ after rejection\n- Spec says preserve original tools on conflict rollback\n\
+      \nRoot cause:\n- `on_tools_changed()` calls `registry.register(server_name,\
+      \ resolved)` which updates `_tool_to_server` globally\n- On conflict rollback,\
+      \ only the changed server's tools are restored\n- But the flat `_tool_to_server`\
+      \ map may have been corrupted for other servers\n\nFix:\n1. In `on_tools_changed()`,\
+      \ snapshot FULL registry state before tentative register\n2. On conflict, restore\
+      \ entire snapshot (both `_tools_by_server` and `_tool_to_server`)\n3. Add `DownstreamRegistry.snapshot()`\
+      \ and `DownstreamRegistry.restore(snapshot)` methods\n\nState semantics:\n-\
+      \ Snapshot is shallow copy of both dicts (tools are immutable ResolvedTool)\n\
+      - Rollback must be atomic: either all restored or none\n- Previous_tools variable\
+      \ is no longer sufficient for rollback"
+    verification: '- After rejected reload of server ''custom'', server ''fs'' tools
+      remain intact
+
+      - get_tool_server(''read_file'') returns ''fs'' after rejected reload
+
+      - All other servers'' tool registrations are preserved
+
+      - uv run pytest tests/integration/test_hot_reload.py -v passes
+
+      - uv run pytest tests/shell/test_reload.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/reload.py
+    - src/tela/shell/downstream.py
+    - tests/integration/test_hot_reload.py
+    agent: python-senior
