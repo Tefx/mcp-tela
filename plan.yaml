@@ -8328,3 +8328,8 @@ phases:
     depends_on:
     - fix2.contracts.verify-contracts
     agent: gate-reviewer
+- id: fix2.public-api
+  name: 'Fix Pass 2: Public API Exposure and Entry Points (Issues 15-17, 24)'
+  status: pending
+  depends_on:
+  - retest.final
