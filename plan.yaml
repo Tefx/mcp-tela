@@ -9519,7 +9519,7 @@ phases:
       retest.'
   - id: retest2.full.regression-suite-retest-batch
     name: regression-suite-retest-batch
-    status: claimed
+    status: done
     description: 'Re-test the exact `retest2.full.regression-suite` blocker family
       after the batched fix.
 
@@ -9596,3 +9596,53 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T14:32:41.413519+00:00'
+    done_at: '2026-03-17T14:36:15.301574+00:00'
+    evidence: 'Artifact:
+
+      - PR: N/A (verify-only retest in isolated worktree)
+
+
+      Verification:
+
+      - `uv run pytest -q` -> PASS (316 passed)
+
+      - `uv run pytest --doctest-modules src/tela/` -> PASS (56 passed, 5 skipped)
+
+      - `uv run pytest --doctest-modules src/tela/core/contracts.py -v` -> PASS (`pre`
+      and `post` doctests pass)
+
+      - `uv run invar guard --all` -> PASS (status passed; static passed; doctest
+      passed; no missing meta-contract errors)
+
+      - `uv run pytest tests/repro/ -q` -> PASS (46 passed)
+
+      - `uv run pytest tests/core/test_errors.py -v` -> PASS (AUTH_RATE_LIMITED constant
+      covered)
+
+
+      Spec link:
+
+      - `retest2.full.regression-suite-retest-batch`
+
+
+      Findings:
+
+      - blocker: []
+
+      - should_fix: []
+
+      - suggestion: existing invar warnings remain as tracked escape-hatch observations
+
+      - tech_debt: minor warning debt noted; non-blocking for this retest
+
+
+      Blind-path policy:
+
+      - `tests/blind/` not present; explicit documented fallback to `tests/repro/`
+      used and passed.
+
+
+      Conclusion:
+
+      - Original blocker family from `retest2.full.regression-suite` is closed; downstream
+      smoke/audit/gate can proceed.'
