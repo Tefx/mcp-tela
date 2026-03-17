@@ -6700,7 +6700,7 @@ phases:
     claimed_at: '2026-03-17T10:50:00.881405+00:00'
   - id: fix.low.docs.l6-l7-remove-unused-click-rich-deps-document-argparse-choice
     name: 'L6+L7: Remove unused Click/Rich deps, document argparse choice'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - pyproject.toml (remove\
       \ click>=8.0, rich>=13.0)\n  - docs/DESIGN.md (L6: update if it references Click)\n\
       \nProblem:\n- L6: DESIGN.md specifies Click but actual CLI uses argparse\n-\
@@ -6722,6 +6722,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:50:01.339171+00:00'
+    done_at: '2026-03-17T10:51:02.109102+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 5ae6cd9
+
+
+      Files changed:
+
+      - pyproject.toml (removed click>=8.0 and rich>=13.0)
+
+      - docs/DESIGN.md (updated Click references to argparse)
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 295 passed, 2 pre-existing repro failures
+
+      - No import errors after dep removal
+
+
+      Spec link:
+
+      - L6: DESIGN.md specifies Click but CLI uses argparse
+
+      - L7: click and rich declared but never imported'
   - id: fix.low.docs.l8-l9-l10-l18-fix-readme-and-add-license
     name: 'L8+L9+L10+L18: Fix README and add LICENSE'
     status: pending
