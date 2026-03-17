@@ -9400,7 +9400,7 @@ phases:
     agent: gate-reviewer
   - id: retest2.full.regression-suite-fix-batch
     name: regression-suite-fix-batch
-    status: pending
+    status: claimed
     description: "Fix ALL blockers and related requirement drift found by `retest2.full.regression-suite`.\n\
       \nstep_type: implementation\nsymbolic_testing: true\ntags: [\"integration\"\
       ]\nprior_loop:\n  - retest2.full.regression-suite\nremaining_blocker: doctest\
@@ -9466,6 +9466,8 @@ phases:
     depends_on:
     - retest2.full.regression-suite
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T14:13:19.440714+00:00'
   - id: retest2.full.regression-suite-retest-batch
     name: regression-suite-retest-batch
     status: pending
