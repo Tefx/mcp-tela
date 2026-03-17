@@ -3063,7 +3063,7 @@ phases:
       - Commit: 08c097a (worktree), merged as 1ad728b'
   - id: gateway.test.gate
     name: Gate gateway.test
-    status: pending
+    status: claimed
     description: 'Gate review: Verify gateway runtime test phase completion.
 
       review_depth: STANDARD
@@ -3097,6 +3097,8 @@ phases:
     depends_on:
     - gateway.test.add-runtime-lifecycle-tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T07:53:41.798851+00:00'
 - id: gateway.runtime
   name: gateway.runtime
   status: locked
