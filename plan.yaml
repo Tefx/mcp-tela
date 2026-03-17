@@ -6611,7 +6611,7 @@ phases:
       - fastmcp is available as a dependency, import works'
   - id: fix.medium.audit.verify
     name: Verify medium audit fixes (M5-M7, M9)
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L1
@@ -6642,6 +6642,26 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T10:54:53.748536+00:00'
+    done_at: '2026-03-17T10:55:02.993296+00:00'
+    evidence: 'Verification: Medium Audit Fixes
+
+
+      M5: Timestamp comparison uses datetime.fromisoformat, not string comparison.
+      PASS
+
+      M6: _audit_entries is deque(maxlen=10000). PASS
+
+      M7: import fastmcp succeeds (v3.1.1). PASS
+
+      M9: on_config_changed implemented (returns Result, not raises). PASS
+
+
+      Test suite: 296 passed, 1 pre-existing repro failure
+
+      Invar guard: 0 errors
+
+
+      Verdict: PASS'
   - id: fix.medium.audit.gate
     name: 'Gate: Medium audit fixes (M5-M7, M9)'
     status: pending
