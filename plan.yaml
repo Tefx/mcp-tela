@@ -7433,7 +7433,7 @@ phases:
       computation is inline, not a separate function)'
   - id: retest.repro.run-repro-tests
     name: Run all repro tests
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L2
@@ -7553,6 +7553,47 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:14:52.981472+00:00'
+    done_at: '2026-03-17T11:15:10.889549+00:00'
+    evidence: 'Verification:
+
+      - Run: uv run pytest tests/repro/ -v --tb=short -> 46 passed, 0 failed
+
+
+      Findings coverage:
+
+      - B1 (CLI subcommands): 9 tests pass (all 5 subcommands registered + callable)
+
+      - B2 (AuditConfig wiring): 4 tests pass (init, tilde expand, disk persist, level
+      filter)
+
+      - B3 (name injection): 2 tests pass (no-name + backward compat)
+
+      - B4 (rollback isolation): 2 tests pass (snapshot/restore + multi-server)
+
+      - H1 (contracts): 2 tests pass (violation raises + no identity lambdas)
+
+      - H2 (concurrent audit): 1 test pass (50 concurrent writes)
+
+      - H3 (no stubs): 1 test pass (no raise NotImplementedError)
+
+      - H4 (token validation): 4 tests pass (deterministic, valid, invalid sig, expired)
+
+      - M3 (core errors): 2 tests pass
+
+      - M5 (timestamps): 1 test pass (Z vs +00:00)
+
+      - M6 (bounded store): 1 test pass (eviction)
+
+      - M7 (FastMCP): 1 test pass
+
+      - M8 (unset env): 1 test pass
+
+      - M10 (default posture): 2 tests pass
+
+      - L1, L5, L11, L13, L17, L18, L19, L20, L21: 13 tests pass
+
+
+      No false positives. All repro tests confirm fixes are in place.'
   - id: retest.repro.gate
     name: 'Gate: Black-box repro verification'
     status: pending
