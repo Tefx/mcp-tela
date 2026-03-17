@@ -1648,7 +1648,7 @@ phases:
       - Out-of-scope runtime initialize wiring remains deferred to `open_mode.runtime`."
   - id: config.impl.verify-config-authority
     name: Verify config authority
-    status: pending
+    status: claimed
     description: "As an INDEPENDENT TESTER (integration-verifier), validate the configuration\
       \ authority behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -1684,6 +1684,8 @@ phases:
     depends_on:
     - config.impl.implement-config-authority
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T06:39:23.823355+00:00'
   - id: config.impl.gate
     name: Gate config.impl
     status: pending
