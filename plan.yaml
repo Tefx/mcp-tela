@@ -10074,6 +10074,34 @@ phases:
   status: locked
   depends_on:
   - rt.cli_start
+  steps:
+  - id: rt.e2e.test
+    name: Write end-to-end integration test
+    status: pending
+    description: 'Write end-to-end integration test: start a mock MCP server (using
+      fastmcp), configure tela to connect to it, start tela, enumerate tools through
+      tela, make a tools/call through tela, verify result forwarded correctly. NO
+      tool_lists injection.'
+    verification: E2E test passes. Test starts real MCP server process. Test does
+      NOT use tool_lists parameter. Test verifies tool enumeration + tool call forwarding.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Test description:
+
+      - Mock server setup:
+
+      - Connection method:
+
+      - Assertions:
+
+      - tool_lists used: NO (mandatory)
+
+      Verification: pytest output
+
+      Gaps/Notes:'
+    agent: python-senior
 - id: rt.liveness
   name: Liveness Verification
   status: locked
