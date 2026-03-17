@@ -4962,7 +4962,7 @@ phases:
       **Verdict: PASS**'
   - id: reload.runtime.gate
     name: Gate reload.runtime
-    status: pending
+    status: claimed
     description: 'Gate review: Verify reload.runtime phase completion.
 
       review_depth: THOROUGH
@@ -5023,3 +5023,5 @@ phases:
     - reload.runtime.freeze-for-l2
     - reload.runtime.verify-reload-runtime
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T08:47:16.377645+00:00'
