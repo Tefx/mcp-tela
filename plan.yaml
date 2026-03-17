@@ -2720,13 +2720,13 @@ phases:
       - OPEN'
 - id: gateway.contract
   name: gateway.contract
-  status: pending
+  status: in_progress
   depends_on:
   - open_mode.runtime
   steps:
   - id: gateway.contract.define-runtime-boundary-contracts
     name: Define runtime boundary contracts
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.9 shell/gateway.py -- Gateway Lifecycle\n \
@@ -2769,6 +2769,8 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T07:23:10.402612+00:00'
   - id: gateway.contract.gate
     name: Gate gateway.contract
     status: pending
