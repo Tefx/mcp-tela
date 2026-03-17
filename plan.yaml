@@ -6525,3 +6525,20 @@ phases:
     depends_on:
     - retest.repro.create-scaffold
     agent: integration-verifier
+  - id: retest.repro.gate
+    name: 'Gate: Black-box repro verification'
+    status: pending
+    description: "Gate review: Confirm all findings have passing repro tests.\n\n\
+      review_depth: THOROUGH\nreview_depth_rationale:\n  - This gate confirms ALL\
+      \ 39 findings are verified\n  - Any gap here means a finding was not actually\
+      \ fixed\n\ncross_cutting_focus:\n  - Every finding ID (B1-B4, H1-H4, M1-M10,\
+      \ L1-L21) has at least one passing test\n  - No false positive tests (tests\
+      \ that pass even without the fix)"
+    verification: '- All repro tests pass
+
+      - Coverage matrix shows every finding ID verified
+
+      - No gaps in coverage'
+    depends_on:
+    - retest.repro.run-repro-tests
+    agent: gate-reviewer
