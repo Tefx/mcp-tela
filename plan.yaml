@@ -6635,13 +6635,13 @@ phases:
     agent: gate-reviewer
 - id: fix.low.docs
   name: 'Low Fixes: Docs and Config (L2, L4, L6-L10, L18)'
-  status: pending
+  status: in_progress
   depends_on:
   - fix.high
   steps:
   - id: fix.low.docs.l2-l4-fix-enforcement-chain-step-count-in-docs
     name: 'L2+L4: Fix enforcement chain step count in docs'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - docs/DESIGN.md (L2:\
       \ says 7-step but executes 5; L4: inconsistent with INTERFACES.md 4-step)\n\
       \  - docs/INTERFACES.md (L4: says 4-step chain)\n\nProblem:\n- L2: Docs say\
@@ -6664,6 +6664,8 @@ phases:
     - docs/INTERFACES.md
     - src/tela/core/enforcement.py
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-17T10:50:00.881405+00:00'
   - id: fix.low.docs.l6-l7-remove-unused-click-rich-deps-document-argparse-choice
     name: 'L6+L7: Remove unused Click/Rich deps, document argparse choice'
     status: pending
