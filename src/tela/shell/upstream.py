@@ -1,8 +1,11 @@
-"""Upstream initialize handling for open-mode profile binding.
+"""Upstream MCP handler contracts for open-mode and gateway runtime.
 
-This module implements MCP initialize-time binding for open mode. Profile
-resolution uses the shared resolved default-profile fact from config authority;
-client-provided connection metadata is explicitly not a profile selection
+This module defines the upstream-facing MCP protocol handler interfaces:
+initialize, tools/list, tools/call, tela.profiles, and notifications.
+The open-mode initialize binding is implemented; remaining handlers are
+contract stubs for the gateway.runtime phase.
+
+Client-provided connection metadata is explicitly not a profile selection
 channel in open mode.
 """
 
@@ -11,7 +14,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
-from tela.core.models import DefaultProfileResolutionStatus, InitializeProfileBinding
+from tela.core.models import (
+    ConnectionContext,
+    DefaultProfileResolutionStatus,
+    InitializeProfileBinding,
+    TelaError,
+)
 from tela.shell.config_loader import Result
 
 
@@ -65,9 +73,6 @@ def resolve_initialize_profile_binding(
         or a rejection reason on failure.
     """
 
-    # Client metadata is explicitly ignored for profile selection in open mode.
-    # The context parameter exists for protocol completeness and future
-    # extensibility, but must not influence the profile binding decision.
     _ = context
 
     if default_resolution_status == DefaultProfileResolutionStatus.MISSING:
@@ -104,3 +109,156 @@ def resolve_initialize_profile_binding(
             resolved_default_profile=resolved_default_profile,
         )
     )
+
+
+# --- MCP Handler Contracts (stubs) ---
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow dead_param: contract stub preserves parameter signatures.
+async def handle_initialize(
+    client_info: dict,
+) -> Result[ConnectionContext, str]:
+    """Handle MCP initialize request.
+
+    In token mode: extract capability_token from clientInfo, validate, bind profile.
+    In open mode: bind explicit default profile.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> import asyncio
+        >>> asyncio.run(handle_initialize({}))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: handle_initialize pending
+
+    Args:
+        client_info: MCP clientInfo dict from initialize request.
+
+    Returns:
+        ``Result[ConnectionContext, str]`` once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: handle_initialize pending")
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
+# @invar:allow dead_param: contract stub preserves parameter signatures.
+async def handle_tools_list(
+    connection: ConnectionContext,
+) -> list[dict]:
+    """Return filtered tool list for the bound profile.
+
+    Each tool retains its original JSON Schema from downstream.
+    Only tools permitted by the profile are included.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> import asyncio
+        >>> asyncio.run(handle_tools_list(
+        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        ... ))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: handle_tools_list pending
+
+    Args:
+        connection: Active upstream connection context.
+
+    Returns:
+        List of tool dicts once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: handle_tools_list pending")
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow dead_param: contract stub preserves parameter signatures.
+async def handle_tools_call(
+    connection: ConnectionContext,
+    tool_name: str,
+    arguments: dict,
+) -> Result[dict, TelaError]:
+    """Handle a tools/call request.
+
+    1. Extract _meta from arguments (if present)
+    2. Strip _meta from arguments
+    3. Run enforcement chain
+    4. If denied: return error, write audit entry
+    5. If allowed: forward to downstream, return result
+    6. Write audit entry
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> import asyncio
+        >>> asyncio.run(handle_tools_call(
+        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
+        ...     "some_tool",
+        ...     {},
+        ... ))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: handle_tools_call pending
+
+    Args:
+        connection: Active upstream connection context.
+        tool_name: Tool to invoke.
+        arguments: Tool arguments (may contain _meta).
+
+    Returns:
+        ``Result[dict, TelaError]`` once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: handle_tools_call pending")
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
+def handle_profiles_list() -> list[dict]:
+    """Return list of configured profiles (tela.profiles MCP method).
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> handle_profiles_list()
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: handle_profiles_list pending
+
+    Returns:
+        List of profile dicts once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: handle_profiles_list pending")
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow dead_param: contract stub preserves parameter signatures.
+async def notify_tools_changed(
+    connection: ConnectionContext,
+    tools_digest: str,
+) -> None:
+    """Send notifications/tools/list_changed to an upstream client.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> import asyncio
+        >>> asyncio.run(notify_tools_changed(
+        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
+        ...     "digest123",
+        ... ))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: notify_tools_changed pending
+
+    Args:
+        connection: Target upstream connection.
+        tools_digest: Digest of the updated tool list.
+    """
+
+    raise NotImplementedError("Contract stub: notify_tools_changed pending")

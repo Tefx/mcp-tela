@@ -1,8 +1,9 @@
-"""Gateway startup binding for runtime configuration.
+"""Gateway lifecycle and startup binding contracts.
 
-This module implements the binding from CLI runtime contract into gateway
-startup configuration. Actual transport startup (stdio/SSE server) is
-deferred to the gateway.runtime phase.
+This module defines the gateway lifecycle interface (start, shutdown, status,
+connections) and implements the CLI-to-gateway startup binding. Actual transport
+startup (stdio/SSE server) and runtime lifecycle management are deferred to the
+gateway.runtime phase.
 """
 
 from __future__ import annotations
@@ -10,7 +11,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from tela.core.models import AuthMode, GatewayTransport, RuntimeBindingContract
+from tela.core.models import (
+    AuthMode,
+    ConnectionContext,
+    GatewayStatus,
+    GatewayTransport,
+    RuntimeBindingContract,
+)
 from tela.shell.config_loader import Result, load_config
 
 
@@ -70,9 +77,6 @@ def bind_gateway_startup(
         startup config on success, or an error string on failure.
     """
 
-    # Determine auth mode by loading the config to inspect auth settings.
-    # The config is already validated by start_command; we only need the
-    # auth mode to decide open vs token gateway startup.
     config_result = load_config(
         path=Path(runtime.config_path),
         default_profile=runtime.cli_default_profile,
@@ -92,3 +96,99 @@ def bind_gateway_startup(
             default_profile=runtime.cli_default_profile,
         )
     )
+
+
+# --- Gateway Lifecycle Contracts (stubs) ---
+
+
+# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
+# @invar:allow dead_param: contract stub preserves parameter signatures.
+async def gateway_start(config: GatewayStartupConfig) -> Result[None, str]:
+    """Start the gateway: load config, connect downstreams, start MCP server.
+
+    Fails fast on config errors or tool conflicts at startup.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> import asyncio
+        >>> asyncio.run(gateway_start(
+        ...     GatewayStartupConfig(
+        ...         transport=GatewayTransport.STDIO,
+        ...         port=None,
+        ...         auth_mode=AuthMode.OPEN,
+        ...         default_profile="dev",
+        ...     )
+        ... ))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: gateway_start pending
+
+    Args:
+        config: Resolved gateway startup configuration.
+
+    Returns:
+        ``Result[None, str]`` once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: gateway_start pending")
+
+
+# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
+async def gateway_shutdown() -> Result[None, str]:
+    """Graceful shutdown: stop accepting connections, close downstreams.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> import asyncio
+        >>> asyncio.run(gateway_shutdown())
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: gateway_shutdown pending
+
+    Returns:
+        ``Result[None, str]`` once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: gateway_shutdown pending")
+
+
+# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
+# @invar:allow shell_result: returns GatewayStatus per DESIGN.md spec, not a failable I/O boundary.
+def gateway_status() -> GatewayStatus:
+    """Return current gateway runtime status.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> gateway_status()
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: gateway_status pending
+
+    Returns:
+        ``GatewayStatus`` once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: gateway_status pending")
+
+
+# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
+# @invar:allow shell_result: returns list[ConnectionContext] per DESIGN.md spec, not a failable I/O boundary.
+def gateway_connections() -> list[ConnectionContext]:
+    """Return list of active upstream connections.
+
+    Contract stub: raises NotImplementedError.
+
+    Examples:
+        >>> gateway_connections()
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Contract stub: gateway_connections pending
+
+    Returns:
+        List of ``ConnectionContext`` once implemented.
+    """
+
+    raise NotImplementedError("Contract stub: gateway_connections pending")
