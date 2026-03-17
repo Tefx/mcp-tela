@@ -2407,7 +2407,7 @@ phases:
       binding, CLI wiring'
   - id: open_mode.runtime.verify-open-mode-runtime
     name: Verify open-mode runtime
-    status: pending
+    status: claimed
     description: "As an INDEPENDENT TESTER (integration-verifier), validate the open-mode\
       \ runtime from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS, not to\
       \ confirm it works.\n\nstep_type: verification\nagent_source: default\nIndependence\
@@ -2485,6 +2485,8 @@ phases:
     depends_on:
     - open_mode.runtime.freeze-for-l2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T07:20:29.533620+00:00'
   - id: open_mode.runtime.gate
     name: Gate open_mode.runtime
     status: pending
