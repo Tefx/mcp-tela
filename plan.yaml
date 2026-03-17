@@ -8405,7 +8405,7 @@ phases:
       Gaps/Notes: none"
   - id: fix2.public-api.verify-api
     name: verify-api
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L1
@@ -8440,6 +8440,13 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:55:16.957370+00:00'
+    done_at: '2026-03-17T11:57:27.200271+00:00'
+    evidence: '## Evidence (integration-verifier)
+
+      All 4 fixes verified: expand_env_vars importable, python -m tela works, 9 error
+      constants importable, detect_conflicts importable without ToolConflict
+
+      Full suite: 311 passed. Repro: 46 passed.'
   - id: fix2.public-api.gate
     name: gate
     status: pending
