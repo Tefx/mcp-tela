@@ -731,6 +731,50 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T05:48:10.667851+00:00'
+  - id: meta.review.fix-enforcement-wording-conflict
+    name: Reconcile canonical enforcement wording conflict
+    status: pending
+    description: 'Batched meta-plan fix for the blocker from `meta.review.gate`.
+
+
+      Reconcile the unresolved enforcement wording conflict between the earlier 7-step
+      framing and the 4-step framing with initialize-time binding, and add the missing
+      planned reconciliation step that earlier evidence said should exist.
+
+
+      Scope is planning/meta only:
+
+      - define the single canonical enforcement wording to be used by downstream implementation
+      planning
+
+      - reconcile the 7-step vs 4-step language so the plan no longer carries competing
+      enforcement interpretations
+
+      - encode the missing reconciliation work as plan structure rather than doc deliverables
+
+      - preserve meta-only scope; docs are references, not deliverables
+
+
+      Completion criteria:
+
+      - one canonical enforcement wording is selected and reflected in plan-facing
+      descriptions
+
+      - the missing reconciliation step is explicitly planned or incorporated so downstream
+      phases have no ambiguity
+
+      - no deliverable language implies docs are required outputs'
+    verification: '- Plan contains one canonical enforcement wording for this blocker
+      family
+
+      - Missing reconciliation work is explicitly represented in plan structure
+
+      - Scope remains meta/planning only; docs are not deliverables
+
+      - Dependency chain starts at `meta.review.gate`'
+    depends_on:
+    - meta.review.gate
+    agent: software-architect
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
   status: locked
