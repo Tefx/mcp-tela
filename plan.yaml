@@ -5940,3 +5940,99 @@ phases:
   depends_on:
   - fix.high
   - fix.medium.config
+  steps:
+  - id: fix.low.code.l1-l3-l5-fix-import-violations-redundant-params-misplaced-pure-functions
+    name: 'L1+L3+L5: Fix import violations, redundant params, misplaced pure functions'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - src/tela/cli.py (L1:\
+      \ imports from shell/gateway.py violates DESIGN.md rule #5)\n  - src/tela/core/enforcement.py\
+      \ (L3: tool_name param redundant with tool.name)\n  - src/tela/shell/upstream.py\
+      \ (L5: strip_meta and filter_tools_for_profile are pure but in Shell)\nharness_refs:\n\
+      \  - tests/core/test_enforcement.py\n  - tests/shell/test_upstream.py\n\nTasks:\n\
+      1. L1: cli.py imports `bind_gateway_startup` directly from shell/gateway.py.\n\
+      \   DESIGN.md rule #5 says CLI should go through commands/ layer.\n   Move the\
+      \ import to go through commands/start.py instead.\n2. L3: `enforce()` has `tool_name`\
+      \ parameter redundant with `tool.name`.\n   Remove the parameter and use `tool.name`\
+      \ internally.\n   Update all call sites.\n3. L5: `strip_meta()` and `filter_tools_for_profile()`\
+      \ are pure functions currently in Shell.\n   Move to Core if they have no I/O\
+      \ dependencies, or document why they stay in Shell.\n\nOut-of-scope: No behavioral\
+      \ changes."
+    verification: '- cli.py no longer imports directly from shell/gateway.py
+
+      - enforce() no longer has redundant tool_name parameter
+
+      - Pure functions in correct zone
+
+      - All tests pass
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/cli.py
+    - src/tela/core/enforcement.py
+    - src/tela/shell/upstream.py
+    agent: python-executor
+  - id: fix.low.code.l11-l12-l13-add-init-py-remove-unused-import-remove-ghost-telaerror
+    name: 'L11+L12+L13: Add __init__.py, remove unused import, remove ghost TelaError'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - src/tela/__init__.py\
+      \ (NEW)\n  - src/tela/core/__init__.py (NEW)\n  - src/tela/shell/__init__.py\
+      \ (NEW)\n  - src/tela/commands/__init__.py (NEW)\n  - tests/integration/test_end_to_end.py\
+      \ (L12: _handle_start imported but unused)\n  - src/tela/core/models.py (L13:\
+      \ TelaError model never constructed anywhere)\n\nTasks:\n1. L11: Add `__init__.py`\
+      \ files to all packages (src/tela/, core/, shell/, commands/)\n   - Can be empty\
+      \ or contain minimal __all__ exports\n2. L12: Remove unused `_handle_start`\
+      \ import from test_end_to_end.py\n3. L13: TelaError model is a complete ghost\
+      \ -- never constructed anywhere.\n   Either remove it or wire it into error\
+      \ responses where appropriate.\n   Decision: KEEP it (it's part of the DESIGN.md\
+      \ contract for structured errors)\n   but add at least one construction site\
+      \ in the error path."
+    verification: '- __init__.py exists in all packages
+
+      - No unused imports in test_end_to_end.py
+
+      - TelaError is either used or documented as reserved
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    refs:
+    - tests/integration/test_end_to_end.py
+    - src/tela/core/models.py
+    agent: python-executor
+  - id: fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
+    name: 'L14+L15+L16+L21: Fix counters, write-only fields, vacuous contracts'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/gateway.py\
+      \ (L14: total_tool_calls never incremented)\n  - src/tela/core/models.py (L15:\
+      \ ConnectionContext.tool_call_count never incremented/read)\n  - src/tela/core/models.py\
+      \ (L16: 19 WRITE-ONLY fields, 4 GHOST fields)\n  - src/tela/core/config.py (L21:\
+      \ _expand_env_token @post is vacuous)\n\nTasks:\n1. L14: Increment `GatewayRuntime.total_tool_calls`\
+      \ in the tool call handling path\n   (gateway_start or wherever tool calls are\
+      \ dispatched)\n2. L15: Increment `ConnectionContext.tool_call_count` when a\
+      \ tool call is processed for a connection\n   - ConnectionContext is frozen\
+      \ (BaseModel) -- may need to make mutable or track externally\n3. L16: Audit\
+      \ all 19 write-only and 4 ghost fields:\n   - For each, either add a read site\
+      \ or document as reserved for future use\n   - Ghost fields (never written OR\
+      \ read): remove or mark as planned\n   - Priority: fix fields that are exposed\
+      \ via status/audit/CLI output\n4. L21: Already covered by H1 (vacuous contracts).\
+      \ Verify it's fixed.\n   If H1 didn't address it, fix _expand_env_token @post\
+      \ to check something meaningful\n   (e.g., all $VAR tokens resolved, or result\
+      \ is a valid string)."
+    verification: '- total_tool_calls incremented during tool dispatch
+
+      - tool_call_count tracked per connection
+
+      - Write-only fields either have readers or are documented
+
+      - Ghost fields cleaned up
+
+      - _expand_env_token @post is meaningful
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/gateway.py
+    - src/tela/core/models.py
+    - src/tela/core/config.py
+    agent: python-executor
