@@ -9847,6 +9847,29 @@ phases:
   status: locked
   depends_on:
   - rt.downstream
+  steps:
+  - id: rt.upstream.server
+    name: Create fastmcp server in gateway.py
+    status: pending
+    description: Create a fastmcp FastMCP server instance in gateway.py. Define how
+      tools from the registry are registered as MCP tools on the server. Wire gateway_start
+      to create and configure the server. Wire gateway_shutdown to stop it.
+    verification: FastMCP server created in gateway_start. Tools from registry exposed
+      as MCP tools. gateway_shutdown stops server.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - FastMCP() instantiated in gateway_start: yes/no
+
+      - Tools registered from registry: yes/no
+
+      - gateway_shutdown stops server: yes/no
+
+      Gaps/Notes:'
+    agent: python-senior
 - id: rt.cli_start
   name: Wire tela start
   status: locked
