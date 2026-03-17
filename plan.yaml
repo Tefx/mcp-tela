@@ -2460,6 +2460,41 @@ phases:
 
       - Upstream emission points covered: yes/no'
     agent: python-executor
+  - id: audit.test.gate
+    name: Gate audit.test
+    status: pending
+    description: 'Gate review: Verify audit runtime test phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Audit tests must define level and outcome semantics before implementation.
+
+      cross_cutting_focus:
+
+      - level filtering cases exist
+
+      - upstream emission cases exist
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Audit test step completed
+
+      - Acceptance covers level filtering and emission semantics
+
+      - Ready for audit.runtime'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: audit.test.add-audit-runtime-tests
+
+      - Acceptance coverage sufficient: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - audit.test.add-audit-runtime-tests
+    agent: gate-reviewer
 - id: audit.runtime
   name: audit.runtime
   status: locked
