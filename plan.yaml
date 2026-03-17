@@ -10375,6 +10375,36 @@ phases:
     depends_on:
     - cap.impl.models
     agent: python-executor
+  - id: cap.impl.config-catalog
+    name: Update config parser and builtin catalog
+    status: pending
+    description: 'Update config.py parse_config() to handle both tools: and capabilities:
+      in YAML, apply side_effect_policy to ceiling capping per MIGRATION-003 rules.
+      Update catalog.py builtin profiles to use capabilities instead of tools, remove
+      side_effect_policy from all 7 builtins.'
+    verification: Config parser accepts both formats. Capping logic correct per migration
+      rules. All 7 builtins use capabilities. All previously-written tests pass. invar
+      guard passes.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - Both YAML formats parsed: yes/no
+
+      - Capping logic for read_only: yes/no
+
+      - Builtins updated: count/7
+
+      - Tests passing: yes/no
+
+      - invar guard: pass/fail
+
+      Gaps/Notes:'
+    depends_on:
+    - cap.impl.enforcement
+    agent: python-executor
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
