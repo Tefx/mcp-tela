@@ -746,7 +746,7 @@ phases:
       \ follow-up fix/re-gate chain now authoritative."
   - id: meta.review.fix-enforcement-wording-conflict
     name: Reconcile canonical enforcement wording conflict
-    status: pending
+    status: claimed
     description: 'Batched meta-plan fix for the blocker from `meta.review.gate`.
 
 
@@ -788,6 +788,8 @@ phases:
     depends_on:
     - meta.review.gate
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T05:52:39.667520+00:00'
   - id: meta.review.regate-enforcement-wording-conflict
     name: Re-test and re-gate enforcement wording reconciliation
     status: pending
