@@ -9164,7 +9164,7 @@ phases:
       \ (`retest2.full.*`)."
 - id: retest2.full
   name: 'Retest Pass 2: Full Regression and Verification Suite'
-  status: in_progress
+  status: done
   depends_on:
   - fix2.concurrency
   - fix2.contracts
@@ -9423,7 +9423,7 @@ phases:
       - Audit reports 32/32 issues covered with evidence and no uncovered issues remaining."
   - id: retest2.full.final-gate
     name: final-gate
-    status: claimed
+    status: done
     description: "FINAL GATE: Fix Pass 2 complete.\n\nreview_depth: THOROUGH\nreview_depth_rationale:\
       \ |\n  - Final release gate for 32-issue fix pass plus regression-suite remediation\n\
       \  - Must confirm no issue was missed\n  - Must confirm no regression from fix\
@@ -9458,6 +9458,20 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T14:46:59.809368+00:00'
+    done_at: '2026-03-17T14:54:19.304023+00:00'
+    evidence: "Artifact:\n- PR: N/A (gate review step)\n\nVerification:\n- Gate-reviewer\
+      \ reported THOROUGH audit across required evidence chains.\n- Reported command\
+      \ outcomes in gate evidence:\n  - `uv run pytest -q` -> 316 passed\n  - `uv\
+      \ run pytest --doctest-modules src/tela/` -> 56 passed, 5 skipped\n  - `uv run\
+      \ invar guard --all` -> passed, 0 errors\n  - `uv run pytest tests/repro/ -q`\
+      \ -> 46 passed\n  - CLI/import smoke checks for `python -m tela`, `expand_env_vars`,\
+      \ `AUTH_RATE_LIMITED` -> OK\n- Gate explicitly reviewed closure of original\
+      \ regression-suite blocker family (doctest/meta-contract/shell debt threshold/blind-path\
+      \ policy/AUTH_RATE_LIMITED drift).\n\nSpec link:\n- `retest2.full.final-gate`\n\
+      \nFindings:\n- blocker: []\n- should_fix: []\n- suggestion:\n  - non-blocking\
+      \ debt notes around shell complexity and future lock-hardening consideration\n\
+      - tech_debt: []\n\nGate decision:\n- APPROVE\n- rationale: all required closure\
+      \ criteria passed; no blockers remain for release in this phase."
   - id: retest2.full.regression-suite-fix-batch
     name: regression-suite-fix-batch
     status: done
