@@ -2240,7 +2240,7 @@ phases:
       - Commit: 6f2f1c8 (worktree), merged as 01ec7ba"
   - id: open_mode.runtime.integrate-cli-default-profile-wiring
     name: Integrate CLI default-profile wiring
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#8.1\
       \ Startup Sequence\n  - docs/INTERFACES.md#A. CLI Interface\n  - docs/INTERFACES.md#H.\
@@ -2291,6 +2291,8 @@ phases:
     depends_on:
     - open_mode.runtime.implement-open-mode-initialize-binding
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T07:15:40.059125+00:00'
   - id: open_mode.runtime.freeze-for-l2
     name: Freeze for open-mode L2 verification
     status: pending
