@@ -5919,3 +5919,18 @@ phases:
     - fix.medium.audit.m5-m6-fix-audit-timestamp-and-bounded-store
     - fix.medium.audit.m7-m9-wire-fastmcp-and-implement-on-config-changed
     agent: integration-verifier
+  - id: fix.medium.audit.gate
+    name: 'Gate: Medium audit fixes (M5-M7, M9)'
+    status: pending
+    description: 'Gate review: Verify medium audit fix phase completion.
+
+
+      review_depth: STANDARD'
+    verification: '- All fixes complete with evidence
+
+      - No regressions
+
+      - invar guard clean'
+    depends_on:
+    - fix.medium.audit.verify
+    agent: gate-reviewer
