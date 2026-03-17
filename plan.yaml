@@ -801,7 +801,7 @@ phases:
       \ mutations required."
   - id: meta.review.regate-enforcement-wording-conflict
     name: Re-test and re-gate enforcement wording reconciliation
-    status: pending
+    status: claimed
     description: 'Independent re-gate after `meta.review.fix-enforcement-wording-conflict`.
 
 
@@ -831,6 +831,8 @@ phases:
     depends_on:
     - meta.review.fix-enforcement-wording-conflict
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T05:56:11.018026+00:00'
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
   status: locked
