@@ -10211,3 +10211,11 @@ phases:
     depends_on:
     - rt.final_gate.integration
     agent: blind-tester
+  - id: rt.final_gate.review
+    name: Full gate review
+    status: pending
+    description: Full gate review. Final verdict.
+    verification: 'Verdict: PASS. Zero BLOCKING. Gateway.runtime is genuinely done.'
+    depends_on:
+    - rt.final_gate.blind
+    agent: gate-reviewer
