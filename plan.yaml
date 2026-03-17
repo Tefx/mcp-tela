@@ -2980,7 +2980,7 @@ phases:
   steps:
   - id: gateway.test.add-runtime-lifecycle-tests
     name: Add runtime lifecycle tests
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.9\
       \ shell/gateway.py -- Gateway Lifecycle\n  - docs/DESIGN.md#4.10 shell/downstream.py\
       \ -- Downstream Server Management\n  - docs/DESIGN.md#4.11 shell/upstream.py\
@@ -3018,6 +3018,49 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T07:50:36.174639+00:00'
+    done_at: '2026-03-17T07:53:27.309727+00:00'
+    evidence: '## Test Evidence
+
+      - Added tests: 36 new tests across 4 files
+
+      - Startup fail-fast covered: yes (missing config, invalid YAML, no default,
+      ambiguous defaults, unknown profile, bind_gateway_startup missing config)
+
+      - Downstream registry covered: yes (ServerConfig shapes for stdio/SSE, tool
+      overrides, default posture, ResolvedTool fields, conflict detection inputs,
+      registry grouping)
+
+      - Upstream call routing covered: yes (handler stubs, ConnectionContext model,
+      EnforcementResult allow/deny, _meta extraction shape, TelaError model)
+
+      - Runtime readiness path fixture: tests/integration/test_end_to_end.py (4 new
+      tests: stdio, SSE, CLI override, fail-fast chain)
+
+
+      ### Test breakdown
+
+      - tests/shell/test_gateway.py: 16 tests (+12 new: config shapes, fail-fast,
+      model fields)
+
+      - tests/shell/test_downstream.py: 15 tests (+9 new: ServerConfig, ResolvedTool,
+      registry grouping)
+
+      - tests/shell/test_upstream.py: 23 tests (+11 new: handler stubs, ConnectionContext,
+      EnforcementResult, _meta, TelaError)
+
+      - tests/integration/test_end_to_end.py: 11 tests (+4 new: runtime readiness
+      paths)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 104 passed
+
+      - `uv run invar guard --changed` -> passed (0 errors)
+
+      - No product implementation added
+
+      - Commit: 08c097a (worktree), merged as 1ad728b'
   - id: gateway.test.gate
     name: Gate gateway.test
     status: pending
