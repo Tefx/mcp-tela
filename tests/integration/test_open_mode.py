@@ -190,17 +190,24 @@ class TestSharedResolvedProfileConformance:
 # --- Integration path: CLI start -> gateway binding (stub verification) ---
 
 
-def test_bind_gateway_startup_is_stub() -> None:
-    """bind_gateway_startup must still be a contract stub."""
+def test_bind_gateway_startup_binds_runtime_contract() -> None:
+    """bind_gateway_startup must produce GatewayStartupConfig from RuntimeBindingContract."""
+    import tempfile, os
+    d = tempfile.mkdtemp()
+    p = os.path.join(d, "tela.yaml")
+    with open(p, "w") as f:
+        f.write("profiles:\n  dev:\n    name: dev\n    default: true\nauth:\n  mode: open\n")
     contract = RuntimeBindingContract(
-        config_path="tela.yaml",
+        config_path=p,
         transport=GatewayTransport.STDIO,
         port=None,
         cli_default_profile="dev",
     )
-    with pytest.raises(NotImplementedError) as exc_info:
-        bind_gateway_startup(contract)
-    assert "Contract stub" in str(exc_info.value)
+    result = bind_gateway_startup(contract)
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.default_profile == "dev"
+    assert result.value.transport == GatewayTransport.STDIO
 
 
 def test_resolve_initialize_binding_succeeds_for_resolved() -> None:

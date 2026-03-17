@@ -1,16 +1,17 @@
-"""Gateway startup contracts for runtime binding.
+"""Gateway startup binding for runtime configuration.
 
-This module defines acceptance-only startup interfaces for wiring CLI start
-arguments into gateway runtime configuration. Runtime startup behavior is out of
-scope for this step.
+This module implements the binding from CLI runtime contract into gateway
+startup configuration. Actual transport startup (stdio/SSE server) is
+deferred to the gateway.runtime phase.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from tela.core.models import AuthMode, GatewayTransport, RuntimeBindingContract
-from tela.shell.config_loader import Result
+from tela.shell.config_loader import Result, load_config
 
 
 @dataclass(frozen=True)
@@ -33,35 +34,61 @@ class GatewayStartupConfig:
 def bind_gateway_startup(
     runtime: RuntimeBindingContract,
 ) -> Result[GatewayStartupConfig, str]:
-    """Bind CLI runtime contract into gateway startup contract.
+    """Bind CLI runtime contract into gateway startup configuration.
 
-    This is acceptance-only for now; no runtime startup logic is implemented.
+    Resolves the gateway startup config from the CLI runtime binding contract.
+    The resolved default-profile is passed through as-is from the shared
+    config authority path -- this function does not re-derive profile selection.
 
     Examples:
-        >>> from tela.core.models import GatewayTransport
-        >>> bind_gateway_startup(
+        >>> import tempfile, os
+        >>> from tela.core.models import GatewayTransport, RuntimeBindingContract
+        >>> d = tempfile.mkdtemp()
+        >>> p = os.path.join(d, "tela.yaml")
+        >>> with open(p, "w") as f:
+        ...     _ = f.write("profiles:\\n  dev:\\n    name: dev\\n    default: true\\nauth:\\n  mode: open\\n")
+        >>> r = bind_gateway_startup(
         ...     RuntimeBindingContract(
-        ...         config_path="tela.yaml",
+        ...         config_path=p,
         ...         transport=GatewayTransport.STDIO,
         ...         port=None,
-        ...         cli_default_profile=None,
+        ...         cli_default_profile="dev",
         ...     )
         ... )
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: bind_gateway_startup runtime wiring pending
+        >>> r.is_ok
+        True
+        >>> r.value.transport
+        <GatewayTransport.STDIO: 'stdio'>
+        >>> r.value.default_profile
+        'dev'
 
     Args:
-        runtime: CLI runtime binding contract from `tela start`.
+        runtime: CLI runtime binding contract from ``tela start``.
 
     Returns:
-        `Result[GatewayStartupConfig, str]` once runtime wiring is implemented.
-
-    Raises:
-        NotImplementedError: This step is contract-only.
+        ``Result[GatewayStartupConfig, str]`` with the resolved gateway
+        startup config on success, or an error string on failure.
     """
 
-    _ = runtime
-    raise NotImplementedError(
-        "Contract stub: bind_gateway_startup runtime wiring pending"
+    # Determine auth mode by loading the config to inspect auth settings.
+    # The config is already validated by start_command; we only need the
+    # auth mode to decide open vs token gateway startup.
+    config_result = load_config(
+        path=Path(runtime.config_path),
+        default_profile=runtime.cli_default_profile,
+    )
+
+    if config_result.is_err:
+        return Result(error=config_result.error)
+
+    assert config_result.value is not None
+    auth_mode = config_result.value.auth.mode
+
+    return Result(
+        value=GatewayStartupConfig(
+            transport=runtime.transport,
+            port=runtime.port,
+            auth_mode=AuthMode(auth_mode),
+            default_profile=runtime.cli_default_profile,
+        )
     )
