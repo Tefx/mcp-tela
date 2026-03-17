@@ -10510,6 +10510,14 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+  - id: cap.docs.gate
+    name: Gate review
+    status: pending
+    description: ''
+    verification: Quick Gate. Docs match implementation. No stale references.
+    depends_on:
+    - cap.docs.update
+    agent: gate-reviewer
 - id: cap.cleanup
   name: Remove Deprecated Code
   status: locked
