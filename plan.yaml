@@ -6542,3 +6542,8 @@ phases:
     depends_on:
     - retest.repro.run-repro-tests
     agent: gate-reviewer
+- id: retest.final
+  name: Final Consolidated Gate
+  status: locked
+  depends_on:
+  - retest.repro
