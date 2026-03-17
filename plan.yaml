@@ -7433,7 +7433,7 @@ phases:
       computation is inline, not a separate function)'
   - id: retest.repro.run-repro-tests
     name: Run all repro tests
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       independence_level: L2
@@ -7551,6 +7551,8 @@ phases:
     depends_on:
     - retest.repro.create-scaffold
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T11:14:52.981472+00:00'
   - id: retest.repro.gate
     name: 'Gate: Black-box repro verification'
     status: pending
