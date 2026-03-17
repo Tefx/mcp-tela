@@ -9,7 +9,6 @@ from __future__ import annotations
 import os
 import tempfile
 
-from tela.cli import _handle_start
 from tela.commands.start import start_command
 from tela.core.models import AuthMode, GatewayTransport
 from tela.shell.gateway import bind_gateway_startup
