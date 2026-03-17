@@ -3990,7 +3990,7 @@ phases:
   steps:
   - id: audit.runtime.implement-audit-entry-building
     name: Implement audit entry building
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.12 shell/audit.py -- Audit Log Writer\n  - docs/DESIGN.md#10.1\
       \ Error Propagation Rules\n  - docs/INTERFACES.md#J. Error Codes\ntouch_paths:\n\
@@ -4019,6 +4019,47 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:32:08.019223+00:00'
+    done_at: '2026-03-17T08:35:08.423271+00:00'
+    evidence: '## Implementation Evidence
+
+      - Audit entry builders: build_audit_entry (with _compute_param_hash helper)
+
+      - Main-path command/output: `uv run pytest -q` -> 194 passed
+
+      - Failure-path command/output: test_build_denied_carries_denial_metadata, test_build_denied_no_response_content
+      -> both pass
+
+      - Upstream integration deferred: yes (upstream.py untouched, audit_write/close/query
+      remain stubs)
+
+
+      ### Changes
+
+      - `src/tela/shell/audit.py`: Implement build_audit_entry with L1/L2/L3 filtering,
+      _compute_param_hash (SHA-256), _now_iso timestamp
+
+      - `tests/shell/test_audit.py`: 24 tests (replacing 2 stub tests with 22 behavior
+      tests + 2 model tests)
+
+
+      ### Level filtering behavior
+
+      - L1: tool+verdict+latency, no param_hash, no content
+
+      - L2: +param_hash (SHA-256 of sorted JSON arguments), no content
+
+      - L3: +request_content, +response_content
+
+      - Meta: always recorded at all levels
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 194 passed
+
+      - `uv run invar guard --changed` -> 0 errors
+
+      - Commit: 1490102 (worktree), merged as 006d516'
   - id: audit.runtime.integrate-audit-emission-and-query
     name: Integrate audit emission and query
     status: pending
