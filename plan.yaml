@@ -8727,7 +8727,7 @@ phases:
     agent: gate-reviewer
 - id: fix2.doctests
   name: 'Fix Pass 2: Doctest Pytest Assertion Rewriting (Issues 19-20, 27-28)'
-  status: in_progress
+  status: done
   depends_on:
   - retest.final
   steps:
@@ -8820,7 +8820,7 @@ phases:
       Full suite: 311 passed, 0 failures'
   - id: fix2.doctests.gate
     name: gate
-    status: claimed
+    status: done
     description: 'Gate review: Verify doctest fix phase completion.
 
 
@@ -8844,6 +8844,9 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T11:57:35.833341+00:00'
+    done_at: '2026-03-17T11:58:51.181402+00:00'
+    evidence: APPROVED by gate-reviewer. 56 doctests passed (0 failures), 315 full
+      suite passed. connections_cmd.py and status_cmd.py doctests include stdout output.
 - id: fix2.upstream-split
   name: 'Fix Pass 2: Upstream.py DX Threshold Split (Issue 14)'
   status: locked
