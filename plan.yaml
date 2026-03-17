@@ -1814,7 +1814,7 @@ phases:
       \ remains deferred to `open_mode.runtime` per out-of-scope guardrail."
   - id: open_mode.contract.gate
     name: Gate open_mode.contract
-    status: pending
+    status: claimed
     description: 'Gate review: Verify open-mode runtime contract phase completion.
 
       review_depth: STANDARD
@@ -1850,6 +1850,8 @@ phases:
     depends_on:
     - open_mode.contract.define-open-mode-runtime-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T07:02:50.169327+00:00'
 - id: open_mode.test
   name: open_mode.test
   status: locked
