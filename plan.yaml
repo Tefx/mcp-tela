@@ -9870,6 +9870,32 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+  - id: rt.upstream.handlers
+    name: Wire upstream handlers to fastmcp server
+    status: pending
+    description: Wire handle_tools_list, handle_tools_call, handle_initialize to the
+      fastmcp server's request handling. Register tela.profiles as MCP resource. Ensure
+      enforcement chain runs on every tools/call. Ensure _meta stripping works.
+    verification: MCP tools/list returns filtered tools. MCP tools/call runs enforcement
+      and forwards. tela.profiles registered. _meta stripped.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - tools/list returns tools: yes/no
+
+      - tools/call forwards with enforcement: yes/no
+
+      - _meta stripped: yes/no
+
+      - tela.profiles registered: yes/no
+
+      Gaps/Notes:'
+    depends_on:
+    - rt.upstream.server
+    agent: python-senior
 - id: rt.cli_start
   name: Wire tela start
   status: locked
