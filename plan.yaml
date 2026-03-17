@@ -8717,7 +8717,7 @@ phases:
   steps:
   - id: fix2.reload-stubs.fix-reload-and-stubs
     name: fix-reload-and-stubs
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#shell-layer\n  - docs/INTERFACES.md\ntouch_paths:\n  - src/tela/commands/start.py\n\
       \  - src/tela/shell/gateway.py\n  - src/tela/shell/reload.py\n  - src/tela/shell/audit.py\n\
@@ -8768,6 +8768,14 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T12:03:02.403183+00:00'
+    done_at: '2026-03-17T12:09:28.299932+00:00'
+    evidence: '## Evidence (python-senior)
+
+      7 issues fixed: double config load (bind_gateway_startup accepts config), SHA-256
+      digest, _audit_level removed, on_config_changed reconnects, call_tool proper
+      error code, notify_tools_changed calls callback, call_tool import at top.
+
+      315+46 tests passed. Merged to main (fast-forward).'
   - id: fix2.reload-stubs.verify-reload-stubs
     name: verify-reload-stubs
     status: pending
