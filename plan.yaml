@@ -8218,3 +8218,8 @@ phases:
     depends_on:
     - fix2.concurrency.verify-locks
     agent: gate-reviewer
+- id: fix2.contracts
+  name: 'Fix Pass 2: Tautological Contracts and Validation Gaps (Issues 6, 18, 25)'
+  status: pending
+  depends_on:
+  - retest.final
