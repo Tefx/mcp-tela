@@ -10419,6 +10419,31 @@ phases:
   status: locked
   depends_on:
   - cap.impl
+  steps:
+  - id: cap.shell.upstream
+    name: Update upstream.py and upstream_utils.py
+    status: pending
+    description: Update upstream.py handle_profiles_list() to emit capabilities not
+      tools. Update upstream_utils.py filter_tools_for_profile() and enforce_tool_call()
+      to read from capabilities field. Remove any side_effect_policy references.
+    verification: Profiles emitted with capabilities key. Enforcement reads capabilities.
+      No side_effect_policy references in shell/. invar guard passes.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - Profiles emit capabilities: yes/no
+
+      - Enforcement reads capabilities: yes/no
+
+      - side_effect_policy grep in shell/: 0 matches
+
+      - invar guard: pass/fail
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: cap.docs
   name: Documentation Sync
   status: locked
