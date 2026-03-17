@@ -27,7 +27,7 @@ from tela.core.models import (
     TelaError,
 )
 from tela.shell.config_loader import Result
-from tela.shell.downstream import get_all_tools, get_tool_server, get_registry
+from tela.shell.downstream import call_tool, get_all_tools, get_tool_server, get_registry
 from tela.shell.gateway import get_runtime
 
 
@@ -359,9 +359,6 @@ async def handle_tools_call(
 
     runtime.total_tool_calls += 1
 
-    # Forward to downstream (call_tool may raise NotImplementedError if actual
-    # MCP communication is not yet wired -- that's expected for now)
-    from tela.shell.downstream import call_tool
     return await call_tool(tool.server_name, tool_name, stripped_args)
 
 
@@ -411,7 +408,7 @@ async def notify_tools_changed(
         connection: Target upstream connection.
         tools_digest: Digest of the updated tool list.
     """
+    from tela.shell.reload import _notify_callback
 
-    # Notification is a no-op until actual MCP transport is wired.
-    # The callback mechanism in reload.py handles the notification dispatch.
-    pass
+    if _notify_callback is not None:
+        await _notify_callback(tools_digest)

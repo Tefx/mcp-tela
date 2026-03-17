@@ -69,8 +69,13 @@ def get_runtime() -> GatewayRuntime:
 # @invar:allow dead_export: startup wiring is connected in a later runtime step.
 def bind_gateway_startup(
     runtime: RuntimeBindingContract,
+    config: TelaConfig | None = None,
 ) -> Result[GatewayStartupConfig, str]:
     """Bind CLI runtime contract into gateway startup configuration.
+
+    When ``config`` is provided, it is used directly (avoiding a redundant
+    ``load_config`` call when the caller has already parsed the config).
+    When ``config`` is None, the config is loaded from ``runtime.config_path``.
 
     Examples:
         >>> import tempfile, os
@@ -96,21 +101,27 @@ def bind_gateway_startup(
 
     Args:
         runtime: CLI runtime binding contract from ``tela start``.
+        config: Already-parsed TelaConfig. If provided, skips ``load_config``.
 
     Returns:
         Result with resolved gateway startup config.
     """
 
-    config_result = load_config(
-        path=Path(runtime.config_path),
-        default_profile=runtime.cli_default_profile,
-    )
+    if config is not None:
+        parsed_config = config
+    else:
+        config_result = load_config(
+            path=Path(runtime.config_path),
+            default_profile=runtime.cli_default_profile,
+        )
 
-    if config_result.is_err:
-        return Result(error=config_result.error)
+        if config_result.is_err:
+            return Result(error=config_result.error)
 
-    assert config_result.value is not None
-    auth_mode = config_result.value.auth.mode
+        assert config_result.value is not None
+        parsed_config = config_result.value
+
+    auth_mode = parsed_config.auth.mode
 
     return Result(
         value=GatewayStartupConfig(

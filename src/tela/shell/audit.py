@@ -119,7 +119,6 @@ _audit_entries: deque[AuditEntry] = deque(maxlen=10000)
 _AUDIT_MAX_ENTRIES: int = 10000
 _audit_lock = asyncio.Lock()
 _audit_log_path: Path | None = None
-_audit_level: AuditLevel = AuditLevel.L2
 
 
 # @invar:allow dead_export: audit wiring is connected in audit.runtime step.
@@ -143,10 +142,9 @@ async def audit_init(config: "AuditConfig") -> Result[None, str]:
     Returns:
         Result[None, str] on success, or error string on failure.
     """
-    global _audit_log_path, _audit_level
+    global _audit_log_path
 
     async with _audit_lock:
-        _audit_level = config.level
 
         expanded = Path(config.output).expanduser()
         if not expanded.is_absolute():

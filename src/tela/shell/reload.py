@@ -27,7 +27,13 @@ from tela.core.models import (
 from tela.shell.audit import audit_write, build_audit_entry
 from tela.shell.config_loader import Result, load_config
 from tela.shell.gateway import get_runtime
-from tela.shell.downstream import _registry_lock, get_all_tools, get_registry
+from tela.shell.downstream import (
+    _registry_lock,
+    connect_all,
+    disconnect_all,
+    get_all_tools,
+    get_registry,
+)
 
 
 # Callback types for upstream notification
@@ -127,7 +133,8 @@ async def on_tools_changed(
         # Success: notify upstream if callback set
         if _notify_callback is not None:
             tool_names = sorted(t.name for ts in get_all_tools().values() for t in ts)
-            digest = ":".join(tool_names)
+            raw = ":".join(tool_names).encode()
+            digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
             await _notify_callback(digest)
 
     return Result(value=None)
@@ -191,13 +198,28 @@ async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     # Update runtime config
     runtime.config = new_config
 
-    # Check for server changes and trigger re-enumeration
+    # Detect server changes and re-connect changed/new servers
     if old_config is not None:
         old_servers = set(old_config.servers.keys())
         new_servers = set(new_config.servers.keys())
 
-        # For changed or new servers, we would re-enumerate tools
-        # This requires actual MCP transport (deferred)
-        # For now, update the config and let the next tool enumeration pick up changes
+        removed = old_servers - new_servers
+        added = new_servers - old_servers
+        # Servers present in both configs but with changed settings
+        changed = {
+            name for name in old_servers & new_servers
+            if old_config.servers[name] != new_config.servers[name]
+        }
+
+        servers_to_reconnect = added | changed
+
+        if removed or servers_to_reconnect:
+            # Disconnect all and reconnect with new config.
+            # Per-server disconnect is not yet supported; full reconnect
+            # is the safe path that preserves conflict-detection invariants.
+            await disconnect_all()
+            connect_result = await connect_all(new_config.servers)
+            if connect_result.is_err:
+                return Result(error=connect_result.error)
 
     return Result(value=None)

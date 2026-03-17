@@ -108,8 +108,8 @@ def test_on_tools_changed_calls_notify_callback() -> None:
             {"name": "tool_a", "inputSchema": {}}, {"name": "tool_b", "inputSchema": {}}
         ]))
         assert len(notified) == 1
-        assert "tool_a" in notified[0]
-        assert "tool_b" in notified[0]
+        assert notified[0].startswith("sha256:")
+        assert len(notified[0]) == len("sha256:") + 64
     finally:
         set_notify_callback(None)
         _teardown()
