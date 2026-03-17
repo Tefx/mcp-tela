@@ -2610,6 +2610,70 @@ phases:
     depends_on:
     - audit.runtime.integrate-audit-emission-and-query
     agent: python-executor
+  - id: audit.runtime.verify-audit-runtime
+    name: Verify audit runtime
+    status: pending
+    description: "As an INDEPENDENT TESTER (integration-verifier), validate audit\
+      \ runtime behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
+      \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
+      Independence Level: L2\nspec_refs:\n  - docs/DESIGN.md#4.12 shell/audit.py --\
+      \ Audit Log Writer\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP\
+      \ Handler\n  - docs/INTERFACES.md#A. CLI Interface\n  - docs/INTERFACES.md#J.\
+      \ Error Codes\ntouch_paths:\n  - src/tela/shell/audit.py\n  - src/tela/shell/upstream.py\n\
+      \  - src/tela/commands/audit_cmd.py\nharness_refs:\n  - tests/shell/test_audit.py\n\
+      \  - tests/integration/test_audit_levels.py\nTest for:\n- Happy path: successful\
+      \ and denied tool calls generate audit records with expected level filtering\n\
+      - Edge cases: L1/L2/L3 differences, `_meta` preservation, query filtering/limits\n\
+      - Error scenarios: downstream error record shape and denied-call latency semantics\n\
+      - Consumer-boundary conformance: upstream emission, audit storage, and CLI audit\
+      \ query interpret the same stored audit facts consistently\nDocument ALL findings.\
+      \ A test that discovers issues is a SUCCESS.\nA test that finds nothing must\
+      \ justify the coverage achieved.\n\nREALISM CHECK:\n- Provide at least one real-path\
+      \ proof with actual command/output against the writer/query seam."
+    verification: '- L2 evidence includes at least one real-path command/output for
+      upstream emission -> audit write -> audit query
+
+      - Evidence proves upstream emission, storage, and query share one audit fact
+      set
+
+      - Failure-path cases are exercised and findings recorded'
+    evidence_template: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: src/tela/shell/upstream.py:emission -> src/tela/shell/audit.py:writer
+      -> src/tela/commands/audit_cmd.py:query
+
+
+      **Exact command executed**:
+
+      ```
+
+      <paste actual command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+
+      ## Conformance Check
+
+      - Shared audit record fixture: <path>
+
+      - Upstream emission matches stored record: yes/no
+
+      - Stored record matches CLI query: yes/no
+
+      - Independent re-derivation remains: yes/no'
+    depends_on:
+    - audit.runtime.freeze-for-l2
+    agent: integration-verifier
 - id: reload.test
   name: reload.test
   status: locked
