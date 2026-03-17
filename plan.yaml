@@ -5888,3 +5888,34 @@ phases:
     - src/tela/shell/downstream.py
     - pyproject.toml
     agent: python-executor
+  - id: fix.medium.audit.verify
+    name: Verify medium audit fixes (M5-M7, M9)
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L1
+
+
+      As an INDEPENDENT TESTER, validate audit and runtime medium fixes.
+
+
+      Test for:
+
+      - M5: Audit query with Z vs +00:00 timestamps returns consistent results
+
+      - M6: Audit store respects max entries limit; oldest evicted
+
+      - M7: fastmcp import succeeds; downstream can use fastmcp client
+
+      - M9: on_config_changed handles add/remove/change server scenarios'
+    verification: '- All medium audit fixes verified
+
+      - No regressions
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    depends_on:
+    - fix.medium.audit.m5-m6-fix-audit-timestamp-and-bounded-store
+    - fix.medium.audit.m7-m9-wire-fastmcp-and-implement-on-config-changed
+    agent: integration-verifier
