@@ -1930,7 +1930,7 @@ phases:
   steps:
   - id: open_mode.test.add-open-mode-contract-and-integration-tests
     name: Add open-mode contract and integration tests
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#7.2\
       \ Open Mode\n  - docs/DESIGN.md#8.1 Startup Sequence\n  - docs/INTERFACES.md#A.\
       \ CLI Interface\n  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n\
@@ -1966,6 +1966,63 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T07:06:27.168751+00:00'
+    done_at: '2026-03-17T07:09:17.553167+00:00'
+    evidence: '## Test Evidence
+
+      - Added tests: 27 total (10 in test_upstream.py, 17 in test_open_mode.py)
+
+      - Shared conformance fixture: tests/integration/test_open_mode.py::TestSharedResolvedProfileConformance
+
+      - CLI -> initialize path covered: yes
+
+      - Rejection cases covered: yes
+
+
+      ### Test Categories
+
+      **tests/shell/test_upstream.py** (10 tests):
+
+      - Contract stub verification (existing + expanded)
+
+      - Initialize success/rejection for RESOLVED/MISSING/AMBIGUOUS states
+
+      - Client metadata isolation (profile hint in metadata ignored)
+
+      - InitializeProfileBinding model contracts (resolved, missing, ambiguous, frozen)
+
+
+      **tests/integration/test_open_mode.py** (17 tests):
+
+      - Contract declaration tests (preserved from previous step)
+
+      - CLI default-profile precedence (CLI wins over config default:true)
+
+      - Config default used when no CLI override
+
+      - CLI profile not found rejection
+
+      - Missing/ambiguous default profile rejection
+
+      - Shared-fact conformance: RuntimeBindingContract, GatewayStartupConfig, InitializeProfileBinding
+      all carry same resolved profile
+
+      - Transport contract: STDIO default, SSE when port provided
+
+      - Stub verification for bind_gateway_startup and resolve_initialize_profile_binding
+
+
+      ### Verification
+
+      - `uv run pytest -q tests/shell/test_upstream.py tests/integration/test_open_mode.py
+      -v` -> 27 passed
+
+      - `uv run pytest -q` (full suite) -> 49 passed
+
+      - `uv run invar guard --changed` -> passed (0 errors, 0 warnings)
+
+      - No product implementation added beyond test fixtures
+
+      - Commit: 9c3abad (worktree), merged as 7491792'
   - id: open_mode.test.gate
     name: Gate open_mode.test
     status: pending
