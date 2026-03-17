@@ -8704,3 +8704,34 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+  - id: fix2.doctests.verify-doctests
+    name: verify-doctests
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L1
+
+
+      As an INDEPENDENT TESTER, validate doctest fixes.
+
+
+      Verify:
+
+      1. `uv run pytest --doctest-modules src/tela/core/contracts.py` -- 0 failures
+
+      2. `uv run pytest --doctest-modules` -- 0 doctest failures across entire codebase
+
+      3. connections_cmd.py and status_cmd.py doctests still pass
+
+      4. Fix is targeted (not blanket doctest suppression)
+
+
+      Finding issues is a POSITIVE outcome.'
+    verification: '- Doctest output showing 0 failures
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    depends_on:
+    - fix2.doctests.fix-doctest-assertion-rewriting
+    agent: integration-verifier
