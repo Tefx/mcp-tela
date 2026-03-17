@@ -7035,7 +7035,7 @@ phases:
       (16 hex chars). Updated test. 296 passed.'
   - id: fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
     name: 'L19: Replace source-text model tests with behavioral tests'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - tests/core/test_models.py\n\
       \nProblem:\n- test_models.py checks source text (e.g., string matching on class\
       \ definitions) rather than behavior\n- Fragile: breaks on any formatting change\
@@ -7054,6 +7054,36 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T11:01:43.344881+00:00'
+    done_at: '2026-03-17T11:04:53.402740+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash: 59e7abb (squash merged to main)
+
+
+      Files changed:
+
+      - tests/core/test_models.py (complete rewrite: 2 source-text tests -> 31 behavioral
+      tests)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/core/test_models.py -v -> 31 passed
+
+      - Run: uv run pytest -q -> 265 passed (full regression)
+
+      - Run: uv run invar guard -> passed
+
+
+      Spec link:
+
+      - L19 review finding: source-text model tests fragile
+
+
+      Gaps/Notes:
+
+      - None. All model types covered: ProfileConfig, TelaConfig, ServerConfig, AuditConfig,
+      enums, runtime models, contract dataclasses.'
   - id: fix.low.tests.l20-implement-prebuilt-profile-catalog
     name: 'L20: Implement prebuilt profile catalog'
     status: claimed
