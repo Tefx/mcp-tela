@@ -51,9 +51,11 @@ def _expand_env_token(value: str, env_vars: Mapping[str, str]) -> str:
             var_name = value[index + 2 : closing]
             replacement = env_vars.get(var_name)
             if replacement is None:
-                result.append(value[index : closing + 1])
-            else:
-                result.append(replacement)
+                raise ConfigContractError(
+                    code="CONFIG_ENV_UNSET",
+                    message=f"Environment variable '{var_name}' is not set. Unset variables cause a startup error.",
+                )
+            result.append(replacement)
             index = closing + 1
             continue
 
@@ -67,9 +69,11 @@ def _expand_env_token(value: str, env_vars: Mapping[str, str]) -> str:
         var_name = value[index + 1 : end]
         replacement = env_vars.get(var_name)
         if replacement is None:
-            result.append(value[index:end])
-        else:
-            result.append(replacement)
+            raise ConfigContractError(
+                code="CONFIG_ENV_UNSET",
+                message=f"Environment variable '{var_name}' is not set. Unset variables cause a startup error.",
+            )
+        result.append(replacement)
         index = end
 
     return "".join(result)
