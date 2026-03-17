@@ -10274,11 +10274,12 @@ phases:
       read_only triggers ceiling capping during migration parse, (d) side_effect_policy:
       allow is silently dropped, (e) new 3-step per-call enforcement chain produces
       correct ALLOW/DENY results, (f) builtin profiles use capabilities format, (g)
-      config parser handles both YAML formats with deprecation warning, (h) tool_overrides
-      survive capping unchanged, (i) empty capabilities map denies all. Each test
-      MUST construct a real ProfileConfig/enforce() call and assert on a business-logic
-      outcome (ALLOW/DENY/field value). No test may fail solely due to ImportError
-      or NotImplementedError.'
+      config parser handles both YAML formats with deprecation warning, (h) override-ceiling
+      invariant: tool override CANNOT elevate access beyond capabilities[family] —
+      migration must downgrade/remove/error if override exceeds capped ceiling, (i)
+      empty capabilities map denies all. Each test MUST construct a real ProfileConfig/enforce()
+      call and assert on a business-logic outcome (ALLOW/DENY/field value). No test
+      may fail solely due to ImportError or NotImplementedError.'
     verification: Tests exist and FAIL (red-green pattern) because implementation
       not yet done. Each test has a real assertion on a business-logic outcome. No
       ImportError-only failures. Tests cover all 9 scenarios listed. pytest -x output
