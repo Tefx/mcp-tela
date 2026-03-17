@@ -3223,7 +3223,7 @@ phases:
       - Commit: a65ecf2 (worktree), merged as 063b8e3'
   - id: gateway.runtime.implement-upstream-routing
     name: Implement upstream routing
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
       \  - docs/DESIGN.md#6.1 tools/list\n  - docs/DESIGN.md#6.2 tools/call\n  - docs/DESIGN.md#8.2\
@@ -3275,6 +3275,8 @@ phases:
     depends_on:
     - gateway.runtime.implement-downstream-manager
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T08:00:28.066952+00:00'
   - id: gateway.runtime.integrate-gateway-lifecycle
     name: Integrate gateway lifecycle
     status: pending
