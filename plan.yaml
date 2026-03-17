@@ -10008,6 +10008,27 @@ phases:
   status: locked
   depends_on:
   - rt.reload_wire
+  steps:
+  - id: rt.escape_cleanup.impl
+    name: Remove stale escape hatch annotations
+    status: pending
+    description: Remove all @invar:allow dead_export annotations for functions that
+      now have runtime callers. Remove dead_param annotations for parameters now used.
+      Keep only legitimate escape hatches (CLI entry points, framework-called functions).
+    verification: invar guard passes. W7 shows zero STUB_MODULE files. Remaining dead_export
+      count <= 12 (legitimate CLI/framework entries only).
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Annotations removed: count
+
+      Annotations remaining: count (list with justification)
+
+      Verification: invar guard output
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: rt.doctests
   name: Replace Pass Doctests
   status: locked
