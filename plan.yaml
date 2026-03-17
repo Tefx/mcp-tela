@@ -9750,3 +9750,8 @@ phases:
   status: locked
   depends_on:
   - rt.reload_wire
+- id: rt.doctests
+  name: Replace Pass Doctests
+  status: locked
+  depends_on:
+  - rt.cli_start
