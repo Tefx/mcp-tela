@@ -9735,3 +9735,8 @@ phases:
   status: locked
   depends_on:
   - rt.downstream
+- id: rt.cli_start
+  name: Wire tela start
+  status: locked
+  depends_on:
+  - rt.upstream
