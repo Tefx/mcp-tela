@@ -10587,3 +10587,12 @@ phases:
     depends_on:
     - cap.final_gate.wiring
     agent: doc-reviewer
+  - id: cap.final_gate.gate
+    name: Full gate review
+    status: pending
+    description: ''
+    verification: 'Full Gate. Verdict: PASS. ADR-003 migration complete. Zero BLOCKING
+      issues.'
+    depends_on:
+    - cap.final_gate.spec
+    agent: gate-reviewer
