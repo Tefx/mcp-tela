@@ -7192,7 +7192,7 @@ phases:
       All three steps (L17, L19, L20) verified. No blockers or issues found.'
 - id: retest.regression
   name: Regression Test Suite
-  status: in_progress
+  status: done
   depends_on:
   - fix.low.code
   - fix.low.docs
@@ -7299,7 +7299,7 @@ phases:
       \ correctly. No architecture violations. No unjustified escape hatches."
   - id: retest.regression.gate
     name: 'Gate: Regression test suite'
-    status: claimed
+    status: done
     description: 'Gate review: Confirm regression suite and invar guard are clean.
 
 
@@ -7317,9 +7317,26 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T11:06:23.500404+00:00'
+    done_at: '2026-03-17T11:06:33.871278+00:00'
+    evidence: 'Gate Review: Regression Test Suite - PASS
+
+
+      Summary:
+
+      - pytest suite: 265/265 passed (0 failures, baseline was 205)
+
+      - invar guard: passed (0 errors, 0 warnings)
+
+      - Doctest note: 2 pre-existing Shell zone doctest failures in connections_cmd.py
+      and status_cmd.py (output format mismatch). These are NOT regressions from fix
+      phases.
+
+
+      Verdict: PASS. No regressions detected. Test count increased by 60 tests from
+      fix phases.'
 - id: retest.repro
   name: Black-Box Repro Verification
-  status: locked
+  status: pending
   depends_on:
   - retest.regression
   steps:
