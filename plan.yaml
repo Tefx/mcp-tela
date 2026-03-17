@@ -5377,3 +5377,8 @@ phases:
     depends_on:
     - fix.blockers.verify-blocker-fixes
     agent: gate-reviewer
+- id: fix.high
+  name: High-Severity Fixes (H1-H4)
+  status: locked
+  depends_on:
+  - fix.blockers
