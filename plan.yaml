@@ -10577,3 +10577,13 @@ phases:
       config fields.'
     verification: W1-W8 all PASS. No dead exports from ADR-003 changes. No ghost fields.
     agent: wiring-auditor
+  - id: cap.final_gate.spec
+    name: Verify docs match implementation
+    status: pending
+    description: Verify docs/DESIGN.md and docs/INTERFACES.md match the implementation
+      post-migration. Verify ADR-003 is fully realized.
+    verification: Spec matches implementation. ADR-003 fully realized. No contradictions
+      between docs and code.
+    depends_on:
+    - cap.final_gate.wiring
+    agent: doc-reviewer
