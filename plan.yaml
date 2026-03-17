@@ -10102,6 +10102,15 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+  - id: rt.e2e.verify
+    name: Run full test suite
+    status: pending
+    description: Run full test suite including new E2E tests.
+    verification: All tests pass. P2 shows no fake seam in new E2E tests. P9 shows
+      tela start stays alive.
+    depends_on:
+    - rt.e2e.test
+    agent: integration-verifier
 - id: rt.liveness
   name: Liveness Verification
   status: locked
