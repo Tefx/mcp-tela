@@ -10552,3 +10552,8 @@ phases:
     depends_on:
     - cap.final_gate.spec
     agent: gate-reviewer
+- id: cap.spec
+  name: Spec and Design Document Migration
+  status: pending
+  depends_on:
+  - retest2.full
