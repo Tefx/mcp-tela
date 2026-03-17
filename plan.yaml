@@ -9742,6 +9742,14 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+  - id: rt.env_field.gate
+    name: Gate review
+    status: pending
+    description: Gate review for env field phase.
+    verification: 'Quick Gate: E1+E4 surface only'
+    depends_on:
+    - rt.env_field.impl
+    agent: gate-reviewer
 - id: rt.downstream
   name: Downstream MCP Client Connections
   status: locked
