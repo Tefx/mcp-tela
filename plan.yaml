@@ -9807,6 +9807,32 @@ phases:
     depends_on:
     - rt.downstream.contract
     agent: python-senior
+  - id: rt.downstream.call
+    name: Implement real call_tool and re_enumerate
+    status: pending
+    description: 'Implement real call_tool: forward tool calls to downstream via fastmcp
+      client session. Implement re_enumerate for hot reload. Remove DOWNSTREAM_NOT_CONNECTED
+      stubs. Use spec error codes (DOWNSTREAM_ERROR, DOWNSTREAM_UNAVAILABLE).'
+    verification: call_tool forwards to real downstream and returns result. re_enumerate
+      re-lists tools. No hardcoded error stubs remain. Spec error codes used.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - call_tool returns real result from downstream: yes/no
+
+      - re_enumerate returns updated tool list: yes/no
+
+      - DOWNSTREAM_NOT_CONNECTED removed: yes/no
+
+      - Spec error codes used: list codes
+
+      Gaps/Notes:'
+    depends_on:
+    - rt.downstream.connect
+    agent: python-senior
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
