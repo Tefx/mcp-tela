@@ -9,6 +9,8 @@ during hot reload. On conflict, the previous tool list is preserved.
 
 from __future__ import annotations
 
+import hashlib
+
 from typing import Awaitable, Callable
 
 from tela.core.conflict import detect_conflicts
