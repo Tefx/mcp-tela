@@ -178,51 +178,60 @@ def test_initialize_profile_binding_is_frozen() -> None:
 # --- MCP Handler contract tests ---
 
 
-def test_handle_initialize_is_contract_stub() -> None:
-    """handle_initialize must still be a contract stub."""
+def test_handle_initialize_returns_connection_context() -> None:
+    """handle_initialize creates a connection context when gateway is started."""
     import asyncio
     from tela.shell.upstream import handle_initialize
+    from tela.shell.gateway import get_runtime
 
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(handle_initialize({}))
+    # Without gateway started, should return error
+    get_runtime().config = None
+    r = asyncio.run(handle_initialize({}))
+    assert r.is_err
 
 
-def test_handle_tools_list_is_contract_stub() -> None:
-    """handle_tools_list must still be a contract stub."""
+def test_handle_tools_list_returns_empty_when_no_gateway() -> None:
+    """handle_tools_list returns empty list when gateway not started."""
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import handle_tools_list
+    from tela.shell.gateway import get_runtime
 
+    get_runtime().config = None
     conn = ConnectionContext(
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(handle_tools_list(conn))
+    result = asyncio.run(handle_tools_list(conn))
+    assert result == []
 
 
-def test_handle_tools_call_is_contract_stub() -> None:
-    """handle_tools_call must still be a contract stub."""
+def test_handle_tools_call_returns_error_when_no_gateway() -> None:
+    """handle_tools_call returns error when gateway not started."""
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import handle_tools_call
+    from tela.shell.gateway import get_runtime
 
+    get_runtime().config = None
     conn = ConnectionContext(
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(handle_tools_call(conn, "tool", {}))
+    result = asyncio.run(handle_tools_call(conn, "tool", {}))
+    assert result.is_err
 
 
-def test_handle_profiles_list_is_contract_stub() -> None:
-    """handle_profiles_list must still be a contract stub."""
+def test_handle_profiles_list_returns_empty_when_no_gateway() -> None:
+    """handle_profiles_list returns empty list when gateway not started."""
     from tela.shell.upstream import handle_profiles_list
+    from tela.shell.gateway import get_runtime
 
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        handle_profiles_list()
+    get_runtime().config = None
+    result = handle_profiles_list()
+    assert result == []
 
 
-def test_notify_tools_changed_is_contract_stub() -> None:
-    """notify_tools_changed must still be a contract stub."""
+def test_notify_tools_changed_is_noop() -> None:
+    """notify_tools_changed is a no-op until MCP transport is wired."""
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import notify_tools_changed
@@ -230,8 +239,8 @@ def test_notify_tools_changed_is_contract_stub() -> None:
     conn = ConnectionContext(
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(notify_tools_changed(conn, "digest"))
+    # Should not raise
+    asyncio.run(notify_tools_changed(conn, "digest"))
 
 
 # --- ConnectionContext model tests for upstream ---

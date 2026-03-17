@@ -267,11 +267,11 @@ def test_connect_all_empty_servers() -> None:
 # --- Remaining stubs ---
 
 
-def test_call_tool_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(call_tool("srv", "tool", {}))
+def test_call_tool_returns_error() -> None:
+    r = asyncio.run(call_tool("srv", "tool", {}))
+    assert r.is_err
 
 
-def test_re_enumerate_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(re_enumerate("srv"))
+def test_re_enumerate_returns_error() -> None:
+    r = asyncio.run(re_enumerate("srv"))
+    assert r.is_err

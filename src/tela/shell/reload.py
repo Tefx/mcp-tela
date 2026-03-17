@@ -23,7 +23,8 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.audit import audit_write, build_audit_entry
-from tela.shell.config_loader import Result
+from tela.shell.config_loader import Result, load_config
+from tela.shell.gateway import get_runtime
 from tela.shell.downstream import get_all_tools, get_registry
 
 
@@ -166,15 +167,14 @@ async def on_server_reconnect(
 async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     """Handle configuration file change.
 
-    Contract stub: actual config reload deferred.
+    Handle configuration file change. Updates runtime config.
 
     Examples:
         >>> import asyncio
         >>> from tela.core.models import TelaConfig
-        >>> asyncio.run(on_config_changed(TelaConfig()))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: on_config_changed pending
+        >>> r = asyncio.run(on_config_changed(TelaConfig()))
+        >>> r.is_ok
+        True
 
     Args:
         new_config: New TelaConfig.
@@ -182,4 +182,19 @@ async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     Returns:
         Result[None, str] once implemented.
     """
-    raise NotImplementedError("Contract stub: on_config_changed pending")
+    runtime = get_runtime()
+    old_config = runtime.config
+
+    # Update runtime config
+    runtime.config = new_config
+
+    # Check for server changes and trigger re-enumeration
+    if old_config is not None:
+        old_servers = set(old_config.servers.keys())
+        new_servers = set(new_config.servers.keys())
+
+        # For changed or new servers, we would re-enumerate tools
+        # This requires actual MCP transport (deferred)
+        # For now, update the config and let the next tool enumeration pick up changes
+
+    return Result(value=None)

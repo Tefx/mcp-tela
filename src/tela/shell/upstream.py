@@ -9,7 +9,9 @@ Audit emission is deferred to audit.runtime.
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Mapping
 
 from tela.core.enforcement import enforce
@@ -25,6 +27,8 @@ from tela.core.models import (
     TelaError,
 )
 from tela.shell.config_loader import Result
+from tela.shell.downstream import get_all_tools, get_tool_server, get_registry
+from tela.shell.gateway import get_runtime
 
 
 @dataclass(frozen=True)
@@ -229,14 +233,11 @@ async def handle_initialize(
 ) -> Result[ConnectionContext, str]:
     """Handle MCP initialize request.
 
-    Contract stub: raises NotImplementedError.
+    Creates a ConnectionContext and registers the connection.
 
     Examples:
-        >>> import asyncio
-        >>> asyncio.run(handle_initialize({}))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: handle_initialize pending
+        >>> # handle_initialize requires gateway to be started
+        >>> pass  # doctest: +SKIP
 
     Args:
         client_info: MCP clientInfo dict.
@@ -245,7 +246,25 @@ async def handle_initialize(
         Result[ConnectionContext, str] once implemented.
     """
 
-    raise NotImplementedError("Contract stub: handle_initialize pending")
+    runtime = get_runtime()
+    if runtime.config is None:
+        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+
+    connection_id = f"conn_{uuid.uuid4().hex[:8]}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    # In open mode, use the resolved default profile
+    profile_name = runtime.config.resolved_default_profile or "default"
+
+    ctx = ConnectionContext(
+        connection_id=connection_id,
+        profile_name=profile_name,
+        connected_at=now_iso,
+    )
+
+    # Register connection in runtime
+    runtime.connections.append(ctx)
+    return Result(value=ctx)
 
 
 # @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
@@ -256,16 +275,11 @@ async def handle_tools_list(
 ) -> list[dict]:
     """Return filtered tool list for the bound profile.
 
-    Contract stub: raises NotImplementedError.
+    Returns filtered tool list for the bound profile.
 
     Examples:
-        >>> import asyncio
-        >>> asyncio.run(handle_tools_list(
-        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
-        ... ))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: handle_tools_list pending
+        >>> # handle_tools_list requires gateway to be started
+        >>> pass  # doctest: +SKIP
 
     Args:
         connection: Active upstream connection context.
@@ -274,7 +288,21 @@ async def handle_tools_list(
         List of tool dicts once implemented.
     """
 
-    raise NotImplementedError("Contract stub: handle_tools_list pending")
+    runtime = get_runtime()
+    if runtime.config is None:
+        return []
+
+    profile = runtime.config.profiles.get(connection.profile_name)
+    if profile is None:
+        return []
+
+    all_tools = get_all_tools()
+    server_default_postures: dict[str, Posture] = {}
+    for sname, scfg in runtime.config.servers.items():
+        server_default_postures[sname] = scfg.default_posture
+
+    permitted = filter_tools_for_profile(all_tools, profile, server_default_postures)
+    return [{"name": t.name, "inputSchema": t.schema_ or {}} for t in permitted]
 
 
 # @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
@@ -286,18 +314,11 @@ async def handle_tools_call(
 ) -> Result[dict, TelaError]:
     """Handle a tools/call request.
 
-    Contract stub: raises NotImplementedError.
+    Runs enforcement chain and forwards to downstream.
 
     Examples:
-        >>> import asyncio
-        >>> asyncio.run(handle_tools_call(
-        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
-        ...     "some_tool",
-        ...     {},
-        ... ))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: handle_tools_call pending
+        >>> # handle_tools_call requires gateway to be started
+        >>> pass  # doctest: +SKIP
 
     Args:
         connection: Active upstream connection context.
@@ -308,7 +329,40 @@ async def handle_tools_call(
         Result[dict, TelaError] once implemented.
     """
 
-    raise NotImplementedError("Contract stub: handle_tools_call pending")
+    runtime = get_runtime()
+    if runtime.config is None:
+        return Result(error=TelaError(code="GATEWAY_NOT_STARTED", message="Gateway has not been started"))
+
+    # Strip _meta
+    stripped_args, held_meta = strip_meta(arguments)
+
+    # Look up tool
+    tool = get_registry().get_tool(tool_name)
+    if tool is None:
+        return Result(error=TelaError(code="TOOL_NOT_FOUND", message=f"Tool '{tool_name}' not found"))
+
+    # Look up profile
+    profile = runtime.config.profiles.get(connection.profile_name)
+    if profile is None:
+        return Result(error=TelaError(code="PROFILE_NOT_FOUND", message=f"Profile '{connection.profile_name}' not found"))
+
+    # Enforce
+    server_config = runtime.config.servers.get(tool.server_name)
+    default_posture = server_config.default_posture if server_config else Posture.NONE
+    enforcement = enforce_tool_call(tool_name, tool, profile, default_posture)
+
+    if enforcement.verdict == EnforcementVerdict.DENY:
+        return Result(error=TelaError(
+            code=enforcement.error_code or "AUTHZ_DENY",
+            message=enforcement.error_message or "Tool call denied",
+        ))
+
+    runtime.total_tool_calls += 1
+
+    # Forward to downstream (call_tool may raise NotImplementedError if actual
+    # MCP communication is not yet wired -- that's expected for now)
+    from tela.shell.downstream import call_tool
+    return await call_tool(tool.server_name, tool_name, stripped_args)
 
 
 # @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
@@ -316,19 +370,24 @@ async def handle_tools_call(
 def handle_profiles_list() -> list[dict]:
     """Return list of configured profiles.
 
-    Contract stub: raises NotImplementedError.
+    Returns list of configured profiles.
 
     Examples:
-        >>> handle_profiles_list()
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: handle_profiles_list pending
+        >>> # handle_profiles_list requires gateway to be started
+        >>> pass  # doctest: +SKIP
 
     Returns:
         List of profile dicts once implemented.
     """
 
-    raise NotImplementedError("Contract stub: handle_profiles_list pending")
+    runtime = get_runtime()
+    if runtime.config is None:
+        return []
+
+    return [
+        {"name": name, "default": p.default, "tools": {k: v.value for k, v in p.tools.items()}}
+        for name, p in runtime.config.profiles.items()
+    ]
 
 
 # @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
@@ -339,7 +398,7 @@ async def notify_tools_changed(
 ) -> None:
     """Send notifications/tools/list_changed to an upstream client.
 
-    Contract stub: raises NotImplementedError.
+    No-op until actual MCP transport is wired.
 
     Examples:
         >>> import asyncio
@@ -347,13 +406,12 @@ async def notify_tools_changed(
         ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
         ...     "digest123",
         ... ))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: notify_tools_changed pending
 
     Args:
         connection: Target upstream connection.
         tools_digest: Digest of the updated tool list.
     """
 
-    raise NotImplementedError("Contract stub: notify_tools_changed pending")
+    # Notification is a no-op until actual MCP transport is wired.
+    # The callback mechanism in reload.py handles the notification dispatch.
+    pass

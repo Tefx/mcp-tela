@@ -180,14 +180,14 @@ async def call_tool(
 ) -> Result[dict, TelaError]:
     """Forward a tool call to a specific downstream server.
 
-    Contract stub: actual MCP communication is deferred to gateway runtime.
+    Forward tool call to downstream server. Returns error until actual MCP
+    transport is wired.
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(call_tool("srv", "tool", {}))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: call_tool pending
+        >>> r = asyncio.run(call_tool("srv", "tool", {}))
+        >>> r.is_err
+        True
 
     Args:
         server_name: Target downstream server name.
@@ -198,7 +198,12 @@ async def call_tool(
         ``Result[dict, TelaError]`` once implemented.
     """
 
-    raise NotImplementedError("Contract stub: call_tool pending")
+    # Actual MCP communication via fastmcp is deferred to gateway runtime
+    # integration. For now, return an error indicating the stub state.
+    return Result(error=TelaError(
+        code="DOWNSTREAM_NOT_CONNECTED",
+        message=f"Downstream call_tool for server '{server_name}' is not yet wired to actual MCP transport",
+    ))
 
 
 # @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
@@ -243,14 +248,14 @@ async def re_enumerate(
 ) -> Result[list[ResolvedTool], str]:
     """Re-enumerate tools for a specific server (hot reload).
 
-    Contract stub: actual MCP communication is deferred.
+    Re-enumerate tools for a specific server. Returns error until actual
+    MCP transport is wired.
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(re_enumerate("srv"))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: re_enumerate pending
+        >>> r = asyncio.run(re_enumerate("srv"))
+        >>> r.is_err
+        True
 
     Args:
         server_name: Server to re-enumerate.
@@ -259,4 +264,6 @@ async def re_enumerate(
         ``Result[list[ResolvedTool], str]`` once implemented.
     """
 
-    raise NotImplementedError("Contract stub: re_enumerate pending")
+    # Actual MCP communication via fastmcp is deferred to gateway runtime
+    # integration. For now, return an error indicating the stub state.
+    return Result(error=f"DOWNSTREAM_NOT_CONNECTED: re_enumerate for server '{server_name}' is not yet wired to actual MCP transport")

@@ -84,9 +84,9 @@ def test_on_server_reconnect_updates_tools() -> None:
 
 # --- on_config_changed: stub ---
 
-def test_on_config_changed_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(on_config_changed(TelaConfig()))
+def test_on_config_changed_updates_runtime() -> None:
+    r = asyncio.run(on_config_changed(TelaConfig()))
+    assert r.is_ok
 
 
 # --- Notification callback ---
