@@ -8711,7 +8711,7 @@ phases:
       ConnectionContext.token.'
 - id: fix2.reload-stubs
   name: 'Fix Pass 2: Reload, Digest, Stubs, and Wiring (Issues 5, 12-13, 21-23, 26)'
-  status: in_progress
+  status: done
   depends_on:
   - fix2.concurrency
   steps:
@@ -8823,7 +8823,7 @@ phases:
       call_tool top-level import.'
   - id: fix2.reload-stubs.gate
     name: gate
-    status: claimed
+    status: done
     description: 'Gate review: Verify reload/stubs fix phase completion.
 
 
@@ -8851,6 +8851,49 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T12:11:40.087224+00:00'
+    done_at: '2026-03-17T12:14:21.083192+00:00'
+    evidence: '## Gate Review Evidence
+
+
+      **Verdict: PASS** (0 BLOCKING, 0 SHOULD_FIX, 1 SUGGESTION)
+
+
+      ### Automated Gates
+
+      - `uv run pytest -q`: 315 passed in 1.34s
+
+      - `uv run invar guard`: 0 errors, 0 warnings, doctests passed
+
+      - Compilation: all 4 changed files compile cleanly
+
+      - Anomaly scans: `_audit_level` zero hits, no `pass` stubs, no `NotImplementedError`,
+      no stub comments
+
+
+      ### 7 Fixes Verified
+
+      1. `bind_gateway_startup` accepts `config: TelaConfig | None = None` (gateway.py:72),
+      skips load_config when provided
+
+      2. `tools_digest` uses `sha256:{hex}` format (reload.py:136-137), test validates
+      prefix+length
+
+      3. `_audit_level` fully removed from audit.py (grep confirms zero hits in src/)
+
+      4. `on_config_changed` detects removed/added/changed servers, calls disconnect_all+connect_all
+      (reload.py:201-223)
+
+      5. `call_tool` returns `Result(error=TelaError(...))` not bare string (downstream.py:203-206)
+
+      6. `notify_tools_changed` imports and calls `_notify_callback` (upstream.py:411-414)
+
+      7. `call_tool` imported at top of upstream.py (line 30), lazy import removed
+
+
+      ### Suggestion (non-blocking)
+
+      S1: upstream.py:411 imports private `_notify_callback` directly; a public accessor
+      would be cleaner but current pattern works correctly.'
 - id: fix2.doctests
   name: 'Fix Pass 2: Doctest Pytest Assertion Rewriting (Issues 19-20, 27-28)'
   status: done
@@ -8975,7 +9018,7 @@ phases:
       suite passed. connections_cmd.py and status_cmd.py doctests include stdout output.
 - id: fix2.upstream-split
   name: 'Fix Pass 2: Upstream.py DX Threshold Split (Issue 14)'
-  status: locked
+  status: pending
   depends_on:
   - fix2.reload-stubs
   steps:
