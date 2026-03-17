@@ -2964,7 +2964,7 @@ phases:
       - Commit: 73a83ed, merged as 1d78d07'
   - id: reload.contract.gate
     name: Gate reload.contract
-    status: pending
+    status: claimed
     description: 'Gate review: Verify reload runtime contract phase completion.
 
       review_depth: STANDARD
@@ -2998,6 +2998,8 @@ phases:
     depends_on:
     - reload.contract.define-reload-runtime-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T08:40:12.505514+00:00'
 - id: gateway.test
   name: gateway.test
   status: done
