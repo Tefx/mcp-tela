@@ -11,7 +11,7 @@ from tela.core.config import (
     resolve_open_mode_default_profile,
     validate_config,
 )
-from tela.core.models import AuthConfig, AuthMode, ProfileConfig, TelaConfig
+from tela.core.models import AuthConfig, AuthMode, ProfileConfig, ServerConfig, TelaConfig
 
 
 def test_requires_open_mode_default_resolution() -> None:
@@ -111,6 +111,54 @@ def test_validate_config_token_mode_with_secret_is_valid() -> None:
         auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
     )
     assert validate_config(config) == []
+
+
+def test_validate_config_server_missing_transport() -> None:
+    """Issue 18: servers must have either command or url."""
+    config = TelaConfig(
+        servers={"bad": ServerConfig(name="bad")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    transport_errors = [e for e in errors if "SERVER_MISSING_TRANSPORT" in e]
+    assert len(transport_errors) == 1
+    assert "'bad'" in transport_errors[0]
+
+
+def test_validate_config_server_ambiguous_transport() -> None:
+    """Issue 18: servers must not have both command and url."""
+    config = TelaConfig(
+        servers={"amb": ServerConfig(name="amb", command="cmd", url="http://x")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    transport_errors = [e for e in errors if "SERVER_AMBIGUOUS_TRANSPORT" in e]
+    assert len(transport_errors) == 1
+    assert "'amb'" in transport_errors[0]
+
+
+def test_validate_config_server_valid_command_only() -> None:
+    """Issue 18: server with only command is valid."""
+    config = TelaConfig(
+        servers={"ok": ServerConfig(name="ok", command="cmd")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    assert errors == []
+
+
+def test_validate_config_server_valid_url_only() -> None:
+    """Issue 18: server with only url is valid."""
+    config = TelaConfig(
+        servers={"ok": ServerConfig(name="ok", url="http://example.com")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    assert errors == []
 
 
 def test_parse_config_injects_name_from_dict_keys() -> None:
