@@ -8444,13 +8444,13 @@ phases:
     agent: gate-reviewer
 - id: fix2.docs
   name: 'Fix Pass 2: DESIGN.md Documentation Drift (Issues 7-11)'
-  status: pending
+  status: in_progress
   depends_on:
   - retest.final
   steps:
   - id: fix2.docs.fix-design-md-drift
     name: fix-design-md-drift
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md\ntouch_paths:\n  - docs/DESIGN.md\nharness_refs: []\nconflict_rationale:\
       \ Only this step touches DESIGN.md.\n\nFix ALL five DESIGN.md documentation\
@@ -8489,6 +8489,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T11:51:36.999247+00:00'
   - id: fix2.docs.verify-docs
     name: verify-docs
     status: pending
