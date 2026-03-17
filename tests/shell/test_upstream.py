@@ -343,7 +343,7 @@ def test_tela_error_model_shape() -> None:
 def test_filter_tools_admits_matching_family() -> None:
     """Tools with admitted family and acceptable posture are included."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
-    from tela.shell.upstream import filter_tools_for_profile
+    from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
         "fs": [
@@ -359,7 +359,7 @@ def test_filter_tools_admits_matching_family() -> None:
 def test_filter_tools_excludes_unadmitted_family() -> None:
     """Tools from unadmitted families are excluded."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
-    from tela.shell.upstream import filter_tools_for_profile
+    from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
         "shell": [
@@ -374,7 +374,7 @@ def test_filter_tools_excludes_unadmitted_family() -> None:
 def test_filter_tools_excludes_posture_exceedance() -> None:
     """Tools exceeding posture ceiling are excluded."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
-    from tela.shell.upstream import filter_tools_for_profile
+    from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
         "fs": [
@@ -389,7 +389,7 @@ def test_filter_tools_excludes_posture_exceedance() -> None:
 def test_filter_tools_respects_side_effect_policy() -> None:
     """Side-effect read_only policy excludes read_write tools."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool, SideEffectPolicy
-    from tela.shell.upstream import filter_tools_for_profile
+    from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
         "fs": [
@@ -410,7 +410,7 @@ def test_filter_tools_respects_side_effect_policy() -> None:
 def test_filter_tools_multiple_servers() -> None:
     """Filtering works across multiple servers."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
-    from tela.shell.upstream import filter_tools_for_profile
+    from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
         "fs": [ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)],
@@ -428,7 +428,7 @@ def test_filter_tools_multiple_servers() -> None:
 
 def test_strip_meta_removes_meta() -> None:
     """_meta is stripped from arguments."""
-    from tela.shell.upstream import strip_meta
+    from tela.shell.upstream_utils import strip_meta
 
     stripped, meta = strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}})
     assert stripped == {"path": "/tmp"}
@@ -437,7 +437,7 @@ def test_strip_meta_removes_meta() -> None:
 
 def test_strip_meta_no_meta() -> None:
     """Arguments without _meta return None for held meta."""
-    from tela.shell.upstream import strip_meta
+    from tela.shell.upstream_utils import strip_meta
 
     stripped, meta = strip_meta({"path": "/tmp"})
     assert stripped == {"path": "/tmp"}
@@ -446,7 +446,7 @@ def test_strip_meta_no_meta() -> None:
 
 def test_strip_meta_empty_arguments() -> None:
     """Empty arguments."""
-    from tela.shell.upstream import strip_meta
+    from tela.shell.upstream_utils import strip_meta
 
     stripped, meta = strip_meta({})
     assert stripped == {}
@@ -459,7 +459,7 @@ def test_strip_meta_empty_arguments() -> None:
 def test_enforce_tool_call_allows() -> None:
     """Open mode enforcement allows valid tool call."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
-    from tela.shell.upstream import enforce_tool_call
+    from tela.shell.upstream_utils import enforce_tool_call
 
     tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
     profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
@@ -470,7 +470,7 @@ def test_enforce_tool_call_allows() -> None:
 def test_enforce_tool_call_denies() -> None:
     """Open mode enforcement denies unadmitted family."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
-    from tela.shell.upstream import enforce_tool_call
+    from tela.shell.upstream_utils import enforce_tool_call
 
     tool = ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE)
     profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})

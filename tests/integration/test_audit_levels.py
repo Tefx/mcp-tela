@@ -235,7 +235,7 @@ def test_upstream_emission_shape_for_denied_call() -> None:
 
 def test_upstream_strips_meta_before_downstream_forwarding() -> None:
     """_meta is stripped before forwarding but held for audit entry."""
-    from tela.shell.upstream import strip_meta
+    from tela.shell.upstream_utils import strip_meta
 
     args = {"path": "/tmp", "_meta": {"trace_id": "tr-1"}}
     stripped, held_meta = strip_meta(args)
