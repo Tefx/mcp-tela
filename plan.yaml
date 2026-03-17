@@ -2826,7 +2826,7 @@ phases:
       - Commit: 85583aa (worktree), merged as 338c2e7'
   - id: gateway.contract.gate
     name: Gate gateway.contract
-    status: pending
+    status: claimed
     description: 'Gate review: Verify gateway runtime contract phase completion.
 
       review_depth: STANDARD
@@ -2862,6 +2862,8 @@ phases:
     depends_on:
     - gateway.contract.define-runtime-boundary-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T07:29:07.663145+00:00'
 - id: reload.contract
   name: reload.contract
   status: locked
