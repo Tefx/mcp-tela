@@ -10234,3 +10234,8 @@ phases:
   status: locked
   depends_on:
   - cap.test
+- id: cap.shell
+  name: Shell Layer Updates
+  status: locked
+  depends_on:
+  - cap.impl
