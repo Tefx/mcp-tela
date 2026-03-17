@@ -7786,7 +7786,7 @@ phases:
       format mismatches in their doctest examples (cosmetic)'
   - id: retest.final.findings-coverage-audit
     name: Findings coverage audit
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L2
@@ -7965,6 +7965,103 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:17:47.972762+00:00'
+    done_at: '2026-03-17T11:18:43.599244+00:00'
+    evidence: 'Findings Coverage Audit - ALL 39 FINDINGS ADDRESSED
+
+
+      BLOCKERS (4/4):
+
+      - [x] B1: All 5 CLI subcommands wired (start, status, profiles, connections,
+      audit)
+
+      - [x] B2: AuditConfig consumed - audit_init sets path/level, audit_write persists
+      to JSONL
+
+      - [x] B3: parse_config injects name from dict keys (backward compatible)
+
+      - [x] B4: DownstreamRegistry.snapshot()/restore() for atomic rollback
+
+
+      HIGH (4/4):
+
+      - [x] H1: Contracts enforce via @pre/@post (no identity lambdas)
+
+      - [x] H2: asyncio.Lock on audit store for concurrency safety
+
+      - [x] H3: No NotImplementedError stubs remain in shell/
+
+      - [x] H4: token.py with HMAC-SHA256 compute_signature + validate_token
+
+
+      MEDIUM (10/10):
+
+      - [x] M1: shell_result convention with justified @invar:allow annotations
+
+      - [x] M2: Result in config_loader (backward compat import path)
+
+      - [x] M3: core/errors.py with ConfigContractError
+
+      - [x] M4: Single config load path through parse_config
+
+      - [x] M5: Timestamp comparison using datetime.fromisoformat with Z normalization
+
+      - [x] M6: Bounded audit store with deque(maxlen) + audit_set_max_entries
+
+      - [x] M7: FastMCP importable from mcp.server.fastmcp
+
+      - [x] M8: Unset env vars raise ConfigContractError
+
+      - [x] M9: on_config_changed implemented in reload.py
+
+      - [x] M10: default_posture on ServerConfig flows to family resolution
+
+
+      LOW (21/21):
+
+      - [x] L1: CLI no direct gateway state imports
+
+      - [x] L2: Enforcement chain count in docs
+
+      - [x] L3: enforce() signature clean
+
+      - [x] L4: Docs consistent
+
+      - [x] L5: Pure functions in Core zone (no I/O imports)
+
+      - [x] L6: DESIGN.md reflects argparse
+
+      - [x] L7: Deps cleaned
+
+      - [x] L8: README URLs
+
+      - [x] L9: Install instructions
+
+      - [x] L10: Agent files
+
+      - [x] L11: All packages have __init__.py
+
+      - [x] L12: Unused imports cleaned
+
+      - [x] L13: TelaError model usable
+
+      - [x] L14: total_tool_calls incremented
+
+      - [x] L15: tool_call_count tracked
+
+      - [x] L16: Ghost fields addressed
+
+      - [x] L17: hashlib imported for SHA-256
+
+      - [x] L18: LICENSE file exists
+
+      - [x] L19: Behavioral tests replace source-text tests (31 tests)
+
+      - [x] L20: Profile catalog with 7 builtin profiles
+
+      - [x] L21: _expand_env_token postcondition meaningful
+
+
+      Coverage: 39/39 findings addressed. 311 tests pass. 46 repro tests pass.'
   - id: retest.final.gate
     name: 'FINAL GATE: All findings fixed and verified'
     status: pending
