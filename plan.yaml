@@ -8120,3 +8120,45 @@ phases:
   status: pending
   depends_on:
   - retest.final
+  steps:
+  - id: fix2.concurrency.lock-fixes
+    name: lock-fixes
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#shell-layer\ntouch_paths:\n  - src/tela/shell/gateway.py\n\
+      \  - src/tela/shell/audit.py\n  - src/tela/shell/reload.py\nharness_refs:\n\
+      \  - tests/\nconflict_rationale: All lock-related files; must be serial to avoid\
+      \ cross-file lock inconsistency.\n\nFix ALL four concurrency issues in one batch:\n\
+      \n## Issue 1: _runtime_lock unused in gateway.py:59\n- `_runtime_lock` is declared\
+      \ but never used in `async with`\n- `gateway_start`, `gateway_shutdown`, `gateway_status`\
+      \ are unprotected\n- Fix: wrap gateway_start/shutdown/status bodies in `async\
+      \ with _runtime_lock:`\n- Grep hint: `grep -n '_runtime_lock' src/tela/shell/gateway.py`\n\
+      \n## Issue 2: _audit_lock incomplete in audit.py\n- `_audit_lock` only protects\
+      \ `audit_query` reads, not `audit_write` writes\n- File writes are also unlocked\n\
+      - Fix: wrap `audit_write` and file-write paths in `async with _audit_lock:`\n\
+      - Grep hint: `grep -n '_audit_lock' src/tela/shell/audit.py`\n\n## Issue 3:\
+      \ on_tools_changed race in reload.py:84-132\n- `on_tools_changed` bypasses `_registry_lock`,\
+      \ races with `connect_all`/`disconnect_all`\n- Fix: acquire `_registry_lock`\
+      \ in `on_tools_changed` before mutating registry state\n- Grep hint: `grep -n\
+      \ '_registry_lock' src/tela/shell/reload.py`\n\n## Issue 4: Unprotected audit\
+      \ globals in audit.py\n- `audit_init`, `audit_set_max_entries`, `audit_close`\
+      \ mutate globals without lock\n- Fix: wrap these in `async with _audit_lock:`\
+      \ or add appropriate guards\n- Grep hint: `grep -n 'def audit_init\\|def audit_set_max\\\
+      |def audit_close' src/tela/shell/audit.py`\n\n## Completion Criteria\n- ALL\
+      \ four lock issues fixed (not just the first)\n- Every async function that mutates\
+      \ module-level state is protected by the appropriate lock\n- No deadlock risk\
+      \ introduced (check lock ordering)\n- Existing tests still pass\n\n## Known\
+      \ Risks (from project history)\n- Module-level mutable singletons were a prior\
+      \ blocker (B4 hot reload)\n- Concurrent access scenarios must be considered\n\
+      - Cleanup/reset semantics between tests must be preserved\n\n## Gate Preview\
+      \ (what the gate WILL reject)\n1. Any mutable global still unprotected after\
+      \ this fix\n2. Lock acquired but not released (missing async with)\n3. Tests\
+      \ failing due to lock contention or deadlock"
+    verification: '- All four lock issues resolved
+
+      - grep for each lock shows consistent usage across all mutation paths
+
+      - uv run pytest -q passes (no deadlocks or regressions)
+
+      - uv run invar guard passes'
+    agent: python-senior
