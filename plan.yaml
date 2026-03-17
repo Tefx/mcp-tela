@@ -292,7 +292,7 @@ phases:
       \ required; rubric captured as step evidence for downstream planning."
 - id: meta.plan_creation
   name: meta.plan_creation
-  status: in_progress
+  status: done
   depends_on:
   - meta.prep
   steps:
@@ -353,7 +353,7 @@ phases:
       \ added."
   - id: meta.plan_creation.create-gateway-runtime-implementation-plan
     name: Create gateway runtime implementation plan
-    status: claimed
+    status: done
     description: Produce the executable vectl implementation plan for gateway lifecycle,
       upstream/downstream runtime, audit, and reload work while preserving CLI/server/gateway/MCP
       server/runtime boundaries. The output must be vectl plan mutations only; docs
@@ -392,6 +392,32 @@ phases:
     agent: vectl-planner
     claimed_by: vectl-planner
     claimed_at: '2026-03-16T20:55:52.226537+00:00'
+    done_at: '2026-03-17T05:05:47.493365+00:00'
+    evidence: "Artifact:\n- gateway/runtime implementation-plan payload applied via\
+      \ `vectl_vectl_mutate`.\n- Added phases: `gateway.contract`, `gateway.test`,\
+      \ `gateway.runtime`, `audit.contract`, `audit.test`, `audit.runtime`, `reload.contract`,\
+      \ `reload.test`, `reload.runtime`.\n- Added concrete-agent contract/test/implementation\
+      \ tracks with verify and gate steps.\n\nVerification:\n- dependency check result\n\
+      \  - `meta.discovery`: done.\n  - `meta.prep`: done.\n  - sibling planning chain\
+      \ preserved: `config.contract -> config.test -> config.impl -> open_mode.contract\
+      \ -> open_mode.test -> open_mode.runtime -> gateway.contract`.\n  - downstream\
+      \ chain validated: `gateway.contract -> gateway.test -> gateway.runtime -> audit.contract\
+      \ -> audit.test -> audit.runtime -> reload.contract -> reload.test -> reload.runtime`.\n\
+      \  - `vectl_vectl_validate`: valid, 0 errors, 0 warnings.\n- contract/test/implementation\
+      \ gate check\n  - Gateway, audit, and reload tracks each include contract step,\
+      \ test step, runtime implementation steps, verification (`integration-verifier`),\
+      \ and gate (`gate-reviewer`).\n  - contract steps assigned to `python-senior`;\
+      \ implementation/test steps assigned to concrete python agents.\n- shared-file\
+      \ serialization assessment\n  - serialization enforced after open-mode runtime\
+      \ for shared files (`src/tela/commands/start.py`, `src/tela/shell/gateway.py`,\
+      \ `src/tela/shell/upstream.py`).\n  - integration-owner pattern encoded for\
+      \ high-conflict files in gateway/audit/reload runtime integration steps.\n \
+      \ - audit depends on gateway runtime; reload depends on audit runtime to reduce\
+      \ dependency conflicts.\n\nPlan mutation payload:\n- applied via `vectl_vectl_mutate`:\n\
+      \  - `add-phase` for gateway/audit/reload contract/test/runtime phases\n  -\
+      \ `edit-phase` dependency chain wiring listed above\n  - `add-step` entries\
+      \ for all gateway/audit/reload contract, test, runtime, freeze, verify, gate\
+      \ steps with explicit IDs/dependencies/agents\n- no docs deliverables added."
   - id: meta.plan_creation.create-cross-repo-alignment-plan
     name: Create cross-repo alignment plan
     status: done
@@ -448,7 +474,7 @@ phases:
       \ `meta.review` used and plan validates cleanly."
 - id: meta.review
   name: meta.review
-  status: locked
+  status: pending
   depends_on:
   - meta.plan_creation
   steps:
