@@ -5401,7 +5401,7 @@ phases:
       - None'
   - id: fix.blockers.verify-blocker-fixes
     name: Verify blocker fixes (B1-B4)
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       independence_level: L2
@@ -5518,6 +5518,8 @@ phases:
     - fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
     - fix.blockers.b4-fix-hot-reload-rollback-isolation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T10:36:47.541336+00:00'
   - id: fix.blockers.gate
     name: 'Gate: Blocker fixes (B1-B4)'
     status: pending
