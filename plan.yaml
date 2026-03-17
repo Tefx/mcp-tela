@@ -6357,3 +6357,51 @@ phases:
   status: locked
   depends_on:
   - retest.regression
+  steps:
+  - id: retest.repro.create-scaffold
+    name: Create black-box repro test scaffold
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - tests/repro/ (NEW directory)\n\
+      \  - tests/repro/conftest.py (NEW -- shared fixtures)\n  - tests/repro/test_blockers.py\
+      \ (NEW -- B1-B4 repros)\n  - tests/repro/test_high.py (NEW -- H1-H4 repros)\n\
+      \  - tests/repro/test_medium.py (NEW -- M1-M10 repros)\n  - tests/repro/test_low.py\
+      \ (NEW -- L1-L21 repros)\n\nCreate black-box reproduction tests for ALL findings\
+      \ from the 5-agent review.\nThese tests verify each fix from an external/behavioral\
+      \ perspective.\n\nTest structure (tests/repro/):\n\n## test_blockers.py\n- test_b1_all_cli_subcommands_registered:\
+      \ verify 5 subcommands in argparse\n- test_b1_audit_subcommand_callable: verify\
+      \ `tela audit` dispatches\n- test_b1_status_subcommand_callable: verify `tela\
+      \ status` dispatches\n- test_b2_audit_config_consumed: verify AuditConfig.output\
+      \ sets _audit_log_path\n- test_b2_audit_persists_to_disk: verify JSONL file\
+      \ written\n- test_b3_config_name_from_dict_key: parse YAML without explicit\
+      \ name field\n- test_b3_backward_compat_explicit_name: explicit name still works\n\
+      - test_b4_rollback_preserves_other_servers: multi-server reload rejection\n\n\
+      ## test_high.py\n- test_h1_pre_post_actually_check: trigger contract violation,\
+      \ verify raises\n- test_h1_no_identity_lambda_pre_post: grep for identity lambdas\n\
+      - test_h2_concurrent_audit_write_safe: asyncio concurrent writes\n- test_h3_no_not_implemented_error:\
+      \ all former stubs execute\n- test_h4_token_validate_accept_valid: HMAC token\
+      \ accepted\n- test_h4_token_validate_reject_invalid: bad token rejected\n\n\
+      ## test_medium.py\n- test_m1_no_unjustified_shell_result_bypass: audit annotations\n\
+      - test_m2_result_not_in_config_loader: verify Result moved\n- test_m3_core_errors_exists:\
+      \ verify core/errors.py exists\n- test_m4_no_double_load_config: verify single\
+      \ load path\n- test_m5_timestamp_comparison_z_vs_offset: Z and +00:00 interop\n\
+      - test_m6_bounded_audit_store: verify max entries eviction\n- test_m7_fastmcp_importable:\
+      \ verify import succeeds\n- test_m8_unset_env_var_errors: verify error on unresolved\
+      \ vars\n- test_m9_on_config_changed_works: verify no NotImplementedError\n-\
+      \ test_m10_default_posture_bridged: verify posture flows to enforcement\n\n\
+      ## test_low.py\n- test_l1_cli_no_direct_gateway_import\n- test_l2_l4_enforcement_chain_count_consistent\n\
+      - test_l3_enforce_no_redundant_tool_name\n- test_l5_pure_functions_in_core\n\
+      - test_l11_init_py_exists\n- test_l12_no_unused_imports_in_e2e\n- test_l13_tela_error_used\n\
+      - test_l14_total_tool_calls_incremented\n- test_l15_connection_tool_call_count\n\
+      - test_l17_digest_is_sha256\n- test_l18_license_exists\n- test_l19_no_source_text_tests\n\
+      - test_l20_profile_catalog_exists\n- test_l21_expand_env_post_meaningful\n\n\
+      Total: ~40 repro tests covering all findings."
+    verification: '- tests/repro/ directory created with all test files
+
+      - All repro tests are syntactically valid
+
+      - Tests import correctly
+
+      - uv run pytest tests/repro/ --collect-only shows ~40 tests
+
+      - Do NOT run tests yet (next step runs them)'
+    agent: python-executor
