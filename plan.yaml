@@ -8333,3 +8333,45 @@ phases:
   status: pending
   depends_on:
   - retest.final
+  steps:
+  - id: fix2.public-api.fix-api-exposure
+    name: fix-api-exposure
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/INTERFACES.md#A. CLI Interface\n  - docs/DESIGN.md#core-layer\ntouch_paths:\n\
+      \  - src/tela/core/config.py\n  - src/tela/core/__init__.py\n  - src/tela/__init__.py\n\
+      \  - src/tela/__main__.py (new)\n  - src/tela/core/errors.py\n  - src/tela/shell/downstream.py\n\
+      harness_refs:\n  - tests/\nconflict_rationale: Different files per issue; no\
+      \ conflict with concurrency phase.\n\nFix FOUR public API issues:\n\n## Issue\
+      \ 15: expand_env_vars not exposed (LOW)\n- Only private `_expand_env_token`\
+      \ exists in core/config.py\n- Public API name `expand_env_vars` is not importable\n\
+      - Fix: Create public `expand_env_vars` function that wraps `_expand_env_token`\
+      \ (or rename)\n- Export from core/__init__.py\n- This fixes blind test failure\
+      \ #29\n\n## Issue 16: Missing __main__.py (LOW)\n- `python -m tela` does not\
+      \ work\n- Fix: Create `src/tela/__main__.py` with standard `from tela.cli import\
+      \ main; main()` pattern\n- This fixes blind test failure #30\n\n## Issue 17:\
+      \ Error code constants not exported (LOW)\n- `AUTHZ_DENY` etc. constants not\
+      \ exported from `core/errors`\n- Fix: Add error code constants to `core/errors.py`\
+      \ and export from `core/__init__.py`\n- Match the error codes documented in\
+      \ INTERFACES.md\n- This fixes blind test failure #31\n\n## Issue 24: ToolConflict\
+      \ unused import in downstream.py (LOW)\n- `ToolConflict` is imported but never\
+      \ used\n- Fix: Remove the unused import\n- Grep hint: `grep -n 'ToolConflict'\
+      \ src/tela/shell/downstream.py`\n\n## Completion Criteria\n- `from tela.core.config\
+      \ import expand_env_vars` works\n- `python -m tela --help` works\n- `from tela.core.errors\
+      \ import AUTHZ_DENY` (and other constants) works\n- No unused imports in downstream.py\n\
+      - All 4 blind test failures (29-32) should now pass\n\n## Gate Preview (what\
+      \ the gate WILL reject)\n1. Any new public symbol not exported from __init__.py\n\
+      2. __main__.py that does not delegate to cli.main()\n3. Error codes that do\
+      \ not match INTERFACES.md"
+    verification: '- from tela.core.config import expand_env_vars succeeds
+
+      - python -m tela --help works
+
+      - from tela.core.errors import AUTHZ_DENY succeeds
+
+      - grep ToolConflict downstream.py returns 0 matches
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    agent: python-executor
