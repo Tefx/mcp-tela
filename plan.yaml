@@ -10568,14 +10568,10 @@ phases:
   - id: cap.spec.design-md
     name: Update DESIGN.md to target state
     status: pending
-    description: 'Update DESIGN.md to reflect the post-migration target state per
-      ADR-003. Changes: (a) Replace 7-step enforcement chain with: initialize-time
-      preconditions (token, profile) + 3-step per-call chain (family admission, tool
-      override, posture ceiling), (b) Replace all profile examples from tools:+side_effect_policy:
-      to capabilities: format, (c) Remove SideEffectPolicy from model descriptions,
-      (d) Update Section 9.1 (profiles), Section 4.4 (enforcement), Section 6 (classification
-      interactions), Section 13 (invariants), Section 14 (decision log). This update
-      defines the implementation target - implementation code MUST match this document.'
+    description: 'DESIGN.md already updated in commit 382927d (user-authored). This
+      step verifies the update is complete: enforcement chain is 3 per-call steps,
+      all profile examples use capabilities:, SideEffectPolicy removed, override-ceiling
+      invariant documented. If any gaps found, fix them.'
     verification: grep -n 'side_effect_policy' docs/DESIGN.md returns only historical/ADR
       references. Enforcement chain described as 3 per-call steps. All profile examples
       use capabilities:.
