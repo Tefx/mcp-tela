@@ -7596,7 +7596,7 @@ phases:
       No false positives. All repro tests confirm fixes are in place.'
   - id: retest.repro.gate
     name: 'Gate: Black-box repro verification'
-    status: pending
+    status: claimed
     description: "Gate review: Confirm all findings have passing repro tests.\n\n\
       review_depth: THOROUGH\nreview_depth_rationale:\n  - This gate confirms ALL\
       \ 39 findings are verified\n  - Any gap here means a finding was not actually\
@@ -7611,6 +7611,8 @@ phases:
     depends_on:
     - retest.repro.run-repro-tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:15:17.666899+00:00'
 - id: retest.final
   name: Final Consolidated Gate
   status: locked
