@@ -80,6 +80,7 @@ src/tela/
     conflict.py                   # Tool name conflict detection
     family.py                     # Family mapping (server-is-family, overrides)
     errors.py                     # Error code definitions and error model
+    catalog.py                    # Prebuilt profile catalog (7 builtin profiles)
   shell/
     __init__.py
     gateway.py                    # MCP server lifecycle (start, shutdown, connections)
@@ -91,9 +92,9 @@ src/tela/
   commands/
     __init__.py
     start.py                      # `tela start` command
-    status.py                     # `tela status` command
-    profiles.py                   # `tela profiles` command
-    connections.py                # `tela connections` command
+    status_cmd.py                 # `tela status` command
+    profiles_cmd.py               # `tela profiles` command
+    connections_cmd.py            # `tela connections` command
     audit_cmd.py                  # `tela audit` command
 tests/
   core/
@@ -325,7 +326,6 @@ class ConnectionContext(BaseModel):
     """Per-connection state for an upstream client."""
     connection_id: str
     profile_name: str
-    token: CapabilityToken | None = None
     connected_at: str                  # ISO-8601
     tool_call_count: int = 0
 
@@ -725,74 +725,92 @@ class ToolConflict(BaseModel):
 
 ### 4.8 core/errors.py -- Error Model
 
-**Responsibility**: Define error codes and the error hierarchy. Map error codes
-to human-readable messages.
+**Responsibility**: Define contract-level configuration errors. Provides
+`ConfigContractError` for config validation failures. Other errors use string
+error codes with the `TelaError` Pydantic model (defined in `core/models`).
 
 **Non-responsibility**: Does NOT format MCP error responses (that is `shell/upstream`).
+Does NOT define a full exception hierarchy -- errors propagate as string codes
+via `TelaError`.
 
-**Dependencies**: `core/models`
-**Depended by**: All other modules
+**Dependencies**: (none)
+**Depended by**: `core/config`, `shell/config_loader`
+
+**Error model**:
+
+- **`ConfigContractError`**: A frozen dataclass exception with `code: str` and
+  `message: str`. Raised during config parsing/validation when contracts are
+  violated.
+- **`TelaError`** (in `core/models`): A Pydantic `BaseModel` with `code: str`,
+  `message: str`, and `details: dict | None`. Used as the structured wire
+  format for MCP error responses. Error codes are plain strings (e.g.,
+  `"AUTHZ_DENY"`, `"TOKEN_INVALID"`).
 
 **Public Interface**:
 
 ```python
-# Error code constants (from contracts/errors.yaml, tela range 200-299)
-AUTHZ_DENY = "AUTHZ_DENY"                    # 200
-PROFILE_NOT_FOUND = "PROFILE_NOT_FOUND"       # 201
-TOKEN_INVALID = "TOKEN_INVALID"               # 202
-TOKEN_EXPIRED = "TOKEN_EXPIRED"               # 203
-TOOL_CONFLICT = "TOOL_CONFLICT"               # 204
-TOOL_UNCLASSIFIED = "TOOL_UNCLASSIFIED"       # 205
-DOWNSTREAM_ERROR = "DOWNSTREAM_ERROR"         # 210
-DOWNSTREAM_UNAVAILABLE = "DOWNSTREAM_UNAVAILABLE"  # 211
+from dataclasses import dataclass
 
-# Common errors
-INVALID_INPUT = "INVALID_INPUT"               # 1
-NOT_FOUND = "NOT_FOUND"                       # 2
-TIMEOUT = "TIMEOUT"                           # 3
-INTERNAL = "INTERNAL"                         # 10
+@dataclass(frozen=True)
+class ConfigContractError(Exception):
+    """Contract-level configuration rejection.
 
-ERROR_CODES: dict[str, int] = { ... }
-ERROR_MESSAGES: dict[str, str] = { ... }
-
-class TelaException(Exception):
-    """Base exception for tela internal control flow.
-
-    Relationship to TelaError:
-    - TelaException is raised/caught internally for control flow (e.g., in
-      the enforcement chain, config parsing, token validation).
-    - TelaError is the Pydantic model used as the MCP wire format for error
-      responses sent to upstream clients.
-    - Use to_error() to convert a TelaException into a TelaError for the wire.
+    >>> err = ConfigContractError(code="CONFIG_PARSE_ERROR", message="bad config")
+    >>> err.code
+    'CONFIG_PARSE_ERROR'
     """
     code: str
     message: str
-    details: dict | None
+```
 
-    def to_error(self) -> TelaError:
-        """Convert this exception to a structured TelaError wire format."""
-        ...
+### 4.9 core/catalog.py -- Prebuilt Profile Catalog
+
+**Responsibility**: Provide the 7 builtin profiles shipped with tela. These are
+templates describing behavioral boundaries (not professions). Deployment-local
+configuration remains the runtime source of truth; builtins serve as defaults
+or starting points.
+
+**Non-responsibility**: Does NOT read config files. Does NOT manage runtime
+profile state.
+
+**Dependencies**: `core/models`, `core/contracts`
+**Depended by**: `core/config`
+
+**Builtin profiles** (7):
+
+| Name | Posture Ceiling | Side-Effect Policy |
+|------|----------------|-------------------|
+| `read_only` | filesystem: READ_ONLY | read_only |
+| `fetch_external` | filesystem+network: READ_ONLY | read_only |
+| `modify_local` | filesystem: READ_WRITE | allow |
+| `send_external` | filesystem: READ_ONLY, network: READ_WRITE | allow |
+| `orchestrate` | filesystem+network: READ_ONLY, orchestration: READ_WRITE | allow |
+| `execute_safe` | filesystem+network+orchestration+execution: READ_WRITE | allow |
+| `execute_full` | all families: DESTRUCTIVE | allow |
+
+**Public Interface**:
+
+```python
+from tela.core.models import ProfileConfig
+
+BUILTIN_PROFILES: dict[str, ProfileConfig]
+
+def get_builtin_profile(name: str) -> ProfileConfig | None:
+    """Look up a single builtin profile by name."""
     ...
 
-class AuthzDenyError(TelaException): ...
-class ProfileNotFoundError(TelaException): ...
-class TokenInvalidError(TelaException): ...
-class TokenExpiredError(TelaException): ...
-class ToolConflictError(TelaException): ...
-class DownstreamError(TelaException): ...
-class DownstreamUnavailableError(TelaException): ...
-class ConfigError(TelaException): ...
+def list_builtin_profiles() -> list[str]:
+    """List all builtin profile names (sorted)."""
+    ...
 
-def make_error(code: str, message: str | None = None, details: dict | None = None) -> TelaError:
-    """Create a structured TelaError from an error code.
-
-    >>> make_error("AUTHZ_DENY", "Tool 'delete_file' denied by profile")
-    TelaError(code="AUTHZ_DENY", message="Tool 'delete_file' denied by profile")
-    """
+def merge_with_builtins(
+    user_profiles: Mapping[str, ProfileConfig],
+) -> dict[str, ProfileConfig]:
+    """Merge user profiles with builtins, user takes precedence."""
     ...
 ```
 
-### 4.9 shell/gateway.py -- Gateway Lifecycle
+### 4.10 shell/gateway.py -- Gateway Lifecycle
 
 **Responsibility**: Orchestrate the full gateway lifecycle: load config, start
 downstream connections, start MCP server, handle shutdown.
@@ -810,7 +828,7 @@ downstream connections, start MCP server, handle shutdown.
 
 ```python
 from typing import Protocol
-from returns.result import Result
+from tela.shell.result import Result
 
 class Gateway(Protocol):
     """The running gateway instance."""
@@ -835,7 +853,7 @@ class Gateway(Protocol):
         ...
 ```
 
-### 4.10 shell/downstream.py -- Downstream Server Management
+### 4.11 shell/downstream.py -- Downstream Server Management
 
 **Responsibility**: Spawn stdio downstream servers, connect to SSE downstream
 servers, enumerate their tool lists, manage their lifecycle.
@@ -851,7 +869,7 @@ upstream connections.
 
 ```python
 from typing import Protocol
-from returns.result import Result
+from tela.shell.result import Result
 
 class DownstreamManager(Protocol):
     """Manages connections to downstream MCP servers."""
@@ -888,7 +906,7 @@ class DownstreamManager(Protocol):
         ...
 ```
 
-### 4.11 shell/upstream.py -- Upstream MCP Handler
+### 4.12 shell/upstream.py -- Upstream MCP Handler
 
 **Responsibility**: Handle MCP protocol interactions with upstream clients. Implement
 `tools/list`, `tools/call`, `tela.profiles`, and `notifications/tools/list_changed`.
@@ -964,7 +982,7 @@ class UpstreamHandler(Protocol):
         ...
 ```
 
-### 4.12 shell/audit.py -- Audit Log Writer
+### 4.13 shell/audit.py -- Audit Log Writer
 
 **Responsibility**: Write structured audit entries to JSONL file.
 
@@ -978,7 +996,7 @@ class UpstreamHandler(Protocol):
 
 ```python
 from typing import Protocol
-from returns.result import Result
+from tela.shell.result import Result
 
 class AuditWriter(Protocol):
     """Append-only audit log writer."""
@@ -1034,7 +1052,7 @@ def build_audit_entry(
     ...
 ```
 
-### 4.13 shell/config_loader.py -- Config File I/O
+### 4.14 shell/config_loader.py -- Config File I/O
 
 **Responsibility**: Read config file from disk, read environment variables,
 pass to `core/config` for parsing.
@@ -1048,7 +1066,7 @@ pass to `core/config` for parsing.
 **Public Interface**:
 
 ```python
-from returns.result import Result
+from tela.shell.result import Result
 
 async def load_config(
     path: str | None = None,
@@ -1070,7 +1088,7 @@ def resolve_state_dir() -> str:
     ...
 ```
 
-### 4.14 shell/reload.py -- Hot Reload
+### 4.15 shell/reload.py -- Hot Reload
 
 **Responsibility**: Orchestrate hot reload when downstream tool lists change or
 configuration changes.
@@ -1086,7 +1104,7 @@ MCP notifications). Does NOT manage connections.
 
 ```python
 from typing import Protocol
-from returns.result import Result
+from tela.shell.result import Result
 
 class ReloadCoordinator(Protocol):
     """Orchestrates hot reload of tool lists and configuration."""
@@ -1144,7 +1162,7 @@ tela start [--config PATH] [--port PORT] [--default-profile NAME]
 When `--port` is provided, additionally listens on SSE. Fails fast on config
 errors or tool conflicts.
 
-### 5.3 commands/status.py -- `tela status`
+### 5.3 commands/status_cmd.py -- `tela status`
 
 ```
 tela status [--json]
@@ -1159,7 +1177,7 @@ connections, profile count.
 
 **Output** (JSON): `GatewayStatus` serialized as JSON.
 
-### 5.4 commands/profiles.py -- `tela profiles`
+### 5.4 commands/profiles_cmd.py -- `tela profiles`
 
 ```
 tela profiles [--json]
@@ -1171,7 +1189,7 @@ postures, side-effect policies, and resolved tool counts.
 **Output** (JSON): Array of profile objects matching the `tela.profiles` MCP
 response format.
 
-### 5.5 commands/connections.py -- `tela connections`
+### 5.5 commands/connections_cmd.py -- `tela connections`
 
 ```
 tela connections [--json]
@@ -1504,19 +1522,25 @@ All tela error codes are in the 200-299 range (from `contracts/errors.yaml`):
 | DOWNSTREAM_ERROR | Downstream server error | 210 |
 | DOWNSTREAM_UNAVAILABLE | Downstream unreachable | 211 |
 
-### 10.3 Exception Hierarchy
+### 10.3 Error Model
+
+The error model uses two complementary types rather than a full exception hierarchy:
 
 ```
-TelaException (base)
-  +-- ConfigError           # Config parsing/validation failures
-  +-- AuthzDenyError        # Enforcement chain denial
-  +-- ProfileNotFoundError  # Profile lookup failure
-  +-- TokenInvalidError     # HMAC verification failure
-  +-- TokenExpiredError     # Token expiry
-  +-- ToolConflictError     # Duplicate tool names across servers
-  +-- DownstreamError       # Downstream server returned error
-  +-- DownstreamUnavailableError  # Downstream server unreachable
+ConfigContractError (dataclass, Exception)
+  -- code: str              # e.g., "CONFIG_PARSE_ERROR"
+  -- message: str           # Human-readable reason
+
+TelaError (Pydantic BaseModel, wire format)
+  -- code: str              # String error code (e.g., "AUTHZ_DENY")
+  -- message: str           # Human-readable message
+  -- details: dict | None   # Optional structured details
 ```
+
+Error codes from section 10.2 are used as plain strings in `TelaError.code`.
+There is no exception subclass hierarchy -- control flow uses
+`ConfigContractError` for config-time failures and `TelaError` for runtime
+MCP error responses.
 
 ---
 
