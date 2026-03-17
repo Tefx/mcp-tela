@@ -4793,7 +4793,7 @@ phases:
       - Commit: 9dd7d8d, merged as e334cee'
   - id: reload.runtime.freeze-for-l2
     name: Freeze for reload L2 verification
-    status: claimed
+    status: done
     description: 'step_type: planning
 
       Freeze: lock snapshot for L2 reload runtime verification.
@@ -4825,6 +4825,20 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:46:26.982964+00:00'
+    done_at: '2026-03-17T08:46:33.740237+00:00'
+    evidence: '## Freeze Evidence
+
+      - Commit: af5a087f26e7a90ab3af59fbfc842a7d14e702f2
+
+      - Git status clean: yes
+
+      - Reload fixture/state snapshot: Re-enumeration via on_tools_changed with in-memory
+      registry. Notification via set_notify_callback. Warning via audit_write.
+
+      - No code changes until `reload.runtime.verify-reload-runtime`: yes
+
+
+      ### Snapshot: 205 tests passing, invar guard clean'
   - id: reload.runtime.verify-reload-runtime
     name: Verify reload runtime
     status: pending
