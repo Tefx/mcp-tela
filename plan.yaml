@@ -2096,13 +2096,13 @@ phases:
       5. **Verification**: 27 tests pass, 49 total suite passes, invar guard clean.'
 - id: open_mode.runtime
   name: open_mode.runtime
-  status: pending
+  status: in_progress
   depends_on:
   - open_mode.test
   steps:
   - id: open_mode.runtime.implement-default-profile-resolution
     name: Implement default-profile resolution
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#7.2\
       \ Open Mode\n  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n  -\
@@ -2142,6 +2142,8 @@ phases:
 
       - Duplicate precedence logic removed/avoided: yes/no'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T07:10:16.443839+00:00'
   - id: open_mode.runtime.implement-open-mode-initialize-binding
     name: Implement open-mode initialize binding
     status: pending
