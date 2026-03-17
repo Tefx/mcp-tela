@@ -8599,3 +8599,41 @@ phases:
 
       - uv run invar guard passes'
     agent: python-senior
+  - id: fix2.reload-stubs.verify-reload-stubs
+    name: verify-reload-stubs
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L1
+
+
+      As an INDEPENDENT TESTER, validate reload, digest, and stub fixes.
+
+
+      Verify:
+
+      1. load_config is called exactly once during `tela start` flow
+
+      2. tools_digest returns sha256:... format string
+
+      3. _audit_level is either read somewhere or removed entirely
+
+      4. Stubs (on_config_changed, call_tool, re_enumerate, notify_tools_changed)
+      have clear deferred documentation
+
+      5. hashlib is used (not unused import)
+
+      6. Deferred import in handle_tools_call is documented or resolved
+
+      7. All tests pass
+
+
+      Finding issues is a POSITIVE outcome.'
+    verification: '- grep evidence for each fix
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    depends_on:
+    - fix2.reload-stubs.fix-reload-and-stubs
+    agent: integration-verifier
