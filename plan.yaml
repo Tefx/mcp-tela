@@ -6757,7 +6757,7 @@ phases:
     claimed_at: '2026-03-17T10:55:32.388865+00:00'
   - id: fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
     name: 'L14+L15+L16+L21: Fix counters, write-only fields, vacuous contracts'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/gateway.py\
       \ (L14: total_tool_calls never incremented)\n  - src/tela/core/models.py (L15:\
       \ ConnectionContext.tool_call_count never incremented/read)\n  - src/tela/core/models.py\
@@ -6792,6 +6792,8 @@ phases:
     - src/tela/core/models.py
     - src/tela/core/config.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:55:32.697564+00:00'
   - id: fix.low.code.gate
     name: 'Gate: Low code quality fixes'
     status: pending
