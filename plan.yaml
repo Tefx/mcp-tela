@@ -6218,7 +6218,7 @@ phases:
       Commits: 8f66c0c, a03f217, eb57672, eb930db'
 - id: fix.medium.config
   name: 'Medium Fixes: Config and Wiring (M1-M4, M8, M10)'
-  status: in_progress
+  status: done
   depends_on:
   - fix.blockers
   steps:
@@ -6436,7 +6436,7 @@ phases:
       - INVAR.md Shell zone rules'
   - id: fix.medium.config.gate
     name: 'Gate: Medium config fixes (M1-M4, M8, M10)'
-    status: claimed
+    status: done
     description: 'Gate review: Verify medium config fix phase completion.
 
 
@@ -6466,6 +6466,10 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T10:55:08.144574+00:00'
+    done_at: '2026-03-17T10:55:16.917123+00:00'
+    evidence: 'Gate: Medium Config Fixes (M1-M4, M8, M10) PASSED. All fixes verified.
+      Result relocated, errors consolidated, env var error handling fixed. 296 passed,
+      0 invar errors.'
 - id: fix.medium.audit
   name: 'Medium Fixes: Audit and Runtime (M5-M7, M9)'
   status: done
@@ -6686,7 +6690,7 @@ phases:
       passed, 0 invar errors.'
 - id: fix.low.code
   name: 'Low Fixes: Code Quality (L1, L3, L5, L11-L16, L21)'
-  status: locked
+  status: pending
   depends_on:
   - fix.high
   - fix.medium.config
