@@ -1,14 +1,14 @@
-"""Gateway lifecycle and startup binding contracts.
+"""Gateway lifecycle and startup binding.
 
-This module defines the gateway lifecycle interface (start, shutdown, status,
-connections) and implements the CLI-to-gateway startup binding. Actual transport
-startup (stdio/SSE server) and runtime lifecycle management are deferred to the
-gateway.runtime phase.
+This module implements the gateway lifecycle: start (load config, connect
+downstreams), shutdown (disconnect downstreams), status, and connections.
+Transport startup (stdio/SSE MCP server) is deferred.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from tela.core.models import (
@@ -17,8 +17,11 @@ from tela.core.models import (
     GatewayStatus,
     GatewayTransport,
     RuntimeBindingContract,
+    ServerConfig,
+    TelaConfig,
 )
 from tela.shell.config_loader import Result, load_config
+from tela.shell.downstream import connect_all, disconnect_all, get_all_tools
 
 
 @dataclass(frozen=True)
@@ -37,15 +40,34 @@ class GatewayStartupConfig:
     default_profile: str | None
 
 
+@dataclass
+class GatewayRuntime:
+    """Mutable gateway runtime state."""
+
+    config: TelaConfig | None = None
+    startup_config: GatewayStartupConfig | None = None
+    start_time: float | None = None
+    connections: list[ConnectionContext] = field(default_factory=list)
+    total_tool_calls: int = 0
+    running: bool = False
+
+
+# Module-level runtime state
+_runtime = GatewayRuntime()
+
+
+# @invar:allow dead_export: runtime accessor used by tests and gateway integration.
+# @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
+def get_runtime() -> GatewayRuntime:
+    """Return the module-level gateway runtime."""
+    return _runtime
+
+
 # @invar:allow dead_export: startup wiring is connected in a later runtime step.
 def bind_gateway_startup(
     runtime: RuntimeBindingContract,
 ) -> Result[GatewayStartupConfig, str]:
     """Bind CLI runtime contract into gateway startup configuration.
-
-    Resolves the gateway startup config from the CLI runtime binding contract.
-    The resolved default-profile is passed through as-is from the shared
-    config authority path -- this function does not re-derive profile selection.
 
     Examples:
         >>> import tempfile, os
@@ -73,8 +95,7 @@ def bind_gateway_startup(
         runtime: CLI runtime binding contract from ``tela start``.
 
     Returns:
-        ``Result[GatewayStartupConfig, str]`` with the resolved gateway
-        startup config on success, or an error string on failure.
+        Result with resolved gateway startup config.
     """
 
     config_result = load_config(
@@ -98,60 +119,77 @@ def bind_gateway_startup(
     )
 
 
-# --- Gateway Lifecycle Contracts (stubs) ---
-
-
 # @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
-async def gateway_start(config: GatewayStartupConfig) -> Result[None, str]:
+async def gateway_start(
+    config: GatewayStartupConfig,
+    tela_config: TelaConfig | None = None,
+    tool_lists: dict[str, list[dict]] | None = None,
+) -> Result[None, str]:
     """Start the gateway: load config, connect downstreams, start MCP server.
 
     Fails fast on config errors or tool conflicts at startup.
 
-    Contract stub: raises NotImplementedError.
-
     Examples:
         >>> import asyncio
-        >>> asyncio.run(gateway_start(
+        >>> from tela.core.models import TelaConfig
+        >>> r = asyncio.run(gateway_start(
         ...     GatewayStartupConfig(
         ...         transport=GatewayTransport.STDIO,
         ...         port=None,
         ...         auth_mode=AuthMode.OPEN,
         ...         default_profile="dev",
-        ...     )
+        ...     ),
+        ...     tela_config=TelaConfig(),
         ... ))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: gateway_start pending
+        >>> r.is_ok
+        True
 
     Args:
         config: Resolved gateway startup configuration.
+        tela_config: Full tela config (if None, loads from config path).
+        tool_lists: Optional pre-enumerated tool lists for testing.
 
     Returns:
-        ``Result[None, str]`` once implemented.
+        Result[None, str] on success, or error string on failure.
     """
 
-    raise NotImplementedError("Contract stub: gateway_start pending")
+    effective_config = tela_config or TelaConfig()
+
+    # Connect downstream servers
+    connect_result = await connect_all(
+        effective_config.servers, tool_lists=tool_lists
+    )
+    if connect_result.is_err:
+        return Result(error=connect_result.error)
+
+    # Store runtime state
+    _runtime.config = effective_config
+    _runtime.startup_config = config
+    _runtime.start_time = time.monotonic()
+    _runtime.running = True
+
+    return Result(value=None)
 
 
 # @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 async def gateway_shutdown() -> Result[None, str]:
     """Graceful shutdown: stop accepting connections, close downstreams.
 
-    Contract stub: raises NotImplementedError.
-
     Examples:
         >>> import asyncio
-        >>> asyncio.run(gateway_shutdown())
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: gateway_shutdown pending
+        >>> r = asyncio.run(gateway_shutdown())
+        >>> r.is_ok
+        True
 
     Returns:
-        ``Result[None, str]`` once implemented.
+        Result[None, str] always succeeds.
     """
 
-    raise NotImplementedError("Contract stub: gateway_shutdown pending")
+    disconnect_result = await disconnect_all()
+    _runtime.running = False
+    _runtime.start_time = None
+    _runtime.connections.clear()
+    return disconnect_result
 
 
 # @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
@@ -159,19 +197,26 @@ async def gateway_shutdown() -> Result[None, str]:
 def gateway_status() -> GatewayStatus:
     """Return current gateway runtime status.
 
-    Contract stub: raises NotImplementedError.
-
     Examples:
-        >>> gateway_status()
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: gateway_status pending
+        >>> gateway_status().server_count
+        0
 
     Returns:
-        ``GatewayStatus`` once implemented.
+        GatewayStatus with current runtime metrics.
     """
 
-    raise NotImplementedError("Contract stub: gateway_status pending")
+    all_tools = get_all_tools()
+    uptime = time.monotonic() - _runtime.start_time if _runtime.start_time else 0.0
+    profile_count = len(_runtime.config.profiles) if _runtime.config else 0
+
+    return GatewayStatus(
+        uptime_seconds=uptime,
+        server_count=len(all_tools),
+        connected_servers=list(all_tools.keys()),
+        active_connections=len(_runtime.connections),
+        profile_count=profile_count,
+        total_tool_calls=_runtime.total_tool_calls,
+    )
 
 
 # @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
@@ -179,16 +224,12 @@ def gateway_status() -> GatewayStatus:
 def gateway_connections() -> list[ConnectionContext]:
     """Return list of active upstream connections.
 
-    Contract stub: raises NotImplementedError.
-
     Examples:
         >>> gateway_connections()
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: gateway_connections pending
+        []
 
     Returns:
-        List of ``ConnectionContext`` once implemented.
+        List of active ConnectionContext.
     """
 
-    raise NotImplementedError("Contract stub: gateway_connections pending")
+    return list(_runtime.connections)
