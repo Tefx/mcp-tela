@@ -10172,6 +10172,14 @@ phases:
     verification: No 'deferred' language in shell module docstrings. Docs match actual
       behavior.
     agent: python-executor
+  - id: rt.doc_sync.gate
+    name: Gate review
+    status: pending
+    description: Gate review for documentation sync.
+    verification: Docs accurate and no deferred language remains.
+    depends_on:
+    - rt.doc_sync.impl
+    agent: gate-reviewer
 - id: rt.final_gate
   name: Deep Review
   status: locked
