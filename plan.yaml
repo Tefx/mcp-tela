@@ -6097,13 +6097,13 @@ phases:
     agent: gate-reviewer
 - id: fix.medium.audit
   name: 'Medium Fixes: Audit and Runtime (M5-M7, M9)'
-  status: pending
+  status: in_progress
   depends_on:
   - fix.blockers
   steps:
   - id: fix.medium.audit.m5-m6-fix-audit-timestamp-and-bounded-store
     name: 'M5+M6: Fix audit timestamp and bounded store'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/audit.py\n\
       harness_refs:\n  - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
       \nProblem M5:\n- Audit timestamp uses string comparison for filtering (`e.timestamp\
@@ -6134,6 +6134,8 @@ phases:
     - src/tela/shell/audit.py
     - tests/shell/test_audit.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:38:43.931867+00:00'
   - id: fix.medium.audit.m7-m9-wire-fastmcp-and-implement-on-config-changed
     name: 'M7+M9: Wire fastmcp and implement on_config_changed'
     status: pending
