@@ -8199,3 +8199,22 @@ phases:
     depends_on:
     - fix2.concurrency.lock-fixes
     agent: integration-verifier
+  - id: fix2.concurrency.gate
+    name: gate
+    status: pending
+    description: "Gate review: Verify concurrency fix phase completion.\n\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale: |\n  - All issues are concurrency-related\
+      \ (high regression risk)\n  - Module-level mutable state was a prior blocker\
+      \ family (B4)\n  - Lock semantics require careful audit\n\nReview criteria:\n\
+      1. All 4 concurrency issues resolved\n2. Lock coverage is complete (no unprotected\
+      \ mutation paths remain)\n3. No deadlock risk\n4. Tests pass without regressions"
+    verification: '- All 4 lock issues confirmed fixed
+
+      - Evidence quality sufficient
+
+      - No new concurrency gaps introduced
+
+      - Ready for next phase'
+    depends_on:
+    - fix2.concurrency.verify-locks
+    agent: gate-reviewer
