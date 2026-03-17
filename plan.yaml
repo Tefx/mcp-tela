@@ -3869,7 +3869,7 @@ phases:
   steps:
   - id: audit.test.add-audit-runtime-tests
     name: Add audit runtime tests
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.12\
       \ shell/audit.py -- Audit Log Writer\n  - docs/DESIGN.md#10.1 Error Propagation\
       \ Rules\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#J.\
@@ -3899,6 +3899,28 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:29:57.757457+00:00'
+    done_at: '2026-03-17T08:31:23.488768+00:00'
+    evidence: '## Test Evidence
+
+      - Added tests: 14 new tests in tests/integration/test_audit_levels.py
+
+      - Audit levels covered: yes (L1 tool+verdict+latency, L2 +param_hash, L3 +request/response
+      content)
+
+      - Outcome semantics covered: yes (denied: no response, enforcement-only latency;
+      allowed success: response at L3; downstream error: error in response)
+
+      - Upstream emission points covered: yes (strip_meta shape, allowed/denied emission
+      shapes)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 186 passed
+
+      - No product implementation added
+
+      - Commit: 516bd27 (worktree), merged as b5b45f6'
   - id: audit.test.gate
     name: Gate audit.test
     status: pending
