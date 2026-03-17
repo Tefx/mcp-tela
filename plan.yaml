@@ -3596,7 +3596,7 @@ phases:
       **Verdict: PASS**'
   - id: gateway.runtime.gate
     name: Gate gateway.runtime
-    status: pending
+    status: claimed
     description: 'Gate review: Verify gateway.runtime phase completion.
 
       review_depth: THOROUGH
@@ -3664,6 +3664,8 @@ phases:
     - gateway.runtime.freeze-for-l2
     - gateway.runtime.verify-gateway-runtime
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T08:09:43.311906+00:00'
 - id: audit.contract
   name: audit.contract
   status: locked
