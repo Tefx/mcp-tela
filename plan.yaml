@@ -5681,3 +5681,8 @@ phases:
     depends_on:
     - fix.high.verify-high-fixes
     agent: gate-reviewer
+- id: fix.medium.config
+  name: 'Medium Fixes: Config and Wiring (M1-M4, M8, M10)'
+  status: locked
+  depends_on:
+  - fix.blockers
