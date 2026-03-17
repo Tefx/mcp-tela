@@ -746,7 +746,7 @@ phases:
       \ follow-up fix/re-gate chain now authoritative."
   - id: meta.review.fix-enforcement-wording-conflict
     name: Canonize initialize-time binding and 4-step per-call enforcement wording
-    status: claimed
+    status: done
     description: 'Batched meta-plan fix for the blocker from `meta.review.gate`.
 
 
@@ -784,6 +784,21 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-17T05:52:39.667520+00:00'
+    done_at: '2026-03-17T05:55:55.777144+00:00'
+    evidence: "Artifact:\n- reconciled canonical wording and plan-structure handling.\n\
+      - canonical wording selected for downstream planning:\n  - initialize-time:\
+      \ CapabilityToken validation + profile binding at `initialize` / connection\
+      \ bind.\n  - per-call: 4-step enforcement chain = family admission, tool override,\
+      \ posture, side-effect.\n- missing reconciliation work explicitly incorporated\
+      \ into plan structure via step edits.\n\nVerification:\n- canonical wording\
+      \ decision\n  - conflicting framing identified and resolved to single canonical\
+      \ wording.\n- dependency and scope checks\n  - dependency chain preserved: `meta.review.gate`\
+      \ -> `meta.review.fix-enforcement-wording-conflict` -> `meta.review.regate-enforcement-wording-conflict`.\n\
+      \  - scope preserved as meta/planning only; docs remain references, not deliverables.\n\
+      \nPlan mutation payload:\n- applied via `vectl_vectl_mutate`:\n  - `edit-step(meta.review.fix-enforcement-wording-conflict)`\
+      \ to canonize wording and incorporate missing reconciliation work.\n  - `edit-step(meta.review.regate-enforcement-wording-conflict)`\
+      \ to enforce independent re-gate checks against conflicting wording.\n- no additional\
+      \ mutations required."
   - id: meta.review.regate-enforcement-wording-conflict
     name: Re-test and re-gate enforcement wording reconciliation
     status: pending
