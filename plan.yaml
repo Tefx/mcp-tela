@@ -8225,7 +8225,7 @@ phases:
       asyncio.run. 315+46 tests passed.'
   - id: fix2.concurrency.gate
     name: gate
-    status: pending
+    status: claimed
     description: "Gate review: Verify concurrency fix phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale: |\n  - All issues are concurrency-related\
       \ (high regression risk)\n  - Module-level mutable state was a prior blocker\
@@ -8242,6 +8242,8 @@ phases:
     depends_on:
     - fix2.concurrency.verify-locks
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T12:00:34.768668+00:00'
 - id: fix2.contracts
   name: 'Fix Pass 2: Tautological Contracts and Validation Gaps (Issues 6, 18, 25)'
   status: done
