@@ -6218,13 +6218,13 @@ phases:
       Commits: 8f66c0c, a03f217, eb57672, eb930db'
 - id: fix.medium.config
   name: 'Medium Fixes: Config and Wiring (M1-M4, M8, M10)'
-  status: pending
+  status: in_progress
   depends_on:
   - fix.blockers
   steps:
   - id: fix.medium.config.m2-m3-relocate-result-type-and-consolidate-error-models
     name: 'M2+M3: Relocate Result type and consolidate error models'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nspec_refs:\n  - docs/DESIGN.md#4.3 core/errors.py\n\
       touch_paths:\n  - src/tela/shell/config_loader.py (remove Result definition)\n\
       \  - src/tela/shell/result.py (NEW -- canonical Result location)\n  - src/tela/core/errors.py\
@@ -6254,6 +6254,8 @@ phases:
     - src/tela/shell/config_loader.py
     - docs/DESIGN.md
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T10:49:59.130145+00:00'
   - id: fix.medium.config.m4-m8-m10-fix-config-wiring-issues
     name: 'M4+M8+M10: Fix config wiring issues'
     status: pending
