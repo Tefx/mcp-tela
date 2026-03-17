@@ -59,3 +59,4 @@ class TelaConfig(BaseModel):
 
     profiles: dict[str, ProfileConfig] = Field(default_factory=dict)
     auth: AuthConfig = Field(default_factory=AuthConfig)
+    resolved_default_profile: str | None = None
