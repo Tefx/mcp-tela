@@ -6224,7 +6224,7 @@ phases:
   steps:
   - id: fix.medium.config.m2-m3-relocate-result-type-and-consolidate-error-models
     name: 'M2+M3: Relocate Result type and consolidate error models'
-    status: claimed
+    status: done
     description: "step_type: implementation\nspec_refs:\n  - docs/DESIGN.md#4.3 core/errors.py\n\
       touch_paths:\n  - src/tela/shell/config_loader.py (remove Result definition)\n\
       \  - src/tela/shell/result.py (NEW -- canonical Result location)\n  - src/tela/core/errors.py\
@@ -6256,6 +6256,35 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T10:49:59.130145+00:00'
+    done_at: '2026-03-17T10:53:01.756190+00:00'
+    evidence: 'Artifact:
+
+      - Commit: ca5f875
+
+
+      Files changed:
+
+      - src/tela/shell/result.py (new - canonical Result location)
+
+      - src/tela/shell/config_loader.py (re-exports Result for backward compat)
+
+      - src/tela/core/errors.py (new - ConfigContractError per DESIGN.md)
+
+      - src/tela/core/config.py (re-exports ConfigContractError for backward compat)
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 295 passed
+
+      - All existing imports continue to work via re-exports
+
+
+      Spec link:
+
+      - M2: Result type in config_loader.py creates misleading dependencies
+
+      - M3: DESIGN.md specifies core/errors.py but it didn''t exist'
   - id: fix.medium.config.m4-m8-m10-fix-config-wiring-issues
     name: 'M4+M8+M10: Fix config wiring issues'
     status: claimed
