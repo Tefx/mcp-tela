@@ -10187,3 +10187,11 @@ phases:
   - rt.doc_sync
   - rt.escape_cleanup
   - rt.doctests
+  steps:
+  - id: rt.final_gate.wiring
+    name: Full W1-W8 wiring audit
+    status: pending
+    description: Full W1-W8 wiring audit.
+    verification: All 8 protocols PASS. Zero STUB_MODULE. Zero PHANTOM dependencies.
+      Zero STALE_HATCH.
+    agent: wiring-auditor
