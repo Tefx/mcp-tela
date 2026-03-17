@@ -1924,7 +1924,7 @@ phases:
       merge as `10af91f` before gate review.'
 - id: open_mode.test
   name: open_mode.test
-  status: in_progress
+  status: done
   depends_on:
   - open_mode.contract
   steps:
@@ -2025,7 +2025,7 @@ phases:
       - Commit: 9c3abad (worktree), merged as 7491792'
   - id: open_mode.test.gate
     name: Gate open_mode.test
-    status: claimed
+    status: done
     description: 'Gate review: Verify open-mode test phase completion.
 
       review_depth: STANDARD
@@ -2065,9 +2065,38 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T07:09:33.500938+00:00'
+    done_at: '2026-03-17T07:09:51.726527+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: open_mode.test.add-open-mode-contract-and-integration-tests
+
+      - Runtime acceptance encoded: pass
+
+      - Conformance fixture present: pass
+
+      - Decision: OPEN
+
+
+      ### Detail
+
+      1. **Success/rejection cases encoded**: CLI precedence (2 tests), missing default
+      rejection, ambiguous default rejection, initialize stub behavior for all 3 resolution
+      states.
+
+      2. **Conformance fixture**: `TestSharedResolvedProfileConformance` (4 tests)
+      proves RuntimeBindingContract, GatewayStartupConfig, and InitializeProfileBinding
+      all carry the same resolved profile without re-derivation.
+
+      3. **CLI-to-initialize integration path**: Tests span resolve_open_mode_default_profile
+      -> RuntimeBindingContract -> GatewayStartupConfig -> InitializeProfileBinding.
+
+      4. **No implementation leakage**: Only test files modified, no product code
+      changes.
+
+      5. **Verification**: 27 tests pass, 49 total suite passes, invar guard clean.'
 - id: open_mode.runtime
   name: open_mode.runtime
-  status: locked
+  status: pending
   depends_on:
   - open_mode.test
   steps:
