@@ -4841,7 +4841,7 @@ phases:
       ### Snapshot: 205 tests passing, invar guard clean'
   - id: reload.runtime.verify-reload-runtime
     name: Verify reload runtime
-    status: pending
+    status: claimed
     description: "As an INDEPENDENT TESTER (integration-verifier), validate hot-reload\
       \ runtime behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -4905,6 +4905,8 @@ phases:
     depends_on:
     - reload.runtime.freeze-for-l2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T08:46:39.229427+00:00'
   - id: reload.runtime.gate
     name: Gate reload.runtime
     status: pending
