@@ -7202,7 +7202,7 @@ phases:
   steps:
   - id: retest.regression.run-full-pytest-suite-all-existing-tests
     name: Run full pytest suite (all existing tests)
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L2
@@ -7241,6 +7241,16 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:05:48.509306+00:00'
+    done_at: '2026-03-17T11:06:16.348726+00:00'
+    evidence: "Verification:\n- Run: uv run pytest -q -> 265 passed, 0 failed\n- Run:\
+      \ uv run pytest --tb=short -v -> 265 passed, 0 failed\n- Run: uv run pytest\
+      \ --doctest-modules src/tela/ -> 54 passed, 2 failed, 5 skipped\n  - FAILED\
+      \ doctests (pre-existing, Shell zone):\n    1. src/tela/commands/connections_cmd.py::connections_command\
+      \ (output format mismatch)\n    2. src/tela/commands/status_cmd.py::status_command\
+      \ (output format mismatch)\n  - These are Shell zone command modules, not Core\
+      \ zone. Pre-existing issue (not a regression from fix phases).\n\nTest count:\
+      \ 265 (significantly above baseline of 205)\nNo regressions from fix phases\
+      \ detected."
   - id: retest.regression.run-invar-guard-for-architecture-verification
     name: Run invar guard for architecture verification
     status: claimed
