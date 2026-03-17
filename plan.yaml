@@ -9018,13 +9018,13 @@ phases:
       suite passed. connections_cmd.py and status_cmd.py doctests include stdout output.
 - id: fix2.upstream-split
   name: 'Fix Pass 2: Upstream.py DX Threshold Split (Issue 14)'
-  status: pending
+  status: in_progress
   depends_on:
   - fix2.reload-stubs
   steps:
   - id: fix2.upstream-split.split-upstream
     name: split-upstream
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#shell-layer\ntouch_paths:\n  - src/tela/shell/upstream.py\n\
       \  - src/tela/shell/ (possible new file for extracted functions)\n  - src/tela/shell/__init__.py\n\
@@ -9052,6 +9052,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T12:14:59.364821+00:00'
   - id: fix2.upstream-split.verify-split
     name: verify-split
     status: pending
