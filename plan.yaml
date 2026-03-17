@@ -9441,3 +9441,80 @@ phases:
     depends_on:
     - retest2.full.regression-suite
     agent: python-senior
+  - id: retest2.full.regression-suite-retest-batch
+    name: regression-suite-retest-batch
+    status: pending
+    description: 'Re-test the exact `retest2.full.regression-suite` blocker family
+      after the batched fix.
+
+
+      step_type: verification
+
+      independence_level: L2
+
+      symbolic_testing: true
+
+      effective_source_step: retest2.full.regression-suite
+
+
+      As an INDEPENDENT TESTER (`integration-verifier`), re-run the full regression
+      command family from a fresh/cold environment and verify that every reported
+      blocker is closed.
+
+
+      ## Required command family
+
+      1. `uv run pytest -q`
+
+      2. `uv run pytest --doctest-modules src/tela/`
+
+      3. `uv run invar guard --all`
+
+      4. `uv run pytest tests/repro/ -q`
+
+      5. Blind-test path policy: if `tests/blind/` now exists and is authoritative,
+      run `uv run pytest tests/blind/ -q`; otherwise explicitly record fallback to
+      the existing black-box suite path and run that path instead. The fallback must
+      not be implicit.
+
+
+      ## Required blocker checks
+
+      - `contracts.py` `pre` doctest passes
+
+      - `contracts.py` `post` doctest passes
+
+      - `uv run invar guard --all` reports no missing meta-contracts on `pre`/`post`
+
+      - shell complexity debt is at or below limit
+
+      - blind-test command path is executable under the documented rule
+
+      - `AUTH_RATE_LIMITED` code/spec drift is resolved and evidenced
+
+
+      ## Evidence requirements
+
+      - Paste actual output for every executed command
+
+      - State whether blind verification used a corrected path or fallback rule
+
+      - Categorize any remaining issue as blocker / should_fix / suggestion
+
+      - Retest must run in a fresh/cold environment; do not reuse a hot state from
+      the failed run'
+    verification: '- `uv run pytest -q` succeeds
+
+      - `uv run pytest --doctest-modules src/tela/` succeeds
+
+      - `uv run invar guard --all` succeeds with 0 errors
+
+      - `uv run pytest tests/repro/ -q` succeeds
+
+      - Blind-test command uses an existing path or explicit fallback rule and succeeds
+
+      - Evidence shows main path plus the highest-risk failure path (meta-contract
+      + shell debt) are both closed'
+    depends_on:
+    - retest2.full.regression-suite-fix-batch
+    agent: integration-verifier
