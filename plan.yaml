@@ -7638,7 +7638,7 @@ phases:
   steps:
   - id: retest.final.clean-env-smoke-test
     name: Clean environment smoke test
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L2
@@ -7754,6 +7754,36 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:15:39.322268+00:00'
+    done_at: '2026-03-17T11:17:09.224084+00:00'
+    evidence: 'Clean Environment Smoke Test - PASS
+
+
+      Verification (after clearing __pycache__ and .pytest_cache):
+
+      1. uv run pytest -q -> 311 passed (from clean cache)
+
+      2. uv run pytest --doctest-modules src/tela/ -> 54 passed, 2 failed (pre-existing
+      Shell zone doctest format issues in status_cmd.py and connections_cmd.py), 5
+      skipped
+
+      3. uv run pytest tests/repro/ -q -> 46 passed
+
+      4. uv run invar guard -> passed (0 errors, 0 warnings)
+
+      5. uv run tela --help -> shows all 5 subcommands: start, status, profiles, connections,
+      audit
+
+      6. uv run tela start --help -> works
+
+      7. uv run tela audit --help -> works
+
+      8. uv run tela status --help -> works
+
+
+      Pre-existing issues (NOT regressions):
+
+      - 2 Shell zone doctest failures: connections_cmd.py and status_cmd.py have output
+      format mismatches in their doctest examples (cosmetic)'
   - id: retest.final.findings-coverage-audit
     name: Findings coverage audit
     status: pending
