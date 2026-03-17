@@ -10148,6 +10148,15 @@ phases:
 
       Gaps/Notes:'
     agent: blind-tester
+  - id: rt.liveness.gate
+    name: Final gate
+    status: pending
+    description: Final gate for liveness phase.
+    verification: Full Gate + W1-W8 + P9. Verdict must be PASS. No BLOCKING issues.
+      Liveness ALIVE.
+    depends_on:
+    - rt.liveness.probe
+    agent: gate-reviewer
 - id: rt.doc_sync
   name: Documentation Sync
   status: locked
