@@ -630,7 +630,7 @@ phases:
       \ rerun/review correction required."
   - id: meta.review.synthesize-cross-plan-dependencies
     name: Synthesize cross-plan dependencies
-    status: pending
+    status: claimed
     description: Synthesize dependencies, sequencing constraints, and shared-file
       serialization requirements across all produced implementation plans. The output
       is vectl plan mutations or explicit no-change only; docs are not deliverables.
@@ -665,6 +665,8 @@ phases:
     - meta.review.review-implementation-plan-quality
     - meta.review.audit-out-of-order-results
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T05:46:06.097222+00:00'
   - id: meta.review.gate
     name: Gate meta planning completion
     status: pending
