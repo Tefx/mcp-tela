@@ -9423,7 +9423,7 @@ phases:
       - Audit reports 32/32 issues covered with evidence and no uncovered issues remaining."
   - id: retest2.full.final-gate
     name: final-gate
-    status: pending
+    status: claimed
     description: "FINAL GATE: Fix Pass 2 complete.\n\nreview_depth: THOROUGH\nreview_depth_rationale:\
       \ |\n  - Final release gate for 32-issue fix pass plus regression-suite remediation\n\
       \  - Must confirm no issue was missed\n  - Must confirm no regression from fix\
@@ -9456,6 +9456,8 @@ phases:
     depends_on:
     - retest2.full.findings-coverage-audit
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T14:46:59.809368+00:00'
   - id: retest2.full.regression-suite-fix-batch
     name: regression-suite-fix-batch
     status: done
