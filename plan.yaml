@@ -9348,26 +9348,32 @@ phases:
     name: final-gate
     status: pending
     description: "FINAL GATE: Fix Pass 2 complete.\n\nreview_depth: THOROUGH\nreview_depth_rationale:\
-      \ |\n  - Final release gate for 32-issue fix pass\n  - Must confirm no issue\
-      \ was missed\n  - Must confirm no regression from fix pass 1\n  - Concurrency\
-      \ fixes require careful review\n\nYOU ARE THE FINAL QUALITY GATE. Your job is\
-      \ to BLOCK release if:\n1. Any of the 32 issues remains unaddressed\n2. Any\
-      \ regression exists in the test suite\n3. Any invar guard violation exists\n\
-      4. Any previously-fixed finding (from pass 1) has regressed\n5. Any of the 6\
-      \ test failures still fails\n\nReview all evidence from:\n- fix2.concurrency\
-      \ (lock fixes)\n- fix2.contracts (tautological contracts, validation)\n- fix2.public-api\
-      \ (API exposure, __main__.py, error codes)\n- fix2.docs (DESIGN.md drift)\n\
-      - fix2.doctests (doctest assertion rewriting)\n- fix2.reload-stubs (reload,\
-      \ digest, stubs)\n- fix2.upstream-split (upstream.py split)\n- retest2.full.regression-suite\
-      \ (full test suite)\n- retest2.full.clean-env-smoke (smoke test)\n- retest2.full.findings-coverage-audit\
-      \ (32-issue checklist)"
+      \ |\n  - Final release gate for 32-issue fix pass plus regression-suite remediation\n\
+      \  - Must confirm no issue was missed\n  - Must confirm no regression from fix\
+      \ pass 1\n  - Concurrency fixes require careful review\n\nYOU ARE THE FINAL\
+      \ QUALITY GATE. Your job is to BLOCK release if:\n1. Any of the 32 issues remains\
+      \ unaddressed\n2. Any regression exists in the test suite\n3. Any invar guard\
+      \ violation exists\n4. Any previously-fixed finding (from pass 1) has regressed\n\
+      5. Any of the 6 test failures still fails\n6. Any `retest2.full.regression-suite`\
+      \ remediation blocker remains unresolved, including blind-path policy or `AUTH_RATE_LIMITED`\
+      \ drift\n\nReview all evidence from:\n- fix2.concurrency (lock fixes)\n- fix2.contracts\
+      \ (tautological contracts, validation)\n- fix2.public-api (API exposure, __main__.py,\
+      \ error codes)\n- fix2.docs (DESIGN.md drift)\n- fix2.doctests (doctest assertion\
+      \ rewriting)\n- fix2.reload-stubs (reload, digest, stubs)\n- fix2.upstream-split\
+      \ (upstream.py split)\n- retest2.full.regression-suite (failed run with findings)\n\
+      - retest2.full.regression-suite-fix-batch (batched remediation)\n- retest2.full.regression-suite-retest-batch\
+      \ (post-fix regression rerun)\n- retest2.full.clean-env-smoke (smoke test)\n\
+      - retest2.full.findings-coverage-audit (32-issue checklist)"
     verification: '- All 32 issues fixed and verified
 
-      - All tests pass (311+ core + doctests + repro + blind)
+      - All tests pass (311+ core + doctests + repro + corrected blind path or explicit
+      fallback)
 
       - invar guard clean
 
       - No regressions from fix pass 1
+
+      - Regression-suite blocker family closed
 
       - Release approved'
     depends_on:
