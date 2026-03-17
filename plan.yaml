@@ -9755,3 +9755,8 @@ phases:
   status: locked
   depends_on:
   - rt.cli_start
+- id: rt.e2e
+  name: End-to-End Integration Tests
+  status: locked
+  depends_on:
+  - rt.cli_start
