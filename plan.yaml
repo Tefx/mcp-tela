@@ -2999,3 +2999,69 @@ phases:
     depends_on:
     - reload.runtime.integrate-notifications-and-warning-emission
     agent: python-executor
+  - id: reload.runtime.verify-reload-runtime
+    name: Verify reload runtime
+    status: pending
+    description: "As an INDEPENDENT TESTER (integration-verifier), validate hot-reload\
+      \ runtime behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
+      \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
+      Independence Level: L2\nspec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py\
+      \ -- Hot Reload\n  - docs/DESIGN.md#8.3 Hot Reload Flow\n  - docs/INTERFACES.md#E.\
+      \ Hot Reload\n  - docs/INTERFACES.md#F. MCP Server Interface (upstream)\ntouch_paths:\n\
+      \  - src/tela/shell/reload.py\n  - src/tela/shell/upstream.py\n  - src/tela/shell/audit.py\n\
+      \  - src/tela/shell/downstream.py\nharness_refs:\n  - tests/shell/test_reload.py\n\
+      \  - tests/integration/test_hot_reload.py\nTest for:\n- Happy path: accepted\
+      \ reload updates tool registry and notifies connected upstream clients without\
+      \ disconnecting them\n- Edge cases: reconnect path, per-server re-enumeration\
+      \ scope, unchanged-connection status during reload\n- Error scenarios: conflict\
+      \ reject-and-keep-previous, TOOL_CONFLICT warning emission, downstream reconnect\
+      \ failure\n- Consumer-boundary conformance: reload coordinator, downstream registry,\
+      \ upstream notification payload, and audit warning all interpret the same accepted/rejected\
+      \ reload fact set consistently\nDocument ALL findings. A test that discovers\
+      \ issues is a SUCCESS.\nA test that finds nothing must justify the coverage\
+      \ achieved.\n\nREALISM CHECK:\n- Provide at least one real-path proof with actual\
+      \ command/output through the reload seam."
+    verification: '- L2 evidence includes at least one real-path command/output for
+      reload trigger -> registry decision -> notify/warn path
+
+      - Evidence proves reload coordinator, downstream registry, upstream notification,
+      and audit warning share one reload fact set
+
+      - Failure-path cases are exercised and findings recorded'
+    evidence_template: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: src/tela/shell/reload.py:trigger -> src/tela/shell/downstream.py:registry
+      -> src/tela/shell/upstream.py:notify -> src/tela/shell/audit.py:warning
+
+
+      **Exact command executed**:
+
+      ```
+
+      <paste actual command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+
+      ## Conformance Check
+
+      - Shared reload fixture: <path>
+
+      - Reload decision matches downstream registry: yes/no
+
+      - Registry fact matches notify/warning outputs: yes/no
+
+      - Independent re-derivation remains: yes/no'
+    depends_on:
+    - reload.runtime.freeze-for-l2
+    agent: integration-verifier
