@@ -6134,3 +6134,22 @@ phases:
     - README.md
     - CLAUDE.md
     agent: doc-reviewer
+  - id: fix.low.docs.gate
+    name: 'Gate: Low docs fixes'
+    status: pending
+    description: 'Gate review: Verify low-severity docs fixes.
+
+
+      review_depth: QUICK
+
+      Covers: L2, L4, L6-L10, L18'
+    verification: '- All docs fixes complete
+
+      - No broken references
+
+      - LICENSE exists'
+    depends_on:
+    - fix.low.docs.l2-l4-fix-enforcement-chain-step-count-in-docs
+    - fix.low.docs.l6-l7-remove-unused-click-rich-deps-document-argparse-choice
+    - fix.low.docs.l8-l9-l10-l18-fix-readme-and-add-license
+    agent: gate-reviewer
