@@ -8691,7 +8691,7 @@ phases:
   steps:
   - id: fix2.doctests.fix-doctest-assertion-rewriting
     name: fix-doctest-assertion-rewriting
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - INVAR.md (contract requirements)\ntouch_paths:\n  - src/tela/core/contracts.py\n\
       \  - conftest.py or pyproject.toml (pytest config)\nharness_refs:\n  - tests/\n\
@@ -8724,6 +8724,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T11:51:37.912636+00:00'
+    done_at: '2026-03-17T11:55:57.574819+00:00'
+    evidence: '## Evidence (from python-executor subagent)
+
+      Files changed: connections_cmd.py, status_cmd.py (doctests updated with expected
+      stdout)
+
+      contracts.py doctests: Already passing, no fix needed
+
+      Verification: 56 doctests passed (5 skipped), 311 pytest passed
+
+      Commit merged to main
+
+      Gaps/Notes: none'
   - id: fix2.doctests.verify-doctests
     name: verify-doctests
     status: pending
