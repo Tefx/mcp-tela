@@ -8238,7 +8238,7 @@ phases:
     agent: gate-reviewer
 - id: fix2.contracts
   name: 'Fix Pass 2: Tautological Contracts and Validation Gaps (Issues 6, 18, 25)'
-  status: in_progress
+  status: done
   depends_on:
   - retest.final
   steps:
@@ -8343,7 +8343,7 @@ phases:
       non-fragile. 315 passed, 4 doctests passed.'
   - id: fix2.contracts.gate
     name: gate
-    status: claimed
+    status: done
     description: 'Gate review: Verify contract and validation fix phase completion.
 
 
@@ -8369,6 +8369,58 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T11:58:22.700825+00:00'
+    done_at: '2026-03-17T11:59:52.386375+00:00'
+    evidence: 'APPROVED — Delta Gate review of contract fixes in core/config.py.
+
+
+      ## Automated Gates
+
+      - `uv run pytest -q`: 315 passed in 0.40s
+
+      - `uv run invar guard`: passed (0 errors, 0 warnings)
+
+      - `python -m doctest src/tela/core/config.py -v`: 7 passed, 0 failed
+
+
+      ## Contract Tautology Audit (all 6 functions reviewed)
+
+      All previously tautological contracts replaced with substantive checks:
+
+      - `len(value) >= 0` -> `isinstance(value, str)` (line 27)
+
+      - `value is not Ellipsis` -> `isinstance(value, (str,int,float,bool,list,dict,type(None)))`
+      (line 89)
+
+      - `result is not Ellipsis` -> `isinstance(result, (str,int,float,bool,list,dict,type(None)))`
+      (line 93)
+
+      - `len(config.profiles) >= 0` -> `isinstance(config, TelaConfig)` (line 169)
+
+      - `result in (True, False)` -> `isinstance(result, bool)` (line 299)
+
+      - validate_config @post: `all(":" in error ...)` -> `isinstance(result, list)
+      and all(isinstance(e, str) and len(e) > 0 ...)` (line 173)
+
+
+      No remaining tautological or identity-lambda contracts found.
+
+
+      ## Server Transport Validation
+
+      - Added lines 213-223: checks for missing transport (no command/url) and ambiguous
+      transport (both command and url).
+
+      - Tests verified: test_validate_config_server_missing_transport, test_validate_config_server_ambiguous_transport,
+      test_validate_config_server_valid_command_only all pass.
+
+
+      ## Postcondition Fragility
+
+      - validate_config @post no longer checks for format-dependent substring (`:`)
+      — now checks structural invariant (list of non-empty strings). Non-fragile.
+
+
+      ## Verdict: PASS — 0 BLOCKING, 0 SHOULD_FIX'
 - id: fix2.public-api
   name: 'Fix Pass 2: Public API Exposure and Entry Points (Issues 15-17, 24)'
   status: in_progress
