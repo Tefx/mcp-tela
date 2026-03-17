@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
+from collections import deque
 from pathlib import Path
 
 from tela.core.models import (
@@ -113,7 +114,8 @@ def build_audit_entry(
 
 # --- In-memory audit store ---
 
-_audit_entries: list[AuditEntry] = []
+_audit_entries: deque[AuditEntry] = deque(maxlen=10000)
+_AUDIT_MAX_ENTRIES: int = 10000
 _audit_log_path: Path | None = None
 _audit_level: AuditLevel = AuditLevel.L2
 
@@ -153,6 +155,20 @@ def audit_init(config: "AuditConfig") -> Result[None, str]:
 
     _audit_log_path = expanded
     return Result(value=None)
+
+
+# @invar:allow dead_export: audit configuration used by tests.
+# @invar:allow shell_result: sets bounded store size, not failable I/O.
+def audit_set_max_entries(max_entries: int) -> None:
+    """Set maximum in-memory audit entries (FIFO eviction).
+
+    Examples:
+        >>> audit_set_max_entries(100)
+    """
+    global _audit_entries, _AUDIT_MAX_ENTRIES
+    _AUDIT_MAX_ENTRIES = max_entries
+    old_entries = list(_audit_entries)
+    _audit_entries = deque(old_entries[-max_entries:], maxlen=max_entries)
 
 
 # @invar:allow dead_export: audit accessor used by tests and integration.
@@ -251,7 +267,14 @@ async def audit_query(
     Returns:
         Result[list[AuditEntry], str] with matching entries.
     """
-    entries = _audit_entries
+    entries = list(_audit_entries)
     if since is not None:
-        entries = [e for e in entries if e.timestamp >= since]
+        try:
+            since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+            entries = [
+                e for e in entries
+                if datetime.fromisoformat(e.timestamp.replace("Z", "+00:00")) >= since_dt
+            ]
+        except (ValueError, TypeError):
+            return Result(error=f"AUDIT_QUERY_ERROR: invalid timestamp format: {since}")
     return Result(value=entries[-limit:])
