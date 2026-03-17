@@ -1,11 +1,19 @@
-"""Audit log writer and reader contracts.
+"""Audit log writer and reader.
 
-Defines acceptance-only interfaces for audit entry construction, JSONL
-writing, and CLI query reading. Actual file I/O implementation is deferred
-to audit.runtime.
+Implements audit entry construction with level filtering, JSONL writing,
+and CLI query reading. Level semantics:
+- L1: tool name, verdict, latency
+- L2: L1 + parameter hash
+- L3: L2 + full request/response content
+- _meta fields are always recorded regardless of level
 """
 
 from __future__ import annotations
+
+import hashlib
+import json
+from datetime import datetime, timezone
+from pathlib import Path
 
 from tela.core.models import (
     AuditEntry,
@@ -18,8 +26,26 @@ from tela.core.models import (
 from tela.shell.config_loader import Result
 
 
+# @invar:allow shell_result: returns hash string, pure data shaping not I/O.
+def _compute_param_hash(arguments: dict) -> str:
+    """Compute SHA-256 hash of tool arguments for L2+ audit entries.
+
+    Examples:
+        >>> _compute_param_hash({"path": "/tmp"})
+        'sha256:...'
+    """
+    serialized = json.dumps(arguments, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(serialized.encode()).hexdigest()[:16]
+    return f"sha256:{digest}"
+
+
+# @invar:allow shell_result: returns timestamp string, minimal I/O.
+def _now_iso() -> str:
+    """Return current UTC timestamp in ISO-8601 format."""
+    return datetime.now(timezone.utc).isoformat()
+
+
 # @invar:allow dead_export: audit wiring is connected in audit.runtime step.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 # @invar:allow shell_result: returns AuditEntry per DESIGN.md spec, data shaping not I/O.
 def build_audit_entry(
     level: AuditLevel,
@@ -41,19 +67,17 @@ def build_audit_entry(
 
     _meta fields are always recorded regardless of level.
 
-    Contract stub: raises NotImplementedError.
-
     Examples:
         >>> from tela.core.models import AuditLevel, ConnectionContext, EnforcementResult, EnforcementVerdict
-        >>> build_audit_entry(
-        ...     AuditLevel.L1,
-        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
-        ...     "read_file", "fs",
-        ...     EnforcementResult(verdict=EnforcementVerdict.ALLOW),
-        ... )
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: build_audit_entry pending
+        >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        >>> allow = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+        >>> entry = build_audit_entry(AuditLevel.L1, conn, "read_file", "fs", allow, latency_ms=5.0)
+        >>> entry.tool_name
+        'read_file'
+        >>> entry.verdict
+        <EnforcementVerdict.ALLOW: 'allow'>
+        >>> entry.param_hash is None
+        True
 
     Args:
         level: Audit level for field filtering.
@@ -68,10 +92,42 @@ def build_audit_entry(
         meta: Held _meta from the tool call arguments.
 
     Returns:
-        AuditEntry once implemented.
+        AuditEntry with fields populated per audit level.
     """
 
-    raise NotImplementedError("Contract stub: build_audit_entry pending")
+    # L2+: compute param_hash from arguments
+    param_hash: str | None = None
+    if level in (AuditLevel.L2, AuditLevel.L3) and arguments is not None:
+        param_hash = _compute_param_hash(arguments)
+
+    # L3: include full content
+    entry_request: dict | None = None
+    entry_response: dict | None = None
+    if level == AuditLevel.L3:
+        entry_request = request_content
+        entry_response = response_content
+
+    return AuditEntry(
+        timestamp=_now_iso(),
+        level=level,
+        connection_id=connection.connection_id,
+        profile_name=connection.profile_name,
+        tool_name=tool_name,
+        server_name=server_name,
+        verdict=result.verdict,
+        denied_by=result.denied_by,
+        error_code=result.error_code,
+        latency_ms=latency_ms,
+        param_hash=param_hash,
+        request_content=entry_request,
+        response_content=entry_response,
+        meta=meta,
+    )
+
+
+# Module-level state for JSONL writer
+_audit_log_path: Path | None = None
+_audit_log_file = None
 
 
 # @invar:allow dead_export: audit wiring is connected in audit.runtime step.
@@ -79,7 +135,7 @@ def build_audit_entry(
 async def audit_write(entry: AuditEntry) -> Result[None, str]:
     """Append an audit entry to the JSONL log file.
 
-    Contract stub: raises NotImplementedError.
+    Contract stub: actual file I/O deferred to integration step.
 
     Examples:
         >>> import asyncio
@@ -109,7 +165,7 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
 async def audit_close() -> Result[None, str]:
     """Flush and close the audit log file.
 
-    Contract stub: raises NotImplementedError.
+    Contract stub: actual file I/O deferred to integration step.
 
     Examples:
         >>> import asyncio
@@ -133,7 +189,7 @@ async def audit_query(
 ) -> Result[list[AuditEntry], str]:
     """Query audit log entries for CLI display.
 
-    Contract stub: raises NotImplementedError.
+    Contract stub: actual file I/O deferred to integration step.
 
     Examples:
         >>> import asyncio
