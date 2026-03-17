@@ -142,6 +142,13 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
                 code="CONFIG_PARSE_ERROR",
                 message="Top-level configuration must be a mapping.",
             )
+        # Inject name from dict keys for servers and profiles sections.
+        # INTERFACES.md specifies that the YAML key IS the server/profile name.
+        for section in ('servers', 'profiles'):
+            if section in expanded and isinstance(expanded[section], dict):
+                for key, value in expanded[section].items():
+                    if isinstance(value, dict) and 'name' not in value:
+                        value['name'] = key
         return TelaConfig.model_validate(expanded)
     except ValidationError as exc:
         details = "; ".join(

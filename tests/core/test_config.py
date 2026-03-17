@@ -111,3 +111,31 @@ def test_validate_config_token_mode_with_secret_is_valid() -> None:
         auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
     )
     assert validate_config(config) == []
+
+
+def test_parse_config_injects_name_from_dict_keys() -> None:
+    """B3: YAML key IS the server/profile name per INTERFACES.md."""
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {"fs": {"command": "cmd"}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+    assert config.profiles["dev"].name == "dev"
+    assert config.servers["fs"].name == "fs"
+
+
+def test_parse_config_explicit_name_still_works() -> None:
+    """B3: Backward compatibility -- explicit name field is not overwritten."""
+    config = parse_config(
+        {
+            "profiles": {"dev": {"name": "dev", "default": True}},
+            "servers": {"fs": {"name": "fs", "command": "cmd"}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+    assert config.profiles["dev"].name == "dev"
+    assert config.servers["fs"].name == "fs"
