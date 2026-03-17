@@ -10399,26 +10399,20 @@ phases:
   - id: cap.shell.upstream
     name: Update upstream.py and upstream_utils.py
     status: pending
-    description: Update upstream.py handle_profiles_list() to emit capabilities not
-      tools. Update upstream_utils.py filter_tools_for_profile() and enforce_tool_call()
-      to read from capabilities field. Remove any side_effect_policy references.
+    description: Update upstream.py handle_profiles_list() to emit both `capabilities`
+      and `tools` keys during migration period (per ADR-003 tela.profiles API section).
+      Update upstream_utils.py filter_tools_for_profile() and enforce_tool_call()
+      to read from profile.capabilities. Remove any side_effect_policy references
+      from shell layer.
     verification: Profiles emitted with capabilities key. Enforcement reads capabilities.
       No side_effect_policy references in shell/. invar guard passes.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Verification:
-
-      - Profiles emit capabilities: yes/no
-
-      - Enforcement reads capabilities: yes/no
-
-      - side_effect_policy grep in shell/: 0 matches
-
-      - invar guard: pass/fail
-
-      Gaps/Notes:'
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -n ''side_effect_policy''
+      src/tela/shell/ output:\ngrep -n ''\.tools'' src/tela/shell/upstream_utils.py
+      output:\ninvar guard output (last 20 lines):\npytest -x output (last 20 lines):\nGaps/Notes:'
+    refs:
+    - src/tela/shell/upstream.py
+    - src/tela/shell/upstream_utils.py
+    - docs/ADR-003-gateway-capability-only-profiles.md
     agent: python-executor
   - id: cap.shell.tests
     name: Update shell and integration tests
