@@ -9910,6 +9910,32 @@ phases:
   status: locked
   depends_on:
   - rt.upstream
+  steps:
+  - id: rt.cli_start.stdio
+    name: Wire _handle_start for stdio transport
+    status: pending
+    description: 'Make _handle_start in cli.py: (a) move banner to stderr, (b) call
+      gateway_start, (c) run fastmcp server on stdio transport via asyncio event loop.
+      Process must stay alive and respond to MCP JSON-RPC on stdin/stdout.'
+    verification: tela start stays alive as MCP stdio server. Banner on stderr not
+      stdout. Responds to MCP initialize request. tests/repro/test_liveness.py test_stdio_stays_alive
+      and test_stdio_no_stdout_pollution pass.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - Process stays alive after start: yes/no
+
+      - Banner on stderr: yes/no
+
+      - MCP initialize response received: yes/no
+
+      - test_liveness.py passing tests: list
+
+      Gaps/Notes:'
+    agent: python-senior
 - id: rt.reload_wire
   name: Wire Hot Reload
   status: locked
