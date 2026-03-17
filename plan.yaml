@@ -2352,7 +2352,7 @@ phases:
       profile selection independently'
   - id: open_mode.runtime.freeze-for-l2
     name: Freeze for open-mode L2 verification
-    status: claimed
+    status: done
     description: 'step_type: planning
 
       Freeze: lock snapshot for L2 open-mode runtime verification.
@@ -2384,6 +2384,27 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T07:20:07.775534+00:00'
+    done_at: '2026-03-17T07:20:17.206242+00:00'
+    evidence: '## Freeze Evidence
+
+      - Commit: 8ac9a74bafe157b8d51f293adbf16c6533f1b830
+
+      - Git status clean: yes
+
+      - Environment declaration: Python 3.12.12, uv, pytest 9.0.2, Darwin 25.3.0.
+      Config fixtures use tempfile-based tela.yaml with open-mode auth.
+
+      - No code changes until `open_mode.runtime.verify-open-mode-runtime`: yes
+
+
+      ### Snapshot summary
+
+      - 58 tests passing (core: 12, shell: 22, integration: 24)
+
+      - invar guard clean (0 errors, 0 warnings)
+
+      - All open-mode runtime steps complete: default-profile resolution, initialize
+      binding, CLI wiring'
   - id: open_mode.runtime.verify-open-mode-runtime
     name: Verify open-mode runtime
     status: pending
