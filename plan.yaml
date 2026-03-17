@@ -5995,7 +5995,7 @@ phases:
       - None'
   - id: fix.high.verify-high-fixes
     name: Verify high-severity fixes (H1-H4)
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       independence_level: L2
@@ -6109,6 +6109,8 @@ phases:
     - fix.high.h3-implement-notimplementederror-contract-stubs
     - fix.high.h4-implement-core-token-py-for-hmac-token-validation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T10:48:44.540752+00:00'
   - id: fix.high.gate
     name: 'Gate: High-severity fixes (H1-H4)'
     status: pending
