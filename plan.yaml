@@ -10229,3 +10229,8 @@ phases:
   status: locked
   depends_on:
   - cap.contract
+- id: cap.impl
+  name: Core Implementation
+  status: locked
+  depends_on:
+  - cap.test
