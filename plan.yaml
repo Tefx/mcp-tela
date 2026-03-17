@@ -6352,3 +6352,8 @@ phases:
     - retest.regression.run-full-pytest-suite-all-existing-tests
     - retest.regression.run-invar-guard-for-architecture-verification
     agent: gate-reviewer
+- id: retest.repro
+  name: Black-Box Repro Verification
+  status: locked
+  depends_on:
+  - retest.regression
