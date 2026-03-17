@@ -5354,3 +5354,26 @@ phases:
     - fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
     - fix.blockers.b4-fix-hot-reload-rollback-isolation
     agent: integration-verifier
+  - id: fix.blockers.gate
+    name: 'Gate: Blocker fixes (B1-B4)'
+    status: pending
+    description: "Gate review: Verify blocker fix phase completion and quality.\n\n\
+      review_depth: THOROUGH\nreview_depth_rationale:\n  - Phase fixes 4 blockers\
+      \ affecting core CLI, audit, config, and reload\n  - All touches state semantics\
+      \ and cross-module wiring\n  - B4 involves registry mutation rollback safety\n\
+      \nReview criteria:\n1. All 4 blocker fixes verified with evidence\n2. No regressions\
+      \ in existing test suite\n3. invar guard passes\n4. CLI subcommands are actually\
+      \ runnable (not just registered)\n5. Audit file persistence is real (file exists\
+      \ on disk)\n6. Config parsing works with INTERFACES.md example YAML\n7. Reload\
+      \ rollback preserves all other servers' tools\n\nYOU ARE THE QUALITY GATE. Block\
+      \ progress if quality is insufficient."
+    verification: '- All blocker fixes complete with evidence
+
+      - No regressions
+
+      - invar guard clean
+
+      - Gate reviewer is independent of all implementation agents'
+    depends_on:
+    - fix.blockers.verify-blocker-fixes
+    agent: gate-reviewer
