@@ -10347,6 +10347,34 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+  - id: cap.impl.enforcement
+    name: Simplify enforcement.py
+    status: pending
+    description: 'Simplify enforcement.py: remove check_side_effect() function, update
+      enforce() to skip side-effect step, renumber steps if needed. Update @pre/@post
+      contracts. The enforcement chain becomes: (1) family admission, (2) tool override,
+      (3) posture ceiling check - done.'
+    verification: check_side_effect() removed. enforce() no longer calls it. Enforcement
+      chain is 3 core steps (family admission, tool override, posture). All contracts
+      pass. invar guard passes.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - check_side_effect removed: yes/no
+
+      - enforce() updated: yes/no
+
+      - Step count after change: N
+
+      - invar guard: pass/fail
+
+      Gaps/Notes:'
+    depends_on:
+    - cap.impl.models
+    agent: python-executor
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
