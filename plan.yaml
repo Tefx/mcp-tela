@@ -10244,3 +10244,8 @@ phases:
   status: locked
   depends_on:
   - cap.shell
+- id: cap.cleanup
+  name: Remove Deprecated Code
+  status: locked
+  depends_on:
+  - cap.docs
