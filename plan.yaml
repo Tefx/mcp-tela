@@ -6664,3 +6664,182 @@ phases:
 
       - [ ] ISSUES FOUND'
     agent: integration-verifier
+  - id: retest.final.findings-coverage-audit
+    name: Findings coverage audit
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+
+      As an INDEPENDENT AUDITOR, verify that every single finding from the 5-agent
+      review has been addressed.
+
+
+      Cross-reference checklist:
+
+
+      BLOCKERS:
+
+      - [ ] B1: audit_command wired into CLI -- verify `tela audit` works
+
+      - [ ] B2: AuditConfig consumed -- verify audit writes to disk
+
+      - [ ] B3: parse_config injects name -- verify real YAML works
+
+      - [ ] B4: Reload rollback isolated -- verify other servers preserved
+
+
+      HIGH:
+
+      - [ ] H1: Contracts enforce -- verify pre/post check predicates
+
+      - [ ] H2: Concurrency guards -- verify locks on singletons
+
+      - [ ] H3: Stubs implemented -- verify no NotImplementedError
+
+      - [ ] H4: token.py exists -- verify HMAC validation
+
+
+      MEDIUM:
+
+      - [ ] M1: shell_result convention -- verify justified annotations only
+
+      - [ ] M2: Result relocated -- verify not in config_loader
+
+      - [ ] M3: core/errors.py exists -- verify consolidated errors
+
+      - [ ] M4: No double load_config -- verify single path
+
+      - [ ] M5: Timestamp comparison -- verify datetime-based
+
+      - [ ] M6: Bounded audit store -- verify max entries
+
+      - [ ] M7: fastmcp imported -- verify import works
+
+      - [ ] M8: Unset env vars error -- verify not silently preserved
+
+      - [ ] M9: on_config_changed -- verify implemented
+
+      - [ ] M10: default_posture bridged -- verify flows to enforcement
+
+
+      LOW:
+
+      - [ ] L1: CLI import path fixed
+
+      - [ ] L2: Enforcement chain count corrected in docs
+
+      - [ ] L3: Redundant tool_name removed from enforce()
+
+      - [ ] L4: Docs consistent on chain count
+
+      - [ ] L5: Pure functions in correct zone
+
+      - [ ] L6: DESIGN.md reflects argparse
+
+      - [ ] L7: Unused click/rich deps removed
+
+      - [ ] L8: README URLs valid
+
+      - [ ] L9: Install instructions accurate
+
+      - [ ] L10: Agent files deduplicated
+
+      - [ ] L11: __init__.py files exist
+
+      - [ ] L12: Unused import removed from test_end_to_end
+
+      - [ ] L13: TelaError used or documented
+
+      - [ ] L14: total_tool_calls incremented
+
+      - [ ] L15: tool_call_count tracked
+
+      - [ ] L16: Write-only/ghost fields addressed
+
+      - [ ] L17: Digest uses SHA-256
+
+      - [ ] L18: LICENSE file exists
+
+      - [ ] L19: Behavioral tests replace source-text tests
+
+      - [ ] L20: Profile catalog implemented
+
+      - [ ] L21: Vacuous contract fixed
+
+
+      ALL 39 findings must be checked off.'
+    verification: '- All 39 findings verified as addressed
+
+      - Checklist fully complete
+
+      - No gaps'
+    evidence_template: '## Findings Coverage Audit
+
+
+      ### Checklist (39 findings)
+
+
+      | ID | Finding | Status | Evidence |
+
+      |----|---------|--------|----------|
+
+      | B1 | audit_command wired | FIXED/OPEN | <evidence> |
+
+      | B2 | AuditConfig consumed | FIXED/OPEN | <evidence> |
+
+      | B3 | name injection | FIXED/OPEN | <evidence> |
+
+      | B4 | rollback isolation | FIXED/OPEN | <evidence> |
+
+      | H1 | contracts enforce | FIXED/OPEN | <evidence> |
+
+      | H2 | concurrency guards | FIXED/OPEN | <evidence> |
+
+      | H3 | stubs implemented | FIXED/OPEN | <evidence> |
+
+      | H4 | token.py | FIXED/OPEN | <evidence> |
+
+      | M1 | shell_result | FIXED/OPEN | <evidence> |
+
+      | M2 | Result relocated | FIXED/OPEN | <evidence> |
+
+      | M3 | core/errors.py | FIXED/OPEN | <evidence> |
+
+      | M4 | double load_config | FIXED/OPEN | <evidence> |
+
+      | M5 | timestamp | FIXED/OPEN | <evidence> |
+
+      | M6 | bounded store | FIXED/OPEN | <evidence> |
+
+      | M7 | fastmcp | FIXED/OPEN | <evidence> |
+
+      | M8 | unset env vars | FIXED/OPEN | <evidence> |
+
+      | M9 | on_config_changed | FIXED/OPEN | <evidence> |
+
+      | M10 | default_posture | FIXED/OPEN | <evidence> |
+
+      | L1-L21 | (each row) | FIXED/OPEN | <evidence> |
+
+
+      ### Summary
+
+      - Total findings: 39
+
+      - Fixed: <count>
+
+      - Open: <count>
+
+      - Not applicable: <count>
+
+
+      ### Verdict
+
+      - [ ] ALL 39 FINDINGS ADDRESSED
+
+      - [ ] GAPS REMAIN: <list>'
+    depends_on:
+    - retest.final.clean-env-smoke-test
+    agent: integration-verifier
