@@ -5658,7 +5658,7 @@ phases:
   steps:
   - id: fix.high.h1-replace-no-op-contract-decorators-with-real-invar-contracts
     name: 'H1: Replace no-op contract decorators with real invar contracts'
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - INVAR.md (Core zone rules)\n  - CLAUDE.md (contract requirements)\ntouch_paths:\n\
       \  - src/tela/core/config.py\n  - src/tela/core/classification.py\n  - src/tela/core/enforcement.py\n\
@@ -5696,6 +5696,51 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T10:38:41.395517+00:00'
+    done_at: '2026-03-17T10:48:22.007197+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 8f66c0c
+
+
+      Files changed:
+
+      - src/tela/core/contracts.py (new - real pre/post decorators)
+
+      - src/tela/core/config.py (replaced no-op, fixed L21 vacuous @post)
+
+      - src/tela/core/classification.py (replaced no-op)
+
+      - src/tela/core/enforcement.py (replaced no-op, added missing @post to posture_le,
+      check_tool_override)
+
+      - src/tela/core/family.py (replaced no-op)
+
+      - src/tela/core/conflict.py (replaced no-op)
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 295 passed (no regressions)
+
+      - Run: uv run invar guard -> 0 errors
+
+      - All @pre/@post now assert at runtime
+
+      - No identity-lambda remains in any core module
+
+      - L21: _expand_env_token @post now checks isinstance(result, str)
+
+
+      Spec link:
+
+      - INVAR.md Core zone rules
+
+      - CLAUDE.md contract requirements
+
+
+      Gaps/Notes:
+
+      - Covers L21 as well'
   - id: fix.high.h2-add-concurrency-protection-to-module-singletons
     name: 'H2: Add concurrency protection to module singletons'
     status: claimed
