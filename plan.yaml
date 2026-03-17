@@ -9722,9 +9722,10 @@ phases:
       smoke/audit/gate can proceed.'
 - id: rt.env_field
   name: ServerConfig.env Field
-  status: pending
+  status: locked
   depends_on:
   - retest2.full
+  - cap.final_gate
   steps:
   - id: rt.env_field.impl
     name: Add env field to ServerConfig
