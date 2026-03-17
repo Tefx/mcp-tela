@@ -856,7 +856,7 @@ phases:
   steps:
   - id: cross_repo_alignment.audit-residual-opifex-drift
     name: Audit residual opifex drift
-    status: claimed
+    status: done
     description: 'Docs/contracts-only scope. Compare `docs/DESIGN.md`, `docs/INTERFACES.md`,
       `contracts/capability_token.schema.json`, `contracts/meta.schema.json`, and
       `contracts/errors.yaml` against `../opifex/design/tela-clean-gateway.md`, `../opifex/design/architecture.md`,
@@ -945,6 +945,24 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-17T05:59:52.678297+00:00'
+    done_at: '2026-03-17T06:08:05.753458+00:00'
+    evidence: "Artifact:\n- residual mismatch audit result (evidence-only deliverable).\n\
+      \nVerification:\n- dependency check result\n  - `meta.discovery`: completed\n\
+      \  - `meta.prep`: completed\n  - phase remained blocked on `meta.review` prior\
+      \ to execution.\n- per-item classification list\n  - `_meta` unknown-field handling\
+      \ -> `local-contract-update` (contract-only correction candidate in `contracts/meta.schema.json`\
+      \ due `additionalProperties: false` mismatch with local design intent).\n  -\
+      \ tela idempotency enforcement -> `opifex-doc-update`.\n  - tela error wire\
+      \ shape -> `opifex-doc-update`.\n  - optional token fields in audit log -> `opifex-doc-update`.\n\
+      \  - token carrier fallback order -> `no-change`.\n  - open mode profile binding\
+      \ -> `no-change`.\n  - gateway/MCP/stdio/SSE/initialize/shutdown/open-mode terminology\
+      \ -> `no-change`.\n- contract->test->implementation applicability statement\n\
+      \  - N/A for this audit step except if later taking the identified `local-contract-update`.\n\
+      - docs/contracts-only scope confirmation\n  - confirmed: no product code, runtime\
+      \ wiring, CLI/server implementation, or behavior-test work.\n  - unintended\
+      \ local doc artifact removed; cleanup commit recorded.\n\nPlan mutation payload:\n\
+      - explicit no-change\n\nGaps/Notes:\n- cleanup commit: `0da061d9be2e09024b0f25f5e08bc7f3a2e6e87f`\
+      \ removed unintended local audit doc artifact."
   - id: cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
     name: Align opifex docs to authoritative tela contracts
     status: pending
