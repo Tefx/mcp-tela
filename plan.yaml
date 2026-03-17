@@ -5784,3 +5784,33 @@ phases:
     depends_on:
     - fix.medium.config.m2-m3-relocate-result-type-and-consolidate-error-models
     agent: python-executor
+  - id: fix.medium.config.gate
+    name: 'Gate: Medium config fixes (M1-M4, M8, M10)'
+    status: pending
+    description: 'Gate review: Verify medium config fix phase completion.
+
+
+      review_depth: STANDARD
+
+      Review criteria:
+
+      1. Result type properly relocated
+
+      2. core/errors.py exists with consolidated error types
+
+      3. Shell Result convention enforced (no unjustified bypasses)
+
+      4. No double load_config in startup path
+
+      5. Unset env vars error properly
+
+      6. Default posture bridged to enforcement'
+    verification: '- All medium config fixes complete with evidence
+
+      - No regressions
+
+      - invar guard clean'
+    depends_on:
+    - fix.medium.config.m1-shell-result-convention
+    - fix.medium.config.m4-m8-m10-fix-config-wiring-issues
+    agent: gate-reviewer
