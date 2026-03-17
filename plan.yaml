@@ -8518,3 +8518,27 @@ phases:
     depends_on:
     - fix2.docs.fix-design-md-drift
     agent: integration-verifier
+  - id: fix2.docs.gate
+    name: gate
+    status: pending
+    description: 'Gate review: Verify DESIGN.md documentation drift phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. All 5 documentation drift issues resolved
+
+      2. DESIGN.md accurately reflects codebase
+
+      3. No new drift introduced'
+    verification: '- All 5 issues confirmed fixed
+
+      - Evidence quality sufficient
+
+      - Ready for next phase'
+    depends_on:
+    - fix2.docs.verify-docs
+    agent: gate-reviewer
