@@ -10557,3 +10557,20 @@ phases:
   status: pending
   depends_on:
   - retest2.full
+  steps:
+  - id: cap.spec.finalize-adr-003-and-migration-003
+    name: Finalize ADR-003 and MIGRATION-003
+    status: pending
+    description: 'Review and finalize the updated ADR-003 (now Accepted) and MIGRATION-003
+      documents. Ensure: (a) ADR-003 defines target profile shape, 3-step enforcement,
+      tela.profiles API response migration, (b) MIGRATION-003 defines all mapping
+      rules including tool_overrides+capping interaction, code changes inventory,
+      dual-format semantics, empty capabilities edge case. These two documents become
+      the authoritative spec for all subsequent implementation.'
+    verification: ADR-003 status is Accepted. MIGRATION-003 has Code Changes, Dual-Format
+      Support, and tool_overrides sections. Both documents internally consistent.
+      No ambiguous migration rules.
+    refs:
+    - docs/ADR-003-gateway-capability-only-profiles.md
+    - docs/MIGRATION-003-capability-only-profiles.md
+    agent: doc-reviewer
