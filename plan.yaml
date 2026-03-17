@@ -10124,6 +10124,30 @@ phases:
   status: locked
   depends_on:
   - rt.e2e
+  steps:
+  - id: rt.liveness.probe
+    name: Blind-tester Mode D liveness probe
+    status: pending
+    description: Run blind-tester Mode D against the completed system. All 4 tests
+      in test_liveness.py must pass.
+    verification: 'VERDICT: ALIVE. All 4 repro tests pass. stdio mode stays alive
+      and responds. SSE mode binds port.'
+    evidence_template: 'Liveness verdict: ALIVE/DEAD_ON_ARRIVAL/PHANTOM
+
+      test_liveness.py results:
+
+      - test_stdio_stays_alive: pass/fail
+
+      - test_stdio_no_stdout_pollution: pass/fail
+
+      - test_sse_binds_port: pass/fail
+
+      - test_status_reports_meaningful_state: pass/fail
+
+      Evidence: command outputs
+
+      Gaps/Notes:'
+    agent: blind-tester
 - id: rt.doc_sync
   name: Documentation Sync
   status: locked
