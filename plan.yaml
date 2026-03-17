@@ -2025,7 +2025,7 @@ phases:
       - Commit: 9c3abad (worktree), merged as 7491792'
   - id: open_mode.test.gate
     name: Gate open_mode.test
-    status: pending
+    status: claimed
     description: 'Gate review: Verify open-mode test phase completion.
 
       review_depth: STANDARD
@@ -2063,6 +2063,8 @@ phases:
     depends_on:
     - open_mode.test.add-open-mode-contract-and-integration-tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T07:09:33.500938+00:00'
 - id: open_mode.runtime
   name: open_mode.runtime
   status: locked
