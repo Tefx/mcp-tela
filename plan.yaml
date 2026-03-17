@@ -1415,13 +1415,13 @@ phases:
       \ corrections required."
 - id: config.test
   name: config.test
-  status: pending
+  status: in_progress
   depends_on:
   - config.contract
   steps:
   - id: config.test.add-config-authority-regressions
     name: Add config authority regressions
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.2\
       \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#9.1 tela.yaml\
       \ Structure\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#H.\
@@ -1450,6 +1450,8 @@ phases:
       \  - token mode missing secrets\n  - unknown CLI default profile\n- Doctest\
       \ target added: <function>"
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T06:17:10.662058+00:00'
   - id: config.test.gate
     name: Gate config.test
     status: pending
