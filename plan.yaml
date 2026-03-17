@@ -848,7 +848,7 @@ phases:
       \ corrections required."
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
-  status: pending
+  status: in_progress
   context: Meta-planned from authoritative tela docs/contracts; phase is blocked on
     the meta review phase completing before any cross-repo alignment work can start.
   depends_on:
@@ -856,7 +856,7 @@ phases:
   steps:
   - id: cross_repo_alignment.audit-residual-opifex-drift
     name: Audit residual opifex drift
-    status: pending
+    status: claimed
     description: 'Docs/contracts-only scope. Compare `docs/DESIGN.md`, `docs/INTERFACES.md`,
       `contracts/capability_token.schema.json`, `contracts/meta.schema.json`, and
       `contracts/errors.yaml` against `../opifex/design/tela-clean-gateway.md`, `../opifex/design/architecture.md`,
@@ -943,6 +943,8 @@ phases:
       - Evidence explicitly confirms docs/contracts-only scope with no product implementation
       work'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T05:59:52.678297+00:00'
   - id: cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
     name: Align opifex docs to authoritative tela contracts
     status: pending
