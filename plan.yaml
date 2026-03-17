@@ -4698,7 +4698,7 @@ phases:
       - Commit: dfe02fa, merged as 143646b'
   - id: reload.runtime.integrate-notifications-and-warning-emission
     name: Integrate notifications and warning emission
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#4.11\
       \ shell/upstream.py -- Upstream MCP Handler\n  - docs/DESIGN.md#4.12 shell/audit.py\
@@ -4747,6 +4747,8 @@ phases:
     depends_on:
     - reload.runtime.implement-reenumeration-and-conflict-rejection
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T08:44:48.897391+00:00'
   - id: reload.runtime.freeze-for-l2
     name: Freeze for reload L2 verification
     status: pending
