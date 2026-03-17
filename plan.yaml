@@ -6258,7 +6258,7 @@ phases:
     claimed_at: '2026-03-17T10:49:59.130145+00:00'
   - id: fix.medium.config.m4-m8-m10-fix-config-wiring-issues
     name: 'M4+M8+M10: Fix config wiring issues'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nspec_refs:\n  - docs/INTERFACES.md#B.\
       \ Configuration\n  - docs/DESIGN.md#Startup Sequence\ntouch_paths:\n  - src/tela/shell/gateway.py\
       \ (M4: double load_config)\n  - src/tela/shell/config_loader.py (M8: unset env\
@@ -6294,6 +6294,8 @@ phases:
     - src/tela/core/config.py
     - src/tela/shell/upstream.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:49:59.999125+00:00'
   - id: fix.medium.config.m1-shell-result-convention
     name: 'M1: Audit and fix shell_result convention bypasses'
     status: pending
