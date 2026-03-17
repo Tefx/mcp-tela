@@ -9519,7 +9519,7 @@ phases:
       retest.'
   - id: retest2.full.regression-suite-retest-batch
     name: regression-suite-retest-batch
-    status: pending
+    status: claimed
     description: 'Re-test the exact `retest2.full.regression-suite` blocker family
       after the batched fix.
 
@@ -9594,3 +9594,5 @@ phases:
     depends_on:
     - retest2.full.regression-suite-fix-batch
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T14:32:41.413519+00:00'
