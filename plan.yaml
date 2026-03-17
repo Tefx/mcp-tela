@@ -5934,3 +5934,9 @@ phases:
     depends_on:
     - fix.medium.audit.verify
     agent: gate-reviewer
+- id: fix.low.code
+  name: 'Low Fixes: Code Quality (L1, L3, L5, L11-L16, L21)'
+  status: locked
+  depends_on:
+  - fix.high
+  - fix.medium.config
