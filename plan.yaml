@@ -8441,3 +8441,45 @@ phases:
   status: pending
   depends_on:
   - retest.final
+  steps:
+  - id: fix2.docs.fix-design-md-drift
+    name: fix-design-md-drift
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md\ntouch_paths:\n  - docs/DESIGN.md\nharness_refs: []\nconflict_rationale:\
+      \ Only this step touches DESIGN.md.\n\nFix ALL five DESIGN.md documentation\
+      \ drift issues:\n\n## Issue 7: Command filenames wrong\n- DESIGN.md says `audit.py`\
+      \ but actual file is `audit_cmd.py`\n- Fix: Update all command filename references\
+      \ to match actual `*_cmd.py` naming\n- Grep hint: `grep -n 'audit\\.py\\|start\\\
+      .py' docs/DESIGN.md` (check for non-_cmd versions)\n\n## Issue 8: Wrong Result\
+      \ import path\n- DESIGN.md still uses `from returns.result import Result`\n\
+      - Actual code uses `tela.shell.result.Result`\n- Fix: Update all Result import\
+      \ references to `tela.shell.result.Result`\n\n## Issue 9: Exception hierarchy\
+      \ mismatch\n- DESIGN.md specifies full hierarchy (`AuthzDenyError` etc.)\n-\
+      \ Actual only has `ConfigContractError`\n- Fix: Update DESIGN.md to document\
+      \ actual exception hierarchy, noting planned vs implemented\n- Mark unimplemented\
+      \ exceptions as deferred/planned\n\n## Issue 10: core/catalog.py missing from\
+      \ module spec\n- `core/catalog.py` exists but is not documented in DESIGN.md\n\
+      - Fix: Add catalog module to the Core layer module listing\n\n## Issue 11: ConnectionContext.token\
+      \ field missing\n- DESIGN.md specifies `ConnectionContext.token: CapabilityToken\
+      \ | None`\n- Field is missing in actual `core/models.py`\n- Fix: Document the\
+      \ field as deferred/not-yet-implemented in DESIGN.md, OR add the field to models.py\n\
+      - Preferred: Add the field to models.py with `None` default to match the spec\n\
+      \n## Completion Criteria\n- ALL five doc drift issues addressed\n- DESIGN.md\
+      \ matches actual code structure\n- No new drift introduced\n\n## Gate Preview\
+      \ (what the gate WILL reject)\n1. Any remaining filename mismatch between DESIGN.md\
+      \ and actual files\n2. Import paths in DESIGN.md that do not match actual code"
+    verification: '- DESIGN.md command filenames match actual *_cmd.py files
+
+      - Result import path matches tela.shell.result.Result
+
+      - Exception hierarchy documented accurately
+
+      - catalog.py listed in module spec
+
+      - ConnectionContext.token addressed
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    agent: python-executor
