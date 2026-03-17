@@ -6729,7 +6729,7 @@ phases:
     claimed_at: '2026-03-17T10:55:33.306008+00:00'
   - id: fix.low.code.l11-l12-l13-add-init-py-remove-unused-import-remove-ghost-telaerror
     name: 'L11+L12+L13: Add __init__.py, remove unused import, remove ghost TelaError'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/__init__.py\
       \ (NEW)\n  - src/tela/core/__init__.py (NEW)\n  - src/tela/shell/__init__.py\
       \ (NEW)\n  - src/tela/commands/__init__.py (NEW)\n  - tests/integration/test_end_to_end.py\
@@ -6757,6 +6757,10 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:55:32.388865+00:00'
+    done_at: '2026-03-17T10:57:16.792822+00:00'
+    evidence: 'Commit: 9de895f. L11: __init__.py added to all packages. L12: Removed
+      unused _handle_start import. L13: TelaError kept as DESIGN.md contract (now
+      used by H3). 296 passed.'
   - id: fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
     name: 'L14+L15+L16+L21: Fix counters, write-only fields, vacuous contracts'
     status: claimed
