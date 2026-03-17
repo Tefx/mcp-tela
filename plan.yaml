@@ -8735,3 +8735,27 @@ phases:
     depends_on:
     - fix2.doctests.fix-doctest-assertion-rewriting
     agent: integration-verifier
+  - id: fix2.doctests.gate
+    name: gate
+    status: pending
+    description: 'Gate review: Verify doctest fix phase completion.
+
+
+      review_depth: QUICK
+
+
+      Review criteria:
+
+      1. All doctest failures resolved
+
+      2. Fix is not overbroad
+
+      3. Tests pass'
+    verification: '- Doctest issues confirmed fixed
+
+      - Evidence quality sufficient
+
+      - Ready for next phase'
+    depends_on:
+    - fix2.doctests.verify-doctests
+    agent: gate-reviewer
