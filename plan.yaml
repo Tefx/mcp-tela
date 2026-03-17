@@ -8675,13 +8675,13 @@ phases:
     agent: gate-reviewer
 - id: fix2.doctests
   name: 'Fix Pass 2: Doctest Pytest Assertion Rewriting (Issues 19-20, 27-28)'
-  status: pending
+  status: in_progress
   depends_on:
   - retest.final
   steps:
   - id: fix2.doctests.fix-doctest-assertion-rewriting
     name: fix-doctest-assertion-rewriting
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - INVAR.md (contract requirements)\ntouch_paths:\n  - src/tela/core/contracts.py\n\
       \  - conftest.py or pyproject.toml (pytest config)\nharness_refs:\n  - tests/\n\
@@ -8712,6 +8712,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T11:51:37.912636+00:00'
   - id: fix2.doctests.verify-doctests
     name: verify-doctests
     status: pending
