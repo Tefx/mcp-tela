@@ -6168,7 +6168,7 @@ phases:
       ### Verdict: PASS'
   - id: fix.high.gate
     name: 'Gate: High-severity fixes (H1-H4)'
-    status: pending
+    status: claimed
     description: "Gate review: Verify high-severity fix phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale:\n  - H1 changes contract enforcement semantics\
       \ across all Core modules\n  - H3 replaces 8 stubs with real implementations\
@@ -6187,6 +6187,8 @@ phases:
     depends_on:
     - fix.high.verify-high-fixes
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T10:49:31.546502+00:00'
 - id: fix.medium.config
   name: 'Medium Fixes: Config and Wiring (M1-M4, M8, M10)'
   status: pending
