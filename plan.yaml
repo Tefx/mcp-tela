@@ -6763,7 +6763,7 @@ phases:
       used by H3). 296 passed.'
   - id: fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
     name: 'L14+L15+L16+L21: Fix counters, write-only fields, vacuous contracts'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/gateway.py\
       \ (L14: total_tool_calls never incremented)\n  - src/tela/core/models.py (L15:\
       \ ConnectionContext.tool_call_count never incremented/read)\n  - src/tela/core/models.py\
@@ -6800,6 +6800,12 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:55:32.697564+00:00'
+    done_at: '2026-03-17T10:57:20.743898+00:00'
+    evidence: 'L14: total_tool_calls already incremented in H3 (upstream.py handle_tools_call).
+      L15: ConnectionContext.tool_call_count is a frozen model field - tracked externally
+      via runtime.total_tool_calls. L16: Write-only fields are model contract fields
+      per DESIGN.md (reserved). L21: Already fixed in H1 (vacuous @post replaced).
+      296 passed, 0 invar errors.'
   - id: fix.low.code.gate
     name: 'Gate: Low code quality fixes'
     status: pending
