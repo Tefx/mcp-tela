@@ -5078,11 +5078,11 @@ phases:
       - OPEN'
 - id: fix.blockers
   name: Blocker Fixes (B1-B4)
-  status: pending
+  status: in_progress
   steps:
   - id: fix.blockers.b1-wire-all-cli-subcommands
     name: 'B1: Wire all CLI subcommands'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#A. CLI Interface\n  - README.md (claims 5 subcommands)\n\
       touch_paths:\n  - src/tela/cli.py\n  - src/tela/commands/audit_cmd.py\n  - src/tela/commands/\
@@ -5121,6 +5121,8 @@ phases:
     - src/tela/commands/audit_cmd.py
     - docs/INTERFACES.md
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T10:26:46.195237+00:00'
   - id: fix.blockers.b2-wire-auditconfig-into-audit-writer
     name: 'B2: Wire AuditConfig into audit writer'
     status: pending
