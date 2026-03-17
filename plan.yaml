@@ -9745,3 +9745,8 @@ phases:
   status: locked
   depends_on:
   - rt.cli_start
+- id: rt.escape_cleanup
+  name: Remove Stale Escape Hatches
+  status: locked
+  depends_on:
+  - rt.reload_wire
