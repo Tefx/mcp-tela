@@ -5544,3 +5544,119 @@ phases:
     - docs/INTERFACES.md
     - INVAR.md
     agent: python-senior
+  - id: fix.high.verify-high-fixes
+    name: Verify high-severity fixes (H1-H4)
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+      agent_source: default
+
+
+      As an INDEPENDENT TESTER, validate all 4 high-severity fixes.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - H1: Contract decorators actually enforce predicates at runtime (trigger a
+      violation and confirm it raises)
+
+      - H2: Concurrent coroutine access to singletons does not corrupt state
+
+      - H3: All 8 former stubs now execute successfully (no NotImplementedError)
+
+      - H4: Token validation accepts valid HMAC tokens and rejects invalid ones
+
+
+      Edge cases:
+
+      - H1: Vacuous contracts are flagged
+
+      - H2: Two audit_write calls interleaving at await points
+
+      - H3: handle_tools_call with denied tool, handle_initialize with invalid client
+
+      - H4: Expired token, wrong secret, malformed token string'
+    verification: '- All 4 high-severity fixes verified independently
+
+      - Edge cases tested
+
+      - No regressions
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier (independent)
+
+      **Independence Level**: L2
+
+
+      ### H1: Contract Decorators
+
+      - Contract violation triggered: yes/no
+
+      - Raised exception: <paste>
+
+      - posture_le @post present: yes/no
+
+      - _expand_env_token @post meaningful: yes/no
+
+
+      ### H2: Concurrency Guards
+
+      - Lock protection verified on: <list modules>
+
+      - Concurrent access test: <describe>
+
+
+      ### H3: Stub Implementations
+
+      - handle_initialize: <result>
+
+      - handle_tools_list: <result>
+
+      - handle_tools_call: <result>
+
+      - handle_profiles_list: <result>
+
+      - notify_tools_changed: <result>
+
+      - call_tool: <result>
+
+      - re_enumerate: <result>
+
+      - on_config_changed: <result>
+
+
+      ### H4: Token Module
+
+      - Valid token accepted: yes/no
+
+      - Invalid token rejected: yes/no
+
+      - Expired token rejected: yes/no
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+
+      ### Verdict
+
+      - [ ] PASS / ISSUES_FOUND / INCOMPLETE'
+    depends_on:
+    - fix.high.h1-replace-no-op-contract-decorators-with-real-invar-contracts
+    - fix.high.h2-add-concurrency-protection-to-module-singletons
+    - fix.high.h3-implement-notimplementederror-contract-stubs
+    - fix.high.h4-implement-core-token-py-for-hmac-token-validation
+    agent: integration-verifier
