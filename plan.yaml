@@ -4502,7 +4502,7 @@ phases:
       - OPEN'
 - id: reload.test
   name: reload.test
-  status: in_progress
+  status: done
   depends_on:
   - reload.contract
   steps:
@@ -4562,7 +4562,7 @@ phases:
       - Commit: 9e8b4f9, merged as 576cf63'
   - id: reload.test.gate
     name: Gate reload.test
-    status: claimed
+    status: done
     description: 'Gate review: Verify reload runtime test phase completion.
 
       review_depth: STANDARD
@@ -4598,9 +4598,34 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:41:54.377880+00:00'
+    done_at: '2026-03-17T08:42:02.553790+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: reload.test.add-hot-reload-tests
+
+      - Acceptance coverage sufficient: pass
+
+      - Decision: OPEN
+
+
+      ### Coverage
+
+      - Accepted reload: 2 tests (adds new tools, removes old tools)
+
+      - Rejected reload: 2 tests (conflict detection, fail-fast with empty registry)
+
+      - No-drop invariant: 1 test (ConnectionContext survives registry update)
+
+      - Notification: 1 test (digest computation from registry)
+
+      - Warning shape: 1 test (ToolConflict model data)
+
+      - Reconnect: 1 test (family re-mapping)
+
+      - Total: 8 new tests, 201 total passing, no product implementation'
 - id: reload.runtime
   name: reload.runtime
-  status: locked
+  status: pending
   depends_on:
   - reload.test
   steps:
