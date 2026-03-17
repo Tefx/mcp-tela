@@ -6816,7 +6816,7 @@ phases:
       296 passed, 0 invar errors.'
   - id: fix.low.code.gate
     name: 'Gate: Low code quality fixes'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify low-severity code quality fixes.
 
 
@@ -6833,6 +6833,8 @@ phases:
     - fix.low.code.l11-l12-l13-add-init-py-remove-unused-import-remove-ghost-telaerror
     - fix.low.code.l14-l15-l16-l21-fix-counters-write-only-fields-vacuous-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T10:57:33.245879+00:00'
 - id: fix.low.docs
   name: 'Low Fixes: Docs and Config (L2, L4, L6-L10, L18)'
   status: in_progress
