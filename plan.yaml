@@ -1747,7 +1747,7 @@ phases:
       \ ready for `open_mode.contract`.\n\nPlan mutation payload:\n- explicit no-change"
 - id: open_mode.contract
   name: open_mode.contract
-  status: in_progress
+  status: done
   depends_on:
   - config.impl
   steps:
@@ -1814,7 +1814,7 @@ phases:
       \ remains deferred to `open_mode.runtime` per out-of-scope guardrail."
   - id: open_mode.contract.gate
     name: Gate open_mode.contract
-    status: claimed
+    status: done
     description: 'Gate review: Verify open-mode runtime contract phase completion.
 
       review_depth: STANDARD
@@ -1852,9 +1852,79 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T07:02:50.169327+00:00'
+    done_at: '2026-03-17T07:05:32.799384+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: open_mode.contract.define-open-mode-runtime-contracts
+
+      - Runnable surface preserved: pass
+
+      - Open-mode binding semantics explicit: pass
+
+      - Decision: OPEN
+
+
+      ### Adversarial Review Detail
+
+
+      **1. Contract completeness (runtime/entrypoint semantics explicit): PASS**
+
+      - `start_command` defines CLI-to-runtime binding: stdio default, SSE on `--port`,
+      `--default-profile` override.
+
+      - `bind_gateway_startup` defines gateway startup contract (`GatewayStartupConfig`).
+
+      - `resolve_initialize_profile_binding` defines upstream initialize binding with
+      explicit rejection semantics.
+
+      - `RuntimeBindingContract`, `InitializeProfileBinding`, `GatewayStartupConfig`
+      dataclasses encode runtime semantics.
+
+
+      **2. Acceptance-only purity (no implementation leakage): PASS**
+
+      - All contract functions raise `NotImplementedError("Contract stub: ...")`.
+
+      - No actual runtime wiring, transport startup, or request handling implemented.
+
+      - Tests verify contract declaration text presence, not runtime behavior.
+
+
+      **3. No profile selection via client metadata in open mode: PASS**
+
+      - `upstream.py` docstring: "Client-provided connection metadata is explicitly
+      not a profile selection channel in open mode".
+
+      - `resolve_initialize_profile_binding` states: "Client metadata must not influence
+      profile selection".
+
+      - Integration test verifies "must not influence profile selection" string.
+
+
+      **4. Runtime boundary preserved across CLI/gateway/upstream: PASS**
+
+      - CLI (`start.py`) -> `RuntimeBindingContract` -> Gateway (`bind_gateway_startup`)
+      -> `GatewayStartupConfig`.
+
+      - Upstream receives resolved profile + `DefaultProfileResolutionStatus`, not
+      raw config.
+
+      - Missing/ambiguous explicitly modeled via enum.
+
+
+      **5. Verification commands:**
+
+      - `uv run pytest -q tests/shell/test_upstream.py tests/integration/test_open_mode.py`
+      -> 6 passed
+
+      - `uv run invar guard --changed` -> passed (0 errors, 0 warnings)
+
+
+      **NOTE:** Contract work branch had not been squash-merged into main. Performed
+      merge as `10af91f` before gate review.'
 - id: open_mode.test
   name: open_mode.test
-  status: locked
+  status: pending
   depends_on:
   - open_mode.contract
   steps:
