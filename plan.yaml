@@ -8899,3 +8899,43 @@ phases:
 
       - All output pasted as evidence'
     agent: integration-verifier
+  - id: retest2.full.clean-env-smoke
+    name: clean-env-smoke
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+
+      Clean environment smoke test. Verify the project works from scratch.
+
+
+      ## Required Checks
+
+      1. `uv sync` -- dependencies resolve cleanly
+
+      2. `uv run tela --help` -- all 5 subcommands listed
+
+      3. `uv run python -m tela --help` -- works (issue 16 fix)
+
+      4. `uv run tela start --help` -- start subcommand help
+
+      5. `uv run invar guard --all` -- 0 errors in clean env
+
+      6. Import smoke: `uv run python -c "from tela.core.config import expand_env_vars;
+      from tela.core.errors import AUTHZ_DENY; print(''OK'')"`
+
+
+      ## Evidence Requirements
+
+      - Paste actual command output
+
+      - Confirm no ModuleNotFoundError or ImportError'
+    verification: '- All smoke test commands succeed
+
+      - Output pasted as evidence
+
+      - No import errors'
+    depends_on:
+    - retest2.full.regression-suite
+    agent: blind-tester
