@@ -6246,3 +6246,12 @@ phases:
     - fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
     - fix.low.tests.l20-implement-prebuilt-profile-catalog
     agent: gate-reviewer
+- id: retest.regression
+  name: Regression Test Suite
+  status: locked
+  depends_on:
+  - fix.low.code
+  - fix.low.docs
+  - fix.low.tests
+  - fix.medium.config
+  - fix.medium.audit
