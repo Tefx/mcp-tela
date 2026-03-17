@@ -1973,6 +1973,42 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+  - id: reload.contract.gate
+    name: Gate reload.contract
+    status: pending
+    description: 'Gate review: Verify reload runtime contract phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Reload spans multiple runtime seams and needs explicit no-drop and conflict-reject
+      contracts.
+
+      cross_cutting_focus:
+
+      - connections remain stable
+
+      - conflict rejection remains explicit
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Contract step completed with acceptance-only artifacts
+
+      - Reload invariants are explicit
+
+      - Ready for reload.test'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: reload.contract.define-reload-runtime-contracts
+
+      - Contract purity: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - reload.contract.define-reload-runtime-contracts
+    agent: gate-reviewer
 - id: gateway.test
   name: gateway.test
   status: locked
