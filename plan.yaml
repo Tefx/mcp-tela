@@ -3726,7 +3726,7 @@ phases:
       - OPEN'
 - id: audit.contract
   name: audit.contract
-  status: in_progress
+  status: done
   depends_on:
   - gateway.runtime
   steps:
@@ -3799,7 +3799,7 @@ phases:
       - Commit: 2d8a818 (worktree), merged as 54ba771'
   - id: audit.contract.gate
     name: Gate audit.contract
-    status: claimed
+    status: done
     description: 'Gate review: Verify audit runtime contract phase completion.
 
       review_depth: STANDARD
@@ -3835,9 +3835,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:29:35.641893+00:00'
+    done_at: '2026-03-17T08:29:46.134177+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: audit.contract.define-audit-runtime-contracts
+
+      - Contract purity: pass (all 4 functions are stubs raising NotImplementedError)
+
+      - Decision: OPEN
+
+
+      ### Detail
+
+      1. **Contract purity**: build_audit_entry, audit_write, audit_close, audit_query
+      — all stubs
+
+      2. **Level semantics**: L1 (tool+verdict+latency), L2 (+param_hash), L3 (+request/response).
+      Meta always recorded.
+
+      3. **Models**: MetaField added to core/models.py, meta field added to AuditEntry
+
+      4. **Upstream seam**: audit_write is the explicit emission point; upstream.py
+      will call it after enforcement
+
+      5. **Tests**: 16 covering all stubs, level fields, MetaField, and denied entries
+
+      6. `uv run pytest -q` -> 174 passed, `uv run invar guard --changed` -> 0 errors'
 - id: audit.test
   name: audit.test
-  status: locked
+  status: pending
   depends_on:
   - audit.contract
   steps:
