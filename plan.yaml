@@ -6664,7 +6664,7 @@ phases:
       Verdict: PASS'
   - id: fix.medium.audit.gate
     name: 'Gate: Medium audit fixes (M5-M7, M9)'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify medium audit fix phase completion.
 
 
@@ -6677,6 +6677,8 @@ phases:
     depends_on:
     - fix.medium.audit.verify
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T10:55:07.772519+00:00'
 - id: fix.low.code
   name: 'Low Fixes: Code Quality (L1, L3, L5, L11-L16, L21)'
   status: locked
