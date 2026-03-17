@@ -3134,7 +3134,7 @@ phases:
   steps:
   - id: gateway.runtime.implement-downstream-manager
     name: Implement downstream manager
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.10 shell/downstream.py -- Downstream Server Management\n\
       \  - docs/DESIGN.md#4.6 core/family.py -- Family Mapping\n  - docs/DESIGN.md#4.7\
@@ -3168,6 +3168,59 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T07:54:48.777234+00:00'
+    done_at: '2026-03-17T07:59:53.646692+00:00'
+    evidence: '## Implementation Evidence
+
+      - Downstream manager paths: connect_all, disconnect_all, get_all_tools, get_tool_server,
+      get_registry, DownstreamRegistry
+
+      - Main-path command/output: `uv run pytest -q` -> 127 passed
+
+      - Conflict failure-path command/output: test_connect_all_fails_on_tool_conflict
+      -> TOOL_CONFLICT error, registry cleared
+
+      - Shared entrypoint wiring untouched: yes (no changes to cli.py, start.py, or
+      gateway lifecycle)
+
+
+      ### New Core modules
+
+      - `src/tela/core/classification.py`: classify_tool (override > annotations >
+      None), posture_from_annotations (readOnlyHint/destructiveHint)
+
+      - `src/tela/core/family.py`: resolve_family (tool override > server override
+      > server name), resolve_tools (full resolution pipeline)
+
+      - `src/tela/core/conflict.py`: detect_conflicts (find duplicate tool names across
+      servers), ToolConflict model
+
+
+      ### Shell downstream implementation
+
+      - `src/tela/shell/downstream.py`: DownstreamRegistry class with register/unregister/get_all_tools/get_tool_server/get_tool/clear.
+      connect_all resolves families+posture+conflicts. disconnect_all clears registry.
+      call_tool and re_enumerate remain stubs.
+
+
+      ### Tests
+
+      - tests/core/test_classification.py: 9 tests
+
+      - tests/core/test_family.py: 6 tests
+
+      - tests/core/test_conflict.py: 5 tests
+
+      - tests/shell/test_downstream.py: 18 tests (registry lifecycle, family resolution,
+      posture from overrides/annotations, conflict fail-fast)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 127 passed
+
+      - `uv run invar guard --changed` -> passed (0 errors)
+
+      - Commit: a65ecf2 (worktree), merged as 063b8e3'
   - id: gateway.runtime.implement-upstream-routing
     name: Implement upstream routing
     status: pending
