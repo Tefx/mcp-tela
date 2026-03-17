@@ -8123,7 +8123,7 @@ phases:
   steps:
   - id: fix2.concurrency.lock-fixes
     name: lock-fixes
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#shell-layer\ntouch_paths:\n  - src/tela/shell/gateway.py\n\
       \  - src/tela/shell/audit.py\n  - src/tela/shell/reload.py\nharness_refs:\n\
@@ -8164,6 +8164,20 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T11:51:35.252110+00:00'
+    done_at: '2026-03-17T11:59:01.956019+00:00'
+    evidence: '## Evidence (python-senior)
+
+      Files: gateway.py, audit.py, reload.py, status_cmd.py, connections_cmd.py, test_gateway.py,
+      test_blockers.py, test_medium.py
+
+      All 4 lock gaps fixed: _runtime_lock used in gateway ops, _audit_lock protects
+      all audit mutations, _registry_lock acquired in on_tools_changed, audit_init/set_max/close
+      use lock.
+
+      Interface changes: gateway_status/connections and audit_init/set_max now async.
+      All callers updated.
+
+      311 passed + 46 repro passed. Merged to main.'
   - id: fix2.concurrency.verify-locks
     name: verify-locks
     status: pending
