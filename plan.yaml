@@ -7054,7 +7054,7 @@ phases:
     agent: python-executor
   - id: fix.low.tests.l20-implement-prebuilt-profile-catalog
     name: 'L20: Implement prebuilt profile catalog'
-    status: claimed
+    status: pending
     description: "step_type: implementation\nspec_refs:\n  - docs/INTERFACES.md#Profile\
       \ Catalog\ntouch_paths:\n  - src/tela/core/catalog.py (NEW)\n  - tests/core/test_catalog.py\
       \ (NEW)\n\nProblem:\n- INTERFACES.md documents 7 prebuilt profiles (read_only,\
@@ -7080,8 +7080,6 @@ phases:
     refs:
     - docs/INTERFACES.md
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-17T10:57:35.196012+00:00'
   - id: fix.low.tests.gate
     name: 'Gate: Low test quality fixes'
     status: pending
