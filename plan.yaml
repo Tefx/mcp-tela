@@ -1434,7 +1434,7 @@ phases:
       \ corrections required."
 - id: config.test
   name: config.test
-  status: in_progress
+  status: done
   depends_on:
   - config.contract
   steps:
@@ -1488,7 +1488,7 @@ phases:
       \ skipped pending implementation phase for contract stubs."
   - id: config.test.gate
     name: Gate config.test
-    status: claimed
+    status: done
     description: 'Gate review: Verify config authority test phase completion.
 
       review_depth: STANDARD
@@ -1527,9 +1527,28 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T06:24:51.830023+00:00'
+    done_at: '2026-03-17T06:28:49.153613+00:00'
+    evidence: "Artifact:\n- Gate review report: `.vectl/gate_reports/config.test.gate.md`\n\
+      - All checkpoints satisfied\n\nVerification:\n- **Acceptance coverage**: SUFFICIENT\n\
+      \  - Open mode precedence (CLI > config default) tested\n  - All 4 failure modes\
+      \ tested (token mode without secrets, open mode with no defaults, open mode\
+      \ with multiple defaults, CLI profile not found)\n  - Error codes verified (OPEN_MODE_DEFAULT_PROFILE_MISSING,\
+      \ OPEN_MODE_DEFAULT_PROFILE_AMBIGUOUS, PROFILE_NOT_FOUND)\n  \n- **Failure-path\
+      \ coverage**: SUFFICIENT\n  - Token mode without secrets: test_token_mode_without_secrets_returns_error\n\
+      \  - Open mode with no default: test_raises_missing_when_no_default_and_no_cli\n\
+      \  - Open mode with multiple defaults: test_raises_ambiguous_when_multiple_defaults_and_no_cli\n\
+      \  - CLI profile missing: test_raises_profile_not_found_when_cli_profile_missing\n\
+      \  \n- **Product implementation leakage**: NONE DETECTED\n  - Only test files\
+      \ and test dependencies modified\n  - Source files remain as contract stubs\
+      \ (NotImplementedError)\n  - No production code changes\n  \n- **Evidence quality**:\
+      \ SUFFICIENT for config.impl start\n  - Commit hash provided: 3242b60b1e46efcf0a3ac67c5e04efdd90785dbb\n\
+      \  - Test command documented\n  - Contract stubs clearly marked\n  - All automated\
+      \ gates passed (pytest: 12 passed/30 skipped, invar_guard: 0 errors/0 warnings)\n\
+      \n- **Open/blocked decision**: OPEN\n  - Ready for config.impl start\n  - No\
+      \ blockers\n  - No SHOULD_FIX items\n  \nPlan mutation payload: explicit no-change"
 - id: config.impl
   name: config.impl
-  status: locked
+  status: pending
   depends_on:
   - config.test
   steps:
