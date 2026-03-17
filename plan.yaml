@@ -6060,3 +6060,77 @@ phases:
   status: locked
   depends_on:
   - fix.high
+  steps:
+  - id: fix.low.docs.l2-l4-fix-enforcement-chain-step-count-in-docs
+    name: 'L2+L4: Fix enforcement chain step count in docs'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - docs/DESIGN.md (L2:\
+      \ says 7-step but executes 5; L4: inconsistent with INTERFACES.md 4-step)\n\
+      \  - docs/INTERFACES.md (L4: says 4-step chain)\n\nProblem:\n- L2: Docs say\
+      \ '7-step enforcement chain' but code actually executes 5 steps\n- L4: INTERFACES.md\
+      \ says '4-step chain', DESIGN.md says '7-step chain'\n- This was flagged as\
+      \ a blocking semantic conflict in meta.discovery\n\nTasks:\n1. Count actual\
+      \ enforcement steps in code (enforcement.py enforce() function)\n2. Update DESIGN.md\
+      \ to match actual implementation\n3. Reconcile INTERFACES.md and DESIGN.md to\
+      \ use consistent wording\n4. Distinguish between initialize-time binding steps\
+      \ and per-call enforcement steps\n\nNote: The meta.discovery phase already identified\
+      \ this conflict. This step resolves it in the docs."
+    verification: '- DESIGN.md and INTERFACES.md use consistent enforcement chain
+      step count
+
+      - Step count matches actual code implementation
+
+      - Initialize-time vs per-call distinction is clear'
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - src/tela/core/enforcement.py
+    agent: doc-reviewer
+  - id: fix.low.docs.l6-l7-remove-unused-click-rich-deps-document-argparse-choice
+    name: 'L6+L7: Remove unused Click/Rich deps, document argparse choice'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - pyproject.toml (remove\
+      \ click>=8.0, rich>=13.0)\n  - docs/DESIGN.md (L6: update if it references Click)\n\
+      \nProblem:\n- L6: DESIGN.md specifies Click but actual CLI uses argparse\n-\
+      \ L7: `click>=8.0` and `rich>=13.0` declared as dependencies but never imported\n\
+      \nTasks:\n1. Remove `click>=8.0` and `rich>=13.0` from pyproject.toml dependencies\n\
+      2. Update DESIGN.md to reflect argparse usage instead of Click\n3. If rich is\
+      \ desired for future output formatting, keep it but add a comment\n\nDecision:\
+      \ Remove both since neither is imported anywhere."
+    verification: '- click and rich removed from pyproject.toml
+
+      - DESIGN.md reflects argparse
+
+      - No import errors
+
+      - uv run pytest -q passes'
+    refs:
+    - pyproject.toml
+    - docs/DESIGN.md
+    agent: python-executor
+  - id: fix.low.docs.l8-l9-l10-l18-fix-readme-and-add-license
+    name: 'L8+L9+L10+L18: Fix README and add LICENSE'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - README.md (L8: invalid\
+      \ sse:// URL; L9: pip install claim)\n  - CLAUDE.md, AGENTS.md, GEMINI.md (L10:\
+      \ identical files)\n  - LICENSE (L18: missing, README claims MIT)\n\nTasks:\n\
+      1. L8: Fix `sse://localhost:3001` to valid URL scheme (e.g., `http://localhost:3001/sse`)\n\
+      2. L9: Remove or qualify `pip install mcp-tela` claim (not on PyPI)\n   - Replace\
+      \ with `uv pip install .` or `pip install -e .` for local install\n3. L10: CLAUDE.md,\
+      \ AGENTS.md, GEMINI.md are identical. Consolidate:\n   - Keep CLAUDE.md as the\
+      \ primary\n   - Make AGENTS.md and GEMINI.md either symlinks or short redirects\n\
+      \   - Or differentiate content if each should have unique instructions\n4. L18:\
+      \ Create LICENSE file with MIT license text (README claims MIT)"
+    verification: '- README has valid URL schemes
+
+      - Install instructions are accurate
+
+      - Agent instruction files deduplicated
+
+      - LICENSE file exists with MIT text
+
+      - No broken links in README'
+    refs:
+    - README.md
+    - CLAUDE.md
+    agent: doc-reviewer
