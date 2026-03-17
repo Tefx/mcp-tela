@@ -10111,6 +10111,14 @@ phases:
     depends_on:
     - rt.e2e.test
     agent: integration-verifier
+  - id: rt.e2e.gate
+    name: Gate review
+    status: pending
+    description: Gate review for E2E phase.
+    verification: Full Gate. B4 resolved. Real integration evidence exists.
+    depends_on:
+    - rt.e2e.verify
+    agent: gate-reviewer
 - id: rt.liveness
   name: Liveness Verification
   status: locked
