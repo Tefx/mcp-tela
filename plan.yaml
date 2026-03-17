@@ -4502,13 +4502,13 @@ phases:
       - OPEN'
 - id: reload.test
   name: reload.test
-  status: pending
+  status: in_progress
   depends_on:
   - reload.contract
   steps:
   - id: reload.test.add-hot-reload-tests
     name: Add hot-reload tests
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.14\
       \ shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3 Hot Reload Flow\n  -\
       \ docs/INTERFACES.md#E. Hot Reload\n  - docs/INTERFACES.md#F. MCP Server Interface\
@@ -4538,6 +4538,8 @@ phases:
 
       - Notification path covered: yes/no'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T08:40:37.011659+00:00'
   - id: reload.test.gate
     name: Gate reload.test
     status: pending
