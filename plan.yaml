@@ -2883,3 +2883,36 @@ phases:
   status: locked
   depends_on:
   - reload.test
+  steps:
+  - id: reload.runtime.implement-reenumeration-and-conflict-rejection
+    name: Implement re-enumeration and conflict rejection
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3\
+      \ Hot Reload Flow\n  - docs/INTERFACES.md#E. Hot Reload\ntouch_paths:\n  - src/tela/shell/reload.py\n\
+      \  - src/tela/shell/downstream.py\n  - src/tela/core/conflict.py\n  - src/tela/core/family.py\n\
+      \  - src/tela/core/classification.py\nharness_refs:\n  - tests/shell/test_reload.py\n\
+      \  - tests/integration/test_hot_reload.py\nconflict_rationale: Keep re-enumeration\
+      \ and conflict decision logic isolated from shared upstream/audit notification\
+      \ files; a later integration step will wire notifications and warnings.\nTasks:\n\
+      - Implement tools/list_changed re-enumeration and conflict checking against\
+      \ current registry state.\n- Preserve reject-and-keep-previous behavior on conflicts.\n\
+      - Keep connection stability invariant explicit.\nOut-of-scope guardrail:\n-\
+      \ No upstream notification wiring yet\n- No audit warning emission integration\
+      \ yet\n"
+    verification: '- Main path: reload tests pass for accepted re-enumeration updates
+
+      - Failure path: tests cover conflict reject-and-keep-previous behavior
+
+      - Proof: shared upstream/audit notification files remain untouched until the
+      integration step'
+    evidence_template: '## Implementation Evidence
+
+      - Reload coordinator paths: <functions>
+
+      - Main-path command/output: <exact>
+
+      - Conflict failure-path command/output: <exact>
+
+      - Notification integration deferred: yes/no'
+    agent: python-executor
