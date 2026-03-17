@@ -3128,13 +3128,13 @@ phases:
       - `uv run pytest -q` -> 104 passed'
 - id: gateway.runtime
   name: gateway.runtime
-  status: pending
+  status: in_progress
   depends_on:
   - gateway.test
   steps:
   - id: gateway.runtime.implement-downstream-manager
     name: Implement downstream manager
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.10 shell/downstream.py -- Downstream Server Management\n\
       \  - docs/DESIGN.md#4.6 core/family.py -- Family Mapping\n  - docs/DESIGN.md#4.7\
@@ -3166,6 +3166,8 @@ phases:
 
       - Shared entrypoint wiring untouched: yes/no'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T07:54:48.777234+00:00'
   - id: gateway.runtime.implement-upstream-routing
     name: Implement upstream routing
     status: pending
