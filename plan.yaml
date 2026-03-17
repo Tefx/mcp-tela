@@ -8832,3 +8832,29 @@ phases:
     depends_on:
     - fix2.upstream-split.split-upstream
     agent: integration-verifier
+  - id: fix2.upstream-split.gate
+    name: gate
+    status: pending
+    description: 'Gate review: Verify upstream.py split phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. upstream.py under 300-line threshold
+
+      2. No broken imports
+
+      3. No behavioral changes
+
+      4. Tests pass'
+    verification: '- Issue 14 confirmed fixed
+
+      - Evidence quality sufficient
+
+      - Ready for final retest'
+    depends_on:
+    - fix2.upstream-split.verify-split
+    agent: gate-reviewer
