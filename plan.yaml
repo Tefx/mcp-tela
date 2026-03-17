@@ -3732,7 +3732,7 @@ phases:
   steps:
   - id: audit.contract.define-audit-runtime-contracts
     name: Define audit runtime contracts
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.12 shell/audit.py -- Audit Log Writer\n  -\
@@ -3764,6 +3764,39 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T08:26:02.281117+00:00'
+    done_at: '2026-03-17T08:29:23.412935+00:00'
+    evidence: '## Contract Evidence
+
+      - Audit contract stubs: src/tela/shell/audit.py (build_audit_entry, audit_write,
+      audit_close, audit_query)
+
+      - Level semantics explicit: yes (L1: tool+verdict+latency, L2: +param_hash,
+      L3: +request/response content, meta always recorded)
+
+      - No implementation logic added: yes (all stubs raise NotImplementedError)
+
+
+      ### Model additions
+
+      - `MetaField` in core/models.py (trace_id required, event_id/idempotency_key/instance_id/persona_id
+      optional)
+
+      - `meta: MetaField | None` added to AuditEntry
+
+
+      ### Tests
+
+      - tests/shell/test_audit.py: 16 tests (4 stub contracts, 5 AuditEntry level
+      tests, 3 MetaField tests, 1 AuditLevel semantics, 3 param coverage)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 174 passed
+
+      - `uv run invar guard --changed` -> passed (0 errors)
+
+      - Commit: 2d8a818 (worktree), merged as 54ba771'
   - id: audit.contract.gate
     name: Gate audit.contract
     status: pending
