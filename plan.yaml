@@ -4206,7 +4206,7 @@ phases:
       ### Snapshot: 190 tests passing, invar guard clean'
   - id: audit.runtime.verify-audit-runtime
     name: Verify audit runtime
-    status: pending
+    status: claimed
     description: "As an INDEPENDENT TESTER (integration-verifier), validate audit\
       \ runtime behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -4268,6 +4268,8 @@ phases:
     depends_on:
     - audit.runtime.freeze-for-l2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T08:37:58.049083+00:00'
   - id: audit.runtime.gate
     name: Gate audit.runtime
     status: pending
