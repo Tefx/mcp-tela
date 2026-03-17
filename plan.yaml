@@ -3434,7 +3434,7 @@ phases:
       - invar guard clean (0 errors)'
   - id: gateway.runtime.verify-gateway-runtime
     name: Verify gateway runtime
-    status: claimed
+    status: done
     description: "As an INDEPENDENT TESTER (integration-verifier), validate the gateway\
       \ lifecycle and runtime from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -3513,6 +3513,87 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T08:08:43.056807+00:00'
+    done_at: '2026-03-17T08:09:31.235205+00:00'
+    evidence: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: src/tela/commands/start.py:CLI -> src/tela/shell/gateway.py:lifecycle
+      -> src/tela/shell/downstream.py:registry -> src/tela/shell/upstream.py:handler
+
+
+      **Exact command executed**:
+
+      ```
+
+      uv run python3 -c "<9-step seam proof: CLI -> start -> gateway -> downstream
+      + upstream>"
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      1. start_command: profile=dev
+
+      2. bind_gateway_startup: transport=stdio, auth=open
+
+      3. gateway_start: OK
+
+      4. gateway_status: servers=2, profiles=1, connected=[''fs'', ''git'']
+
+      5. downstream: fs_tools=2, git_tools=1
+
+      6. upstream filter: permitted=[''git_status'', ''read_file'', ''write_file'']
+
+      7. enforce read_file: verdict=allow
+
+      8. strip_meta: stripped_has_meta=False, held_meta={''trace_id'': ''t1''}
+
+      9. gateway_shutdown: OK
+
+      VERDICT: PASS
+
+      ```
+
+
+      **Remaining mocks in related tests**: 0 (only monkeypatch for env vars in config_loader)
+
+
+      **Justification for remaining mocks**: monkeypatch.setenv is env var injection,
+      not behavior mocking. All paths use real function calls with injected tool_lists.
+
+
+      ## Failure Paths
+
+      1. Tool conflict: `TOOL_CONFLICT: read_file in [fs1, fs2]` -- fail-fast at startup
+
+      2. Denied family: `verdict=deny, denied_by=family_admission` -- unadmitted family
+
+      3. Denied posture: `verdict=deny, denied_by=posture_check` -- posture exceedance
+
+
+      ## Conformance Check
+
+      - Shared runtime fixture: tool_lists injection via connect_all + gateway_start
+
+      - CLI/startup matches gateway status: yes (2 servers, 1 profile, [''fs'', ''git''])
+
+      - Gateway status matches upstream/downstream registry facts: yes (get_all_tools
+      agrees with gateway_status.connected_servers)
+
+      - Independent re-derivation remains: no (all surfaces consume shared registry)
+
+
+      ## Test Suite
+
+      - `uv run pytest -q` -> 160 passed
+
+      - `uv run invar guard --changed` -> 0 errors
+
+
+      **Verdict: PASS**'
   - id: gateway.runtime.gate
     name: Gate gateway.runtime
     status: pending
