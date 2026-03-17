@@ -2169,6 +2169,38 @@ phases:
     depends_on:
     - gateway.runtime.implement-upstream-routing
     agent: python-executor
+  - id: gateway.runtime.freeze-for-l2
+    name: Freeze for gateway L2 verification
+    status: pending
+    description: 'step_type: planning
+
+      Freeze: lock snapshot for L2 gateway runtime verification.
+
+      Requirements:
+
+      - record `git rev-parse HEAD`
+
+      - record `git status` clean
+
+      - declare runtime environment and transport fixture under test
+
+      - state that no code changes are allowed until the subsequent verify step completes
+
+      agent_source: default'
+    verification: '- Freeze evidence includes commit SHA, clean status, environment
+      declaration, and no-change statement'
+    evidence_template: '## Freeze Evidence
+
+      - Commit: <git rev-parse HEAD>
+
+      - Git status clean: yes/no
+
+      - Runtime environment: <details>
+
+      - No code changes until `gateway.runtime.verify-gateway-runtime`: yes/no'
+    depends_on:
+    - gateway.runtime.integrate-gateway-lifecycle
+    agent: python-executor
 - id: audit.contract
   name: audit.contract
   status: locked
