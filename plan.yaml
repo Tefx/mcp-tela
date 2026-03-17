@@ -6468,7 +6468,7 @@ phases:
     claimed_at: '2026-03-17T10:55:08.144574+00:00'
 - id: fix.medium.audit
   name: 'Medium Fixes: Audit and Runtime (M5-M7, M9)'
-  status: in_progress
+  status: done
   depends_on:
   - fix.blockers
   steps:
@@ -6666,7 +6666,7 @@ phases:
       Verdict: PASS'
   - id: fix.medium.audit.gate
     name: 'Gate: Medium audit fixes (M5-M7, M9)'
-    status: claimed
+    status: done
     description: 'Gate review: Verify medium audit fix phase completion.
 
 
@@ -6681,6 +6681,9 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T10:55:07.772519+00:00'
+    done_at: '2026-03-17T10:55:15.335941+00:00'
+    evidence: 'Gate: Medium Audit Fixes (M5-M7, M9) PASSED. All fixes verified. 296
+      passed, 0 invar errors.'
 - id: fix.low.code
   name: 'Low Fixes: Code Quality (L1, L3, L5, L11-L16, L21)'
   status: locked
