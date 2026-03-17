@@ -6976,7 +6976,7 @@ phases:
       296 passed.'
   - id: fix.low.docs.gate
     name: 'Gate: Low docs fixes'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify low-severity docs fixes.
 
 
@@ -6993,6 +6993,8 @@ phases:
     - fix.low.docs.l6-l7-remove-unused-click-rich-deps-document-argparse-choice
     - fix.low.docs.l8-l9-l10-l18-fix-readme-and-add-license
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T10:57:33.914917+00:00'
 - id: fix.low.tests
   name: 'Low Fixes: Test Quality (L17, L19, L20)'
   status: in_progress
