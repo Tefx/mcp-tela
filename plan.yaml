@@ -10594,3 +10594,20 @@ phases:
     depends_on:
     - cap.spec.finalize-adr-003-and-migration-003
     agent: python-senior
+  - id: cap.spec.interfaces-md
+    name: Update INTERFACES.md to target state
+    status: pending
+    description: 'Update INTERFACES.md to reflect the post-migration target state.
+      Changes: (a) Profile schema: capabilities: replaces tools:, side_effect_policy
+      removed, (b) tela.profiles MCP response: emit capabilities key (and tools during
+      migration), drop side_effect_policy, (c) Enforcement chain section: 3 per-call
+      steps, (d) Config examples: capabilities format.'
+    verification: grep -n 'side_effect_policy' docs/INTERFACES.md returns only migration/historical
+      notes. Profile schema uses capabilities:. tela.profiles response documented
+      with both keys during migration.
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -n ''side_effect_policy''
+      docs/INTERFACES.md output:\nProfile schema key: capabilities\ntela.profiles
+      response format: documented\nGaps/Notes:'
+    depends_on:
+    - cap.spec.finalize-adr-003-and-migration-003
+    agent: python-senior
