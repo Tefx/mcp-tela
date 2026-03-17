@@ -5698,7 +5698,7 @@ phases:
     claimed_at: '2026-03-17T10:38:41.395517+00:00'
   - id: fix.high.h2-add-concurrency-protection-to-module-singletons
     name: 'H2: Add concurrency protection to module singletons'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#Concurrency\ntouch_paths:\n  - src/tela/shell/audit.py (_audit_entries,\
       \ _audit_log_path)\n  - src/tela/shell/downstream.py (_registry)\n  - src/tela/shell/gateway.py\
@@ -5732,6 +5732,8 @@ phases:
     - src/tela/shell/gateway.py
     - src/tela/shell/reload.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T10:38:41.814303+00:00'
   - id: fix.high.h3-implement-notimplementederror-contract-stubs
     name: 'H3: Implement NotImplementedError contract stubs'
     status: pending
