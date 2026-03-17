@@ -8483,3 +8483,38 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+  - id: fix2.docs.verify-docs
+    name: verify-docs
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L1
+
+
+      As an INDEPENDENT TESTER, validate DESIGN.md matches actual code.
+
+
+      Verify:
+
+      1. Command filenames in DESIGN.md match actual files in src/tela/commands/
+
+      2. Result import path references are correct
+
+      3. Exception hierarchy is accurately documented
+
+      4. catalog.py is listed in module spec
+
+      5. ConnectionContext.token field is addressed (either in code or doc)
+
+      6. No other stale references remain
+
+
+      Finding issues is a POSITIVE outcome.'
+    verification: '- File listing comparison between DESIGN.md and actual src/
+
+      - grep evidence for corrected import paths
+
+      - No stale references remain'
+    depends_on:
+    - fix2.docs.fix-design-md-drift
+    agent: integration-verifier
