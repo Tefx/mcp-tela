@@ -9740,3 +9740,8 @@ phases:
   status: locked
   depends_on:
   - rt.upstream
+- id: rt.reload_wire
+  name: Wire Hot Reload
+  status: locked
+  depends_on:
+  - rt.cli_start
