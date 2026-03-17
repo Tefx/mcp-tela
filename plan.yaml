@@ -2240,7 +2240,7 @@ phases:
       - Commit: 6f2f1c8 (worktree), merged as 01ec7ba"
   - id: open_mode.runtime.integrate-cli-default-profile-wiring
     name: Integrate CLI default-profile wiring
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#8.1\
       \ Startup Sequence\n  - docs/INTERFACES.md#A. CLI Interface\n  - docs/INTERFACES.md#H.\
@@ -2293,6 +2293,63 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T07:15:40.059125+00:00'
+    done_at: '2026-03-17T07:19:53.786370+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      uv run pytest -q tests/integration/test_end_to_end.py -v
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      7 passed
+
+      ```
+
+
+      **Path exercised**: CLI entrypoint -> start command -> gateway startup config
+      -> open-mode binding
+
+
+      ### Changes
+
+      - `src/tela/cli.py` (NEW): CLI entrypoint with `tela start --config/--port/--default-profile`.
+      Wires through start_command -> bind_gateway_startup. Returns exit code.
+
+      - `src/tela/shell/gateway.py`: Replaced contract stub with implementation that
+      loads config for auth mode and builds GatewayStartupConfig from RuntimeBindingContract.
+
+      - `tests/integration/test_end_to_end.py` (NEW): 7 end-to-end tests covering
+      config default, CLI override, SSE port, missing/ambiguous/unknown profile rejection,
+      and shared-fact conformance.
+
+      - `tests/integration/test_open_mode.py`: Updated bind_gateway_startup stub test
+      to behavioral assertion.
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 58 passed (full suite)
+
+      - `uv run invar guard --changed` -> passed (0 errors, 0 warnings)
+
+      - Doctests pass for both cli.py and gateway.py
+
+      - Commit: 80130f0 (worktree), merged as ddb69a3
+
+
+      ### Integration proof
+
+      - test_gateway_binds_same_profile_as_cli_authority proves no sibling path re-derives
+      profile selection independently'
   - id: open_mode.runtime.freeze-for-l2
     name: Freeze for open-mode L2 verification
     status: pending
