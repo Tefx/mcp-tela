@@ -4698,7 +4698,7 @@ phases:
       - Commit: dfe02fa, merged as 143646b'
   - id: reload.runtime.integrate-notifications-and-warning-emission
     name: Integrate notifications and warning emission
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#4.11\
       \ shell/upstream.py -- Upstream MCP Handler\n  - docs/DESIGN.md#4.12 shell/audit.py\
@@ -4749,6 +4749,48 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:44:48.897391+00:00'
+    done_at: '2026-03-17T08:46:20.387392+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      uv run pytest -q tests/shell/test_reload.py -v
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      8 passed
+
+      ```
+
+
+      **Path exercised**: reload trigger -> conflict decision -> notify upstream |
+      audit warning
+
+
+      ### Changes
+
+      - `src/tela/shell/reload.py`: Add notification callback (set_notify_callback),
+      integrate audit_write for TOOL_CONFLICT warning
+
+      - `tests/shell/test_reload.py`: +2 tests (callback notification, audit warning
+      emission)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 205 passed
+
+      - `uv run invar guard --changed` -> 0 errors
+
+      - Commit: 9dd7d8d, merged as e334cee'
   - id: reload.runtime.freeze-for-l2
     name: Freeze for reload L2 verification
     status: pending
