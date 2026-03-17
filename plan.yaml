@@ -10611,3 +10611,15 @@ phases:
     depends_on:
     - cap.spec.finalize-adr-003-and-migration-003
     agent: python-senior
+  - id: cap.spec.gate
+    name: Spec migration gate review
+    status: pending
+    description: Verify ADR-003, MIGRATION-003, DESIGN.md, and INTERFACES.md are internally
+      consistent and define a clear, unambiguous target state for implementation.
+      Enforcement step count must be consistent (3 per-call) across all 4 documents.
+    verification: 'Quick Gate: E1 (spec alignment across all 4 docs). No contradictions.
+      Enforcement step count consistent (3 per-call).'
+    depends_on:
+    - cap.spec.design-md
+    - cap.spec.interfaces-md
+    agent: gate-reviewer
