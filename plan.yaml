@@ -9176,7 +9176,7 @@ phases:
   steps:
   - id: retest2.full.regression-suite
     name: regression-suite
-    status: claimed
+    status: done
     description: "step_type: verification\nindependence_level: L2\n\nFull regression\
       \ test suite run in clean environment.\n\n## Required Test Runs\n\n1. **Full\
       \ pytest suite**: `uv run pytest -q` -- expect 311+ tests passing, 0 failures\n\
@@ -9205,6 +9205,25 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T14:06:27.039509+00:00'
+    done_at: '2026-03-17T14:13:10.826902+00:00'
+    evidence: "Regression suite execution completed with detected blocker/should_fix\
+      \ findings; step closed with findings batched into follow-up repair steps.\n\
+      \nArtifact:\n- PR: N/A (verify-only)\n\nVerification:\n- `uv run pytest -q`\
+      \ -> 315 passed\n- `uv run pytest --doctest-modules src/tela/` -> 56 passed,\
+      \ 5 skipped, 2 failed (contracts doctests)\n- `uv run invar guard --all` ->\
+      \ failed with 3 errors, 29 warnings\n- `uv run pytest tests/repro/ -q` -> 46\
+      \ passed\n- `uv run pytest tests/blind/ -q` -> path not found in workspace\n\
+      \nIssue classification:\n- blocker:\n  - invar guard failure (3 errors)\n  -\
+      \ contracts doctest failures (pre/post traceback format mismatch)\n  - missing/invalid\
+      \ blind-test path in required command set\n- should_fix:\n  - AUTH_RATE_LIMITED\
+      \ constant/reference drift\n  - shell complexity debt threshold exceeded\n \
+      \ - missing meta-contract decorators on `contracts.pre`/`contracts.post`\n-\
+      \ suggestion/tech_debt: recorded in subagent evidence\n\nBatched remediation\
+      \ protocol applied:\n- Planner created ONE batched fix step: `retest2.full.regression-suite-fix-batch`\n\
+      - Planner created ONE batched retest step: `retest2.full.regression-suite-retest-batch`\n\
+      - Dependencies wired so retest chain proceeds through fix->retest before downstream\
+      \ smoke/final gate.\n\nSource: integration-verifier evidence + planner mutation\
+      \ confirmation."
   - id: retest2.full.clean-env-smoke
     name: clean-env-smoke
     status: pending
