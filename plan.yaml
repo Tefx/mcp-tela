@@ -5205,7 +5205,7 @@ phases:
     claimed_at: '2026-03-17T10:26:47.005610+00:00'
   - id: fix.blockers.b4-fix-hot-reload-rollback-isolation
     name: 'B4: Fix hot reload rollback isolation'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.12 shell/reload.py -- Hot Reload Orchestration\n  - docs/DESIGN.md#No-drop-connection\
       \ invariant\ntouch_paths:\n  - src/tela/shell/reload.py\n  - src/tela/shell/downstream.py\n\
@@ -5241,6 +5241,8 @@ phases:
     - src/tela/shell/downstream.py
     - tests/integration/test_hot_reload.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T10:26:47.495785+00:00'
   - id: fix.blockers.verify-blocker-fixes
     name: Verify blocker fixes (B1-B4)
     status: pending
