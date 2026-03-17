@@ -2967,3 +2967,35 @@ phases:
     depends_on:
     - reload.runtime.implement-reenumeration-and-conflict-rejection
     agent: python-executor
+  - id: reload.runtime.freeze-for-l2
+    name: Freeze for reload L2 verification
+    status: pending
+    description: 'step_type: planning
+
+      Freeze: lock snapshot for L2 reload runtime verification.
+
+      Requirements:
+
+      - record `git rev-parse HEAD`
+
+      - record `git status` clean
+
+      - declare reload fixture and connection-state snapshot under test
+
+      - state that no code changes are allowed until the subsequent verify step completes
+
+      agent_source: default'
+    verification: '- Freeze evidence includes commit SHA, clean status, fixture declaration,
+      and no-change statement'
+    evidence_template: '## Freeze Evidence
+
+      - Commit: <git rev-parse HEAD>
+
+      - Git status clean: yes/no
+
+      - Reload fixture/state snapshot: <details>
+
+      - No code changes until `reload.runtime.verify-reload-runtime`: yes/no'
+    depends_on:
+    - reload.runtime.integrate-notifications-and-warning-emission
+    agent: python-executor
