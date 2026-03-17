@@ -2974,13 +2974,13 @@ phases:
     agent: gate-reviewer
 - id: gateway.test
   name: gateway.test
-  status: pending
+  status: in_progress
   depends_on:
   - gateway.contract
   steps:
   - id: gateway.test.add-runtime-lifecycle-tests
     name: Add runtime lifecycle tests
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.9\
       \ shell/gateway.py -- Gateway Lifecycle\n  - docs/DESIGN.md#4.10 shell/downstream.py\
       \ -- Downstream Server Management\n  - docs/DESIGN.md#4.11 shell/upstream.py\
@@ -3016,6 +3016,8 @@ phases:
 
       - Runtime readiness path fixture: <path>'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T07:50:36.174639+00:00'
   - id: gateway.test.gate
     name: Gate gateway.test
     status: pending
