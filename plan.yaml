@@ -10497,33 +10497,19 @@ phases:
   - id: cap.cleanup.remove-legacy
     name: Remove all remaining deprecated code
     status: pending
-    description: 'Remove all remaining deprecated code: SideEffectPolicy enum if still
-      present, check_side_effect function if still present, any tools field compatibility
-      shims if migration period is complete, any side_effect_policy handling in config
-      parser. Clean grep: no SideEffectPolicy or check_side_effect in src/.'
+    description: 'Remove all remaining deprecated code: SideEffectPolicy enum, check_side_effect
+      function (if still present), side_effect_policy handling in config parser. Keep
+      `tools:` as deprecated alias with warning during migration period (do NOT remove
+      tools: support yet — that happens after one release cycle per MIGRATION-003).
+      This step may be a no-op if prior phases already removed all legacy code. If
+      grep already returns 0 matches, report that as evidence. Do not make changes
+      for the sake of making changes.'
     verification: grep 'SideEffectPolicy\|check_side_effect\|side_effect_policy' src/tela/
       returns 0 matches. All tests pass. invar guard passes.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Removed:
-
-      - SideEffectPolicy enum: yes/no
-
-      - check_side_effect function: yes/no
-
-      - side_effect_policy config handling: yes/no
-
-      Verification:
-
-      - grep output: 0 matches in src/
-
-      - Full test suite: pass/fail
-
-      - invar guard: pass/fail
-
-      Gaps/Notes:'
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -rn ''SideEffectPolicy''
+      src/tela/ output:\ngrep -rn ''check_side_effect'' src/tela/ output:\ngrep -rn
+      ''side_effect_policy'' src/tela/ output:\npytest -x output (last 20 lines):\ninvar
+      guard output (last 20 lines):\nGaps/Notes:'
     agent: python-executor
   - id: cap.cleanup.gate
     name: Gate review
