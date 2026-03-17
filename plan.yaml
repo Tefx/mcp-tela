@@ -9725,6 +9725,23 @@ phases:
   status: pending
   depends_on:
   - retest2.full
+  steps:
+  - id: rt.env_field.impl
+    name: Add env field to ServerConfig
+    status: pending
+    description: 'Add env: dict[str, str] = Field(default_factory=dict) to ServerConfig
+      in models.py. Update config parser to handle env field. Update tela.yaml.example
+      with env example.'
+    verification: invar guard passes. ServerConfig accepts env field. Config parser
+      handles env with ${VAR} expansion.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification: invar guard output + test showing env field parsed
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: rt.downstream
   name: Downstream MCP Client Connections
   status: locked
