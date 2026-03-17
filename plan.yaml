@@ -5686,3 +5686,74 @@ phases:
   status: locked
   depends_on:
   - fix.blockers
+  steps:
+  - id: fix.medium.config.m2-m3-relocate-result-type-and-consolidate-error-models
+    name: 'M2+M3: Relocate Result type and consolidate error models'
+    status: pending
+    description: "step_type: implementation\nspec_refs:\n  - docs/DESIGN.md#4.3 core/errors.py\n\
+      touch_paths:\n  - src/tela/shell/config_loader.py (remove Result definition)\n\
+      \  - src/tela/shell/result.py (NEW -- canonical Result location)\n  - src/tela/core/errors.py\
+      \ (NEW -- per DESIGN.md)\n  - All shell/*.py files (update imports)\n  - src/tela/commands/*.py\
+      \ (update imports)\nconflict_rationale: Import changes touch many files -- must\
+      \ serialize with M1.\n\nProblem M2:\n- `Result[T,E]` type is defined in `config_loader.py`,\
+      \ creating misleading dependencies\n- Every shell module imports from config_loader\
+      \ just for Result\n\nProblem M3:\n- DESIGN.md specifies `core/errors.py` but\
+      \ it doesn't exist\n- 3 error models coexist: ConfigContractError (config.py),\
+      \ TelaError (models.py), ad-hoc strings\n\nTasks:\n1. Create `src/tela/shell/result.py`\
+      \ with the `Result` class (Shell zone, since it handles I/O boundaries)\n2.\
+      \ Update all imports from `config_loader.Result` to `result.Result`\n3. Create\
+      \ `src/tela/core/errors.py` per DESIGN.md with consolidated error types\n4.\
+      \ Move `ConfigContractError` from config.py to core/errors.py\n5. Keep `TelaError`\
+      \ in models.py (it's a Pydantic model, not an exception)\n6. Update all imports\n\
+      \nOut-of-scope: Do not change error semantics, only locations."
+    verification: '- Result class in shell/result.py
+
+      - core/errors.py exists with ConfigContractError
+
+      - No imports from config_loader.Result remain
+
+      - All tests pass
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/config_loader.py
+    - docs/DESIGN.md
+    agent: python-senior
+  - id: fix.medium.config.m4-m8-m10-fix-config-wiring-issues
+    name: 'M4+M8+M10: Fix config wiring issues'
+    status: pending
+    description: "step_type: implementation\nspec_refs:\n  - docs/INTERFACES.md#B.\
+      \ Configuration\n  - docs/DESIGN.md#Startup Sequence\ntouch_paths:\n  - src/tela/shell/gateway.py\
+      \ (M4: double load_config)\n  - src/tela/shell/config_loader.py (M8: unset env\
+      \ vars)\n  - src/tela/core/config.py (M8: env expansion)\n  - src/tela/shell/upstream.py\
+      \ (M10: default_posture bridging)\nconflict_rationale: Gateway.py overlaps with\
+      \ B2 -- must wait for blockers.gate.\n\nProblem M4:\n- `bind_gateway_startup`\
+      \ loads config via `load_config()`, then `gateway_start` might load again\n\
+      - Double `load_config` call is redundant\n\nProblem M8:\n- Unset env vars in\
+      \ config values are silently preserved (e.g., `$UNSET_VAR` stays as literal)\n\
+      - INTERFACES.md says should error on unresolved env vars\n\nProblem M10:\n-\
+      \ `ServerConfig.default_posture` is parsed but not bridged to upstream function\
+      \ parameters\n- Enforcement functions need server default posture but it's not\
+      \ passed through\n\nTasks:\n1. M4: Remove redundant load_config call; pass TelaConfig\
+      \ through from bind_gateway_startup to gateway_start\n2. M8: In `_expand_env_token`,\
+      \ when env var is not found in env_vars, raise ConfigContractError instead of\
+      \ preserving the literal\n3. M10: Bridge ServerConfig.default_posture to enforcement\
+      \ chain by passing it through upstream handlers\n\nFailure-mode checklist:\n\
+      - M8: Ensure `$` in non-variable context (e.g., dollar amounts) doesn't trigger\
+      \ false errors\n- M10: Ensure default_posture=NONE is the correct fallback when\
+      \ not specified"
+    verification: '- No double load_config call in gateway startup path
+
+      - Unset env vars raise error (not silently preserved)
+
+      - Default posture flows from ServerConfig to enforcement
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/gateway.py
+    - src/tela/shell/config_loader.py
+    - src/tela/core/config.py
+    - src/tela/shell/upstream.py
+    agent: python-executor
