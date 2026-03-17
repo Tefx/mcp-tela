@@ -9400,7 +9400,7 @@ phases:
     agent: gate-reviewer
   - id: retest2.full.regression-suite-fix-batch
     name: regression-suite-fix-batch
-    status: claimed
+    status: done
     description: "Fix ALL blockers and related requirement drift found by `retest2.full.regression-suite`.\n\
       \nstep_type: implementation\nsymbolic_testing: true\ntags: [\"integration\"\
       ]\nprior_loop:\n  - retest2.full.regression-suite\nremaining_blocker: doctest\
@@ -9468,6 +9468,55 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T14:13:19.440714+00:00'
+    done_at: '2026-03-17T14:32:22.086142+00:00'
+    evidence: 'Artifact:
+
+      - Step branch commits: `98b2b9f`, `45c8b53`
+
+      - Main squash commit: `2ce54a1` (`[vectl] step-retest2.full.regression-suite-fix-batch
+      completed`)
+
+
+      Verification:
+
+      - `uv run pytest -q` -> 316 passed
+
+      - `uv run pytest --doctest-modules src/tela/` -> 56 passed, 5 skipped
+
+      - `uv run invar guard --all` -> passed (static errors=0, doctest phase passed)
+
+      - `uv run pytest tests/repro/ -q` -> 46 passed
+
+
+      Spec link:
+
+      - `retest2.full.regression-suite-fix-batch` (batched remediation for findings
+      from `retest2.full.regression-suite`)
+
+
+      Files changed (as reported by worker and merged):
+
+      - `src/tela/__main__.py`
+
+      - `src/tela/core/contracts.py`
+
+      - `src/tela/commands/audit_cmd.py`
+
+      - plus consolidated first-pass batch files: `README.md`, `docs/DESIGN.md`, `docs/INTERFACES.md`,
+      `src/tela/cli.py`, `src/tela/commands/profiles_cmd.py`, `src/tela/core/errors.py`,
+      `tests/core/test_errors.py`
+
+
+      Notes:
+
+      - Root cause for invar/doctest blocker addressed by guarding CLI execution in
+      `__main__` import path and stabilizing doctest expectations.
+
+      - Blind-path requirement drift addressed via documented fallback to executable
+      repro suite path.
+
+      - This step handled ALL blocker families in a single batched fix pass before
+      retest.'
   - id: retest2.full.regression-suite-retest-batch
     name: regression-suite-retest-batch
     status: pending
