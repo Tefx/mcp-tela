@@ -8939,3 +8939,102 @@ phases:
     depends_on:
     - retest2.full.regression-suite
     agent: blind-tester
+  - id: retest2.full.findings-coverage-audit
+    name: findings-coverage-audit
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+
+      Findings coverage audit: verify ALL 32 remaining issues are addressed.
+
+
+      ## Checklist (ALL must be checked)
+
+
+      ### MEDIUM (6)
+
+      - [ ] Issue 1: _runtime_lock used in gateway_start/shutdown/status
+
+      - [ ] Issue 2: _audit_lock protects audit_write and file writes
+
+      - [ ] Issue 3: on_tools_changed acquires _registry_lock
+
+      - [ ] Issue 4: audit_init/audit_set_max_entries/audit_close lock-protected
+
+      - [ ] Issue 5: load_config called exactly once in tela start flow
+
+      - [ ] Issue 6: No tautological contracts in config.py
+
+
+      ### SHOULD_FIX (8)
+
+      - [ ] Issue 7: DESIGN.md command filenames match actual *_cmd.py
+
+      - [ ] Issue 8: DESIGN.md Result import path correct
+
+      - [ ] Issue 9: DESIGN.md exception hierarchy accurate
+
+      - [ ] Issue 10: catalog.py in DESIGN.md module spec
+
+      - [ ] Issue 11: ConnectionContext.token addressed
+
+      - [ ] Issue 12: tools_digest uses sha256:... format
+
+      - [ ] Issue 13: _audit_level not write-only
+
+      - [ ] Issue 14: upstream.py under 300 lines
+
+
+      ### LOW (12)
+
+      - [ ] Issue 15: expand_env_vars public API exposed
+
+      - [ ] Issue 16: __main__.py exists, python -m tela works
+
+      - [ ] Issue 17: Error code constants exported
+
+      - [ ] Issue 18: validate_config checks command/url
+
+      - [ ] Issue 19: contracts.py pre doctest passes
+
+      - [ ] Issue 20: connections_cmd.py and status_cmd.py doctests pass
+
+      - [ ] Issue 21: on_config_changed documented as deferred
+
+      - [ ] Issue 22: call_tool/re_enumerate documented as deferred
+
+      - [ ] Issue 23: notify_tools_changed documented as deferred
+
+      - [ ] Issue 24: ToolConflict unused import removed
+
+      - [ ] Issue 25: validate_config postcondition not format-coupled
+
+      - [ ] Issue 26: handle_tools_call deferred import documented
+
+
+      ### TEST FAILURES (6)
+
+      - [ ] Issue 27: contracts.py::pre doctest passes
+
+      - [ ] Issue 28: contracts.py::post doctest passes
+
+      - [ ] Issue 29: expand_env_vars importable
+
+      - [ ] Issue 30: python -m tela works
+
+      - [ ] Issue 31: error code constants importable
+
+      - [ ] Issue 32: server without command/url rejected by validation
+
+
+      For each issue, provide: grep/test evidence showing the fix is in place.'
+    verification: '- All 32 issues checked with evidence
+
+      - 0 uncovered issues remaining
+
+      - Evidence is grep/test output, not summaries'
+    depends_on:
+    - retest2.full.clean-env-smoke
+    agent: integration-verifier
