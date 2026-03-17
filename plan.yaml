@@ -8858,3 +8858,14 @@ phases:
     depends_on:
     - fix2.upstream-split.verify-split
     agent: gate-reviewer
+- id: retest2.full
+  name: 'Retest Pass 2: Full Regression and Verification Suite'
+  status: locked
+  depends_on:
+  - fix2.concurrency
+  - fix2.contracts
+  - fix2.public-api
+  - fix2.docs
+  - fix2.doctests
+  - fix2.upstream-split
+  - fix2.reload-stubs
