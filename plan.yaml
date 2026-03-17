@@ -5819,3 +5819,72 @@ phases:
   status: locked
   depends_on:
   - fix.blockers
+  steps:
+  - id: fix.medium.audit.m5-m6-fix-audit-timestamp-and-bounded-store
+    name: 'M5+M6: Fix audit timestamp and bounded store'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/audit.py\n\
+      harness_refs:\n  - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
+      \nProblem M5:\n- Audit timestamp uses string comparison for filtering (`e.timestamp\
+      \ >= since`)\n- `+00:00` vs `Z` format inconsistency breaks string ordering\n\
+      - ISO-8601 string comparison is not reliable for datetime ordering\n\nProblem\
+      \ M6:\n- In-memory audit store `_audit_entries` is unbounded\n- Long-running\
+      \ processes will leak memory indefinitely\n\nTasks:\n1. M5: Replace string comparison\
+      \ in `audit_query` with proper `datetime` comparison\n   - Parse `since` parameter\
+      \ as datetime\n   - Parse each entry's `timestamp` as datetime\n   - Handle\
+      \ both `+00:00` and `Z` suffixes\n   - Normalize `_now_iso()` output to consistent\
+      \ format\n2. M6: Add configurable max entries with FIFO eviction in `_audit_entries`\n\
+      \   - Default max: 10000 entries\n   - When limit reached, evict oldest entries\n\
+      \   - Configurable via `audit_init` if it exists (from B2 fix)\n   - Use `collections.deque(maxlen=N)`\
+      \ for efficient bounded storage\n\nPattern: Use `datetime.fromisoformat()` for\
+      \ parsing (Python 3.11+)"
+    verification: '- Timestamp comparison uses datetime, not strings
+
+      - Both +00:00 and Z formats handled
+
+      - Audit store bounded at configurable max
+
+      - Memory does not grow unbounded
+
+      - uv run pytest tests/shell/test_audit.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/audit.py
+    - tests/shell/test_audit.py
+    agent: python-executor
+  - id: fix.medium.audit.m7-m9-wire-fastmcp-and-implement-on-config-changed
+    name: 'M7+M9: Wire fastmcp and implement on_config_changed'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/reload.py\
+      \ (M9: on_config_changed stub)\n  - pyproject.toml (M7: verify fastmcp dependency)\n\
+      \  - src/tela/shell/upstream.py (M7: import fastmcp where needed)\n  - src/tela/shell/downstream.py\
+      \ (M7: import fastmcp where needed)\nharness_refs:\n  - tests/shell/test_reload.py\n\
+      \nProblem M7:\n- `fastmcp>=2.0.0` declared as dependency but never imported\
+      \ anywhere\n- Gateway cannot actually communicate with downstream MCP servers\n\
+      \nProblem M9:\n- `on_config_changed` hot reload stub raises NotImplementedError\n\
+      - INTERFACES.md lists config file change as a reload trigger\n\nTasks:\n1. M7:\
+      \ Import and use fastmcp in downstream.py (call_tool, re_enumerate) and upstream.py\
+      \ (MCP server setup)\n   - If fastmcp is not suitable for current architecture,\
+      \ document why and adjust dependency\n   - At minimum, verify the import works:\
+      \ `import fastmcp`\n2. M9: Implement `on_config_changed(new_config: TelaConfig)`\
+      \ in reload.py:\n   - Compare new config servers with current config servers\n\
+      \   - For added/changed servers: connect and enumerate\n   - For removed servers:\
+      \ disconnect\n   - Run conflict detection on new tool set\n   - Emit audit entry\
+      \ for config reload event\n\nNote: M7 overlaps with H3 (implement stubs). If\
+      \ H3 already wires fastmcp, this step should verify and clean up. If H3 deferred\
+      \ fastmcp, this step must complete the wiring."
+    verification: '- `import fastmcp` succeeds
+
+      - on_config_changed no longer raises NotImplementedError
+
+      - Config reload detects added/removed/changed servers
+
+      - uv run pytest tests/shell/test_reload.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/reload.py
+    - src/tela/shell/downstream.py
+    - pyproject.toml
+    agent: python-executor
