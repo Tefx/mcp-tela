@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from tela.core.models import (
+    AuditConfig,
     AuditEntry,
     AuditLevel,
     ConnectionContext,
@@ -114,6 +115,44 @@ def build_audit_entry(
 
 _audit_entries: list[AuditEntry] = []
 _audit_log_path: Path | None = None
+_audit_level: AuditLevel = AuditLevel.L2
+
+
+# @invar:allow dead_export: audit wiring is connected in audit.runtime step.
+def audit_init(config: "AuditConfig") -> Result[None, str]:
+    """Initialize audit subsystem from AuditConfig.
+
+    Sets the module-level audit log path and level. Creates parent
+    directory if needed. Backward-compatible: if never called, behavior
+    is unchanged (in-memory only, default L2 level).
+
+    Examples:
+        >>> from tela.core.models import AuditConfig, AuditLevel
+        >>> r = audit_init(AuditConfig(level=AuditLevel.L1, output="/tmp/tela-test-audit.jsonl"))
+        >>> r.is_ok
+        True
+
+    Args:
+        config: AuditConfig with level and output path.
+
+    Returns:
+        Result[None, str] on success, or error string on failure.
+    """
+    global _audit_log_path, _audit_level
+
+    _audit_level = config.level
+
+    expanded = Path(config.output).expanduser()
+    if not expanded.is_absolute():
+        expanded = expanded.resolve()
+
+    try:
+        expanded.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        return Result(error=f"AUDIT_INIT_ERROR: cannot create directory: {e}")
+
+    _audit_log_path = expanded
+    return Result(value=None)
 
 
 # @invar:allow dead_export: audit accessor used by tests and integration.
@@ -172,6 +211,8 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
 async def audit_close() -> Result[None, str]:
     """Flush and close the audit log.
 
+    Resets the audit log path to None (disabling disk persistence).
+
     Examples:
         >>> import asyncio
         >>> r = asyncio.run(audit_close())
@@ -181,6 +222,8 @@ async def audit_close() -> Result[None, str]:
     Returns:
         Result[None, str] always succeeds.
     """
+    global _audit_log_path
+    _audit_log_path = None
     return Result(value=None)
 
 

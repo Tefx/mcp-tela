@@ -21,6 +21,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.config_loader import Result, load_config
+from tela.shell.audit import audit_init
 from tela.shell.downstream import connect_all, disconnect_all, get_all_tools
 
 
@@ -161,6 +162,11 @@ async def gateway_start(
     )
     if connect_result.is_err:
         return Result(error=connect_result.error)
+
+    # Initialize audit subsystem from config
+    audit_result = audit_init(effective_config.audit)
+    if audit_result.is_err:
+        return Result(error=audit_result.error)
 
     # Store runtime state
     _runtime.config = effective_config
