@@ -6977,7 +6977,7 @@ phases:
   steps:
   - id: fix.low.tests.l17-fix-reload-tools-digest-to-use-sha-256
     name: 'L17: Fix reload tools_digest to use SHA-256'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/reload.py\n\
       harness_refs:\n  - tests/shell/test_reload.py\n\nProblem:\n- reload.py computes\
       \ tools_digest as raw concatenation of tool names: `':'.join(tool_names)`\n\
@@ -6998,6 +6998,9 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:55:30.384917+00:00'
+    done_at: '2026-03-17T10:57:13.588997+00:00'
+    evidence: 'Commit: 487cc5d. Changed tools_digest from raw concat to SHA-256 hash
+      (16 hex chars). Updated test. 296 passed.'
   - id: fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
     name: 'L19: Replace source-text model tests with behavioral tests'
     status: pending
