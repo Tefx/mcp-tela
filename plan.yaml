@@ -8760,7 +8760,7 @@ phases:
       Gaps/Notes: none'
   - id: fix2.doctests.verify-doctests
     name: verify-doctests
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L1
@@ -8791,6 +8791,12 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:56:03.661445+00:00'
+    done_at: '2026-03-17T11:57:28.255427+00:00'
+    evidence: '## Evidence (integration-verifier)
+
+      Doctests: 56 passed, 5 skipped (intentional +SKIP directives), 0 failures
+
+      Full suite: 311 passed, 0 failures'
   - id: fix2.doctests.gate
     name: gate
     status: pending
