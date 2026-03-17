@@ -5,6 +5,10 @@
 **Non-scope**: Internal implementation details, algorithms, storage layouts.
 **Source documents**: docs/INTERFACES.md, opifex/design/tela-clean-gateway.md, opifex/design/architecture.md, contracts/*.
 
+For operator setup, deployment patterns, and end-user examples, see
+`docs/USAGE.md`. For a commented configuration template, see
+`tela.yaml.example`.
+
 ---
 
 ## 1. System Overview

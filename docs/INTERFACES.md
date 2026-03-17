@@ -1,5 +1,9 @@
 # tela -- Interface Specification
 
+For an operator-oriented walkthrough, including stdio vs SSE deployment advice,
+client integration patterns, and worked examples, see `docs/USAGE.md`. For a
+fully commented configuration template, see `tela.yaml.example`.
+
 ## A. CLI Interface
 
 All commands support `--json` for machine-readable output.
