@@ -10485,6 +10485,31 @@ phases:
   status: locked
   depends_on:
   - cap.shell
+  steps:
+  - id: cap.docs.update
+    name: Update documentation
+    status: pending
+    description: Update DESIGN.md (enforcement chain description, profile examples),
+      INTERFACES.md (profile schema, enforcement steps), tela.yaml.example (profile
+      format), tela.yaml (local test config). Remove side_effect_policy from all docs.
+      Add migration notes referencing ADR-003.
+    verification: grep 'side_effect_policy' in docs/ returns only ADR-003 and MIGRATION-003
+      (historical). All profile examples use capabilities format. Enforcement chain
+      described as 3 core steps.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - side_effect_policy in docs (non-ADR): 0
+
+      - Profile examples use capabilities: yes/no
+
+      - Enforcement steps documented: count
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: cap.cleanup
   name: Remove Deprecated Code
   status: locked
