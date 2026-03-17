@@ -5078,7 +5078,7 @@ phases:
       - OPEN'
 - id: fix.blockers
   name: Blocker Fixes (B1-B4)
-  status: in_progress
+  status: done
   steps:
   - id: fix.blockers.b1-wire-all-cli-subcommands
     name: 'B1: Wire all CLI subcommands'
@@ -5601,7 +5601,7 @@ phases:
       ### Verdict: PASS'
   - id: fix.blockers.gate
     name: 'Gate: Blocker fixes (B1-B4)'
-    status: claimed
+    status: done
     description: "Gate review: Verify blocker fix phase completion and quality.\n\n\
       review_depth: THOROUGH\nreview_depth_rationale:\n  - Phase fixes 4 blockers\
       \ affecting core CLI, audit, config, and reload\n  - All touches state semantics\
@@ -5624,9 +5624,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T10:38:09.899677+00:00'
+    done_at: '2026-03-17T10:38:20.265399+00:00'
+    evidence: 'Gate: Blocker Fixes (B1-B4) PASSED
+
+
+      All 4 blocker implementation steps completed with evidence.
+
+      Independent verification step (fix.blockers.verify-blocker-fixes) passed with
+      L2 independence.
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 280 passed, 7 pre-existing repro failures (no regressions)
+
+      - Run: uv run invar guard -> 0 errors
+
+      - All 5 CLI subcommands callable (B1)
+
+      - Audit persists to JSONL on disk (B2)
+
+      - Config name injection from dict keys works (B3)
+
+      - Full registry rollback on conflict (B4)
+
+
+      Commits: d94df04, 5df75ba, af49774, ac731a3'
 - id: fix.high
   name: High-Severity Fixes (H1-H4)
-  status: locked
+  status: pending
   depends_on:
   - fix.blockers
   steps:
@@ -5930,7 +5956,7 @@ phases:
     agent: gate-reviewer
 - id: fix.medium.config
   name: 'Medium Fixes: Config and Wiring (M1-M4, M8, M10)'
-  status: locked
+  status: pending
   depends_on:
   - fix.blockers
   steps:
@@ -6063,7 +6089,7 @@ phases:
     agent: gate-reviewer
 - id: fix.medium.audit
   name: 'Medium Fixes: Audit and Runtime (M5-M7, M9)'
-  status: locked
+  status: pending
   depends_on:
   - fix.blockers
   steps:
