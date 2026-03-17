@@ -9720,3 +9720,8 @@ phases:
 
       - Original blocker family from `retest2.full.regression-suite` is closed; downstream
       smoke/audit/gate can proceed.'
+- id: rt.env_field
+  name: ServerConfig.env Field
+  status: pending
+  depends_on:
+  - retest2.full
