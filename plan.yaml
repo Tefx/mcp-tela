@@ -1753,7 +1753,7 @@ phases:
   steps:
   - id: open_mode.contract.define-open-mode-runtime-contracts
     name: Define open-mode runtime contracts
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
@@ -1797,6 +1797,21 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T06:47:01.977688+00:00'
+    done_at: '2026-03-17T06:53:05.632163+00:00'
+    evidence: "Artifact:\n- contract-only runtime binding surfaces defined.\n- commit:\
+      \ `7e50af4`.\n- files:\n  - `src/tela/commands/start.py`\n  - `src/tela/core/models.py`\n\
+      \  - `src/tela/shell/gateway.py`\n  - `src/tela/shell/upstream.py`\n  - `tests/shell/test_upstream.py`\n\
+      \  - `tests/integration/test_open_mode.py`\n\nVerification:\n- acceptance-only\
+      \ scope preserved (signatures/types/interfaces/stubs; no runtime startup/request\
+      \ handling implementation).\n- explicit runtime semantics encoded in contracts/docs:\n\
+      \  - stdio default, optional SSE on `--port`\n  - open mode initialize binds\
+      \ explicit resolved default profile\n  - missing/ambiguous default rejects initialize\n\
+      \  - client metadata cannot choose profile\n- commands:\n  - `invar_guard --changed`\
+      \ -> passed (0 errors, 0 warnings)\n  - `uv run pytest -q tests/shell/test_upstream.py\
+      \ tests/integration/test_open_mode.py` -> `6 passed`\n  - `uv run pytest -q\
+      \ tests/shell/test_config_loader.py tests/core/test_models.py` -> `12 passed`\n\
+      \nPlan mutation payload:\n- explicit no-change\n\nGaps/Notes:\n- runtime wiring\
+      \ remains deferred to `open_mode.runtime` per out-of-scope guardrail."
   - id: open_mode.contract.gate
     name: Gate open_mode.contract
     status: pending
