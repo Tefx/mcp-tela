@@ -6436,7 +6436,7 @@ phases:
       - INVAR.md Shell zone rules'
   - id: fix.medium.config.gate
     name: 'Gate: Medium config fixes (M1-M4, M8, M10)'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify medium config fix phase completion.
 
 
@@ -6464,6 +6464,8 @@ phases:
     - fix.medium.config.m1-shell-result-convention
     - fix.medium.config.m4-m8-m10-fix-config-wiring-issues
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T10:55:08.144574+00:00'
 - id: fix.medium.audit
   name: 'Medium Fixes: Audit and Runtime (M5-M7, M9)'
   status: in_progress
