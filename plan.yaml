@@ -8869,3 +8869,33 @@ phases:
   - fix2.doctests
   - fix2.upstream-split
   - fix2.reload-stubs
+  steps:
+  - id: retest2.full.regression-suite
+    name: regression-suite
+    status: pending
+    description: "step_type: verification\nindependence_level: L2\n\nFull regression\
+      \ test suite run in clean environment.\n\n## Required Test Runs\n\n1. **Full\
+      \ pytest suite**: `uv run pytest -q` -- expect 311+ tests passing, 0 failures\n\
+      2. **Doctests**: `uv run pytest --doctest-modules src/tela/` -- expect 0 failures\n\
+      3. **Invar guard**: `uv run invar guard --all` -- expect 0 errors, 0 warnings\n\
+      4. **Repro tests**: `uv run pytest tests/repro/ -q` -- expect 46+ tests passing\n\
+      5. **Blind tester tests**: `uv run pytest tests/blind/ -q` -- expect 71+ tests\
+      \ passing (including previously failing 29-32)\n\n## Evidence Requirements\n\
+      - Paste actual command output for each run (not summaries)\n- Report exact pass/fail\
+      \ counts\n- If any failures, categorize as: pre-existing vs new regression vs\
+      \ known limitation\n\n## Specific Regression Checks\n- Verify the 6 previously-failing\
+      \ tests now pass:\n  - contracts.py::pre doctest\n  - contracts.py::post doctest\
+      \  \n  - expand_env_vars importable\n  - python -m tela works\n  - error code\
+      \ constants importable\n  - server without command/url rejected"
+    verification: '- Full pytest: 311+ passed, 0 failed
+
+      - Doctests: 0 failures
+
+      - Invar guard: 0 errors
+
+      - Repro tests: 46+ passed
+
+      - Blind tests: 71+ passed (6 previously-failing now pass)
+
+      - All output pasted as evidence'
+    agent: integration-verifier
