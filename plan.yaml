@@ -8564,7 +8564,7 @@ phases:
       tests + invar guard passed.'
 - id: fix2.docs
   name: 'Fix Pass 2: DESIGN.md Documentation Drift (Issues 7-11)'
-  status: in_progress
+  status: done
   depends_on:
   - retest.final
   steps:
@@ -8666,7 +8666,7 @@ phases:
       Note: INVAR.md:79 still has returns.result (out of scope).'
   - id: fix2.docs.gate
     name: gate
-    status: claimed
+    status: done
     description: 'Gate review: Verify DESIGN.md documentation drift phase completion.
 
 
@@ -8690,6 +8690,10 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T11:59:51.652919+00:00'
+    done_at: '2026-03-17T12:00:59.554834+00:00'
+    evidence: 'APPROVED by gate-reviewer. All 5 DESIGN.md fixes verified: no returns.result,
+      *_cmd.py filenames, no old exception hierarchy, catalog.py spec present, no
+      ConnectionContext.token.'
 - id: fix2.reload-stubs
   name: 'Fix Pass 2: Reload, Digest, Stubs, and Wiring (Issues 5, 12-13, 21-23, 26)'
   status: locked
