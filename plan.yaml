@@ -2167,7 +2167,7 @@ phases:
       - Token mode unaffected: load_config skips open-mode resolution for token auth"
   - id: open_mode.runtime.implement-open-mode-initialize-binding
     name: Implement open-mode initialize binding
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
       \  - docs/DESIGN.md#7.2 Open Mode\n  - docs/INTERFACES.md#H. Open Mode (standalone,\
@@ -2219,6 +2219,8 @@ phases:
     depends_on:
     - open_mode.runtime.implement-default-profile-resolution
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T07:13:18.798357+00:00'
   - id: open_mode.runtime.integrate-cli-default-profile-wiring
     name: Integrate CLI default-profile wiring
     status: pending
