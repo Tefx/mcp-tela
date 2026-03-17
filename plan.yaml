@@ -4631,7 +4631,7 @@ phases:
   steps:
   - id: reload.runtime.implement-reenumeration-and-conflict-rejection
     name: Implement re-enumeration and conflict rejection
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3\
       \ Hot Reload Flow\n  - docs/INTERFACES.md#E. Hot Reload\ntouch_paths:\n  - src/tela/shell/reload.py\n\
@@ -4663,6 +4663,39 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:42:18.474022+00:00'
+    done_at: '2026-03-17T08:44:35.339908+00:00'
+    evidence: '## Implementation Evidence
+
+      - Reload coordinator paths: on_tools_changed, on_server_reconnect (on_config_changed
+      remains stub)
+
+      - Main-path command/output: `uv run pytest -q` -> 203 passed
+
+      - Conflict failure-path command/output: test_on_tools_changed_rejects_conflict
+      -> TOOL_CONFLICT error, previous tools preserved
+
+      - Notification integration deferred: yes (upstream.py and audit.py untouched)
+
+
+      ### Changes
+
+      - `src/tela/shell/reload.py`: Implement on_tools_changed (re-enumerate, conflict
+      check, rollback on conflict), on_server_reconnect (delegates to on_tools_changed)
+
+      - `src/tela/shell/downstream.py`: Fix DownstreamRegistry.register to unregister
+      old tools before updating
+
+      - `tests/shell/test_reload.py`: 6 tests (add tool, remove tool, conflict rejection,
+      reconnect, config stub)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 203 passed
+
+      - `uv run invar guard --changed` -> 0 errors, doctests pass
+
+      - Commit: dfe02fa, merged as 143646b'
   - id: reload.runtime.integrate-notifications-and-warning-emission
     name: Integrate notifications and warning emission
     status: pending
