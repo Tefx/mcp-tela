@@ -87,3 +87,55 @@ def test_on_server_reconnect_updates_tools() -> None:
 def test_on_config_changed_is_contract_stub() -> None:
     with pytest.raises(NotImplementedError, match="Contract stub"):
         asyncio.run(on_config_changed(TelaConfig()))
+
+
+# --- Notification callback ---
+
+def test_on_tools_changed_calls_notify_callback() -> None:
+    """Accepted reload calls the notification callback with tools digest."""
+    from tela.shell.reload import set_notify_callback
+
+    notified = []
+
+    async def capture_notify(digest: str) -> None:
+        notified.append(digest)
+
+    set_notify_callback(capture_notify)
+    try:
+        servers = {"fs": ServerConfig(name="fs", command="cmd")}
+        asyncio.run(connect_all(servers, tool_lists={"fs": [{"name": "tool_a", "inputSchema": {}}]}))
+        asyncio.run(on_tools_changed("fs", servers["fs"], [
+            {"name": "tool_a", "inputSchema": {}}, {"name": "tool_b", "inputSchema": {}}
+        ]))
+        assert len(notified) == 1
+        assert "tool_a" in notified[0]
+        assert "tool_b" in notified[0]
+    finally:
+        set_notify_callback(None)
+        _teardown()
+
+
+# --- Warning emission ---
+
+def test_on_tools_changed_conflict_emits_audit_warning() -> None:
+    """Rejected reload emits TOOL_CONFLICT audit warning."""
+    from tela.shell.audit import clear_audit_entries, get_audit_entries
+
+    clear_audit_entries()
+    servers = {
+        "fs": ServerConfig(name="fs", command="cmd"),
+        "custom": ServerConfig(name="custom", command="cmd2"),
+    }
+    asyncio.run(connect_all(servers, tool_lists={
+        "fs": [{"name": "read_file", "inputSchema": {}}],
+        "custom": [{"name": "other_tool", "inputSchema": {}}],
+    }))
+    asyncio.run(on_tools_changed(
+        "custom", servers["custom"],
+        [{"name": "read_file", "inputSchema": {}}],
+    ))
+    entries = get_audit_entries()
+    assert len(entries) == 1
+    assert entries[0].error_code == "TOOL_CONFLICT"
+    clear_audit_entries()
+    _teardown()

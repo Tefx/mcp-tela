@@ -1,7 +1,7 @@
 """Hot reload orchestration.
 
-Implements re-enumeration, conflict checking, and registry updates for
-tools/list_changed handling, server reconnection, and config changes.
+Implements re-enumeration, conflict checking, upstream notification
+callbacks, and TOOL_CONFLICT audit warning emission.
 
 No-drop-connection invariant: active upstream connections are never dropped
 during hot reload. On conflict, the previous tool list is preserved.
@@ -9,11 +9,36 @@ during hot reload. On conflict, the previous tool list is preserved.
 
 from __future__ import annotations
 
+from typing import Awaitable, Callable
+
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
-from tela.core.models import ServerConfig, TelaConfig
+from tela.core.models import (
+    AuditEntry,
+    AuditLevel,
+    ConnectionContext,
+    EnforcementResult,
+    EnforcementVerdict,
+    ServerConfig,
+    TelaConfig,
+)
+from tela.shell.audit import audit_write, build_audit_entry
 from tela.shell.config_loader import Result
 from tela.shell.downstream import get_all_tools, get_registry
+
+
+# Callback types for upstream notification
+NotifyCallback = Callable[[str], Awaitable[None]]  # tools_digest -> None
+
+_notify_callback: NotifyCallback | None = None
+
+
+# @invar:allow dead_export: reload wiring is connected in reload.runtime step.
+# @invar:allow shell_result: sets callback, not a failable I/O boundary.
+def set_notify_callback(callback: NotifyCallback | None) -> None:
+    """Set the upstream notification callback for tools/list_changed."""
+    global _notify_callback
+    _notify_callback = callback
 
 
 # @invar:allow dead_export: reload wiring is connected in reload.runtime step.
@@ -27,8 +52,8 @@ async def on_tools_changed(
     1. Re-enumerate the server's tool list
     2. Re-assign families
     3. Re-run conflict detection against all servers
-    4. No conflict: update resolved tool set
-    5. Conflict: reject change, keep previous tools
+    4. No conflict: update resolved tool set, notify upstream via callback
+    5. Conflict: reject change, keep previous tools, emit TOOL_CONFLICT warning
 
     Active upstream connections are NOT dropped during this process.
 
@@ -53,22 +78,19 @@ async def on_tools_changed(
     Returns:
         Result[None, str] on success, or error string if conflict detected.
     """
-
     registry = get_registry()
-
-    # Save previous state for rollback
     previous_tools = registry.get_all_tools().get(server_name, [])
 
     # Re-enumerate
     resolved = resolve_tools(server_name, server_config, new_tool_list)
 
-    # Temporarily update registry to check for conflicts
+    # Temporarily update registry
     registry.register(server_name, resolved)
 
-    # Check conflicts across all servers
+    # Check conflicts
     conflicts = detect_conflicts(registry.get_all_tools())
     if conflicts:
-        # Rollback: restore previous tools
+        # Rollback
         if previous_tools:
             registry.register(server_name, previous_tools)
         else:
@@ -77,9 +99,33 @@ async def on_tools_changed(
         conflict_desc = "; ".join(
             f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
         )
+
+        # Emit TOOL_CONFLICT audit warning
+        warning_entry = build_audit_entry(
+            level=AuditLevel.L1,
+            connection=ConnectionContext(
+                connection_id="system", profile_name="system",
+                connected_at="",
+            ),
+            tool_name=conflicts[0].tool_name,
+            server_name=server_name,
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="tool_conflict",
+                error_code="TOOL_CONFLICT",
+                error_message=conflict_desc,
+            ),
+        )
+        await audit_write(warning_entry)
+
         return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
 
-    # No conflict: accept the update
+    # Success: notify upstream if callback set
+    if _notify_callback is not None:
+        tool_names = sorted(t.name for ts in get_all_tools().values() for t in ts)
+        digest = ":".join(tool_names)
+        await _notify_callback(digest)
+
     return Result(value=None)
 
 
@@ -90,9 +136,6 @@ async def on_server_reconnect(
     tool_list: list[dict],
 ) -> Result[None, str]:
     """Handle a downstream server reconnecting after disconnect.
-
-    Re-enumerates tools and updates the registry. Delegates to
-    on_tools_changed for the actual re-enumeration and conflict checking.
 
     Examples:
         >>> import asyncio
@@ -123,7 +166,7 @@ async def on_server_reconnect(
 async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     """Handle configuration file change.
 
-    Contract stub: actual config reload deferred to full integration.
+    Contract stub: actual config reload deferred.
 
     Examples:
         >>> import asyncio
