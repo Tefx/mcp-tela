@@ -9730,3 +9730,8 @@ phases:
   status: locked
   depends_on:
   - rt.env_field
+- id: rt.upstream
+  name: Upstream MCP Server via fastmcp
+  status: locked
+  depends_on:
+  - rt.downstream
