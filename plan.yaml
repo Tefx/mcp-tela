@@ -4562,7 +4562,7 @@ phases:
       - Commit: 9e8b4f9, merged as 576cf63'
   - id: reload.test.gate
     name: Gate reload.test
-    status: pending
+    status: claimed
     description: 'Gate review: Verify reload runtime test phase completion.
 
       review_depth: STANDARD
@@ -4596,6 +4596,8 @@ phases:
     depends_on:
     - reload.test.add-hot-reload-tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T08:41:54.377880+00:00'
 - id: reload.runtime
   name: reload.runtime
   status: locked
