@@ -7,18 +7,14 @@ already-provided data and enforce deterministic validation contracts.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Mapping
 
+from tela.core.contracts import pre, post
 from pydantic import ValidationError
 
 from tela.core.models import AuthMode, ProfileConfig, TelaConfig
 
-pre: Callable[[Callable[..., bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
-post: Callable[[Callable[[Any], bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
+
 
 
 @dataclass(frozen=True)

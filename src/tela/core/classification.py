@@ -6,16 +6,11 @@ or leaves unclassified for the caller to apply a server default.
 
 from __future__ import annotations
 
-from typing import Any, Callable
 
+from tela.core.contracts import pre, post
 from tela.core.models import Posture, ServerConfig
 
-pre: Callable[[Callable[..., bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
-post: Callable[[Callable[[Any], bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
+
 
 
 @pre(lambda tool_name, server_config, mcp_annotations=None: isinstance(tool_name, str) and len(tool_name) > 0)

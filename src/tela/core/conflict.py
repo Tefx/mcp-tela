@@ -7,18 +7,13 @@ same name. Does NOT decide what to do about conflicts (caller decides).
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Callable
 
+from tela.core.contracts import pre, post
 from pydantic import BaseModel
 
 from tela.core.models import ResolvedTool
 
-pre: Callable[[Callable[..., bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
-post: Callable[[Callable[[Any], bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
+
 
 
 class ToolConflict(BaseModel):

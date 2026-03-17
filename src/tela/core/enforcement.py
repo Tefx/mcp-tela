@@ -6,8 +6,8 @@ Does NOT perform I/O, validate tokens, or look up profiles.
 
 from __future__ import annotations
 
-from typing import Any, Callable
 
+from tela.core.contracts import pre, post
 from tela.core.models import (
     EnforcementResult,
     EnforcementVerdict,
@@ -17,12 +17,7 @@ from tela.core.models import (
     SideEffectPolicy,
 )
 
-pre: Callable[[Callable[..., bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
-post: Callable[[Callable[[Any], bool]], Callable[[Any], Any]] = lambda _predicate: (
-    lambda func: func
-)
+
 
 _POSTURE_ORDER = {
     Posture.NONE: 0,
@@ -33,6 +28,7 @@ _POSTURE_ORDER = {
 
 
 @pre(lambda a, b: isinstance(a, Posture) and isinstance(b, Posture))
+@post(lambda result: isinstance(result, bool))
 def posture_le(a: Posture, b: Posture) -> bool:
     """Compare postures: is a <= b in the ordering?
 
@@ -93,6 +89,7 @@ def check_family_admission(
 
 
 @pre(lambda tool_name, family, profile: isinstance(tool_name, str))
+@post(lambda result: result is None or isinstance(result, EnforcementResult))
 def check_tool_override(
     tool_name: str,
     family: str,
