@@ -166,15 +166,16 @@ async def gateway_start(
         return Result(error=connect_result.error)
 
     # Initialize audit subsystem from config
-    audit_result = audit_init(effective_config.audit)
+    audit_result = await audit_init(effective_config.audit)
     if audit_result.is_err:
         return Result(error=audit_result.error)
 
     # Store runtime state
-    _runtime.config = effective_config
-    _runtime.startup_config = config
-    _runtime.start_time = time.monotonic()
-    _runtime.running = True
+    async with _runtime_lock:
+        _runtime.config = effective_config
+        _runtime.startup_config = config
+        _runtime.start_time = time.monotonic()
+        _runtime.running = True
 
     return Result(value=None)
 
@@ -194,50 +195,55 @@ async def gateway_shutdown() -> Result[None, str]:
     """
 
     disconnect_result = await disconnect_all()
-    _runtime.running = False
-    _runtime.start_time = None
-    _runtime.connections.clear()
+    async with _runtime_lock:
+        _runtime.running = False
+        _runtime.start_time = None
+        _runtime.connections.clear()
     return disconnect_result
 
 
 # @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 # @invar:allow shell_result: returns GatewayStatus per DESIGN.md spec, not a failable I/O boundary.
-def gateway_status() -> GatewayStatus:
+async def gateway_status() -> GatewayStatus:
     """Return current gateway runtime status.
 
     Examples:
-        >>> gateway_status().server_count
+        >>> import asyncio
+        >>> asyncio.run(gateway_status()).server_count
         0
 
     Returns:
         GatewayStatus with current runtime metrics.
     """
 
-    all_tools = get_all_tools()
-    uptime = time.monotonic() - _runtime.start_time if _runtime.start_time else 0.0
-    profile_count = len(_runtime.config.profiles) if _runtime.config else 0
+    async with _runtime_lock:
+        all_tools = get_all_tools()
+        uptime = time.monotonic() - _runtime.start_time if _runtime.start_time else 0.0
+        profile_count = len(_runtime.config.profiles) if _runtime.config else 0
 
-    return GatewayStatus(
-        uptime_seconds=uptime,
-        server_count=len(all_tools),
-        connected_servers=list(all_tools.keys()),
-        active_connections=len(_runtime.connections),
-        profile_count=profile_count,
-        total_tool_calls=_runtime.total_tool_calls,
-    )
+        return GatewayStatus(
+            uptime_seconds=uptime,
+            server_count=len(all_tools),
+            connected_servers=list(all_tools.keys()),
+            active_connections=len(_runtime.connections),
+            profile_count=profile_count,
+            total_tool_calls=_runtime.total_tool_calls,
+        )
 
 
 # @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 # @invar:allow shell_result: returns list[ConnectionContext] per DESIGN.md spec, not a failable I/O boundary.
-def gateway_connections() -> list[ConnectionContext]:
+async def gateway_connections() -> list[ConnectionContext]:
     """Return list of active upstream connections.
 
     Examples:
-        >>> gateway_connections()
+        >>> import asyncio
+        >>> asyncio.run(gateway_connections())
         []
 
     Returns:
         List of active ConnectionContext.
     """
 
-    return list(_runtime.connections)
+    async with _runtime_lock:
+        return list(_runtime.connections)

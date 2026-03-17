@@ -123,7 +123,7 @@ _audit_level: AuditLevel = AuditLevel.L2
 
 
 # @invar:allow dead_export: audit wiring is connected in audit.runtime step.
-def audit_init(config: "AuditConfig") -> Result[None, str]:
+async def audit_init(config: "AuditConfig") -> Result[None, str]:
     """Initialize audit subsystem from AuditConfig.
 
     Sets the module-level audit log path and level. Creates parent
@@ -131,8 +131,9 @@ def audit_init(config: "AuditConfig") -> Result[None, str]:
     is unchanged (in-memory only, default L2 level).
 
     Examples:
+        >>> import asyncio
         >>> from tela.core.models import AuditConfig, AuditLevel
-        >>> r = audit_init(AuditConfig(level=AuditLevel.L1, output="/tmp/tela-test-audit.jsonl"))
+        >>> r = asyncio.run(audit_init(AuditConfig(level=AuditLevel.L1, output="/tmp/tela-test-audit.jsonl")))
         >>> r.is_ok
         True
 
@@ -144,33 +145,36 @@ def audit_init(config: "AuditConfig") -> Result[None, str]:
     """
     global _audit_log_path, _audit_level
 
-    _audit_level = config.level
+    async with _audit_lock:
+        _audit_level = config.level
 
-    expanded = Path(config.output).expanduser()
-    if not expanded.is_absolute():
-        expanded = expanded.resolve()
+        expanded = Path(config.output).expanduser()
+        if not expanded.is_absolute():
+            expanded = expanded.resolve()
 
-    try:
-        expanded.parent.mkdir(parents=True, exist_ok=True)
-    except OSError as e:
-        return Result(error=f"AUDIT_INIT_ERROR: cannot create directory: {e}")
+        try:
+            expanded.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            return Result(error=f"AUDIT_INIT_ERROR: cannot create directory: {e}")
 
-    _audit_log_path = expanded
+        _audit_log_path = expanded
     return Result(value=None)
 
 
 # @invar:allow dead_export: audit configuration used by tests.
 # @invar:allow shell_result: sets bounded store size, not failable I/O.
-def audit_set_max_entries(max_entries: int) -> None:
+async def audit_set_max_entries(max_entries: int) -> None:
     """Set maximum in-memory audit entries (FIFO eviction).
 
     Examples:
-        >>> audit_set_max_entries(100)
+        >>> import asyncio
+        >>> asyncio.run(audit_set_max_entries(100))
     """
     global _audit_entries, _AUDIT_MAX_ENTRIES
-    _AUDIT_MAX_ENTRIES = max_entries
-    old_entries = list(_audit_entries)
-    _audit_entries = deque(old_entries[-max_entries:], maxlen=max_entries)
+    async with _audit_lock:
+        _AUDIT_MAX_ENTRIES = max_entries
+        old_entries = list(_audit_entries)
+        _audit_entries = deque(old_entries[-max_entries:], maxlen=max_entries)
 
 
 # @invar:allow dead_export: audit accessor used by tests and integration.
@@ -213,14 +217,15 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
     Returns:
         Result[None, str] on success.
     """
-    _audit_entries.append(entry)
+    async with _audit_lock:
+        _audit_entries.append(entry)
 
-    if _audit_log_path is not None:
-        try:
-            with open(_audit_log_path, "a") as f:
-                f.write(entry.model_dump_json() + "\n")
-        except OSError as e:
-            return Result(error=f"AUDIT_WRITE_ERROR: {e}")
+        if _audit_log_path is not None:
+            try:
+                with open(_audit_log_path, "a") as f:
+                    f.write(entry.model_dump_json() + "\n")
+            except OSError as e:
+                return Result(error=f"AUDIT_WRITE_ERROR: {e}")
 
     return Result(value=None)
 
@@ -241,7 +246,8 @@ async def audit_close() -> Result[None, str]:
         Result[None, str] always succeeds.
     """
     global _audit_log_path
-    _audit_log_path = None
+    async with _audit_lock:
+        _audit_log_path = None
     return Result(value=None)
 
 
