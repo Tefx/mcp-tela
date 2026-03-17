@@ -1569,7 +1569,7 @@ phases:
       \ blockers\n  - No SHOULD_FIX items\n  \nPlan mutation payload: explicit no-change"
 - id: config.impl
   name: config.impl
-  status: in_progress
+  status: done
   depends_on:
   - config.test
   steps:
@@ -1700,7 +1700,7 @@ phases:
       \ found.\n- verdict\n  - PASS\n\nPlan mutation payload:\n- explicit no-change"
   - id: config.impl.gate
     name: Gate config.impl
-    status: claimed
+    status: done
     description: 'Gate review: Verify config authority phase completion.
 
       review_depth: STANDARD
@@ -1736,9 +1736,18 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T06:43:23.071159+00:00'
+    done_at: '2026-03-17T06:46:23.295276+00:00'
+    evidence: "Artifact:\n- gate review report for config.impl phase.\n\nVerification:\n\
+      - reviewed steps findings\n  - `config.impl.implement-config-authority`: implementation\
+      \ landed with required semantics and passing tests/invar.\n  - `config.impl.verify-config-authority`:\
+      \ independent verification passed with centralized authority proof and required\
+      \ scenario coverage.\n- authority/fail-closed/leakage checks\n  - central authority\
+      \ path confirmed.\n  - token mode fail-closed behavior confirmed.\n  - no runtime\
+      \ binding leakage into config-only phase.\n- OPEN/BLOCKED decision\n  - OPEN:\
+      \ ready for `open_mode.contract`.\n\nPlan mutation payload:\n- explicit no-change"
 - id: open_mode.contract
   name: open_mode.contract
-  status: locked
+  status: pending
   depends_on:
   - config.impl
   steps:
