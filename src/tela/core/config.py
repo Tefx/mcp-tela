@@ -24,7 +24,7 @@ from tela.core.errors import ConfigContractError  # noqa: F401
 
 @pre(
     lambda value, env_vars: (
-        len(value) >= 0 and all(isinstance(key, str) for key in env_vars.keys())
+        isinstance(value, str) and all(isinstance(key, str) for key in env_vars.keys())
     )
 )
 @post(lambda result: "$\x00" not in result)
@@ -82,10 +82,11 @@ def _expand_env_token(value: str, env_vars: Mapping[str, str]) -> str:
 
 @pre(
     lambda value, env_vars: (
-        value is not Ellipsis and all(isinstance(key, str) for key in env_vars.keys())
+        isinstance(value, (str, int, float, bool, list, dict, type(None)))
+        and all(isinstance(key, str) for key in env_vars.keys())
     )
 )
-@post(lambda result: result is not Ellipsis)
+@post(lambda result: isinstance(result, (str, int, float, bool, list, dict, type(None))))
 def _expand_env_in_object(value: object, env_vars: Mapping[str, str]) -> object:
     """Recursively expand env tokens in string leaves."""
 
@@ -161,11 +162,11 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
 
 @pre(
     lambda config, cli_default_profile=None: (
-        len(config.profiles) >= 0
+        isinstance(config, TelaConfig)
         and (cli_default_profile is None or len(cli_default_profile) > 0)
     )
 )
-@post(lambda result: all(":" in error for error in result))
+@post(lambda result: isinstance(result, list) and all(isinstance(e, str) and len(e) > 0 for e in result))
 def validate_config(
     config: TelaConfig, cli_default_profile: str | None = None
 ) -> list[str]:
@@ -204,6 +205,18 @@ def validate_config(
         errors.append(
             "TOKEN_MODE_SECRETS_MISSING: token mode requires at least one secret."
         )
+
+    for name, server in config.servers.items():
+        has_command = server.command is not None
+        has_url = server.url is not None
+        if not has_command and not has_url:
+            errors.append(
+                f"SERVER_MISSING_TRANSPORT: server '{name}' must define either 'command' or 'url'."
+            )
+        elif has_command and has_url:
+            errors.append(
+                f"SERVER_AMBIGUOUS_TRANSPORT: server '{name}' must define either 'command' or 'url', not both."
+            )
 
     return errors
 
@@ -279,7 +292,7 @@ def resolve_open_mode_default_profile(
 
 
 @pre(lambda auth_mode: auth_mode in (AuthMode.OPEN, AuthMode.TOKEN))
-@post(lambda result: result in (True, False))
+@post(lambda result: isinstance(result, bool))
 def requires_open_mode_default_resolution(auth_mode: AuthMode) -> bool:
     """Declare whether open-mode default resolution must execute.
 
