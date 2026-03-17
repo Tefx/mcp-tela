@@ -231,8 +231,8 @@ ensures that new or unexpected tools cannot bypass policy silently.
 CapabilityToken validation is a connection-bind operation, not a per-call one.
 During MCP `initialize` / connection establishment, tela validates the token
 signature, expiry, and `tools_profile`, then binds the resulting profile to the
-connection context. Every `tools/call` request then passes through this 4-step
-enforcement chain:
+connection context. Every `tools/call` request then passes through the
+per-call enforcement chain (steps 3-6 of the 7-step model in DESIGN.md):
 
 ### 1. Family admission
 

@@ -75,7 +75,7 @@ src/tela/
     models.py                     # Data models (Pydantic): config, profiles, tokens, etc.
     config.py                     # Config parsing, validation, env var expansion
     token.py                      # Token validation logic (HMAC, expiry, dual-key)
-    enforcement.py                # 7-step enforcement chain (pure decision logic)
+    enforcement.py                # 7-step enforcement chain (pure decision logic; steps 1-2 are pre-conditions, steps 3-7 execute per-call)
     classification.py             # Tool posture classification (overrides, annotations, default)
     conflict.py                   # Tool name conflict detection
     family.py                     # Family mapping (server-is-family, overrides)
