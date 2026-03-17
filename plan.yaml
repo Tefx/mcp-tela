@@ -3065,3 +3065,66 @@ phases:
     depends_on:
     - reload.runtime.freeze-for-l2
     agent: integration-verifier
+  - id: reload.runtime.gate
+    name: Gate reload.runtime
+    status: pending
+    description: 'Gate review: Verify reload.runtime phase completion.
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Reload spans multiple runtime seams and has no-drop connection invariants.
+
+      - Phase contains integration-tagged work and L2 verification.
+
+      cross_cutting_focus:
+
+      - accepted reload notifies without disconnecting clients
+
+      - rejected reload warns and keeps previous tool set
+
+      - reload/downstream/upstream/audit share one reload fact set
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- All phase steps completed successfully
+
+      - Real-path evidence shows reload trigger reaches registry decision and notify/warn
+      outputs end-to-end
+
+      - Cross-surface conformance evidence shows reload/downstream/upstream/audit
+      share one reload fact set
+
+      - No unresolved blockers; phase ready for later execution sequencing'
+    evidence_template: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: reload.runtime
+
+
+      ### Runtime Surface Check
+
+      - Real notify/warn path exercised: yes/no
+
+      - No-drop evidence present: yes/no
+
+
+      ### Conformance Check
+
+      - Reload/downstream/upstream/audit share one reload fact set: yes/no
+
+      - Independent re-derivation absent: yes/no
+
+
+      ### Decision
+
+      - OPEN | BLOCKED'
+    depends_on:
+    - reload.runtime.implement-reenumeration-and-conflict-rejection
+    - reload.runtime.integrate-notifications-and-warning-emission
+    - reload.runtime.freeze-for-l2
+    - reload.runtime.verify-reload-runtime
+    agent: gate-reviewer
