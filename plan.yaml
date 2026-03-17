@@ -8375,3 +8375,38 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+  - id: fix2.public-api.verify-api
+    name: verify-api
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L1
+
+
+      As an INDEPENDENT TESTER, validate public API exposure fixes.
+
+
+      Verify:
+
+      1. `from tela.core.config import expand_env_vars` works in Python
+
+      2. `python -m tela --help` produces help text
+
+      3. `from tela.core.errors import AUTHZ_DENY` works (and other error codes)
+
+      4. No unused imports in downstream.py
+
+      5. All tests pass
+
+
+      Finding issues is a POSITIVE outcome.'
+    verification: '- Import evidence for each new public symbol
+
+      - python -m tela --help output
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    depends_on:
+    - fix2.public-api.fix-api-exposure
+    agent: integration-verifier
