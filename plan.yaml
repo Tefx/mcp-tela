@@ -517,7 +517,7 @@ phases:
     claimed_at: '2026-03-17T05:39:54.828202+00:00'
   - id: meta.review.review-implementation-plan-quality
     name: Review implementation-plan quality
-    status: pending
+    status: claimed
     description: Review all produced implementation plans from `meta.plan_creation`
       for completeness, dependency integrity, concrete agent assignment, evidence
       quality, and no implementation leakage at the meta layer. This review must explicitly
@@ -551,6 +551,8 @@ phases:
     - ../opifex/design/architecture.md
     - ../opifex/design/requirements.md
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-17T05:40:13.718772+00:00'
   - id: meta.review.audit-out-of-order-results
     name: Audit out-of-order results
     status: pending
