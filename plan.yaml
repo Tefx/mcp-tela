@@ -8801,7 +8801,7 @@ phases:
       Full suite: 311 passed, 0 failures'
   - id: fix2.doctests.gate
     name: gate
-    status: pending
+    status: claimed
     description: 'Gate review: Verify doctest fix phase completion.
 
 
@@ -8823,6 +8823,8 @@ phases:
     depends_on:
     - fix2.doctests.verify-doctests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:57:35.833341+00:00'
 - id: fix2.upstream-split
   name: 'Fix Pass 2: Upstream.py DX Threshold Split (Issue 14)'
   status: locked
