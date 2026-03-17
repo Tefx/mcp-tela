@@ -5814,3 +5814,8 @@ phases:
     - fix.medium.config.m1-shell-result-convention
     - fix.medium.config.m4-m8-m10-fix-config-wiring-issues
     agent: gate-reviewer
+- id: fix.medium.audit
+  name: 'Medium Fixes: Audit and Runtime (M5-M7, M9)'
+  status: locked
+  depends_on:
+  - fix.blockers
