@@ -26,5 +26,5 @@
       "description": "PersonaSpec id (stable persona identity). For audit correlation, not security verification."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }
