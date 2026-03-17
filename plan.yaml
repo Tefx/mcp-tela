@@ -691,7 +691,7 @@ phases:
       - explicit no-change\n  - no `vectl_mutate` corrections required."
   - id: meta.review.gate
     name: Gate meta planning completion
-    status: claimed
+    status: done
     description: Final meta gate before any non-meta execution planning proceeds.
       Confirm that conformance, quality, out-of-order audit, and cross-plan dependency
       synthesis are complete and that the resulting implementation plans are ready
@@ -731,6 +731,19 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T05:48:10.667851+00:00'
+    done_at: '2026-03-17T05:52:24.491991+00:00'
+    evidence: "Artifact:\n- meta review gate result: initially REJECT due to blocker.\n\
+      - blocker detected: unresolved enforcement wording conflict (7-step wording\
+      \ vs 4-step per-call wording with initialize-time binding).\n- docs-as-deliverable\
+      \ check: PASS (no docs deliverable drift).\n\nVerification:\n- dependency check\
+      \ result\n  - FAIL at initial gate: prior blocking conflict remained unresolved\
+      \ in authoritative planning basis.\n- readiness decision\n  - initial readiness:\
+      \ BLOCKED.\n  - remediation batched per protocol: created fix + regate follow-up\
+      \ steps.\n\nPlan mutation payload:\n- batched fix created via planner:\n  -\
+      \ `meta.review.fix-enforcement-wording-conflict` depends_on `meta.review.gate`\n\
+      \  - `meta.review.regate-enforcement-wording-conflict` depends_on `meta.review.fix-enforcement-wording-conflict`\n\
+      - transition rationale: original gate step completed with blocker captured;\
+      \ follow-up fix/re-gate chain now authoritative."
   - id: meta.review.fix-enforcement-wording-conflict
     name: Reconcile canonical enforcement wording conflict
     status: pending
