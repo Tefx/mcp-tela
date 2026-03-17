@@ -9123,7 +9123,7 @@ phases:
       - Verification step produced no plan mutations.'
   - id: fix2.upstream-split.gate
     name: gate
-    status: pending
+    status: claimed
     description: 'Gate review: Verify upstream.py split phase completion.
 
 
@@ -9147,6 +9147,8 @@ phases:
     depends_on:
     - fix2.upstream-split.verify-split
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T14:00:18.987664+00:00'
 - id: retest2.full
   name: 'Retest Pass 2: Full Regression and Verification Suite'
   status: locked
