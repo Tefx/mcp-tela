@@ -2530,6 +2530,54 @@ phases:
 
       - Upstream integration deferred: yes/no'
     agent: python-executor
+  - id: audit.runtime.integrate-audit-emission-and-query
+    name: Integrate audit emission and query
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#4.12 shell/audit.py -- Audit Log Writer\n  -\
+      \ docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n  - docs/DESIGN.md#5.6\
+      \ commands/audit_cmd.py -- tela audit\n  - docs/INTERFACES.md#A. CLI Interface\n\
+      touch_paths:\n  - src/tela/shell/audit.py\n  - src/tela/shell/upstream.py\n\
+      \  - src/tela/commands/audit_cmd.py\nharness_refs:\n  - tests/shell/test_audit.py\n\
+      \  - tests/integration/test_audit_levels.py\nconflict_rationale: This is the\
+      \ serial integration step for the shared upstream audit seam and audit CLI query\
+      \ path.\nTasks:\n- Integrate audit entry writing into upstream allow/deny/error\
+      \ paths.\n- Implement audit reader/query path for CLI-facing audit retrieval.\n\
+      - Preserve `_meta` hold/strip semantics and avoid changing gateway lifecycle\
+      \ wiring.\nIntegration path exercised: upstream tools/call result -> audit entry\
+      \ build/write -> audit query/read path\nOut-of-scope guardrail:\n- No hot-reload\
+      \ warning implementation; reload owns that consumer path.\n"
+    verification: '- Main path: upstream paths write audit entries and audit query
+      returns expected records
+
+      - Failure path: denied and downstream-error calls produce correct audit records
+
+      - Proof: shared audit emission occurs only through the integrated writer path'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name that invokes source through sink>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: upstream tools/call -> audit writer -> audit query'
+    depends_on:
+    - audit.runtime.implement-audit-entry-building
+    agent: python-executor
 - id: reload.test
   name: reload.test
   status: locked
