@@ -10339,27 +10339,21 @@ phases:
     name: Simplify enforcement.py
     status: pending
     description: 'Simplify enforcement.py: remove check_side_effect() function, update
-      enforce() to skip side-effect step, renumber steps if needed. Update @pre/@post
-      contracts. The enforcement chain becomes: (1) family admission, (2) tool override,
-      (3) posture ceiling check - done.'
-    verification: check_side_effect() removed. enforce() no longer calls it. Enforcement
-      chain is 3 core steps (family admission, tool override, posture). All contracts
-      pass. invar guard passes.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Verification:
-
-      - check_side_effect removed: yes/no
-
-      - enforce() updated: yes/no
-
-      - Step count after change: N
-
-      - invar guard: pass/fail
-
-      Gaps/Notes:'
+      enforce() to skip side-effect step. The per-call enforcement chain becomes 3
+      steps: (1) family admission, (2) tool override, (3) posture ceiling. Update
+      ALL enforcement.py functions that reference profile.tools to use profile.capabilities.
+      Update ALL doctests in enforcement.py to use capabilities= instead of tools=.
+      Update @pre/@post contracts.'
+    verification: check_side_effect() removed. enforce() no longer calls it. Per-call
+      enforcement chain is 3 steps. All profile.tools references changed to profile.capabilities.
+      All doctests updated. invar guard passes. All tests pass.
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -n ''check_side_effect''
+      src/tela/core/enforcement.py output:\ngrep -n ''profile.tools'' src/tela/core/enforcement.py
+      output:\ngrep -n ''\.tools'' src/tela/core/enforcement.py output:\ninvar guard
+      output (last 20 lines):\npytest -x output (last 20 lines):\nGaps/Notes:'
+    refs:
+    - src/tela/core/enforcement.py
+    - src/tela/core/models.py
     depends_on:
     - cap.impl.models
     agent: python-executor
