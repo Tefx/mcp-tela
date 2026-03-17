@@ -175,6 +175,20 @@ class EnforcementResult(BaseModel):
     error_message: str | None = None
 
 
+class MetaField(BaseModel):
+    """Per-call tracing metadata injected by anima.
+
+    Validation policy: tela accepts any dict as _meta from tool call
+    arguments and stores it as-is. The MetaField model is used for
+    typed access to known fields only.
+    """
+
+    trace_id: str
+    event_id: str | None = None
+    idempotency_key: str | None = None
+    instance_id: str | None = None
+    persona_id: str | None = None
+
 class AuditEntry(BaseModel):
     """A single audit log entry."""
 
@@ -191,6 +205,7 @@ class AuditEntry(BaseModel):
     param_hash: str | None = None
     request_content: dict | None = None
     response_content: dict | None = None
+    meta: MetaField | None = None
 
 
 class GatewayStatus(BaseModel):
