@@ -10316,30 +10316,24 @@ phases:
   - id: cap.impl.models
     name: Update ProfileConfig in models.py
     status: pending
-    description: 'Update ProfileConfig in models.py: add capabilities as the primary
-      field, keep tools as deprecated alias during migration, remove SideEffectPolicy
-      enum, remove side_effect_policy field from ProfileConfig. Use Pydantic model_validator
-      or field alias for dual-field support.'
+    description: 'Update ProfileConfig in models.py: add `capabilities` as the primary
+      field with Pydantic model_validator for dual-field support, keep `tools` as
+      deprecated alias during migration. Mark SideEffectPolicy as deprecated (do NOT
+      remove yet — removal happens in cap.cleanup to avoid breaking catalog.py builtins
+      in the same phase). Remove `side_effect_policy` field from ProfileConfig.'
     verification: 'ProfileConfig(capabilities={''fs'': Posture.READ_WRITE}) works.
-      ProfileConfig(tools={''fs'': Posture.READ_WRITE}) works (migration). SideEffectPolicy
-      enum removed. invar guard passes.'
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Verification:
-
-      - capabilities= accepted: yes/no
-
-      - tools= accepted (migration): yes/no
-
-      - SideEffectPolicy removed: yes/no
-
-      - side_effect_policy removed: yes/no
-
-      - invar guard: pass/fail
-
-      Gaps/Notes:'
+      ProfileConfig(tools={''fs'': Posture.READ_WRITE}) works (migration). side_effect_policy
+      field removed from ProfileConfig. SideEffectPolicy enum marked deprecated but
+      still importable. invar guard passes.'
+    evidence_template: 'Commit hash(es):\nFiles changed:\npython -c "from tela.core.models
+      import ProfileConfig; print(ProfileConfig(name=''t'', capabilities={''fs'':
+      ''read_write''}))" output:\npython -c "from tela.core.models import ProfileConfig;
+      print(ProfileConfig(name=''t'', tools={''fs'': ''read_write''}))" output:\ngrep
+      -n ''side_effect_policy'' src/tela/core/models.py output:\ninvar guard output
+      (last 20 lines):\npytest -x output (last 20 lines):\nGaps/Notes:'
+    refs:
+    - src/tela/core/models.py
+    - docs/MIGRATION-003-capability-only-profiles.md
     agent: python-executor
   - id: cap.impl.enforcement
     name: Simplify enforcement.py
