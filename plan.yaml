@@ -8117,13 +8117,13 @@ phases:
       Verdict: PASS. Plan complete. All review findings fixed and verified.'
 - id: fix2.concurrency
   name: 'Fix Pass 2: Concurrency and Lock Gaps (Issues 1-4)'
-  status: pending
+  status: in_progress
   depends_on:
   - retest.final
   steps:
   - id: fix2.concurrency.lock-fixes
     name: lock-fixes
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#shell-layer\ntouch_paths:\n  - src/tela/shell/gateway.py\n\
       \  - src/tela/shell/audit.py\n  - src/tela/shell/reload.py\nharness_refs:\n\
@@ -8162,6 +8162,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T11:51:35.252110+00:00'
   - id: fix2.concurrency.verify-locks
     name: verify-locks
     status: pending
