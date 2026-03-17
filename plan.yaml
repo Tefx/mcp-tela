@@ -2115,6 +2115,60 @@ phases:
     depends_on:
     - gateway.runtime.implement-downstream-manager
     agent: python-executor
+  - id: gateway.runtime.integrate-gateway-lifecycle
+    name: Integrate gateway lifecycle
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#4.9 shell/gateway.py -- Gateway Lifecycle\n \
+      \ - docs/DESIGN.md#5.2 commands/start.py -- tela start\n  - docs/DESIGN.md#8.1\
+      \ Startup Sequence\n  - docs/INTERFACES.md#A. CLI Interface\ntouch_paths:\n\
+      \  - src/tela/commands/start.py\n  - src/tela/shell/gateway.py\n  - src/tela/cli.py\n\
+      harness_refs:\n  - tests/shell/test_gateway.py\n  - tests/integration/test_end_to_end.py\n\
+      conflict_rationale: This is the serial integration step for shared entrypoint\
+      \ and lifecycle files. It must remain single-owner to avoid worktree merge conflicts\
+      \ with `commands/start.py`, `shell/gateway.py`, and `cli.py`.\nTasks:\n- Wire\
+      \ startup/shutdown orchestration so the gateway loads config, connects downstreams,\
+      \ starts the MCP server, and exposes runtime status/connections surfaces.\n\
+      - Preserve runnable surface semantics: `tela start` remains the entrypoint,\
+      \ stdio remains default transport, optional SSE remains an explicit runtime\
+      \ path.\n- Consume the upstream/downstream implementations and the sibling open-mode\
+      \ runtime plan as dependencies; do not re-derive profile binding or duplicate\
+      \ downstream registry logic.\nIntegration path exercised: CLI entrypoint ->\
+      \ start command -> gateway startup -> downstream manager + upstream handler\n\
+      Out-of-scope guardrail:\n- No audit writer implementation\n- No hot-reload implementation\n"
+    verification: '- Main path: startup and shutdown tests pass through the real gateway
+      entrypoint path
+
+      - Failure path: startup fail-fast behavior for config/tool conflicts remains
+      intact
+
+      - Proof: shared runtime files are only integrated here, not modified by sibling
+      implementation steps'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name that invokes source through sink>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: CLI/start -> gateway lifecycle -> upstream/downstream runtime'
+    depends_on:
+    - gateway.runtime.implement-upstream-routing
+    agent: python-executor
 - id: audit.contract
   name: audit.contract
   status: locked
