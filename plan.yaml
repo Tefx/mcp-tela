@@ -4625,7 +4625,7 @@ phases:
       - Total: 8 new tests, 201 total passing, no product implementation'
 - id: reload.runtime
   name: reload.runtime
-  status: in_progress
+  status: done
   depends_on:
   - reload.test
   steps:
@@ -4962,7 +4962,7 @@ phases:
       **Verdict: PASS**'
   - id: reload.runtime.gate
     name: Gate reload.runtime
-    status: claimed
+    status: done
     description: 'Gate review: Verify reload.runtime phase completion.
 
       review_depth: THOROUGH
@@ -5025,3 +5025,54 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:47:16.377645+00:00'
+    done_at: '2026-03-17T08:47:35.794361+00:00'
+    evidence: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: reload.runtime
+
+      **Review depth**: THOROUGH
+
+
+      ### Runtime Surface Check
+
+      - Real notify/warn path exercised: yes (6-step seam proof: accepted notify +
+      rejected warning)
+
+      - No-drop evidence present: yes (ConnectionContext survives registry update
+      in integration test)
+
+
+      ### Conformance Check
+
+      - Reload/downstream/upstream/audit share one reload fact set: yes (in-memory
+      registry + audit store)
+
+      - Independent re-derivation absent: yes
+
+
+      ### Phase Steps
+
+      1. implement-reenumeration-and-conflict-rejection: on_tools_changed with rollback
+
+      2. integrate-notifications-and-warning-emission: notification callback + audit
+      warning
+
+      3. freeze-for-l2: snapshot at af5a087
+
+      4. verify-reload-runtime: L2 PASS with seam proof
+
+      5. gate: this review
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 205 passed
+
+      - `uv run invar guard --all` -> 0 errors
+
+
+      ### Decision
+
+      - OPEN'
