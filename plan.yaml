@@ -2388,6 +2388,42 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+  - id: audit.contract.gate
+    name: Gate audit.contract
+    status: pending
+    description: 'Gate review: Verify audit runtime contract phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Audit is a cross-cutting runtime seam that must stay explicit before tests
+      and implementation.
+
+      cross_cutting_focus:
+
+      - shell-owned audit I/O remains explicit
+
+      - upstream emission seam is defined, not implemented
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Contract step completed with acceptance-only artifacts
+
+      - Audit seams are explicit and runtime-safe
+
+      - Ready for audit.test'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: audit.contract.define-audit-runtime-contracts
+
+      - Contract purity: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - audit.contract.define-audit-runtime-contracts
+    agent: gate-reviewer
 - id: audit.test
   name: audit.test
   status: locked
