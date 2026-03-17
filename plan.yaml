@@ -10272,37 +10272,31 @@ phases:
     description: 'Write tests covering: (a) ProfileConfig accepts both tools= and
       capabilities=, (b) capabilities= is canonical in serialized output, (c) side_effect_policy:
       read_only triggers ceiling capping during migration parse, (d) side_effect_policy:
-      allow is silently dropped, (e) new 5-step enforcement chain produces same ALLOW/DENY
-      results as old chain (minus side-effect step), (f) builtin profiles use capabilities
-      format, (g) config parser handles both YAML formats.'
+      allow is silently dropped, (e) new 3-step per-call enforcement chain produces
+      correct ALLOW/DENY results, (f) builtin profiles use capabilities format, (g)
+      config parser handles both YAML formats with deprecation warning, (h) tool_overrides
+      survive capping unchanged, (i) empty capabilities map denies all. Each test
+      MUST construct a real ProfileConfig/enforce() call and assert on a business-logic
+      outcome (ALLOW/DENY/field value). No test may fail solely due to ImportError
+      or NotImplementedError.'
     verification: Tests exist and FAIL (red-green pattern) because implementation
-      not yet done. Tests cover all 7 scenarios listed. No test uses side_effect_policy
-      without testing migration behavior.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Tests written: count
-
-      Test scenarios covered:
-
-      - dual-field acceptance: yes/no
-
-      - canonical output: yes/no
-
-      - read_only capping: yes/no
-
-      - allow drop: yes/no
-
-      - 5-step enforcement: yes/no
-
-      - builtin profiles: yes/no
-
-      - config parser: yes/no
-
-      Verification: pytest output showing expected failures
-
-      Gaps/Notes:'
+      not yet done. Each test has a real assertion on a business-logic outcome. No
+      ImportError-only failures. Tests cover all 9 scenarios listed. pytest -x output
+      included in evidence.
+    evidence_template: 'Commit hash(es):\nFiles changed:\nTests written: count\nTest
+      scenarios covered:\n- dual-field acceptance: yes/no\n- canonical output: yes/no\n-
+      read_only capping: yes/no\n- allow drop: yes/no\n- 3-step enforcement: yes/no\n-
+      builtin profiles: yes/no\n- config parser both formats: yes/no\n- tool_overrides
+      survive capping: yes/no\n- empty capabilities: yes/no\npytest -x output (last
+      20 lines):\nGaps/Notes:'
+    refs:
+    - tests/core/test_models.py
+    - tests/core/test_enforcement.py
+    - tests/core/test_config.py
+    - tests/core/test_catalog.py
+    - src/tela/core/models.py
+    - docs/ADR-003-gateway-capability-only-profiles.md
+    - docs/MIGRATION-003-capability-only-profiles.md
     agent: python-executor
   - id: cap.test.gate
     name: Quick gate review
