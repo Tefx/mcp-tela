@@ -5242,7 +5242,7 @@ phases:
       - None'
   - id: fix.blockers.b4-fix-hot-reload-rollback-isolation
     name: 'B4: Fix hot reload rollback isolation'
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.12 shell/reload.py -- Hot Reload Orchestration\n  - docs/DESIGN.md#No-drop-connection\
       \ invariant\ntouch_paths:\n  - src/tela/shell/reload.py\n  - src/tela/shell/downstream.py\n\
@@ -5280,6 +5280,41 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T10:26:47.495785+00:00'
+    done_at: '2026-03-17T10:36:11.663181+00:00'
+    evidence: 'Artifact:
+
+      - Commit: add13c8 (worktree), 5df75ba (squash merge to main)
+
+
+      Files changed:
+
+      - src/tela/shell/downstream.py (added snapshot/restore to DownstreamRegistry)
+
+      - src/tela/shell/reload.py (use full snapshot instead of per-server rollback)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/integration/test_hot_reload.py tests/shell/test_reload.py
+      -v -> 15 passed
+
+      - Run: uv run invar guard -> 0 errors
+
+      - Run: uv run pytest -q -> 280 passed (no new regressions)
+
+      - After rejected reload, all other servers'' tool registrations preserved
+
+
+      Spec link:
+
+      - docs/DESIGN.md#4.12 shell/reload.py -- Hot Reload Orchestration
+
+      - docs/DESIGN.md#No-drop-connection invariant
+
+
+      Gaps/Notes:
+
+      - None'
   - id: fix.blockers.verify-blocker-fixes
     name: Verify blocker fixes (B1-B4)
     status: pending
