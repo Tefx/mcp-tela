@@ -7253,7 +7253,7 @@ phases:
       \ detected."
   - id: retest.regression.run-invar-guard-for-architecture-verification
     name: Run invar guard for architecture verification
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L1
@@ -7292,6 +7292,11 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:05:48.977534+00:00'
+    done_at: '2026-03-17T11:06:18.118047+00:00'
+    evidence: "Verification:\n- Run: uv run invar guard -> passed\n  - static: passed\
+      \ (0 errors, 0 warnings)\n  - doctest: passed\n  - crosshair: skipped (no changed\
+      \ files)\n  - property_tests: skipped (no changed files)\n\nAll zones enforced\
+      \ correctly. No architecture violations. No unjustified escape hatches."
   - id: retest.regression.gate
     name: 'Gate: Regression test suite'
     status: pending
