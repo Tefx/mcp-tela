@@ -8449,7 +8449,7 @@ phases:
       Full suite: 311 passed. Repro: 46 passed.'
   - id: fix2.public-api.gate
     name: gate
-    status: pending
+    status: claimed
     description: 'Gate review: Verify public API exposure phase completion.
 
 
@@ -8473,6 +8473,8 @@ phases:
     depends_on:
     - fix2.public-api.verify-api
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:57:35.437303+00:00'
 - id: fix2.docs
   name: 'Fix Pass 2: DESIGN.md Documentation Drift (Issues 7-11)'
   status: in_progress
