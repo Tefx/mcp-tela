@@ -9164,7 +9164,7 @@ phases:
       \ (`retest2.full.*`)."
 - id: retest2.full
   name: 'Retest Pass 2: Full Regression and Verification Suite'
-  status: pending
+  status: in_progress
   depends_on:
   - fix2.concurrency
   - fix2.contracts
@@ -9176,7 +9176,7 @@ phases:
   steps:
   - id: retest2.full.regression-suite
     name: regression-suite
-    status: pending
+    status: claimed
     description: "step_type: verification\nindependence_level: L2\n\nFull regression\
       \ test suite run in clean environment.\n\n## Required Test Runs\n\n1. **Full\
       \ pytest suite**: `uv run pytest -q` -- expect 311+ tests passing, 0 failures\n\
@@ -9203,6 +9203,8 @@ phases:
 
       - All output pasted as evidence'
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T14:06:27.039509+00:00'
   - id: retest2.full.clean-env-smoke
     name: clean-env-smoke
     status: pending
