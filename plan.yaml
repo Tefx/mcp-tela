@@ -2355,6 +2355,39 @@ phases:
   status: locked
   depends_on:
   - gateway.runtime
+  steps:
+  - id: audit.contract.define-audit-runtime-contracts
+    name: Define audit runtime contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
+      spec_refs:\n  - docs/DESIGN.md#4.12 shell/audit.py -- Audit Log Writer\n  -\
+      \ docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n  - docs/DESIGN.md#10.1\
+      \ Error Propagation Rules\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n\
+      \  - docs/INTERFACES.md#J. Error Codes\n  - INVAR.md\ntouch_paths:\n  - src/tela/shell/audit.py\n\
+      \  - src/tela/shell/upstream.py\n  - src/tela/core/models.py\nharness_refs:\n\
+      \  - tests/shell/test_audit.py\n  - tests/integration/test_audit_levels.py\n\
+      conflict_rationale: Audit touches `shell/upstream.py`, a shared runtime file.\
+      \ Contract the seam first, then keep the serial integration step single-owner\
+      \ in `audit.runtime`.\nTasks:\n- Define acceptance-only contracts for audit\
+      \ entry construction, writer/reader interfaces, level filtering, and upstream\
+      \ audit emission seam.\n- Preserve file-I/O ownership in Shell and keep data-shaping\
+      \ types explicit at module boundaries.\n- Non-goals: no completed JSONL writing,\
+      \ no CLI audit query implementation beyond stubbed interfaces.\n"
+    verification: '- Contract artifacts are signatures/stubs only with no write/query
+      logic
+
+      - Audit level semantics and upstream emission seam are explicit
+
+      - Ready for audit.test'
+    evidence_template: '## Contract Evidence
+
+      - Audit contract stubs: <paths>
+
+      - Level semantics explicit: yes/no
+
+      - No implementation logic added: yes/no'
+    agent: python-senior
 - id: audit.test
   name: audit.test
   status: locked
