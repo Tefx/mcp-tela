@@ -582,7 +582,7 @@ phases:
       \  - No `vectl_mutate` corrections required."
   - id: meta.review.audit-out-of-order-results
     name: Audit out-of-order results
-    status: claimed
+    status: done
     description: If any meta work was executed out of dependency order, classify each
       result as rerun-required, keep-with-review, or risk-only. This is a plan control
       step and produces vectl plan mutations or explicit no-change only.
@@ -615,6 +615,19 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-17T05:43:54.247989+00:00'
+    done_at: '2026-03-17T05:45:57.226939+00:00'
+    evidence: "Artifact:\n- out-of-order audit\n  - audited observable meta execution\
+      \ history and current plan state.\n  - no retained completed meta result found\
+      \ executed out of dependency order.\n\nVerification:\n- dependency check result\n\
+      \  - PASS: visible completion order remains `meta.discovery` -> `meta.prep`\
+      \ -> `meta.plan_creation` -> `meta.review` review steps.\n  - PASS: completed\
+      \ review steps occur after plan-creation prerequisites.\n- per-step rerun/keep/risk\
+      \ classification\n  - `meta.review.review-implementation-plan-conformance`:\
+      \ not-applicable (no out-of-order retained result)\n  - `meta.review.review-implementation-plan-quality`:\
+      \ not-applicable (no out-of-order retained result)\n  - prior rejected/deferred\
+      \ historical attempts: risk-only historical noise; not a current correction\
+      \ target.\n\nPlan mutation payload:\n- explicit no-change\n  - no `vectl_mutate`\
+      \ rerun/review correction required."
   - id: meta.review.synthesize-cross-plan-dependencies
     name: Synthesize cross-plan dependencies
     status: pending
