@@ -52,7 +52,7 @@ writing, network operations) belongs in Shell.
 
 - Build: hatchling
 - Python: >= 3.11
-- Dependencies: fastmcp >= 2.0.0, pydantic >= 2.0, click >= 8.0, rich >= 13.0, pyyaml >= 6.0
+- Dependencies: fastmcp >= 2.0.0, pydantic >= 2.0, pyyaml >= 6.0
 - Entry point: `tela = "tela.cli:main"`
 - Package location: `src/tela`
 
@@ -69,7 +69,7 @@ writing, network operations) belongs in Shell.
 ```
 src/tela/
   __init__.py
-  cli.py                          # CLI entry point (Click group)
+  cli.py                          # CLI entry point (argparse)
   core/
     __init__.py
     models.py                     # Data models (Pydantic): config, profiles, tokens, etc.
@@ -1115,14 +1115,14 @@ class ReloadCoordinator(Protocol):
 
 ## 5. CLI Command Specifications
 
-Entry point: `tela = "tela.cli:main"` (Click group)
+Entry point: `tela = "tela.cli:main"` (argparse)
 
 ### 5.1 cli.py -- CLI Entry Point
 
 ```python
-import click
+import argparse
 
-@click.group()
+# argparse-based CLI (see cli.py)
 def main():
     """tela -- MCP aggregation gateway."""
     ...
