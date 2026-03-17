@@ -3434,7 +3434,7 @@ phases:
       - invar guard clean (0 errors)'
   - id: gateway.runtime.verify-gateway-runtime
     name: Verify gateway runtime
-    status: pending
+    status: claimed
     description: "As an INDEPENDENT TESTER (integration-verifier), validate the gateway\
       \ lifecycle and runtime from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -3511,6 +3511,8 @@ phases:
     depends_on:
     - gateway.runtime.freeze-for-l2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T08:08:43.056807+00:00'
   - id: gateway.runtime.gate
     name: Gate gateway.runtime
     status: pending
