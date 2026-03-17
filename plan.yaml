@@ -10523,6 +10523,38 @@ phases:
   status: locked
   depends_on:
   - cap.docs
+  steps:
+  - id: cap.cleanup.remove-legacy
+    name: Remove all remaining deprecated code
+    status: pending
+    description: 'Remove all remaining deprecated code: SideEffectPolicy enum if still
+      present, check_side_effect function if still present, any tools field compatibility
+      shims if migration period is complete, any side_effect_policy handling in config
+      parser. Clean grep: no SideEffectPolicy or check_side_effect in src/.'
+    verification: grep 'SideEffectPolicy\|check_side_effect\|side_effect_policy' src/tela/
+      returns 0 matches. All tests pass. invar guard passes.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Removed:
+
+      - SideEffectPolicy enum: yes/no
+
+      - check_side_effect function: yes/no
+
+      - side_effect_policy config handling: yes/no
+
+      Verification:
+
+      - grep output: 0 matches in src/
+
+      - Full test suite: pass/fail
+
+      - invar guard: pass/fail
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: cap.final_gate
   name: Full Gate Review
   status: locked
