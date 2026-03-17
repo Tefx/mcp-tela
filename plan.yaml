@@ -9760,3 +9760,8 @@ phases:
   status: locked
   depends_on:
   - rt.cli_start
+- id: rt.liveness
+  name: Liveness Verification
+  status: locked
+  depends_on:
+  - rt.e2e
