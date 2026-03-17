@@ -5167,7 +5167,7 @@ phases:
     claimed_at: '2026-03-17T10:26:46.659949+00:00'
   - id: fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
     name: 'B3: Fix parse_config name injection from dict keys'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#B. Configuration (tela.yaml) -- YAML key IS the server/profile\
       \ name\ntouch_paths:\n  - src/tela/core/config.py\nharness_refs:\n  - tests/core/test_config.py\n\
@@ -5201,6 +5201,8 @@ phases:
     - src/tela/core/config.py
     - docs/INTERFACES.md
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T10:26:47.005610+00:00'
   - id: fix.blockers.b4-fix-hot-reload-rollback-isolation
     name: 'B4: Fix hot reload rollback isolation'
     status: pending
