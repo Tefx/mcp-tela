@@ -1486,7 +1486,7 @@ phases:
       \ skipped pending implementation phase for contract stubs."
   - id: config.test.gate
     name: Gate config.test
-    status: pending
+    status: claimed
     description: 'Gate review: Verify config authority test phase completion.
 
       review_depth: STANDARD
@@ -1523,6 +1523,8 @@ phases:
     depends_on:
     - config.test.add-config-authority-regressions
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T06:24:51.830023+00:00'
 - id: config.impl
   name: config.impl
   status: locked
