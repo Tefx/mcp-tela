@@ -4206,7 +4206,7 @@ phases:
       ### Snapshot: 190 tests passing, invar guard clean'
   - id: audit.runtime.verify-audit-runtime
     name: Verify audit runtime
-    status: claimed
+    status: done
     description: "As an INDEPENDENT TESTER (integration-verifier), validate audit\
       \ runtime behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -4270,6 +4270,72 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T08:37:58.049083+00:00'
+    done_at: '2026-03-17T08:38:30.090391+00:00'
+    evidence: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: src/tela/shell/upstream.py:emission -> src/tela/shell/audit.py:writer
+      -> src/tela/commands/audit_cmd.py:query
+
+
+      **Exact command executed**:
+
+      ```
+
+      uv run python3 -c "<7-step seam proof: enforce -> strip_meta -> build_audit_entry
+      -> audit_write -> audit_query -> audit_command>"
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      1. enforce: verdict=allow
+
+      2. strip_meta: held={''trace_id'': ''tr-1''}
+
+      3. build_audit_entry: tool=read_file, hash=sha256:ef28a75876b54cb6, meta=tr-1
+
+      4. audit_write: stored=1
+
+      5. denied entry: tool=exec_cmd, verdict=deny
+
+      6. audit_query: count=2
+
+      7. audit_command output:
+
+      [2026-03-17T08:38:17.426731+00:00] ALLOW read_file (fs) profile=dev
+
+      [2026-03-17T08:38:17.427117+00:00] DENY exec_cmd (shell) profile=dev
+
+      VERDICT: PASS
+
+      ```
+
+
+      ## Conformance Check
+
+      - Shared audit record fixture: in-memory store via audit_write/get_audit_entries
+
+      - Upstream emission matches stored record: yes (enforce -> build_audit_entry
+      -> audit_write)
+
+      - Stored record matches CLI query: yes (audit_query -> audit_command)
+
+      - Independent re-derivation remains: no (all audit paths use shared in-memory
+      store)
+
+
+      ### Test Suite
+
+      - `uv run pytest -q` -> 190 passed
+
+      - 0 mocks in audit tests
+
+
+      **Verdict: PASS**'
   - id: audit.runtime.gate
     name: Gate audit.runtime
     status: pending
