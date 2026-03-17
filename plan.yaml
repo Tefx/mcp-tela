@@ -1336,7 +1336,7 @@ phases:
       \ dead_export` as contract-step stub escape hatch until runtime caller lands."
   - id: config.contract.gate
     name: Gate config.contract
-    status: pending
+    status: claimed
     description: 'Gate review: Verify config authority contract phase completion.
 
       review_depth: STANDARD
@@ -1380,6 +1380,8 @@ phases:
     depends_on:
     - config.contract.define-config-authority-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T06:08:39.162169+00:00'
 - id: config.test
   name: config.test
   status: locked
