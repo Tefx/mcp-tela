@@ -80,6 +80,10 @@ def _expand_env_token(value: str, env_vars: Mapping[str, str]) -> str:
     return "".join(result)
 
 
+# Public alias per DESIGN.md: expand_env_vars(value: str, env_vars: dict[str, str]) -> str
+expand_env_vars = _expand_env_token
+
+
 @pre(
     lambda value, env_vars: (
         value is not Ellipsis and all(isinstance(key, str) for key in env_vars.keys())

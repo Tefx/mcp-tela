@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from tela.core.conflict import ToolConflict, detect_conflicts
+from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
 from tela.core.models import ResolvedTool, ServerConfig, TelaError
 from tela.shell.config_loader import Result
