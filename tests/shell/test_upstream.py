@@ -326,3 +326,144 @@ def test_tela_error_model_shape() -> None:
     assert error.code == "AUTHZ_DENY"
     assert error.details is not None
     assert error.details["tool"] == "write_file"
+
+
+# --- filter_tools_for_profile tests ---
+
+
+def test_filter_tools_admits_matching_family() -> None:
+    """Tools with admitted family and acceptable posture are included."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream import filter_tools_for_profile
+
+    tools = {
+        "fs": [
+            ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY),
+        ]
+    }
+    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
+    assert len(result) == 1
+    assert result[0].name == "read_file"
+
+
+def test_filter_tools_excludes_unadmitted_family() -> None:
+    """Tools from unadmitted families are excluded."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream import filter_tools_for_profile
+
+    tools = {
+        "shell": [
+            ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE),
+        ]
+    }
+    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    result = filter_tools_for_profile(tools, profile, {"shell": Posture.NONE})
+    assert len(result) == 0
+
+
+def test_filter_tools_excludes_posture_exceedance() -> None:
+    """Tools exceeding posture ceiling are excluded."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream import filter_tools_for_profile
+
+    tools = {
+        "fs": [
+            ResolvedTool(name="write_file", server_name="fs", family="fs", posture=Posture.READ_WRITE),
+        ]
+    }
+    profile = ProfileConfig(name="reader", tools={"fs": Posture.READ_ONLY})
+    result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
+    assert len(result) == 0
+
+
+def test_filter_tools_respects_side_effect_policy() -> None:
+    """Side-effect read_only policy excludes read_write tools."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool, SideEffectPolicy
+    from tela.shell.upstream import filter_tools_for_profile
+
+    tools = {
+        "fs": [
+            ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY),
+            ResolvedTool(name="write_file", server_name="fs", family="fs", posture=Posture.READ_WRITE),
+        ]
+    }
+    profile = ProfileConfig(
+        name="safe",
+        tools={"fs": Posture.READ_WRITE},
+        side_effect_policy=SideEffectPolicy.READ_ONLY,
+    )
+    result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
+    assert len(result) == 1
+    assert result[0].name == "read_file"
+
+
+def test_filter_tools_multiple_servers() -> None:
+    """Filtering works across multiple servers."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream import filter_tools_for_profile
+
+    tools = {
+        "fs": [ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)],
+        "git": [ResolvedTool(name="git_status", server_name="git", family="git", posture=Posture.READ_ONLY)],
+        "shell": [ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE)],
+    }
+    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE, "git": Posture.READ_ONLY})
+    result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE, "git": Posture.NONE, "shell": Posture.NONE})
+    names = {t.name for t in result}
+    assert names == {"read_file", "git_status"}
+
+
+# --- strip_meta tests ---
+
+
+def test_strip_meta_removes_meta() -> None:
+    """_meta is stripped from arguments."""
+    from tela.shell.upstream import strip_meta
+
+    stripped, meta = strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}})
+    assert stripped == {"path": "/tmp"}
+    assert meta == {"trace_id": "t1"}
+
+
+def test_strip_meta_no_meta() -> None:
+    """Arguments without _meta return None for held meta."""
+    from tela.shell.upstream import strip_meta
+
+    stripped, meta = strip_meta({"path": "/tmp"})
+    assert stripped == {"path": "/tmp"}
+    assert meta is None
+
+
+def test_strip_meta_empty_arguments() -> None:
+    """Empty arguments."""
+    from tela.shell.upstream import strip_meta
+
+    stripped, meta = strip_meta({})
+    assert stripped == {}
+    assert meta is None
+
+
+# --- enforce_tool_call tests ---
+
+
+def test_enforce_tool_call_allows() -> None:
+    """Open mode enforcement allows valid tool call."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream import enforce_tool_call
+
+    tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
+    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    result = enforce_tool_call("read_file", tool, profile, Posture.NONE)
+    assert result.verdict.value == "allow"
+
+
+def test_enforce_tool_call_denies() -> None:
+    """Open mode enforcement denies unadmitted family."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream import enforce_tool_call
+
+    tool = ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE)
+    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    result = enforce_tool_call("exec", tool, profile, Posture.NONE)
+    assert result.verdict.value == "deny"

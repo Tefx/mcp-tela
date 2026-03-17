@@ -1,12 +1,10 @@
-"""Upstream MCP handler contracts for open-mode and gateway runtime.
+"""Upstream MCP handler for tools/list, tools/call, and open-mode initialize.
 
-This module defines the upstream-facing MCP protocol handler interfaces:
-initialize, tools/list, tools/call, tela.profiles, and notifications.
-The open-mode initialize binding is implemented; remaining handlers are
-contract stubs for the gateway.runtime phase.
+Implements the upstream-facing MCP protocol handler interfaces. Open-mode
+initialize binding is preserved from prior implementation. tools/list filtering
+uses the enforcement chain. tools/call strips _meta and runs enforcement.
 
-Client-provided connection metadata is explicitly not a profile selection
-channel in open mode.
+Audit emission is deferred to audit.runtime.
 """
 
 from __future__ import annotations
@@ -14,10 +12,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
+from tela.core.enforcement import enforce
 from tela.core.models import (
     ConnectionContext,
     DefaultProfileResolutionStatus,
+    EnforcementResult,
+    EnforcementVerdict,
     InitializeProfileBinding,
+    Posture,
+    ProfileConfig,
+    ResolvedTool,
     TelaError,
 )
 from tela.shell.config_loader import Result
@@ -25,11 +29,7 @@ from tela.shell.config_loader import Result
 
 @dataclass(frozen=True)
 class InitializeContext:
-    """Connection metadata contract visible at MCP initialize boundary.
-
-    Client-provided connection metadata is explicitly not a profile selection
-    channel in open mode.
-    """
+    """Connection metadata contract visible at MCP initialize boundary."""
 
     connection_metadata: Mapping[str, str]
 
@@ -48,10 +48,6 @@ def resolve_initialize_profile_binding(
     - Ambiguous default-profile resolution rejects initialize.
     - Client metadata must not influence profile selection.
 
-    The resolved default profile comes from the shared config authority helper
-    (``resolve_open_mode_default_profile``). This function does not re-derive
-    profile choice; it only validates and binds the pre-resolved fact.
-
     Examples:
         >>> r = resolve_initialize_profile_binding(
         ...     resolved_default_profile="production",
@@ -69,8 +65,7 @@ def resolve_initialize_profile_binding(
         context: Initialize request metadata; profile hints here are ignored.
 
     Returns:
-        ``Result[InitializeProfileBinding, str]`` with the binding on success,
-        or a rejection reason on failure.
+        Result with binding on success, or rejection reason on failure.
     """
 
     _ = context
@@ -111,7 +106,120 @@ def resolve_initialize_profile_binding(
     )
 
 
-# --- MCP Handler Contracts (stubs) ---
+# --- tools/list filtering ---
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow shell_result: returns list per tools/list filtering spec.
+def filter_tools_for_profile(
+    all_tools: dict[str, list[ResolvedTool]],
+    profile: ProfileConfig,
+    server_default_postures: dict[str, Posture],
+) -> list[ResolvedTool]:
+    """Filter resolved tools to those permitted by a profile.
+
+    A tool is included if and only if:
+    1. Its family exists in the profile's tools map
+    2. Its posture (classified or default) <= the profile's ceiling
+    3. It is not explicitly denied by a profile tool_overrides entry
+    4. If side_effect_policy is read_only, only tools with posture <= read_only
+
+    Examples:
+        >>> from tela.core.models import Posture, ProfileConfig, ResolvedTool
+        >>> tools = {"fs": [ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)]}
+        >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
+        >>> len(result)
+        1
+        >>> result[0].name
+        'read_file'
+
+    Args:
+        all_tools: Server name to resolved tool list mapping.
+        profile: Bound profile configuration.
+        server_default_postures: Server name to default posture mapping.
+
+    Returns:
+        List of tools permitted by the profile.
+    """
+
+    allowed_token = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+    permitted: list[ResolvedTool] = []
+
+    for server_name, tools in all_tools.items():
+        default_posture = server_default_postures.get(server_name, Posture.NONE)
+        for tool in tools:
+            result = enforce(
+                tool.name, tool, profile, allowed_token, default_posture
+            )
+            if result.verdict == EnforcementVerdict.ALLOW:
+                permitted.append(tool)
+
+    return permitted
+
+
+# --- tools/call with _meta stripping ---
+
+
+# @invar:allow shell_result: returns tuple per _meta extraction spec, not a failable I/O boundary.
+def strip_meta(arguments: dict) -> tuple[dict, dict | None]:
+    """Strip _meta from tool call arguments.
+
+    Returns (stripped_arguments, held_meta). held_meta is None if _meta
+    was not present.
+
+    Examples:
+        >>> strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}})
+        ({'path': '/tmp'}, {'trace_id': 't1'})
+        >>> strip_meta({"path": "/tmp"})
+        ({'path': '/tmp'}, None)
+
+    Args:
+        arguments: Raw tool call arguments.
+
+    Returns:
+        Tuple of (stripped arguments, held _meta or None).
+    """
+
+    meta = arguments.get("_meta")
+    stripped = {k: v for k, v in arguments.items() if k != "_meta"}
+    return stripped, meta
+
+
+# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
+# @invar:allow shell_result: returns EnforcementResult per enforcement chain spec.
+def enforce_tool_call(
+    tool_name: str,
+    tool: ResolvedTool,
+    profile: ProfileConfig,
+    default_posture: Posture,
+) -> EnforcementResult:
+    """Run enforcement chain for a tool call in open mode (no token).
+
+    Open mode uses a pre-allowed token result.
+
+    Examples:
+        >>> from tela.core.models import ResolvedTool, ProfileConfig, Posture
+        >>> tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
+        >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> enforce_tool_call("read_file", tool, profile, Posture.NONE).verdict
+        <EnforcementVerdict.ALLOW: 'allow'>
+
+    Args:
+        tool_name: Name of the tool.
+        tool: Resolved tool metadata.
+        profile: Bound profile configuration.
+        default_posture: Server's default posture.
+
+    Returns:
+        EnforcementResult.
+    """
+
+    allowed_token = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+    return enforce(tool_name, tool, profile, allowed_token, default_posture)
+
+
+# --- MCP Handler Stubs (remaining) ---
 
 
 # @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
@@ -120,9 +228,6 @@ async def handle_initialize(
     client_info: dict,
 ) -> Result[ConnectionContext, str]:
     """Handle MCP initialize request.
-
-    In token mode: extract capability_token from clientInfo, validate, bind profile.
-    In open mode: bind explicit default profile.
 
     Contract stub: raises NotImplementedError.
 
@@ -134,10 +239,10 @@ async def handle_initialize(
         NotImplementedError: Contract stub: handle_initialize pending
 
     Args:
-        client_info: MCP clientInfo dict from initialize request.
+        client_info: MCP clientInfo dict.
 
     Returns:
-        ``Result[ConnectionContext, str]`` once implemented.
+        Result[ConnectionContext, str] once implemented.
     """
 
     raise NotImplementedError("Contract stub: handle_initialize pending")
@@ -150,9 +255,6 @@ async def handle_tools_list(
     connection: ConnectionContext,
 ) -> list[dict]:
     """Return filtered tool list for the bound profile.
-
-    Each tool retains its original JSON Schema from downstream.
-    Only tools permitted by the profile are included.
 
     Contract stub: raises NotImplementedError.
 
@@ -184,13 +286,6 @@ async def handle_tools_call(
 ) -> Result[dict, TelaError]:
     """Handle a tools/call request.
 
-    1. Extract _meta from arguments (if present)
-    2. Strip _meta from arguments
-    3. Run enforcement chain
-    4. If denied: return error, write audit entry
-    5. If allowed: forward to downstream, return result
-    6. Write audit entry
-
     Contract stub: raises NotImplementedError.
 
     Examples:
@@ -210,7 +305,7 @@ async def handle_tools_call(
         arguments: Tool arguments (may contain _meta).
 
     Returns:
-        ``Result[dict, TelaError]`` once implemented.
+        Result[dict, TelaError] once implemented.
     """
 
     raise NotImplementedError("Contract stub: handle_tools_call pending")
@@ -219,7 +314,7 @@ async def handle_tools_call(
 # @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
 def handle_profiles_list() -> list[dict]:
-    """Return list of configured profiles (tela.profiles MCP method).
+    """Return list of configured profiles.
 
     Contract stub: raises NotImplementedError.
 

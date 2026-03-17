@@ -94,6 +94,12 @@ class ServerConfig(BaseModel):
 # --- Profile Configuration ---
 
 
+class ProfileToolOverrides(BaseModel):
+    """Per-tool overrides within a profile (by family)."""
+
+    overrides: dict[str, "EnforcementVerdict"] = Field(default_factory=dict)
+
+
 class ProfileConfig(BaseModel):
     """Contract shape for a single profile configuration.
 
@@ -103,6 +109,7 @@ class ProfileConfig(BaseModel):
 
     name: str
     tools: dict[str, Posture] = Field(default_factory=dict)
+    tool_overrides: dict[str, ProfileToolOverrides] = Field(default_factory=dict)
     side_effect_policy: SideEffectPolicy = SideEffectPolicy.ALLOW
     default: bool = False
 
