@@ -10361,12 +10361,14 @@ phases:
   - id: cap.impl.config-catalog
     name: Update config parser and builtin catalog
     status: pending
-    description: 'Update config.py parse_config(): accept both `tools:` and `capabilities:`
-      YAML keys (not both in same profile), emit deprecation warning for `tools:`,
-      apply side_effect_policy→ceiling capping per MIGRATION-003 rules, error if side_effect_policy
-      appears with capabilities:. Update catalog.py: rename tools→capabilities in
-      all 7 builtin profiles, remove side_effect_policy, apply read_only capping to
-      read_only and fetch_external builtins.'
+    description: 'Update config.py parse_config(): accept both tools: and capabilities:
+      YAML keys (not both in same profile), emit deprecation warning for tools:, apply
+      side_effect_policy→ceiling capping per MIGRATION-003 rules. Enforce override-ceiling
+      invariant: if an allow override exceeds the (possibly capped) family ceiling,
+      downgrade/remove/error per ADR-003 (''No tool override may elevate access beyond
+      capabilities[family]''). Update catalog.py: rename tools→capabilities in all
+      7 builtin profiles, remove side_effect_policy, apply read_only capping to read_only
+      and fetch_external builtins.'
     verification: Config parser accepts both formats. Capping logic correct per migration
       rules. All 7 builtins use capabilities. All previously-written tests pass. invar
       guard passes.
