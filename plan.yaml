@@ -9959,6 +9959,15 @@ phases:
     depends_on:
     - rt.cli_start.stdio
     agent: python-senior
+  - id: rt.cli_start.gate
+    name: Gate review with liveness probe
+    status: pending
+    description: Gate review with blind-tester Mode D liveness probe.
+    verification: Full Gate + blind-tester Mode D. tela start must be ALIVE (not DEAD_ON_ARRIVAL).
+      All 4 tests in test_liveness.py must pass.
+    depends_on:
+    - rt.cli_start.sse
+    agent: gate-reviewer
 - id: rt.reload_wire
   name: Wire Hot Reload
   status: locked
