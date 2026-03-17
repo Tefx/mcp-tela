@@ -2809,6 +2809,39 @@ phases:
   status: locked
   depends_on:
   - reload.contract
+  steps:
+  - id: reload.test.add-hot-reload-tests
+    name: Add hot-reload tests
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.14\
+      \ shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3 Hot Reload Flow\n  -\
+      \ docs/INTERFACES.md#E. Hot Reload\n  - docs/INTERFACES.md#F. MCP Server Interface\
+      \ (upstream)\ntouch_paths:\n  - tests/shell/test_reload.py\n  - tests/integration/test_hot_reload.py\n\
+      \  - tests/shell/test_downstream.py\n  - tests/shell/test_upstream.py\nharness_refs:\n\
+      \  - tests/shell/test_reload.py\n  - tests/integration/test_hot_reload.py\n\
+      conflict_rationale: Hot-reload tests define the multi-module invariant before\
+      \ shared reload/upstream/audit files are implemented.\nTasks:\n- Add tests for\
+      \ tools/list_changed re-enumeration, conflict reject-and-keep-previous behavior,\
+      \ and upstream notifications.\n- Add tests for no active connection drop during\
+      \ accepted and rejected reload paths.\n- Add tests for TOOL_CONFLICT warning\
+      \ emission hook without implementing the writer itself here.\n- Keep this step\
+      \ test-only; no product implementation.\n"
+    verification: '- Tests exist for accepted reload, rejected reload, notifications,
+      and no-drop invariants
+
+      - Conflict warning path is encoded in tests
+
+      - No product implementation beyond fixtures/helpers'
+    evidence_template: '## Test Evidence
+
+      - Added tests: <exact ids>
+
+      - Accepted/rejected reload covered: yes/no
+
+      - No-drop invariant covered: yes/no
+
+      - Notification path covered: yes/no'
+    agent: python-executor
 - id: reload.runtime
   name: reload.runtime
   status: locked
