@@ -9896,6 +9896,15 @@ phases:
     depends_on:
     - rt.upstream.server
     agent: python-senior
+  - id: rt.upstream.gate
+    name: Gate review
+    status: pending
+    description: Gate review for upstream phase.
+    verification: Full Gate. W1 must show zero DEAD exports in upstream.py. All handler
+      functions must have runtime callers.
+    depends_on:
+    - rt.upstream.handlers
+    agent: gate-reviewer
 - id: rt.cli_start
   name: Wire tela start
   status: locked
