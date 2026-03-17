@@ -18,7 +18,7 @@ from tela.core.models import (
 from tela.shell.upstream import InitializeContext, resolve_initialize_profile_binding
 
 
-# --- Existing contract tests (preserved) ---
+# --- Existing contract tests (updated for implementation) ---
 
 
 def test_initialize_context_exposes_connection_metadata_contract() -> None:
@@ -26,51 +26,82 @@ def test_initialize_context_exposes_connection_metadata_contract() -> None:
     assert context.connection_metadata["client"] == "desktop"
 
 
-def test_resolve_initialize_profile_binding_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError) as exc_info:
-        resolve_initialize_profile_binding(
-            resolved_default_profile=None,
-            default_resolution_status=DefaultProfileResolutionStatus.MISSING,
-            context=InitializeContext(connection_metadata={"profile": "dev"}),
-        )
+def test_resolve_initialize_profile_binding_succeeds_for_resolved() -> None:
+    """Resolved profile must produce a successful binding."""
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile="production",
+        default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
+        context=InitializeContext(connection_metadata={}),
+    )
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.status == DefaultProfileResolutionStatus.RESOLVED
+    assert result.value.resolved_default_profile == "production"
 
-    assert "Contract stub" in str(exc_info.value)
+
+def test_resolve_initialize_profile_binding_rejects_missing() -> None:
+    """Missing default-profile must reject initialize with error."""
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile=None,
+        default_resolution_status=DefaultProfileResolutionStatus.MISSING,
+        context=InitializeContext(connection_metadata={"profile": "dev"}),
+    )
+    assert result.is_err
+    assert "INITIALIZE_REJECTED" in (result.error or "")
 
 
 # --- Initialize success cases ---
 
 
-def test_resolve_binding_stub_raises_on_resolved_profile() -> None:
-    """Even with a valid resolved profile, the stub must raise NotImplementedError."""
-    with pytest.raises(NotImplementedError):
-        resolve_initialize_profile_binding(
-            resolved_default_profile="production",
-            default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
-            context=InitializeContext(connection_metadata={}),
-        )
+def test_resolve_binding_returns_binding_on_resolved_profile() -> None:
+    """Resolved profile must return InitializeProfileBinding."""
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile="production",
+        default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
+        context=InitializeContext(connection_metadata={}),
+    )
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.resolved_default_profile == "production"
+    assert result.value.status == DefaultProfileResolutionStatus.RESOLVED
 
 
 # --- Initialize rejection cases ---
 
 
-def test_resolve_binding_stub_raises_on_missing_default() -> None:
+def test_resolve_binding_rejects_on_missing_default() -> None:
     """Missing default-profile resolution must reject initialize."""
-    with pytest.raises(NotImplementedError):
-        resolve_initialize_profile_binding(
-            resolved_default_profile=None,
-            default_resolution_status=DefaultProfileResolutionStatus.MISSING,
-            context=InitializeContext(connection_metadata={}),
-        )
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile=None,
+        default_resolution_status=DefaultProfileResolutionStatus.MISSING,
+        context=InitializeContext(connection_metadata={}),
+    )
+    assert result.is_err
+    assert "INITIALIZE_REJECTED" in (result.error or "")
+    assert "no default profile" in (result.error or "")
 
 
-def test_resolve_binding_stub_raises_on_ambiguous_default() -> None:
+def test_resolve_binding_rejects_on_ambiguous_default() -> None:
     """Ambiguous default-profile resolution must reject initialize."""
-    with pytest.raises(NotImplementedError):
-        resolve_initialize_profile_binding(
-            resolved_default_profile=None,
-            default_resolution_status=DefaultProfileResolutionStatus.AMBIGUOUS,
-            context=InitializeContext(connection_metadata={}),
-        )
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile=None,
+        default_resolution_status=DefaultProfileResolutionStatus.AMBIGUOUS,
+        context=InitializeContext(connection_metadata={}),
+    )
+    assert result.is_err
+    assert "INITIALIZE_REJECTED" in (result.error or "")
+    assert "ambiguous" in (result.error or "")
+
+
+def test_resolve_binding_rejects_resolved_with_none_profile() -> None:
+    """Resolved status with None profile is an inconsistent state: reject."""
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile=None,
+        default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
+        context=InitializeContext(connection_metadata={}),
+    )
+    assert result.is_err
+    assert "INITIALIZE_REJECTED" in (result.error or "")
 
 
 # --- Client metadata isolation ---
@@ -81,28 +112,24 @@ def test_connection_metadata_does_not_select_profile() -> None:
 
     The contract explicitly states: 'Client-provided connection metadata is
     explicitly not a profile selection channel in open mode.'
-    Even if metadata contains a 'profile' key, the function signature forces
-    profile selection through resolved_default_profile parameter only.
+    Even if metadata contains a 'profile' key, the function resolves profile
+    only through resolved_default_profile parameter.
     """
-    # The function signature enforces this by design:
-    # - resolved_default_profile comes from config/CLI authority
-    # - context.connection_metadata is present but explicitly ignored
     context = InitializeContext(
         connection_metadata={"profile": "should-be-ignored", "x-tenant": "acme"}
     )
-    # Verify the context carries the metadata but the function interface
-    # does not use it for profile selection (it's a keyword-only param
-    # separate from the profile resolution path)
     assert context.connection_metadata["profile"] == "should-be-ignored"
 
-    # The stub still raises, but the important contract property is that
-    # connection_metadata is structurally separate from profile resolution
-    with pytest.raises(NotImplementedError):
-        resolve_initialize_profile_binding(
-            resolved_default_profile="explicit-authority",
-            default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
-            context=context,
-        )
+    # Despite metadata containing a "profile" hint, the binding uses
+    # the explicit resolved_default_profile parameter
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile="explicit-authority",
+        default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
+        context=context,
+    )
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.resolved_default_profile == "explicit-authority"
 
 
 # --- InitializeProfileBinding model contracts ---

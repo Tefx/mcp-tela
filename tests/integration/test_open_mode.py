@@ -203,14 +203,16 @@ def test_bind_gateway_startup_is_stub() -> None:
     assert "Contract stub" in str(exc_info.value)
 
 
-def test_resolve_initialize_binding_is_stub() -> None:
-    """resolve_initialize_profile_binding must still be a contract stub."""
-    with pytest.raises(NotImplementedError):
-        resolve_initialize_profile_binding(
-            resolved_default_profile="dev",
-            default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
-            context=InitializeContext(connection_metadata={}),
-        )
+def test_resolve_initialize_binding_succeeds_for_resolved() -> None:
+    """resolve_initialize_profile_binding must succeed for resolved profile."""
+    result = resolve_initialize_profile_binding(
+        resolved_default_profile="dev",
+        default_resolution_status=DefaultProfileResolutionStatus.RESOLVED,
+        context=InitializeContext(connection_metadata={}),
+    )
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.resolved_default_profile == "dev"
 
 
 # --- Transport contract tests ---
