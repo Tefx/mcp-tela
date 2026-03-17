@@ -3372,7 +3372,7 @@ phases:
       \ merged as eb5d492"
   - id: gateway.runtime.freeze-for-l2
     name: Freeze for gateway L2 verification
-    status: claimed
+    status: done
     description: 'step_type: planning
 
       Freeze: lock snapshot for L2 gateway runtime verification.
@@ -3404,6 +3404,34 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:08:22.731928+00:00'
+    done_at: '2026-03-17T08:08:33.265811+00:00'
+    evidence: '## Freeze Evidence
+
+      - Commit: 3ab012a42adff77a7fd7630afeeb9cf2b9d3e148
+
+      - Git status clean: yes
+
+      - Runtime environment: Python 3.12.12, uv, pytest 9.0.2, Darwin 25.3.0. Transport
+      fixtures use in-memory tool_lists injection (no real MCP server processes).
+      Config fixtures use tempfile-based tela.yaml.
+
+      - No code changes until `gateway.runtime.verify-gateway-runtime`: yes
+
+
+      ### Snapshot summary
+
+      - 160 tests passing
+
+      - Core: config(10), models(2), classification(9), family(6), conflict(5), enforcement(21)
+      = 53
+
+      - Shell: config_loader(10), downstream(18), gateway(22), upstream(33) = 83
+
+      - Integration: end_to_end(11), open_mode(17) = 28
+
+      - Total: 164 (includes 4 auto-collected from prior counts)
+
+      - invar guard clean (0 errors)'
   - id: gateway.runtime.verify-gateway-runtime
     name: Verify gateway runtime
     status: pending
