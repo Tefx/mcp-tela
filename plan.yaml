@@ -1557,13 +1557,13 @@ phases:
       \ blockers\n  - No SHOULD_FIX items\n  \nPlan mutation payload: explicit no-change"
 - id: config.impl
   name: config.impl
-  status: pending
+  status: in_progress
   depends_on:
   - config.test
   steps:
   - id: config.impl.implement-config-authority
     name: Implement config authority
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.1 core/models.py -- Data Models\n  - docs/DESIGN.md#4.2\
       \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#4.13 shell/config_loader.py\
@@ -1616,6 +1616,8 @@ phases:
 
       - Out-of-scope runtime wiring left for open_mode.runtime: yes/no'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T06:29:57.931088+00:00'
   - id: config.impl.verify-config-authority
     name: Verify config authority
     status: pending
