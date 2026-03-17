@@ -2916,3 +2916,54 @@ phases:
 
       - Notification integration deferred: yes/no'
     agent: python-executor
+  - id: reload.runtime.integrate-notifications-and-warning-emission
+    name: Integrate notifications and warning emission
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#4.11\
+      \ shell/upstream.py -- Upstream MCP Handler\n  - docs/DESIGN.md#4.12 shell/audit.py\
+      \ -- Audit Log Writer\n  - docs/INTERFACES.md#E. Hot Reload\n  - docs/INTERFACES.md#F.\
+      \ MCP Server Interface (upstream)\ntouch_paths:\n  - src/tela/shell/reload.py\n\
+      \  - src/tela/shell/upstream.py\n  - src/tela/shell/audit.py\nharness_refs:\n\
+      \  - tests/shell/test_reload.py\n  - tests/integration/test_hot_reload.py\n\
+      conflict_rationale: This is the serial integration step for shared notification\
+      \ and warning-emission seams across reload, upstream, and audit files.\nTasks:\n\
+      - Integrate upstream notifications/tools/list_changed emission for accepted\
+      \ reloads.\n- Integrate TOOL_CONFLICT warning emission for rejected reloads.\n\
+      - Preserve invariant that active upstream connections remain connected in both\
+      \ paths.\nIntegration path exercised: reload trigger -> re-enumeration decision\
+      \ -> notify upstream or emit audit warning\n"
+    verification: '- Main path: accepted reload emits notifications/tools/list_changed
+      without dropping connections
+
+      - Failure path: rejected reload emits TOOL_CONFLICT warning and keeps previous
+      tool set
+
+      - Proof: shared notification/warning behavior is integrated only through this
+      serial step'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name that invokes source through sink>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: reload trigger -> conflict decision -> notify upstream |
+      audit warning'
+    depends_on:
+    - reload.runtime.implement-reenumeration-and-conflict-rejection
+    agent: python-executor
