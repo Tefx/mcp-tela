@@ -1095,7 +1095,7 @@ phases:
       \ (local contract alignment change)"
   - id: cross_repo_alignment.verify-docs-contracts-only-alignment
     name: Verify docs/contracts-only alignment
-    status: pending
+    status: claimed
     description: 'As an independent reviewer, validate that `cross_repo_alignment.align-opifex-docs-to-authoritative-contracts`
       closed the audited residual mismatches without expanding into product implementation
       work.
@@ -1179,6 +1179,8 @@ phases:
     depends_on:
     - cross_repo_alignment.align-opifex-docs-to-authoritative-contracts
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T06:17:14.945363+00:00'
   - id: cross_repo_alignment.freeze-for-gate
     name: Freeze snapshot for cross-repo alignment gate
     status: pending
