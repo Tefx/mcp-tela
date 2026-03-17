@@ -9779,6 +9779,34 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+  - id: rt.downstream.connect
+    name: Implement real connect_all
+    status: pending
+    description: 'Implement real connect_all: import fastmcp, spawn stdio child processes
+      using ServerConfig.command/args/env, connect SSE clients using ServerConfig.url,
+      enumerate tools via MCP tools/list, populate registry with real tool data. Remove
+      tool_lists parameter (or keep only for testing but add real connection path).
+      Implement disconnect_all to close sessions and kill processes.'
+    verification: connect_all with a real or mock MCP server produces non-empty registry.
+      disconnect_all cleans up. fastmcp is imported. No tool_lists-only evidence accepted.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - fastmcp import confirmed: yes/no
+
+      - Real MCP server connection tested: yes/no (describe server used)
+
+      - Registry populated from real enumeration: yes/no
+
+      - tool_lists parameter: kept for testing / removed
+
+      Gaps/Notes:'
+    depends_on:
+    - rt.downstream.contract
+    agent: python-senior
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
