@@ -1241,7 +1241,7 @@ phases:
       - explicit no-change"
   - id: cross_repo_alignment.gate
     name: Gate cross-repo alignment phase
-    status: pending
+    status: claimed
     description: 'Gate review: verify the cross-repo docs/contracts alignment phase
       is complete and stayed within non-product scope.
 
@@ -1311,6 +1311,8 @@ phases:
     depends_on:
     - cross_repo_alignment.freeze-for-gate
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T06:30:02.770339+00:00'
 - id: config.contract
   name: config.contract
   status: done
