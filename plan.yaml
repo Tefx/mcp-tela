@@ -8547,3 +8547,55 @@ phases:
   status: locked
   depends_on:
   - fix2.concurrency
+  steps:
+  - id: fix2.reload-stubs.fix-reload-and-stubs
+    name: fix-reload-and-stubs
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#shell-layer\n  - docs/INTERFACES.md\ntouch_paths:\n  - src/tela/commands/start.py\n\
+      \  - src/tela/shell/gateway.py\n  - src/tela/shell/reload.py\n  - src/tela/shell/audit.py\n\
+      \  - src/tela/shell/downstream.py\n  - src/tela/shell/upstream.py\nharness_refs:\n\
+      \  - tests/\nconflict_rationale: Depends on fix2.concurrency because reload.py\
+      \ and audit.py are shared; must run after lock fixes.\n\nFix SEVEN issues related\
+      \ to reload, digest, stubs, and wiring:\n\n## Issue 5: Duplicate load_config\
+      \ call (MEDIUM)\n- `tela start` calls `load_config` twice: once in start_command\
+      \ (start.py:59) and once in bind_gateway_startup (gateway.py:104)\n- Fix: Remove\
+      \ one of the duplicate calls; gateway startup should use the config already\
+      \ loaded by start_command\n- Grep hint: `grep -rn 'load_config' src/tela/`\n\
+      \n## Issue 12: tools_digest format wrong (SHOULD_FIX)\n- `tools_digest` uses\
+      \ `\":\".join()` not `sha256:...` per spec\n- `hashlib` is imported but unused\n\
+      - Fix: Implement proper SHA256-based digest: `sha256:<hex>` format using hashlib\n\
+      - Grep hint: `grep -n 'tools_digest\\|hashlib' src/tela/shell/reload.py`\n\n\
+      ## Issue 13: _audit_level write-only (SHOULD_FIX)\n- `_audit_level` is written\
+      \ at line 122 and 147 but never read\n- Configured audit level is silently discarded\n\
+      - Fix: Either use _audit_level to filter audit writes, or remove it if filtering\
+      \ is deferred\n- If deferred: add a TODO comment explaining why and remove the\
+      \ dead write\n\n## Issue 21: on_config_changed is a stub (LOW)\n- Sets config\
+      \ but does no re-enumeration\n- Fix: Document as explicitly deferred with TODO,\
+      \ or implement basic re-enumeration\n- Preferred: Add TODO comment with clear\
+      \ scope note\n\n## Issue 22: call_tool and re_enumerate always return error\
+      \ (LOW)\n- MCP transport is deferred, so these always return error\n- Fix: Document\
+      \ clearly as deferred stubs with TODO comments\n- Ensure error messages are\
+      \ clear about MCP transport being unimplemented\n\n## Issue 23: notify_tools_changed\
+      \ body is `pass` (LOW)\n- Fix: Document as deferred stub with TODO comment\n\
+      - Ensure no caller assumes this does actual notification\n\n## Issue 26: handle_tools_call\
+      \ deferred import (LOW)\n- Uses deferred import to work around circular dependency\n\
+      - Fix: If circular dep can be resolved cleanly, do so. Otherwise document with\
+      \ comment explaining why.\n\n## Completion Criteria\n- Duplicate load_config\
+      \ eliminated\n- tools_digest uses sha256 hash format\n- _audit_level either\
+      \ used or removed (no write-only state)\n- All stubs clearly documented as deferred\n\
+      - No unused imports remain (hashlib should be used now)\n\n## Gate Preview (what\
+      \ the gate WILL reject)\n1. Duplicate load_config still present\n2. hashlib\
+      \ still unused after digest fix\n3. Write-only variables remaining without documentation"
+    verification: '- Duplicate load_config removed (grep evidence)
+
+      - tools_digest uses sha256 format (grep evidence)
+
+      - _audit_level not write-only (used or removed)
+
+      - All stubs have TODO comments
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    agent: python-senior
