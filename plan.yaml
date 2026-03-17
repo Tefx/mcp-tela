@@ -9024,7 +9024,7 @@ phases:
   steps:
   - id: fix2.upstream-split.split-upstream
     name: split-upstream
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#shell-layer\ntouch_paths:\n  - src/tela/shell/upstream.py\n\
       \  - src/tela/shell/ (possible new file for extracted functions)\n  - src/tela/shell/__init__.py\n\
@@ -9054,6 +9054,9 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T12:14:59.364821+00:00'
+    done_at: '2026-03-17T12:18:34.914343+00:00'
+    evidence: upstream.py split into upstream.py (299 lines) + upstream_utils.py (130
+      lines). Both under 300. 315+46 tests passed. Merged to main (fast-forward).
   - id: fix2.upstream-split.verify-split
     name: verify-split
     status: pending
