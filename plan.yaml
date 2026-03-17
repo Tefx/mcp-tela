@@ -8222,13 +8222,13 @@ phases:
     agent: gate-reviewer
 - id: fix2.contracts
   name: 'Fix Pass 2: Tautological Contracts and Validation Gaps (Issues 6, 18, 25)'
-  status: pending
+  status: in_progress
   depends_on:
   - retest.final
   steps:
   - id: fix2.contracts.fix-tautological-and-validation
     name: fix-tautological-and-validation
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#B. Configuration\n  - INVAR.md (contract requirements)\n\
       touch_paths:\n  - src/tela/core/config.py\nharness_refs:\n  - tests/core/test_config.py\n\
@@ -8268,6 +8268,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T11:51:35.648199+00:00'
   - id: fix2.contracts.verify-contracts
     name: verify-contracts
     status: pending
