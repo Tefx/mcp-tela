@@ -8795,3 +8795,40 @@ phases:
 
       - uv run invar guard passes'
     agent: python-senior
+  - id: fix2.upstream-split.verify-split
+    name: verify-split
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L1
+
+
+      As an INDEPENDENT TESTER, validate upstream.py split refactoring.
+
+
+      Verify:
+
+      1. upstream.py is under 300 lines (wc -l)
+
+      2. All extracted symbols are importable from new locations
+
+      3. All existing import paths still resolve (grep + import test)
+
+      4. No behavioral changes (test suite unchanged)
+
+      5. __init__.py exports updated if needed
+
+      6. All tests pass
+
+
+      Finding issues is a POSITIVE outcome.'
+    verification: '- wc -l evidence
+
+      - Import resolution evidence
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    depends_on:
+    - fix2.upstream-split.split-upstream
+    agent: integration-verifier
