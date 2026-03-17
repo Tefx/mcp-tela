@@ -6334,3 +6334,21 @@ phases:
 
       - No unjustified escape hatches'
     agent: integration-verifier
+  - id: retest.regression.gate
+    name: 'Gate: Regression test suite'
+    status: pending
+    description: 'Gate review: Confirm regression suite and invar guard are clean.
+
+
+      review_depth: STANDARD'
+    verification: '- All existing tests pass
+
+      - All doctests pass
+
+      - invar guard clean
+
+      - No regressions from any fix phase'
+    depends_on:
+    - retest.regression.run-full-pytest-suite-all-existing-tests
+    - retest.regression.run-invar-guard-for-architecture-verification
+    agent: gate-reviewer
