@@ -2842,6 +2842,42 @@ phases:
 
       - Notification path covered: yes/no'
     agent: python-executor
+  - id: reload.test.gate
+    name: Gate reload.test
+    status: pending
+    description: 'Gate review: Verify reload runtime test phase completion.
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Reload tests must encode connection-stability and conflict-reject semantics
+      before implementation.
+
+      cross_cutting_focus:
+
+      - no-drop invariants exist
+
+      - conflict reject path exists
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- Reload test step completed
+
+      - Acceptance covers no-drop, conflict rejection, and notification semantics
+
+      - Ready for reload.runtime'
+    evidence_template: '## Gate Review Report
+
+      - Reviewed step: reload.test.add-hot-reload-tests
+
+      - Acceptance coverage sufficient: pass/fail
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - reload.test.add-hot-reload-tests
+    agent: gate-reviewer
 - id: reload.runtime
   name: reload.runtime
   status: locked
