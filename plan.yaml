@@ -8117,7 +8117,7 @@ phases:
       Verdict: PASS. Plan complete. All review findings fixed and verified.'
 - id: fix2.concurrency
   name: 'Fix Pass 2: Concurrency and Lock Gaps (Issues 1-4)'
-  status: in_progress
+  status: done
   depends_on:
   - retest.final
   steps:
@@ -8225,7 +8225,7 @@ phases:
       asyncio.run. 315+46 tests passed.'
   - id: fix2.concurrency.gate
     name: gate
-    status: claimed
+    status: done
     description: "Gate review: Verify concurrency fix phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale: |\n  - All issues are concurrency-related\
       \ (high regression risk)\n  - Module-level mutable state was a prior blocker\
@@ -8244,6 +8244,21 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T12:00:34.768668+00:00'
+    done_at: '2026-03-17T12:02:37.660313+00:00'
+    evidence: "\nstatus: \"APPROVED\"\nevidence: |\n  CONDITIONAL PASS (0 BLOCKING,\
+      \ 1 SHOULD_FIX)\n\n  All 4 required lock fixes verified:\n  1. gateway.py: _runtime_lock\
+      \ used in gateway_start (L174), shutdown (L198), status (L219), connections\
+      \ (L248) -- PASS\n  2. audit.py: _audit_lock used in init (L148), set_max (L174),\
+      \ write (L220), close (L249), query (L278) -- PASS\n  3. reload.py: on_tools_changed\
+      \ acquires _registry_lock from downstream (import L30, use L84) -- PASS\n  4.\
+      \ CLI callers: connections_cmd.py:32 and status_cmd.py:36 use asyncio.run()\
+      \ -- PASS\n  5. uv run pytest -q: 315 passed in 1.76s -- PASS\n\n  Additional\
+      \ verification:\n  - Doctests: 14 passed (gateway, audit, reload modules)\n\
+      \  - Runtime verification: all 4 converted functions confirmed as coroutines\
+      \ via inspect.iscoroutinefunction\n  - All 3 locks confirmed as asyncio.Lock\
+      \ instances\n\n  SHOULD_FIX (S1): on_config_changed in reload.py:192 mutates\
+      \ runtime.config without _runtime_lock.\n  Currently a stub, not blocking, but\
+      \ same class of bug as those fixed here.\n"
 - id: fix2.contracts
   name: 'Fix Pass 2: Tautological Contracts and Validation Gaps (Issues 6, 18, 25)'
   status: done
@@ -8696,7 +8711,7 @@ phases:
       ConnectionContext.token.'
 - id: fix2.reload-stubs
   name: 'Fix Pass 2: Reload, Digest, Stubs, and Wiring (Issues 5, 12-13, 21-23, 26)'
-  status: locked
+  status: pending
   depends_on:
   - fix2.concurrency
   steps:
