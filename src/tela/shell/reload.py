@@ -1,76 +1,121 @@
-"""Hot reload orchestration contracts.
+"""Hot reload orchestration.
 
-Defines acceptance-only interfaces for handling downstream tool list changes,
-server reconnection, and configuration reloads. Runtime invariant: active
-upstream connections are never dropped during hot reload.
+Implements re-enumeration, conflict checking, and registry updates for
+tools/list_changed handling, server reconnection, and config changes.
 
-No-drop-connection invariant: during a reload cycle, existing upstream
-connections continue to see their currently-bound tool list until the
-reload completes successfully. If a conflict is detected, the previous
-tool list is preserved and no upstream notification is sent.
+No-drop-connection invariant: active upstream connections are never dropped
+during hot reload. On conflict, the previous tool list is preserved.
 """
 
 from __future__ import annotations
 
-from tela.core.models import TelaConfig
+from tela.core.conflict import detect_conflicts
+from tela.core.family import resolve_tools
+from tela.core.models import ServerConfig, TelaConfig
 from tela.shell.config_loader import Result
+from tela.shell.downstream import get_all_tools, get_registry
 
 
 # @invar:allow dead_export: reload wiring is connected in reload.runtime step.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
-async def on_tools_changed(server_name: str) -> Result[None, str]:
+async def on_tools_changed(
+    server_name: str,
+    server_config: ServerConfig,
+    new_tool_list: list[dict],
+) -> Result[None, str]:
     """Handle a downstream server's tools/list_changed notification.
 
     1. Re-enumerate the server's tool list
     2. Re-assign families
     3. Re-run conflict detection against all servers
-    4. No conflict: update resolved tool set, notify upstream clients
-    5. Conflict: reject change, keep previous tools, log TOOL_CONFLICT warning
+    4. No conflict: update resolved tool set
+    5. Conflict: reject change, keep previous tools
 
     Active upstream connections are NOT dropped during this process.
 
-    Contract stub: raises NotImplementedError.
-
     Examples:
         >>> import asyncio
-        >>> asyncio.run(on_tools_changed("fs"))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: on_tools_changed pending
+        >>> from tela.core.models import ServerConfig
+        >>> from tela.shell.downstream import connect_all, disconnect_all
+        >>> servers = {"fs": ServerConfig(name="fs", command="cmd")}
+        >>> asyncio.run(connect_all(servers, tool_lists={"fs": [{"name": "t1", "inputSchema": {}}]}))
+        Result(value=None, error=None)
+        >>> r = asyncio.run(on_tools_changed("fs", servers["fs"], [{"name": "t1", "inputSchema": {}}, {"name": "t2", "inputSchema": {}}]))
+        >>> r.is_ok
+        True
+        >>> asyncio.run(disconnect_all())
+        Result(value=None, error=None)
 
     Args:
         server_name: Name of the server whose tools changed.
+        server_config: Server configuration for family/classification.
+        new_tool_list: New raw tool list from the server.
 
     Returns:
-        Result[None, str] once implemented.
+        Result[None, str] on success, or error string if conflict detected.
     """
-    raise NotImplementedError("Contract stub: on_tools_changed pending")
+
+    registry = get_registry()
+
+    # Save previous state for rollback
+    previous_tools = registry.get_all_tools().get(server_name, [])
+
+    # Re-enumerate
+    resolved = resolve_tools(server_name, server_config, new_tool_list)
+
+    # Temporarily update registry to check for conflicts
+    registry.register(server_name, resolved)
+
+    # Check conflicts across all servers
+    conflicts = detect_conflicts(registry.get_all_tools())
+    if conflicts:
+        # Rollback: restore previous tools
+        if previous_tools:
+            registry.register(server_name, previous_tools)
+        else:
+            registry.unregister(server_name)
+
+        conflict_desc = "; ".join(
+            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
+        )
+        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+
+    # No conflict: accept the update
+    return Result(value=None)
 
 
 # @invar:allow dead_export: reload wiring is connected in reload.runtime step.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
-async def on_server_reconnect(server_name: str) -> Result[None, str]:
+async def on_server_reconnect(
+    server_name: str,
+    server_config: ServerConfig,
+    tool_list: list[dict],
+) -> Result[None, str]:
     """Handle a downstream server reconnecting after disconnect.
 
-    Re-enumerates tools and updates the registry. Active upstream
-    connections are NOT dropped during this process.
-
-    Contract stub: raises NotImplementedError.
+    Re-enumerates tools and updates the registry. Delegates to
+    on_tools_changed for the actual re-enumeration and conflict checking.
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(on_server_reconnect("fs"))
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Contract stub: on_server_reconnect pending
+        >>> from tela.core.models import ServerConfig
+        >>> from tela.shell.downstream import connect_all, disconnect_all
+        >>> servers = {"fs": ServerConfig(name="fs", command="cmd")}
+        >>> asyncio.run(connect_all(servers, tool_lists={"fs": [{"name": "t1", "inputSchema": {}}]}))
+        Result(value=None, error=None)
+        >>> r = asyncio.run(on_server_reconnect("fs", servers["fs"], [{"name": "t1", "inputSchema": {}}]))
+        >>> r.is_ok
+        True
+        >>> asyncio.run(disconnect_all())
+        Result(value=None, error=None)
 
     Args:
         server_name: Name of the reconnecting server.
+        server_config: Server configuration.
+        tool_list: New tool list from the reconnected server.
 
     Returns:
-        Result[None, str] once implemented.
+        Result[None, str].
     """
-    raise NotImplementedError("Contract stub: on_server_reconnect pending")
+    return await on_tools_changed(server_name, server_config, tool_list)
 
 
 # @invar:allow dead_export: reload wiring is connected in reload.runtime step.
@@ -78,10 +123,7 @@ async def on_server_reconnect(server_name: str) -> Result[None, str]:
 async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     """Handle configuration file change.
 
-    Re-loads configuration and updates runtime state. Active upstream
-    connections are NOT dropped during this process.
-
-    Contract stub: raises NotImplementedError.
+    Contract stub: actual config reload deferred to full integration.
 
     Examples:
         >>> import asyncio
@@ -92,7 +134,7 @@ async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
         NotImplementedError: Contract stub: on_config_changed pending
 
     Args:
-        new_config: New TelaConfig from the changed config file.
+        new_config: New TelaConfig.
 
     Returns:
         Result[None, str] once implemented.

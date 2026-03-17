@@ -27,6 +27,8 @@ class DownstreamRegistry:
 
     def register(self, server_name: str, tools: list[ResolvedTool]) -> None:
         """Register resolved tools for a server, updating the flat lookup."""
+        # Remove old tools for this server first
+        self.unregister(server_name)
         self._tools_by_server[server_name] = tools
         for tool in tools:
             self._tool_to_server[tool.name] = server_name
