@@ -8423,7 +8423,7 @@ phases:
       ## Verdict: PASS — 0 BLOCKING, 0 SHOULD_FIX'
 - id: fix2.public-api
   name: 'Fix Pass 2: Public API Exposure and Entry Points (Issues 15-17, 24)'
-  status: in_progress
+  status: done
   depends_on:
   - retest.final
   steps:
@@ -8524,7 +8524,7 @@ phases:
       Full suite: 311 passed. Repro: 46 passed.'
   - id: fix2.public-api.gate
     name: gate
-    status: claimed
+    status: done
     description: 'Gate review: Verify public API exposure phase completion.
 
 
@@ -8550,6 +8550,10 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T11:57:35.437303+00:00'
+    done_at: '2026-03-17T12:00:15.551597+00:00'
+    evidence: 'APPROVED by gate-reviewer. All 4 fixes verified: expand_env_vars importable,
+      python -m tela works, 9 error constants present, no unused ToolConflict. 315
+      tests + invar guard passed.'
 - id: fix2.docs
   name: 'Fix Pass 2: DESIGN.md Documentation Drift (Issues 7-11)'
   status: in_progress
