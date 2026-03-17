@@ -6,10 +6,8 @@ to Core to produce a runtime-ready `TelaConfig` authority surface.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
 from pathlib import Path
-from typing import Generic, TypeVar
 
 import yaml
 
@@ -22,28 +20,8 @@ from tela.core.config import (
 )
 from tela.core.models import TelaConfig
 
-T = TypeVar("T")
-E = TypeVar("E")
-
-
-@dataclass(frozen=True)
-class Result(Generic[T, E]):
-    """Result type for Shell boundaries."""
-
-    value: T | None = None
-    error: E | None = None
-
-    @property
-    def is_ok(self) -> bool:
-        """Return True when result is success."""
-
-        return self.error is None
-
-    @property
-    def is_err(self) -> bool:
-        """Return True when result is failure."""
-
-        return self.error is not None
+# Re-export for backward compatibility
+from tela.shell.result import Result  # noqa: F401
 
 
 # @invar:allow dead_export: CLI/runtime wiring is implemented in later step.

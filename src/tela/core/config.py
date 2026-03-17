@@ -17,17 +17,8 @@ from tela.core.models import AuthMode, ProfileConfig, TelaConfig
 
 
 
-@dataclass(frozen=True)
-class ConfigContractError(Exception):
-    """Contract-level configuration rejection.
-
-    Attributes:
-        code: Stable contract error code.
-        message: Human-readable reason for rejection.
-    """
-
-    code: str
-    message: str
+# Re-export for backward compatibility
+from tela.core.errors import ConfigContractError  # noqa: F401
 
 
 @pre(
