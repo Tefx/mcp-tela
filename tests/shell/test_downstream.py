@@ -1,11 +1,11 @@
-"""Runtime lifecycle tests for downstream server management.
+"""Runtime tests for downstream server management.
 
 Tests cover:
-- Tool registry lookup behavior (model-level)
+- Tool registry lookup behavior (connect, enumerate, lookup, disconnect)
 - ServerConfig shapes for stdio and SSE servers
 - ResolvedTool model behavior and fields
-- Tool conflict detection inputs
-- Downstream stub contracts
+- Tool conflict detection at startup
+- Registry lifecycle (connect_all, disconnect_all)
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from tela.shell.downstream import (
     connect_all,
     disconnect_all,
     get_all_tools,
+    get_registry,
     get_tool_server,
     re_enumerate,
 )
@@ -29,7 +30,6 @@ from tela.shell.downstream import (
 
 
 def test_server_config_stdio_shape() -> None:
-    """Stdio server config carries command and args."""
     config = ServerConfig(
         name="filesystem",
         command="npx",
@@ -42,17 +42,12 @@ def test_server_config_stdio_shape() -> None:
 
 
 def test_server_config_sse_shape() -> None:
-    """SSE server config carries url, no command."""
-    config = ServerConfig(
-        name="remote",
-        url="http://localhost:8080/sse",
-    )
+    config = ServerConfig(name="remote", url="http://localhost:8080/sse")
     assert config.url == "http://localhost:8080/sse"
     assert config.command is None
 
 
 def test_server_config_with_tool_overrides() -> None:
-    """Server config can carry per-tool family and posture overrides."""
     config = ServerConfig(
         name="srv",
         command="cmd",
@@ -66,17 +61,11 @@ def test_server_config_with_tool_overrides() -> None:
 
 
 def test_server_config_explicit_family_override() -> None:
-    """Server-level family override applies to all tools from that server."""
-    config = ServerConfig(
-        name="srv",
-        command="cmd",
-        family="custom_family",
-    )
+    config = ServerConfig(name="srv", command="cmd", family="custom_family")
     assert config.family == "custom_family"
 
 
 def test_server_config_default_posture_options() -> None:
-    """Default posture can be set to any Posture value."""
     for posture in Posture:
         config = ServerConfig(name="srv", command="cmd", default_posture=posture)
         assert config.default_posture == posture
@@ -86,7 +75,6 @@ def test_server_config_default_posture_options() -> None:
 
 
 def test_resolved_tool_carries_server_and_family() -> None:
-    """ResolvedTool tracks which server owns the tool and its family."""
     tool = ResolvedTool(
         name="read_file",
         server_name="filesystem",
@@ -98,39 +86,15 @@ def test_resolved_tool_carries_server_and_family() -> None:
     assert tool.server_name == "filesystem"
     assert tool.family == "filesystem"
     assert tool.posture == Posture.READ_ONLY
-    assert "path" in tool.schema_["properties"]
 
 
 def test_resolved_tool_unclassified_posture() -> None:
-    """Unclassified tool has posture=None."""
-    tool = ResolvedTool(
-        name="unknown_tool",
-        server_name="srv",
-        family="srv",
-    )
+    tool = ResolvedTool(name="unknown_tool", server_name="srv", family="srv")
     assert tool.posture is None
     assert tool.schema_ == {}
 
 
-def test_resolved_tool_conflict_detection_inputs() -> None:
-    """Two tools with same name from different servers represent a conflict.
-
-    This tests the model input shape for conflict detection. The actual
-    detection logic belongs in core/conflict.py (not yet implemented).
-    """
-    tool_a = ResolvedTool(name="list_files", server_name="fs1", family="fs1")
-    tool_b = ResolvedTool(name="list_files", server_name="fs2", family="fs2")
-    # Same name, different servers: this is a conflict input
-    assert tool_a.name == tool_b.name
-    assert tool_a.server_name != tool_b.server_name
-
-
 def test_resolved_tool_registry_grouping() -> None:
-    """Tools can be grouped by server name for registry lookup.
-
-    This validates the dict[str, list[ResolvedTool]] registry shape
-    that get_all_tools will return once implemented.
-    """
     tools = {
         "filesystem": [
             ResolvedTool(name="read_file", server_name="filesystem", family="filesystem"),
@@ -140,40 +104,172 @@ def test_resolved_tool_registry_grouping() -> None:
             ResolvedTool(name="git_status", server_name="git", family="git"),
         ],
     }
-    assert len(tools["filesystem"]) == 2
-    assert len(tools["git"]) == 1
-    # Flat lookup: find server for a tool name
     flat = {t.name: srv for srv, ts in tools.items() for t in ts}
     assert flat["read_file"] == "filesystem"
     assert flat["git_status"] == "git"
 
 
-# --- Downstream stub contracts (preserved from contract phase) ---
+# --- connect_all / disconnect_all / registry lifecycle ---
 
 
-def test_connect_all_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(connect_all({}))
+def test_connect_all_registers_tools() -> None:
+    """connect_all populates the registry with resolved tools."""
+    servers = {
+        "fs": ServerConfig(name="fs", command="cmd"),
+        "git": ServerConfig(name="git", command="cmd"),
+    }
+    tool_lists = {
+        "fs": [
+            {"name": "read_file", "inputSchema": {"type": "object"}},
+            {"name": "write_file", "inputSchema": {"type": "object"}},
+        ],
+        "git": [
+            {"name": "git_status", "inputSchema": {}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    assert get_tool_server("read_file") == "fs"
+    assert get_tool_server("write_file") == "fs"
+    assert get_tool_server("git_status") == "git"
+    assert get_tool_server("nonexistent") is None
+
+    all_tools = get_all_tools()
+    assert len(all_tools["fs"]) == 2
+    assert len(all_tools["git"]) == 1
 
 
-def test_disconnect_all_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        asyncio.run(disconnect_all())
+def test_connect_all_resolves_families() -> None:
+    """connect_all uses Core family resolution for tool family assignment."""
+    servers = {
+        "srv": ServerConfig(
+            name="srv",
+            command="cmd",
+            family="custom_family",
+            tool_overrides={"special": ToolOverride(family="override_family")},
+        ),
+    }
+    tool_lists = {
+        "srv": [
+            {"name": "normal_tool", "inputSchema": {}},
+            {"name": "special", "inputSchema": {}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    normal = registry.get_tool("normal_tool")
+    assert normal is not None
+    assert normal.family == "custom_family"
+
+    special = registry.get_tool("special")
+    assert special is not None
+    assert special.family == "override_family"
+
+
+def test_connect_all_resolves_posture_from_overrides() -> None:
+    """connect_all uses Core classification for posture from tool overrides."""
+    servers = {
+        "srv": ServerConfig(
+            name="srv",
+            command="cmd",
+            tool_overrides={"dangerous": ToolOverride(posture=Posture.DESTRUCTIVE)},
+        ),
+    }
+    tool_lists = {
+        "srv": [
+            {"name": "dangerous", "inputSchema": {}},
+            {"name": "unclassified", "inputSchema": {}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    assert registry.get_tool("dangerous") is not None
+    assert registry.get_tool("dangerous").posture == Posture.DESTRUCTIVE
+    assert registry.get_tool("unclassified") is not None
+    assert registry.get_tool("unclassified").posture is None
+
+
+def test_connect_all_resolves_posture_from_annotations() -> None:
+    """connect_all uses Core classification for posture from MCP annotations."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {
+        "srv": [
+            {"name": "reader", "inputSchema": {}, "annotations": {"readOnlyHint": True}},
+            {"name": "destroyer", "inputSchema": {}, "annotations": {"destructiveHint": True}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    assert registry.get_tool("reader").posture == Posture.READ_ONLY
+    assert registry.get_tool("destroyer").posture == Posture.DESTRUCTIVE
+
+
+def test_connect_all_fails_on_tool_conflict() -> None:
+    """connect_all fails fast when two servers expose the same tool name."""
+    servers = {
+        "fs1": ServerConfig(name="fs1", command="cmd1"),
+        "fs2": ServerConfig(name="fs2", command="cmd2"),
+    }
+    tool_lists = {
+        "fs1": [{"name": "read_file", "inputSchema": {}}],
+        "fs2": [{"name": "read_file", "inputSchema": {}}],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_err
+    assert "TOOL_CONFLICT" in (result.error or "")
+    assert "read_file" in (result.error or "")
+
+    # Registry must be cleared on conflict
+    assert get_all_tools() == {}
+
+
+def test_connect_all_no_conflict_different_names() -> None:
+    """connect_all succeeds when servers have unique tool names."""
+    servers = {
+        "fs": ServerConfig(name="fs", command="cmd1"),
+        "git": ServerConfig(name="git", command="cmd2"),
+    }
+    tool_lists = {
+        "fs": [{"name": "read_file", "inputSchema": {}}],
+        "git": [{"name": "git_status", "inputSchema": {}}],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+
+def test_disconnect_all_clears_registry() -> None:
+    """disconnect_all removes all tools from the registry."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {"srv": [{"name": "tool", "inputSchema": {}}]}
+    asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert get_tool_server("tool") == "srv"
+
+    result = asyncio.run(disconnect_all())
+    assert result.is_ok
+    assert get_tool_server("tool") is None
+    assert get_all_tools() == {}
+
+
+def test_connect_all_empty_servers() -> None:
+    """connect_all with no servers produces empty registry."""
+    result = asyncio.run(connect_all({}))
+    assert result.is_ok
+    assert get_all_tools() == {}
+
+
+# --- Remaining stubs ---
 
 
 def test_call_tool_is_contract_stub() -> None:
     with pytest.raises(NotImplementedError, match="Contract stub"):
         asyncio.run(call_tool("srv", "tool", {}))
-
-
-def test_get_all_tools_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        get_all_tools()
-
-
-def test_get_tool_server_is_contract_stub() -> None:
-    with pytest.raises(NotImplementedError, match="Contract stub"):
-        get_tool_server("some_tool")
 
 
 def test_re_enumerate_is_contract_stub() -> None:
