@@ -1565,7 +1565,7 @@ phases:
   steps:
   - id: config.impl.implement-config-authority
     name: Implement config authority
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.1 core/models.py -- Data Models\n  - docs/DESIGN.md#4.2\
       \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#4.13 shell/config_loader.py\
@@ -1620,6 +1620,22 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T06:29:57.931088+00:00'
+    done_at: '2026-03-17T06:38:36.294281+00:00'
+    evidence: "Artifact:\n- Implemented config authority helper surfaces and shell\
+      \ handoff.\n- Commits:\n  - `8b957e6` (core parsing/authority validation)\n\
+      \  - `7228e92` (shell config loading and deterministic errors)\n- Files changed:\n\
+      \  - `src/tela/core/models.py`\n  - `src/tela/core/config.py`\n  - `src/tela/shell/config_loader.py`\n\
+      \  - `tests/core/test_config.py`\n  - `tests/core/test_models.py`\n  - `tests/shell/test_config_loader.py`\n\
+      \nVerification:\n- Main/failure path tests:\n  - `uv run pytest -q tests/core/test_config.py\
+      \ tests/shell/test_config_loader.py tests/core/test_models.py` -> `22 passed`\n\
+      \  - targeted subsets for open/token/default-profile failure modes passed.\n\
+      - Invar evidence:\n  - `invar_guard(...changed=true)` -> passed (0 errors, 0\
+      \ warnings).\n- Required semantics proven:\n  - CLI `--default-profile` precedence\
+      \ over config default in open mode.\n  - deterministic rejection on missing/ambiguous/unknown\
+      \ default profile.\n  - token mode missing-secrets fails closed.\n  - shell-owned\
+      \ file/env handling preserved; core kept pure.\n  - resolved authority exposed\
+      \ for runtime callers without introducing open_mode runtime wiring.\n\nGaps/Notes:\n\
+      - Out-of-scope runtime initialize wiring remains deferred to `open_mode.runtime`."
   - id: config.impl.verify-config-authority
     name: Verify config authority
     status: pending
