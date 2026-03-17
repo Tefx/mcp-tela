@@ -9373,3 +9373,71 @@ phases:
     depends_on:
     - retest2.full.findings-coverage-audit
     agent: gate-reviewer
+  - id: retest2.full.regression-suite-fix-batch
+    name: regression-suite-fix-batch
+    status: pending
+    description: "Fix ALL blockers and related requirement drift found by `retest2.full.regression-suite`.\n\
+      \nstep_type: implementation\nsymbolic_testing: true\ntags: [\"integration\"\
+      ]\nprior_loop:\n  - retest2.full.regression-suite\nremaining_blocker: doctest\
+      \ traceback formatting, missing meta-contracts on `pre`/`post`, shell complexity\
+      \ debt over threshold, blind-path requirement drift, and missing `AUTH_RATE_LIMITED`\
+      \ constant or requirement drift\nwhy_new_loop: original regression verification\
+      \ produced actionable findings that require one consolidated remediation pass\
+      \ before downstream smoke/gate work can continue safely\n\n## Root Cause vs\
+      \ Symptom\n- Root cause: contract helpers and shell surfaces are out of sync\
+      \ with current doctest/meta-contract expectations, and the regression plan referenced\
+      \ a non-existent blind-test path.\n- Symptom: doctest traceback mismatch, `invar\
+      \ guard --all` reports missing `@pre/@post` meta-contracts plus shell complexity\
+      \ debt, and verifier cannot execute the documented blind suite.\n- Why this\
+      \ fix is not surface-level: it must align contract definitions, verification\
+      \ expectations, shell decomposition, and test-path policy together rather than\
+      \ patching one failing command at a time.\n\n## Blockers to Fix (ALL of these,\
+      \ not just the first)\n### B1: `contracts.py` doctest traceback mismatch for\
+      \ `pre` and `post`\nLocations: `src/tela/core/contracts.py`, related doctest\
+      \ expectations in regression-facing tests/docs if present.\nRemediation: make\
+      \ doctest evidence and raised exception formatting consistent for both decorators\
+      \ without weakening the contract behavior.\nGrep hint: `rg -n \"doctest|Traceback|pre\\\
+      (|post\\(\" src/tela tests`\n\n### B2: Missing `@pre/@post` meta-contracts on\
+      \ `pre` and `post`\nLocations: `src/tela/core/contracts.py`\nRemediation: add\
+      \ the required non-vacuous meta-contracts for both decorators and keep them\
+      \ compatible with `uv run invar guard --all`.\nGrep hint: `rg -n \"@pre|@post|def\
+      \ pre|def post\" src/tela/core/contracts.py`\n\n### B3: `shell_complexity_debt`\
+      \ exceeds limit (6 > 5)\nLocations: shell modules counted by the debt checker;\
+      \ likely `src/tela/shell/**` and debt definitions.\nRemediation: reduce the\
+      \ measured shell complexity debt to the allowed limit by completing the smallest\
+      \ safe extraction/split or by removing the counted debt source that the checker\
+      \ reports.\nGrep hint: `rg -n \"shell_complexity_debt|complexity debt|shell\"\
+      \ src/tela`\n\n### B4: blind-test path requirement drift\nLocations: plan-facing\
+      \ requirement/evidence path and any docs/tests that still reference `tests/blind/`.\n\
+      Remediation: replace the non-existent blind path with the actual executable\
+      \ suite, or define an explicit fallback rule that uses an existing path and\
+      \ records the fallback in evidence.\nGrep hint: `rg -n \"tests/blind|blind test|blind-tester\"\
+      \ .`\n\n### S1: missing `AUTH_RATE_LIMITED` constant or requirement drift\n\
+      Locations: `src/tela/core/errors.py`, exports, and authoritative requirement\
+      \ docs/tests.\nRemediation: either add/export the constant where the spec requires\
+      \ it or repair the requirement reference so code/spec agree; do not leave ambiguous\
+      \ drift.\nGrep hint: `rg -n \"AUTH_RATE_LIMITED|RATE_LIMITED|error code\" src/tela\
+      \ tests docs`\n\n## Completion Criteria\n- ALL blockers and the should-fix item\
+      \ addressed in one pass\n- Sibling search completed for each blocker family\n\
+      - No `tests/blind/` requirement remains without an executable path or explicit\
+      \ fallback rule\n- Root-cause evidence explains how the combined change closes\
+      \ the blocker family\n\n## Gate Preview (what the gate WILL reject)\n1. Fixing\
+      \ only doctest text without adding the required meta-contracts\n2. Reducing\
+      \ one shell warning while leaving `shell_complexity_debt` above threshold\n\
+      3. Leaving blind-test execution ambiguous or still pointing at `tests/blind/`\n\
+      4. Resolving code but leaving `AUTH_RATE_LIMITED` drift between spec and implementation"
+    verification: '- Use the exact required command family for follow-up verification:
+      `uv run pytest -q`, `uv run pytest --doctest-modules src/tela/`, `uv run invar
+      guard --all`, `uv run pytest tests/repro/ -q`
+
+      - Provide sibling-search evidence for each blocker family using the grep hints
+      above
+
+      - Show that the blind-test command is corrected to an existing path or an explicit
+      fallback rule before retest
+
+      - Root-cause evidence covers both the main path and the highest-risk failure
+      path'
+    depends_on:
+    - retest2.full.regression-suite
+    agent: python-senior
