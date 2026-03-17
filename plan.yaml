@@ -5167,7 +5167,7 @@ phases:
     claimed_at: '2026-03-17T10:26:46.659949+00:00'
   - id: fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
     name: 'B3: Fix parse_config name injection from dict keys'
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#B. Configuration (tela.yaml) -- YAML key IS the server/profile\
       \ name\ntouch_paths:\n  - src/tela/core/config.py\nharness_refs:\n  - tests/core/test_config.py\n\
@@ -5203,6 +5203,43 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:26:47.005610+00:00'
+    done_at: '2026-03-17T10:36:07.627992+00:00'
+    evidence: 'Artifact:
+
+      - Commit: a39eabe (worktree), d94df04 (squash merge to main)
+
+
+      Files changed:
+
+      - src/tela/core/config.py (added name injection from dict keys)
+
+      - tests/core/test_config.py (added 2 test cases)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/core/test_config.py -v -> 12 passed (including 2
+      new)
+
+      - Run: uv run invar guard -> 0 errors
+
+      - Run: uv run pytest -q -> 280 passed, 7 failed (pre-existing repro failures
+      only)
+
+      - Config without explicit name field parses successfully
+
+      - Config with explicit name field still works (backward compatible)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#B. Configuration (tela.yaml) -- YAML key IS the server/profile
+      name
+
+
+      Gaps/Notes:
+
+      - None'
   - id: fix.blockers.b4-fix-hot-reload-rollback-isolation
     name: 'B4: Fix hot reload rollback isolation'
     status: claimed
