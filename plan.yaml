@@ -1423,7 +1423,7 @@ phases:
   steps:
   - id: config.test.add-config-authority-regressions
     name: Add config authority regressions
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.2\
       \ core/config.py -- Configuration Parsing\n  - docs/DESIGN.md#9.1 tela.yaml\
       \ Structure\n  - docs/INTERFACES.md#B. Configuration (tela.yaml)\n  - docs/INTERFACES.md#H.\
@@ -1454,6 +1454,21 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T06:17:10.662058+00:00'
+    done_at: '2026-03-17T06:23:47.285188+00:00'
+    evidence: "Artifact:\n- Added regression tests for config authority/open-mode\
+      \ precedence and failures.\n- Commit: `3242b60b1e46efcf0a3ac67c5e04efdd90785dbb`.\n\
+      - Files modified:\n  - `tests/core/test_config.py`\n  - `tests/shell/test_config_loader.py`\
+      \ (new)\n  - `pyproject.toml` (test dependency)\n  - `uv.lock` (lock refresh)\n\
+      \nVerification:\n- Added test coverage for required modes:\n  - success path\
+      \ + explicit `--default-profile` precedence over config default\n  - token mode\
+      \ without secrets\n  - open mode with no default\n  - open mode with multiple\
+      \ defaults\n  - CLI-selected profile missing from config\n- Doctest/contract-aligned\
+      \ target included for new Core helper surfaces.\n- Run: `uv run pytest tests/core/test_config.py\
+      \ tests/shell/test_config_loader.py -v` -> passed/skip mix as expected for contract-stub\
+      \ phase.\n- Run: `invar guard` -> passed for this test-only step context.\n\
+      - Scope check: no product implementation files changed beyond test fixtures/helpers\
+      \ and test dependency plumbing.\n\nGaps/Notes:\n- Some tests are intentionally\
+      \ skipped pending implementation phase for contract stubs."
   - id: config.test.gate
     name: Gate config.test
     status: pending
