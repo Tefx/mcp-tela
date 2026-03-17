@@ -745,46 +745,40 @@ phases:
       - transition rationale: original gate step completed with blocker captured;\
       \ follow-up fix/re-gate chain now authoritative."
   - id: meta.review.fix-enforcement-wording-conflict
-    name: Reconcile canonical enforcement wording conflict
+    name: Canonize initialize-time binding and 4-step per-call enforcement wording
     status: claimed
     description: 'Batched meta-plan fix for the blocker from `meta.review.gate`.
 
 
-      Reconcile the unresolved enforcement wording conflict between the earlier 7-step
-      framing and the 4-step framing with initialize-time binding, and add the missing
-      planned reconciliation step that earlier evidence said should exist.
+      Canonical wording for downstream planning: CapabilityToken validation and profile
+      binding happen during `initialize` / connection bind. Per-call enforcement is
+      a 4-step chain: family admission, tool override, posture, and side-effect.
 
 
-      Scope is planning/meta only:
-
-      - define the single canonical enforcement wording to be used by downstream implementation
-      planning
-
-      - reconcile the 7-step vs 4-step language so the plan no longer carries competing
-      enforcement interpretations
-
-      - encode the missing reconciliation work as plan structure rather than doc deliverables
-
-      - preserve meta-only scope; docs are references, not deliverables
+      This step explicitly incorporates the previously missing reconciliation work
+      into plan structure. Scope is meta/planning only; docs remain references, not
+      deliverables.
 
 
       Completion criteria:
 
-      - one canonical enforcement wording is selected and reflected in plan-facing
-      descriptions
+      - plan-facing descriptions use the canonical initialize-time binding + 4-step
+      per-call wording
 
-      - the missing reconciliation step is explicitly planned or incorporated so downstream
-      phases have no ambiguity
+      - the earlier missing reconciliation work is explicitly incorporated into this
+      step so downstream planning has no ambiguity
 
       - no deliverable language implies docs are required outputs'
-    verification: '- Plan contains one canonical enforcement wording for this blocker
-      family
+    verification: '- Plan-facing description uses exactly one canonical wording: initialize-time
+      binding for token/profile; 4-step per-call enforcement for runtime calls
 
-      - Missing reconciliation work is explicitly represented in plan structure
+      - Missing reconciliation work is explicitly incorporated into this step''s plan
+      structure
 
-      - Scope remains meta/planning only; docs are not deliverables
+      - Scope remains meta/planning only; docs are references, not deliverables
 
-      - Dependency chain starts at `meta.review.gate`'
+      - Dependency chain remains `meta.review.gate` -> `meta.review.fix-enforcement-wording-conflict`
+      -> `meta.review.regate-enforcement-wording-conflict`'
     depends_on:
     - meta.review.gate
     agent: software-architect
