@@ -3223,7 +3223,7 @@ phases:
       - Commit: a65ecf2 (worktree), merged as 063b8e3'
   - id: gateway.runtime.implement-upstream-routing
     name: Implement upstream routing
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#4.11 shell/upstream.py -- Upstream MCP Handler\n\
       \  - docs/DESIGN.md#6.1 tools/list\n  - docs/DESIGN.md#6.2 tools/call\n  - docs/DESIGN.md#8.2\
@@ -3277,6 +3277,28 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:00:28.066952+00:00'
+    done_at: '2026-03-17T08:05:35.478381+00:00'
+    evidence: "## Integration Evidence\n\n**Command or test exercising the full path**:\n\
+      ```\nuv run pytest -q tests/core/test_enforcement.py tests/shell/test_upstream.py\
+      \ -v\n```\n\n**Actual output**:\n```\n51 passed\n```\n\n**Path exercised**:\
+      \ upstream handler -> enforcement chain -> downstream manager -> result/error\
+      \ return\n\n### New Core module\n- `src/tela/core/enforcement.py`: 7-step enforcement\
+      \ chain\n  - posture_le: posture ordering comparison\n  - check_family_admission:\
+      \ family in profile.tools?\n  - check_tool_override: profile.tool_overrides\
+      \ per-tool allow/deny\n  - check_posture: tool posture <= family ceiling\n \
+      \ - check_side_effect: posture vs side_effect_policy\n  - enforce: full 7-step\
+      \ chain\n\n### New upstream functions\n- `filter_tools_for_profile`: filters\
+      \ resolved tools using enforcement chain\n- `strip_meta`: extracts and removes\
+      \ _meta from arguments\n- `enforce_tool_call`: runs enforcement for open mode\
+      \ (pre-allowed token)\n\n### Model additions\n- `ProfileToolOverrides` in core/models.py\
+      \ (per-tool overrides within a profile)\n- `tool_overrides` field added to `ProfileConfig`\n\
+      \n### Tests\n- tests/core/test_enforcement.py: 21 tests (posture_le, family,\
+      \ override, posture, side-effect, full chain)\n- tests/shell/test_upstream.py:\
+      \ +10 tests (filter by family/posture/side-effect/multi-server, strip_meta,\
+      \ enforce_tool_call)\n\n### Verification\n- `uv run pytest -q` -> 158 passed\n\
+      - `uv run invar guard --changed` -> passed (0 errors, 11 warnings)\n- _meta\
+      \ is stripped before forwarding and audit emission remains deferred\n- Commit:\
+      \ 0d11919 (worktree), merged as dad1a73"
   - id: gateway.runtime.integrate-gateway-lifecycle
     name: Integrate gateway lifecycle
     status: pending
