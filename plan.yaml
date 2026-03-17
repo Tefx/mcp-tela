@@ -790,30 +790,29 @@ phases:
     description: 'Independent re-gate after `meta.review.fix-enforcement-wording-conflict`.
 
 
-      Validate that the enforcement wording conflict is actually closed, that the
-      planned reconciliation step now exists in executable plan form, and that downstream
-      non-meta planning can proceed without competing wording or missing reconciliation
-      work.
+      Validate that the plan now uses one canonical wording only: CapabilityToken
+      validation and profile binding happen during `initialize` / connection bind,
+      while per-call enforcement is the 4-step chain of family admission, tool override,
+      posture, and side-effect.
 
 
       Reject if:
 
-      - both 7-step and 4-step enforcement framings still survive without adjudication
+      - any plan-facing description still presents token validation or profile lookup
+      as per-call enforcement steps
 
-      - initialize-time binding wording is still ambiguous
-
-      - the missing reconciliation work is still absent from the plan
+      - the incorporated reconciliation work is not explicit in plan structure
 
       - docs are treated as deliverables instead of planning references'
-    verification: '- Independent review confirms exactly one canonical enforcement
-      wording remains
+    verification: '- Independent review confirms exactly one canonical wording remains
+      in blocker-family plan-facing descriptions
 
-      - Planned reconciliation step exists and is sequenced for execution planning
+      - Reconciliation work is explicitly represented by `meta.review.fix-enforcement-wording-conflict`
 
-      - Dependency chain is `meta.review.gate` -> `meta.review.fix-enforcement-wording-conflict`
+      - Dependency chain remains `meta.review.gate` -> `meta.review.fix-enforcement-wording-conflict`
       -> `meta.review.regate-enforcement-wording-conflict`
 
-      - Meta/planning-only scope preserved'
+      - Meta/planning-only scope preserved; docs are references, not deliverables'
     depends_on:
     - meta.review.fix-enforcement-wording-conflict
     agent: gate-reviewer
