@@ -8488,7 +8488,7 @@ phases:
   steps:
   - id: fix2.docs.fix-design-md-drift
     name: fix-design-md-drift
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md\ntouch_paths:\n  - docs/DESIGN.md\nharness_refs: []\nconflict_rationale:\
       \ Only this step touches DESIGN.md.\n\nFix ALL five DESIGN.md documentation\
@@ -8529,6 +8529,16 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T11:51:36.999247+00:00'
+    done_at: '2026-03-17T11:58:16.703373+00:00'
+    evidence: '## Evidence (python-executor)
+
+      Files: docs/DESIGN.md (+102/-78 lines)
+
+      Fixed: command filenames (*_cmd.py), returns.result→tela.shell.result, exception
+      hierarchy→actual model, added catalog.py spec, removed ConnectionContext.token
+      field
+
+      Merged to main, no conflicts'
   - id: fix2.docs.verify-docs
     name: verify-docs
     status: pending
