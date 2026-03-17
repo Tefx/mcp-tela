@@ -6673,7 +6673,7 @@ phases:
   steps:
   - id: fix.low.docs.l2-l4-fix-enforcement-chain-step-count-in-docs
     name: 'L2+L4: Fix enforcement chain step count in docs'
-    status: claimed
+    status: done
     description: "step_type: implementation\ntouch_paths:\n  - docs/DESIGN.md (L2:\
       \ says 7-step but executes 5; L4: inconsistent with INTERFACES.md 4-step)\n\
       \  - docs/INTERFACES.md (L4: says 4-step chain)\n\nProblem:\n- L2: Docs say\
@@ -6698,6 +6698,31 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-17T10:50:00.881405+00:00'
+    done_at: '2026-03-17T10:51:46.937375+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 2b4f3bb
+
+
+      Files changed:
+
+      - docs/DESIGN.md (clarified 7-step model: steps 1-2 pre-conditions, 3-7 per-call)
+
+      - docs/INTERFACES.md (references 7-step model with cross-reference to DESIGN.md)
+
+
+      Verification:
+
+      - DESIGN.md and INTERFACES.md now use consistent enforcement chain description
+
+      - Code has 7 labeled steps in enforce() matching docs
+
+
+      Spec link:
+
+      - L2: DESIGN.md says 7-step but only 5 execute in enforce()
+
+      - L4: INTERFACES.md says 4-step, DESIGN.md says 7-step'
   - id: fix.low.docs.l6-l7-remove-unused-click-rich-deps-document-argparse-choice
     name: 'L6+L7: Remove unused Click/Rich deps, document argparse choice'
     status: done
