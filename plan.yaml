@@ -2726,7 +2726,7 @@ phases:
   steps:
   - id: gateway.contract.define-runtime-boundary-contracts
     name: Define runtime boundary contracts
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.9 shell/gateway.py -- Gateway Lifecycle\n \
@@ -2771,6 +2771,59 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T07:23:10.402612+00:00'
+    done_at: '2026-03-17T07:28:51.654102+00:00'
+    evidence: '## Contract Evidence
+
+      - Runtime contract stubs: src/tela/shell/gateway.py, src/tela/shell/downstream.py,
+      src/tela/shell/upstream.py, src/tela/core/models.py
+
+      - Preserved runtime boundaries: CLI (cli.py), gateway lifecycle (gateway.py),
+      downstream management (downstream.py), upstream MCP handler (upstream.py), Core
+      models (models.py)
+
+      - Open-mode assumptions treated as dependency only: yes (resolve_initialize_profile_binding
+      implementation preserved, not redefined)
+
+      - No implementation logic added: yes (all new functions are contract stubs raising
+      NotImplementedError)
+
+
+      ### New Models (core/models.py)
+
+      - ServerConfig, ToolOverride, ResolvedTool, ConnectionContext, EnforcementResult,
+      EnforcementVerdict, AuditEntry, AuditLevel, AuditConfig, GatewayStatus, TelaError
+
+
+      ### New Stubs
+
+      **gateway.py**: gateway_start, gateway_shutdown, gateway_status, gateway_connections
+
+      **downstream.py** (NEW): connect_all, disconnect_all, call_tool, get_all_tools,
+      get_tool_server, re_enumerate
+
+      **upstream.py**: handle_initialize, handle_tools_list, handle_tools_call, handle_profiles_list,
+      notify_tools_changed
+
+
+      ### Tests
+
+      - tests/shell/test_gateway.py: 4 tests (all stubs verified)
+
+      - tests/shell/test_downstream.py: 6 tests (all stubs verified)
+
+      - Existing tests preserved and passing
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 68 passed
+
+      - `uv run invar guard --changed` -> passed (0 errors, 7 warnings for expected
+      stub shell_pure_logic)
+
+      - Doctests pass
+
+      - Commit: 85583aa (worktree), merged as 338c2e7'
   - id: gateway.contract.gate
     name: Gate gateway.contract
     status: pending
