@@ -2586,7 +2586,7 @@ phases:
       path, edge cases, error scenarios, and conformance.'
   - id: open_mode.runtime.gate
     name: Gate open_mode.runtime
-    status: pending
+    status: claimed
     description: 'Gate review: Verify open_mode.runtime phase completion.
 
       review_depth: THOROUGH
@@ -2656,6 +2656,8 @@ phases:
     - open_mode.runtime.freeze-for-l2
     - open_mode.runtime.verify-open-mode-runtime
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T07:22:13.574078+00:00'
 - id: gateway.contract
   name: gateway.contract
   status: locked
