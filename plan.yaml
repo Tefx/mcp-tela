@@ -8542,3 +8542,8 @@ phases:
     depends_on:
     - fix2.docs.verify-docs
     agent: gate-reviewer
+- id: fix2.reload-stubs
+  name: 'Fix Pass 2: Reload, Digest, Stubs, and Wiring (Issues 5, 12-13, 21-23, 26)'
+  status: locked
+  depends_on:
+  - fix2.concurrency
