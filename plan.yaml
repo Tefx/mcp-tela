@@ -10555,6 +10555,14 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+  - id: cap.cleanup.gate
+    name: Gate review
+    status: pending
+    description: ''
+    verification: Quick Gate. Zero legacy references. All tests pass.
+    depends_on:
+    - cap.cleanup.remove-legacy
+    agent: gate-reviewer
 - id: cap.final_gate
   name: Full Gate Review
   status: locked
