@@ -1648,7 +1648,7 @@ phases:
       - Out-of-scope runtime initialize wiring remains deferred to `open_mode.runtime`."
   - id: config.impl.verify-config-authority
     name: Verify config authority
-    status: claimed
+    status: done
     description: "As an INDEPENDENT TESTER (integration-verifier), validate the configuration\
       \ authority behavior from a fresh perspective.\n\nYOUR GOAL IS TO FIND PROBLEMS,\
       \ not to confirm it works.\n\nstep_type: verification\nagent_source: default\n\
@@ -1686,6 +1686,18 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T06:39:23.823355+00:00'
+    done_at: '2026-03-17T06:42:46.554007+00:00'
+    evidence: "Artifact:\n- independent verification report for config authority implementation.\n\
+      \nVerification:\n- commands executed and outputs\n  - `uv run pytest -v tests/core/test_config.py\
+      \ tests/shell/test_config_loader.py` -> `20 passed`\n  - `uv run python -m doctest\
+      \ src/tela/core/config.py -v` -> `7 passed, 0 failed`\n  - `invar_guard(...changed=false)`\
+      \ -> passed (0 errors, 0 warnings)\n  - mock/fake seam scan over tests -> none\
+      \ found\n  - code search for `profile.default` usage -> centralized in shared\
+      \ authority helper\n- issues table\n  - none found\n- coverage assessment\n\
+      \  - happy path and all required edge/error scenarios covered (no default, multiple\
+      \ defaults, unknown CLI profile, token-mode empty secrets, precedence behavior).\n\
+      \  - authority centralization confirmed; no competing default-selection path\
+      \ found.\n- verdict\n  - PASS\n\nPlan mutation payload:\n- explicit no-change"
   - id: config.impl.gate
     name: Gate config.impl
     status: pending
