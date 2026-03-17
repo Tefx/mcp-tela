@@ -9833,6 +9833,15 @@ phases:
     depends_on:
     - rt.downstream.connect
     agent: python-senior
+  - id: rt.downstream.gate
+    name: Gate review with wiring audit
+    status: pending
+    description: Gate review with wiring audit for downstream phase.
+    verification: Full Gate. W1 must show zero DEAD exports in downstream.py. W8 must
+      show fastmcp as USED. No DOWNSTREAM_NOT_CONNECTED in codebase.
+    depends_on:
+    - rt.downstream.call
+    agent: gate-reviewer
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
