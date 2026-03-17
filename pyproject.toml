@@ -21,3 +21,8 @@ tela = "tela.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tela"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
