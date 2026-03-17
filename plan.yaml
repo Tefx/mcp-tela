@@ -7086,7 +7086,7 @@ phases:
       enums, runtime models, contract dataclasses.'
   - id: fix.low.tests.l20-implement-prebuilt-profile-catalog
     name: 'L20: Implement prebuilt profile catalog'
-    status: claimed
+    status: done
     description: "step_type: implementation\nspec_refs:\n  - docs/INTERFACES.md#Profile\
       \ Catalog\ntouch_paths:\n  - src/tela/core/catalog.py (NEW)\n  - tests/core/test_catalog.py\
       \ (NEW)\n\nProblem:\n- INTERFACES.md documents 7 prebuilt profiles (read_only,\
@@ -7114,6 +7114,41 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T11:01:44.137900+00:00'
+    done_at: '2026-03-17T11:04:57.100683+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash: c6111cd (squash merged to main)
+
+
+      Files changed:
+
+      - src/tela/core/catalog.py (NEW: 7 builtin profiles with @pre/@post contracts)
+
+      - tests/core/test_catalog.py (NEW: 19 tests)
+
+      - src/tela/core/config.py (wired merge_with_builtins into parse_config)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/core/test_catalog.py -v -> 19 passed
+
+      - Run: uv run pytest -q -> 265 passed (full regression)
+
+      - Run: uv run invar guard -> passed (0 errors, 0 warnings)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#Prebuilt Profile Catalog (v1)
+
+
+      Gaps/Notes:
+
+      - Catalog auto-populates only when profiles dict is empty (not when partially
+      filled)
+
+      - Builtins use canonical family names (filesystem, network, orchestration, execution)'
   - id: fix.low.tests.gate
     name: 'Gate: Low test quality fixes'
     status: pending
