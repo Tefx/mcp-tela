@@ -848,7 +848,7 @@ phases:
       \ corrections required."
 - id: cross_repo_alignment
   name: Cross-Repo Docs and Contract Alignment
-  status: in_progress
+  status: done
   context: Meta-planned from authoritative tela docs/contracts; phase is blocked on
     the meta review phase completing before any cross-repo alignment work can start.
   depends_on:
@@ -1241,7 +1241,7 @@ phases:
       - explicit no-change"
   - id: cross_repo_alignment.gate
     name: Gate cross-repo alignment phase
-    status: claimed
+    status: done
     description: 'Gate review: verify the cross-repo docs/contracts alignment phase
       is complete and stayed within non-product scope.
 
@@ -1313,6 +1313,16 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T06:30:02.770339+00:00'
+    done_at: '2026-03-17T06:38:42.332310+00:00'
+    evidence: "Artifact:\n- cross_repo_alignment gate review completed.\n\nVerification:\n\
+      - mandatory checks and findings\n  - dependency checks against discovery/prep/meta-review:\
+      \ PASS.\n  - docs/contracts-only scope evidence present and preserved: PASS.\n\
+      \  - contract->test->implementation applicability statement present (N/A where\
+      \ appropriate): PASS.\n  - exact changed paths / no-change evidence present:\
+      \ PASS.\n  - no product implementation introduced in phase: PASS.\n  - freeze\
+      \ compliance to gate: PASS.\n- final decision\n  - OPEN: cross_repo_alignment\
+      \ phase accepted.\n\nPlan mutation payload:\n- explicit no-change\n  - no additional\
+      \ plan corrections required."
 - id: config.contract
   name: config.contract
   status: done
