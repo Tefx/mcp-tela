@@ -8410,3 +8410,29 @@ phases:
     depends_on:
     - fix2.public-api.fix-api-exposure
     agent: integration-verifier
+  - id: fix2.public-api.gate
+    name: gate
+    status: pending
+    description: 'Gate review: Verify public API exposure phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. All 4 issues resolved
+
+      2. New public symbols properly exported
+
+      3. __main__.py works
+
+      4. Error codes match spec'
+    verification: '- All 4 issues confirmed fixed
+
+      - Evidence quality sufficient
+
+      - Ready for next phase'
+    depends_on:
+    - fix2.public-api.verify-api
+    agent: gate-reviewer
