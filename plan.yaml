@@ -7035,7 +7035,7 @@ phases:
       (16 hex chars). Updated test. 296 passed.'
   - id: fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
     name: 'L19: Replace source-text model tests with behavioral tests'
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - tests/core/test_models.py\n\
       \nProblem:\n- test_models.py checks source text (e.g., string matching on class\
       \ definitions) rather than behavior\n- Fragile: breaks on any formatting change\
@@ -7052,6 +7052,8 @@ phases:
     refs:
     - tests/core/test_models.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T11:00:04.832338+00:00'
   - id: fix.low.tests.l20-implement-prebuilt-profile-catalog
     name: 'L20: Implement prebuilt profile catalog'
     status: pending
