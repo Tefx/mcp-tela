@@ -10471,6 +10471,15 @@ phases:
     depends_on:
     - cap.shell.upstream
     agent: python-executor
+  - id: cap.shell.gate
+    name: Gate review
+    status: pending
+    description: ''
+    verification: Full Gate. All tests pass. No stale side_effect_policy references
+      outside migration code.
+    depends_on:
+    - cap.shell.tests
+    agent: gate-reviewer
 - id: cap.docs
   name: Documentation Sync
   status: locked
