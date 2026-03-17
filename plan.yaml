@@ -1924,13 +1924,13 @@ phases:
       merge as `10af91f` before gate review.'
 - id: open_mode.test
   name: open_mode.test
-  status: pending
+  status: in_progress
   depends_on:
   - open_mode.contract
   steps:
   - id: open_mode.test.add-open-mode-contract-and-integration-tests
     name: Add open-mode contract and integration tests
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#7.2\
       \ Open Mode\n  - docs/DESIGN.md#8.1 Startup Sequence\n  - docs/INTERFACES.md#A.\
       \ CLI Interface\n  - docs/INTERFACES.md#H. Open Mode (standalone, no token)\n\
@@ -1964,6 +1964,8 @@ phases:
 
       - Rejection cases covered: yes/no'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T07:06:27.168751+00:00'
   - id: open_mode.test.gate
     name: Gate open_mode.test
     status: pending
