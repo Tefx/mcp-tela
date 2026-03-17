@@ -2096,7 +2096,7 @@ phases:
       5. **Verification**: 27 tests pass, 49 total suite passes, invar guard clean.'
 - id: open_mode.runtime
   name: open_mode.runtime
-  status: in_progress
+  status: done
   depends_on:
   - open_mode.test
   steps:
@@ -2586,7 +2586,7 @@ phases:
       path, edge cases, error scenarios, and conformance.'
   - id: open_mode.runtime.gate
     name: Gate open_mode.runtime
-    status: claimed
+    status: done
     description: 'Gate review: Verify open_mode.runtime phase completion.
 
       review_depth: THOROUGH
@@ -2658,9 +2658,69 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T07:22:13.574078+00:00'
+    done_at: '2026-03-17T07:22:44.677504+00:00'
+    evidence: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: open_mode.runtime
+
+      **Review depth**: THOROUGH
+
+
+      ### Runnable Surface Check
+
+      - Entrypoint identified: yes (`src/tela/cli.py:main`, wired via `pyproject.toml
+      [project.scripts] tela = "tela.cli:main"`)
+
+      - Exact launch command present: yes (`tela start --config <path> [--port PORT]
+      [--default-profile NAME]`)
+
+      - Real initialize path exercised end-to-end: yes (L2 verification includes 7
+      real-path CLI scenarios + full seam proof spanning CLI -> start_command -> bind_gateway_startup
+      -> resolve_initialize_profile_binding)
+
+
+      ### Conformance Check
+
+      - CLI/gateway/upstream share one resolved default-profile fact: yes (TestSharedResolvedProfileConformance
+      + real-path proof)
+
+      - Independent re-derivation absent: yes (all surfaces consume the shared resolved
+      fact from config authority)
+
+
+      ### Phase Steps Review
+
+      1. `implement-default-profile-resolution`: start_command wired to shared config
+      authority, doctest + regression tests
+
+      2. `implement-open-mode-initialize-binding`: upstream binding implemented with
+      RESOLVED/MISSING/AMBIGUOUS handling, metadata isolation
+
+      3. `integrate-cli-default-profile-wiring`: CLI entrypoint + gateway binding
+      + 7 end-to-end tests
+
+      4. `freeze-for-l2`: snapshot at 8ac9a74, clean status
+
+      5. `verify-open-mode-runtime`: L2 verification PASS with real-path seam proof
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 58 passed
+
+      - `uv run invar guard --all` -> passed (0 errors, 0 warnings)
+
+      - No unresolved blockers
+
+
+      ### Decision
+
+      - OPEN'
 - id: gateway.contract
   name: gateway.contract
-  status: locked
+  status: pending
   depends_on:
   - open_mode.runtime
   steps:
