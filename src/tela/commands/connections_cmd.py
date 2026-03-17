@@ -5,6 +5,7 @@ Provides the ``tela connections`` command for listing active upstream connection
 
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 
@@ -27,7 +28,7 @@ def connections_command(json_output: bool = False) -> int:
         Process exit code.
     """
     try:
-        conns = gateway_connections()
+        conns = asyncio.run(gateway_connections())
     except Exception as e:
         print(f"error: {e}", file=sys.stderr)
         return 1

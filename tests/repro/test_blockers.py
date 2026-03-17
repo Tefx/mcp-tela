@@ -97,7 +97,7 @@ class TestB2AuditConfigWiring:
 
         path = str(tmp_path / "audit.jsonl")
         config = AuditConfig(level=AuditLevel.L1, output=path)
-        result = audit_init(config)
+        result = asyncio.run(audit_init(config))
         assert result.is_ok
         assert audit_mod._audit_log_path is not None
 
@@ -107,7 +107,7 @@ class TestB2AuditConfigWiring:
 
         monkeypatch.setenv("HOME", str(tmp_path))
         config = AuditConfig(level=AuditLevel.L2, output="~/audit.jsonl")
-        result = audit_init(config)
+        result = asyncio.run(audit_init(config))
         assert result.is_ok
         assert audit_mod._audit_log_path is not None
         assert "~" not in str(audit_mod._audit_log_path)
@@ -121,7 +121,7 @@ class TestB2AuditConfigWiring:
         )
 
         path = tmp_path / "audit.jsonl"
-        audit_init(AuditConfig(level=AuditLevel.L1, output=str(path)))
+        asyncio.run(audit_init(AuditConfig(level=AuditLevel.L1, output=str(path))))
 
         entry = AuditEntry(
             timestamp="2026-01-01T00:00:00Z",

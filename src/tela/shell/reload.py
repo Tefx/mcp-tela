@@ -27,7 +27,7 @@ from tela.core.models import (
 from tela.shell.audit import audit_write, build_audit_entry
 from tela.shell.config_loader import Result, load_config
 from tela.shell.gateway import get_runtime
-from tela.shell.downstream import get_all_tools, get_registry
+from tela.shell.downstream import _registry_lock, get_all_tools, get_registry
 
 
 # Callback types for upstream notification
@@ -81,53 +81,54 @@ async def on_tools_changed(
     Returns:
         Result[None, str] on success, or error string if conflict detected.
     """
-    registry = get_registry()
-    # Snapshot FULL registry state before tentative register for atomic rollback.
-    # Previous approach only saved one server's tools, corrupting the flat
-    # _tool_to_server map for other servers on conflict rollback (B4).
-    snap = registry.snapshot()
+    async with _registry_lock:
+        registry = get_registry()
+        # Snapshot FULL registry state before tentative register for atomic rollback.
+        # Previous approach only saved one server's tools, corrupting the flat
+        # _tool_to_server map for other servers on conflict rollback (B4).
+        snap = registry.snapshot()
 
-    # Re-enumerate
-    resolved = resolve_tools(server_name, server_config, new_tool_list)
+        # Re-enumerate
+        resolved = resolve_tools(server_name, server_config, new_tool_list)
 
-    # Temporarily update registry
-    registry.register(server_name, resolved)
+        # Temporarily update registry
+        registry.register(server_name, resolved)
 
-    # Check conflicts
-    conflicts = detect_conflicts(registry.get_all_tools())
-    if conflicts:
-        # Rollback entire registry to pre-change state
-        registry.restore(snap)
+        # Check conflicts
+        conflicts = detect_conflicts(registry.get_all_tools())
+        if conflicts:
+            # Rollback entire registry to pre-change state
+            registry.restore(snap)
 
-        conflict_desc = "; ".join(
-            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
-        )
+            conflict_desc = "; ".join(
+                f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
+            )
 
-        # Emit TOOL_CONFLICT audit warning
-        warning_entry = build_audit_entry(
-            level=AuditLevel.L1,
-            connection=ConnectionContext(
-                connection_id="system", profile_name="system",
-                connected_at="",
-            ),
-            tool_name=conflicts[0].tool_name,
-            server_name=server_name,
-            result=EnforcementResult(
-                verdict=EnforcementVerdict.DENY,
-                denied_by="tool_conflict",
-                error_code="TOOL_CONFLICT",
-                error_message=conflict_desc,
-            ),
-        )
-        await audit_write(warning_entry)
+            # Emit TOOL_CONFLICT audit warning
+            warning_entry = build_audit_entry(
+                level=AuditLevel.L1,
+                connection=ConnectionContext(
+                    connection_id="system", profile_name="system",
+                    connected_at="",
+                ),
+                tool_name=conflicts[0].tool_name,
+                server_name=server_name,
+                result=EnforcementResult(
+                    verdict=EnforcementVerdict.DENY,
+                    denied_by="tool_conflict",
+                    error_code="TOOL_CONFLICT",
+                    error_message=conflict_desc,
+                ),
+            )
+            await audit_write(warning_entry)
 
-        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+            return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
 
-    # Success: notify upstream if callback set
-    if _notify_callback is not None:
-        tool_names = sorted(t.name for ts in get_all_tools().values() for t in ts)
-        digest = ":".join(tool_names)
-        await _notify_callback(digest)
+        # Success: notify upstream if callback set
+        if _notify_callback is not None:
+            tool_names = sorted(t.name for ts in get_all_tools().values() for t in ts)
+            digest = ":".join(tool_names)
+            await _notify_callback(digest)
 
     return Result(value=None)
 

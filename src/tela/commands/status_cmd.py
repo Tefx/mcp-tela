@@ -5,6 +5,7 @@ Provides the ``tela status`` command for displaying gateway runtime status.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 
@@ -27,7 +28,7 @@ def status_command(json_output: bool = False) -> int:
         Process exit code.
     """
     try:
-        status = gateway_status()
+        status = asyncio.run(gateway_status())
     except Exception as e:
         print(f"error: {e}", file=sys.stderr)
         return 1

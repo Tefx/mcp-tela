@@ -85,7 +85,7 @@ class TestM6BoundedAuditStore:
         from tela.core.models import AuditEntry
 
         clear_audit_entries()
-        audit_set_max_entries(5)
+        asyncio.run(audit_set_max_entries(5))
 
         async def write_ten():
             for i in range(10):
@@ -107,7 +107,7 @@ class TestM6BoundedAuditStore:
         assert entries[-1].tool_name == "tool_9"
 
         # Reset
-        audit_set_max_entries(10000)
+        asyncio.run(audit_set_max_entries(10000))
 
 
 # --- M7: FastMCP importable ---
