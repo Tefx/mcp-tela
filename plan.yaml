@@ -1941,6 +1941,38 @@ phases:
   status: locked
   depends_on:
   - audit.runtime
+  steps:
+  - id: reload.contract.define-reload-runtime-contracts
+    name: Define reload runtime contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
+      spec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3\
+      \ Hot Reload Flow\n  - docs/INTERFACES.md#E. Hot Reload\n  - docs/INTERFACES.md#F.\
+      \ MCP Server Interface (upstream)\n  - INVAR.md\ntouch_paths:\n  - src/tela/shell/reload.py\n\
+      \  - src/tela/shell/downstream.py\n  - src/tela/shell/upstream.py\n  - src/tela/shell/audit.py\n\
+      \  - src/tela/core/conflict.py\nharness_refs:\n  - tests/shell/test_reload.py\n\
+      \  - tests/integration/test_hot_reload.py\nconflict_rationale: Reload crosses\
+      \ downstream, upstream, and audit seams. Contract it first so later integration\
+      \ stays serialized and explicit.\nTasks:\n- Define acceptance-only contracts\
+      \ for tools/list_changed handling, re-enumeration, conflict rejection, upstream\
+      \ notification, and audit warning emission.\n- Preserve runtime invariant that\
+      \ active upstream connections are not dropped during hot reload.\n- Non-goals:\
+      \ no completed re-enumeration or notification behavior.\n"
+    verification: '- Contract artifacts are signatures/stubs only with no runtime
+      logic
+
+      - No-drop-connection invariant and conflict-reject semantics are explicit
+
+      - Ready for reload.test'
+    evidence_template: '## Contract Evidence
+
+      - Reload contract stubs: <paths>
+
+      - No-drop invariant explicit: yes/no
+
+      - No implementation logic added: yes/no'
+    agent: python-senior
 - id: gateway.test
   name: gateway.test
   status: locked
