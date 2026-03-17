@@ -2901,7 +2901,7 @@ phases:
       -> 0 errors.'
 - id: reload.contract
   name: reload.contract
-  status: locked
+  status: pending
   depends_on:
   - audit.runtime
   steps:
@@ -3984,7 +3984,7 @@ phases:
       - No product implementation in test files'
 - id: audit.runtime
   name: audit.runtime
-  status: in_progress
+  status: done
   depends_on:
   - audit.test
   steps:
@@ -4338,7 +4338,7 @@ phases:
       **Verdict: PASS**'
   - id: audit.runtime.gate
     name: Gate audit.runtime
-    status: claimed
+    status: done
     description: 'Gate review: Verify audit.runtime phase completion.
 
       review_depth: THOROUGH
@@ -4400,6 +4400,58 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:38:34.714663+00:00'
+    done_at: '2026-03-17T08:38:53.273721+00:00'
+    evidence: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: audit.runtime
+
+      **Review depth**: THOROUGH
+
+
+      ### Runtime Surface Check
+
+      - Real emit/store/query path exercised: yes (7-step seam proof: enforce -> strip_meta
+      -> build -> write -> query -> CLI display)
+
+      - Level filtering evidence present: yes (L1 omits hash/content, L2 adds param_hash,
+      L3 adds request/response content, meta always)
+
+
+      ### Conformance Check
+
+      - Upstream/storage/query share one audit fact set: yes (in-memory _audit_entries
+      list)
+
+      - Independent re-derivation absent: yes
+
+
+      ### Phase Steps
+
+      1. implement-audit-entry-building: build_audit_entry with L1/L2/L3 filtering
+      + param_hash
+
+      2. integrate-audit-emission-and-query: audit_write, audit_query, audit_close,
+      audit_cmd.py
+
+      3. freeze-for-l2: snapshot at aad7222
+
+      4. verify-audit-runtime: L2 PASS with seam proof
+
+      5. gate: this review
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 190 passed
+
+      - `uv run invar guard --all` -> 0 errors
+
+
+      ### Decision
+
+      - OPEN'
 - id: reload.test
   name: reload.test
   status: locked
