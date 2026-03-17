@@ -10455,30 +10455,23 @@ phases:
   - id: cap.docs.update
     name: Update documentation
     status: pending
-    description: 'Update ALL documentation: DESIGN.md (enforcement chain 3-step description,
-      profile examples — 17+ locations), INTERFACES.md (profile schema, tela.profiles
-      response, enforcement steps — 7 locations), USAGE.md (profile examples — 5 locations),
-      README.md (any profile examples), tela.yaml.example (all profile examples —
-      10 locations), tela.yaml (local test config). Remove side_effect_policy from
-      all docs except ADR-003 and MIGRATION-003 (historical). Ensure enforcement chain
-      described as 3 per-call steps consistently.'
+    description: 'Update remaining documentation NOT covered by cap.spec: (a) USAGE.md
+      — profile examples (5 locations), (b) README.md — any profile examples, (c)
+      tela.yaml.example — all profile examples (10 locations), (d) tela.yaml — local
+      test config. DESIGN.md and INTERFACES.md were already updated in cap.spec phase.
+      Remove side_effect_policy from all these files.'
     verification: grep 'side_effect_policy' in docs/ returns only ADR-003 and MIGRATION-003
       (historical). All profile examples use capabilities format. Enforcement chain
       described as 3 core steps.
     evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -rn ''side_effect_policy''
-      docs/ output (should only be ADR-003 and MIGRATION-003):\ngrep -rn ''side_effect_policy''
-      tela.yaml.example output:\ngrep -rn ''side_effect_policy'' README.md output:\nEnforcement
-      step count in DESIGN.md: 3 per-call\nEnforcement step count in INTERFACES.md:
-      3 per-call\nGaps/Notes:'
+      docs/USAGE.md output:\ngrep -rn ''side_effect_policy'' README.md output:\ngrep
+      -rn ''side_effect_policy'' tela.yaml.example output:\ngrep -rn ''side_effect_policy''
+      tela.yaml output:\nGaps/Notes:'
     refs:
-    - docs/DESIGN.md
-    - docs/INTERFACES.md
     - docs/USAGE.md
     - README.md
     - tela.yaml.example
     - tela.yaml
-    - docs/ADR-003-gateway-capability-only-profiles.md
-    - docs/MIGRATION-003-capability-only-profiles.md
     agent: python-senior
   - id: cap.docs.gate
     name: Gate review
