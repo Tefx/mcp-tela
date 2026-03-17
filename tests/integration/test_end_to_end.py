@@ -136,3 +136,78 @@ def test_gateway_binds_same_profile_as_cli_authority() -> None:
 
     # The profile in gateway config must be identical to what CLI resolved
     assert gateway_result.value.default_profile == runtime_result.value.cli_default_profile
+
+
+# --- Runtime readiness integration tests ---
+
+
+def test_runtime_readiness_open_mode_stdio() -> None:
+    """Full path from CLI to GatewayStartupConfig proves runtime readiness.
+
+    This exercises: CLI args -> start_command -> bind_gateway_startup
+    -> GatewayStartupConfig with resolved profile and transport.
+    """
+    config_path, _ = _write_open_mode_config({"production": True})
+
+    # Step 1: CLI -> start_command
+    runtime_result = start_command(config_path=config_path)
+    assert runtime_result.is_ok and runtime_result.value is not None
+
+    # Step 2: start_command -> bind_gateway_startup
+    gateway_result = bind_gateway_startup(runtime_result.value)
+    assert gateway_result.is_ok and gateway_result.value is not None
+
+    # Runtime readiness assertions
+    gw = gateway_result.value
+    assert gw.transport == GatewayTransport.STDIO
+    assert gw.port is None
+    assert gw.auth_mode == AuthMode.OPEN
+    assert gw.default_profile == "production"
+
+
+def test_runtime_readiness_open_mode_sse() -> None:
+    """SSE transport runtime readiness with explicit port."""
+    config_path, _ = _write_open_mode_config({"dev": True})
+
+    runtime_result = start_command(config_path=config_path, port=3000)
+    assert runtime_result.is_ok and runtime_result.value is not None
+
+    gateway_result = bind_gateway_startup(runtime_result.value)
+    assert gateway_result.is_ok and gateway_result.value is not None
+
+    gw = gateway_result.value
+    assert gw.transport == GatewayTransport.SSE
+    assert gw.port == 3000
+    assert gw.default_profile == "dev"
+
+
+def test_runtime_readiness_cli_profile_override() -> None:
+    """CLI --default-profile overrides config default in runtime readiness."""
+    config_path, _ = _write_open_mode_config({"staging": True, "production": False})
+
+    runtime_result = start_command(
+        config_path=config_path, default_profile="production"
+    )
+    assert runtime_result.is_ok and runtime_result.value is not None
+
+    gateway_result = bind_gateway_startup(runtime_result.value)
+    assert gateway_result.is_ok and gateway_result.value is not None
+
+    assert gateway_result.value.default_profile == "production"
+
+
+def test_runtime_readiness_fail_fast_chain() -> None:
+    """Config errors propagate through the full CLI -> gateway chain.
+
+    When start_command fails, bind_gateway_startup is never reached.
+    This is the fail-fast behavior specified in DESIGN.md 8.1.
+    """
+    config_path, _ = _write_open_mode_config({"dev": False, "staging": False})
+
+    # start_command fails — no default profile
+    runtime_result = start_command(config_path=config_path)
+    assert runtime_result.is_err
+
+    # Gateway is never reached — this is fail-fast at startup
+    # (We cannot call bind_gateway_startup because runtime_result has no value)
+    assert runtime_result.value is None
