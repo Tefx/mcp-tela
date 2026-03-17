@@ -79,7 +79,10 @@ async def on_tools_changed(
         Result[None, str] on success, or error string if conflict detected.
     """
     registry = get_registry()
-    previous_tools = registry.get_all_tools().get(server_name, [])
+    # Snapshot FULL registry state before tentative register for atomic rollback.
+    # Previous approach only saved one server's tools, corrupting the flat
+    # _tool_to_server map for other servers on conflict rollback (B4).
+    snap = registry.snapshot()
 
     # Re-enumerate
     resolved = resolve_tools(server_name, server_config, new_tool_list)
@@ -90,11 +93,8 @@ async def on_tools_changed(
     # Check conflicts
     conflicts = detect_conflicts(registry.get_all_tools())
     if conflicts:
-        # Rollback
-        if previous_tools:
-            registry.register(server_name, previous_tools)
-        else:
-            registry.unregister(server_name)
+        # Rollback entire registry to pre-change state
+        registry.restore(snap)
 
         conflict_desc = "; ".join(
             f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts

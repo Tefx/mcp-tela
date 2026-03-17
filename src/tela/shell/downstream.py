@@ -58,6 +58,22 @@ class DownstreamRegistry:
                 return tool
         return None
 
+    def snapshot(self) -> tuple[dict[str, list["ResolvedTool"]], dict[str, str]]:
+        """Snapshot full registry state for atomic rollback.
+
+        Returns shallow copies -- safe because ResolvedTool is immutable.
+        """
+        return (
+            {k: list(v) for k, v in self._tools_by_server.items()},
+            dict(self._tool_to_server),
+        )
+
+    def restore(self, snap: tuple[dict[str, list["ResolvedTool"]], dict[str, str]]) -> None:
+        """Restore full registry state from snapshot (atomic rollback)."""
+        tools_by_server, tool_to_server = snap
+        self._tools_by_server = {k: list(v) for k, v in tools_by_server.items()}
+        self._tool_to_server = dict(tool_to_server)
+
     def clear(self) -> None:
         """Clear all registry entries."""
         self._tools_by_server.clear()
