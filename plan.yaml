@@ -3984,13 +3984,13 @@ phases:
       - No product implementation in test files'
 - id: audit.runtime
   name: audit.runtime
-  status: pending
+  status: in_progress
   depends_on:
   - audit.test
   steps:
   - id: audit.runtime.implement-audit-entry-building
     name: Implement audit entry building
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.12 shell/audit.py -- Audit Log Writer\n  - docs/DESIGN.md#10.1\
       \ Error Propagation Rules\n  - docs/INTERFACES.md#J. Error Codes\ntouch_paths:\n\
@@ -4017,6 +4017,8 @@ phases:
 
       - Upstream integration deferred: yes/no'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T08:32:08.019223+00:00'
   - id: audit.runtime.integrate-audit-emission-and-query
     name: Integrate audit emission and query
     status: pending
