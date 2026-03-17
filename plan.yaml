@@ -9243,7 +9243,7 @@ phases:
 
       - No import errors'
     depends_on:
-    - retest2.full.regression-suite
+    - retest2.full.regression-suite-retest-batch
     agent: blind-tester
   - id: retest2.full.findings-coverage-audit
     name: findings-coverage-audit
