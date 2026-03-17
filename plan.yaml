@@ -8228,7 +8228,7 @@ phases:
   steps:
   - id: fix2.contracts.fix-tautological-and-validation
     name: fix-tautological-and-validation
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#B. Configuration\n  - INVAR.md (contract requirements)\n\
       touch_paths:\n  - src/tela/core/config.py\nharness_refs:\n  - tests/core/test_config.py\n\
@@ -8270,6 +8270,18 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T11:51:35.648199+00:00'
+    done_at: '2026-03-17T11:56:46.327231+00:00'
+    evidence: '## Evidence (from python-senior subagent)
+
+      Files changed: core/config.py (5 tautological contracts → meaningful, server
+      transport validation added, fragile postcondition replaced), tests/core/test_config.py
+      (4 new tests)
+
+      Verification: 315 passed, doctests 4 passed
+
+      Commit merged to main (auto-merge, no conflicts)
+
+      Gaps/Notes: none'
   - id: fix2.contracts.verify-contracts
     name: verify-contracts
     status: pending
