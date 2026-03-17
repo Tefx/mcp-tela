@@ -6,6 +6,7 @@ validation contracts. It intentionally contains no business-rule logic.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -34,6 +35,21 @@ class AuthMode(str, Enum):
     OPEN = "open"
 
 
+class GatewayTransport(str, Enum):
+    """Gateway transport contract for runtime startup."""
+
+    STDIO = "stdio"
+    SSE = "sse"
+
+
+class DefaultProfileResolutionStatus(str, Enum):
+    """Outcome contract for open-mode default-profile resolution."""
+
+    RESOLVED = "resolved"
+    MISSING = "missing"
+    AMBIGUOUS = "ambiguous"
+
+
 class ProfileConfig(BaseModel):
     """Contract shape for a single profile configuration.
 
@@ -60,3 +76,32 @@ class TelaConfig(BaseModel):
     profiles: dict[str, ProfileConfig] = Field(default_factory=dict)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     resolved_default_profile: str | None = None
+
+
+@dataclass(frozen=True)
+class RuntimeBindingContract:
+    """CLI-to-gateway runtime binding authority for `tela start`.
+
+    Contract semantics:
+    - `transport=GatewayTransport.STDIO` when CLI omits `--port`.
+    - `transport=GatewayTransport.SSE` when CLI provides `--port`.
+    - `cli_default_profile` reflects `--default-profile` without guessing.
+    """
+
+    config_path: str
+    transport: GatewayTransport
+    port: int | None
+    cli_default_profile: str | None
+
+
+@dataclass(frozen=True)
+class InitializeProfileBinding:
+    """Explicit upstream initialize profile-binding contract for open mode.
+
+    `status` captures acceptance outcome. If status is not `RESOLVED`,
+    `resolved_default_profile` must remain `None` and initialization must be
+    rejected by the shell boundary.
+    """
+
+    status: DefaultProfileResolutionStatus
+    resolved_default_profile: str | None
