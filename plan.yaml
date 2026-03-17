@@ -8559,7 +8559,7 @@ phases:
       Merged to main, no conflicts'
   - id: fix2.docs.verify-docs
     name: verify-docs
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       independence_level: L1
@@ -8594,6 +8594,12 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-17T11:58:23.436135+00:00'
+    done_at: '2026-03-17T11:59:46.011813+00:00'
+    evidence: '## Evidence (integration-verifier)
+
+      All 5 DESIGN.md fixes verified: no returns.result refs, *_cmd.py filenames,
+      no AuthzDenyError, catalog.py spec exists, ConnectionContext.token removed.
+      Note: INVAR.md:79 still has returns.result (out of scope).'
   - id: fix2.docs.gate
     name: gate
     status: pending
