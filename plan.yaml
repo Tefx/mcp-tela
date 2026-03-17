@@ -10360,30 +10360,24 @@ phases:
   - id: cap.impl.config-catalog
     name: Update config parser and builtin catalog
     status: pending
-    description: 'Update config.py parse_config() to handle both tools: and capabilities:
-      in YAML, apply side_effect_policy to ceiling capping per MIGRATION-003 rules.
-      Update catalog.py builtin profiles to use capabilities instead of tools, remove
-      side_effect_policy from all 7 builtins.'
+    description: 'Update config.py parse_config(): accept both `tools:` and `capabilities:`
+      YAML keys (not both in same profile), emit deprecation warning for `tools:`,
+      apply side_effect_policy→ceiling capping per MIGRATION-003 rules, error if side_effect_policy
+      appears with capabilities:. Update catalog.py: rename tools→capabilities in
+      all 7 builtin profiles, remove side_effect_policy, apply read_only capping to
+      read_only and fetch_external builtins.'
     verification: Config parser accepts both formats. Capping logic correct per migration
       rules. All 7 builtins use capabilities. All previously-written tests pass. invar
       guard passes.
-    evidence_template: 'Commit hash(es):
-
-      Files changed:
-
-      Verification:
-
-      - Both YAML formats parsed: yes/no
-
-      - Capping logic for read_only: yes/no
-
-      - Builtins updated: count/7
-
-      - Tests passing: yes/no
-
-      - invar guard: pass/fail
-
-      Gaps/Notes:'
+    evidence_template: 'Commit hash(es):\nFiles changed:\ngrep -n ''side_effect_policy''
+      src/tela/core/config.py output:\ngrep -n ''side_effect_policy'' src/tela/core/catalog.py
+      output:\npython -c "from tela.core.catalog import BUILTIN_PROFILES; print([p.capabilities
+      for p in BUILTIN_PROFILES.values()])" output:\ninvar guard output (last 20 lines):\npytest
+      -x output (last 20 lines):\nGaps/Notes:'
+    refs:
+    - src/tela/core/config.py
+    - src/tela/core/catalog.py
+    - docs/MIGRATION-003-capability-only-profiles.md
     depends_on:
     - cap.impl.enforcement
     agent: python-executor
