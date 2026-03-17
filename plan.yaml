@@ -10265,6 +10265,45 @@ phases:
   status: locked
   depends_on:
   - cap.contract
+  steps:
+  - id: cap.test.write
+    name: Write tests covering migration and new schema
+    status: pending
+    description: 'Write tests covering: (a) ProfileConfig accepts both tools= and
+      capabilities=, (b) capabilities= is canonical in serialized output, (c) side_effect_policy:
+      read_only triggers ceiling capping during migration parse, (d) side_effect_policy:
+      allow is silently dropped, (e) new 5-step enforcement chain produces same ALLOW/DENY
+      results as old chain (minus side-effect step), (f) builtin profiles use capabilities
+      format, (g) config parser handles both YAML formats.'
+    verification: Tests exist and FAIL (red-green pattern) because implementation
+      not yet done. Tests cover all 7 scenarios listed. No test uses side_effect_policy
+      without testing migration behavior.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Tests written: count
+
+      Test scenarios covered:
+
+      - dual-field acceptance: yes/no
+
+      - canonical output: yes/no
+
+      - read_only capping: yes/no
+
+      - allow drop: yes/no
+
+      - 5-step enforcement: yes/no
+
+      - builtin profiles: yes/no
+
+      - config parser: yes/no
+
+      Verification: pytest output showing expected failures
+
+      Gaps/Notes:'
+    agent: python-executor
 - id: cap.impl
   name: Core Implementation
   status: locked
