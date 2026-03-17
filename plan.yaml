@@ -10444,6 +10444,33 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+  - id: cap.shell.tests
+    name: Update shell and integration tests
+    status: pending
+    description: Update all shell-layer tests and integration tests to use capabilities
+      format. Update test fixtures, conftest.py helpers. Fix any repro tests that
+      reference old format.
+    verification: All 316+ tests pass. No test constructs ProfileConfig with tools=
+      without also testing migration. grep 'side_effect_policy' in tests/ returns
+      only migration-testing code.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Tests updated: count
+
+      Verification:
+
+      - Full test suite: pass/fail (count)
+
+      - side_effect_policy in tests: only in migration tests
+
+      - invar guard: pass/fail
+
+      Gaps/Notes:'
+    depends_on:
+    - cap.shell.upstream
+    agent: python-executor
 - id: cap.docs
   name: Documentation Sync
   status: locked
