@@ -6158,3 +6158,72 @@ phases:
   status: locked
   depends_on:
   - fix.high
+  steps:
+  - id: fix.low.tests.l17-fix-reload-tools-digest-to-use-sha-256
+    name: 'L17: Fix reload tools_digest to use SHA-256'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - src/tela/shell/reload.py\n\
+      harness_refs:\n  - tests/shell/test_reload.py\n\nProblem:\n- reload.py computes\
+      \ tools_digest as raw concatenation of tool names: `':'.join(tool_names)`\n\
+      - Spec says digest should be SHA-256 hash\n\nTasks:\n1. Replace raw concat digest\
+      \ with SHA-256 hash of sorted tool names\n2. Use `hashlib.sha256` consistent\
+      \ with audit.py pattern\n3. Update tests expecting the old digest format\n\n\
+      File: src/tela/shell/reload.py\nLine: ~125 (digest = ':'.join(tool_names))\n\
+      Pattern: Follow `_compute_param_hash` in audit.py"
+    verification: '- tools_digest is SHA-256 hash, not raw concat
+
+      - Format matches spec
+
+      - uv run pytest tests/shell/test_reload.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/reload.py
+    agent: python-executor
+  - id: fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
+    name: 'L19: Replace source-text model tests with behavioral tests'
+    status: pending
+    description: "step_type: implementation\ntouch_paths:\n  - tests/core/test_models.py\n\
+      \nProblem:\n- test_models.py checks source text (e.g., string matching on class\
+      \ definitions) rather than behavior\n- Fragile: breaks on any formatting change\
+      \ even if behavior is unchanged\n\nTasks:\n1. Review each test in test_models.py\n\
+      2. Replace source-text assertions with behavioral assertions:\n   - Test model\
+      \ instantiation with valid/invalid data\n   - Test field defaults\n   - Test\
+      \ serialization/deserialization\n   - Test enum values\n3. Remove any tests\
+      \ that only check source text existence"
+    verification: '- No source-text string matching in test_models.py
+
+      - All tests verify behavior (construction, validation, serialization)
+
+      - uv run pytest tests/core/test_models.py -v passes'
+    refs:
+    - tests/core/test_models.py
+    agent: python-executor
+  - id: fix.low.tests.l20-implement-prebuilt-profile-catalog
+    name: 'L20: Implement prebuilt profile catalog'
+    status: pending
+    description: "step_type: implementation\nspec_refs:\n  - docs/INTERFACES.md#Profile\
+      \ Catalog\ntouch_paths:\n  - src/tela/core/catalog.py (NEW)\n  - tests/core/test_catalog.py\
+      \ (NEW)\n\nProblem:\n- INTERFACES.md documents 7 prebuilt profiles (read_only,\
+      \ fetch_external, modify_local, send_external, orchestrate, execute_safe, execute_full)\n\
+      - None are implemented -- the catalog is just documentation\n\nTasks:\n1. Create\
+      \ `src/tela/core/catalog.py` with:\n   - BUILTIN_PROFILES dict mapping name\
+      \ to ProfileConfig\n   - 7 profiles as specified in INTERFACES.md\n   - Each\
+      \ with appropriate tools, posture ceilings, and side_effect_policy\n2. Add @pre/@post\
+      \ contracts per Core zone rules\n3. Add doctests\n4. Create tests/core/test_catalog.py\n\
+      5. Wire catalog into config loader: if profiles section is empty, load builtins\n\
+      \nCore zone rules: no I/O, @pre + @post + doctest required."
+    verification: '- catalog.py exists with 7 builtin profiles
+
+      - Each profile matches INTERFACES.md specification
+
+      - Catalog loaded when config has no profiles
+
+      - @pre/@post contracts present
+
+      - uv run pytest tests/core/test_catalog.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    agent: python-executor
