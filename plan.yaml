@@ -6227,3 +6227,22 @@ phases:
     refs:
     - docs/INTERFACES.md
     agent: python-executor
+  - id: fix.low.tests.gate
+    name: 'Gate: Low test quality fixes'
+    status: pending
+    description: 'Gate review: Verify low-severity test quality fixes.
+
+
+      review_depth: QUICK
+
+      Covers: L17, L19, L20'
+    verification: '- All test quality fixes complete
+
+      - No regressions
+
+      - invar guard clean'
+    depends_on:
+    - fix.low.tests.l17-fix-reload-tools-digest-to-use-sha-256
+    - fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
+    - fix.low.tests.l20-implement-prebuilt-profile-catalog
+    agent: gate-reviewer
