@@ -10162,6 +10162,16 @@ phases:
   status: locked
   depends_on:
   - rt.liveness
+  steps:
+  - id: rt.doc_sync.impl
+    name: Update documentation to match runtime
+    status: pending
+    description: Update README.md and docs/USAGE.md to reflect actual working state.
+      Update INTERFACES.md if any contracts changed. Remove 'deferred' language from
+      module docstrings.
+    verification: No 'deferred' language in shell module docstrings. Docs match actual
+      behavior.
+    agent: python-executor
 - id: rt.final_gate
   name: Deep Review
   status: locked
