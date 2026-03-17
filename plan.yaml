@@ -2901,7 +2901,7 @@ phases:
       -> 0 errors.'
 - id: reload.contract
   name: reload.contract
-  status: in_progress
+  status: done
   depends_on:
   - audit.runtime
   steps:
@@ -2964,7 +2964,7 @@ phases:
       - Commit: 73a83ed, merged as 1d78d07'
   - id: reload.contract.gate
     name: Gate reload.contract
-    status: claimed
+    status: done
     description: 'Gate review: Verify reload runtime contract phase completion.
 
       review_depth: STANDARD
@@ -3000,6 +3000,26 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T08:40:12.505514+00:00'
+    done_at: '2026-03-17T08:40:22.518566+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: reload.contract.define-reload-runtime-contracts
+
+      - Contract purity: pass (3 stubs, all raise NotImplementedError)
+
+      - Decision: OPEN
+
+
+      ### Detail
+
+      1. All 3 functions (on_tools_changed, on_server_reconnect, on_config_changed)
+      are stubs
+
+      2. No-drop-connection invariant documented in module and function docstrings
+
+      3. Conflict-reject semantics explicit in on_tools_changed docstring
+
+      4. 3 contract tests, 193 total passing, 0 invar errors'
 - id: gateway.test
   name: gateway.test
   status: done
@@ -4482,7 +4502,7 @@ phases:
       - OPEN'
 - id: reload.test
   name: reload.test
-  status: locked
+  status: pending
   depends_on:
   - reload.contract
   steps:
