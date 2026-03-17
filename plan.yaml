@@ -10222,9 +10222,9 @@ phases:
     agent: gate-reviewer
 - id: cap.contract
   name: Define New Profile Contracts
-  status: pending
+  status: locked
   depends_on:
-  - retest2.full
+  - cap.spec
   steps:
   - id: cap.contract.define
     name: Define contracts for new ProfileConfig shape
