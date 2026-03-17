@@ -5743,7 +5743,7 @@ phases:
       - Covers L21 as well'
   - id: fix.high.h2-add-concurrency-protection-to-module-singletons
     name: 'H2: Add concurrency protection to module singletons'
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#Concurrency\ntouch_paths:\n  - src/tela/shell/audit.py (_audit_entries,\
       \ _audit_log_path)\n  - src/tela/shell/downstream.py (_registry)\n  - src/tela/shell/gateway.py\
@@ -5779,6 +5779,38 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-17T10:38:41.814303+00:00'
+    done_at: '2026-03-17T10:48:25.094717+00:00'
+    evidence: 'Artifact:
+
+      - Commit: a03f217
+
+
+      Files changed:
+
+      - src/tela/shell/audit.py (asyncio.Lock for _audit_entries)
+
+      - src/tela/shell/downstream.py (asyncio.Lock for _registry)
+
+      - src/tela/shell/gateway.py (asyncio.Lock for _runtime)
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 295 passed
+
+      - No deadlocks (single lock per module, no nested locking)
+
+      - All existing tests pass without modification
+
+
+      Spec link:
+
+      - docs/DESIGN.md#Concurrency
+
+
+      Gaps/Notes:
+
+      - None'
   - id: fix.high.h3-implement-notimplementederror-contract-stubs
     name: 'H3: Implement NotImplementedError contract stubs'
     status: claimed
