@@ -10224,6 +10224,33 @@ phases:
   status: pending
   depends_on:
   - retest2.full
+  steps:
+  - id: cap.contract.define
+    name: Define contracts for new ProfileConfig shape
+    status: pending
+    description: 'Define contracts for new ProfileConfig shape: add capabilities field
+      (alias for tools during migration), plan removal of SideEffectPolicy enum and
+      side_effect_policy field, define new 5-step enforcement chain (remove check_side_effect).
+      Write @pre/@post contracts and doctests BEFORE implementation per Invar protocol.'
+    verification: Contracts define new ProfileConfig accepting both tools= and capabilities=.
+      Contracts define 5-step enforcement chain without check_side_effect. invar guard
+      passes.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Contract decisions:
+
+      - ProfileConfig.capabilities field type:
+
+      - Migration-period dual-field handling:
+
+      - Enforcement steps after removal:
+
+      Verification: invar guard output
+
+      Gaps/Notes:'
+    agent: python-senior
 - id: cap.test
   name: Tests for Migration and New Schema
   status: locked
