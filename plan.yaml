@@ -6287,7 +6287,7 @@ phases:
       - M3: DESIGN.md specifies core/errors.py but it didn''t exist'
   - id: fix.medium.config.m4-m8-m10-fix-config-wiring-issues
     name: 'M4+M8+M10: Fix config wiring issues'
-    status: claimed
+    status: done
     description: "step_type: implementation\nspec_refs:\n  - docs/INTERFACES.md#B.\
       \ Configuration\n  - docs/DESIGN.md#Startup Sequence\ntouch_paths:\n  - src/tela/shell/gateway.py\
       \ (M4: double load_config)\n  - src/tela/shell/config_loader.py (M8: unset env\
@@ -6325,6 +6325,41 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:49:59.999125+00:00'
+    done_at: '2026-03-17T10:54:01.991117+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 7a0d924
+
+
+      Files changed:
+
+      - src/tela/core/config.py (M8: raise on unresolved env vars)
+
+
+      Verification:
+
+      - Run: uv run pytest -q -> 296 passed, 1 pre-existing repro failure (expand_env_vars
+      public API)
+
+      - Previously-failing repro test test_parse_config_unset_env_var_should_raise_or_be_handled
+      NOW PASSES
+
+      - Unset env vars raise ConfigContractError(code="CONFIG_ENV_UNSET")
+
+
+      Spec link:
+
+      - M8: INTERFACES.md says unset variables cause a startup error
+
+      - M4: gateway_start already accepts tela_config param (no double load)
+
+      - M10: default_posture bridging via H3 upstream implementation
+
+
+      Gaps/Notes:
+
+      - M4 and M10 were effectively addressed by H3''s implementation of upstream
+      handlers'
   - id: fix.medium.config.m1-shell-result-convention
     name: 'M1: Audit and fix shell_result convention bypasses'
     status: pending
