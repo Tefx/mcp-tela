@@ -5382,3 +5382,165 @@ phases:
   status: locked
   depends_on:
   - fix.blockers
+  steps:
+  - id: fix.high.h1-replace-no-op-contract-decorators-with-real-invar-contracts
+    name: 'H1: Replace no-op contract decorators with real invar contracts'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - INVAR.md (Core zone rules)\n  - CLAUDE.md (contract requirements)\ntouch_paths:\n\
+      \  - src/tela/core/config.py\n  - src/tela/core/classification.py\n  - src/tela/core/enforcement.py\n\
+      \  - src/tela/core/family.py\n  - src/tela/core/conflict.py\nharness_refs:\n\
+      \  - All tests/core/*.py\nconflict_rationale: Only this step touches core contract\
+      \ decorators.\n\nProblem:\n- Every Core module defines `pre`/`post` as identity\
+      \ lambdas: `pre = lambda _predicate: lambda func: func`\n- Zero runtime checking\
+      \ of any @pre/@post contract\n- `posture_le` and `check_tool_override` are missing\
+      \ @post decorators entirely\n\nTasks:\n1. Replace identity-lambda `pre`/`post`\
+      \ with proper imports from the invar contract library\n   - Check if `dpcontracts`,\
+      \ `icontract`, or project-local contract library is available\n   - If no contract\
+      \ library exists, implement lightweight `pre`/`post` decorators that actually\
+      \ check predicates in debug/test mode\n2. Add missing `@post` to `posture_le`\
+      \ and `check_tool_override`\n3. Verify all existing @pre/@post predicates are\
+      \ semantically correct (not vacuous)\n4. Fix L21 while here: `_expand_env_token`\
+      \ @post contract is vacuous (checks for \\x00 which can never appear)\n\nCovers:\
+      \ H1, L21\n\nWARNING: Do not break existing tests. Contract violations in existing\
+      \ code must be fixed, not suppressed."
+    verification: '- pre/post decorators actually check predicates at runtime
+
+      - posture_le and check_tool_override have @post
+
+      - _expand_env_token @post is meaningful (not vacuous)
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes
+
+      - No identity-lambda pre/post remains in any core module'
+    refs:
+    - src/tela/core/config.py
+    - src/tela/core/classification.py
+    - src/tela/core/enforcement.py
+    - INVAR.md
+    agent: python-senior
+  - id: fix.high.h2-add-concurrency-protection-to-module-singletons
+    name: 'H2: Add concurrency protection to module singletons'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#Concurrency\ntouch_paths:\n  - src/tela/shell/audit.py (_audit_entries,\
+      \ _audit_log_path)\n  - src/tela/shell/downstream.py (_registry)\n  - src/tela/shell/gateway.py\
+      \ (_runtime)\n  - src/tela/shell/reload.py (_notify_callback)\nharness_refs:\n\
+      \  - tests/shell/test_audit.py\n  - tests/shell/test_downstream.py\n  - tests/shell/test_gateway.py\n\
+      \  - tests/shell/test_reload.py\nconflict_rationale: Touches multiple shell\
+      \ modules but only adds locking -- no behavioral change.\n\nProblem:\n- `_runtime`\
+      \ (gateway), `_registry` (downstream), `_audit_entries` (audit), `_notify_callback`\
+      \ (reload) are all module-level mutable singletons\n- No concurrency protection:\
+      \ concurrent connections will race on list/counter mutations\n- asyncio event\
+      \ loop is single-threaded but multiple coroutines can interleave at await points\n\
+      \nTasks:\n1. Add `asyncio.Lock` guards to `_audit_entries` mutations (append,\
+      \ clear, query)\n2. Add `asyncio.Lock` guards to `_registry` mutations (register,\
+      \ unregister, clear)\n3. Add `asyncio.Lock` guard to `_runtime` state mutations\
+      \ (connections list, running flag)\n4. Add `asyncio.Lock` guard to `_notify_callback`\
+      \ setter\n5. Ensure locks are module-level (not per-call) for correct scoping\n\
+      6. Consider using `threading.Lock` for truly thread-safe access if gateway uses\
+      \ thread pool\n\nOut-of-scope: No behavioral changes, only adding safety guards."
+    verification: '- All module singletons have lock protection
+
+      - No deadlocks introduced (verify lock ordering if multiple locks)
+
+      - Existing tests pass without modification
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/audit.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/reload.py
+    agent: python-senior
+  - id: fix.high.h3-implement-notimplementederror-contract-stubs
+    name: 'H3: Implement NotImplementedError contract stubs'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#4.10 shell/upstream.py\n  - docs/DESIGN.md#4.10 shell/downstream.py\n\
+      \  - docs/DESIGN.md#4.12 shell/reload.py\n  - docs/INTERFACES.md#MCP Protocol\n\
+      touch_paths:\n  - src/tela/shell/upstream.py (5 stubs: handle_initialize, handle_tools_list,\
+      \ handle_tools_call, handle_profiles_list, notify_tools_changed)\n  - src/tela/shell/downstream.py\
+      \ (2 stubs: call_tool, re_enumerate)\n  - src/tela/shell/reload.py (1 stub:\
+      \ on_config_changed)\nharness_refs:\n  - tests/shell/test_upstream.py\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_reload.py\n  - tests/integration/test_end_to_end.py\n\
+      conflict_rationale: Serialized with H2 (both touch same shell modules).\n\n\
+      Problem:\n- 8 NotImplementedError contract stubs remain unimplemented\n- Gateway\
+      \ cannot actually forward tool calls\n- fastmcp dependency declared but never\
+      \ imported\n\nTasks:\n1. upstream.py:\n   - handle_initialize: Create ConnectionContext,\
+      \ bind profile, return Result\n   - handle_tools_list: Filter tools for bound\
+      \ profile using enforcement chain\n   - handle_tools_call: Strip _meta, enforce,\
+      \ forward to downstream, emit audit\n   - handle_profiles_list: Return configured\
+      \ profiles as list[dict]\n   - notify_tools_changed: Send notification to upstream\
+      \ client (via callback)\n2. downstream.py:\n   - call_tool: Forward tool call\
+      \ to downstream server (use fastmcp client or subprocess)\n   - re_enumerate:\
+      \ Re-enumerate tools from a downstream server\n3. reload.py:\n   - on_config_changed:\
+      \ Reload config, reconnect changed servers, detect conflicts\n\nNOTE: For call_tool\
+      \ and re_enumerate, actual MCP communication via fastmcp is acceptable as a\
+      \ deferred integration step. Implement the in-process logic first, with fastmcp\
+      \ wiring as a follow-up if the dependency is not yet functional.\n\nCovers:\
+      \ H3, M7 (fastmcp import)"
+    verification: '- All 8 NotImplementedError stubs replaced with working implementations
+
+      - handle_initialize creates valid ConnectionContext
+
+      - handle_tools_list returns filtered tools
+
+      - handle_tools_call runs enforcement and forwards
+
+      - No NotImplementedError remains in upstream.py, downstream.py, reload.py
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes'
+    refs:
+    - src/tela/shell/upstream.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/reload.py
+    - docs/DESIGN.md
+    agent: python-senior
+  - id: fix.high.h4-implement-core-token-py-for-hmac-token-validation
+    name: 'H4: Implement core/token.py for HMAC token validation'
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#Token Authentication\n  - docs/DESIGN.md#CapabilityToken\
+      \ model\n  - docs/INTERFACES.md#Authentication\ntouch_paths:\n  - src/tela/core/token.py\
+      \ (NEW)\n  - src/tela/core/models.py (CapabilityToken model if not exists)\n\
+      \  - tests/core/test_token.py (NEW)\nharness_refs:\n  - tests/core/\nconflict_rationale:\
+      \ New file, no overlap with other steps.\n\nProblem:\n- DESIGN.md specifies\
+      \ HMAC token validation, CapabilityToken model\n- core/token.py is completely\
+      \ missing\n- Token auth mode is entirely non-functional\n\nTasks:\n1. Create\
+      \ `src/tela/core/token.py` with:\n   - `CapabilityToken` model (or add to models.py\
+      \ if simpler)\n   - `validate_token(token: str, secrets: list[str]) -> Result[CapabilityToken,\
+      \ str]`\n   - `create_token(profile: str, secret: str) -> str` (for testing)\n\
+      \   - HMAC-SHA256 signature validation\n   - Token expiry checking\n   - Profile\
+      \ extraction from token payload\n2. Add @pre/@post contracts per INVAR.md Core\
+      \ zone rules\n3. Add doctests\n4. Create `tests/core/test_token.py` with unit\
+      \ tests\n5. Wire into upstream.py handle_initialize for token auth mode\n\n\
+      Core zone rules apply: no I/O imports, @pre + @post + doctest required."
+    verification: '- core/token.py exists with CapabilityToken model
+
+      - validate_token correctly validates HMAC tokens
+
+      - create_token produces valid tokens
+
+      - Token expiry is checked
+
+      - Profile is extracted from token
+
+      - @pre/@post contracts present
+
+      - Doctests pass
+
+      - uv run pytest tests/core/test_token.py -v passes
+
+      - uv run invar guard passes'
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - INVAR.md
+    agent: python-senior
