@@ -6840,7 +6840,7 @@ phases:
       0 invar errors.'
 - id: fix.low.docs
   name: 'Low Fixes: Docs and Config (L2, L4, L6-L10, L18)'
-  status: in_progress
+  status: done
   depends_on:
   - fix.high
   steps:
@@ -6979,7 +6979,7 @@ phases:
       296 passed.'
   - id: fix.low.docs.gate
     name: 'Gate: Low docs fixes'
-    status: claimed
+    status: done
     description: 'Gate review: Verify low-severity docs fixes.
 
 
@@ -6998,6 +6998,9 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T10:57:33.914917+00:00'
+    done_at: '2026-03-17T10:57:41.291568+00:00'
+    evidence: 'Gate: Low Docs Fixes PASSED. All steps complete. README fixed, LICENSE
+      added, docs reconciled. 296 passed.'
 - id: fix.low.tests
   name: 'Low Fixes: Test Quality (L17, L19, L20)'
   status: in_progress
