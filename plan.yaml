@@ -1245,13 +1245,13 @@ phases:
     agent: gate-reviewer
 - id: config.contract
   name: config.contract
-  status: pending
+  status: in_progress
   depends_on:
   - meta.review
   steps:
   - id: config.contract.define-config-authority-contracts
     name: Define config authority contracts
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.1 core/models.py -- Data Models\n  - docs/DESIGN.md#4.2\
@@ -1294,6 +1294,8 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T05:59:47.908900+00:00'
   - id: config.contract.gate
     name: Gate config.contract
     status: pending
