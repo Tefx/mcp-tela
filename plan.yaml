@@ -8162,3 +8162,40 @@ phases:
 
       - uv run invar guard passes'
     agent: python-senior
+  - id: fix2.concurrency.verify-locks
+    name: verify-locks
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+
+      As an INDEPENDENT TESTER, validate all concurrency fixes.
+
+
+      Verify:
+
+      1. _runtime_lock is used in gateway_start, gateway_shutdown, gateway_status
+
+      2. _audit_lock protects audit_write AND file writes, not just audit_query
+
+      3. _registry_lock is acquired in on_tools_changed
+
+      4. audit_init/audit_set_max_entries/audit_close are lock-protected
+
+      5. No deadlock risk (check lock ordering across files)
+
+      6. All tests pass
+
+
+      Finding issues is a POSITIVE outcome.'
+    verification: '- grep evidence showing lock usage at each mutation site
+
+      - uv run pytest -q passes
+
+      - uv run invar guard passes
+
+      - No lock-ordering violations identified'
+    depends_on:
+    - fix2.concurrency.lock-fixes
+    agent: integration-verifier
