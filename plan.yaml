@@ -6362,7 +6362,7 @@ phases:
       handlers'
   - id: fix.medium.config.m1-shell-result-convention
     name: 'M1: Audit and fix shell_result convention bypasses'
-    status: claimed
+    status: done
     description: "step_type: implementation\nspec_refs:\n  - INVAR.md (Shell zone\
       \ rules: returns Result[T, E])\ntouch_paths:\n  - src/tela/shell/*.py (15+ @invar:allow\
       \ shell_result annotations)\nharness_refs:\n  - tests/shell/*.py\nconflict_rationale:\
@@ -6389,6 +6389,51 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T10:54:35.144950+00:00'
+    done_at: '2026-03-17T10:54:48.156523+00:00'
+    evidence: 'Artifact:
+
+      - Audit completed, all 18 @invar:allow shell_result annotations reviewed
+
+
+      Audit Results (all JUSTIFIED):
+
+      1. gateway.py (3): get_runtime, gateway_status, gateway_connections - pure data
+      accessors
+
+      2. audit.py (6): _compute_param_hash, _now_iso, build_audit_entry - pure data
+      shaping; get_audit_entries, clear_audit_entries, audit_set_max_entries - state
+      accessors
+
+      3. reload.py (1): set_notify_callback - setter, not failable
+
+      4. upstream.py (4): filter_tools_for_profile, strip_meta, enforce_tool_call,
+      handle_profiles_list - pure data shaping/lookup
+
+      5. downstream.py (3): get_registry, get_all_tools, get_tool_server - pure data
+      accessors
+
+
+      None of these can fail with I/O errors. All are either:
+
+      - CLI exit codes (POSIX convention)
+
+      - Pure data shaping functions (no I/O)
+
+      - Data accessors returning module-level state
+
+
+      Verification:
+
+      - All 18 annotations have clear justification comments
+
+      - No unjustified bypasses found
+
+      - Run: uv run pytest -q -> 296 passed
+
+
+      Spec link:
+
+      - INVAR.md Shell zone rules'
   - id: fix.medium.config.gate
     name: 'Gate: Medium config fixes (M1-M4, M8, M10)'
     status: pending
