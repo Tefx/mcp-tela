@@ -582,7 +582,7 @@ phases:
       \  - No `vectl_mutate` corrections required."
   - id: meta.review.audit-out-of-order-results
     name: Audit out-of-order results
-    status: pending
+    status: claimed
     description: If any meta work was executed out of dependency order, classify each
       result as rerun-required, keep-with-review, or risk-only. This is a plan control
       step and produces vectl plan mutations or explicit no-change only.
@@ -613,6 +613,8 @@ phases:
     - meta.review.review-implementation-plan-conformance
     - meta.review.review-implementation-plan-quality
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T05:43:54.247989+00:00'
   - id: meta.review.synthesize-cross-plan-dependencies
     name: Synthesize cross-plan dependencies
     status: pending
