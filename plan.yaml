@@ -9725,3 +9725,8 @@ phases:
   status: pending
   depends_on:
   - retest2.full
+- id: rt.downstream
+  name: Downstream MCP Client Connections
+  status: locked
+  depends_on:
+  - rt.env_field
