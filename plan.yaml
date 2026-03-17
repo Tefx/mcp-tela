@@ -10249,3 +10249,8 @@ phases:
   status: locked
   depends_on:
   - cap.docs
+- id: cap.final_gate
+  name: Full Gate Review
+  status: locked
+  depends_on:
+  - cap.cleanup
