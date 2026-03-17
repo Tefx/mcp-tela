@@ -2674,6 +2674,68 @@ phases:
     depends_on:
     - audit.runtime.freeze-for-l2
     agent: integration-verifier
+  - id: audit.runtime.gate
+    name: Gate audit.runtime
+    status: pending
+    description: 'Gate review: Verify audit.runtime phase completion.
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Audit is a cross-cutting runtime and output-governance surface.
+
+      - Phase contains integration-tagged work and L2 verification.
+
+      cross_cutting_focus:
+
+      - audit levels and outcome shapes remain consistent across emit/store/query
+      paths
+
+      - `_meta` is preserved in audit while stripped from downstream forwarding
+
+      step_type: gate
+
+      agent_source: default'
+    verification: '- All phase steps completed successfully
+
+      - Real-path evidence shows upstream emission reaches audit storage and CLI query
+      end-to-end
+
+      - Cross-surface conformance evidence shows emit/store/query share one audit
+      fact set
+
+      - No unresolved blockers; ready for reload.contract'
+    evidence_template: '## Gate Review Report
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: audit.runtime
+
+
+      ### Runtime Surface Check
+
+      - Real emit/store/query path exercised: yes/no
+
+      - Level filtering evidence present: yes/no
+
+
+      ### Conformance Check
+
+      - Upstream/storage/query share one audit fact set: yes/no
+
+      - Independent re-derivation absent: yes/no
+
+
+      ### Decision
+
+      - OPEN | BLOCKED'
+    depends_on:
+    - audit.runtime.implement-audit-entry-building
+    - audit.runtime.integrate-audit-emission-and-query
+    - audit.runtime.freeze-for-l2
+    - audit.runtime.verify-audit-runtime
+    agent: gate-reviewer
 - id: reload.test
   name: reload.test
   status: locked
