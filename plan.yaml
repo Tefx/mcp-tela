@@ -6405,3 +6405,123 @@ phases:
 
       - Do NOT run tests yet (next step runs them)'
     agent: python-executor
+  - id: retest.repro.run-repro-tests
+    name: Run all repro tests
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+
+      As an INDEPENDENT TESTER, run all black-box repro tests and report results.
+
+
+      Commands:
+
+      1. `uv run pytest tests/repro/ -v --tb=short` -- all repro tests verbose
+
+      2. `uv run pytest tests/repro/test_blockers.py -v` -- blocker repros
+
+      3. `uv run pytest tests/repro/test_high.py -v` -- high repros
+
+      4. `uv run pytest tests/repro/test_medium.py -v` -- medium repros
+
+      5. `uv run pytest tests/repro/test_low.py -v` -- low repros
+
+
+      For each failing test:
+
+      - Record exact failure output
+
+      - Map to original finding ID (B1-B4, H1-H4, M1-M10, L1-L21)
+
+      - Determine if fix was incomplete or test is wrong
+
+
+      Expected: All ~40 repro tests pass, confirming every finding is fixed.'
+    verification: '- All repro tests pass
+
+      - Every finding ID (B1-B4, H1-H4, M1-M10, L1-L21) has at least one passing repro
+      test
+
+      - No false positives'
+    evidence_template: '## Repro Test Report
+
+
+      **Test run timestamp**: <ISO 8601>
+
+
+      ### Results by category
+
+
+      #### Blockers (B1-B4)
+
+      ```
+
+      <paste uv run pytest tests/repro/test_blockers.py -v>
+
+      ```
+
+
+      #### High (H1-H4)
+
+      ```
+
+      <paste uv run pytest tests/repro/test_high.py -v>
+
+      ```
+
+
+      #### Medium (M1-M10)
+
+      ```
+
+      <paste uv run pytest tests/repro/test_medium.py -v>
+
+      ```
+
+
+      #### Low (L1-L21)
+
+      ```
+
+      <paste uv run pytest tests/repro/test_low.py -v>
+
+      ```
+
+
+      ### Coverage Matrix
+
+      | Finding | Repro Test | Result |
+
+      |---------|-----------|--------|
+
+      | B1 | test_b1_* | PASS/FAIL |
+
+      | B2 | test_b2_* | PASS/FAIL |
+
+      | B3 | test_b3_* | PASS/FAIL |
+
+      | B4 | test_b4_* | PASS/FAIL |
+
+      | H1 | test_h1_* | PASS/FAIL |
+
+      | H2 | test_h2_* | PASS/FAIL |
+
+      | H3 | test_h3_* | PASS/FAIL |
+
+      | H4 | test_h4_* | PASS/FAIL |
+
+      | M1-M10 | test_m*_* | PASS/FAIL |
+
+      | L1-L21 | test_l*_* | PASS/FAIL |
+
+
+      ### Verdict
+
+      - [ ] ALL FINDINGS VERIFIED
+
+      - [ ] GAPS REMAIN'
+    depends_on:
+    - retest.repro.create-scaffold
+    agent: integration-verifier
