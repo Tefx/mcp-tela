@@ -10224,3 +10224,8 @@ phases:
   status: pending
   depends_on:
   - retest2.full
+- id: cap.test
+  name: Tests for Migration and New Schema
+  status: locked
+  depends_on:
+  - cap.contract
