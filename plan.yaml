@@ -2901,13 +2901,13 @@ phases:
       -> 0 errors.'
 - id: reload.contract
   name: reload.contract
-  status: pending
+  status: in_progress
   depends_on:
   - audit.runtime
   steps:
   - id: reload.contract.define-reload-runtime-contracts
     name: Define reload runtime contracts
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
       spec_refs:\n  - docs/DESIGN.md#4.14 shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3\
@@ -2936,6 +2936,8 @@ phases:
 
       - No implementation logic added: yes/no'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T08:39:06.776638+00:00'
   - id: reload.contract.gate
     name: Gate reload.contract
     status: pending
