@@ -8436,3 +8436,8 @@ phases:
     depends_on:
     - fix2.public-api.verify-api
     agent: gate-reviewer
+- id: fix2.docs
+  name: 'Fix Pass 2: DESIGN.md Documentation Drift (Issues 7-11)'
+  status: pending
+  depends_on:
+  - retest.final
