@@ -9059,7 +9059,7 @@ phases:
       lines). Both under 300. 315+46 tests passed. Merged to main (fast-forward).
   - id: fix2.upstream-split.verify-split
     name: verify-split
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       independence_level: L1
@@ -9094,6 +9094,8 @@ phases:
     depends_on:
     - fix2.upstream-split.split-upstream
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-17T12:18:44.300405+00:00'
   - id: fix2.upstream-split.gate
     name: gate
     status: pending
