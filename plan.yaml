@@ -10219,3 +10219,8 @@ phases:
     depends_on:
     - rt.final_gate.blind
     agent: gate-reviewer
+- id: cap.contract
+  name: Define New Profile Contracts
+  status: pending
+  depends_on:
+  - retest2.full
