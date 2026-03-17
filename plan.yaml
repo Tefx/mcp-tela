@@ -8823,7 +8823,7 @@ phases:
       call_tool top-level import.'
   - id: fix2.reload-stubs.gate
     name: gate
-    status: pending
+    status: claimed
     description: 'Gate review: Verify reload/stubs fix phase completion.
 
 
@@ -8849,6 +8849,8 @@ phases:
     depends_on:
     - fix2.reload-stubs.verify-reload-stubs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T12:11:40.087224+00:00'
 - id: fix2.doctests
   name: 'Fix Pass 2: Doctest Pytest Assertion Rewriting (Issues 19-20, 27-28)'
   status: done
