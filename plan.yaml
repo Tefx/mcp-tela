@@ -1267,7 +1267,7 @@ phases:
     agent: gate-reviewer
 - id: config.contract
   name: config.contract
-  status: in_progress
+  status: done
   depends_on:
   - meta.review
   steps:
@@ -1338,7 +1338,7 @@ phases:
       \ dead_export` as contract-step stub escape hatch until runtime caller lands."
   - id: config.contract.gate
     name: Gate config.contract
-    status: claimed
+    status: done
     description: 'Gate review: Verify config authority contract phase completion.
 
       review_depth: STANDARD
@@ -1384,9 +1384,20 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T06:08:39.162169+00:00'
+    done_at: '2026-03-17T06:16:29.360383+00:00'
+    evidence: "Artifact:\n- gate review report for `config.contract.define-config-authority-contracts`.\n\
+      \nVerification:\n- contract purity decision\n  - PASS: contract-only artifacts;\
+      \ no business logic leakage.\n  - automated checks passed (`invar_guard` clean;\
+      \ contract tests passed).\n- authority semantics decision\n  - PASS: local config\
+      \ runtime authority preserved; explicit `--default-profile` precedence and rejection\
+      \ semantics captured.\n- invar ownership decision\n  - PASS: Core/Shell boundaries\
+      \ preserved per INVAR (`@pre/@post` + doctest placeholders on Core contract\
+      \ surfaces; no Core I/O).\n- open/blocked decision\n  - OPEN: phase ready for\
+      \ `config.test`.\n\nPlan mutation payload:\n- explicit no-change\n  - no `vectl_mutate`\
+      \ corrections required."
 - id: config.test
   name: config.test
-  status: locked
+  status: pending
   depends_on:
   - config.contract
   steps:
