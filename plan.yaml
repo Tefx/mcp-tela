@@ -5235,3 +5235,122 @@ phases:
     - src/tela/shell/downstream.py
     - tests/integration/test_hot_reload.py
     agent: python-senior
+  - id: fix.blockers.verify-blocker-fixes
+    name: Verify blocker fixes (B1-B4)
+    status: pending
+    description: 'step_type: verification
+
+      independence_level: L2
+
+      agent_source: default
+
+
+      As an INDEPENDENT TESTER, validate all 4 blocker fixes from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - B1: All 5 CLI subcommands callable and producing correct output
+
+      - B2: Audit entries persist to disk JSONL file; audit level filtering works
+
+      - B3: YAML config without explicit `name` fields parses correctly
+
+      - B4: Hot reload rollback preserves other servers'' tool registries
+
+
+      Edge cases:
+
+      - B1: Unknown subcommand shows help; each subcommand --help works
+
+      - B2: Audit file in non-existent directory; permission denied; ~ expansion
+
+      - B3: Config with both explicit and implicit names; empty servers/profiles
+
+      - B4: Multiple simultaneous reload rejections; rollback with 3+ servers
+
+
+      Document ALL findings.
+
+      '
+    verification: '- All 4 blocker fixes verified independently
+
+      - Edge cases tested
+
+      - No regressions in existing test suite
+
+      - uv run pytest -q passes (all tests)
+
+      - uv run invar guard passes'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier (independent of implementation)
+
+      **Independence Level**: L2
+
+
+      ### B1: CLI Subcommands
+
+      - Commands tested: <list all 5>
+
+      - Output: <paste actual output for each>
+
+
+      ### B2: Audit Persistence
+
+      - JSONL file created: yes/no
+
+      - Level filtering verified: yes/no
+
+      - Edge cases: <directory creation, ~ expansion>
+
+
+      ### B3: Config Name Injection
+
+      - Real YAML without names: <paste test config>
+
+      - Result: <paste parse result>
+
+      - Backward compat: <paste result with explicit names>
+
+
+      ### B4: Reload Rollback
+
+      - Multi-server scenario: <describe setup>
+
+      - Other server tools preserved after rejected reload: yes/no
+
+      - get_tool_server results: <paste>
+
+
+      ### Test Suite
+
+      - uv run pytest -q: <paste summary>
+
+      - uv run invar guard: <paste result>
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - fix.blockers.b1-wire-all-cli-subcommands
+    - fix.blockers.b2-wire-auditconfig-into-audit-writer
+    - fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
+    - fix.blockers.b4-fix-hot-reload-rollback-isolation
+    agent: integration-verifier
