@@ -2974,7 +2974,7 @@ phases:
     agent: gate-reviewer
 - id: gateway.test
   name: gateway.test
-  status: in_progress
+  status: done
   depends_on:
   - gateway.contract
   steps:
@@ -3063,7 +3063,7 @@ phases:
       - Commit: 08c097a (worktree), merged as 1ad728b'
   - id: gateway.test.gate
     name: Gate gateway.test
-    status: claimed
+    status: done
     description: 'Gate review: Verify gateway runtime test phase completion.
 
       review_depth: STANDARD
@@ -3099,9 +3099,36 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T07:53:41.798851+00:00'
+    done_at: '2026-03-17T07:53:58.759428+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: gateway.test.add-runtime-lifecycle-tests
+
+      - Acceptance coverage sufficient: pass
+
+      - Decision: OPEN
+
+
+      ### Coverage summary
+
+      - Startup fail-fast: 6 tests (missing file, invalid YAML, no default, ambiguous,
+      unknown profile, gateway bind fail)
+
+      - Downstream registry: 9 tests (ServerConfig stdio/SSE/overrides/family/posture,
+      ResolvedTool fields/unclassified/conflict/grouping)
+
+      - Upstream call routing: 11 tests (5 handler stubs, ConnectionContext, EnforcementResult,
+      _meta shape, TelaError)
+
+      - Integration runtime readiness: 4 tests (stdio, SSE, CLI override, fail-fast
+      chain)
+
+      - Total: 104 tests passing, no product implementation in test files
+
+      - `uv run pytest -q` -> 104 passed'
 - id: gateway.runtime
   name: gateway.runtime
-  status: locked
+  status: pending
   depends_on:
   - gateway.test
   steps:
