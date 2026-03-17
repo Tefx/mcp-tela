@@ -2720,7 +2720,7 @@ phases:
       - OPEN'
 - id: gateway.contract
   name: gateway.contract
-  status: in_progress
+  status: done
   depends_on:
   - open_mode.runtime
   steps:
@@ -2826,7 +2826,7 @@ phases:
       - Commit: 85583aa (worktree), merged as 338c2e7'
   - id: gateway.contract.gate
     name: Gate gateway.contract
-    status: claimed
+    status: done
     description: 'Gate review: Verify gateway runtime contract phase completion.
 
       review_depth: STANDARD
@@ -2864,6 +2864,41 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-17T07:29:07.663145+00:00'
+    done_at: '2026-03-17T07:29:24.449502+00:00'
+    evidence: '## Gate Review Report
+
+      - Reviewed step: gateway.contract.define-runtime-boundary-contracts
+
+      - Contract purity: pass
+
+      - Runtime boundaries preserved: pass
+
+      - Decision: OPEN
+
+
+      ### Detail
+
+      1. **Contract purity**: All 15 new functions are stubs raising NotImplementedError.
+      No runtime logic.
+
+      2. **Runtime boundaries**: gateway lifecycle (4 functions), downstream management
+      (6 functions), upstream MCP handler (5 functions) — all per DESIGN.md specs
+      4.9, 4.10, 4.11.
+
+      3. **Models**: ServerConfig, ToolOverride, ResolvedTool, ConnectionContext,
+      EnforcementResult/Verdict, AuditEntry/Level/Config, GatewayStatus, TelaError
+      — all type-only in core/models.py.
+
+      4. **Open-mode**: Existing resolve_initialize_profile_binding preserved, handle_initialize
+      is a separate new stub.
+
+      5. **Shell/Core**: All escape hatches justified (dead_export for stubs, shell_result
+      for non-Result returns matching DESIGN.md, dead_param for stub parameters).
+
+      6. **Tests**: 68 total (10 new contract stub tests).
+
+      7. **Verification**: `uv run pytest -q` -> 68 passed, `uv run invar guard --changed`
+      -> 0 errors.'
 - id: reload.contract
   name: reload.contract
   status: locked
@@ -2939,7 +2974,7 @@ phases:
     agent: gate-reviewer
 - id: gateway.test
   name: gateway.test
-  status: locked
+  status: pending
   depends_on:
   - gateway.contract
   steps:
