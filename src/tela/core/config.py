@@ -13,6 +13,7 @@ from tela.core.contracts import pre, post
 from pydantic import ValidationError
 
 from tela.core.models import AuthMode, ProfileConfig, TelaConfig
+from tela.core.catalog import merge_with_builtins
 
 
 
@@ -140,7 +141,13 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
                 for key, value in expanded[section].items():
                     if isinstance(value, dict) and 'name' not in value:
                         value['name'] = key
-        return TelaConfig.model_validate(expanded)
+        config = TelaConfig.model_validate(expanded)
+        # Wire in builtin profiles when user provides none
+        if not config.profiles:
+            config = config.model_copy(
+                update={"profiles": merge_with_builtins(config.profiles)}
+            )
+        return config
     except ValidationError as exc:
         details = "; ".join(
             f"{'.'.join(str(item) for item in err['loc'])}: {err['msg']}"
