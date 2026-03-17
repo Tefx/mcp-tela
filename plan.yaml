@@ -7151,7 +7151,7 @@ phases:
       - Builtins use canonical family names (filesystem, network, orchestration, execution)'
   - id: fix.low.tests.gate
     name: 'Gate: Low test quality fixes'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify low-severity test quality fixes.
 
 
@@ -7168,6 +7168,8 @@ phases:
     - fix.low.tests.l19-replace-source-text-model-tests-with-behavioral-tests
     - fix.low.tests.l20-implement-prebuilt-profile-catalog
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-17T11:05:14.770865+00:00'
 - id: retest.regression
   name: Regression Test Suite
   status: locked
