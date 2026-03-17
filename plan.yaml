@@ -9973,6 +9973,28 @@ phases:
   status: locked
   depends_on:
   - rt.cli_start
+  steps:
+  - id: rt.reload_wire.impl
+    name: Wire hot reload to fastmcp downstream
+    status: pending
+    description: Wire set_notify_callback, on_tools_changed, on_server_reconnect to
+      real fastmcp downstream notifications. Wire on_config_changed if applicable.
+    verification: Hot reload functions have runtime callers. Downstream tool list
+      change triggers re-enumeration.
+    evidence_template: 'Commit hash(es):
+
+      Files changed:
+
+      Verification:
+
+      - set_notify_callback called at startup: yes/no
+
+      - on_server_reconnect triggered by downstream: yes/no
+
+      - Tool list update propagated: yes/no
+
+      Gaps/Notes:'
+    agent: python-senior
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
   status: locked
