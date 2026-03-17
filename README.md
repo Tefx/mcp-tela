@@ -50,8 +50,9 @@ Then wire your MCP host to launch:
 }
 ```
 
-Use this for local stdio-based development. Switch to `--port 8080` when you
-want one shared SSE gateway for multiple agents.
+This uses the example file's custom `developer` profile for a practical local
+default. Use this for local stdio-based development. Switch to `--port 8080`
+when you want one shared SSE gateway for multiple agents.
 
 ## Configuration at a glance
 
@@ -220,7 +221,34 @@ tela includes these built-in profile templates:
 - `execute_full`
 
 You can use them as-is, override them by name, or define your own profiles.
+The docs use two naming patterns on purpose:
+
+- built-in profiles such as `modify_local` and `execute_safe`
+- custom example profiles such as `developer` and `team_safe`
+
 See `tela.yaml.example` and `docs/USAGE.md` for concrete examples.
+
+## Core FAQ
+
+### Does stdio mean only one agent can use tela?
+
+No. Multiple agents can use tela in stdio mode, but each client usually starts
+its own `tela` child process.
+
+### When should I use stdio?
+
+Use `stdio` for local development, simple MCP host integration, and situations
+where per-client processes are acceptable.
+
+### When should I use SSE?
+
+Use `SSE` when multiple agents or clients should share one long-lived gateway.
+
+### Which profile name should I start with?
+
+Use the custom `developer` profile from `tela.yaml.example` for quick local
+setup. Use built-in profiles like `modify_local` or `execute_safe` when you
+want to align closely with the built-in catalog semantics.
 
 ## CLI
 

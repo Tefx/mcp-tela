@@ -254,6 +254,16 @@ Operational notes:
 - prefer conservative shared profiles and explicit per-tool denies
 - use `L3` audit logging when you need stronger operational traceability
 
+Token auth flow:
+
+```text
+client -> presents token metadata -> tela
+      -> tela validates signature and expiry using configured secrets
+      -> tela binds the request to an allowed profile
+      -> tela applies posture, tool override, and side-effect checks
+      -> tela forwards allowed calls to downstream MCP servers
+```
+
 ### `audit`
 
 Audit logs are written as JSONL.
@@ -392,6 +402,8 @@ instance instead of each launching its own stdio child process.
 - use `SSE` if your host can connect to a shared remote MCP endpoint
 - prefer `open` mode only for local trusted environments
 - prefer `token` mode for shared agent infrastructure
+- for quick local setup, the example config's custom `developer` profile is the simplest default
+- for policy-centric setups, start from built-in profiles such as `modify_local` or `execute_safe`
 
 ## Choosing between stdio and SSE
 
@@ -470,7 +482,7 @@ This is often the most practical rollout path.
 
 - auth mode: `open`
 - transport: `stdio`
-- default profile: `modify_local` or a custom `developer` profile
+- default profile: custom `developer` profile from `tela.yaml.example`
 - audit level: `L2`
 
 ### Recipe: shared internal gateway
@@ -571,7 +583,9 @@ servers:
     family: "filesystem"
 
 profiles:
-  modify_local:
+  developer:
+    tools:
+      filesystem: "read_write"
     default: true
 
 auth:
@@ -585,7 +599,7 @@ audit:
 Recommended run command:
 
 ```bash
-tela start --config tela.yaml
+tela start --config tela.yaml --default-profile developer
 ```
 
 ### Shared gateway for multiple agents
@@ -623,6 +637,28 @@ Recommended run command:
 ```bash
 tela start --config tela.yaml --port 8080
 ```
+
+## Core FAQ
+
+### Does stdio mean only one agent can use tela?
+
+No. Multiple agents can use tela in stdio mode, but each client usually starts
+its own `tela` child process.
+
+### When should I use stdio?
+
+Use `stdio` when the MCP host launches local child processes and you want the
+simplest possible setup.
+
+### When should I use SSE?
+
+Use `SSE` when multiple agents or clients should share one long-lived gateway.
+
+### Which profile naming pattern should I follow?
+
+Use built-in names like `modify_local` and `execute_safe` when you want to stay
+close to the built-in catalog. Use custom names like `developer` and
+`team_safe` when you are documenting deployment-specific policy intent.
 
 ## Troubleshooting
 
