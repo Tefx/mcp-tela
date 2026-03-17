@@ -5125,7 +5125,7 @@ phases:
     claimed_at: '2026-03-17T10:26:46.195237+00:00'
   - id: fix.blockers.b2-wire-auditconfig-into-audit-writer
     name: 'B2: Wire AuditConfig into audit writer'
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#4.11 shell/audit.py -- Audit Log Writer\n  - docs/INTERFACES.md#Audit\
       \ Configuration\ntouch_paths:\n  - src/tela/shell/audit.py\n  - src/tela/shell/gateway.py\n\
@@ -5163,6 +5163,8 @@ phases:
     - src/tela/shell/gateway.py
     - src/tela/core/models.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-17T10:26:46.659949+00:00'
   - id: fix.blockers.b3-fix-parse-config-name-injection-from-dict-keys
     name: 'B3: Fix parse_config name injection from dict keys'
     status: pending
