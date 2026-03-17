@@ -8637,3 +8637,31 @@ phases:
     depends_on:
     - fix2.reload-stubs.fix-reload-and-stubs
     agent: integration-verifier
+  - id: fix2.reload-stubs.gate
+    name: gate
+    status: pending
+    description: 'Gate review: Verify reload/stubs fix phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. All 7 issues resolved
+
+      2. No write-only variables remain
+
+      3. No unused imports remain
+
+      4. Stubs properly documented
+
+      5. Tests pass without regressions'
+    verification: '- All 7 issues confirmed fixed
+
+      - Evidence quality sufficient
+
+      - Ready for next phase'
+    depends_on:
+    - fix2.reload-stubs.verify-reload-stubs
+    agent: gate-reviewer
