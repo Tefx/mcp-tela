@@ -474,13 +474,13 @@ phases:
       \ `meta.review` used and plan validates cleanly."
 - id: meta.review
   name: meta.review
-  status: pending
+  status: in_progress
   depends_on:
   - meta.plan_creation
   steps:
   - id: meta.review.review-implementation-plan-conformance
     name: Review implementation-plan conformance
-    status: pending
+    status: claimed
     description: Review all produced implementation plans from `meta.plan_creation`
       for conformance to the settled tela boundaries, including runtime terms, profile
       authority, `open mode` rules, and core/shell ownership. This review must explicitly
@@ -513,6 +513,8 @@ phases:
     - ../opifex/design/architecture.md
     - ../opifex/design/requirements.md
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-17T05:39:54.828202+00:00'
   - id: meta.review.review-implementation-plan-quality
     name: Review implementation-plan quality
     status: pending
