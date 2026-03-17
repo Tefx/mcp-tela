@@ -10203,3 +10203,11 @@ phases:
     depends_on:
     - rt.final_gate.wiring
     agent: integration-verifier
+  - id: rt.final_gate.blind
+    name: Blind-tester Mode D
+    status: pending
+    description: Blind-tester Mode D final verification.
+    verification: 'VERDICT: ALIVE'
+    depends_on:
+    - rt.final_gate.integration
+    agent: blind-tester
