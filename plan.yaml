@@ -7342,7 +7342,7 @@ phases:
   steps:
   - id: retest.repro.create-scaffold
     name: Create black-box repro test scaffold
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntouch_paths:\n  - tests/repro/ (NEW directory)\n\
       \  - tests/repro/conftest.py (NEW -- shared fixtures)\n  - tests/repro/test_blockers.py\
       \ (NEW -- B1-B4 repros)\n  - tests/repro/test_high.py (NEW -- H1-H4 repros)\n\
@@ -7387,6 +7387,8 @@ phases:
 
       - Do NOT run tests yet (next step runs them)'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T11:07:56.949882+00:00'
   - id: retest.repro.run-repro-tests
     name: Run all repro tests
     status: pending
