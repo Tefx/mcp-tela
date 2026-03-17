@@ -4508,7 +4508,7 @@ phases:
   steps:
   - id: reload.test.add-hot-reload-tests
     name: Add hot-reload tests
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/DESIGN.md#4.14\
       \ shell/reload.py -- Hot Reload\n  - docs/DESIGN.md#8.3 Hot Reload Flow\n  -\
       \ docs/INTERFACES.md#E. Hot Reload\n  - docs/INTERFACES.md#F. MCP Server Interface\
@@ -4540,6 +4540,26 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-17T08:40:37.011659+00:00'
+    done_at: '2026-03-17T08:41:49.754634+00:00'
+    evidence: '## Test Evidence
+
+      - Added tests: 8 new tests in tests/integration/test_hot_reload.py
+
+      - Accepted/rejected reload covered: yes (re-enumerate updates/removes tools,
+      conflict rejects with empty registry)
+
+      - No-drop invariant covered: yes (ConnectionContext survives registry update)
+
+      - Notification path covered: yes (tools_digest from registry shape)
+
+
+      ### Verification
+
+      - `uv run pytest -q` -> 201 passed
+
+      - No product implementation added
+
+      - Commit: 9e8b4f9, merged as 576cf63'
   - id: reload.test.gate
     name: Gate reload.test
     status: pending
