@@ -8334,13 +8334,13 @@ phases:
     agent: gate-reviewer
 - id: fix2.public-api
   name: 'Fix Pass 2: Public API Exposure and Entry Points (Issues 15-17, 24)'
-  status: pending
+  status: in_progress
   depends_on:
   - retest.final
   steps:
   - id: fix2.public-api.fix-api-exposure
     name: fix-api-exposure
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#A. CLI Interface\n  - docs/DESIGN.md#core-layer\ntouch_paths:\n\
       \  - src/tela/core/config.py\n  - src/tela/core/__init__.py\n  - src/tela/__init__.py\n\
@@ -8379,6 +8379,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-17T11:51:36.607347+00:00'
   - id: fix2.public-api.verify-api
     name: verify-api
     status: pending
