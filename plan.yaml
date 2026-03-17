@@ -8302,3 +8302,29 @@ phases:
     depends_on:
     - fix2.contracts.fix-tautological-and-validation
     agent: integration-verifier
+  - id: fix2.contracts.gate
+    name: gate
+    status: pending
+    description: 'Gate review: Verify contract and validation fix phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. All 3 contract/validation issues resolved
+
+      2. No tautological contracts remain anywhere in config.py
+
+      3. Validation is spec-conformant
+
+      4. Tests pass without regressions'
+    verification: '- All 3 issues confirmed fixed
+
+      - Evidence quality sufficient
+
+      - Ready for next phase'
+    depends_on:
+    - fix2.contracts.verify-contracts
+    agent: gate-reviewer
