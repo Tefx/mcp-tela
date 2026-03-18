@@ -10379,6 +10379,42 @@ phases:
     depends_on:
     - cap.contract.define
     agent: python-senior
+  - id: cap.contract.retest-gate-blockers
+    name: Retest ProfileConfig alias conflict behavior after gate fix
+    status: pending
+    description: 'Re-test the cap.contract gate blocker from an independent reviewer
+      perspective.
+
+
+      As an INDEPENDENT TESTER (`gate-reviewer`), validate that the `ProfileConfig`
+      migration alias contract now executes through the real model validation path.
+
+
+      Test for:
+
+      - Happy path: single-field `tools` or `capabilities` input still normalizes
+      as intended for migration
+
+      - Edge case: alias normalization path remains active with the repaired validator/decorator
+      structure
+
+      - Error scenario: conflicting `tools` + `capabilities` input raises `ValueError`
+      per MIGRATION-003
+
+      - Contract proof: targeted doctest/pytest covers the conflict path and changed-files
+      `invar guard` evidence is present
+
+
+      Document findings. Finding an issue is a successful retest outcome.'
+    verification: '- Run targeted doctest/pytest proof covering `ProfileConfig` conflict
+      detection for `tools` + `capabilities`
+
+      - Verify changed-files `invar guard` evidence is present for the fix
+
+      - Confirm conflicting inputs raise `ValueError` per MIGRATION-003'
+    depends_on:
+    - cap.contract.fix-gate-blockers
+    agent: gate-reviewer
 - id: cap.test
   name: Tests for Migration and New Schema
   status: locked
