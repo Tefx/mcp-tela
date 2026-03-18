@@ -6,12 +6,18 @@ Tests cover:
 - ResolvedTool model behavior and fields
 - Tool conflict detection at startup
 - Registry lifecycle (connect_all, disconnect_all)
+- Downstream client lifecycle: stdio/SSE connection setup
+- connect_all/disconnect_all session semantics
+- MCP tools/list enumeration behavior
+- Empty/failure registry handling
+- Teardown cleanup semantics
 """
 
 from __future__ import annotations
 
 import asyncio
 
+import pytest
 
 from tela.core.models import Posture, ResolvedTool, ServerConfig, ToolOverride
 from tela.shell.downstream import (
@@ -23,6 +29,57 @@ from tela.shell.downstream import (
     get_tool_server,
     re_enumerate,
 )
+
+
+# --- Fixtures for stdio and SSE server configurations ---
+
+
+@pytest.fixture
+def stdio_server_config() -> ServerConfig:
+    """ServerConfig for a stdio-based downstream MCP server.
+
+    Per INTERFACES.md section 9.1:
+    - stdio server contract: ServerConfig.command is required
+    - client connect uses command, args, and env from config
+    """
+    return ServerConfig(
+        name="filesystem",
+        command="npx",
+        args=["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+        env={"NODE_ENV": "production", "LOG_LEVEL": "info"},
+    )
+
+
+@pytest.fixture
+def sse_server_config() -> ServerConfig:
+    """ServerConfig for an SSE-based downstream MCP server.
+
+    Per INTERFACES.md section 9.1:
+    - SSE server contract: ServerConfig.url is required
+    - client connect uses url
+    """
+    return ServerConfig(
+        name="remote_service",
+        url="http://localhost:8080/sse",
+    )
+
+
+@pytest.fixture
+def minimal_stdio_config() -> ServerConfig:
+    """Minimal stdio config with command only, no args or env."""
+    return ServerConfig(
+        name="minimal_stdio",
+        command="/usr/local/bin/mcp-server",
+    )
+
+
+@pytest.fixture
+def minimal_sse_config() -> ServerConfig:
+    """Minimal SSE config with url only."""
+    return ServerConfig(
+        name="minimal_sse",
+        url="http://host:9999/mcp",
+    )
 
 
 # --- ServerConfig model tests ---
@@ -96,8 +153,12 @@ def test_resolved_tool_unclassified_posture() -> None:
 def test_resolved_tool_registry_grouping() -> None:
     tools = {
         "filesystem": [
-            ResolvedTool(name="read_file", server_name="filesystem", family="filesystem"),
-            ResolvedTool(name="write_file", server_name="filesystem", family="filesystem"),
+            ResolvedTool(
+                name="read_file", server_name="filesystem", family="filesystem"
+            ),
+            ResolvedTool(
+                name="write_file", server_name="filesystem", family="filesystem"
+            ),
         ],
         "git": [
             ResolvedTool(name="git_status", server_name="git", family="git"),
@@ -198,8 +259,16 @@ def test_connect_all_resolves_posture_from_annotations() -> None:
     servers = {"srv": ServerConfig(name="srv", command="cmd")}
     tool_lists = {
         "srv": [
-            {"name": "reader", "inputSchema": {}, "annotations": {"readOnlyHint": True}},
-            {"name": "destroyer", "inputSchema": {}, "annotations": {"destructiveHint": True}},
+            {
+                "name": "reader",
+                "inputSchema": {},
+                "annotations": {"readOnlyHint": True},
+            },
+            {
+                "name": "destroyer",
+                "inputSchema": {},
+                "annotations": {"destructiveHint": True},
+            },
         ],
     }
     result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
@@ -274,3 +343,484 @@ def test_call_tool_returns_error() -> None:
 def test_re_enumerate_returns_error() -> None:
     r = asyncio.run(re_enumerate("srv"))
     assert r.is_err
+
+
+# --- Client lifecycle: stdio connection setup ---
+
+
+def test_stdio_config_has_command_args_env(
+    stdio_server_config: ServerConfig,
+) -> None:
+    """stdio ServerConfig has command, args, and env fields."""
+    assert stdio_server_config.command == "npx"
+    assert stdio_server_config.url is None
+    assert len(stdio_server_config.args) == 3
+    assert stdio_server_config.env == {"NODE_ENV": "production", "LOG_LEVEL": "info"}
+
+
+def test_minimal_stdio_config_command_only(
+    minimal_stdio_config: ServerConfig,
+) -> None:
+    """Minimal stdio config requires only command; args/env default to empty."""
+    assert minimal_stdio_config.command == "/usr/local/bin/mcp-server"
+    assert minimal_stdio_config.args == []
+    assert minimal_stdio_config.env == {}
+    assert minimal_stdio_config.url is None
+
+
+def test_stdio_connect_all_registers_tools_from_tool_lists(
+    stdio_server_config: ServerConfig,
+) -> None:
+    """connect_all with stdio server config registers tools via tool_lists injection.
+
+    Until actual MCP transport is wired, the tool_lists parameter is used to
+    inject pre-enumerated tool lists for testing the registration contract.
+
+    Per INTERFACES.md 9.3:
+    - startup establishes session then enumerates and registers tools
+    - invariant: _clients key exists iff server is currently connected
+    """
+    servers = {"filesystem": stdio_server_config}
+    tool_lists = {
+        "filesystem": [
+            {"name": "read_file", "inputSchema": {"type": "object"}},
+            {"name": "write_file", "inputSchema": {"type": "object"}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    # Registry should contain all tools from tool_lists
+    registry = get_registry()
+    tools = registry.get_all_tools()
+    assert "filesystem" in tools
+    assert len(tools["filesystem"]) == 2
+
+    # Verify individual tool lookup
+    tool = registry.get_tool("read_file")
+    assert tool is not None
+    assert tool.server_name == "filesystem"
+
+    # Verify server lookup
+    assert registry.get_tool_server("read_file") == "filesystem"
+
+    # Cleanup
+    asyncio.run(disconnect_all())
+
+
+def test_stdio_config_env_field_propagates_to_config() -> None:
+    """ServerConfig.env field is preserved for downstream client spawn.
+
+    Per INTERFACES.md 9.1 and rt.env_field:
+    - env field is dict[str, str]
+    - omitted env defaults to {}
+    - explicit env: {} is equivalent to omitting env
+    """
+    config = ServerConfig(
+        name="server_with_env",
+        command="python",
+        args=["-m", "mcp_server"],
+        env={"PYTHONPATH": "/app/src", "DEBUG": "1"},
+    )
+    assert config.env == {"PYTHONPATH": "/app/src", "DEBUG": "1"}
+
+
+def test_stdio_config_empty_env_is_valid() -> None:
+    """Empty env dict is valid and equivalent to omitting env."""
+    config = ServerConfig(name="no_env", command="cmd", env={})
+    assert config.env == {}
+
+
+def test_stdio_config_missing_env_defaults_to_empty() -> None:
+    """Omitting env field defaults to empty dict, not None."""
+    config = ServerConfig(name="implicit_env", command="cmd")
+    assert config.env == {}
+
+
+# --- Client lifecycle: SSE connection setup ---
+
+
+def test_sse_config_has_url(sse_server_config: ServerConfig) -> None:
+    """SSE ServerConfig has url field."""
+    assert sse_server_config.url == "http://localhost:8080/sse"
+    assert sse_server_config.command is None
+
+
+def test_minimal_sse_config_url_only(
+    minimal_sse_config: ServerConfig,
+) -> None:
+    """Minimal SSE config requires only url; args/env are not applicable."""
+    assert minimal_sse_config.url == "http://host:9999/mcp"
+    assert minimal_sse_config.command is None
+    assert minimal_sse_config.args == []
+    assert minimal_sse_config.env == {}
+
+
+def test_sse_connect_all_registers_tools_from_tool_lists(
+    sse_server_config: ServerConfig,
+) -> None:
+    """connect_all with SSE server config registers tools via tool_lists injection.
+
+    Until actual MCP transport is wired (fastmcp), tool_lists provides the
+    enumeration result for testing the registration contract.
+    """
+    servers = {"remote_service": sse_server_config}
+    tool_lists = {
+        "remote_service": [
+            {"name": "fetch_data", "inputSchema": {"type": "object"}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    tools = registry.get_all_tools()
+    assert "remote_service" in tools
+    assert len(tools["remote_service"]) == 1
+
+    tool = registry.get_tool("fetch_data")
+    assert tool is not None
+    assert tool.server_name == "remote_service"
+
+    asyncio.run(disconnect_all())
+
+
+def test_mixed_stdio_and_sse_servers_in_connect_all(
+    stdio_server_config: ServerConfig,
+    sse_server_config: ServerConfig,
+) -> None:
+    """connect_all supports mixed stdio and SSE server configurations.
+
+    Per INTERFACES.md 9.1:
+    - each server defines exactly one transport (command OR url)
+    - both stdio and SSE servers can coexist in server registry
+    """
+    servers = {
+        "filesystem": stdio_server_config,
+        "remote_service": sse_server_config,
+    }
+    tool_lists = {
+        "filesystem": [{"name": "read_file", "inputSchema": {}}],
+        "remote_service": [{"name": "fetch_data", "inputSchema": {}}],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    all_tools = registry.get_all_tools()
+    assert len(all_tools) == 2
+    assert "filesystem" in all_tools
+    assert "remote_service" in all_tools
+
+    asyncio.run(disconnect_all())
+
+
+# --- connect_all / disconnect_all session lifecycle ---
+
+
+def test_connect_all_returns_result_ok_on_success() -> None:
+    """connect_all returns Result.ok on successful tool enumeration."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {"srv": [{"name": "tool1", "inputSchema": {}}]}
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+    assert result.value is None  # Result[None, str] returns None on success
+
+
+def test_connect_all_returns_error_on_conflict() -> None:
+    """connect_all returns Result.err with TOOL_CONFLICT on duplicate tool names."""
+    servers = {
+        "s1": ServerConfig(name="s1", command="cmd1"),
+        "s2": ServerConfig(name="s2", command="cmd2"),
+    }
+    tool_lists = {
+        "s1": [{"name": "dup_tool", "inputSchema": {}}],
+        "s2": [{"name": "dup_tool", "inputSchema": {}}],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_err
+    assert result.error is not None
+    assert "TOOL_CONFLICT" in result.error
+
+
+def test_disconnect_all_always_succeeds() -> None:
+    """disconnect_all returns Result.ok even when registry is already empty."""
+    result = asyncio.run(disconnect_all())
+    assert result.is_ok
+
+    # Calling again on empty registry also succeeds
+    result2 = asyncio.run(disconnect_all())
+    assert result2.is_ok
+
+
+def test_disconnect_all_after_connect_clears_registry() -> None:
+    """disconnect_all clears the registry after a successful connect_all."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {"srv": [{"name": "tool", "inputSchema": {}}]}
+
+    asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert get_tool_server("tool") == "srv"
+
+    asyncio.run(disconnect_all())
+    assert get_tool_server("tool") is None
+    assert get_all_tools() == {}
+
+
+def test_connect_all_clears_previous_state() -> None:
+    """connect_all clears the registry before populating (no accumulation)."""
+    # First connect
+    servers1 = {"srv1": ServerConfig(name="srv1", command="cmd1")}
+    tool_lists1 = {"srv1": [{"name": "tool_a", "inputSchema": {}}]}
+    asyncio.run(connect_all(servers1, tool_lists=tool_lists1))
+    assert get_tool_server("tool_a") == "srv1"
+
+    # Second connect with different server
+    servers2 = {"srv2": ServerConfig(name="srv2", command="cmd2")}
+    tool_lists2 = {"srv2": [{"name": "tool_b", "inputSchema": {}}]}
+    asyncio.run(connect_all(servers2, tool_lists=tool_lists2))
+
+    # Previous tools should be cleared
+    assert get_tool_server("tool_a") is None
+    assert get_tool_server("tool_b") == "srv2"
+
+    asyncio.run(disconnect_all())
+
+
+# --- MCP tools/list enumeration behavior ---
+
+
+def test_tools_list_enumeration_populates_registry() -> None:
+    """tools/list enumeration populates the tool registry with all tools.
+
+    Per INTERFACES.md 9.3:
+    - startup: establish sessions, then enumerate and register tools
+    """
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {
+        "srv": [
+            {"name": "read", "inputSchema": {"type": "object"}},
+            {"name": "write", "inputSchema": {"type": "object"}},
+            {"name": "delete", "inputSchema": {"type": "object"}},
+        ],
+    }
+    asyncio.run(connect_all(servers, tool_lists=tool_lists))
+
+    registry = get_registry()
+    assert registry.get_tool("read") is not None
+    assert registry.get_tool("write") is not None
+    assert registry.get_tool("delete") is not None
+
+    asyncio.run(disconnect_all())
+
+
+def test_tools_list_empty_for_server() -> None:
+    """tools/list returning empty list results in empty tool set for that server."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {"srv": []}  # Empty tool list
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    tools = registry.get_all_tools()
+    assert "srv" in tools
+    assert tools["srv"] == []
+
+    asyncio.run(disconnect_all())
+
+
+def test_tools_list_with_schema_and_annotations() -> None:
+    """tools/list carries schema and annotations for posture classification."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {
+        "srv": [
+            {
+                "name": "read_only_tool",
+                "inputSchema": {"type": "object"},
+                "annotations": {"readOnlyHint": True},
+            },
+            {
+                "name": "destructive_tool",
+                "inputSchema": {"type": "object"},
+                "annotations": {"destructiveHint": True},
+            },
+        ],
+    }
+    asyncio.run(connect_all(servers, tool_lists=tool_lists))
+
+    registry = get_registry()
+    read_tool = registry.get_tool("read_only_tool")
+    dest_tool = registry.get_tool("destructive_tool")
+
+    assert read_tool is not None
+    assert read_tool.posture == Posture.READ_ONLY
+
+    assert dest_tool is not None
+    assert dest_tool.posture == Posture.DESTRUCTIVE
+
+    asyncio.run(disconnect_all())
+
+
+# --- Empty/failure registry handling ---
+
+
+def test_connect_all_empty_server_dict() -> None:
+    """connect_all with empty server dict returns success and empty registry."""
+    result = asyncio.run(connect_all({}))
+    assert result.is_ok
+    assert result.value is None
+    assert get_all_tools() == {}
+
+
+def test_registry_empty_after_failed_connect() -> None:
+    """Registry is empty after connect_all fails due to conflict.
+
+    Per INTERFACES.md 9.3:
+    - failure during startup: close opened sessions, leave _clients empty
+    - no partial connected state
+    """
+    servers = {
+        "s1": ServerConfig(name="s1", command="cmd1"),
+        "s2": ServerConfig(name="s2", command="cmd2"),
+    }
+    tool_lists = {
+        "s1": [{"name": "conflict_tool", "inputSchema": {}}],
+        "s2": [{"name": "conflict_tool", "inputSchema": {}}],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_err
+
+    # Registry must be cleared on conflict
+    assert get_all_tools() == {}
+
+
+def test_registry_snapshot_restore_mechanism() -> None:
+    """DownstreamRegistry supports snapshot/restore for atomic rollback."""
+    registry = get_registry()
+
+    # Add some tools
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {"srv": [{"name": "tool1", "inputSchema": {}}]}
+    asyncio.run(connect_all(servers, tool_lists=tool_lists))
+
+    # Take snapshot
+    snap = registry.snapshot()
+    assert isinstance(snap, tuple)
+    assert len(snap) == 2
+
+    # Add more tools
+    tool_lists2 = {
+        "srv": [
+            {"name": "tool1", "inputSchema": {}},
+            {"name": "tool2", "inputSchema": {}},
+        ]
+    }
+    asyncio.run(connect_all(servers, tool_lists=tool_lists2))
+    assert registry.get_tool("tool2") is not None
+
+    # Restore to snapshot (simulating rollback on conflict)
+    registry.restore(snap)
+    assert registry.get_tool("tool2") is None
+    assert registry.get_tool("tool1") is not None
+
+    asyncio.run(disconnect_all())
+
+
+# --- Teardown cleanup semantics ---
+
+
+def test_disconnect_all_is_idempotent() -> None:
+    """disconnect_all can be called multiple times without error."""
+    asyncio.run(disconnect_all())  # Empty
+    asyncio.run(disconnect_all())  # Still empty
+    asyncio.run(disconnect_all())  # Still empty
+
+    result = asyncio.run(disconnect_all())
+    assert result.is_ok
+
+
+def test_disconnect_all_clears_all_servers() -> None:
+    """disconnect_all clears all servers from registry regardless of count."""
+    servers = {
+        "s1": ServerConfig(name="s1", command="cmd1"),
+        "s2": ServerConfig(name="s2", command="cmd2"),
+        "s3": ServerConfig(name="s3", url="http://host/sse"),
+    }
+    tool_lists = {
+        "s1": [{"name": "tool1", "inputSchema": {}}],
+        "s2": [{"name": "tool2", "inputSchema": {}}],
+        "s3": [{"name": "tool3", "inputSchema": {}}],
+    }
+    asyncio.run(connect_all(servers, tool_lists=tool_lists))
+
+    all_tools = get_all_tools()
+    assert len(all_tools) == 3
+
+    asyncio.run(disconnect_all())
+
+    all_tools = get_all_tools()
+    assert len(all_tools) == 0
+
+
+def test_connect_all_then_disconnect_all_is_clean_state() -> None:
+    """Full lifecycle: connect_all -> tool enumeration -> disconnect_all -> clean state."""
+    servers = {"srv": ServerConfig(name="srv", command="cmd")}
+    tool_lists = {"srv": [{"name": "tool", "inputSchema": {}}]}
+
+    # Connect
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+    assert get_tool_server("tool") == "srv"
+
+    # Verify registry state
+    registry = get_registry()
+    tool = registry.get_tool("tool")
+    assert tool is not None
+    assert tool.name == "tool"
+    assert tool.server_name == "srv"
+    assert tool.family == "srv"  # Default family is server name
+
+    # Disconnect
+    result = asyncio.run(disconnect_all())
+    assert result.is_ok
+
+    # Verify clean state
+    assert get_tool_server("tool") is None
+    assert registry.get_tool("tool") is None
+    assert get_all_tools() == {}
+
+
+# --- ServerConfig validation for transport ---
+
+
+def test_server_config_rejects_both_command_and_url() -> None:
+    """ServerConfig with both command and url is invalid per INTERFACES.md 9.1.
+
+    Per spec: mixed transport fields (command and url both set) are invalid
+    and must be rejected as a config/runtime contract violation.
+
+    Note: Current model validation does not enforce this; tests document the
+    expected future validation contract.
+    """
+    # Pydantic model currently allows both, but this is a config error
+    # that should be caught during validation (future enforcement)
+    config = ServerConfig(name="invalid", command="cmd", url="http://host/sse")
+    # Document current behavior (no validation) vs expected behavior
+    # This test documents that validation should be added
+    assert config.command == "cmd"
+    assert config.url == "http://host/sse"
+    # TODO: Add validation in config parsing step to reject this
+
+
+def test_server_config_requires_transport() -> None:
+    """ServerConfig requires exactly one transport (command OR url).
+
+    A server config without any transport is invalid.
+
+    Note: Current model allows this; tests document expected future validation.
+    """
+    # Pydantic model currently allows neither, but this is a config error
+    config = ServerConfig(name="invalid")
+    # Document current behavior (no validation) vs expected behavior
+    assert config.command is None
+    assert config.url is None
+    # TODO: Add validation in config parsing step to require exactly one transport
