@@ -43,9 +43,12 @@ htmlcov/
 .gemini/
 .claude/
 .opencode/
+opencode.json
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+
+tela.yaml
 
 .serena/
 plan-dashboard.html
