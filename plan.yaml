@@ -10228,7 +10228,7 @@ phases:
   steps:
   - id: cap.contract.define
     name: Define contracts for new ProfileConfig shape
-    status: claimed
+    status: done
     description: 'Define contracts for new ProfileConfig shape: add `capabilities`
       field (alias for `tools` during migration), plan removal of `SideEffectPolicy`
       enum and `side_effect_policy` field, define new 3-step per-call enforcement
@@ -10253,6 +10253,59 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T17:08:41.601927+00:00'
+    done_at: '2026-03-18T17:15:33.523571+00:00'
+    evidence: "Commit hash(es):\n- bc3ddb56705eab680818a1992960a70bdd15e727\n\nFiles\
+      \ changed:\n- src/tela/core/models.py\n- src/tela/core/enforcement.py\n\nContract\
+      \ decisions:\n- ProfileConfig.capabilities field type:\n  - `dict[str, Posture]`\
+      \ (canonical map).\n  - Source: `docs/ADR-003-gateway-capability-only-profiles.md:36-37`\
+      \ (`tool_posture <= profile.capabilities[tool.family]`) and `docs/ADR-003-gateway-capability-only-profiles.md:51-53`\
+      \ (rename `tools` -> `capabilities`).\n- Migration-period dual-field handling:\n\
+      \  - Added `normalize_profile_config_aliases(raw)` with `@pre/@post` + doctests.\n\
+      \  - `ProfileConfig` now accepts both `capabilities=` and `tools=` via `validation_alias=AliasChoices(\"\
+      capabilities\", \"tools\")`; conflict raises `ValueError`.\n  - Kept `ProfileConfig.tools`\
+      \ property alias (contracted) for migration compatibility.\n  - Source: `docs/MIGRATION-003-capability-only-profiles.md:71-73`\
+      \ and `docs/MIGRATION-003-capability-only-profiles.md:89-108`.\n- Enforcement\
+      \ steps after removal: 3 (family admission, tool override, posture ceiling)\n\
+      \  - Updated `enforce()` chain to exactly 3 per-call steps and removed `check_side_effect`\
+      \ from runtime path.\n  - Updated enforcement doctests from `ProfileConfig(...,\
+      \ tools=...)` to `ProfileConfig(..., capabilities=...)`.\n  - Source: `docs/ADR-003-gateway-capability-only-profiles.md:40-45`\
+      \ and `docs/MIGRATION-003-capability-only-profiles.md:77-82,194-199`.\n\ninvar\
+      \ sig output for models.py:\n- file: `src/tela/core/models.py`\n- `normalize_profile_config_aliases(raw:\
+      \ Mapping[str, Any] | None) -> dict[str, Any]`\n  - @pre: `lambda raw: raw is\
+      \ None or isinstance(raw, Mapping)`\n  - @post: `lambda result: isinstance(result,\
+      \ dict) and ('capabilities' in result or 'tools' not in result)`\n- `ProfileConfig._normalize_aliases(cls,\
+      \ data: Any) -> Any`\n  - @pre: `lambda cls, data: cls is ProfileConfig`\n \
+      \ - @post: `lambda result: result is not None`\n- `ProfileConfig.tools(self)\
+      \ -> dict[str, Posture]`\n  - @post: `lambda result: isinstance(result, dict)`\n\
+      \ninvar sig output for enforcement.py:\n- file: `src/tela/core/enforcement.py`\n\
+      - `posture_le(a: Posture, b: Posture) -> bool`\n  - @pre: `lambda a, b: isinstance(a,\
+      \ Posture) and isinstance(b, Posture)`\n  - @post: `lambda result: isinstance(result,\
+      \ bool)`\n- `check_family_admission(family: str, profile: ProfileConfig) ->\
+      \ EnforcementResult`\n  - @pre: `lambda family, profile: isinstance(family,\
+      \ str) and len(family) > 0`\n  - @post: `lambda result: isinstance(result, EnforcementResult)`\n\
+      - `check_tool_override(tool_name: str, family: str, profile: ProfileConfig)\
+      \ -> EnforcementResult | None`\n  - @pre: `lambda tool_name, family, profile:\
+      \ isinstance(tool_name, str)`\n  - @post: `lambda result: result is None or\
+      \ isinstance(result, EnforcementResult)`\n- `check_posture(tool_posture: Posture\
+      \ | None, family_ceiling: Posture, default_posture: Posture) -> EnforcementResult`\n\
+      \  - @pre: `lambda tool_posture, family_ceiling, default_posture: isinstance(family_ceiling,\
+      \ Posture)`\n  - @post: `lambda result: isinstance(result, EnforcementResult)`\n\
+      - `enforce(tool_name: str, tool: ResolvedTool, profile: ProfileConfig, token_result:\
+      \ EnforcementResult, default_posture: Posture) -> EnforcementResult`\n  - @pre:\
+      \ `lambda tool_name, tool, profile, token_result, default_posture: token_result.verdict\
+      \ == EnforcementVerdict.ALLOW`\n  - @post: `lambda result: isinstance(result,\
+      \ EnforcementResult)`\n\npytest --doctest-modules output (last 20 lines):\n\
+      ============================= test session starts ==============================\n\
+      platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0\nrootdir: /Users/tefx/Projects/mcp-tela/.vectl/worktrees/cap.contract.define\n\
+      configfile: pyproject.toml\nplugins: anyio-4.12.1\ncollected 8 items\n\nsrc/tela/core/models.py\
+      \ ...                                              [ 37%]\nsrc/tela/core/enforcement.py\
+      \ .....                                       [100%]\n\n==============================\
+      \ 8 passed in 0.12s ===============================\n\nGaps/Notes:\n- Did not\
+      \ remove `SideEffectPolicy` enum or `ProfileConfig.side_effect_policy` field\
+      \ yet; this step keeps migration compatibility while enforcing capability-first\
+      \ contracts.\n- Did not modify files outside scope (`src/tela/core/models.py`,\
+      \ `src/tela/core/enforcement.py`).\n- Full repository doctest run still has\
+      \ unrelated legacy test import dependency on `check_side_effect` in tests."
   - id: cap.contract.gate
     name: Quick gate review
     status: pending
