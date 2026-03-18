@@ -11238,7 +11238,7 @@ phases:
       - Gate PASS; no blocking issues in cap.shell phase.'
 - id: cap.docs
   name: Documentation Sync
-  status: in_progress
+  status: done
   depends_on:
   - cap.shell
   steps:
@@ -11309,7 +11309,7 @@ phases:
       - Historical references remain in ADR/MIGRATION documentation by design.'
   - id: cap.docs.gate
     name: Gate review
-    status: claimed
+    status: done
     description: ''
     verification: Quick Gate. Docs match implementation. No stale references.
     depends_on:
@@ -11317,9 +11317,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T19:09:18.151311+00:00'
+    done_at: '2026-03-18T19:13:59.858686+00:00'
+    evidence: 'Artifact:
+
+      - Commit range reviewed: docs update step
+
+
+      Verification:
+
+      - Active docs/examples migrated to `capabilities` and free of `side_effect_policy`
+
+      - Enforcement-chain wording aligned to 3-step model
+
+      - Wiring/escape-hatch/runnable/integration sections reviewed as N/A or verified
+      for docs-only scope
+
+
+      Spec link:
+
+      - ADR-003 capability-only profile shape
+
+      - DESIGN 3-step enforcement text
+
+
+      Result:
+
+      - Gate PASS for cap.docs'
 - id: cap.cleanup
   name: Remove Deprecated Code
-  status: locked
+  status: pending
   depends_on:
   - cap.docs
   steps:
