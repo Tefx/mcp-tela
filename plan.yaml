@@ -10110,7 +10110,7 @@ phases:
       - live SSE endpoint integration deferred; transport selection path tested'
   - id: rt.downstream.call
     name: Implement real call_tool and re_enumerate
-    status: claimed
+    status: done
     description: 'Implement real call_tool: forward tool calls to downstream via fastmcp
       client session. Implement re_enumerate for hot reload. Remove DOWNSTREAM_NOT_CONNECTED
       stubs. Use spec error codes (DOWNSTREAM_ERROR, DOWNSTREAM_UNAVAILABLE).'
@@ -10136,6 +10136,37 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T20:47:32.952007+00:00'
+    done_at: '2026-03-18T20:53:24.739500+00:00'
+    evidence: 'Commit hash(es):
+
+      - 9b426fc9803aac5d027cfeb51b092cc375efb578
+
+
+      Files changed:
+
+      - src/tela/shell/downstream.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/shell/test_downstream_runtime_connection.py
+
+
+      Verification:
+
+      - call_tool returns real downstream results via session forwarding
+
+      - re_enumerate refreshes registry via real relist
+
+      - `DOWNSTREAM_NOT_CONNECTED` stub text removed
+
+      - error handling uses `DOWNSTREAM_UNAVAILABLE` and `DOWNSTREAM_ERROR`
+
+      - focused runtime downstream tests pass
+
+
+      Gaps/Notes:
+
+      - scope confined to downstream call/re-enumerate behavior'
   - id: rt.downstream.gate
     name: Gate review with wiring audit
     status: pending
