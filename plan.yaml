@@ -11000,7 +11000,7 @@ phases:
       - MIGRATION-003 override handling and migration constraints'
   - id: cap.impl.retest-gate-remediation
     name: Retest cap.impl gate remediation
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, retest the full `cap.impl.gate` remediation
       from a fresh perspective.
 
@@ -11039,6 +11039,8 @@ phases:
     depends_on:
     - cap.impl.fix-gate-blockers
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-18T18:36:46.217582+00:00'
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
