@@ -9883,9 +9883,15 @@ phases:
     verification: '- Focused tests cover default, explicit mapping, expansion, and
       contract-defined failure path
 
-      - Evidence cites the contract step as the authority for fixture shape and semantics
+      - Evidence cites `rt.env_field.contract` as the authority for fixture shape
+      and semantics
 
-      - Tests are ready to fail against missing or incorrect implementation'
+      - Tests are ready to fail against missing or incorrect implementation
+
+      - This step completes only when the test suite expresses the contract before
+      implementation proceeds'
+    depends_on:
+    - rt.env_field.contract
     agent: integration-verifier
 - id: rt.downstream
   name: Downstream MCP Client Connections
