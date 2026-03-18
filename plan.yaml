@@ -10886,13 +10886,15 @@ phases:
       side-effect migration behavior, and enforces override ceiling during parse path.'
   - id: cap.impl.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: ''
     verification: 'Full Gate. E1: all ADR-003 rules implemented. E4: all cap.test
       tests pass. Contract strength verified.'
     depends_on:
     - cap.impl.config-catalog
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T18:24:17.009398+00:00'
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
