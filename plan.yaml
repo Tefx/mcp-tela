@@ -11536,7 +11536,7 @@ phases:
     agent: gate-reviewer
   - id: cap.final_gate.fix-field-name-consistency
     name: 'Batched fix: resolve docs/code field-name contradictions'
-    status: claimed
+    status: done
     description: 'Fix ALL documentation/code field-name contradictions found by `cap.final_gate.spec`,
       not just the first mention.
 
@@ -11618,6 +11618,29 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-18T19:42:42.681360+00:00'
+    done_at: '2026-03-18T19:47:06.033031+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 84e1eda
+
+
+      Verification:
+
+      - Targeted tests pass for token/upstream/repro surfaces
+
+      - Search confirms no remaining `profile_id` or `tools_profile` identifiers
+
+      - Canonical `profile_name` present across models, shell response, docs, and
+      tests
+
+      - Worktree clean after commit
+
+
+      Spec link:
+
+      - INTERFACES token and profiles payload sections now aligned with implementation
+
+      - CapabilityToken canonical field is `profile_name`'
   - id: cap.final_gate.retest-field-name-consistency
     name: Retest docs/code field-name consistency
     status: pending
