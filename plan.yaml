@@ -9988,13 +9988,13 @@ phases:
       - interfaces server/env contract section'
 - id: rt.downstream
   name: Downstream MCP Client Connections
-  status: pending
+  status: in_progress
   depends_on:
   - rt.env_field
   steps:
   - id: rt.downstream.contract
     name: Design fastmcp client integration pattern
-    status: pending
+    status: claimed
     description: Design the fastmcp client integration pattern. Define how connect_all
       will spawn stdio servers (using ServerConfig.command/args/env) and connect to
       SSE servers (using ServerConfig.url). Define session lifecycle, error handling,
@@ -10015,6 +10015,8 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T20:26:09.415766+00:00'
   - id: rt.downstream.connect
     name: Implement real connect_all
     status: pending
