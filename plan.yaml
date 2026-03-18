@@ -9722,7 +9722,7 @@ phases:
       smoke/audit/gate can proceed.'
 - id: rt.env_field
   name: ServerConfig.env Field
-  status: locked
+  status: pending
   depends_on:
   - retest2.full
   - cap.final_gate
@@ -11451,7 +11451,7 @@ phases:
       - Gate PASS'
 - id: cap.final_gate
   name: Full Gate Review
-  status: in_progress
+  status: done
   depends_on:
   - cap.cleanup
   steps:
@@ -11885,7 +11885,7 @@ phases:
       - final gate runtime/static blocker remediation scope and liveness expectations'
   - id: cap.final_gate.retest-runtime-static-blockers
     name: Independent retest of batched runtime and static-analysis blockers
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`blind-tester`), validate that the blockers
       from `cap.final_gate.gate` are actually closed from a fresh perspective.
 
@@ -11944,6 +11944,31 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-18T20:03:18.953886+00:00'
+    done_at: '2026-03-18T20:05:39.413115+00:00'
+    evidence: 'Artifact:
+
+      - Independent retest against post-fix mainline
+
+
+      Verification:
+
+      - liveness repro tests pass (stdio banner hygiene + initialize + SSE stay-alive)
+
+      - mypy clean for contracts/token scope
+
+      - ruff clean for src/tests scope
+
+      - full test run passes with warnings only
+
+
+      Spec link:
+
+      - runtime behavior expected by INTERFACES and liveness repro suite
+
+
+      Verdict:
+
+      - blocker families closed; ready for full gate re-review'
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
