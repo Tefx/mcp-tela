@@ -10556,7 +10556,7 @@ phases:
   steps:
   - id: cap.spec.finalize-adr-003-and-migration-003
     name: Finalize ADR-003 and MIGRATION-003
-    status: claimed
+    status: done
     description: 'Review and finalize the updated ADR-003 (Accepted) and MIGRATION-003
       documents. Key invariant added by user: ''No tool override may elevate access
       beyond capabilities[family]''. Migration must downgrade/remove/fail overrides
@@ -10570,6 +10570,52 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-18T16:46:26.670244+00:00'
+    done_at: '2026-03-18T16:58:06.133117+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 98f38e6
+
+
+      Verification:
+
+      - Run: grep -A2 "^## Status" docs/ADR-003-gateway-capability-only-profiles.md
+      -> Accepted
+
+      - Run: grep -c "^## Code Changes" docs/MIGRATION-003-capability-only-profiles.md
+      -> 1
+
+      - Run: grep -c "^## Dual-Format Support" docs/MIGRATION-003-capability-only-profiles.md
+      -> 1
+
+      - Run: grep -c "^## tool_overrides Section" docs/MIGRATION-003-capability-only-profiles.md
+      -> 1
+
+      - Run: grep "No tool override may elevate" docs/ADR-003-gateway-capability-only-profiles.md
+      -> Found (line 46)
+
+      - Run: grep "no tool override may exceed" docs/MIGRATION-003-capability-only-profiles.md
+      -> Found (line 45)
+
+      - Run: grep -A3 "If a legacy override would exceed" docs/MIGRATION-003-capability-only-profiles.md
+      | tail -3 -> downgrade/remove/reject options present
+
+      - Run: grep "tool_posture <= profile.capabilities" docs/ADR-003-gateway-capability-only-profiles.md
+      -> Found (line 36)
+
+      - Run: grep "tool_posture <= profile.capabilities" docs/DESIGN.md -> Found (line
+      50)
+
+      - Run: grep "tool_posture <= profile.capabilities" docs/INTERFACES.md -> Found
+      (line 127)
+
+
+      Spec link:
+
+      - docs/ADR-003-gateway-capability-only-profiles.md: Status Accepted, enforcement
+      chain 3 steps, invariant: "No tool override may elevate access beyond capabilities[family]"
+
+      - docs/MIGRATION-003-capability-only-profiles.md: Contains Code Changes, Dual-Format
+      Support, tool_overrides Section, override downgrade/remove/reject rules'
   - id: cap.spec.design-md
     name: Update DESIGN.md to target state
     status: pending
