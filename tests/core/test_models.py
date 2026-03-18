@@ -21,7 +21,6 @@ from tela.core.models import (
     Posture,
     ProfileConfig,
     ServerConfig,
-    SideEffectPolicy,
     TelaConfig,
     ToolOverride,
     ResolvedTool,
@@ -136,10 +135,6 @@ class TestEnums:
     def test_auth_mode_values(self) -> None:
         assert AuthMode.TOKEN.value == "token"
         assert AuthMode.OPEN.value == "open"
-
-    def test_side_effect_policy_values(self) -> None:
-        assert SideEffectPolicy.ALLOW.value == "allow"
-        assert SideEffectPolicy.READ_ONLY.value == "read_only"
 
     def test_gateway_transport_values(self) -> None:
         assert GatewayTransport.STDIO.value == "stdio"

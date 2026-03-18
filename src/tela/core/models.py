@@ -28,19 +28,6 @@ class Posture(str, Enum):
     DESTRUCTIVE = "destructive"
 
 
-class SideEffectPolicy(str, Enum):
-    """Profile side-effect policy mode.
-
-    .. deprecated::
-        Use ``ProfileConfig.capabilities`` instead. This enum is retained
-        for backward compatibility during migration and will be removed
-        in a future release.
-    """
-
-    ALLOW = "allow"
-    READ_ONLY = "read_only"
-
-
 class AuthMode(str, Enum):
     """Authentication mode for gateway startup."""
 

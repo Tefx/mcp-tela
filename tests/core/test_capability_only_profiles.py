@@ -1,7 +1,8 @@
-"""Tests for capability-only profile migration (ADR-003).
+"""Tests for capability-only profile format (ADR-003).
 
-Tests verify the migration from tools/side_effect_policy to capabilities format.
-These tests are designed to FAIL until the implementation is complete.
+Tests verify the tools→capabilities alias migration and enforcement chain.
+The side_effect_policy migration has been removed - legacy configs with
+side_effect_policy will now fail validation (unknown field).
 """
 
 from __future__ import annotations
@@ -15,7 +16,6 @@ from tela.core.models import (
     Posture,
     ProfileConfig,
     ProfileToolOverrides,
-    SideEffectPolicy,
 )
 from tela.core.enforcement import enforce, check_posture
 from tela.core.config import parse_config
@@ -97,119 +97,11 @@ class TestCanonicalOutput:
 
 
 # ==============================================================================
-# (c) side_effect_policy: read_only triggers ceiling capping during migration parse
+# (c) side_effect_policy field is removed - legacy config should error
 # ==============================================================================
-
-
-class TestReadOnlyCapping:
-    """Tests that side_effect_policy: read_only caps capabilities during parse."""
-
-    def test_read_only_capping_in_parse_config(self) -> None:
-        """Legacy config with side_effect_policy: read_only should cap all capabilities."""
-        # Legacy YAML with side_effect_policy: read_only
-        # All families should be capped to read_only
-        raw_config = {
-            "profiles": {
-                "reviewer": {
-                    "name": "reviewer",
-                    "tools": {
-                        "filesystem": Posture.READ_WRITE.value,
-                        "git": Posture.READ_WRITE.value,
-                    },
-                    "side_effect_policy": "read_only",
-                }
-            },
-            "auth": {"mode": "open"},
-        }
-        config = parse_config(raw_config, {})
-        profile = config.profiles["reviewer"]
-
-        # All capabilities should be capped to read_only
-        for family, posture in profile.capabilities.items():
-            assert posture == Posture.READ_ONLY, (
-                f"Family {family} should be capped to read_only, got {posture}"
-            )
-
-    def test_read_only_capping_preserves_read_only_capabilities(self) -> None:
-        """If capability is already read_only, no downgrade needed."""
-        raw_config = {
-            "profiles": {
-                "viewer": {
-                    "name": "viewer",
-                    "tools": {"filesystem": Posture.READ_ONLY.value},
-                    "side_effect_policy": "read_only",
-                }
-            },
-            "auth": {"mode": "open"},
-        }
-        config = parse_config(raw_config, {})
-        profile = config.profiles["viewer"]
-        assert profile.capabilities["filesystem"] == Posture.READ_ONLY
-
-    def test_read_only_capping_downgrades_destructive(self) -> None:
-        """Destructive posture must be downgraded to read_only under read_only policy."""
-        raw_config = {
-            "profiles": {
-                "safe": {
-                    "name": "safe",
-                    "tools": {"filesystem": Posture.DESTRUCTIVE.value},
-                    "side_effect_policy": "read_only",
-                }
-            },
-            "auth": {"mode": "open"},
-        }
-        config = parse_config(raw_config, {})
-        profile = config.profiles["safe"]
-        assert profile.capabilities["filesystem"] == Posture.READ_ONLY
-
-
-# ==============================================================================
-# (d) side_effect_policy: allow is silently dropped
-# ==============================================================================
-
-
-class TestAllowDropped:
-    """Tests that side_effect_policy: allow is silently dropped during parse."""
-
-    def test_allow_policy_dropped_silently(self) -> None:
-        """Legacy config with side_effect_policy: allow should be accepted."""
-        raw_config = {
-            "profiles": {
-                "developer": {
-                    "name": "developer",
-                    "tools": {"filesystem": Posture.READ_WRITE.value},
-                    "side_effect_policy": "allow",
-                }
-            },
-            "auth": {"mode": "open"},
-        }
-        # Should not raise
-        config = parse_config(raw_config, {})
-        profile = config.profiles["developer"]
-        assert profile.capabilities["filesystem"] == Posture.READ_WRITE
-        # side_effect_policy should be removed (not in target model)
-        # Or it may remain for backward compat but be ignored
-
-    def test_allow_policy_does_not_affect_capabilities(self) -> None:
-        """allow policy should not change capability postures."""
-        raw_config = {
-            "profiles": {
-                "full": {
-                    "name": "full",
-                    "tools": {
-                        "filesystem": Posture.DESTRUCTIVE.value,
-                        "git": Posture.READ_WRITE.value,
-                    },
-                    "side_effect_policy": "allow",
-                }
-            },
-            "auth": {"mode": "open"},
-        }
-        config = parse_config(raw_config, {})
-        profile = config.profiles["full"]
-        # postures should remain unchanged
-        assert profile.capabilities["filesystem"] == Posture.DESTRUCTIVE
-        assert profile.capabilities["git"] == Posture.READ_WRITE
+# NOTE: side_effect_policy migration support has been removed.
+# Legacy configs containing side_effect_policy will now raise an error
+# during validation (unknown field). Users must migrate to capabilities format.
 
 
 # ==============================================================================
@@ -404,16 +296,14 @@ class TestBuiltinProfilesCapabilities:
                 f"execute_full profile: {family} should be destructive, got {posture}"
             )
 
-    def test_builtins_no_side_effect_policy_field(self) -> None:
-        """Builtin profiles should not rely on side_effect_policy."""
-        # After migration, builtin profiles should express capability only
+    def test_builtins_use_capabilities_only(self) -> None:
+        """Builtin profiles must express authorization via capabilities."""
+        # After migration removal, builtin profiles express full authorization
+        # via capabilities field alone.
         for name, profile in BUILTIN_PROFILES.items():
-            # side_effect_policy may still exist for backward compat but should be ignored
-            # The key test is that capabilities express the full authorization story
             _ = name
-            _ = profile
-            # This test passes as long as capabilities is populated correctly
-            # side_effect_policy field may remain but should be deprecated
+            # The key test is that capabilities is populated correctly
+            assert len(profile.capabilities) > 0, f"{name} has empty capabilities"
 
 
 # ==============================================================================
@@ -613,46 +503,6 @@ class TestOverrideCeilingInvariant:
         # Explicit deny override must result in DENY
         assert result.verdict == EnforcementVerdict.DENY
         assert result.denied_by == "tool_override"
-
-    def test_migration_rejects_override_exceeding_ceiling(self) -> None:
-        """During migration, override that would exceed ceiling must be rejected or downgraded."""
-        # This tests the migration-time invariant from MIGRATION-003
-        # When parsing legacy config with side_effect_policy: read_only AND tool_overrides
-        # the override must not exceed the capped ceiling
-        raw_config = {
-            "profiles": {
-                "reviewer": {
-                    "name": "reviewer",
-                    "tools": {"filesystem": Posture.READ_WRITE.value},
-                    "side_effect_policy": "read_only",
-                    "tool_overrides": {
-                        "filesystem": {
-                            "edit_file": "allow"  # implies read_write, exceeds read_only ceiling
-                        }
-                    },
-                }
-            },
-            "auth": {"mode": "open"},
-        }
-        # Migration should either:
-        # 1. Reject the config with an error
-        # 2. Downgrade the override to deny
-        # 3. Remove the override
-        # This test asserts that one of these outcomes must occur
-        with pytest.raises(Exception) as exc_info:
-            config = parse_config(raw_config, {})
-            # If parsing succeeds, verify the override was handled correctly
-            profile = config.profiles["reviewer"]
-            # Either the override is removed, downgraded to deny, or error was raised
-            # A dangerous "allow" override for read_write operation in read_only family
-            # must not survive migration unchanged
-            if "filesystem" in profile.tool_overrides:
-                overrides = profile.tool_overrides["filesystem"].overrides
-                if "edit_file" in overrides:
-                    # If override exists, it must be DENY, not ALLOW
-                    assert overrides["edit_file"] != EnforcementVerdict.ALLOW, (
-                        "Override cannot be ALLOW for operation exceeding family ceiling"
-                    )
 
 
 # ==============================================================================

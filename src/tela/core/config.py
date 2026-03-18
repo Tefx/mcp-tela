@@ -13,121 +13,12 @@ from typing import Mapping
 from tela.core.contracts import pre, post
 from pydantic import ValidationError
 
-from tela.core.models import AuthMode, Posture, ProfileConfig, TelaConfig
+from tela.core.models import AuthMode, ProfileConfig, TelaConfig
 from tela.core.catalog import merge_with_builtins
 
 
 # Re-export for backward compatibility
 from tela.core.errors import ConfigContractError  # noqa: F401
-
-
-@pre(
-    lambda profile_data, profile_name: (
-        isinstance(profile_data, dict)
-        and isinstance(profile_name, str)
-        and len(profile_name) > 0
-    )
-)
-@post(lambda result: isinstance(result, dict))
-def _apply_side_effect_policy_migration(
-    profile_data: dict,
-    profile_name: str,
-) -> dict:
-    """Apply migration logic for legacy side_effect_policy field.
-
-    Migration rules per MIGRATION-003:
-    - side_effect_policy: read_only -> cap all family ceilings to READ_ONLY
-    - side_effect_policy: allow -> drop the field (no change)
-    - side_effect_policy: approval_required -> error (not supported)
-
-    Note: This function does NOT handle tools→capabilities migration.
-    That is done by normalize_profile_config_aliases in models.py.
-
-    Args:
-        profile_data: Raw profile dict from YAML parsing.
-        profile_name: Profile name for error messages.
-
-    Returns:
-        Migrated profile dict with side_effect_policy removed.
-    """
-    result = dict(profile_data)
-
-    side_effect_policy = result.pop("side_effect_policy", None)
-    if side_effect_policy is None:
-        return result
-
-    # Emit deprecation warning
-    warnings.warn(
-        f"Profile '{profile_name}': 'side_effect_policy' is deprecated. "
-        "Use 'capabilities' to express posture ceilings directly.",
-        DeprecationWarning,
-        stacklevel=3,
-    )
-
-    # Handle policy values
-    if side_effect_policy == "approval_required":
-        raise ConfigContractError(
-            code="MIGRATION_ERROR",
-            message=(
-                f"Profile '{profile_name}': 'side_effect_policy: approval_required' "
-                "is not supported. Runtime approval belongs to anima. "
-                "Remove this field or switch to capability-only profiles."
-            ),
-        )
-
-    if side_effect_policy == "read_only":
-        # Get the current capabilities (from either 'capabilities' or 'tools' key)
-        # The tools→capabilities normalization will be done by normalize_profile_config_aliases
-        capabilities = result.get("capabilities") or result.get("tools", {})
-
-        # ADR-003 invariant: no override may elevate beyond capabilities[family].
-        # During migration from side_effect_policy=read_only we reject any explicit
-        # ALLOW override because posture classification is not available here.
-        # This selects the documented "reject" strategy.
-        tool_overrides = result.get("tool_overrides")
-        if isinstance(tool_overrides, Mapping):
-            for family, family_cfg in tool_overrides.items():
-                if isinstance(family_cfg, Mapping):
-                    overrides = family_cfg.get("overrides")
-                    candidate = (
-                        overrides if isinstance(overrides, Mapping) else family_cfg
-                    )
-                    for tool_name, verdict in candidate.items():
-                        if str(verdict).lower() == "allow":
-                            raise ConfigContractError(
-                                code="MIGRATION_ERROR",
-                                message=(
-                                    f"Profile '{profile_name}': override '{family}.{tool_name}=allow' "
-                                    "is incompatible with side_effect_policy=read_only migration. "
-                                    "No tool override may elevate beyond capabilities[family]."
-                                ),
-                            )
-
-        # Emit deprecation warning for legacy tools key
-        if "tools" in result:
-            warnings.warn(
-                f"Profile '{profile_name}': 'tools:' is deprecated. "
-                "Use 'capabilities:' instead.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-
-        # Cap all family ceilings to READ_ONLY
-        result["capabilities"] = {
-            family: Posture.READ_ONLY for family in capabilities.keys()
-        }
-        # Remove tools key so it doesn't conflict with capabilities
-        result.pop("tools", None)
-        warnings.warn(
-            f"Profile '{profile_name}': Capped all capabilities to read_only due to "
-            "legacy side_effect_policy. Update config to use explicit capabilities.",
-            UserWarning,
-            stacklevel=3,
-        )
-
-    # side_effect_policy: allow is silently dropped (capabilities already correct)
-
-    return result
 
 
 @pre(
@@ -257,22 +148,17 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
                     if isinstance(value, dict):
                         if "name" not in value:
                             value["name"] = key
-        # Migrate profiles: apply side_effect_policy → capabilities capping
+        # Emit deprecation warning for legacy 'tools:' key if present
         profiles_section = expanded.get("profiles", {})
         if isinstance(profiles_section, dict):
             for profile_name, profile_data in profiles_section.items():
-                if isinstance(profile_data, dict):
-                    profiles_section[profile_name] = (
-                        _apply_side_effect_policy_migration(profile_data, profile_name)
+                if isinstance(profile_data, dict) and "tools" in profile_data:
+                    warnings.warn(
+                        f"Profile '{profile_name}': 'tools:' is deprecated. "
+                        "Use 'capabilities:' instead.",
+                        DeprecationWarning,
+                        stacklevel=2,
                     )
-                    # Emit deprecation warning for legacy 'tools:' key if still present
-                    if "tools" in profiles_section[profile_name]:
-                        warnings.warn(
-                            f"Profile '{profile_name}': 'tools:' is deprecated. "
-                            "Use 'capabilities:' instead.",
-                            DeprecationWarning,
-                            stacklevel=2,
-                        )
         config = TelaConfig.model_validate(expanded)
         # Wire in builtin profiles when user provides none
         if not config.profiles:
