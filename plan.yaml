@@ -11506,6 +11506,88 @@ phases:
     depends_on:
     - cap.final_gate.spec
     agent: gate-reviewer
+  - id: cap.final_gate.fix-field-name-consistency
+    name: 'Batched fix: resolve docs/code field-name contradictions'
+    status: pending
+    description: 'Fix ALL documentation/code field-name contradictions found by `cap.final_gate.spec`,
+      not just the first mention.
+
+
+      Issue family: INTERFACES.md currently contradicts implemented capability/profile
+      naming.
+
+
+      Required scope:
+
+      - Reconcile the authoritative field names used by the shipped implementation
+      and the capability/profile contract.
+
+      - Resolve the contradiction where docs mention `profile_id` while implementation
+      currently uses `name` for profiles responses and `tools_profile` in `CapabilityToken`.
+
+      - Update all sibling references in `docs/INTERFACES.md` and any immediately
+      related capability/profile contract documentation within this phase family so
+      the naming is internally consistent.
+
+      - If a code rename is required for consistency, include the exact code/documentation
+      updates needed for one canonical naming scheme; do not leave mixed terminology
+      behind.
+
+
+      Root Cause vs Symptom:
+
+      - Root cause: the external interface documentation and implemented field names
+      diverged during capability/profile migration.
+
+      - Symptom: gate review found contradictory field names across docs and implementation.
+
+      - Why this fix is not surface-level: it requires a canonical field-name decision
+      and a sibling scan across the capability/profile contract surface, not a single-line
+      doc edit.
+
+
+      Search instructions:
+
+      - Search for all occurrences of `profile_id`, `tools_profile`, and profile response
+      field names in the capability/profile docs and related implementation touch
+      paths.
+
+      - Verify no sibling contradiction remains after the chosen canonical naming
+      is applied.
+
+
+      Out-of-scope guardrail:
+
+      - Do not introduce a second compatibility alias unless the contract explicitly
+      requires it; prefer one canonical external name with docs and code aligned.
+
+
+      spec_refs:
+
+      - `docs/INTERFACES.md`
+
+      - capability/profile contract implemented in `src/`
+
+
+      touch_paths:
+
+      - `docs/INTERFACES.md`
+
+      - capability/profile implementation files under `src/`
+
+
+      step_type: implementation'
+    verification: '- Docs/code field-name consistency verified for profiles response
+      fields and `CapabilityToken`
+
+      - No remaining contradiction between `profile_id`, `name`, and `tools_profile`
+      in the capability/profile surface
+
+      - Evidence cites the canonical field names and where they are defined in docs
+      and implementation'
+    depends_on:
+    - cap.final_gate.spec
+    agent: software-architect
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
