@@ -10662,13 +10662,13 @@ phases:
       - Gate PASS with 9/9 requested scenarios covered and correct red-green pattern.'
 - id: cap.impl
   name: Core Implementation
-  status: pending
+  status: in_progress
   depends_on:
   - cap.test
   steps:
   - id: cap.impl.models
     name: Update ProfileConfig in models.py
-    status: pending
+    status: claimed
     description: 'Update ProfileConfig in models.py: add `capabilities` as the primary
       field with Pydantic model_validator for dual-field support, keep `tools` as
       deprecated alias during migration. Mark SideEffectPolicy as deprecated (do NOT
@@ -10688,6 +10688,8 @@ phases:
     - src/tela/core/models.py
     - docs/MIGRATION-003-capability-only-profiles.md
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T17:47:20.133521+00:00'
   - id: cap.impl.enforcement
     name: Simplify enforcement.py
     status: pending
