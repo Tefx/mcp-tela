@@ -10110,7 +10110,7 @@ phases:
       - live SSE endpoint integration deferred; transport selection path tested'
   - id: rt.downstream.call
     name: Implement real call_tool and re_enumerate
-    status: pending
+    status: claimed
     description: 'Implement real call_tool: forward tool calls to downstream via fastmcp
       client session. Implement re_enumerate for hot reload. Remove DOWNSTREAM_NOT_CONNECTED
       stubs. Use spec error codes (DOWNSTREAM_ERROR, DOWNSTREAM_UNAVAILABLE).'
@@ -10134,6 +10134,8 @@ phases:
     depends_on:
     - rt.downstream.connect
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T20:47:32.952007+00:00'
   - id: rt.downstream.gate
     name: Gate review with wiring audit
     status: pending
