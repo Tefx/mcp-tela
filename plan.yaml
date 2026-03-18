@@ -10810,7 +10810,7 @@ phases:
       - This step verified conformance and found no additional implementation required.'
   - id: cap.impl.config-catalog
     name: Update config parser and builtin catalog
-    status: claimed
+    status: done
     description: 'Update config.py parse_config(): accept both tools: and capabilities:
       YAML keys (not both in same profile), emit deprecation warning for tools:, apply
       side_effect_policy→ceiling capping per MIGRATION-003 rules. Enforce override-ceiling
@@ -10836,6 +10836,54 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T18:12:48.566840+00:00'
+    done_at: '2026-03-18T18:23:45.163350+00:00'
+    evidence: 'Commit hash(es):
+
+      - 95f563d
+
+
+      Files changed:
+
+      - src/tela/core/config.py
+
+      - src/tela/core/catalog.py
+
+      - tests/core/test_catalog.py
+
+
+      grep -n ''side_effect_policy'' src/tela/core/config.py output:
+
+      - multiple migration-handling matches (read_only capping, allow drop, approval_required
+      rejection)
+
+
+      grep -n ''side_effect_policy'' src/tela/core/catalog.py output:
+
+      - no matches
+
+
+      python -c builtin capabilities output:
+
+      - all 7 builtins expose `capabilities` maps
+
+
+      invar guard output:
+
+      - passed, errors=0
+
+
+      pytest output:
+
+      - focused run for catalog/config tests: all passed
+
+
+      Gaps/Notes:
+
+      - `tests/core/test_catalog.py` updated to assert `capabilities` instead of removed
+      `side_effect_policy` model field.
+
+      - Config migration now accepts `tools` alias with deprecation warning, applies
+      side-effect migration behavior, and enforces override ceiling during parse path.'
   - id: cap.impl.gate
     name: Gate review
     status: pending
