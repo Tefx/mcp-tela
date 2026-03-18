@@ -11885,7 +11885,7 @@ phases:
       - final gate runtime/static blocker remediation scope and liveness expectations'
   - id: cap.final_gate.retest-runtime-static-blockers
     name: Independent retest of batched runtime and static-analysis blockers
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`blind-tester`), validate that the blockers
       from `cap.final_gate.gate` are actually closed from a fresh perspective.
 
@@ -11942,6 +11942,8 @@ phases:
     depends_on:
     - cap.final_gate.fix-runtime-static-blockers
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-18T20:03:18.953886+00:00'
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
