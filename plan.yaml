@@ -11200,13 +11200,15 @@ phases:
       code paths by design.'
   - id: cap.shell.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: ''
     verification: Full Gate. All tests pass. No stale side_effect_policy references
       outside migration code.
     depends_on:
     - cap.shell.tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T18:59:04.220552+00:00'
 - id: cap.docs
   name: Documentation Sync
   status: locked
