@@ -141,7 +141,26 @@ The upstream MCP surface exposes:
 
 ### `tela.profiles`
 
-Normative payload shape:
+Migration payload shape (backward-compatible window):
+
+```json
+[
+  {
+    "profile_id": "developer",
+    "tools": {
+      "filesystem": "read_write",
+      "git": "read_only"
+    },
+    "capabilities": {
+      "filesystem": "read_write",
+      "git": "read_only"
+    },
+    "default": false
+  }
+]
+```
+
+Post-migration payload shape (canonical):
 
 ```json
 [
@@ -155,6 +174,10 @@ Normative payload shape:
   }
 ]
 ```
+
+Historical/migration notes:
+- `tools` is emitted only during the migration window for backward compatibility
+- `side_effect_policy` is not part of `tela.profiles` output in the target model
 
 ## 8. Invariants
 
