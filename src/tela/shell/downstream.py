@@ -1,14 +1,19 @@
 """Downstream server management.
 
-Manages connections to downstream MCP servers, tool enumeration, resolved tool
-registry construction, and tool call forwarding. Actual process management and
-network I/O for real MCP server connections is deferred to the gateway runtime
-integration step; this implementation provides the registry and lookup layer.
+Manages connections to downstream MCP servers, real MCP ``tools/list``
+enumeration, resolved-tool registry construction, and tool call forwarding.
 """
 
 from __future__ import annotations
 
 import asyncio
+from contextlib import AsyncExitStack
+from dataclasses import dataclass
+from typing import Any
+
+from mcp.client.session import ClientSession
+from mcp.client.sse import sse_client
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
@@ -70,7 +75,9 @@ class DownstreamRegistry:
             dict(self._tool_to_server),
         )
 
-    def restore(self, snap: tuple[dict[str, list["ResolvedTool"]], dict[str, str]]) -> None:
+    def restore(
+        self, snap: tuple[dict[str, list["ResolvedTool"]], dict[str, str]]
+    ) -> None:
         """Restore full registry state from snapshot (atomic rollback)."""
         tools_by_server, tool_to_server = snap
         self._tools_by_server = {k: list(v) for k, v in tools_by_server.items()}
@@ -85,6 +92,120 @@ class DownstreamRegistry:
 # Module-level registry instance
 _registry = DownstreamRegistry()
 _registry_lock = asyncio.Lock()
+
+
+@dataclass
+class _ClientHandle:
+    """Connected downstream client session and transport lifecycle stack."""
+
+    session: ClientSession
+    stack: AsyncExitStack
+
+
+_clients: dict[str, _ClientHandle] = {}
+
+
+def _validate_transport_mode(
+    server_name: str, server_config: ServerConfig
+) -> str | None:
+    """Validate server transport shape and return an error if invalid."""
+
+    has_command = bool(server_config.command)
+    has_url = bool(server_config.url)
+    if has_command == has_url:
+        return (
+            "DOWNSTREAM_CONNECT_FAILED: "
+            f"server '{server_name}' must set exactly one transport: command or url"
+        )
+    return None
+
+
+async def _open_stdio_client(
+    server_name: str, server_config: ServerConfig
+) -> _ClientHandle:
+    """Open and initialize an MCP stdio client session for one server."""
+
+    command = server_config.command
+    if command is None:
+        raise ValueError(f"server '{server_name}' is missing command")
+
+    params = StdioServerParameters(
+        command=command,
+        args=list(server_config.args),
+        env=dict(server_config.env),
+    )
+    stack = AsyncExitStack()
+    try:
+        read_stream, write_stream = await stack.enter_async_context(
+            stdio_client(params)
+        )
+        session = await stack.enter_async_context(
+            ClientSession(read_stream, write_stream)
+        )
+        await session.initialize()
+        return _ClientHandle(session=session, stack=stack)
+    except Exception:
+        await stack.aclose()
+        raise
+
+
+async def _open_sse_client(
+    server_name: str, server_config: ServerConfig
+) -> _ClientHandle:
+    """Open and initialize an MCP SSE client session for one server."""
+
+    url = server_config.url
+    if url is None:
+        raise ValueError(f"server '{server_name}' is missing url")
+
+    stack = AsyncExitStack()
+    try:
+        read_stream, write_stream = await stack.enter_async_context(sse_client(url=url))
+        session = await stack.enter_async_context(
+            ClientSession(read_stream, write_stream)
+        )
+        await session.initialize()
+        return _ClientHandle(session=session, stack=stack)
+    except Exception:
+        await stack.aclose()
+        raise
+
+
+async def _open_client_for_server(
+    server_name: str, server_config: ServerConfig
+) -> _ClientHandle:
+    """Open a connected client handle from a server config transport."""
+
+    if server_config.command is not None:
+        return await _open_stdio_client(server_name, server_config)
+    return await _open_sse_client(server_name, server_config)
+
+
+async def _enumerate_tools(session: ClientSession) -> list[dict[str, Any]]:
+    """Enumerate all tools from a downstream session via MCP ``tools/list``."""
+
+    list_result = await session.list_tools()
+    tools = list(list_result.tools)
+    cursor = list_result.nextCursor
+
+    while cursor is not None:
+        list_result = await session.list_tools(cursor=cursor)
+        tools.extend(list_result.tools)
+        cursor = list_result.nextCursor
+
+    return [tool.model_dump(by_alias=True, exclude_none=True) for tool in tools]
+
+
+async def _close_all_clients_locked() -> None:
+    """Close all connected downstream sessions/processes best-effort."""
+
+    handles = list(_clients.values())
+    _clients.clear()
+    for handle in handles:
+        try:
+            await handle.stack.aclose()
+        except Exception:
+            continue
 
 
 # @invar:allow dead_export: registry accessor used by tests and gateway integration.
@@ -105,9 +226,9 @@ async def connect_all(
     Enumerates tools, resolves families and posture, and runs conflict detection.
     Fails fast on tool name conflicts.
 
-    In the current implementation, actual process spawning and MCP communication
-    are deferred. The ``tool_lists`` parameter allows injection of pre-enumerated
-    tool lists for testing and integration.
+    When ``tool_lists`` is provided, it is treated as test-only scaffolding and
+    bypasses transport/session setup. Production runtime leaves ``tool_lists``
+    unset and enumerates tools from real downstream MCP sessions.
 
     Examples:
         >>> import asyncio
@@ -122,25 +243,51 @@ async def connect_all(
 
     Args:
         servers: Server name to configuration mapping.
-        tool_lists: Optional pre-enumerated tool lists for testing.
+        tool_lists: Optional pre-enumerated tool lists for test scaffolding.
 
     Returns:
         ``Result[None, str]`` on success, or error string if conflicts detected.
     """
 
     async with _registry_lock:
+        await _close_all_clients_locked()
         _registry.clear()
 
         all_resolved: dict[str, list[ResolvedTool]] = {}
 
         for server_name, server_config in servers.items():
-            raw_tools = (tool_lists or {}).get(server_name, [])
+            validation_error = _validate_transport_mode(server_name, server_config)
+            if validation_error is not None:
+                await _close_all_clients_locked()
+                _registry.clear()
+                return Result(error=validation_error)
+
+            try:
+                if tool_lists is not None:
+                    raw_tools = tool_lists.get(server_name, [])
+                else:
+                    client_handle = await _open_client_for_server(
+                        server_name, server_config
+                    )
+                    _clients[server_name] = client_handle
+                    raw_tools = await _enumerate_tools(client_handle.session)
+            except Exception as exc:
+                await _close_all_clients_locked()
+                _registry.clear()
+                return Result(
+                    error=(
+                        "DOWNSTREAM_CONNECT_FAILED: "
+                        f"server '{server_name}' connection/enumeration failed: {exc}"
+                    )
+                )
+
             resolved = resolve_tools(server_name, server_config, raw_tools)
             all_resolved[server_name] = resolved
             _registry.register(server_name, resolved)
 
         conflicts = detect_conflicts(all_resolved)
         if conflicts:
+            await _close_all_clients_locked()
             _registry.clear()
             conflict_desc = "; ".join(
                 f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
@@ -167,6 +314,7 @@ async def disconnect_all() -> Result[None, str]:
     """
 
     async with _registry_lock:
+        await _close_all_clients_locked()
         _registry.clear()
     return Result(value=None)
 
@@ -200,10 +348,12 @@ async def call_tool(
 
     # Actual MCP communication via fastmcp is deferred to gateway runtime
     # integration. For now, return an error indicating the stub state.
-    return Result(error=TelaError(
-        code="DOWNSTREAM_NOT_CONNECTED",
-        message=f"Downstream call_tool for server '{server_name}' is not yet wired to actual MCP transport",
-    ))
+    return Result(
+        error=TelaError(
+            code="DOWNSTREAM_NOT_CONNECTED",
+            message=f"Downstream call_tool for server '{server_name}' is not yet wired to actual MCP transport",
+        )
+    )
 
 
 # @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
@@ -266,4 +416,6 @@ async def re_enumerate(
 
     # Actual MCP communication via fastmcp is deferred to gateway runtime
     # integration. For now, return an error indicating the stub state.
-    return Result(error=f"DOWNSTREAM_NOT_CONNECTED: re_enumerate for server '{server_name}' is not yet wired to actual MCP transport")
+    return Result(
+        error=f"DOWNSTREAM_NOT_CONNECTED: re_enumerate for server '{server_name}' is not yet wired to actual MCP transport"
+    )
