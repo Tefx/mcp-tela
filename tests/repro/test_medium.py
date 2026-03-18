@@ -15,7 +15,6 @@ from tela.core.models import (
     Posture,
     ProfileConfig,
     ResolvedTool,
-    SideEffectPolicy,
 )
 
 
@@ -158,6 +157,8 @@ class TestM10DefaultPosture:
         from tela.core.models import ServerConfig
 
         raw_tools = [{"name": "read_file", "inputSchema": {}}]
-        server = ServerConfig(name="fs", command="cmd", default_posture=Posture.READ_ONLY)
+        server = ServerConfig(
+            name="fs", command="cmd", default_posture=Posture.READ_ONLY
+        )
         resolved = resolve_tools("fs", server, raw_tools)
         assert len(resolved) == 1

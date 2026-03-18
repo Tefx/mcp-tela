@@ -40,12 +40,12 @@ def test_posture_le_higher() -> None:
 
 
 def test_family_admission_allowed() -> None:
-    p = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     assert check_family_admission("fs", p).verdict == EnforcementVerdict.ALLOW
 
 
 def test_family_admission_denied() -> None:
-    p = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     r = check_family_admission("shell", p)
     assert r.verdict == EnforcementVerdict.DENY
     assert r.denied_by == "family_admission"
@@ -55,14 +55,14 @@ def test_family_admission_denied() -> None:
 
 
 def test_tool_override_none() -> None:
-    p = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     assert check_tool_override("read_file", "fs", p) is None
 
 
 def test_tool_override_deny() -> None:
     p = ProfileConfig(
         name="dev",
-        tools={"fs": Posture.READ_WRITE},
+        capabilities={"fs": Posture.READ_WRITE},
         tool_overrides={
             "fs": ProfileToolOverrides(
                 overrides={"delete_file": EnforcementVerdict.DENY}
@@ -77,7 +77,7 @@ def test_tool_override_deny() -> None:
 def test_tool_override_allow() -> None:
     p = ProfileConfig(
         name="dev",
-        tools={"fs": Posture.READ_ONLY},
+        capabilities={"fs": Posture.READ_ONLY},
         tool_overrides={
             "fs": ProfileToolOverrides(overrides={"special": EnforcementVerdict.ALLOW})
         },
@@ -122,7 +122,7 @@ def test_enforce_allows_valid_tool() -> None:
     tool = ResolvedTool(
         name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY
     )
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     assert (
         enforce("read_file", tool, profile, ALLOW, Posture.NONE).verdict
         == EnforcementVerdict.ALLOW
@@ -133,7 +133,7 @@ def test_enforce_denies_unadmitted_family() -> None:
     tool = ResolvedTool(
         name="cmd", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE
     )
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     r = enforce("cmd", tool, profile, ALLOW, Posture.NONE)
     assert r.verdict == EnforcementVerdict.DENY
     assert r.denied_by == "family_admission"
@@ -143,7 +143,7 @@ def test_enforce_denies_posture_exceedance() -> None:
     tool = ResolvedTool(
         name="write_file", server_name="fs", family="fs", posture=Posture.READ_WRITE
     )
-    profile = ProfileConfig(name="reader", tools={"fs": Posture.READ_ONLY})
+    profile = ProfileConfig(name="reader", capabilities={"fs": Posture.READ_ONLY})
     r = enforce("write_file", tool, profile, ALLOW, Posture.NONE)
     assert r.verdict == EnforcementVerdict.DENY
 
@@ -154,7 +154,7 @@ def test_enforce_override_allow_does_not_bypass_posture_ceiling() -> None:
     )
     profile = ProfileConfig(
         name="dev",
-        tools={"fs": Posture.READ_ONLY},
+        capabilities={"fs": Posture.READ_ONLY},
         tool_overrides={
             "fs": ProfileToolOverrides(overrides={"special": EnforcementVerdict.ALLOW})
         },
@@ -170,7 +170,7 @@ def test_enforce_override_denies() -> None:
     )
     profile = ProfileConfig(
         name="dev",
-        tools={"fs": Posture.READ_WRITE},
+        capabilities={"fs": Posture.READ_WRITE},
         tool_overrides={
             "fs": ProfileToolOverrides(overrides={"danger": EnforcementVerdict.DENY})
         },
@@ -186,7 +186,7 @@ def test_enforce_override_allow_within_ceiling_still_allows() -> None:
     )
     profile = ProfileConfig(
         name="dev",
-        tools={"fs": Posture.READ_ONLY},
+        capabilities={"fs": Posture.READ_ONLY},
         tool_overrides={
             "fs": ProfileToolOverrides(
                 overrides={"read_special": EnforcementVerdict.ALLOW}

@@ -10,7 +10,7 @@ from tela.core.catalog import (
     list_builtin_profiles,
     merge_with_builtins,
 )
-from tela.core.models import Posture, ProfileConfig, SideEffectPolicy
+from tela.core.models import Posture, ProfileConfig
 
 
 class TestBuiltinProfiles:
@@ -52,26 +52,26 @@ class TestBuiltinProfiles:
     def test_send_external_profile(self) -> None:
         p = BUILTIN_PROFILES["send_external"]
         assert p.name == "send_external"
-        assert "network" in p.tools
+        assert "network" in p.capabilities
 
     def test_orchestrate_profile(self) -> None:
         p = BUILTIN_PROFILES["orchestrate"]
         assert p.name == "orchestrate"
-        assert "orchestration" in p.tools
+        assert "orchestration" in p.capabilities
 
     def test_execute_safe_profile(self) -> None:
         p = BUILTIN_PROFILES["execute_safe"]
         assert p.name == "execute_safe"
-        assert "execution" in p.tools
+        assert "execution" in p.capabilities
         # execute_safe does NOT have destructive posture
-        for posture in p.tools.values():
+        for posture in p.capabilities.values():
             assert posture != Posture.DESTRUCTIVE
 
     def test_execute_full_profile(self) -> None:
         p = BUILTIN_PROFILES["execute_full"]
         assert p.name == "execute_full"
         # execute_full has destructive posture
-        for posture in p.tools.values():
+        for posture in p.capabilities.values():
             assert posture == Posture.DESTRUCTIVE
 
     def test_no_builtin_is_default(self) -> None:
@@ -111,10 +111,10 @@ class TestMergeWithBuiltins:
         assert "read_only" in result
 
     def test_user_profile_overrides_builtin(self) -> None:
-        custom = ProfileConfig(name="read_only", tools={}, default=True)
+        custom = ProfileConfig(name="read_only", capabilities={}, default=True)
         result = merge_with_builtins({"read_only": custom})
         assert result["read_only"].default is True
-        assert result["read_only"].tools == {}
+        assert result["read_only"].capabilities == {}
 
     def test_user_custom_profile_added(self) -> None:
         custom = ProfileConfig(name="my_profile")

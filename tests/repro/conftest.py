@@ -14,7 +14,6 @@ from tela.core.models import (
     Posture,
     ResolvedTool,
     ServerConfig,
-    SideEffectPolicy,
 )
 
 

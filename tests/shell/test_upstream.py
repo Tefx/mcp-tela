@@ -355,7 +355,7 @@ def test_filter_tools_admits_matching_family() -> None:
             ),
         ]
     }
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
     assert len(result) == 1
     assert result[0].name == "read_file"
@@ -376,7 +376,7 @@ def test_filter_tools_excludes_unadmitted_family() -> None:
             ),
         ]
     }
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = filter_tools_for_profile(tools, profile, {"shell": Posture.NONE})
     assert len(result) == 0
 
@@ -396,7 +396,7 @@ def test_filter_tools_excludes_posture_exceedance() -> None:
             ),
         ]
     }
-    profile = ProfileConfig(name="reader", tools={"fs": Posture.READ_ONLY})
+    profile = ProfileConfig(name="reader", capabilities={"fs": Posture.READ_ONLY})
     result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
     assert len(result) == 0
 
@@ -463,7 +463,7 @@ def test_filter_tools_multiple_servers() -> None:
         ],
     }
     profile = ProfileConfig(
-        name="dev", tools={"fs": Posture.READ_WRITE, "git": Posture.READ_ONLY}
+        name="dev", capabilities={"fs": Posture.READ_WRITE, "git": Posture.READ_ONLY}
     )
     result = filter_tools_for_profile(
         tools, profile, {"fs": Posture.NONE, "git": Posture.NONE, "shell": Posture.NONE}
@@ -513,7 +513,7 @@ def test_enforce_tool_call_allows() -> None:
     tool = ResolvedTool(
         name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY
     )
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = enforce_tool_call("read_file", tool, profile, Posture.NONE)
     assert result.verdict.value == "allow"
 
@@ -526,6 +526,6 @@ def test_enforce_tool_call_denies() -> None:
     tool = ResolvedTool(
         name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE
     )
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = enforce_tool_call("exec", tool, profile, Posture.NONE)
     assert result.verdict.value == "deny"
