@@ -16,7 +16,6 @@ from typing import Awaitable, Callable
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
 from tela.core.models import (
-    AuditEntry,
     AuditLevel,
     ConnectionContext,
     EnforcementResult,
@@ -25,7 +24,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.audit import audit_write, build_audit_entry
-from tela.shell.config_loader import Result, load_config
+from tela.shell.config_loader import Result
 from tela.shell.gateway import get_runtime
 from tela.shell.downstream import (
     _registry_lock,

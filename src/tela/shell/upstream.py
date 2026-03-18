@@ -26,7 +26,6 @@ from tela.shell.config_loader import Result
 from tela.shell.downstream import (
     call_tool,
     get_all_tools,
-    get_tool_server,
     get_registry,
 )
 from tela.shell.gateway import get_runtime

@@ -17,7 +17,7 @@ from tela.core.models import (
     ProfileConfig,
     ProfileToolOverrides,
 )
-from tela.core.enforcement import enforce, check_posture
+from tela.core.enforcement import enforce
 from tela.core.config import parse_config
 from tela.core.catalog import BUILTIN_PROFILES, get_builtin_profile
 

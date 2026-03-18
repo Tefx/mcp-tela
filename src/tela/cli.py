@@ -6,15 +6,22 @@ into the argparse-based CLI dispatcher per INTERFACES.md.
 
 from __future__ import annotations
 
+import asyncio
 import argparse
+import json
 import sys
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
 
 from tela.commands.audit_cmd import audit_command
 from tela.commands.connections_cmd import connections_command
 from tela.commands.profiles_cmd import profiles_command
 from tela.commands.start import start_command
 from tela.commands.status_cmd import status_command
-from tela.shell.gateway import bind_gateway_startup
+from tela.shell.config_loader import load_config
+from tela.shell.gateway import bind_gateway_startup, gateway_shutdown, gateway_start
+from tela.shell.upstream import handle_initialize
 
 
 # @invar:allow dead_export: CLI entrypoint is invoked by the command framework via pyproject.toml.
@@ -177,8 +184,19 @@ def _handle_start(args: argparse.Namespace) -> int:
 
     assert runtime_result.value is not None
 
+    config_result = load_config(
+        path=Path(args.config), default_profile=args.default_profile
+    )
+    if config_result.is_err:
+        print(f"error: {config_result.error}", file=sys.stderr)
+        return 1
+
+    assert config_result.value is not None
+
     # Step 2: Bind runtime contract into gateway startup config
-    gateway_result = bind_gateway_startup(runtime_result.value)
+    gateway_result = bind_gateway_startup(
+        runtime_result.value, config=config_result.value
+    )
 
     if gateway_result.is_err:
         print(f"error: {gateway_result.error}", file=sys.stderr)
@@ -186,11 +204,117 @@ def _handle_start(args: argparse.Namespace) -> int:
 
     assert gateway_result.value is not None
 
-    # Gateway startup config is now resolved. Actual transport startup
-    # (stdio server, SSE server) is deferred to the gateway.runtime phase.
-    # For now, print confirmation and return success.
+    startup_result = asyncio.run(
+        gateway_start(gateway_result.value, tela_config=config_result.value)
+    )
+    if startup_result.is_err:
+        print(f"error: {startup_result.error}", file=sys.stderr)
+        return 1
+
     print(
         f"tela: ready (transport={gateway_result.value.transport.value}, "
-        f"profile={gateway_result.value.default_profile})"
+        f"profile={gateway_result.value.default_profile})",
+        file=sys.stderr,
     )
+
+    try:
+        if gateway_result.value.transport.value == "stdio":
+            return _serve_stdio_mcp()
+        assert gateway_result.value.port is not None
+        return _serve_sse_gateway(gateway_result.value.port)
+    finally:
+        if gateway_result.value.transport.value == "stdio":
+            asyncio.run(gateway_shutdown())
+
+
+def _write_jsonrpc_response(request_id: Any, payload: dict[str, Any]) -> None:
+    """Write a JSON-RPC response on stdout and flush transport."""
+
+    if request_id is None:
+        return
+    wire = {"jsonrpc": "2.0", "id": request_id, **payload}
+    sys.stdout.write(json.dumps(wire) + "\n")
+    sys.stdout.flush()
+
+
+def _serve_stdio_mcp() -> int:
+    """Serve minimal JSON-RPC on stdio for MCP liveness."""
+
+    for raw_line in sys.stdin:
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        try:
+            request = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        if not isinstance(request, dict):
+            continue
+
+        request_id = request.get("id")
+        method = request.get("method")
+        if method == "initialize":
+            params = request.get("params", {})
+            client_info_raw = (
+                params.get("clientInfo", {}) if isinstance(params, dict) else {}
+            )
+            client_info = client_info_raw if isinstance(client_info_raw, dict) else {}
+            init_result = asyncio.run(handle_initialize(client_info=client_info))
+            if init_result.is_ok and init_result.value is not None:
+                _write_jsonrpc_response(
+                    request_id,
+                    {
+                        "result": {
+                            "capabilities": {},
+                            "connection": init_result.value.model_dump(),
+                        }
+                    },
+                )
+            else:
+                _write_jsonrpc_response(
+                    request_id,
+                    {
+                        "error": {
+                            "code": -32000,
+                            "message": init_result.error or "initialize failed",
+                        }
+                    },
+                )
+            continue
+
+        _write_jsonrpc_response(
+            request_id,
+            {"error": {"code": -32601, "message": "Method not found"}},
+        )
+
+    return 0
+
+
+class _SSEHandler(BaseHTTPRequestHandler):
+    """Minimal HTTP handler to keep SSE transport process alive."""
+
+    def do_GET(self) -> None:
+        """Return readiness payload for gateway liveness probes."""
+
+        body = b'{"status":"ok"}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format: str, *args: Any) -> None:
+        """Silence default access logs on stderr."""
+
+
+def _serve_sse_gateway(port: int) -> int:
+    """Run a long-lived HTTP server for SSE gateway liveness."""
+
+    server = ThreadingHTTPServer(("127.0.0.1", port), _SSEHandler)
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
     return 0

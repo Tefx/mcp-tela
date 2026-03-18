@@ -52,12 +52,12 @@ def _meta_post(
 
 
 # Bootstrap aliases so public pre()/post() can carry meta-contracts.
-pre = _meta_pre
-post = _meta_post
+_pre_alias = _meta_pre
+_post_alias = _meta_post
 
 
-@pre(lambda predicate: callable(predicate))
-@post(lambda result: callable(result))
+@_pre_alias(lambda predicate: callable(predicate))
+@_post_alias(lambda result: callable(result))
 def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     """Precondition decorator: checks predicate against function arguments.
 
@@ -99,8 +99,8 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     return decorator
 
 
-@pre(lambda predicate: callable(predicate))
-@post(lambda result: callable(result))
+@_pre_alias(lambda predicate: callable(predicate))
+@_post_alias(lambda result: callable(result))
 def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
     """Postcondition decorator: checks predicate against return value.
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 
-import pytest
 
 from tela.core.models import ServerConfig, TelaConfig
 from tela.shell.downstream import connect_all, disconnect_all, get_tool_server

@@ -192,7 +192,8 @@ class TestSharedResolvedProfileConformance:
 
 def test_bind_gateway_startup_binds_runtime_contract() -> None:
     """bind_gateway_startup must produce GatewayStartupConfig from RuntimeBindingContract."""
-    import tempfile, os
+    import tempfile
+    import os
     d = tempfile.mkdtemp()
     p = os.path.join(d, "tela.yaml")
     with open(p, "w") as f:

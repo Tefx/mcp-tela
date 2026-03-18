@@ -9,12 +9,8 @@ import pytest
 
 from tela.core.models import (
     AuditLevel,
-    ConnectionContext,
-    EnforcementResult,
     EnforcementVerdict,
     Posture,
-    ProfileConfig,
-    ResolvedTool,
 )
 
 

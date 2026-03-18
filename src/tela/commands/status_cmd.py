@@ -6,7 +6,6 @@ Provides the ``tela status`` command for displaying gateway runtime status.
 from __future__ import annotations
 
 import asyncio
-import json
 import sys
 
 from tela.shell.gateway import gateway_status

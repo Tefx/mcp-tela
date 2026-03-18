@@ -7,7 +7,6 @@ already-provided data and enforce deterministic validation contracts.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass
 from typing import Mapping
 
 from tela.core.contracts import pre, post

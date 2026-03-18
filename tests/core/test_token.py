@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
 
-from tela.core.models import CapabilityToken, EnforcementVerdict
+from tela.core.models import EnforcementVerdict
 from tela.core.token import (
     compute_signature,
     create_token,

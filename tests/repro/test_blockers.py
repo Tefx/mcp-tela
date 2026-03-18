@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import argparse
 
 import pytest
 
 from tela.core.models import (
     AuditConfig,
     AuditLevel,
-    ProfileConfig,
-    Posture,
     ResolvedTool,
-    ServerConfig,
 )
 
 
@@ -92,7 +88,7 @@ class TestB2AuditConfigWiring:
     """B2: AuditConfig.level and .output must be consumed."""
 
     def test_audit_init_sets_path(self, tmp_path) -> None:
-        from tela.shell.audit import audit_init, _audit_log_path
+        from tela.shell.audit import audit_init
         import tela.shell.audit as audit_mod
 
         path = str(tmp_path / "audit.jsonl")

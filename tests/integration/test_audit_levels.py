@@ -226,7 +226,6 @@ def test_upstream_emission_shape_for_allowed_call() -> None:
 
 def test_upstream_emission_shape_for_denied_call() -> None:
     """After enforcement DENY, upstream builds audit entry with denial metadata."""
-    conn = _make_connection()
     result = _make_deny()
     assert result.verdict == EnforcementVerdict.DENY
     assert result.denied_by == "family_admission"

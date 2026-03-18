@@ -19,7 +19,6 @@ from tela.core.models import (
     AuditLevel,
     ConnectionContext,
     EnforcementResult,
-    EnforcementVerdict,
     MetaField,
 )
 from tela.shell.config_loader import Result

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 
 from tela.core.models import (
-    AuditEntry,
     AuditLevel,
     ConnectionContext,
     EnforcementResult,

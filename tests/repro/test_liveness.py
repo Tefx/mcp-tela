@@ -15,7 +15,6 @@ Actual (observed via black-box probing):
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 import subprocess
@@ -229,7 +228,7 @@ if __name__ == "__main__":
             test()
             print(f"  PASS: {name}")
             passed += 1
-        except Exception as e:
+        except Exception:
             print(f"  FAIL: {name}")
             traceback.print_exc()
             failed += 1

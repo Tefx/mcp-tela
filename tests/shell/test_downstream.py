@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 
-import pytest
 
 from tela.core.models import Posture, ResolvedTool, ServerConfig, ToolOverride
 from tela.shell.downstream import (

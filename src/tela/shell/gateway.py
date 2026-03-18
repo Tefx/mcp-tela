@@ -18,7 +18,6 @@ from tela.core.models import (
     GatewayStatus,
     GatewayTransport,
     RuntimeBindingContract,
-    ServerConfig,
     TelaConfig,
 )
 from tela.shell.config_loader import Result, load_config

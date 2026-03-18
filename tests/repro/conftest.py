@@ -5,15 +5,9 @@ from __future__ import annotations
 import pytest
 
 from tela.core.models import (
-    AuditConfig,
-    AuditLevel,
     ConnectionContext,
     EnforcementResult,
     EnforcementVerdict,
-    ProfileConfig,
-    Posture,
-    ResolvedTool,
-    ServerConfig,
 )
 
 

@@ -15,7 +15,6 @@ from tela.core.conflict import ToolConflict, detect_conflicts
 from tela.core.family import resolve_tools
 from tela.core.models import (
     ConnectionContext,
-    Posture,
     ResolvedTool,
     ServerConfig,
 )
@@ -23,7 +22,6 @@ from tela.shell.downstream import (
     connect_all,
     disconnect_all,
     get_all_tools,
-    get_registry,
     get_tool_server,
 )
 

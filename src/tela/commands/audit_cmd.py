@@ -8,7 +8,6 @@ from __future__ import annotations
 import asyncio
 
 from tela.shell.audit import audit_query
-from tela.shell.config_loader import Result
 
 
 # @invar:allow dead_export: CLI entrypoint is wired by the command framework.
@@ -47,7 +46,6 @@ def audit_command(
     entries = result.value
 
     if json_output:
-        import json
 
         for entry in entries:
             print(entry.model_dump_json())

@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 
 from tela.core.contracts import pre, post
 from tela.core.models import CapabilityToken, EnforcementResult, EnforcementVerdict
@@ -172,11 +172,17 @@ def create_token(
     Returns:
         Signed CapabilityToken.
     """
-    fields = {
+    fields: dict[str, str] = {
         "token_id": token_id,
         "profile_name": profile,
         "issued_at": issued_at,
         "expires_at": expires_at,
     }
     sig = compute_signature(fields, secret)
-    return CapabilityToken(**fields, signature=sig)
+    return CapabilityToken(
+        token_id=token_id,
+        profile_name=profile,
+        issued_at=issued_at,
+        expires_at=expires_at,
+        signature=sig,
+    )
