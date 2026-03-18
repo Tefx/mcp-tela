@@ -9722,7 +9722,7 @@ phases:
       smoke/audit/gate can proceed.'
 - id: rt.env_field
   name: ServerConfig.env Field
-  status: pending
+  status: in_progress
   depends_on:
   - retest2.full
   - cap.final_gate
@@ -9822,7 +9822,7 @@ phases:
     agent: gate-reviewer
   - id: rt.env_field.contract
     name: Define env field contract and semantics
-    status: pending
+    status: claimed
     description: "Contract step for the new `ServerConfig.env` feature.\n\nstep_type:\
       \ contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - signatures\n \
       \ - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\nDefine acceptance-only\
@@ -9843,6 +9843,8 @@ phases:
       - Acceptance boundary is explicit enough for downstream tests to validate parsing
       and expansion behavior'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T20:08:54.393831+00:00'
   - id: rt.env_field.test
     name: Add env field parsing and expansion tests
     status: pending
