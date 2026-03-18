@@ -289,10 +289,11 @@ def handle_profiles_list() -> list[dict]:
     if runtime.config is None:
         return []
 
-    # Migration: emit both 'capabilities' and 'tools' keys per ADR-003
+    # Migration: emit both 'capabilities' and 'tools' keys per ADR-003.
+    # Canonical external profile identifier field is 'profile_name'.
     return [
         {
-            "name": name,
+            "profile_name": name,
             "default": p.default,
             "capabilities": {k: v.value for k, v in p.capabilities.items()},
             "tools": {k: v.value for k, v in p.capabilities.items()},

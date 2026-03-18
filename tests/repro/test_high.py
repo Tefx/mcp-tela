@@ -36,9 +36,7 @@ class TestH1ContractEnforcement:
 
         core_dir = Path("src/tela/core")
         # Match only EXACT identity: "lambda x: x)" or "lambda result: result)"
-        identity_re = re.compile(
-            r"@(?:pre|post)\(\s*lambda\s+(\w+)\s*:\s*\1\s*\)"
-        )
+        identity_re = re.compile(r"@(?:pre|post)\(\s*lambda\s+(\w+)\s*:\s*\1\s*\)")
 
         for py_file in core_dir.glob("*.py"):
             if py_file.name == "__init__.py":
@@ -46,9 +44,7 @@ class TestH1ContractEnforcement:
             source = py_file.read_text()
             matches = identity_re.findall(source)
             if matches:
-                pytest.fail(
-                    f"{py_file.name} has pure identity lambda in contract"
-                )
+                pytest.fail(f"{py_file.name} has pure identity lambda in contract")
 
 
 # --- H2: Concurrent audit writes ---
@@ -104,7 +100,7 @@ class TestH3NoStubs:
                 stripped = line.strip()
                 if stripped.startswith("raise NotImplementedError"):
                     pytest.fail(
-                        f"{py_file.name}:{i+1} has NotImplementedError stub: {stripped}"
+                        f"{py_file.name}:{i + 1} has NotImplementedError stub: {stripped}"
                     )
 
 
@@ -117,7 +113,7 @@ class TestH4TokenValidation:
     def test_compute_signature_deterministic(self) -> None:
         from tela.core.token import compute_signature
 
-        fields = {"token_id": "tok_1", "tools_profile": "dev"}
+        fields = {"token_id": "tok_1", "profile_name": "dev"}
         sig1 = compute_signature(fields, "secret")
         sig2 = compute_signature(fields, "secret")
         assert sig1 == sig2
@@ -128,7 +124,7 @@ class TestH4TokenValidation:
 
         fields = {
             "token_id": "tok_1",
-            "tools_profile": "dev",
+            "profile_name": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
         }
@@ -143,7 +139,7 @@ class TestH4TokenValidation:
 
         token = CapabilityToken(
             token_id="tok_1",
-            tools_profile="dev",
+            profile_name="dev",
             issued_at="2026-01-01T00:00:00Z",
             expires_at="2026-12-31T23:59:59Z",
             signature="bad_signature",
@@ -156,7 +152,7 @@ class TestH4TokenValidation:
 
         fields = {
             "token_id": "tok_1",
-            "tools_profile": "dev",
+            "profile_name": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-01-02T00:00:00Z",
         }

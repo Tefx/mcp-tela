@@ -14,14 +14,14 @@ from tela.core.token import (
 
 
 def test_compute_signature_is_deterministic() -> None:
-    fields = {"token_id": "tok_1", "tools_profile": "dev"}
+    fields = {"token_id": "tok_1", "profile_name": "dev"}
     sig1 = compute_signature(fields, "secret")
     sig2 = compute_signature(fields, "secret")
     assert sig1 == sig2
 
 
 def test_compute_signature_differs_for_different_secrets() -> None:
-    fields = {"token_id": "tok_1", "tools_profile": "dev"}
+    fields = {"token_id": "tok_1", "profile_name": "dev"}
     sig1 = compute_signature(fields, "secret1")
     sig2 = compute_signature(fields, "secret2")
     assert sig1 != sig2
@@ -68,5 +68,5 @@ def test_validate_token_dual_key_rotation() -> None:
 
 def test_create_token_profile() -> None:
     tok = create_token("production", "secret")
-    assert tok.tools_profile == "production"
+    assert tok.profile_name == "production"
     assert tok.token_id == "tok_auto"

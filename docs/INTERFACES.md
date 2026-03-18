@@ -110,7 +110,7 @@ according to gateway configuration.
 
 At connection establishment, tela binds the session to exactly one profile.
 
-In token mode, the binding comes from the token `profile_id`.
+In token mode, the binding comes from the token `profile_name`.
 In open mode, the binding comes from one explicit local default profile.
 
 ### 6.2 Per-call authorization
@@ -146,7 +146,7 @@ Migration payload shape (backward-compatible window):
 ```json
 [
   {
-    "profile_id": "developer",
+    "profile_name": "developer",
     "tools": {
       "filesystem": "read_write",
       "git": "read_only"
@@ -165,7 +165,7 @@ Post-migration payload shape (canonical):
 ```json
 [
   {
-    "profile_id": "developer",
+    "profile_name": "developer",
     "capabilities": {
       "filesystem": "read_write",
       "git": "read_only"

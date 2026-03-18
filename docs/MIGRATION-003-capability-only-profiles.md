@@ -115,7 +115,7 @@ The `tela.profiles` MCP response emits dual keys during migration:
 
 ```json
 {
-  "profile_id": "developer",
+  "profile_name": "developer",
   "tools": { "filesystem": "read_only" },
   "capabilities": { "filesystem": "read_only" }
 }

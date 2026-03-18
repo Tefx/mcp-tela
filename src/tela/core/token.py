@@ -15,7 +15,11 @@ from tela.core.contracts import pre, post
 from tela.core.models import CapabilityToken, EnforcementResult, EnforcementVerdict
 
 
-@pre(lambda token_fields, secret: isinstance(token_fields, dict) and isinstance(secret, str) and len(secret) > 0)
+@pre(
+    lambda token_fields, secret: (
+        isinstance(token_fields, dict) and isinstance(secret, str) and len(secret) > 0
+    )
+)
 @post(lambda result: isinstance(result, str) and len(result) > 0)
 def compute_signature(token_fields: dict, secret: str) -> str:
     """Compute HMAC-SHA256 signature over token fields.
@@ -24,7 +28,7 @@ def compute_signature(token_fields: dict, secret: str) -> str:
     with keys in alphabetical order, no whitespace.
 
     Examples:
-        >>> sig = compute_signature({"token_id": "tok_1", "tools_profile": "dev"}, "secret")
+        >>> sig = compute_signature({"token_id": "tok_1", "profile_name": "dev"}, "secret")
         >>> isinstance(sig, str) and len(sig) == 64
         True
 
@@ -43,7 +47,9 @@ def compute_signature(token_fields: dict, secret: str) -> str:
     ).hexdigest()
 
 
-@pre(lambda expires_at, now_iso: isinstance(expires_at, str) and isinstance(now_iso, str))
+@pre(
+    lambda expires_at, now_iso: isinstance(expires_at, str) and isinstance(now_iso, str)
+)
 @post(lambda result: isinstance(result, bool))
 def is_expired(expires_at: str, now_iso: str) -> bool:
     """Check if a token has expired.
@@ -66,7 +72,11 @@ def is_expired(expires_at: str, now_iso: str) -> bool:
     return now_dt >= expires_dt
 
 
-@pre(lambda token, secrets, now_iso: isinstance(secrets, list) and len(secrets) > 0 and isinstance(now_iso, str))
+@pre(
+    lambda token, secrets, now_iso: (
+        isinstance(secrets, list) and len(secrets) > 0 and isinstance(now_iso, str)
+    )
+)
 @post(lambda result: isinstance(result, EnforcementResult))
 def validate_token(
     token: CapabilityToken,
@@ -78,7 +88,7 @@ def validate_token(
     Tries each secret (dual-key rotation). Checks HMAC signature, then expiry.
 
     Examples:
-        >>> fields = {"token_id": "tok_1", "tools_profile": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> fields = {"token_id": "tok_1", "profile_name": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
         >>> sig = compute_signature(fields, "secret1")
         >>> tok = CapabilityToken(**fields, signature=sig)
         >>> r = validate_token(tok, ["secret1"], "2026-06-01T00:00:00Z")
@@ -126,7 +136,14 @@ def validate_token(
     return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
 
 
-@pre(lambda profile, secret, token_id="tok_auto", expires_at="2099-12-31T23:59:59Z", issued_at="2026-01-01T00:00:00Z": isinstance(profile, str) and len(profile) > 0 and isinstance(secret, str) and len(secret) > 0)
+@pre(
+    lambda profile, secret, token_id="tok_auto", expires_at="2099-12-31T23:59:59Z", issued_at="2026-01-01T00:00:00Z": (
+        isinstance(profile, str)
+        and len(profile) > 0
+        and isinstance(secret, str)
+        and len(secret) > 0
+    )
+)
 @post(lambda result: isinstance(result, CapabilityToken))
 def create_token(
     profile: str,
@@ -139,14 +156,14 @@ def create_token(
 
     Examples:
         >>> tok = create_token("dev", "secret1")
-        >>> tok.tools_profile
+        >>> tok.profile_name
         'dev'
         >>> r = validate_token(tok, ["secret1"], "2026-06-01T00:00:00Z")
         >>> r.verdict
         <EnforcementVerdict.ALLOW: 'allow'>
 
     Args:
-        profile: Tools profile name.
+        profile: Profile name bound by the capability token.
         secret: HMAC secret key.
         token_id: Token identifier.
         expires_at: Expiration time (ISO-8601).
@@ -157,7 +174,7 @@ def create_token(
     """
     fields = {
         "token_id": token_id,
-        "tools_profile": profile,
+        "profile_name": profile,
         "issued_at": issued_at,
         "expires_at": expires_at,
     }

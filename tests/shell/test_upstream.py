@@ -230,6 +230,39 @@ def test_handle_profiles_list_returns_empty_when_no_gateway() -> None:
     assert result == []
 
 
+def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
+    """profiles surface emits profile_name as the canonical external identifier."""
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        TelaConfig,
+    )
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import handle_profiles_list
+
+    get_runtime().config = TelaConfig(
+        profiles={
+            "dev": ProfileConfig(
+                name="dev", capabilities={"filesystem": Posture.READ_ONLY}
+            )
+        },
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+
+    result = handle_profiles_list()
+
+    assert result == [
+        {
+            "profile_name": "dev",
+            "default": False,
+            "capabilities": {"filesystem": "read_only"},
+            "tools": {"filesystem": "read_only"},
+        }
+    ]
+
+
 def test_notify_tools_changed_is_noop() -> None:
     """notify_tools_changed is a no-op until MCP transport is wired."""
     import asyncio

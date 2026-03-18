@@ -218,13 +218,13 @@ class CapabilityToken(BaseModel):
     """Token presented by upstream client at connection time.
 
     Examples:
-        >>> tok = CapabilityToken(token_id="tok_1", tools_profile="dev", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", signature="abc")
-        >>> tok.tools_profile
+        >>> tok = CapabilityToken(token_id="tok_1", profile_name="dev", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", signature="abc")
+        >>> tok.profile_name
         'dev'
     """
 
     token_id: str
-    tools_profile: str
+    profile_name: str
     persona_ref: str | None = None
     instance_id: str | None = None
     max_depth: int | None = None
