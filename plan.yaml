@@ -10348,7 +10348,7 @@ phases:
       - Dependencies: fix depends on `cap.contract.define`; retest depends on fix.'
   - id: cap.contract.fix-gate-blockers
     name: Fix batched gate blocker in ProfileConfig alias normalization
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by cap.contract.gate for ProfileConfig alias
       normalization.
 
@@ -10408,6 +10408,8 @@ phases:
     depends_on:
     - cap.contract.define
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T17:30:38.824144+00:00'
   - id: cap.contract.retest-gate-blockers
     name: Retest ProfileConfig alias conflict behavior after gate fix
     status: pending
