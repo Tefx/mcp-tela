@@ -9994,7 +9994,7 @@ phases:
   steps:
   - id: rt.downstream.contract
     name: Design fastmcp client integration pattern
-    status: claimed
+    status: done
     description: Design the fastmcp client integration pattern. Define how connect_all
       will spawn stdio servers (using ServerConfig.command/args/env) and connect to
       SSE servers (using ServerConfig.url). Define session lifecycle, error handling,
@@ -10017,6 +10017,31 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T20:26:09.415766+00:00'
+    done_at: '2026-03-18T20:29:14.249897+00:00'
+    evidence: 'Commit hash(es):
+
+      - 6343295d0924179c331b322f2574cc98ae18a7b2
+
+
+      Files changed:
+
+      - docs/INTERFACES.md
+
+
+      Contract decisions:
+
+      - Client session type: `_clients` maps `server_name` to `ClientSession`
+
+      - Lifecycle: `connect_all` all-or-nothing, teardown-on-failure, explicit disconnect
+      and reload semantics
+
+      - Error handling: documented downstream connect/not-connected/tool-call failure
+      codes and duplicate-tool conflict behavior
+
+
+      Gaps/Notes:
+
+      - no dead_export escape hatch added in this contract step'
   - id: rt.downstream.connect
     name: Implement real connect_all
     status: pending
