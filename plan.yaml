@@ -11238,13 +11238,13 @@ phases:
       - Gate PASS; no blocking issues in cap.shell phase.'
 - id: cap.docs
   name: Documentation Sync
-  status: pending
+  status: in_progress
   depends_on:
   - cap.shell
   steps:
   - id: cap.docs.update
     name: Update documentation
-    status: pending
+    status: claimed
     description: 'Update remaining documentation NOT covered by cap.spec: (a) USAGE.md
       — profile examples (5 locations), (b) README.md — any profile examples, (c)
       tela.yaml.example — all profile examples (10 locations), (d) tela.yaml — local
@@ -11263,6 +11263,8 @@ phases:
     - tela.yaml.example
     - tela.yaml
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T19:02:40.730584+00:00'
   - id: cap.docs.gate
     name: Gate review
     status: pending
