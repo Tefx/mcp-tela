@@ -11065,13 +11065,13 @@ phases:
       - MIGRATION-003 migration invariants'
 - id: cap.shell
   name: Shell Layer Updates
-  status: pending
+  status: in_progress
   depends_on:
   - cap.impl
   steps:
   - id: cap.shell.upstream
     name: Update upstream.py and upstream_utils.py
-    status: pending
+    status: claimed
     description: Update upstream.py handle_profiles_list() to emit both `capabilities`
       and `tools` keys during migration period (per ADR-003 tela.profiles API section).
       Update upstream_utils.py filter_tools_for_profile() and enforce_tool_call()
@@ -11087,6 +11087,8 @@ phases:
     - src/tela/shell/upstream_utils.py
     - docs/ADR-003-gateway-capability-only-profiles.md
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T18:43:23.505955+00:00'
   - id: cap.shell.tests
     name: Update shell and integration tests
     status: pending
