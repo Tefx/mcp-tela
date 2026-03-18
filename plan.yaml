@@ -11345,13 +11345,13 @@ phases:
       - Gate PASS for cap.docs'
 - id: cap.cleanup
   name: Remove Deprecated Code
-  status: pending
+  status: in_progress
   depends_on:
   - cap.docs
   steps:
   - id: cap.cleanup.remove-legacy
     name: Remove all remaining deprecated code
-    status: pending
+    status: claimed
     description: 'Remove all remaining deprecated code: SideEffectPolicy enum, check_side_effect
       function (if still present), side_effect_policy handling in config parser. Keep
       `tools:` as deprecated alias with warning during migration period (do NOT remove
@@ -11366,6 +11366,8 @@ phases:
       ''side_effect_policy'' src/tela/ output:\npytest -x output (last 20 lines):\ninvar
       guard output (last 20 lines):\nGaps/Notes:'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T19:14:31.731303+00:00'
   - id: cap.cleanup.gate
     name: Gate review
     status: pending
