@@ -10317,6 +10317,68 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T17:16:02.379581+00:00'
+  - id: cap.contract.fix-gate-blockers
+    name: Fix batched gate blocker in ProfileConfig alias normalization
+    status: pending
+    description: 'Fix ALL blockers found by cap.contract.gate for ProfileConfig alias
+      normalization.
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+
+      ## Root Cause vs Symptom:
+
+      - Root cause: `ProfileConfig._normalize_aliases` relies on stacked `@model_validator(mode="before")`
+      and `@classmethod` with additional `@pre/@post` decoration in a way that breaks
+      descriptor behavior, so normalization does not execute.
+
+      - Symptom: conflicting `tools` + `capabilities` inputs bypass conflict detection
+      instead of raising `ValueError`.
+
+      - Why this fix is not surface-level: repair the validator/decorator structure
+      so the migration conflict path executes at model construction time, not just
+      the helper in isolation.
+
+
+      ### B1: MIGRATION-003 conflict detection is skipped for dual-field input
+
+      Locations: `src/tela/core/models.py`
+
+      Remediation: restore runnable validation wiring so `ProfileConfig` rejects simultaneous
+      `tools` and `capabilities` input per MIGRATION-003 while preserving the migration
+      alias contract.
+
+      Grep hint: search for `_normalize_aliases`, `model_validator`, and `normalize_profile_config_aliases`
+      in `src/tela/core/models.py`.
+
+      IMPORTANT: search for sibling validator/decorator combinations beyond the listed
+      method so the fix does not leave an alternate bypass path.
+
+
+      ## Completion Criteria:
+
+      - ALL listed blocker conditions fixed
+
+      - conflicting `tools` + `capabilities` inputs raise `ValueError` per `docs/MIGRATION-003-capability-only-profiles.md`
+
+      - sibling decorator/validator search completed for the touched normalization
+      path
+
+      - targeted doctest/pytest proof added or updated for the conflict case
+
+      - invar guard runs for changed files'
+    verification: '- Main path: `ProfileConfig` still accepts migrated alias input
+      on the intended single-field paths
+
+      - Failure path: conflicting `tools` + `capabilities` input raises `ValueError`
+      per MIGRATION-003
+
+      - Proof: targeted doctest/pytest demonstrates the conflict case and changed-files
+      `invar guard` passes'
+    depends_on:
+    - cap.contract.define
+    agent: python-senior
 - id: cap.test
   name: Tests for Migration and New Schema
   status: locked
