@@ -36,6 +36,13 @@ servers:
     # OPTIONAL: Arguments passed to the command
     args: ["--root", "/workspace", "--readonly"]
     
+    # OPTIONAL: Environment variables passed to the server process
+    # Supports ${VAR} and $VAR expansion from parse-time environment
+    env:
+      LOG_LEVEL: "debug"
+      # Use environment variables for secrets:
+      # API_KEY: "${MCP_API_KEY}"
+    
     # OPTIONAL: Tool family classification
     # Defaults to server name (server-is-family convention) if omitted.
     # Example: server named 'github' would default to family 'github'.
