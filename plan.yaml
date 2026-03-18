@@ -10044,7 +10044,7 @@ phases:
       - no dead_export escape hatch added in this contract step'
   - id: rt.downstream.connect
     name: Implement real connect_all
-    status: claimed
+    status: done
     description: 'Implement real connect_all after contract and tests are in place:
       import fastmcp, spawn stdio child processes using ServerConfig.command/args/env,
       connect SSE clients using ServerConfig.url, enumerate tools via MCP `tools/list`,
@@ -10076,6 +10076,38 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T20:39:38.123901+00:00'
+    done_at: '2026-03-18T20:46:58.330672+00:00'
+    evidence: 'Commit hash(es):
+
+      - b3250602dc774d39547d031af378c9688b1887e4
+
+
+      Files changed:
+
+      - src/tela/shell/downstream.py
+
+      - tests/fixtures/fastmcp_stdio_server.py
+
+      - tests/shell/test_downstream_runtime_connection.py
+
+
+      Verification:
+
+      - fastmcp import confirmed: yes
+
+      - Real MCP server connection tested: yes (stdio subprocess fixture)
+
+      - Registry populated from real enumeration: yes (`tools/list` path verified)
+
+      - tool_lists parameter: retained only as test scaffolding fallback; production
+      path uses real session/listing
+
+
+      Gaps/Notes:
+
+      - `call_tool` and `re_enumerate` remain for downstream steps
+
+      - live SSE endpoint integration deferred; transport selection path tested'
   - id: rt.downstream.call
     name: Implement real call_tool and re_enumerate
     status: pending
