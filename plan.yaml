@@ -10738,7 +10738,7 @@ phases:
       - Related cleanup in catalog/tests deferred to later planned steps.'
   - id: cap.impl.enforcement
     name: Simplify enforcement.py
-    status: claimed
+    status: done
     description: 'Simplify enforcement.py: remove check_side_effect() function, update
       enforce() to skip side-effect step. The per-call enforcement chain becomes 3
       steps: (1) family admission, (2) tool override, (3) posture ceiling. Update
@@ -10760,6 +10760,54 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T18:03:35.949074+00:00'
+    done_at: '2026-03-18T18:12:25.753101+00:00'
+    evidence: 'Commit hash(es):
+
+      - none
+
+
+      Files changed:
+
+      - none (verification-only completion)
+
+
+      grep -n ''check_side_effect'' src/tela/core/enforcement.py output:
+
+      - no matches
+
+
+      grep -n ''profile.tools'' src/tela/core/enforcement.py output:
+
+      - no matches
+
+
+      grep -n ''\.tools'' src/tela/core/enforcement.py output:
+
+      - no matches
+
+
+      invar guard output:
+
+      - passed (no changed files)
+
+
+      pytest output:
+
+      - not run for this verification-only step because no code changes were required
+
+
+      Spec link:
+
+      - `src/tela/core/enforcement.py` 3-step chain and `capabilities` usage align
+      with ADR-003/MIGRATION-003
+
+
+      Gaps/Notes:
+
+      - Enforcement simplification and doctest migration were already satisfied by
+      prior merged work in `cap.contract.define`.
+
+      - This step verified conformance and found no additional implementation required.'
   - id: cap.impl.config-catalog
     name: Update config parser and builtin catalog
     status: pending
