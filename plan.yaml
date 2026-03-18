@@ -10500,13 +10500,13 @@ phases:
       conflicts with `capabilities` must raise `ValueError`'
 - id: cap.test
   name: Tests for Migration and New Schema
-  status: pending
+  status: in_progress
   depends_on:
   - cap.contract
   steps:
   - id: cap.test.write
     name: Write tests covering migration and new schema
-    status: pending
+    status: claimed
     description: 'Write tests covering: (a) ProfileConfig accepts both tools= and
       capabilities=, (b) capabilities= is canonical in serialized output, (c) side_effect_policy:
       read_only triggers ceiling capping during migration parse, (d) side_effect_policy:
@@ -10537,6 +10537,8 @@ phases:
     - docs/ADR-003-gateway-capability-only-profiles.md
     - docs/MIGRATION-003-capability-only-profiles.md
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T17:38:18.459806+00:00'
   - id: cap.test.gate
     name: Quick gate review
     status: pending
