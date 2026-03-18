@@ -10169,7 +10169,7 @@ phases:
       - scope confined to downstream call/re-enumerate behavior'
   - id: rt.downstream.gate
     name: Gate review with wiring audit
-    status: pending
+    status: claimed
     description: Gate review with wiring audit for downstream phase after the contract
       -> test -> implementation chain. Confirm runtime downstream connection behavior,
       MCP `tools/list` evidence, and cleanup semantics are covered before allowing
@@ -10180,6 +10180,8 @@ phases:
     - rt.downstream.call
     - rt.downstream.test
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T20:54:06.905149+00:00'
   - id: rt.downstream.test
     name: Test connect/disconnect lifecycle and tools list behavior
     status: done
