@@ -10348,7 +10348,7 @@ phases:
       - Dependencies: fix depends on `cap.contract.define`; retest depends on fix.'
   - id: cap.contract.fix-gate-blockers
     name: Fix batched gate blocker in ProfileConfig alias normalization
-    status: claimed
+    status: done
     description: 'Fix ALL blockers found by cap.contract.gate for ProfileConfig alias
       normalization.
 
@@ -10410,6 +10410,31 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T17:30:38.824144+00:00'
+    done_at: '2026-03-18T17:35:35.516878+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 1ffd076
+
+
+      Verification:
+
+      - Run: `uv run --group dev pytest -q tests/core/test_models.py -k "ProfileConfig
+      and (conflicting or matching or capabilities_with_posture or tools_with_posture)"`
+      -> `4 passed, 30 deselected in 0.09s`
+
+      - Run: `invar_guard(path=.vectl/worktrees/cap.contract.fix-gate-blockers, changed=true)`
+      -> `status=passed, errors=0 (warnings=2)`
+
+      - Run: `grep "@pre\\(|@post\\(|@model_validator\\(|def _normalize_aliases|normalize_profile_config_aliases"
+      src/tela/core/models.py` -> confirmed only the ProfileConfig normalization validator/decorator
+      combination in the touched path, with no alternate bypass in that path
+
+
+      Spec link:
+
+      - MIGRATION-003 alias contract (canonical `capabilities`, `tools` accepted alias,
+      conflict must error), implemented in `src/tela/core/models.py` via `normalize_profile_config_aliases`
+      + `ProfileConfig._normalize_aliases`'
   - id: cap.contract.retest-gate-blockers
     name: Retest ProfileConfig alias conflict behavior after gate fix
     status: pending
