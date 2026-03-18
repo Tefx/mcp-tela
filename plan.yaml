@@ -10437,7 +10437,7 @@ phases:
       + `ProfileConfig._normalize_aliases`'
   - id: cap.contract.retest-gate-blockers
     name: Retest ProfileConfig alias conflict behavior after gate fix
-    status: pending
+    status: claimed
     description: 'Re-test the cap.contract gate blocker from an independent reviewer
       perspective.
 
@@ -10471,6 +10471,8 @@ phases:
     depends_on:
     - cap.contract.fix-gate-blockers
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T17:36:03.917248+00:00'
 - id: cap.test
   name: Tests for Migration and New Schema
   status: locked
