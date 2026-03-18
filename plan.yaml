@@ -10724,7 +10724,7 @@ phases:
       - Enforcement chain already documented as 3 per-call steps; no gap found there.'
   - id: cap.spec.gate
     name: Spec migration gate review
-    status: pending
+    status: claimed
     description: Verify ADR-003, MIGRATION-003, DESIGN.md, and INTERFACES.md are internally
       consistent and define a clear, unambiguous target state for implementation.
       Enforcement step count must be consistent (3 per-call) across all 4 documents.
@@ -10734,3 +10734,5 @@ phases:
     - cap.spec.design-md
     - cap.spec.interfaces-md
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T17:02:31.469475+00:00'
