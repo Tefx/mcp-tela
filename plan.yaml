@@ -10222,7 +10222,7 @@ phases:
     agent: gate-reviewer
 - id: cap.contract
   name: Define New Profile Contracts
-  status: in_progress
+  status: done
   depends_on:
   - cap.spec
   steps:
@@ -10437,7 +10437,7 @@ phases:
       + `ProfileConfig._normalize_aliases`'
   - id: cap.contract.retest-gate-blockers
     name: Retest ProfileConfig alias conflict behavior after gate fix
-    status: claimed
+    status: done
     description: 'Re-test the cap.contract gate blocker from an independent reviewer
       perspective.
 
@@ -10473,9 +10473,34 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T17:36:03.917248+00:00'
+    done_at: '2026-03-18T17:37:50.926482+00:00'
+    evidence: 'Artifact:
+
+      - PR: independent retest (no new commits)
+
+
+      Verification:
+
+      - Run: `uv run --group dev pytest -v tests/core/test_models.py::TestProfileConfig::test_conflicting_tools_and_capabilities_raise_value_error`
+      and related alias-path tests -> `4 passed`
+
+      - Run: direct constructor check with conflicting `tools` + `capabilities` ->
+      `ValidationError` raised with root `ValueError` (`must match when both are provided`)
+
+      - Run: `invar_guard(path=.vectl/worktrees/cap.contract.retest-gate-blockers,
+      changed=true)` -> passed, errors=0
+
+      - Run: `python3 -m doctest -v src/tela/core/models.py` -> doctest conflict and
+      happy paths pass
+
+
+      Spec link:
+
+      - MIGRATION-003: alias migration contract where `tools` is accepted as alias,
+      conflicts with `capabilities` must raise `ValueError`'
 - id: cap.test
   name: Tests for Migration and New Schema
-  status: locked
+  status: pending
   depends_on:
   - cap.contract
   steps:
