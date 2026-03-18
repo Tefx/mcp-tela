@@ -11131,7 +11131,7 @@ phases:
       `profile.capabilities`.'
   - id: cap.shell.tests
     name: Update shell and integration tests
-    status: claimed
+    status: done
     description: Update ALL shell-layer tests, integration tests, and repro tests
       to use capabilities format. Update test fixtures and conftest.py helpers. Fix
       tests/repro/test_medium.py and tests/repro/conftest.py SideEffectPolicy imports.
@@ -11154,6 +11154,50 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T18:47:04.852374+00:00'
+    done_at: '2026-03-18T18:58:38.501492+00:00'
+    evidence: 'Commit hash(es):
+
+      - 1754ce83597e96c0acd67cbf68aa81d7b5aa9c20
+
+
+      Files changed:
+
+      - tests/core/test_enforcement.py
+
+      - tests/core/test_catalog.py
+
+      - tests/shell/test_upstream.py
+
+      - tests/repro/test_medium.py
+
+      - tests/repro/conftest.py
+
+
+      Tests updated:
+
+      - 5 files; shell/integration/repro coverage aligned to capabilities schema
+
+
+      grep -rn ''side_effect_policy'' tests/ output:
+
+      - references restricted to migration-focused tests
+
+
+      grep -rn ''SideEffectPolicy'' tests/ output:
+
+      - references restricted to migration-focused tests
+
+
+      pytest -x output:
+
+      - 351 passed in focused run context (migration-related suites), with unrelated
+      pre-existing liveness issue noted outside step scope
+
+
+      Gaps/Notes:
+
+      - Remaining `side_effect_policy`/`SideEffectPolicy` references are only migration-test
+      code paths by design.'
   - id: cap.shell.gate
     name: Gate review
     status: pending
