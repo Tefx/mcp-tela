@@ -9751,6 +9751,29 @@ phases:
     depends_on:
     - rt.env_field.impl
     agent: gate-reviewer
+  - id: rt.env_field.contract
+    name: Define env field contract and semantics
+    status: pending
+    description: "Contract step for the new `ServerConfig.env` feature.\n\nstep_type:\
+      \ contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - signatures\n \
+      \ - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\nDefine acceptance-only\
+      \ behavior for `env` on `ServerConfig` and config parsing surfaces without shipping\
+      \ implementation logic.\n\nScope:\n- `models.py`: declare the public `env: dict[str,\
+      \ str]` contract on `ServerConfig`\n- config parser contract: document accepted\
+      \ config shape, default semantics, and `${VAR}` expansion expectations\n- compatibility\
+      \ semantics: missing `env` defaults to `{}`; explicit mappings preserve key/value\
+      \ pairs; expansion behavior and failure/leave-as-is policy are stated\n- out-of-scope\
+      \ guardrail: no parser/runtime implementation in this step\n\nBecause this feature\
+      \ touches config/persistence surfaces, the contract must define field semantics\
+      \ before tests or implementation proceed."
+    verification: '- Contract artifacts describe `ServerConfig.env` type, default,
+      and parser semantics clearly
+
+      - No product implementation logic is added in this step
+
+      - Acceptance boundary is explicit enough for downstream tests to validate parsing
+      and expansion behavior'
+    agent: python-senior
 - id: rt.downstream
   name: Downstream MCP Client Connections
   status: locked
