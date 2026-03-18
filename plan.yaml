@@ -10308,7 +10308,7 @@ phases:
       \ unrelated legacy test import dependency on `check_side_effect` in tests."
   - id: cap.contract.gate
     name: Quick gate review
-    status: claimed
+    status: done
     description: ''
     verification: 'Quick Gate: E1+E4. Contracts are non-vacuous and match ADR-003
       spec.'
@@ -10317,6 +10317,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T17:16:02.379581+00:00'
+    done_at: '2026-03-18T17:30:29.387236+00:00'
+    evidence: 'Gate review outcome: BLOCKER detected and batched remediation planned.
+
+
+      Blocking issue:
+
+      - `ProfileConfig._normalize_aliases` conflict detection for simultaneous `tools`
+      + `capabilities` input does not execute due validator/decorator wiring.
+
+      - Spec requirement violated: conflicting dual-field input must raise `ValueError`
+      per MIGRATION-003.
+
+
+      Verification excerpt:
+
+      - Run: `uv run python -c "from tela.core.models import ProfileConfig, Posture;
+      p = ProfileConfig(name=''bad'', tools={''fs'': Posture.READ_ONLY}, capabilities={''fs'':
+      Posture.READ_WRITE}); print(p.capabilities)"`
+
+      - Outcome: no `ValueError` (unexpected)
+
+
+      Follow-up plan mutation:
+
+      - Added fix step: `cap.contract.fix-gate-blockers`
+
+      - Added retest step: `cap.contract.retest-gate-blockers`
+
+      - Dependencies: fix depends on `cap.contract.define`; retest depends on fix.'
   - id: cap.contract.fix-gate-blockers
     name: Fix batched gate blocker in ProfileConfig alias normalization
     status: pending
