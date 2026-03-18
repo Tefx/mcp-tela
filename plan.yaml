@@ -10738,7 +10738,7 @@ phases:
       - Related cleanup in catalog/tests deferred to later planned steps.'
   - id: cap.impl.enforcement
     name: Simplify enforcement.py
-    status: pending
+    status: claimed
     description: 'Simplify enforcement.py: remove check_side_effect() function, update
       enforce() to skip side-effect step. The per-call enforcement chain becomes 3
       steps: (1) family admission, (2) tool override, (3) posture ceiling. Update
@@ -10758,6 +10758,8 @@ phases:
     depends_on:
     - cap.impl.models
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T18:03:35.949074+00:00'
   - id: cap.impl.config-catalog
     name: Update config parser and builtin catalog
     status: pending
