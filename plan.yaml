@@ -10115,7 +10115,7 @@ phases:
     agent: gate-reviewer
   - id: rt.downstream.test
     name: Test connect/disconnect lifecycle and tools list behavior
-    status: pending
+    status: claimed
     description: 'Define and add downstream client tests before implementation. Cover
       stdio and SSE connection setup, connect_all/disconnect_all lifecycle, MCP `tools/list`
       enumeration, empty-or-failed registry handling, and teardown/cleanup semantics
@@ -10133,6 +10133,8 @@ phases:
     depends_on:
     - rt.downstream.contract
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T20:32:30.343296+00:00'
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
