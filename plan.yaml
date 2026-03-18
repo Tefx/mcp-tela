@@ -10500,7 +10500,7 @@ phases:
       conflicts with `capabilities` must raise `ValueError`'
 - id: cap.test
   name: Tests for Migration and New Schema
-  status: in_progress
+  status: done
   depends_on:
   - cap.contract
   steps:
@@ -10589,7 +10589,7 @@ phases:
       No ImportError failures.'
   - id: cap.test.gate
     name: Quick gate review
-    status: claimed
+    status: done
     description: ''
     verification: Quick Gate. Tests are well-structured and cover ADR-003 migration
       rules.
@@ -10598,9 +10598,71 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T17:42:29.320316+00:00'
+    done_at: '2026-03-18T17:46:49.307921+00:00'
+    evidence: 'Artifact:
+
+      - Commit: e50a0e0465efeee3ada1d4eb215c20d170480ba5
+
+      - File: tests/core/test_capability_only_profiles.py (36 tests)
+
+
+      Verification:
+
+      - Run: `uv run pytest tests/core/test_capability_only_profiles.py -v`
+
+      - Outcome: `36 collected, 31 passed, 5 failed` (expected red-green failures
+      for unimplemented behavior)
+
+
+      Wiring audit (W1-W8):
+
+      - W1 exports/import wiring: PASS
+
+      - W2 public API coverage: PASS
+
+      - W3 test isolation: PASS
+
+      - W4 dependency presence: PASS
+
+      - W5 write-only fields: N/A
+
+      - W6 NotImplemented stubs: PASS
+
+      - W7 config field consumption: N/A for this gate scope
+
+      - W8 CLI registration: N/A
+
+
+      Escape hatch audit:
+
+      - Run: `grep -rn ''@invar:allow'' tests/core/test_capability_only_profiles.py`
+
+      - Outcome: no matches
+
+
+      Runnable surface smoke/liveness:
+
+      - N/A (test-writing phase; no runnable service delivered)
+
+
+      Integration vs fixture distinction:
+
+      - N/A (unit-test scope; direct object construction and business assertions)
+
+
+      Spec link:
+
+      - ADR-003 capability-only model and 3-step enforcement chain
+
+      - MIGRATION-003 migration alias and override-ceiling expectations
+
+
+      Result:
+
+      - Gate PASS with 9/9 requested scenarios covered and correct red-green pattern.'
 - id: cap.impl
   name: Core Implementation
-  status: locked
+  status: pending
   depends_on:
   - cap.test
   steps:
