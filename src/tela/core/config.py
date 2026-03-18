@@ -115,6 +115,12 @@ def _expand_env_in_object(value: object, env_vars: Mapping[str, str]) -> object:
 def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> TelaConfig:
     """Parse raw configuration into `TelaConfig`.
 
+    Server env contract:
+    - `servers.<name>.env` accepts `dict[str, str]`.
+    - Omitted `env` defaults to `{}`.
+    - `${VAR}` placeholders in env values are expanded using `env_vars`.
+    - Unresolved placeholders raise `ConfigContractError(code="CONFIG_ENV_UNSET", ...)`.
+
     Args:
         raw: Parsed YAML object graph for local runtime config.
         env_vars: Environment mapping used for `${VAR}` expansion.

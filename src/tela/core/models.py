@@ -82,6 +82,7 @@ class ServerConfig(BaseModel):
     command: str | None = None
     args: list[str] = Field(default_factory=list)
     url: str | None = None
+    env: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
     default_posture: Posture = Posture.NONE

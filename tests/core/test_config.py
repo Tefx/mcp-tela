@@ -11,7 +11,13 @@ from tela.core.config import (
     resolve_open_mode_default_profile,
     validate_config,
 )
-from tela.core.models import AuthConfig, AuthMode, ProfileConfig, ServerConfig, TelaConfig
+from tela.core.models import (
+    AuthConfig,
+    AuthMode,
+    ProfileConfig,
+    ServerConfig,
+    TelaConfig,
+)
 
 
 def test_requires_open_mode_default_resolution() -> None:
@@ -187,3 +193,59 @@ def test_parse_config_explicit_name_still_works() -> None:
     )
     assert config.profiles["dev"].name == "dev"
     assert config.servers["fs"].name == "fs"
+
+
+def test_parse_config_server_env_defaults_to_empty_mapping() -> None:
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {"fs": {"command": "cmd"}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+    assert config.servers["fs"].env == {}
+
+
+def test_parse_config_server_env_expands_placeholders() -> None:
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {
+                "fs": {
+                    "command": "cmd",
+                    "env": {
+                        "API_KEY": "${KEY}",
+                        "PREFIXED": "token-${KEY}",
+                    },
+                }
+            },
+            "auth": {"mode": "open"},
+        },
+        {"KEY": "abc123"},
+    )
+    assert config.servers["fs"].env == {
+        "API_KEY": "abc123",
+        "PREFIXED": "token-abc123",
+    }
+
+
+def test_parse_config_server_env_missing_and_explicit_empty_are_equivalent() -> None:
+    missing_env = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {"fs": {"command": "cmd"}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+    explicit_empty_env = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {"fs": {"command": "cmd", "env": {}}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+
+    assert missing_env.servers["fs"].env == explicit_empty_env.servers["fs"].env == {}

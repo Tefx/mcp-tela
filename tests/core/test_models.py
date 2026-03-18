@@ -153,12 +153,21 @@ class TestServerConfig:
         assert s.name == "fs"
         assert s.command is None
         assert s.args == []
+        assert s.env == {}
         assert s.default_posture == Posture.NONE
 
     def test_server_with_command(self) -> None:
         s = ServerConfig(name="fs", command="node", args=["server.js"])
         assert s.command == "node"
         assert s.args == ["server.js"]
+
+    def test_server_with_explicit_env_mapping(self) -> None:
+        s = ServerConfig(name="fs", command="node", env={"TOKEN": "abc"})
+        assert s.env == {"TOKEN": "abc"}
+
+    def test_server_env_requires_string_values(self) -> None:
+        with pytest.raises(ValidationError):
+            ServerConfig(name="fs", command="node", env={"PORT": 8080})
 
 
 # --- AuditConfig behavioral tests ---

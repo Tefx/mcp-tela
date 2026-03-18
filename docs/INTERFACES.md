@@ -46,6 +46,14 @@ Optional gateway controls:
 - `family`
 - `default_posture`
 - `tool_overrides`
+- `env`
+
+`env` contract:
+- type is `dict[str, str]` (`VAR_NAME -> value`)
+- omitted `env` defaults to `{}`
+- explicit `env: {}` is equivalent to omitting `env`
+- parser accepts `${VAR}` placeholders in env values and resolves them from parse-time environment input
+- unresolved `${VAR}` placeholders are rejected during parse as configuration errors
 
 ### 3.2 Profiles
 
