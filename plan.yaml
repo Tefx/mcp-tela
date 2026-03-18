@@ -11525,7 +11525,7 @@ phases:
       - `cap.final_gate.gate` now depends on retest step.'
   - id: cap.final_gate.gate
     name: Full gate review
-    status: pending
+    status: claimed
     description: ''
     verification: 'Full Gate. Verdict: PASS. ADR-003 migration complete. Zero BLOCKING
       issues.'
@@ -11534,6 +11534,8 @@ phases:
     - cap.final_gate.spec
     - cap.final_gate.retest-field-name-consistency
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T19:49:41.783526+00:00'
   - id: cap.final_gate.fix-field-name-consistency
     name: 'Batched fix: resolve docs/code field-name contradictions'
     status: done
