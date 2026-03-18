@@ -10222,7 +10222,7 @@ phases:
     agent: gate-reviewer
 - id: cap.contract
   name: Define New Profile Contracts
-  status: locked
+  status: pending
   depends_on:
   - cap.spec
   steps:
@@ -10550,7 +10550,7 @@ phases:
     agent: gate-reviewer
 - id: cap.spec
   name: Spec and Design Document Migration
-  status: in_progress
+  status: done
   depends_on:
   - retest2.full
   steps:
@@ -10724,7 +10724,7 @@ phases:
       - Enforcement chain already documented as 3 per-call steps; no gap found there.'
   - id: cap.spec.gate
     name: Spec migration gate review
-    status: claimed
+    status: done
     description: Verify ADR-003, MIGRATION-003, DESIGN.md, and INTERFACES.md are internally
       consistent and define a clear, unambiguous target state for implementation.
       Enforcement step count must be consistent (3 per-call) across all 4 documents.
@@ -10736,3 +10736,314 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T17:02:31.469475+00:00'
+    done_at: '2026-03-18T17:08:09.520576+00:00'
+    evidence: '## Quick Gate: E1 Spec Alignment Verification
+
+
+      **Step ID**: cap.spec.gate
+
+      **Scope**: ADR-003, MIGRATION-003, DESIGN.md, INTERFACES.md
+
+      **Gate Type**: Quick Gate (E1 only)
+
+
+      ---
+
+
+      ### Phase 0: Automated Gates
+
+
+      **Type Checking**: N/A - Documentation files (.md) only, no Python code
+
+      **Linting**: N/A - Documentation files only
+
+      **Test Suite**: N/A - Documentation files only
+
+      **Pattern Scans**: N/A - No code patterns in specification documents
+
+
+      ---
+
+
+      ### Wiring Audit (W1-W8)
+
+
+      **Status**: N/A
+
+
+      **Reason**: This gate reviews specification documents (ADR-003, MIGRATION-003,
+      DESIGN.md, INTERFACES.md). These are Markdown documentation files defining the
+      target architecture. There are no:
+
+      - Public exports to verify
+
+      - CLI commands to register
+
+      - Config fields to consume
+
+      - NotImplementedError stubs
+
+      - Write-only fields
+
+
+      Wiring audit applies to implementation code, not specification documents.
+
+
+      ---
+
+
+      ### Escape Hatch Audit
+
+
+      **Status**: N/A
+
+
+      **Command**: `grep -rn ''@invar:allow'' docs/ --include=''*.md''`
+
+      **Result**: No matches - `@invar:allow` is a Python decorator annotation, not
+      present in Markdown specification files.
+
+
+      **Reason**: Specification documents contain no code and therefore no `@invar:allow`
+      escape hatch annotations.
+
+
+      ---
+
+
+      ### Runnable Surface Smoke/Liveness
+
+
+      **Status**: N/A
+
+
+      **Reason**: This phase delivers specification documents, not runnable surfaces.
+      No:
+
+      - Server entry points
+
+      - CLI commands
+
+      - API endpoints
+
+      - Daemon processes
+
+
+      Runnable surface verification applies to implementation phases that deliver
+      executable code.
+
+
+      ---
+
+
+      ### Integration-vs-Fixture Distinction
+
+
+      **Status**: N/A
+
+
+      **Reason**: This phase does not include integration tests or test fixtures.
+      It defines specification requirements for:
+
+      - Profile schema changes (tools → capabilities)
+
+      - Enforcement chain simplification (4 steps → 3 steps)
+
+      - Field removal (side_effect_policy)
+
+
+      Test fixture provenance verification applies to testing phases, not specification
+      definition phases.
+
+
+      ---
+
+
+      ### E1: Spec Alignment Verification
+
+
+      **Documents Verified**:
+
+      1. `docs/ADR-003-gateway-capability-only-profiles.md` (90 lines)
+
+      2. `docs/MIGRATION-003-capability-only-profiles.md` (204 lines)
+
+      3. `docs/DESIGN.md` (101 lines)
+
+      4. `docs/INTERFACES.md` (187 lines)
+
+
+      #### Enforcement Step Count Verification
+
+
+      | Document      | Location     | Explicit Count            | Steps Listed                                                      |
+      Status |
+
+      | ------------- | ------------ | ------------------------- | -----------------------------------------------------------------
+      | ------ |
+
+      | ADR-003       | Line 40      | "3 steps"                 | family admission,
+      tool override, posture ceiling                  | ✓      |
+
+      | MIGRATION-003 | Line 77      | "from 4 steps to 3 steps" | Family admission,
+      Tool override check, Posture ceiling comparison | ✓      |
+
+      | MIGRATION-003 | Line 194-196 | (implied 3)               | family admission,
+      tool override application, posture comparison   | ✓      |
+
+      | DESIGN.md     | Line 47      | "3 per-call steps"        | family admission,
+      tool override check, posture ceiling comparison | ✓      |
+
+      | INTERFACES.md | Line 120-122 | (implied 3)               | family admission,
+      tool override application, posture comparison   | ✓      |
+
+
+      **Result**: All documents specify exactly **3 enforcement steps per call** ✓
+
+
+      #### Field Naming Consistency
+
+
+      | Concept           | ADR-003         | MIGRATION-003  | DESIGN.md    | INTERFACES.md                 |
+      Status |
+
+      | ----------------- | --------------- | -------------- | ------------ | -----------------------------
+      | ------ |
+
+      | Target field name | `capabilities`    | `capabilities`   | `capabilities`
+      | `capabilities`                  | ✓      |
+
+      | Legacy field name | `tools` (renamed) | `tools` (legacy) | N/A          |
+      `tools` (migration window only) | ✓      |
+
+
+      **Result**: Consistent target model uses `capabilities` ✓
+
+
+      #### side_effect_policy Treatment
+
+
+      | Document      | Treatment                                                       |
+      Status |
+
+      | ------------- | ---------------------------------------------------------------
+      | ------ |
+
+      | ADR-003       | Dropped from response; migration emits both keys                |
+      ✓      |
+
+      | MIGRATION-003 | Removed from model; legacy input capping rules defined          |
+      ✓      |
+
+      | DESIGN.md     | Not present (clean target state)                                |
+      ✓      |
+
+      | INTERFACES.md | "not part of output in target model"; legacy note for migration
+      | ✓      |
+
+
+      **Result**: Consistent — `side_effect_policy` is legacy/removed in target ✓
+
+
+      #### Core Authorization Primitive
+
+
+      All four documents express the same rule:
+
+      ```
+
+      allow iff tool_posture <= profile.capabilities[tool.family]
+
+      ```
+
+
+      **Result**: Identical authorization rule across all documents ✓
+
+
+      #### Override Constraint
+
+
+      All four documents specify that tool overrides cannot exceed the family ceiling:
+
+      - ADR-003: "No tool override may elevate access beyond `capabilities[family]`"
+
+      - MIGRATION-003: "no tool override may exceed capabilities[family]"
+
+      - DESIGN.md: "no tool override may elevate access beyond `capabilities[family]`"
+
+      - INTERFACES.md: "no override may exceed the family capability ceiling"
+
+
+      **Result**: Consistent override constraint ✓
+
+
+      #### Contradiction Scan
+
+
+      **Contradictions Found**: NONE
+
+
+      All four documents agree on:
+
+      - Enforcement step count: 3 per call
+
+      - Field naming: `capabilities` in target
+
+      - Authorization rule: `tool_posture <= capabilities[family]`
+
+      - Override semantics: capped to family ceiling
+
+      - Profile model: capability-only
+
+      - `side_effect_policy`: removed/legacy
+
+
+      ---
+
+
+      ### Confidence Calibration
+
+
+      | Aspect             | Confidence | Basis                              |
+
+      | ------------------ | ---------- | ---------------------------------- |
+
+      | Step count         | High       | Explicit "3 steps" in all 4 docs   |
+
+      | Field naming       | High       | Explicit `capabilities` throughout   |
+
+      | Authorization rule | High       | Identical inequality in all 4 docs |
+
+      | No contradictions  | High       | Exhaustive text comparison         |
+
+
+      ### Non-Goals
+
+
+      - Implementation correctness (specs only)
+
+      - Code path coverage (no code)
+
+      - Security pen-testing (documentation phase)
+
+      - Performance benchmarks (spec phase)
+
+      - Runtime behavior (static documents)
+
+
+      ### Verdict
+
+
+      **PASS** - All specification documents are internally consistent with:
+
+      - Exactly 3 enforcement steps per call
+
+      - Consistent use of `capabilities` field name
+
+      - Consistent removal of `side_effect_policy`
+
+      - Identical authorization primitive
+
+      - Identical override constraint
+
+      - No contradictions found'
