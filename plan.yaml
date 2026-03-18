@@ -10308,13 +10308,15 @@ phases:
       \ unrelated legacy test import dependency on `check_side_effect` in tests."
   - id: cap.contract.gate
     name: Quick gate review
-    status: pending
+    status: claimed
     description: ''
     verification: 'Quick Gate: E1+E4. Contracts are non-vacuous and match ADR-003
       spec.'
     depends_on:
     - cap.contract.define
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T17:16:02.379581+00:00'
 - id: cap.test
   name: Tests for Migration and New Schema
   status: locked
