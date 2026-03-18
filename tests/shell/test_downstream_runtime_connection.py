@@ -9,8 +9,9 @@ from typing import Any
 
 from mcp.types import ListToolsResult, Tool
 
-from tela.core.models import ServerConfig
+from tela.core.models import ServerConfig, TelaConfig
 from tela.shell import downstream
+from tela.shell.gateway import get_runtime
 
 
 def test_connect_all_enumerates_real_stdio_server() -> None:
@@ -155,6 +156,128 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
     )
     assert result.is_ok
     assert downstream.get_tool_server("sse_tool") == "remote"
+
+    cleanup = asyncio.run(downstream.disconnect_all())
+    assert cleanup.is_ok
+
+
+def test_call_tool_returns_real_downstream_result() -> None:
+    """call_tool forwards to connected downstream session and returns payload."""
+
+    server_script = (
+        Path(__file__).resolve().parents[1] / "fixtures" / "fastmcp_stdio_server.py"
+    )
+    servers = {
+        "local_stdio": ServerConfig(
+            name="local_stdio",
+            command=sys.executable,
+            args=[str(server_script)],
+        )
+    }
+
+    async def _run() -> None:
+        connect_result = await downstream.connect_all(servers)
+        assert connect_result.is_ok
+
+        call_result = await downstream.call_tool(
+            "local_stdio",
+            "echo",
+            {"value": "hello"},
+        )
+        assert call_result.is_ok
+        assert call_result.value is not None
+        content = call_result.value.get("content")
+        assert isinstance(content, list)
+        assert len(content) > 0
+        first_content = content[0]
+        assert isinstance(first_content, dict)
+        assert first_content.get("type") == "text"
+        assert first_content.get("text") == "hello"
+
+        cleanup = await downstream.disconnect_all()
+        assert cleanup.is_ok
+
+    asyncio.run(_run())
+
+
+def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
+    """re_enumerate re-lists tools from connected downstream session."""
+
+    class FakeSession:
+        def __init__(self) -> None:
+            self.enumeration = 0
+
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            del cursor
+            del params
+            if self.enumeration == 0:
+                tools = [Tool(name="initial_tool", inputSchema={"type": "object"})]
+            else:
+                tools = [
+                    Tool(name="initial_tool", inputSchema={"type": "object"}),
+                    Tool(name="new_tool", inputSchema={"type": "object"}),
+                ]
+            self.enumeration += 1
+            return ListToolsResult(tools=tools, nextCursor=None)
+
+        async def call_tool(
+            self,
+            name: str,
+            arguments: dict[str, Any] | None = None,
+            read_timeout_seconds: Any = None,
+            progress_callback: Any = None,
+            *,
+            meta: dict[str, Any] | None = None,
+        ) -> Any:
+            del name
+            del arguments
+            del read_timeout_seconds
+            del progress_callback
+            del meta
+            raise AssertionError("call_tool not expected in re_enumerate test")
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    fake_session = FakeSession()
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+    ) -> downstream._ClientHandle:
+        del server_name
+        del server_config
+        return downstream._ClientHandle(session=fake_session, stack=FakeStack())
+
+    monkeypatch.setattr(
+        downstream,
+        "_open_client_for_server",
+        _fake_open_client_for_server,
+    )
+
+    servers = {"mocked": ServerConfig(name="mocked", command="unused-command")}
+    connect_result = asyncio.run(downstream.connect_all(servers))
+    assert connect_result.is_ok
+    assert downstream.get_tool_server("initial_tool") == "mocked"
+    assert downstream.get_tool_server("new_tool") is None
+
+    runtime = get_runtime()
+    previous_config = runtime.config
+    runtime.config = TelaConfig(servers=servers)
+    try:
+        re_enum_result = asyncio.run(downstream.re_enumerate("mocked"))
+        assert re_enum_result.is_ok
+        assert re_enum_result.value is not None
+        tool_names = sorted(tool.name for tool in re_enum_result.value)
+        assert tool_names == ["initial_tool", "new_tool"]
+
+        assert downstream.get_tool_server("initial_tool") == "mocked"
+        assert downstream.get_tool_server("new_tool") == "mocked"
+    finally:
+        runtime.config = previous_config
 
     cleanup = asyncio.run(downstream.disconnect_all())
     assert cleanup.is_ok

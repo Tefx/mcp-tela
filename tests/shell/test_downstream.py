@@ -335,14 +335,18 @@ def test_connect_all_empty_servers() -> None:
 # --- Remaining stubs ---
 
 
-def test_call_tool_returns_error() -> None:
+def test_call_tool_returns_downstream_unavailable_when_not_connected() -> None:
     r = asyncio.run(call_tool("srv", "tool", {}))
     assert r.is_err
+    assert r.error is not None
+    assert r.error.code == "DOWNSTREAM_UNAVAILABLE"
 
 
-def test_re_enumerate_returns_error() -> None:
+def test_re_enumerate_returns_downstream_unavailable_when_not_connected() -> None:
     r = asyncio.run(re_enumerate("srv"))
     assert r.is_err
+    assert r.error is not None
+    assert r.error.startswith("DOWNSTREAM_UNAVAILABLE")
 
 
 # --- Client lifecycle: stdio connection setup ---

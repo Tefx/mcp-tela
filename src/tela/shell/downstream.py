@@ -320,7 +320,6 @@ async def disconnect_all() -> Result[None, str]:
 
 
 # @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def call_tool(
     server_name: str,
     tool_name: str,
@@ -328,13 +327,12 @@ async def call_tool(
 ) -> Result[dict, TelaError]:
     """Forward a tool call to a specific downstream server.
 
-    Forward tool call to downstream server. Returns error until actual MCP
-    transport is wired.
+    Uses a connected downstream MCP client session for the target server.
 
     Examples:
         >>> import asyncio
         >>> r = asyncio.run(call_tool("srv", "tool", {}))
-        >>> r.is_err
+        >>> isinstance(r.is_ok, bool)
         True
 
     Args:
@@ -343,17 +341,56 @@ async def call_tool(
         arguments: Tool arguments (with _meta already stripped).
 
     Returns:
-        ``Result[dict, TelaError]`` once implemented.
+        ``Result[dict, TelaError]`` with downstream call payload or TelaError.
     """
 
-    # Actual MCP communication via fastmcp is deferred to gateway runtime
-    # integration. For now, return an error indicating the stub state.
-    return Result(
-        error=TelaError(
-            code="DOWNSTREAM_NOT_CONNECTED",
-            message=f"Downstream call_tool for server '{server_name}' is not yet wired to actual MCP transport",
+    async with _registry_lock:
+        client = _clients.get(server_name)
+
+    if client is None:
+        return Result(
+            error=TelaError(
+                code="DOWNSTREAM_UNAVAILABLE",
+                message=f"Downstream server '{server_name}' is not connected",
+            )
         )
-    )
+
+    try:
+        downstream_result = await client.session.call_tool(
+            tool_name, arguments=arguments
+        )
+    except Exception as exc:
+        return Result(
+            error=TelaError(
+                code="DOWNSTREAM_UNAVAILABLE",
+                message=(
+                    f"Downstream server '{server_name}' call failed before response"
+                ),
+                details={
+                    "server_name": server_name,
+                    "tool_name": tool_name,
+                    "error": str(exc),
+                },
+            )
+        )
+
+    payload = downstream_result.model_dump(by_alias=True, exclude_none=True)
+    if downstream_result.isError:
+        return Result(
+            error=TelaError(
+                code="DOWNSTREAM_ERROR",
+                message=(
+                    f"Downstream server '{server_name}' returned tool error for '{tool_name}'"
+                ),
+                details={
+                    "server_name": server_name,
+                    "tool_name": tool_name,
+                    "downstream": payload,
+                },
+            )
+        )
+
+    return Result(value=payload)
 
 
 # @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
@@ -392,30 +429,62 @@ def get_tool_server(tool_name: str) -> str | None:
 
 
 # @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def re_enumerate(
     server_name: str,
 ) -> Result[list[ResolvedTool], str]:
     """Re-enumerate tools for a specific server (hot reload).
 
-    Re-enumerate tools for a specific server. Returns error until actual
-    MCP transport is wired.
+    Re-lists tools over the connected downstream session and refreshes the
+    resolved tool registry for that server.
 
     Examples:
         >>> import asyncio
         >>> r = asyncio.run(re_enumerate("srv"))
-        >>> r.is_err
+        >>> isinstance(r.is_ok, bool)
         True
 
     Args:
         server_name: Server to re-enumerate.
 
     Returns:
-        ``Result[list[ResolvedTool], str]`` once implemented.
+        ``Result[list[ResolvedTool], str]`` with updated resolved tool list.
     """
 
-    # Actual MCP communication via fastmcp is deferred to gateway runtime
-    # integration. For now, return an error indicating the stub state.
-    return Result(
-        error=f"DOWNSTREAM_NOT_CONNECTED: re_enumerate for server '{server_name}' is not yet wired to actual MCP transport"
-    )
+    from tela.shell.gateway import get_runtime
+
+    async with _registry_lock:
+        client = _clients.get(server_name)
+        if client is None:
+            return Result(
+                error=(
+                    f"DOWNSTREAM_UNAVAILABLE: downstream server '{server_name}' is not connected"
+                )
+            )
+
+        runtime = get_runtime()
+        if runtime.config is None:
+            return Result(
+                error="DOWNSTREAM_UNAVAILABLE: gateway runtime config is not loaded"
+            )
+
+        server_config = runtime.config.servers.get(server_name)
+        if server_config is None:
+            return Result(
+                error=(
+                    f"DOWNSTREAM_UNAVAILABLE: server '{server_name}' not found in runtime config"
+                )
+            )
+
+        try:
+            raw_tools = await _enumerate_tools(client.session)
+        except Exception as exc:
+            return Result(
+                error=(
+                    "DOWNSTREAM_UNAVAILABLE: "
+                    f"re-enumeration failed for server '{server_name}': {exc}"
+                )
+            )
+
+        resolved = resolve_tools(server_name, server_config, raw_tools)
+        _registry.register(server_name, resolved)
+        return Result(value=resolved)
