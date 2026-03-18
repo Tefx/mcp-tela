@@ -44,13 +44,19 @@ Concrete tool posture comes from:
 
 ### Authorization
 
-Authorization is a single comparison:
+Authorization is enforced in 3 per-call steps:
+
+1. family admission
+2. tool override check
+3. posture ceiling comparison
+
+Core comparison:
 
 ```text
 tool_posture <= profile.capabilities[tool.family]
 ```
 
-with family admission and tool overrides as pre-checks.
+There is no separate workflow-policy layer in gateway authorization.
 
 ## Module Boundaries
 
@@ -89,6 +95,7 @@ CLI entrypoints only.
 
 - one connection binds to one profile
 - profile ceilings are family-based
+- no tool override may elevate access beyond `capabilities[family]`
 - classification is concrete-provider aware
 - unclassified access is handled conservatively
 - approval semantics do not appear in gateway profiles
