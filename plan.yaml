@@ -10927,7 +10927,7 @@ phases:
       - `tests/core/test_enforcement.py` ImportError for `check_side_effect`'
   - id: cap.impl.fix-gate-blockers
     name: Fix cap.impl gate blockers
-    status: pending
+    status: claimed
     description: "Fix ALL reported issues from `cap.impl.gate`, not just the first.\n\
       \n## Blockers to Fix (ALL of these)\n1. Override-ceiling invariant bypass in\
       \ enforcement flow.\n   - Scope: `check_tool_override` and the `enforce` early-return\
@@ -10967,6 +10967,8 @@ phases:
     depends_on:
     - cap.impl.gate
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T18:30:44.760333+00:00'
   - id: cap.impl.retest-gate-remediation
     name: Retest cap.impl gate remediation
     status: pending
