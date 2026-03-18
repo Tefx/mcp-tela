@@ -10618,7 +10618,7 @@ phases:
       Support, tool_overrides Section, override downgrade/remove/reject rules'
   - id: cap.spec.design-md
     name: Update DESIGN.md to target state
-    status: claimed
+    status: done
     description: 'DESIGN.md already updated in commit 382927d (user-authored). This
       step verifies the update is complete: enforcement chain is 3 per-call steps,
       all profile examples use capabilities:, SideEffectPolicy removed, override-ceiling
@@ -10634,6 +10634,43 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T16:59:03.562726+00:00'
+    done_at: '2026-03-18T17:01:59.467976+00:00'
+    evidence: 'Commit hash(es):
+
+      - f4f2e9f73a0cfef1b38d8a7cda9f11902ca91879
+
+
+      Files changed:
+
+      - docs/DESIGN.md
+
+
+      grep -n ''side_effect_policy'' docs/DESIGN.md output:
+
+      - (no matches)
+
+
+      grep -c ''capabilities:'' docs/DESIGN.md output:
+
+      - 1
+
+
+      Sections updated: list
+
+      - Core Concepts -> Authorization (explicit 3 per-call enforcement steps)
+
+      - Invariants (added override-ceiling invariant)
+
+
+      Gaps/Notes:
+
+      - No gaps remaining for this step''s criteria.
+
+      - Enforcement chain is documented as 3 per-call steps.
+
+      - Profile example continues to use `capabilities:`.
+
+      - `SideEffectPolicy`/`side_effect_policy` is absent from DESIGN.md.'
   - id: cap.spec.interfaces-md
     name: Update INTERFACES.md to target state
     status: claimed
