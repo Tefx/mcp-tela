@@ -9722,7 +9722,7 @@ phases:
       smoke/audit/gate can proceed.'
 - id: rt.env_field
   name: ServerConfig.env Field
-  status: in_progress
+  status: done
   depends_on:
   - retest2.full
   - cap.final_gate
@@ -9822,7 +9822,7 @@ phases:
       finalized documented example surface.'
   - id: rt.env_field.gate
     name: Gate review
-    status: claimed
+    status: done
     description: 'Gate review for the env field phase.
 
 
@@ -9849,6 +9849,31 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T20:20:22.006234+00:00'
+    done_at: '2026-03-18T20:25:37.179044+00:00'
+    evidence: 'Artifact:
+
+      - rt.env_field contract/test/implementation artifacts reviewed
+
+
+      Verification:
+
+      - env-field contract semantics align with implementation and tests
+
+      - core tests including env-field suite pass
+
+      - wiring audit and escape-hatch audit completed
+
+      - runnable/integration applicability assessed for this non-runnable phase
+
+
+      Spec link:
+
+      - interfaces env contract section and corresponding implementation/test locations
+
+
+      Result:
+
+      - Gate PASS'
   - id: rt.env_field.contract
     name: Define env field contract and semantics
     status: done
@@ -9963,7 +9988,7 @@ phases:
       - interfaces server/env contract section'
 - id: rt.downstream
   name: Downstream MCP Client Connections
-  status: locked
+  status: pending
   depends_on:
   - rt.env_field
   steps:
