@@ -30,10 +30,9 @@ def filter_tools_for_profile(
     """Filter resolved tools to those permitted by a profile.
 
     A tool is included if and only if:
-    1. Its family exists in the profile's tools map
+    1. Its family exists in the profile's capabilities map
     2. Its posture (classified or default) <= the profile's ceiling
     3. It is not explicitly denied by a profile tool_overrides entry
-    4. If side_effect_policy is read_only, only tools with posture <= read_only
 
     Examples:
         >>> from tela.core.models import Posture, ProfileConfig, ResolvedTool
@@ -60,9 +59,7 @@ def filter_tools_for_profile(
     for server_name, tools in all_tools.items():
         default_posture = server_default_postures.get(server_name, Posture.NONE)
         for tool in tools:
-            result = enforce(
-                tool.name, tool, profile, allowed_token, default_posture
-            )
+            result = enforce(tool.name, tool, profile, allowed_token, default_posture)
             if result.verdict == EnforcementVerdict.ALLOW:
                 permitted.append(tool)
 

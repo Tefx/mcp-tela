@@ -23,9 +23,18 @@ from tela.core.models import (
     TelaError,
 )
 from tela.shell.config_loader import Result
-from tela.shell.downstream import call_tool, get_all_tools, get_tool_server, get_registry
+from tela.shell.downstream import (
+    call_tool,
+    get_all_tools,
+    get_tool_server,
+    get_registry,
+)
 from tela.shell.gateway import get_runtime
-from tela.shell.upstream_utils import enforce_tool_call, filter_tools_for_profile, strip_meta
+from tela.shell.upstream_utils import (
+    enforce_tool_call,
+    filter_tools_for_profile,
+    strip_meta,
+)
 
 
 @dataclass(frozen=True)
@@ -105,7 +114,6 @@ def resolve_initialize_profile_binding(
             resolved_default_profile=resolved_default_profile,
         )
     )
-
 
 
 # --- MCP Handler functions ---
@@ -216,7 +224,11 @@ async def handle_tools_call(
 
     runtime = get_runtime()
     if runtime.config is None:
-        return Result(error=TelaError(code="GATEWAY_NOT_STARTED", message="Gateway has not been started"))
+        return Result(
+            error=TelaError(
+                code="GATEWAY_NOT_STARTED", message="Gateway has not been started"
+            )
+        )
 
     # Strip _meta
     stripped_args, held_meta = strip_meta(arguments)
@@ -224,12 +236,21 @@ async def handle_tools_call(
     # Look up tool
     tool = get_registry().get_tool(tool_name)
     if tool is None:
-        return Result(error=TelaError(code="TOOL_NOT_FOUND", message=f"Tool '{tool_name}' not found"))
+        return Result(
+            error=TelaError(
+                code="TOOL_NOT_FOUND", message=f"Tool '{tool_name}' not found"
+            )
+        )
 
     # Look up profile
     profile = runtime.config.profiles.get(connection.profile_name)
     if profile is None:
-        return Result(error=TelaError(code="PROFILE_NOT_FOUND", message=f"Profile '{connection.profile_name}' not found"))
+        return Result(
+            error=TelaError(
+                code="PROFILE_NOT_FOUND",
+                message=f"Profile '{connection.profile_name}' not found",
+            )
+        )
 
     # Enforce
     server_config = runtime.config.servers.get(tool.server_name)
@@ -237,10 +258,12 @@ async def handle_tools_call(
     enforcement = enforce_tool_call(tool_name, tool, profile, default_posture)
 
     if enforcement.verdict == EnforcementVerdict.DENY:
-        return Result(error=TelaError(
-            code=enforcement.error_code or "AUTHZ_DENY",
-            message=enforcement.error_message or "Tool call denied",
-        ))
+        return Result(
+            error=TelaError(
+                code=enforcement.error_code or "AUTHZ_DENY",
+                message=enforcement.error_message or "Tool call denied",
+            )
+        )
 
     runtime.total_tool_calls += 1
 
@@ -266,8 +289,14 @@ def handle_profiles_list() -> list[dict]:
     if runtime.config is None:
         return []
 
+    # Migration: emit both 'capabilities' and 'tools' keys per ADR-003
     return [
-        {"name": name, "default": p.default, "tools": {k: v.value for k, v in p.tools.items()}}
+        {
+            "name": name,
+            "default": p.default,
+            "capabilities": {k: v.value for k, v in p.capabilities.items()},
+            "tools": {k: v.value for k, v in p.capabilities.items()},
+        }
         for name, p in runtime.config.profiles.items()
     ]
 
