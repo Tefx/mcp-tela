@@ -11457,7 +11457,7 @@ phases:
   steps:
   - id: cap.final_gate.wiring
     name: Full W1-W8 wiring audit
-    status: claimed
+    status: done
     description: 'Full W1-W8 wiring audit focusing on: no dead exports from removed
       functions, no ghost schema fields from removed SideEffectPolicy, no unconsumed
       config fields.'
@@ -11465,6 +11465,26 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-18T19:30:35.610443+00:00'
+    done_at: '2026-03-18T19:38:15.121322+00:00'
+    evidence: 'Artifact:
+
+      - Wiring audit report on post-cleanup state
+
+
+      Verification:
+
+      - W1..W8 all PASS
+
+      - No ghost schema fields from removed side-effect model
+
+      - No dead exports tied to removed legacy paths
+
+      - No unconsumed config fields introduced by migration
+
+
+      Spec link:
+
+      - Capability-only migration target and cleanup commitments'
   - id: cap.final_gate.spec
     name: Verify docs match implementation
     status: pending
