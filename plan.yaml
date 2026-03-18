@@ -10937,6 +10937,47 @@ phases:
     depends_on:
     - cap.impl.gate
     agent: python-senior
+  - id: cap.impl.retest-gate-remediation
+    name: Retest cap.impl gate remediation
+    status: pending
+    description: 'As an INDEPENDENT TESTER, retest the full `cap.impl.gate` remediation
+      from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: override requests obey the configured ceiling in normal enforcement
+      flow
+
+      - Edge cases: the prior `enforce` early-return path still evaluates the override
+      ceiling invariant
+
+      - Error scenarios: stale test imports and stale removed-field references are
+      fully eliminated from the exercised test set
+
+
+      Document any remaining blocker or should-fix findings. This retest is successful
+      if it finds issues clearly or produces clean evidence that the blocker families
+      are closed.
+
+
+      Independence Level: L1'
+    verification: '- Run the targeted capability enforcement and test-suite checks
+      that exercise override-ceiling behavior after the fix
+
+      - Verify the prior bypass scenario now fails or is blocked according to contract
+
+      - Verify updated tests pass without importing `check_side_effect`
+
+      - Verify updated tests pass without referencing removed `side_effect_policy`
+
+      - Report actual commands/tests used and any remaining findings'
+    depends_on:
+    - cap.impl.fix-gate-blockers
+    agent: integration-verifier
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
