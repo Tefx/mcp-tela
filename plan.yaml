@@ -10589,13 +10589,15 @@ phases:
       No ImportError failures.'
   - id: cap.test.gate
     name: Quick gate review
-    status: pending
+    status: claimed
     description: ''
     verification: Quick Gate. Tests are well-structured and cover ADR-003 migration
       rules.
     depends_on:
     - cap.test.write
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T17:42:29.320316+00:00'
 - id: cap.impl
   name: Core Implementation
   status: locked
