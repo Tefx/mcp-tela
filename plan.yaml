@@ -9988,7 +9988,7 @@ phases:
       - interfaces server/env contract section'
 - id: rt.downstream
   name: Downstream MCP Client Connections
-  status: in_progress
+  status: done
   depends_on:
   - rt.env_field
   steps:
@@ -10169,7 +10169,7 @@ phases:
       - scope confined to downstream call/re-enumerate behavior'
   - id: rt.downstream.gate
     name: Gate review with wiring audit
-    status: claimed
+    status: done
     description: Gate review with wiring audit for downstream phase after the contract
       -> test -> implementation chain. Confirm runtime downstream connection behavior,
       MCP `tools/list` evidence, and cleanup semantics are covered before allowing
@@ -10182,6 +10182,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T20:54:06.905149+00:00'
+    done_at: '2026-03-18T21:07:57.892731+00:00'
+    evidence: 'Artifact:
+
+      - downstream phase gate audit completed after contract->test->connect->call
+      chain
+
+
+      Verification:
+
+      - W1 wiring audit passed for downstream exports and call sites
+
+      - W8 fastmcp usage verified in runtime path
+
+      - no `DOWNSTREAM_NOT_CONNECTED` marker remains
+
+      - runnable/liveness probe evidence provided for real stdio transport enumeration
+
+      - integration-vs-fixture distinction documented (real protocol test vs tool_lists
+      scaffold tests)
+
+
+      Spec link:
+
+      - downstream contract and runtime behavior documentation
+
+
+      Result:
+
+      - Gate PASS'
   - id: rt.downstream.test
     name: Test connect/disconnect lifecycle and tools list behavior
     status: done
@@ -10231,7 +10260,7 @@ phases:
       - out-of-scope respected (no product downstream manager implementation changes).'
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
-  status: locked
+  status: pending
   depends_on:
   - rt.downstream
   steps:
