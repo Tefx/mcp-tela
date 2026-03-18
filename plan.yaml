@@ -9774,6 +9774,50 @@ phases:
       - Acceptance boundary is explicit enough for downstream tests to validate parsing
       and expansion behavior'
     agent: python-senior
+  - id: rt.env_field.test
+    name: Add env field parsing and expansion tests
+    status: pending
+    description: 'Test step for the new `ServerConfig.env` feature.
+
+
+      step_type: test
+
+      agent_source: default
+
+
+      Add focused tests for config parsing and `${VAR}` expansion behavior defined
+      by `rt.env_field.contract`.
+
+
+      Required coverage:
+
+      - minimal fixture with no `env` field -> parsed model defaults to `{}`
+
+      - documented fixture with `env` mapping -> parser preserves explicit entries
+
+      - `${VAR}` expansion path -> environment-backed substitution is exercised from
+      config input through parsed result
+
+      - failure-path regression -> undefined or non-expandable values follow the contract-defined
+      behavior
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one fixture MUST use the exact documented config shape for server entries
+      and `env` mapping, with no convenience fields beyond the contract.
+
+
+      Out-of-scope guardrail:
+
+      - no product parser/model implementation beyond minimal test fixtures/helpers'
+    verification: '- Focused tests cover default, explicit mapping, expansion, and
+      contract-defined failure path
+
+      - Evidence cites the contract step as the authority for fixture shape and semantics
+
+      - Tests are ready to fail against missing or incorrect implementation'
+    agent: integration-verifier
 - id: rt.downstream
   name: Downstream MCP Client Connections
   status: locked
