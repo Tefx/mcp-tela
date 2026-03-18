@@ -11830,6 +11830,65 @@ phases:
     depends_on:
     - cap.final_gate.gate
     agent: python-senior
+  - id: cap.final_gate.retest-runtime-static-blockers
+    name: Independent retest of batched runtime and static-analysis blockers
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`blind-tester`), validate that the blockers
+      from `cap.final_gate.gate` are actually closed from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: stdio initialize returns a clean response through the real entrypoint
+      with no stdout banner contamination
+
+      - Edge cases: SSE entrypoint stays alive long enough to accept at least one
+      operation and does not exit early after startup
+
+      - Error scenarios: mypy still reports no contracts/token errors and ruff reports
+      no unused-import or directly related lint regressions in the gate scope
+
+      - Gate readiness: collected evidence is specific enough for the full gate to
+      re-open without ambiguity
+
+
+      Document ALL findings. A retest that discovers issues is a SUCCESSFUL verification
+      outcome.
+
+
+      Independence Level: L2
+
+
+      ## Required evidence
+
+      - exact liveness commands/probes used for stdio initialize and SSE stay-alive
+
+      - actual command output, not just a summary
+
+      - mypy command and output for the contracts/token scope
+
+      - ruff command and output for the reported lint scope
+
+      - explicit verdict on whether the phase is ready for full gate re-review'
+    verification: '- Liveness: independent stdio initialize probe passes with clean
+      protocol output and no banner contamination
+
+      - Liveness: independent SSE stay-alive probe passes on the real runtime entrypoint
+
+      - Static analysis: mypy output is clean for the contracts/token scope required
+      by the gate
+
+      - Static analysis: ruff output is clean for unused imports and related failures
+      in scope
+
+      - Full gate readiness: evidence is sufficient to resume `cap.final_gate.gate`
+      review without missing blocker families'
+    depends_on:
+    - cap.final_gate.fix-runtime-static-blockers
+    agent: blind-tester
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
