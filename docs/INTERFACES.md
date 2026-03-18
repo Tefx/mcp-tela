@@ -193,3 +193,58 @@ Historical/migration notes:
 - tela does not consume PersonaSpec or JobSpec directly
 - tela enforces capability ceilings, not workflow policy
 - runtime approval and temporary read-only execution remain outside the gateway
+
+## 9. Downstream fastmcp Client Contract
+
+This section defines the shell-side integration contract for connecting to
+downstream MCP providers via `mcp.client`/fastmcp session clients.
+
+### 9.1 `connect_all` transport behavior
+
+`connect_all(servers)` iterates configured servers and selects exactly one
+connection mode per server:
+
+- stdio server contract: `ServerConfig.command` is required; client connect uses
+  `command`, `args`, and `env` from config.
+- SSE server contract: `ServerConfig.url` is required; client connect uses `url`.
+- mixed transport fields (`command` and `url` both set) are invalid and must be
+  rejected as a config/runtime contract violation.
+
+Per-server session results are stored in `_clients` only after successful session
+establishment.
+
+### 9.2 `_clients` mapping shape
+
+Runtime mapping contract:
+
+```text
+_clients: dict[str, ClientSession]
+```
+
+- key: canonical `server_name` from `servers` mapping.
+- value: connected downstream client session object used for `tools/list`,
+  `tools/call`, and re-enumeration.
+- invariant: key exists iff that server is currently connected.
+
+### 9.3 Session lifecycle contract
+
+- startup (`connect_all`): establish sessions for all servers, then enumerate and
+  register tools.
+- failure during startup: close any sessions opened in the same call and leave
+  `_clients` empty (no partial connected state).
+- shutdown (`disconnect_all`): close all sessions best-effort, clear `_clients`,
+  and clear resolved tool registry.
+- reload/re-enumeration: session identity in `_clients` is reused when transport
+  endpoint is unchanged; replaced only when reconnect is required.
+
+### 9.4 Error handling contract
+
+- transport/session establishment errors are surfaced as structured
+  `TelaError(code="DOWNSTREAM_CONNECT_FAILED", ...)` with server context.
+- tool invocation on missing/unconnected server returns
+  `TelaError(code="DOWNSTREAM_NOT_CONNECTED", ...)`.
+- downstream tool execution failures are surfaced as
+  `TelaError(code="DOWNSTREAM_TOOL_CALL_FAILED", ...)` and include server/tool
+  context in `details`.
+- `connect_all` rejects tool-name conflicts across servers and tears down opened
+  sessions before returning conflict error.
