@@ -9729,7 +9729,7 @@ phases:
   steps:
   - id: rt.env_field.impl
     name: Add env field to ServerConfig
-    status: claimed
+    status: done
     description: 'Implement the `ServerConfig.env` feature after contract and test
       acceptance are defined.
 
@@ -9795,6 +9795,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T20:16:36.622793+00:00'
+    done_at: '2026-03-18T20:19:40.401488+00:00'
+    evidence: 'Commit hash(es):
+
+      - 6178eb67ac621efa2d662cd7dabb8546742c1fdb
+
+
+      Files changed:
+
+      - tela.yaml.example
+
+
+      Verification:
+
+      - env-field acceptance tests pass
+
+      - ServerConfig.env and parser expansion behavior present and passing in current
+      code
+
+      - example config updated to documented env shape
+
+
+      Gaps/Notes:
+
+      - Core implementation landed earlier in contract/test progression; this step
+      finalized documented example surface.'
   - id: rt.env_field.gate
     name: Gate review
     status: pending
