@@ -11740,7 +11740,7 @@ phases:
       - INTERFACES field naming sections and corresponding implementation points'
   - id: cap.final_gate.fix-runtime-static-blockers
     name: Fix batched runtime and static-analysis blockers from cap.final_gate.gate
-    status: claimed
+    status: done
     description: 'Fix ALL blockers found by `cap.final_gate.gate` for the cap final
       gate surface. This is one batched remediation step for ALL of these, not just
       the first.
@@ -11855,6 +11855,34 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T19:56:52.438315+00:00'
+    done_at: '2026-03-18T20:02:45.727347+00:00'
+    evidence: 'Artifact:
+
+      - Commit: ec2bbb4
+
+
+      Verification:
+
+      - `tests/repro/test_liveness.py` passes (stdio banner hygiene, initialize response,
+      SSE liveness)
+
+      - direct stdio initialize probe confirms JSON-RPC on stdout and banner on stderr
+      only
+
+      - direct SSE probe confirms process alive and status endpoint responsive
+
+      - targeted core/repro suite passes
+
+      - mypy passes for contracts/token/cli scope
+
+      - ruff passes for src/tests scope
+
+      - sibling scans confirm no alternate stdout contamination paths
+
+
+      Spec link:
+
+      - final gate runtime/static blocker remediation scope and liveness expectations'
   - id: cap.final_gate.retest-runtime-static-blockers
     name: Independent retest of batched runtime and static-analysis blockers
     status: pending
