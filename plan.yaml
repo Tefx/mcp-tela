@@ -11643,7 +11643,7 @@ phases:
       - CapabilityToken canonical field is `profile_name`'
   - id: cap.final_gate.retest-field-name-consistency
     name: Retest docs/code field-name consistency
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`doc-reviewer`), re-check the capability/profile
       contract after `cap.final_gate.fix-field-name-consistency`.
 
@@ -11693,6 +11693,26 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-18T19:47:36.676587+00:00'
+    done_at: '2026-03-18T19:49:12.017866+00:00'
+    evidence: 'Artifact:
+
+      - Independent retest on post-fix state
+
+
+      Verification:
+
+      - No `profile_id`/`tools_profile` matches across src/docs/tests
+
+      - `CapabilityToken` exposes canonical `profile_name`
+
+      - Profiles response docs and implementation both use canonical `profile_name`
+
+      - Targeted token/upstream/repro tests pass
+
+
+      Spec link:
+
+      - INTERFACES field naming sections and corresponding implementation points'
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
