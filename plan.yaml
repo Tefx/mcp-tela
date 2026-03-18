@@ -11504,7 +11504,9 @@ phases:
     verification: 'Full Gate. Verdict: PASS. ADR-003 migration complete. Zero BLOCKING
       issues.'
     depends_on:
+    - cap.final_gate.wiring
     - cap.final_gate.spec
+    - cap.final_gate.retest-field-name-consistency
     agent: gate-reviewer
   - id: cap.final_gate.fix-field-name-consistency
     name: 'Batched fix: resolve docs/code field-name contradictions'
