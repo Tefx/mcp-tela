@@ -11244,7 +11244,7 @@ phases:
   steps:
   - id: cap.docs.update
     name: Update documentation
-    status: claimed
+    status: done
     description: 'Update remaining documentation NOT covered by cap.spec: (a) USAGE.md
       — profile examples (5 locations), (b) README.md — any profile examples, (c)
       tela.yaml.example — all profile examples (10 locations), (d) tela.yaml — local
@@ -11265,6 +11265,48 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T19:02:40.730584+00:00'
+    done_at: '2026-03-18T19:08:50.536888+00:00'
+    evidence: 'Commit hash(es):
+
+      - 1b63c761349ac04ba94c6dae904a08e33e08d0c5
+
+      - d750b040e9cfb94f6ab02f787ed1575fc856f884 (scope-repair revert)
+
+
+      Files changed:
+
+      - docs/USAGE.md
+
+      - README.md
+
+      - tela.yaml.example
+
+
+      grep -rn ''side_effect_policy'' docs/USAGE.md output:
+
+      - no matches
+
+
+      grep -rn ''side_effect_policy'' README.md output:
+
+      - no matches
+
+
+      grep -rn ''side_effect_policy'' tela.yaml.example output:
+
+      - no matches
+
+
+      grep -rn ''side_effect_policy'' tela.yaml output:
+
+      - file not found in repo
+
+
+      Gaps/Notes:
+
+      - `tela.yaml` is absent in repository, so no in-repo modification was possible.
+
+      - Historical references remain in ADR/MIGRATION documentation by design.'
   - id: cap.docs.gate
     name: Gate review
     status: pending
