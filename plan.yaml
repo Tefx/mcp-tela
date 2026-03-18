@@ -10662,7 +10662,7 @@ phases:
       - Gate PASS with 9/9 requested scenarios covered and correct red-green pattern.'
 - id: cap.impl
   name: Core Implementation
-  status: in_progress
+  status: done
   depends_on:
   - cap.test
   steps:
@@ -11000,7 +11000,7 @@ phases:
       - MIGRATION-003 override handling and migration constraints'
   - id: cap.impl.retest-gate-remediation
     name: Retest cap.impl gate remediation
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, retest the full `cap.impl.gate` remediation
       from a fresh perspective.
 
@@ -11041,9 +11041,31 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-18T18:36:46.217582+00:00'
+    done_at: '2026-03-18T18:39:50.544638+00:00'
+    evidence: 'Artifact:
+
+      - Independent retest run on post-fix state
+
+
+      Verification:
+
+      - Targeted override-ceiling and enforcement tests pass
+
+      - No stale `check_side_effect` imports/references in exercised test modules
+
+      - No stale `.side_effect_policy` field-access references in exercised test modules
+
+      - Regression check confirms prior bypass path is closed
+
+
+      Spec link:
+
+      - ADR-003 override ceiling invariant
+
+      - MIGRATION-003 migration invariants'
 - id: cap.shell
   name: Shell Layer Updates
-  status: locked
+  status: pending
   depends_on:
   - cap.impl
   steps:
