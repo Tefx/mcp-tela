@@ -11131,7 +11131,7 @@ phases:
       `profile.capabilities`.'
   - id: cap.shell.tests
     name: Update shell and integration tests
-    status: pending
+    status: claimed
     description: Update ALL shell-layer tests, integration tests, and repro tests
       to use capabilities format. Update test fixtures and conftest.py helpers. Fix
       tests/repro/test_medium.py and tests/repro/conftest.py SideEffectPolicy imports.
@@ -11152,6 +11152,8 @@ phases:
     depends_on:
     - cap.shell.upstream
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T18:47:04.852374+00:00'
   - id: cap.shell.gate
     name: Gate review
     status: pending
