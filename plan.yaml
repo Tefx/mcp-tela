@@ -11415,12 +11415,14 @@ phases:
       - `tools` alias support retained with migration warning per MIGRATION-003.'
   - id: cap.cleanup.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: ''
     verification: Quick Gate. Zero legacy references. All tests pass.
     depends_on:
     - cap.cleanup.remove-legacy
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T19:27:11.864464+00:00'
 - id: cap.final_gate
   name: Full Gate Review
   status: locked
