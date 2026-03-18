@@ -11536,7 +11536,7 @@ phases:
     agent: gate-reviewer
   - id: cap.final_gate.fix-field-name-consistency
     name: 'Batched fix: resolve docs/code field-name contradictions'
-    status: pending
+    status: claimed
     description: 'Fix ALL documentation/code field-name contradictions found by `cap.final_gate.spec`,
       not just the first mention.
 
@@ -11616,6 +11616,8 @@ phases:
     depends_on:
     - cap.final_gate.spec
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-18T19:42:42.681360+00:00'
   - id: cap.final_gate.retest-field-name-consistency
     name: Retest docs/code field-name consistency
     status: pending
