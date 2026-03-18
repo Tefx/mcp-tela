@@ -10673,7 +10673,7 @@ phases:
       - `SideEffectPolicy`/`side_effect_policy` is absent from DESIGN.md.'
   - id: cap.spec.interfaces-md
     name: Update INTERFACES.md to target state
-    status: claimed
+    status: done
     description: 'INTERFACES.md already updated in commit 382927d (user-authored).
       This step verifies the update is complete: profile schema uses capabilities:,
       tela.profiles response documented, enforcement chain is 3 per-call steps, side_effect_policy
@@ -10689,6 +10689,39 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T17:00:31.669908+00:00'
+    done_at: '2026-03-18T17:02:14.953016+00:00'
+    evidence: 'Commit hash(es):
+
+      - a09ce79c52ab145fc7bf219d551a34c4c037aa9e
+
+
+      Files changed:
+
+      - docs/INTERFACES.md
+
+
+      grep -n ''side_effect_policy'' docs/INTERFACES.md output:
+
+      - 180:- `side_effect_policy` is not part of `tela.profiles` output in the target
+      model
+
+
+      Profile schema key: capabilities
+
+
+      tela.profiles response format: documented
+
+      - Migration payload includes both "tools" and "capabilities" keys
+
+      - Post-migration canonical payload includes "capabilities" key only
+
+
+      Gaps/Notes:
+
+      - Added migration/backward-compatibility `tela.profiles` payload example with
+      both keys.
+
+      - Enforcement chain already documented as 3 per-call steps; no gap found there.'
   - id: cap.spec.gate
     name: Spec migration gate review
     status: pending
