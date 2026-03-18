@@ -10044,7 +10044,7 @@ phases:
       - no dead_export escape hatch added in this contract step'
   - id: rt.downstream.connect
     name: Implement real connect_all
-    status: pending
+    status: claimed
     description: 'Implement real connect_all after contract and tests are in place:
       import fastmcp, spawn stdio child processes using ServerConfig.command/args/env,
       connect SSE clients using ServerConfig.url, enumerate tools via MCP `tools/list`,
@@ -10074,6 +10074,8 @@ phases:
     - rt.downstream.contract
     - rt.downstream.test
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T20:39:38.123901+00:00'
   - id: rt.downstream.call
     name: Implement real call_tool and re_enumerate
     status: pending
