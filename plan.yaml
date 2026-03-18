@@ -11487,7 +11487,7 @@ phases:
       - Capability-only migration target and cleanup commitments'
   - id: cap.final_gate.spec
     name: Verify docs match implementation
-    status: pending
+    status: claimed
     description: Verify docs/DESIGN.md and docs/INTERFACES.md match the implementation
       post-migration. Verify ADR-003 is fully realized.
     verification: Spec matches implementation. ADR-003 fully realized. No contradictions
@@ -11495,6 +11495,8 @@ phases:
     depends_on:
     - cap.final_gate.wiring
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-18T19:38:43.825708+00:00'
   - id: cap.final_gate.gate
     name: Full gate review
     status: pending
