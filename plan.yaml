@@ -11740,7 +11740,7 @@ phases:
       - INTERFACES field naming sections and corresponding implementation points'
   - id: cap.final_gate.fix-runtime-static-blockers
     name: Fix batched runtime and static-analysis blockers from cap.final_gate.gate
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by `cap.final_gate.gate` for the cap final
       gate surface. This is one batched remediation step for ALL of these, not just
       the first.
@@ -11853,6 +11853,8 @@ phases:
     depends_on:
     - cap.final_gate.gate
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T19:56:52.438315+00:00'
   - id: cap.final_gate.retest-runtime-static-blockers
     name: Independent retest of batched runtime and static-analysis blockers
     status: pending
