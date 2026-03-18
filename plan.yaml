@@ -10115,7 +10115,7 @@ phases:
     agent: gate-reviewer
   - id: rt.downstream.test
     name: Test connect/disconnect lifecycle and tools list behavior
-    status: claimed
+    status: done
     description: 'Define and add downstream client tests before implementation. Cover
       stdio and SSE connection setup, connect_all/disconnect_all lifecycle, MCP `tools/list`
       enumeration, empty-or-failed registry handling, and teardown/cleanup semantics
@@ -10135,6 +10135,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T20:32:30.343296+00:00'
+    done_at: '2026-03-18T20:39:03.681883+00:00'
+    evidence: 'Artifact:
+
+      - Commit: ddba3fc9a8804e40e73e4dd2d54f306bae00a333
+
+
+      Verification:
+
+      - downstream shell test suite passes in step scope
+
+      - added pre-implementation lifecycle/tools-list coverage with stdio+SSE fixture
+      shapes
+
+      - invar guard changed-scope pass
+
+
+      Spec link:
+
+      - downstream client contract section in INTERFACES and rt.downstream.contract
+      outputs
+
+
+      Notes:
+
+      - out-of-scope respected (no product downstream manager implementation changes).'
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
