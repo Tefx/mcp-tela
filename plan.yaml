@@ -11345,7 +11345,7 @@ phases:
       - Gate PASS for cap.docs'
 - id: cap.cleanup
   name: Remove Deprecated Code
-  status: in_progress
+  status: done
   depends_on:
   - cap.docs
   steps:
@@ -11415,7 +11415,7 @@ phases:
       - `tools` alias support retained with migration warning per MIGRATION-003.'
   - id: cap.cleanup.gate
     name: Gate review
-    status: claimed
+    status: done
     description: ''
     verification: Quick Gate. Zero legacy references. All tests pass.
     depends_on:
@@ -11423,9 +11423,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T19:27:11.864464+00:00'
+    done_at: '2026-03-18T19:30:00.832327+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 6a38a9b
+
+
+      Verification:
+
+      - No `SideEffectPolicy`, `check_side_effect`, or `side_effect_policy` references
+      in `src/tela/`
+
+      - Core tests passed
+
+      - invar guard passed
+
+      - Wiring/escape-hatch/runnable/integration sections reviewed for gate completeness
+
+
+      Spec link:
+
+      - cap.cleanup removal objective with migration alias retained
+
+
+      Result:
+
+      - Gate PASS'
 - id: cap.final_gate
   name: Full Gate Review
-  status: locked
+  status: pending
   depends_on:
   - cap.cleanup
   steps:
