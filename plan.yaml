@@ -10927,7 +10927,7 @@ phases:
       - `tests/core/test_enforcement.py` ImportError for `check_side_effect`'
   - id: cap.impl.fix-gate-blockers
     name: Fix cap.impl gate blockers
-    status: claimed
+    status: done
     description: "Fix ALL reported issues from `cap.impl.gate`, not just the first.\n\
       \n## Blockers to Fix (ALL of these)\n1. Override-ceiling invariant bypass in\
       \ enforcement flow.\n   - Scope: `check_tool_override` and the `enforce` early-return\
@@ -10969,6 +10969,35 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T18:30:44.760333+00:00'
+    done_at: '2026-03-18T18:36:16.380242+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 8cef4e6
+
+
+      Verification:
+
+      - Run: `uv run pytest tests/core/test_enforcement.py::test_enforce_override_allow_does_not_bypass_posture_ceiling`
+      -> pass
+
+      - Run: `uv run pytest tests/core/test_capability_only_profiles.py::TestOverrideCeilingInvariant`
+      -> pass
+
+      - Run: focused suite for enforcement/models/upstream migration paths -> pass
+
+      - Run: `grep -rn ''check_side_effect'' tests src/tela/core/enforcement.py` ->
+      no stale imports/references
+
+      - Run: `grep -rn ''\.side_effect_policy'' tests` -> no stale field-access references
+
+      - Run: `invar guard --changed` -> passed
+
+
+      Spec link:
+
+      - ADR-003 override ceiling invariant
+
+      - MIGRATION-003 override handling and migration constraints'
   - id: cap.impl.retest-gate-remediation
     name: Retest cap.impl gate remediation
     status: pending
