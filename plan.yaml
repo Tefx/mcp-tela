@@ -11071,7 +11071,7 @@ phases:
   steps:
   - id: cap.shell.upstream
     name: Update upstream.py and upstream_utils.py
-    status: claimed
+    status: done
     description: Update upstream.py handle_profiles_list() to emit both `capabilities`
       and `tools` keys during migration period (per ADR-003 tela.profiles API section).
       Update upstream_utils.py filter_tools_for_profile() and enforce_tool_call()
@@ -11089,6 +11089,46 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T18:43:23.505955+00:00'
+    done_at: '2026-03-18T18:46:35.906413+00:00'
+    evidence: 'Commit hash(es):
+
+      - d9bcb9fdb21a9c0aa91ec1c5adffdaa5321e9d07
+
+
+      Files changed:
+
+      - src/tela/shell/upstream.py
+
+      - src/tela/shell/upstream_utils.py
+
+
+      grep -n ''side_effect_policy'' src/tela/shell/ output:
+
+      - no matches
+
+
+      grep -n ''\.tools'' src/tela/shell/upstream_utils.py output:
+
+      - no matches
+
+
+      invar guard output:
+
+      - passed
+
+
+      pytest -x output:
+
+      - 69 passed (focused shell/core suite)
+
+
+      Gaps/Notes:
+
+      - `handle_profiles_list()` now emits both `capabilities` and legacy `tools`
+      during migration.
+
+      - Shell-layer docs/usage updated to capability terminology; enforcement uses
+      `profile.capabilities`.'
   - id: cap.shell.tests
     name: Update shell and integration tests
     status: pending
