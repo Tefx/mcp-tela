@@ -11309,12 +11309,14 @@ phases:
       - Historical references remain in ADR/MIGRATION documentation by design.'
   - id: cap.docs.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: ''
     verification: Quick Gate. Docs match implementation. No stale references.
     depends_on:
     - cap.docs.update
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T19:09:18.151311+00:00'
 - id: cap.cleanup
   name: Remove Deprecated Code
   status: locked
