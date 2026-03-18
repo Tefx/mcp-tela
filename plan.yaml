@@ -11451,18 +11451,20 @@ phases:
       - Gate PASS'
 - id: cap.final_gate
   name: Full Gate Review
-  status: pending
+  status: in_progress
   depends_on:
   - cap.cleanup
   steps:
   - id: cap.final_gate.wiring
     name: Full W1-W8 wiring audit
-    status: pending
+    status: claimed
     description: 'Full W1-W8 wiring audit focusing on: no dead exports from removed
       functions, no ghost schema fields from removed SideEffectPolicy, no unconsumed
       config fields.'
     verification: W1-W8 all PASS. No dead exports from ADR-003 changes. No ghost fields.
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-18T19:30:35.610443+00:00'
   - id: cap.final_gate.spec
     name: Verify docs match implementation
     status: pending
