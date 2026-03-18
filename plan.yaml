@@ -11588,6 +11588,56 @@ phases:
     depends_on:
     - cap.final_gate.spec
     agent: software-architect
+  - id: cap.final_gate.retest-field-name-consistency
+    name: Retest docs/code field-name consistency
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`doc-reviewer`), re-check the capability/profile
+      contract after `cap.final_gate.fix-field-name-consistency`.
+
+
+      YOUR GOAL IS TO FIND REMAINING CONTRADICTIONS, not to confirm the first fix
+      looks plausible.
+
+
+      Required checks:
+
+      - Profiles response field naming in docs matches implemented behavior
+
+      - `CapabilityToken` field naming in docs matches implemented behavior
+
+      - `docs/INTERFACES.md` uses one canonical naming scheme consistently
+
+      - No contradictory leftover references to `profile_id` remain where the implementation
+      exposes `name` or `tools_profile`
+
+
+      Independence Level: L1
+
+
+      spec_refs:
+
+      - `docs/INTERFACES.md`
+
+      - capability/profile implementation files under `src/`
+
+
+      touch_paths:
+
+      - `docs/INTERFACES.md`
+
+      - capability/profile implementation files under `src/`
+
+
+      step_type: verification'
+    verification: '- Compare docs against the implemented profiles response and `CapabilityToken`
+      definitions
+
+      - Confirm field-name consistency across docs and code with cited file locations
+
+      - Report any remaining contradictions before `cap.final_gate.gate` proceeds'
+    depends_on:
+    - cap.final_gate.fix-field-name-consistency
+    agent: doc-reviewer
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
