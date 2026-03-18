@@ -9822,7 +9822,7 @@ phases:
       finalized documented example surface.'
   - id: rt.env_field.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: 'Gate review for the env field phase.
 
 
@@ -9847,6 +9847,8 @@ phases:
     - rt.env_field.test
     - rt.env_field.impl
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-18T20:20:22.006234+00:00'
   - id: rt.env_field.contract
     name: Define env field contract and semantics
     status: done
