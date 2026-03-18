@@ -11643,7 +11643,7 @@ phases:
       - CapabilityToken canonical field is `profile_name`'
   - id: cap.final_gate.retest-field-name-consistency
     name: Retest docs/code field-name consistency
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`doc-reviewer`), re-check the capability/profile
       contract after `cap.final_gate.fix-field-name-consistency`.
 
@@ -11691,6 +11691,8 @@ phases:
     depends_on:
     - cap.final_gate.fix-field-name-consistency
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-18T19:47:36.676587+00:00'
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
