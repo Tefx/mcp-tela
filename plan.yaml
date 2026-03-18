@@ -10810,7 +10810,7 @@ phases:
       - This step verified conformance and found no additional implementation required.'
   - id: cap.impl.config-catalog
     name: Update config parser and builtin catalog
-    status: pending
+    status: claimed
     description: 'Update config.py parse_config(): accept both tools: and capabilities:
       YAML keys (not both in same profile), emit deprecation warning for tools:, apply
       side_effect_policy→ceiling capping per MIGRATION-003 rules. Enforce override-ceiling
@@ -10834,6 +10834,8 @@ phases:
     depends_on:
     - cap.impl.enforcement
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-18T18:12:48.566840+00:00'
   - id: cap.impl.gate
     name: Gate review
     status: pending
