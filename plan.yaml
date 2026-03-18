@@ -11065,7 +11065,7 @@ phases:
       - MIGRATION-003 migration invariants'
 - id: cap.shell
   name: Shell Layer Updates
-  status: in_progress
+  status: done
   depends_on:
   - cap.impl
   steps:
@@ -11200,7 +11200,7 @@ phases:
       code paths by design.'
   - id: cap.shell.gate
     name: Gate review
-    status: claimed
+    status: done
     description: ''
     verification: Full Gate. All tests pass. No stale side_effect_policy references
       outside migration code.
@@ -11209,9 +11209,36 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T18:59:04.220552+00:00'
+    done_at: '2026-03-18T19:02:16.860936+00:00'
+    evidence: 'Artifact:
+
+      - Commit: a457bdd (shell tests)
+
+      - Commit: cf10067 (shell upstream)
+
+
+      Verification:
+
+      - Run: invar-tools guard --all -> passed
+
+      - Run: pytest tests/ --ignore=tests/repro/test_liveness.py -> 351 passed
+
+      - Run: grep for `side_effect_policy` under `src/tela/shell/` -> no matches
+
+      - Run: grep for `profile.capabilities` usage in enforcement -> verified
+
+
+      Spec link:
+
+      - ADR-003 tela.profiles migration response requirements
+
+
+      Result:
+
+      - Gate PASS; no blocking issues in cap.shell phase.'
 - id: cap.docs
   name: Documentation Sync
-  status: locked
+  status: pending
   depends_on:
   - cap.shell
   steps:
