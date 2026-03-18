@@ -10886,7 +10886,7 @@ phases:
       side-effect migration behavior, and enforces override ceiling during parse path.'
   - id: cap.impl.gate
     name: Gate review
-    status: claimed
+    status: done
     description: ''
     verification: 'Full Gate. E1: all ADR-003 rules implemented. E4: all cap.test
       tests pass. Contract strength verified.'
@@ -10895,6 +10895,36 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T18:24:17.009398+00:00'
+    done_at: '2026-03-18T18:30:09.466265+00:00'
+    evidence: 'Gate review completed with blocker detection and batched remediation
+      created.
+
+
+      Detected blockers:
+
+      - Override-ceiling invariant bypass in enforcement path: ALLOW override can
+      bypass posture ceiling.
+
+      - Stale test imports for removed `check_side_effect`.
+
+
+      Should-fix:
+
+      - Tests still referencing removed `side_effect_policy` field.
+
+
+      Planner remediation created:
+
+      - `cap.impl.fix-gate-blockers` (depends on `cap.impl.gate`)
+
+      - `cap.impl.retest-gate-remediation` (depends on `cap.impl.fix-gate-blockers`)
+
+
+      Verification excerpts from gate:
+
+      - Override-ceiling tests fail in `tests/core/test_capability_only_profiles.py::TestOverrideCeilingInvariant`
+
+      - `tests/core/test_enforcement.py` ImportError for `check_side_effect`'
   - id: cap.impl.fix-gate-blockers
     name: Fix cap.impl gate blockers
     status: pending
