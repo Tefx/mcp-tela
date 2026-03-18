@@ -29,7 +29,13 @@ class Posture(str, Enum):
 
 
 class SideEffectPolicy(str, Enum):
-    """Profile side-effect policy mode."""
+    """Profile side-effect policy mode.
+
+    .. deprecated::
+        Use ``ProfileConfig.capabilities`` instead. This enum is retained
+        for backward compatibility during migration and will be removed
+        in a future release.
+    """
 
     ALLOW = "allow"
     READ_ONLY = "read_only"
@@ -172,8 +178,6 @@ class ProfileConfig(BaseModel):
         validation_alias=AliasChoices("capabilities", "tools"),
     )
     tool_overrides: dict[str, ProfileToolOverrides] = Field(default_factory=dict)
-    # Migration compatibility: field remains during capability-only transition.
-    side_effect_policy: SideEffectPolicy = SideEffectPolicy.ALLOW
     default: bool = False
 
     @model_validator(mode="before")
