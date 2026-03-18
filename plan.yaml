@@ -10618,7 +10618,7 @@ phases:
       Support, tool_overrides Section, override downgrade/remove/reject rules'
   - id: cap.spec.design-md
     name: Update DESIGN.md to target state
-    status: pending
+    status: claimed
     description: 'DESIGN.md already updated in commit 382927d (user-authored). This
       step verifies the update is complete: enforcement chain is 3 per-call steps,
       all profile examples use capabilities:, SideEffectPolicy removed, override-ceiling
@@ -10632,6 +10632,8 @@ phases:
     depends_on:
     - cap.spec.finalize-adr-003-and-migration-003
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T16:59:03.562726+00:00'
   - id: cap.spec.interfaces-md
     name: Update INTERFACES.md to target state
     status: pending
