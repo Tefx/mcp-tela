@@ -10550,13 +10550,13 @@ phases:
     agent: gate-reviewer
 - id: cap.spec
   name: Spec and Design Document Migration
-  status: pending
+  status: in_progress
   depends_on:
   - retest2.full
   steps:
   - id: cap.spec.finalize-adr-003-and-migration-003
     name: Finalize ADR-003 and MIGRATION-003
-    status: pending
+    status: claimed
     description: 'Review and finalize the updated ADR-003 (Accepted) and MIGRATION-003
       documents. Key invariant added by user: ''No tool override may elevate access
       beyond capabilities[family]''. Migration must downgrade/remove/fail overrides
@@ -10568,6 +10568,8 @@ phases:
     - docs/ADR-003-gateway-capability-only-profiles.md
     - docs/MIGRATION-003-capability-only-profiles.md
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-18T16:46:26.670244+00:00'
   - id: cap.spec.design-md
     name: Update DESIGN.md to target state
     status: pending
