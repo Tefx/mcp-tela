@@ -10105,6 +10105,26 @@ phases:
     depends_on:
     - rt.downstream.call
     agent: gate-reviewer
+  - id: rt.downstream.test
+    name: Test connect/disconnect lifecycle and tools list behavior
+    status: pending
+    description: 'Define and add downstream client tests before implementation. Cover
+      stdio and SSE connection setup, connect_all/disconnect_all lifecycle, MCP `tools/list`
+      enumeration, empty-or-failed registry handling, and teardown/cleanup semantics
+      for spawned processes or sessions. Include at least one spec-derived fixture
+      for `ServerConfig.command`/`args`/`env` and one for URL-based downstream config.
+      Out of scope: product implementation changes in `connect_all`, `disconnect_all`,
+      `call_tool`, or `re_enumerate`.'
+    verification: '- Add focused tests for connect_all/disconnect_all lifecycle and
+      MCP `tools/list` behavior before implementation dispatch
+
+      - Cover main path and failure path: successful registry population, empty tool
+      list, connection failure, and disconnect cleanup
+
+      - Evidence names exact test modules/cases for downstream lifecycle behavior'
+    depends_on:
+    - rt.downstream.contract
+    agent: python-executor
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
   status: locked
