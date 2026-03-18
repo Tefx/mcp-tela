@@ -9,8 +9,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Mapping
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, model_validator
+
+from tela.core.contracts import post, pre
 
 
 # --- Enumerations ---
@@ -100,18 +103,94 @@ class ProfileToolOverrides(BaseModel):
     overrides: dict[str, "EnforcementVerdict"] = Field(default_factory=dict)
 
 
+@pre(lambda raw: raw is None or isinstance(raw, Mapping))
+@post(
+    lambda result: (
+        isinstance(result, dict) and ("capabilities" in result or "tools" not in result)
+    )
+)
+def normalize_profile_config_aliases(raw: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Normalize migration aliases for ``ProfileConfig`` inputs.
+
+    Migration contract:
+    - ``tools`` is accepted as an alias for ``capabilities``.
+    - If both are provided they must be equal.
+
+    Examples:
+        >>> normalize_profile_config_aliases({"name": "dev", "tools": {"fs": Posture.READ_ONLY}})["capabilities"]["fs"]
+        <Posture.READ_ONLY: 'read_only'>
+        >>> normalize_profile_config_aliases({"name": "dev", "capabilities": {"fs": Posture.READ_WRITE}})["capabilities"]["fs"]
+        <Posture.READ_WRITE: 'read_write'>
+        >>> normalize_profile_config_aliases({"tools": {"fs": Posture.READ_ONLY}, "capabilities": {"fs": Posture.READ_WRITE}})
+        Traceback (most recent call last):
+        ...
+        ValueError: ProfileConfig.tools and ProfileConfig.capabilities must match when both are provided
+
+    Args:
+        raw: Raw profile mapping before pydantic field validation.
+
+    Returns:
+        Normalized dict using ``capabilities`` as canonical key.
+
+    Raises:
+        ValueError: If both alias keys are provided with different values.
+    """
+
+    normalized: dict[str, Any] = {} if raw is None else dict(raw)
+    capabilities = normalized.get("capabilities")
+    tools = normalized.get("tools")
+
+    if capabilities is None and tools is not None:
+        normalized["capabilities"] = tools
+    elif capabilities is not None and tools is not None and capabilities != tools:
+        raise ValueError(
+            "ProfileConfig.tools and ProfileConfig.capabilities must match when both are provided"
+        )
+
+    return normalized
+
+
 class ProfileConfig(BaseModel):
     """Contract shape for a single profile configuration.
 
+    Migration contract: ``capabilities`` is canonical. ``tools`` remains an
+    accepted alias during migration.
+
     `default` marks the profile as the open-mode fallback candidate when the
     CLI does not supply `--default-profile`.
+
+    Examples:
+        >>> ProfileConfig(name="dev", capabilities={"fs": Posture.READ_ONLY}).capabilities["fs"]
+        <Posture.READ_ONLY: 'read_only'>
+        >>> ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE}).capabilities["fs"]
+        <Posture.READ_WRITE: 'read_write'>
     """
 
     name: str
-    tools: dict[str, Posture] = Field(default_factory=dict)
+    capabilities: dict[str, Posture] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("capabilities", "tools"),
+    )
     tool_overrides: dict[str, ProfileToolOverrides] = Field(default_factory=dict)
+    # Migration compatibility: field remains during capability-only transition.
     side_effect_policy: SideEffectPolicy = SideEffectPolicy.ALLOW
     default: bool = False
+
+    @pre(lambda cls, data: cls is ProfileConfig)
+    @post(lambda result: result is not None)
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_aliases(cls, data: Any) -> Any:
+        if isinstance(data, Mapping) or data is None:
+            return normalize_profile_config_aliases(data)
+        return data
+
+    @property
+    @post(lambda result: isinstance(result, dict))
+    def tools(self) -> dict[str, Posture]:
+        """Backward-compatible alias for ``capabilities`` during migration."""
+
+        return self.capabilities
 
 
 # --- Auth and Audit Configuration ---
@@ -152,6 +231,7 @@ class CapabilityToken(BaseModel):
         >>> tok.tools_profile
         'dev'
     """
+
     token_id: str
     tools_profile: str
     persona_ref: str | None = None
@@ -206,6 +286,7 @@ class MetaField(BaseModel):
     idempotency_key: str | None = None
     instance_id: str | None = None
     persona_id: str | None = None
+
 
 class AuditEntry(BaseModel):
     """A single audit log entry."""

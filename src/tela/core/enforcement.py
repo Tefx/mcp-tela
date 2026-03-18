@@ -1,4 +1,4 @@
-"""7-step enforcement chain for tool call authorization.
+"""3-step enforcement chain for per-call authorization.
 
 Pure decision logic: receives all inputs and returns an EnforcementResult.
 Does NOT perform I/O, validate tokens, or look up profiles.
@@ -14,9 +14,7 @@ from tela.core.models import (
     Posture,
     ProfileConfig,
     ResolvedTool,
-    SideEffectPolicy,
 )
-
 
 
 _POSTURE_ORDER = {
@@ -63,7 +61,7 @@ def check_family_admission(
 
     Examples:
         >>> from tela.core.models import ProfileConfig, Posture
-        >>> p = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
         >>> check_family_admission("fs", p).verdict
         <EnforcementVerdict.ALLOW: 'allow'>
         >>> check_family_admission("shell", p).verdict
@@ -77,7 +75,7 @@ def check_family_admission(
         EnforcementResult with ALLOW or DENY.
     """
 
-    if family in profile.tools:
+    if family in profile.capabilities:
         return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
 
     return EnforcementResult(
@@ -103,7 +101,7 @@ def check_tool_override(
 
     Examples:
         >>> from tela.core.models import ProfileConfig, Posture, EnforcementVerdict
-        >>> p = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
         >>> check_tool_override("read_file", "fs", p) is None
         True
 
@@ -135,7 +133,11 @@ def check_tool_override(
     )
 
 
-@pre(lambda tool_posture, family_ceiling, default_posture: isinstance(family_ceiling, Posture))
+@pre(
+    lambda tool_posture, family_ceiling, default_posture: isinstance(
+        family_ceiling, Posture
+    )
+)
 @post(lambda result: isinstance(result, EnforcementResult))
 def check_posture(
     tool_posture: Posture | None,
@@ -169,7 +171,7 @@ def check_posture(
     if effective == Posture.NONE and tool_posture is None:
         return EnforcementResult(
             verdict=EnforcementVerdict.DENY,
-            denied_by="posture_check",
+            denied_by="posture_ceiling",
             error_code="TOOL_UNCLASSIFIED",
             error_message="Tool is unclassified and server default_posture is NONE",
         )
@@ -179,53 +181,17 @@ def check_posture(
 
     return EnforcementResult(
         verdict=EnforcementVerdict.DENY,
-        denied_by="posture_check",
+        denied_by="posture_ceiling",
         error_code="AUTHZ_DENY",
         error_message=f"Tool posture {effective.value} exceeds ceiling {family_ceiling.value}",
     )
 
 
-@pre(lambda effective_posture, side_effect_policy: isinstance(effective_posture, Posture))
-@post(lambda result: isinstance(result, EnforcementResult))
-def check_side_effect(
-    effective_posture: Posture,
-    side_effect_policy: SideEffectPolicy,
-) -> EnforcementResult:
-    """Check if a tool call's posture is compatible with side-effect policy.
-
-    If posture > read_only and policy is read_only: DENY.
-
-    Examples:
-        >>> check_side_effect(Posture.READ_WRITE, SideEffectPolicy.READ_ONLY).verdict
-        <EnforcementVerdict.DENY: 'deny'>
-        >>> check_side_effect(Posture.READ_ONLY, SideEffectPolicy.READ_ONLY).verdict
-        <EnforcementVerdict.ALLOW: 'allow'>
-        >>> check_side_effect(Posture.DESTRUCTIVE, SideEffectPolicy.ALLOW).verdict
-        <EnforcementVerdict.ALLOW: 'allow'>
-
-    Args:
-        effective_posture: The tool's effective posture.
-        side_effect_policy: Profile's side-effect policy.
-
-    Returns:
-        EnforcementResult with ALLOW or DENY.
-    """
-
-    if side_effect_policy == SideEffectPolicy.ALLOW:
-        return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
-
-    if posture_le(effective_posture, Posture.READ_ONLY):
-        return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
-
-    return EnforcementResult(
-        verdict=EnforcementVerdict.DENY,
-        denied_by="side_effect_check",
-        error_code="AUTHZ_DENY",
-        error_message=f"Side-effect policy is read_only but tool posture is {effective_posture.value}",
+@pre(
+    lambda tool_name, tool, profile, token_result, default_posture: (
+        token_result.verdict == EnforcementVerdict.ALLOW
     )
-
-
-@pre(lambda tool_name, tool, profile, token_result, default_posture: token_result.verdict == EnforcementVerdict.ALLOW)
+)
 @post(lambda result: isinstance(result, EnforcementResult))
 def enforce(
     tool_name: str,
@@ -234,14 +200,14 @@ def enforce(
     token_result: EnforcementResult,
     default_posture: Posture,
 ) -> EnforcementResult:
-    """Run the 7-step enforcement chain for a single tool call.
+    """Run the 3-step per-call enforcement chain for a tool call.
 
     Precondition: token_result.verdict MUST be ALLOW.
 
     Examples:
         >>> from tela.core.models import ResolvedTool, ProfileConfig, Posture, EnforcementResult, EnforcementVerdict
         >>> tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
-        >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
         >>> allow = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
         >>> enforce("read_file", tool, profile, allow, Posture.NONE).verdict
         <EnforcementVerdict.ALLOW: 'allow'>
@@ -257,30 +223,21 @@ def enforce(
         EnforcementResult with final verdict.
     """
 
-    # Step 1: Token validation (pre-computed, ALLOW required by precondition)
-    # Step 2: Profile lookup (already resolved by caller)
-
-    # Step 3: Family admission
+    # Step 1: Family admission
     family_result = check_family_admission(tool.family, profile)
     if family_result.verdict == EnforcementVerdict.DENY:
         return family_result
 
-    # Step 4: Tool override check
+    # Step 2: Tool override check
     override_result = check_tool_override(tool_name, tool.family, profile)
     if override_result is not None:
         return override_result
 
-    # Step 5: Posture check
-    family_ceiling = profile.tools[tool.family]
+    # Step 3: Posture ceiling
+    family_ceiling = profile.capabilities[tool.family]
     posture_result = check_posture(tool.posture, family_ceiling, default_posture)
     if posture_result.verdict == EnforcementVerdict.DENY:
         return posture_result
 
-    # Step 6: Side-effect check
-    effective = tool.posture if tool.posture is not None else default_posture
-    side_effect_result = check_side_effect(effective, profile.side_effect_policy)
-    if side_effect_result.verdict == EnforcementVerdict.DENY:
-        return side_effect_result
-
-    # Step 7: Final verdict
+    # Final verdict
     return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
