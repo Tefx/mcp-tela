@@ -9730,11 +9730,58 @@ phases:
   - id: rt.env_field.impl
     name: Add env field to ServerConfig
     status: pending
-    description: 'Add env: dict[str, str] = Field(default_factory=dict) to ServerConfig
-      in models.py. Update config parser to handle env field. Update tela.yaml.example
-      with env example.'
-    verification: invar guard passes. ServerConfig accepts env field. Config parser
-      handles env with ${VAR} expansion.
+    description: 'Implement the `ServerConfig.env` feature after contract and test
+      acceptance are defined.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+
+      Files / surfaces:
+
+      - `models.py`: add `env: dict[str, str] = Field(default_factory=dict)` to `ServerConfig`
+
+      - config parser: honor the contract-defined `env` shape and `${VAR}` expansion
+      semantics
+
+      - `tela.yaml.example`: document the supported `env` mapping shape
+
+
+      Execution rationale:
+
+      - This is a new feature on config/persistence-adjacent surfaces, so implementation
+      must follow explicit upstream contract and test steps
+
+      - `rt.env_field.impl` depends on `rt.env_field.contract` and `rt.env_field.test`
+      to preserve contract-first planning and keep acceptance stable before code lands
+
+
+      Failure-mode checklist:
+
+      - missing `env` field falls back to `{}`
+
+      - explicit empty mapping stays an explicit empty mapping
+
+      - `${VAR}` expansion follows the contract-defined success/failure semantics
+
+      - parser/model behavior does not silently rewrite unrelated config fields
+
+
+      Out-of-scope guardrail:
+
+      - downstream runtime consumption of env values is deferred to later runtime
+      phases'
+    verification: '- Main path: targeted model/parser tests for `ServerConfig.env`
+      and `${VAR}` expansion pass
+
+      - Failure path: regression covers missing `env` and contract-defined expansion
+      fallback behavior
+
+      - Example config is updated to the contract-defined shape
+
+      - `invar guard` target for the changed scope is ready for downstream verification'
     evidence_template: 'Commit hash(es):
 
       Files changed:
@@ -9742,6 +9789,9 @@ phases:
       Verification: invar guard output + test showing env field parsed
 
       Gaps/Notes:'
+    depends_on:
+    - rt.env_field.contract
+    - rt.env_field.test
     agent: python-executor
   - id: rt.env_field.gate
     name: Gate review
