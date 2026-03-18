@@ -61,6 +61,31 @@ class TestProfileConfig:
         p = ProfileConfig(name="dev", tools={"read_file": Posture.READ_ONLY})
         assert p.tools["read_file"] == Posture.READ_ONLY
 
+    def test_capabilities_with_posture(self) -> None:
+        p = ProfileConfig(name="dev", capabilities={"read_file": Posture.READ_WRITE})
+        assert p.capabilities["read_file"] == Posture.READ_WRITE
+
+    def test_matching_tools_and_capabilities_are_accepted(self) -> None:
+        p = ProfileConfig(
+            name="dev",
+            tools={"read_file": Posture.READ_ONLY},
+            capabilities={"read_file": Posture.READ_ONLY},
+        )
+        assert p.capabilities["read_file"] == Posture.READ_ONLY
+
+    def test_conflicting_tools_and_capabilities_raise_value_error(self) -> None:
+        with pytest.raises(
+            ValidationError, match="must match when both are provided"
+        ) as exc_info:
+            ProfileConfig(
+                name="dev",
+                tools={"read_file": Posture.READ_ONLY},
+                capabilities={"read_file": Posture.READ_WRITE},
+            )
+
+        root_error = exc_info.value.errors()[0]["ctx"]["error"]
+        assert isinstance(root_error, ValueError)
+
     def test_name_required(self) -> None:
         with pytest.raises(ValidationError):
             ProfileConfig()  # type: ignore[call-arg]

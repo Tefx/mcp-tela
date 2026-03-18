@@ -176,10 +176,10 @@ class ProfileConfig(BaseModel):
     side_effect_policy: SideEffectPolicy = SideEffectPolicy.ALLOW
     default: bool = False
 
-    @pre(lambda cls, data: cls is ProfileConfig)
-    @post(lambda result: result is not None)
     @model_validator(mode="before")
     @classmethod
+    @pre(lambda cls, data: cls is ProfileConfig)
+    @post(lambda result: result is not None)
     def _normalize_aliases(cls, data: Any) -> Any:
         if isinstance(data, Mapping) or data is None:
             return normalize_profile_config_aliases(data)
