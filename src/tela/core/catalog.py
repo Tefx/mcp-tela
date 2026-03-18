@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Mapping
 
 from tela.core.contracts import pre, post
-from tela.core.models import Posture, ProfileConfig, SideEffectPolicy
+from tela.core.models import Posture, ProfileConfig
 
 
 # The 7 prebuilt profiles from INTERFACES.md v1 catalog.
@@ -22,66 +22,59 @@ from tela.core.models import Posture, ProfileConfig, SideEffectPolicy
 BUILTIN_PROFILES: dict[str, ProfileConfig] = {
     "read_only": ProfileConfig(
         name="read_only",
-        tools={"filesystem": Posture.READ_ONLY},
-        side_effect_policy=SideEffectPolicy.READ_ONLY,
+        capabilities={"filesystem": Posture.READ_ONLY},
         default=False,
     ),
     "fetch_external": ProfileConfig(
         name="fetch_external",
-        tools={
+        capabilities={
             "filesystem": Posture.READ_ONLY,
             "network": Posture.READ_ONLY,
         },
-        side_effect_policy=SideEffectPolicy.READ_ONLY,
         default=False,
     ),
     "modify_local": ProfileConfig(
         name="modify_local",
-        tools={
+        capabilities={
             "filesystem": Posture.READ_WRITE,
         },
-        side_effect_policy=SideEffectPolicy.ALLOW,
         default=False,
     ),
     "send_external": ProfileConfig(
         name="send_external",
-        tools={
+        capabilities={
             "filesystem": Posture.READ_ONLY,
             "network": Posture.READ_WRITE,
         },
-        side_effect_policy=SideEffectPolicy.ALLOW,
         default=False,
     ),
     "orchestrate": ProfileConfig(
         name="orchestrate",
-        tools={
+        capabilities={
             "filesystem": Posture.READ_ONLY,
             "network": Posture.READ_ONLY,
             "orchestration": Posture.READ_WRITE,
         },
-        side_effect_policy=SideEffectPolicy.ALLOW,
         default=False,
     ),
     "execute_safe": ProfileConfig(
         name="execute_safe",
-        tools={
+        capabilities={
             "filesystem": Posture.READ_WRITE,
             "network": Posture.READ_WRITE,
             "orchestration": Posture.READ_WRITE,
             "execution": Posture.READ_WRITE,
         },
-        side_effect_policy=SideEffectPolicy.ALLOW,
         default=False,
     ),
     "execute_full": ProfileConfig(
         name="execute_full",
-        tools={
+        capabilities={
             "filesystem": Posture.DESTRUCTIVE,
             "network": Posture.DESTRUCTIVE,
             "orchestration": Posture.DESTRUCTIVE,
             "execution": Posture.DESTRUCTIVE,
         },
-        side_effect_policy=SideEffectPolicy.ALLOW,
         default=False,
     ),
 }
@@ -99,8 +92,8 @@ def get_builtin_profile(name: str) -> ProfileConfig | None:
         The ProfileConfig if found, else None.
 
     Examples:
-        >>> get_builtin_profile("read_only").side_effect_policy.value
-        'read_only'
+        >>> get_builtin_profile("read_only").capabilities["filesystem"]
+        <Posture.READ_ONLY: 'read_only'>
         >>> get_builtin_profile("nonexistent") is None
         True
     """
@@ -121,9 +114,7 @@ def list_builtin_profiles() -> list[str]:
     return sorted(BUILTIN_PROFILES.keys())
 
 
-@pre(
-    lambda user_profiles: all(isinstance(k, str) for k in user_profiles.keys())
-)
+@pre(lambda user_profiles: all(isinstance(k, str) for k in user_profiles.keys()))
 @post(lambda result: len(result) >= len(BUILTIN_PROFILES))
 def merge_with_builtins(
     user_profiles: Mapping[str, ProfileConfig],
@@ -143,7 +134,7 @@ def merge_with_builtins(
         >>> result = merge_with_builtins({})
         >>> len(result) == 7
         True
-        >>> custom = ProfileConfig(name="read_only", tools={}, default=True)
+        >>> custom = ProfileConfig(name="read_only", capabilities={}, default=True)
         >>> result = merge_with_builtins({"read_only": custom})
         >>> result["read_only"].default
         True

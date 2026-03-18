@@ -6,20 +6,105 @@ already-provided data and enforce deterministic validation contracts.
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Mapping
 
 from tela.core.contracts import pre, post
 from pydantic import ValidationError
 
-from tela.core.models import AuthMode, ProfileConfig, TelaConfig
+from tela.core.models import AuthMode, Posture, ProfileConfig, TelaConfig
 from tela.core.catalog import merge_with_builtins
-
-
 
 
 # Re-export for backward compatibility
 from tela.core.errors import ConfigContractError  # noqa: F401
+
+
+@pre(
+    lambda profile_data, profile_name: (
+        isinstance(profile_data, dict)
+        and isinstance(profile_name, str)
+        and len(profile_name) > 0
+    )
+)
+@post(lambda result: isinstance(result, dict))
+def _apply_side_effect_policy_migration(
+    profile_data: dict,
+    profile_name: str,
+) -> dict:
+    """Apply migration logic for legacy side_effect_policy field.
+
+    Migration rules per MIGRATION-003:
+    - side_effect_policy: read_only -> cap all family ceilings to READ_ONLY
+    - side_effect_policy: allow -> drop the field (no change)
+    - side_effect_policy: approval_required -> error (not supported)
+
+    Note: This function does NOT handle tools→capabilities migration.
+    That is done by normalize_profile_config_aliases in models.py.
+
+    Args:
+        profile_data: Raw profile dict from YAML parsing.
+        profile_name: Profile name for error messages.
+
+    Returns:
+        Migrated profile dict with side_effect_policy removed.
+    """
+    result = dict(profile_data)
+
+    side_effect_policy = result.pop("side_effect_policy", None)
+    if side_effect_policy is None:
+        return result
+
+    # Emit deprecation warning
+    warnings.warn(
+        f"Profile '{profile_name}': 'side_effect_policy' is deprecated. "
+        "Use 'capabilities' to express posture ceilings directly.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+
+    # Handle policy values
+    if side_effect_policy == "approval_required":
+        raise ConfigContractError(
+            code="MIGRATION_ERROR",
+            message=(
+                f"Profile '{profile_name}': 'side_effect_policy: approval_required' "
+                "is not supported. Runtime approval belongs to anima. "
+                "Remove this field or switch to capability-only profiles."
+            ),
+        )
+
+    if side_effect_policy == "read_only":
+        # Get the current capabilities (from either 'capabilities' or 'tools' key)
+        # The tools→capabilities normalization will be done by normalize_profile_config_aliases
+        capabilities = result.get("capabilities") or result.get("tools", {})
+
+        # Emit deprecation warning for legacy tools key
+        if "tools" in result:
+            warnings.warn(
+                f"Profile '{profile_name}': 'tools:' is deprecated. "
+                "Use 'capabilities:' instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        # Cap all family ceilings to READ_ONLY
+        result["capabilities"] = {
+            family: Posture.READ_ONLY for family in capabilities.keys()
+        }
+        # Remove tools key so it doesn't conflict with capabilities
+        result.pop("tools", None)
+        warnings.warn(
+            f"Profile '{profile_name}': Capped all capabilities to read_only due to "
+            "legacy side_effect_policy. Update config to use explicit capabilities.",
+            UserWarning,
+            stacklevel=3,
+        )
+
+    # side_effect_policy: allow is silently dropped (capabilities already correct)
+
+    return result
 
 
 @pre(
@@ -90,7 +175,9 @@ expand_env_vars = _expand_env_token
         and all(isinstance(key, str) for key in env_vars.keys())
     )
 )
-@post(lambda result: isinstance(result, (str, int, float, bool, list, dict, type(None))))
+@post(
+    lambda result: isinstance(result, (str, int, float, bool, list, dict, type(None)))
+)
 def _expand_env_in_object(value: object, env_vars: Mapping[str, str]) -> object:
     """Recursively expand env tokens in string leaves."""
 
@@ -141,11 +228,28 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
             )
         # Inject name from dict keys for servers and profiles sections.
         # INTERFACES.md specifies that the YAML key IS the server/profile name.
-        for section in ('servers', 'profiles'):
+        for section in ("servers", "profiles"):
             if section in expanded and isinstance(expanded[section], dict):
                 for key, value in expanded[section].items():
-                    if isinstance(value, dict) and 'name' not in value:
-                        value['name'] = key
+                    if isinstance(value, dict):
+                        if "name" not in value:
+                            value["name"] = key
+        # Migrate profiles: apply side_effect_policy → capabilities capping
+        profiles_section = expanded.get("profiles", {})
+        if isinstance(profiles_section, dict):
+            for profile_name, profile_data in profiles_section.items():
+                if isinstance(profile_data, dict):
+                    profiles_section[profile_name] = (
+                        _apply_side_effect_policy_migration(profile_data, profile_name)
+                    )
+                    # Emit deprecation warning for legacy 'tools:' key if still present
+                    if "tools" in profiles_section[profile_name]:
+                        warnings.warn(
+                            f"Profile '{profile_name}': 'tools:' is deprecated. "
+                            "Use 'capabilities:' instead.",
+                            DeprecationWarning,
+                            stacklevel=2,
+                        )
         config = TelaConfig.model_validate(expanded)
         # Wire in builtin profiles when user provides none
         if not config.profiles:
@@ -170,7 +274,12 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
         and (cli_default_profile is None or len(cli_default_profile) > 0)
     )
 )
-@post(lambda result: isinstance(result, list) and all(isinstance(e, str) and len(e) > 0 for e in result))
+@post(
+    lambda result: (
+        isinstance(result, list)
+        and all(isinstance(e, str) and len(e) > 0 for e in result)
+    )
+)
 def validate_config(
     config: TelaConfig, cli_default_profile: str | None = None
 ) -> list[str]:

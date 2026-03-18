@@ -34,23 +34,20 @@ class TestBuiltinProfiles:
     def test_read_only_profile(self) -> None:
         p = BUILTIN_PROFILES["read_only"]
         assert p.name == "read_only"
-        assert p.side_effect_policy == SideEffectPolicy.READ_ONLY
         assert p.default is False
         # read_only: local read only, no mutation
-        for posture in p.tools.values():
+        for posture in p.capabilities.values():
             assert posture == Posture.READ_ONLY
 
     def test_fetch_external_profile(self) -> None:
         p = BUILTIN_PROFILES["fetch_external"]
         assert p.name == "fetch_external"
-        assert p.side_effect_policy == SideEffectPolicy.READ_ONLY
-        assert "network" in p.tools
+        assert "network" in p.capabilities
 
     def test_modify_local_profile(self) -> None:
         p = BUILTIN_PROFILES["modify_local"]
         assert p.name == "modify_local"
-        assert p.side_effect_policy == SideEffectPolicy.ALLOW
-        assert p.tools.get("filesystem") == Posture.READ_WRITE
+        assert p.capabilities.get("filesystem") == Posture.READ_WRITE
 
     def test_send_external_profile(self) -> None:
         p = BUILTIN_PROFILES["send_external"]
