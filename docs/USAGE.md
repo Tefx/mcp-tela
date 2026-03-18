@@ -106,9 +106,8 @@ Profiles define what a client is allowed to do.
 
 Each profile contains:
 
-- `tools`: family -> maximum posture ceiling
+- `capabilities`: family -> maximum posture ceiling
 - `tool_overrides`: allow or deny specific tools within a family
-- `side_effect_policy`: `allow` or `read_only`
 - `default`: whether the profile is the default in open mode
 
 Example:
@@ -116,7 +115,7 @@ Example:
 ```yaml
 profiles:
   developer:
-    tools:
+    capabilities:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
@@ -127,7 +126,6 @@ profiles:
       git:
         overrides:
           force_push: "allow"
-    side_effect_policy: "allow"
     default: true
 ```
 
@@ -220,14 +218,13 @@ servers:
 
 profiles:
   team_safe:
-    tools:
+    capabilities:
       filesystem: "read_write"
       git: "read_only"
     tool_overrides:
       filesystem:
         overrides:
           delete_file: "deny"
-    side_effect_policy: "allow"
     default: true
 
 auth:
@@ -584,7 +581,7 @@ servers:
 
 profiles:
   developer:
-    tools:
+    capabilities:
       filesystem: "read_write"
     default: true
 
@@ -616,10 +613,9 @@ servers:
 
 profiles:
   developer:
-    tools:
+    capabilities:
       filesystem: "read_write"
       git: "read_write"
-    side_effect_policy: "allow"
     default: true
 
 auth:
@@ -680,10 +676,9 @@ Not both, and not neither.
 
 Check, in order:
 
-1. server family assignment
-2. profile family ceiling in `tools`
-3. profile `tool_overrides`
-4. `side_effect_policy`
+1. family admission
+2. tool override check
+3. posture ceiling comparison
 
 ### A legacy document references `tests/blind/`
 

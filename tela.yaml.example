@@ -144,14 +144,8 @@ profiles:
     # REQUIRED: Family -> posture ceiling mapping
     # Postures: none < read_only < read_write < destructive
     # The client can only use tools at or below the specified posture
-    tools:
+    capabilities:
       filesystem: "read_only"
-    
-    # OPTIONAL: Side-effect policy
-    # Values: "allow" | "read_only"
-    # "read_only": Blocks any tool marked as having side effects
-    # "allow": Allows side effects within posture ceiling
-    side_effect_policy: "read_only"
     
     # OPTIONAL: Mark as default for open mode
     # At most ONE profile can have default: true
@@ -165,10 +159,9 @@ profiles:
   # Use case: Research, web scraping, documentation lookup
   #
   fetch_external:
-    tools:
+    capabilities:
       filesystem: "read_only"
       network: "read_only"
-    side_effect_policy: "read_only"
     default: false
 
   # ===========================================================================
@@ -178,10 +171,8 @@ profiles:
   # Use case: Local development, code modification
   #
   modify_local:
-    tools:
+    capabilities:
       filesystem: "read_write"
-    # Allow modifications to local files
-    side_effect_policy: "allow"
     default: false
 
   # ===========================================================================
@@ -191,10 +182,9 @@ profiles:
   # Use case: CI/CD, deployment, API integration
   #
   send_external:
-    tools:
+    capabilities:
       filesystem: "read_only"
       network: "read_write"
-    side_effect_policy: "allow"
     default: false
 
   # ===========================================================================
@@ -204,11 +194,10 @@ profiles:
   # Use case: Job scheduling, workflow management
   #
   orchestrate:
-    tools:
+    capabilities:
       filesystem: "read_only"
       network: "read_only"
       orchestration: "read_write"
-    side_effect_policy: "allow"
     default: false
 
   # ===========================================================================
@@ -218,12 +207,11 @@ profiles:
   # Use case: Development workstations, trusted automation
   #
   execute_safe:
-    tools:
+    capabilities:
       filesystem: "read_write"
       network: "read_write"
       orchestration: "read_write"
       execution: "read_write"
-    side_effect_policy: "allow"
     default: false
 
   # ===========================================================================
@@ -233,12 +221,11 @@ profiles:
   # Use case: Admin operations, trusted automation with full access
   #
   execute_full:
-    tools:
+    capabilities:
       filesystem: "destructive"
       network: "destructive"
       orchestration: "destructive"
       execution: "destructive"
-    side_effect_policy: "allow"
     default: false
 
   # ===========================================================================
@@ -251,7 +238,7 @@ profiles:
   # Define it when connecting git-related MCP servers.
   #
   developer:
-    tools:
+    capabilities:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
@@ -274,8 +261,6 @@ profiles:
           # Allow all git operations
           force_push: "allow"
     
-    side_effect_policy: "allow"
-    
     # Make this the default profile for open mode connections
     default: true
 
@@ -285,7 +270,7 @@ profiles:
   # CI/CD pipeline profile with network write and limited local access
   #
   ci_runner:
-    tools:
+    capabilities:
       filesystem: "read_only"
       network: "read_write"
       orchestration: "read_write"
@@ -295,8 +280,6 @@ profiles:
         overrides:
           # Allow writing to specific CI directories
           write_ci_artifacts: "allow"
-    
-    side_effect_policy: "allow"
     default: false
 
   # ===========================================================================
@@ -305,13 +288,10 @@ profiles:
   # Read-only audit access - no modifications allowed
   #
   auditor:
-    tools:
+    capabilities:
       filesystem: "read_only"
       network: "read_only"
       orchestration: "read_only"
-    
-    # Block all side effects (even within posture ceiling)
-    side_effect_policy: "read_only"
     default: false
 
 # -----------------------------------------------------------------------------
@@ -505,14 +485,14 @@ audit:
 # 
 # profiles:
 #   developer:
-#     tools:
+#     capabilities:
 #       filesystem: "read_write"
 #       git: "read_write"
 #       orchestration: "read_write"
 #     default: true
 #   
 #   bot:
-#     tools:
+#     capabilities:
 #       orchestration: "read_write"
 # 
 # auth:

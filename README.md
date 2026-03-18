@@ -82,9 +82,8 @@ servers:
 
 profiles:
   developer:
-    tools:
+    capabilities:
       filesystem: "read_write"
-    side_effect_policy: "allow"
     default: true
 
 auth:
