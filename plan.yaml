@@ -11715,6 +11715,121 @@ phases:
       Spec link:
 
       - INTERFACES field naming sections and corresponding implementation points'
+  - id: cap.final_gate.fix-runtime-static-blockers
+    name: Fix batched runtime and static-analysis blockers from cap.final_gate.gate
+    status: pending
+    description: 'Fix ALL blockers found by `cap.final_gate.gate` for the cap final
+      gate surface. This is one batched remediation step for ALL of these, not just
+      the first.
+
+
+      ## Blockers to Fix (ALL)
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: stdout-producing CLI/banner behavior and runtime startup paths
+      are not fully isolated from stdio transport requirements, while static-analysis
+      hygiene regressed in the same gate window.
+
+      - Symptom: banner contamination corrupts stdio initialize traffic; stdio/SSE
+      liveness probes fail; mypy reports type errors in contracts/token; ruff reports
+      unused-import and related lint failures.
+
+      - Why this fix is not surface-level: it must close transport purity, startup/liveness,
+      and Python static-analysis blocker families together so the full gate can reopen
+      cleanly.
+
+
+      ### B1: stdout banner contamination in `src/tela/cli.py`
+
+      Locations: `src/tela/cli.py`
+
+      Remediation: ensure stdio transport paths never emit banners or other human-facing
+      stdout before or during protocol traffic; route any user-facing banner/log output
+      away from stdio protocol output.
+
+      Grep hint: search for banner / print / console output paths in `src/tela/cli.py`
+      and sibling startup emitters.
+
+      IMPORTANT: search sibling startup/output paths beyond the first offending line
+      so no alternate stdio entry path still prints to stdout.
+
+
+      ### B2: liveness failures for stdio initialize and SSE staying alive
+
+      Locations: runtime / entrypoint surfaces for stdio initialize and SSE startup/lifecycle
+
+      Remediation: repair startup and lifecycle wiring so stdio initialize returns
+      the expected response without contamination and SSE remains alive long enough
+      to accept at least one operation on the real entrypoint path.
+
+      Grep hint: search stdio / SSE entrypoint, serve, run, initialize, and shutdown
+      wiring.
+
+      IMPORTANT: verify both module wiring and runtime lifecycle; do not treat handler-only
+      correctness as sufficient.
+
+
+      ### B3: mypy errors in contracts/token
+
+      Locations: contracts and token modules referenced by the gate findings
+
+      Remediation: resolve all reported typing failures in the contracts/token surfaces
+      and any directly coupled signatures revealed by the mypy run.
+
+      Grep hint: search recent type-ignore additions, incomplete annotations, and
+      contract/token call sites.
+
+      IMPORTANT: fix the real type mismatch, not by broadly silencing errors unless
+      the codebase already has an explicit approved pattern.
+
+
+      ### B4: ruff lint failures (unused imports and related)
+
+      Locations: files reported by the gate lint output
+
+      Remediation: clear all ruff-reported unused imports and directly related lint
+      failures introduced by the current gate scope.
+
+      Grep hint: search import blocks in the gate-reported files and sibling modules
+      touched in the same runtime/static-analysis path.
+
+      IMPORTANT: remove or use imports intentionally; do not leave dead wiring behind.
+
+
+      ## Completion Criteria
+
+      - ALL four blocker families fixed
+
+      - sibling search completed for runtime/output and static-analysis blocker patterns
+
+      - no banner contamination remains on stdio transport paths
+
+      - stdio initialize and SSE liveness blocker family closed on the runnable entrypoints
+
+      - mypy clean for the contracts/token scope required by the gate
+
+      - ruff clean for the reported lint scope and related files
+
+      - changes leave the phase ready for independent retest and full gate re-review'
+    verification: '- Liveness main path: stdio initialize probe reaches the real entrypoint
+      and returns a clean protocol response with no banner/stdout contamination
+
+      - Liveness failure path: SSE liveness probe shows the server stays alive and
+      accepts at least one operation without premature exit
+
+      - Static analysis: mypy passes for the contracts/token scope reported by the
+      gate
+
+      - Static analysis: ruff passes for unused-import and related failures reported
+      by the gate
+
+      - Readiness: evidence explains sibling search coverage and shows the phase is
+      ready for full gate re-review'
+    depends_on:
+    - cap.final_gate.gate
+    agent: python-senior
 - id: cap.spec
   name: Spec and Design Document Migration
   status: done
