@@ -10260,13 +10260,13 @@ phases:
       - out-of-scope respected (no product downstream manager implementation changes).'
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
-  status: pending
+  status: in_progress
   depends_on:
   - rt.downstream
   steps:
   - id: rt.upstream.server
     name: Create fastmcp server in gateway.py
-    status: pending
+    status: claimed
     description: Create a fastmcp FastMCP server instance in gateway.py. Define how
       tools from the registry are registered as MCP tools on the server. Wire gateway_start
       to create and configure the server. Wire gateway_shutdown to stop it.
@@ -10286,6 +10286,8 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T21:08:29.855695+00:00'
   - id: rt.upstream.handlers
     name: Wire upstream handlers to fastmcp server
     status: pending
