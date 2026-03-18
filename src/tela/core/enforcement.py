@@ -99,6 +99,8 @@ def check_tool_override(
     Returns EnforcementResult(ALLOW) if override = allow.
     Returns EnforcementResult(DENY) if override = deny.
 
+    Note: ALLOW overrides do not bypass posture-ceiling checks in ``enforce``.
+
     Examples:
         >>> from tela.core.models import ProfileConfig, Posture, EnforcementVerdict
         >>> p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
@@ -230,7 +232,10 @@ def enforce(
 
     # Step 2: Tool override check
     override_result = check_tool_override(tool_name, tool.family, profile)
-    if override_result is not None:
+    if (
+        override_result is not None
+        and override_result.verdict == EnforcementVerdict.DENY
+    ):
         return override_result
 
     # Step 3: Posture ceiling

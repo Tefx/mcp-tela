@@ -49,10 +49,6 @@ class TestProfileConfig:
         p = ProfileConfig(name="dev", default=True)
         assert p.default is True
 
-    def test_side_effect_policy_default(self) -> None:
-        p = ProfileConfig(name="dev")
-        assert p.side_effect_policy == SideEffectPolicy.ALLOW
-
     def test_tools_default_empty(self) -> None:
         p = ProfileConfig(name="dev")
         assert p.tools == {}

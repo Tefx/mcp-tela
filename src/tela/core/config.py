@@ -80,6 +80,29 @@ def _apply_side_effect_policy_migration(
         # The tools→capabilities normalization will be done by normalize_profile_config_aliases
         capabilities = result.get("capabilities") or result.get("tools", {})
 
+        # ADR-003 invariant: no override may elevate beyond capabilities[family].
+        # During migration from side_effect_policy=read_only we reject any explicit
+        # ALLOW override because posture classification is not available here.
+        # This selects the documented "reject" strategy.
+        tool_overrides = result.get("tool_overrides")
+        if isinstance(tool_overrides, Mapping):
+            for family, family_cfg in tool_overrides.items():
+                if isinstance(family_cfg, Mapping):
+                    overrides = family_cfg.get("overrides")
+                    candidate = (
+                        overrides if isinstance(overrides, Mapping) else family_cfg
+                    )
+                    for tool_name, verdict in candidate.items():
+                        if str(verdict).lower() == "allow":
+                            raise ConfigContractError(
+                                code="MIGRATION_ERROR",
+                                message=(
+                                    f"Profile '{profile_name}': override '{family}.{tool_name}=allow' "
+                                    "is incompatible with side_effect_policy=read_only migration. "
+                                    "No tool override may elevate beyond capabilities[family]."
+                                ),
+                            )
+
         # Emit deprecation warning for legacy tools key
         if "tools" in result:
             warnings.warn(

@@ -347,7 +347,12 @@ def test_filter_tools_admits_matching_family() -> None:
 
     tools = {
         "fs": [
-            ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY),
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+            ),
         ]
     }
     profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
@@ -363,7 +368,12 @@ def test_filter_tools_excludes_unadmitted_family() -> None:
 
     tools = {
         "shell": [
-            ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE),
+            ResolvedTool(
+                name="exec",
+                server_name="shell",
+                family="shell",
+                posture=Posture.DESTRUCTIVE,
+            ),
         ]
     }
     profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
@@ -378,7 +388,12 @@ def test_filter_tools_excludes_posture_exceedance() -> None:
 
     tools = {
         "fs": [
-            ResolvedTool(name="write_file", server_name="fs", family="fs", posture=Posture.READ_WRITE),
+            ResolvedTool(
+                name="write_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_WRITE,
+            ),
         ]
     }
     profile = ProfileConfig(name="reader", tools={"fs": Posture.READ_ONLY})
@@ -386,21 +401,30 @@ def test_filter_tools_excludes_posture_exceedance() -> None:
     assert len(result) == 0
 
 
-def test_filter_tools_respects_side_effect_policy() -> None:
-    """Side-effect read_only policy excludes read_write tools."""
-    from tela.core.models import Posture, ProfileConfig, ResolvedTool, SideEffectPolicy
+def test_filter_tools_respects_capability_ceiling() -> None:
+    """Read-only capability ceiling excludes read_write tools."""
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
     from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
         "fs": [
-            ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY),
-            ResolvedTool(name="write_file", server_name="fs", family="fs", posture=Posture.READ_WRITE),
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+            ),
+            ResolvedTool(
+                name="write_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_WRITE,
+            ),
         ]
     }
     profile = ProfileConfig(
         name="safe",
-        tools={"fs": Posture.READ_WRITE},
-        side_effect_policy=SideEffectPolicy.READ_ONLY,
+        capabilities={"fs": Posture.READ_ONLY},
     )
     result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
     assert len(result) == 1
@@ -413,12 +437,37 @@ def test_filter_tools_multiple_servers() -> None:
     from tela.shell.upstream_utils import filter_tools_for_profile
 
     tools = {
-        "fs": [ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)],
-        "git": [ResolvedTool(name="git_status", server_name="git", family="git", posture=Posture.READ_ONLY)],
-        "shell": [ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE)],
+        "fs": [
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+            )
+        ],
+        "git": [
+            ResolvedTool(
+                name="git_status",
+                server_name="git",
+                family="git",
+                posture=Posture.READ_ONLY,
+            )
+        ],
+        "shell": [
+            ResolvedTool(
+                name="exec",
+                server_name="shell",
+                family="shell",
+                posture=Posture.DESTRUCTIVE,
+            )
+        ],
     }
-    profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE, "git": Posture.READ_ONLY})
-    result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE, "git": Posture.NONE, "shell": Posture.NONE})
+    profile = ProfileConfig(
+        name="dev", tools={"fs": Posture.READ_WRITE, "git": Posture.READ_ONLY}
+    )
+    result = filter_tools_for_profile(
+        tools, profile, {"fs": Posture.NONE, "git": Posture.NONE, "shell": Posture.NONE}
+    )
     names = {t.name for t in result}
     assert names == {"read_file", "git_status"}
 
@@ -461,7 +510,9 @@ def test_enforce_tool_call_allows() -> None:
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
     from tela.shell.upstream_utils import enforce_tool_call
 
-    tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
+    tool = ResolvedTool(
+        name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY
+    )
     profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
     result = enforce_tool_call("read_file", tool, profile, Posture.NONE)
     assert result.verdict.value == "allow"
@@ -472,7 +523,9 @@ def test_enforce_tool_call_denies() -> None:
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
     from tela.shell.upstream_utils import enforce_tool_call
 
-    tool = ResolvedTool(name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE)
+    tool = ResolvedTool(
+        name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE
+    )
     profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
     result = enforce_tool_call("exec", tool, profile, Posture.NONE)
     assert result.verdict.value == "deny"
