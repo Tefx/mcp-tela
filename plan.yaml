@@ -10895,6 +10895,48 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-18T18:24:17.009398+00:00'
+  - id: cap.impl.fix-gate-blockers
+    name: Fix cap.impl gate blockers
+    status: pending
+    description: "Fix ALL reported issues from `cap.impl.gate`, not just the first.\n\
+      \n## Blockers to Fix (ALL of these)\n1. Override-ceiling invariant bypass in\
+      \ enforcement flow.\n   - Scope: `check_tool_override` and the `enforce` early-return\
+      \ path must preserve the override ceiling invariant.\n   - Root cause vs symptom:\n\
+      \     - Root cause: control flow allows an early return to bypass the invariant\
+      \ check.\n     - Symptom: override requests can escape the intended enforcement\
+      \ ceiling.\n   - Search for sibling paths that can bypass the same invariant,\
+      \ not only the reported branch.\n   - Grep hints: `check_tool_override`, `enforce`,\
+      \ `override`, `ceiling`, `early return`.\n2. Stale tests importing removed `check_side_effect`.\n\
+      \   - Remove or update every stale import and align tests with the current public\
+      \ surface.\n   - Search all test modules for sibling stale imports, not just\
+      \ the first failing file.\n   - Grep hints: `check_side_effect`, `from .* import\
+      \ check_side_effect`.\n3. Stale tests referencing removed `side_effect_policy`\
+      \ field.\n   - Update fixtures and assertions to the current schema/contract.\n\
+      \   - Search all tests for sibling references to removed capability fields.\n\
+      \   - Grep hints: `side_effect_policy`.\n\n## Completion Criteria\n- Override-ceiling\
+      \ enforcement holds on the main path and on the prior bypass path.\n- No stale\
+      \ `check_side_effect` imports remain in tests.\n- No stale `side_effect_policy`\
+      \ references remain in tests unless explicitly migrated by current spec.\n-\
+      \ Sibling search completed for all three issue families.\n\n## Out of Scope\n\
+      - Do not expand capability semantics beyond the current `cap.contract` / `cap.spec`\
+      \ scope.\n- Do not introduce compatibility wrappers for removed test-only symbols\
+      \ unless required by authoritative spec.\n\nsymbolic_testing: false"
+    verification: '- Main path: targeted tests cover valid override enforcement under
+      the current ceiling rules
+
+      - Failure path: regression test covers the prior `enforce` early-return bypass
+      and proves the override ceiling is still checked
+
+      - Test hygiene: test suite no longer imports removed `check_side_effect`
+
+      - Schema hygiene: test fixtures/assertions no longer reference removed `side_effect_policy`
+      field
+
+      - Proof: focused search confirms no remaining sibling stale references for `check_side_effect`
+      or `side_effect_policy` in relevant tests'
+    depends_on:
+    - cap.impl.gate
+    agent: python-senior
 - id: cap.shell
   name: Shell Layer Updates
   status: locked
