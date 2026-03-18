@@ -11487,7 +11487,7 @@ phases:
       - Capability-only migration target and cleanup commitments'
   - id: cap.final_gate.spec
     name: Verify docs match implementation
-    status: claimed
+    status: done
     description: Verify docs/DESIGN.md and docs/INTERFACES.md match the implementation
       post-migration. Verify ADR-003 is fully realized.
     verification: Spec matches implementation. ADR-003 fully realized. No contradictions
@@ -11497,6 +11497,32 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-18T19:38:43.825708+00:00'
+    done_at: '2026-03-18T19:42:11.281836+00:00'
+    evidence: 'Gate review detected blocker and remediation path created.
+
+
+      Detected blocker:
+
+      - INTERFACES.md uses `profile_id` while implementation uses `name` (profiles
+      response) and `tools_profile` (CapabilityToken).
+
+
+      Evidence:
+
+      - `grep -rn "profile_id" src/tela/` -> no matches
+
+      - `grep -rn "tools_profile" src/tela/core/models.py` -> matches
+
+      - `src/tela/shell/upstream.py` emits profile field `name`
+
+
+      Remediation steps added:
+
+      - `cap.final_gate.fix-field-name-consistency`
+
+      - `cap.final_gate.retest-field-name-consistency`
+
+      - `cap.final_gate.gate` now depends on retest step.'
   - id: cap.final_gate.gate
     name: Full gate review
     status: pending
