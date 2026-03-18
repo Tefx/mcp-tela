@@ -9863,7 +9863,7 @@ phases:
       - interfaces documentation section for server config/env contract'
   - id: rt.env_field.test
     name: Add env field parsing and expansion tests
-    status: pending
+    status: claimed
     description: 'Test step for the new `ServerConfig.env` feature.
 
 
@@ -9911,6 +9911,8 @@ phases:
     depends_on:
     - rt.env_field.contract
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-18T20:13:22.520937+00:00'
 - id: rt.downstream
   name: Downstream MCP Client Connections
   status: locked
