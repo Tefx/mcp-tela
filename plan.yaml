@@ -10222,13 +10222,13 @@ phases:
     agent: gate-reviewer
 - id: cap.contract
   name: Define New Profile Contracts
-  status: pending
+  status: in_progress
   depends_on:
   - cap.spec
   steps:
   - id: cap.contract.define
     name: Define contracts for new ProfileConfig shape
-    status: pending
+    status: claimed
     description: 'Define contracts for new ProfileConfig shape: add `capabilities`
       field (alias for `tools` during migration), plan removal of `SideEffectPolicy`
       enum and `side_effect_policy` field, define new 3-step per-call enforcement
@@ -10251,6 +10251,8 @@ phases:
     - docs/ADR-003-gateway-capability-only-profiles.md
     - docs/MIGRATION-003-capability-only-profiles.md
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T17:08:41.601927+00:00'
   - id: cap.contract.gate
     name: Quick gate review
     status: pending
