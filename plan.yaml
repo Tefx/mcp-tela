@@ -11351,7 +11351,7 @@ phases:
   steps:
   - id: cap.cleanup.remove-legacy
     name: Remove all remaining deprecated code
-    status: claimed
+    status: done
     description: 'Remove all remaining deprecated code: SideEffectPolicy enum, check_side_effect
       function (if still present), side_effect_policy handling in config parser. Keep
       `tools:` as deprecated alias with warning during migration period (do NOT remove
@@ -11368,6 +11368,51 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-18T19:14:31.731303+00:00'
+    done_at: '2026-03-18T19:26:31.158534+00:00'
+    evidence: 'Commit hash(es):
+
+      - 99b7471e70966bf0bd1612600cb5604490e4a0bd
+
+
+      Files changed:
+
+      - src/tela/core/models.py
+
+      - src/tela/core/config.py
+
+      - tests/core/test_models.py
+
+      - tests/core/test_capability_only_profiles.py
+
+
+      grep -rn ''SideEffectPolicy'' src/tela/ output:
+
+      - no matches
+
+
+      grep -rn ''check_side_effect'' src/tela/ output:
+
+      - no matches
+
+
+      grep -rn ''side_effect_policy'' src/tela/ output:
+
+      - no matches
+
+
+      pytest -x output:
+
+      - focused core suite passed (146 passed)
+
+
+      invar guard output:
+
+      - passed, errors=0
+
+
+      Gaps/Notes:
+
+      - `tools` alias support retained with migration warning per MIGRATION-003.'
   - id: cap.cleanup.gate
     name: Gate review
     status: pending
