@@ -9796,9 +9796,28 @@ phases:
   - id: rt.env_field.gate
     name: Gate review
     status: pending
-    description: Gate review for env field phase.
-    verification: 'Quick Gate: E1+E4 surface only'
+    description: 'Gate review for the env field phase.
+
+
+      review_depth: STANDARD
+
+      review_depth_rationale: new config-facing field with contract -> test -> implementation
+      sequencing
+
+
+      Verify the phase only opens when the env-field contract, parsing/expansion tests,
+      and implementation evidence are all complete and mutually consistent.'
+    verification: '- Contract step completed with acceptance-only semantics for `ServerConfig.env`
+
+      - Test step covers parsing, expansion, and failure-path behavior from the contract
+
+      - Implementation step satisfies the contract without widening scope beyond env
+      field support
+
+      - Evidence is sufficient to proceed to downstream runtime phases'
     depends_on:
+    - rt.env_field.contract
+    - rt.env_field.test
     - rt.env_field.impl
     agent: gate-reviewer
   - id: rt.env_field.contract
