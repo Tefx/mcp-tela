@@ -10636,7 +10636,7 @@ phases:
     claimed_at: '2026-03-18T16:59:03.562726+00:00'
   - id: cap.spec.interfaces-md
     name: Update INTERFACES.md to target state
-    status: pending
+    status: claimed
     description: 'INTERFACES.md already updated in commit 382927d (user-authored).
       This step verifies the update is complete: profile schema uses capabilities:,
       tela.profiles response documented, enforcement chain is 3 per-call steps, side_effect_policy
@@ -10650,6 +10650,8 @@ phases:
     depends_on:
     - cap.spec.finalize-adr-003-and-migration-003
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-18T17:00:31.669908+00:00'
   - id: cap.spec.gate
     name: Spec migration gate review
     status: pending
