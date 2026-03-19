@@ -10556,7 +10556,7 @@ phases:
   steps:
   - id: rt.reload_wire.impl
     name: Wire hot reload to fastmcp downstream
-    status: pending
+    status: claimed
     description: 'Implement hot-reload wiring against the already-defined test coverage
       for the fastmcp downstream runtime surface.
 
@@ -10608,6 +10608,8 @@ phases:
     depends_on:
     - rt.reload_wire.test
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T06:14:36.391068+00:00'
   - id: rt.reload_wire.gate
     name: Gate review
     status: pending
