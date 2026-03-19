@@ -11642,7 +11642,7 @@ phases:
       \nSpec link:\n- Step rt.liveness.gate"
   - id: rt.liveness.fix-should-fix-batch
     name: Batch should-fix remediation from rt.liveness.gate
-    status: claimed
+    status: done
     description: 'Fix ALL should-fix issues reported by `rt.liveness.gate` in one
       batched remediation step.
 
@@ -11696,6 +11696,57 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T07:14:01.919791+00:00'
+    done_at: '2026-03-19T07:21:17.676415+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 70359f3f0e3a23b1b80c1522d643c095ed72c678
+
+      - Files changed: pyproject.toml; uv.lock; src/tela/shell/downstream.py; src/tela/shell/downstream_clients.py;
+      src/tela/shell/downstream_registry.py; src/tela/shell/gateway.py
+
+
+      Root cause vs symptom:
+
+      - downstream.py oversize caused by mixed orchestration+transport+registry responsibilities;
+      extracted coherent helper modules while preserving behavior.
+
+      - callback annotation mismatch caused by overly broad object|None type in gateway
+      callback boundary; narrowed to callable signature used by reload contract.
+
+      - mypy YAML failure caused by missing typing support in tooling/dependencies;
+      added types-PyYAML and ensured mypy tooling wiring.
+
+
+      Sibling search:
+
+      - callback signature siblings searched across shell modules; aligned gateway/reload
+      callback contracts.
+
+      - YAML typing gaps searched across src and project manifests; dependency and
+      lock entries now present.
+
+
+      Verification:
+
+      - Run: wc -l src/tela/shell/downstream.py src/tela/shell/downstream_clients.py
+      src/tela/shell/downstream_registry.py -> downstream.py 481 lines (<500)
+
+      - Run: uv run --group dev mypy src/tela/shell/config_loader.py src/tela/shell/gateway.py
+      src/tela/shell/downstream.py src/tela/shell/downstream_clients.py -> Success:
+      no issues found
+
+      - Run: uv run --group dev pytest tests/shell/test_downstream.py tests/shell/test_downstream_runtime_connection.py
+      tests/shell/test_gateway.py -q -> 74 passed
+
+
+      Spec link:
+
+      - Step rt.liveness.fix-should-fix-batch
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.liveness.retest-should-fix-batch
     name: Independent retest for batched should-fix remediation
     status: pending
