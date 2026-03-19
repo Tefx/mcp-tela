@@ -10875,12 +10875,14 @@ phases:
       - scope limited to doctest replacement in specified files'
   - id: rt.doctests.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: Gate review for doctests phase.
     verification: Quick Gate. B5 resolved. Zero pass doctests.
     depends_on:
     - rt.doctests.impl
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T06:14:30.092401+00:00'
 - id: rt.e2e
   name: End-to-End Integration Tests
   status: in_progress
