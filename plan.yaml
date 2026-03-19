@@ -10583,6 +10583,74 @@ phases:
     depends_on:
     - rt.reload_wire.impl
     agent: gate-reviewer
+  - id: rt.reload_wire.test
+    name: Add hot reload wiring tests
+    status: pending
+    description: 'Test step: add targeted coverage for fastmcp hot-reload wiring before
+      runtime implementation.
+
+
+      Scope:
+
+      - Validate `set_notify_callback`, `on_tools_changed`, and `on_server_reconnect`
+      are wired to real runtime callers rather than dead exports.
+
+      - Validate downstream tool-list change triggers re-enumeration through the actual
+      reload path.
+
+      - Validate `on_config_changed` behavior if that callback remains part of the
+      runtime surface.
+
+
+      Required coverage:
+
+      - At least one focused test for callback wiring reachability/runtime callers
+
+      - At least one focused test for re-enumeration trigger behavior after downstream
+      change
+
+      - At least one negative/assertive check that stale no-op wiring or dead callback
+      paths are not the only exercised path
+
+
+      Spec refs:
+
+      - docs/design/runtime reload wiring expectations (runtime surface)
+
+      - existing reload runtime behavior from `reload.runtime`
+
+
+      This step is intentionally ordered before `rt.reload_wire.impl` to satisfy contract/test-first
+      planning for a non-trivial runtime wiring feature.'
+    verification: '- Targeted reload wiring tests are added for callback reachability,
+      runtime callers, and re-enumeration trigger behavior
+
+      - Evidence names the exact test modules/cases covering each runtime callback
+      surface
+
+      - Test evidence makes dead-export-only coverage insufficient'
+    evidence_template: '## Test Evidence
+
+
+      **Callback wiring tests**:
+
+      - <test module::case>
+
+
+      **Runtime caller coverage**:
+
+      - <which caller path exercises each callback>
+
+
+      **Re-enumeration trigger proof**:
+
+      - <test module::case showing downstream tool-list change triggers re-enumeration>
+
+
+      **Config-changed coverage**:
+
+      - <covered | explicitly deferred with rationale>'
+    agent: python-executor
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
   status: locked
