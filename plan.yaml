@@ -11829,19 +11829,21 @@ phases:
       - none'
 - id: rt.doc_sync
   name: Documentation Sync
-  status: pending
+  status: in_progress
   depends_on:
   - rt.liveness
   steps:
   - id: rt.doc_sync.impl
     name: Update documentation to match runtime
-    status: pending
+    status: claimed
     description: Update README.md and docs/USAGE.md to reflect actual working state.
       Update INTERFACES.md if any contracts changed. Remove 'deferred' language from
       module docstrings.
     verification: No 'deferred' language in shell module docstrings. Docs match actual
       behavior.
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-19T07:24:22.542101+00:00'
   - id: rt.doc_sync.gate
     name: Gate review
     status: pending
