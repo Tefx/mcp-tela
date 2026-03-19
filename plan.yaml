@@ -10854,13 +10854,13 @@ phases:
       - covered by callback tests'
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
-  status: pending
+  status: in_progress
   depends_on:
   - rt.reload_wire
   steps:
   - id: rt.escape_cleanup.impl
     name: Remove stale escape hatch annotations
-    status: pending
+    status: claimed
     description: Remove all @invar:allow dead_export annotations for functions that
       now have runtime callers. Remove dead_param annotations for parameters now used.
       Keep only legitimate escape hatches (CLI entry points, framework-called functions).
@@ -10878,6 +10878,8 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-19T06:30:45.740963+00:00'
   - id: rt.escape_cleanup.gate
     name: Gate review
     status: pending
