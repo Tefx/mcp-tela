@@ -23,6 +23,9 @@ packages = ["src/tela"]
 
 [dependency-groups]
 dev = [
+    # `invar-guard==1.20.3` is not published in the default registry; use the
+    # published CLI carrier package that provides `uv run invar guard ...`.
+    "invar-tools==1.20.3",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
 ]
