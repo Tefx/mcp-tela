@@ -10550,7 +10550,7 @@ phases:
       \ behavior contract\n\nResult:\n- Gate PASS"
 - id: rt.reload_wire
   name: Wire Hot Reload
-  status: pending
+  status: in_progress
   depends_on:
   - rt.cli_start
   steps:
@@ -10636,7 +10636,7 @@ phases:
     agent: gate-reviewer
   - id: rt.reload_wire.test
     name: Add hot reload wiring tests
-    status: pending
+    status: claimed
     description: 'Test step: add targeted coverage for fastmcp hot-reload wiring before
       runtime implementation.
 
@@ -10702,6 +10702,8 @@ phases:
 
       - <covered | explicitly deferred with rationale>'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-19T06:09:14.046670+00:00'
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
   status: locked
