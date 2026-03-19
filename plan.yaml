@@ -10426,7 +10426,7 @@ phases:
   steps:
   - id: rt.cli_start.stdio
     name: Wire _handle_start for stdio transport
-    status: claimed
+    status: done
     description: 'Make _handle_start in cli.py: (a) move banner to stderr, (b) call
       gateway_start, (c) run fastmcp server on stdio transport via asyncio event loop.
       Process must stay alive and respond to MCP JSON-RPC on stdin/stdout.'
@@ -10451,6 +10451,31 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T05:42:51.673116+00:00'
+    done_at: '2026-03-19T05:47:18.838634+00:00'
+    evidence: 'Commit hash(es):
+
+      - e882591
+
+
+      Files changed:
+
+      - src/tela/cli.py
+
+
+      Verification:
+
+      - Process stays alive after start: yes
+
+      - Banner on stderr: yes
+
+      - MCP initialize response received: yes
+
+      - liveness suite: `tests/repro/test_liveness.py` all pass
+
+
+      Gaps/Notes:
+
+      - scope limited to stdio start wiring and transport behavior'
   - id: rt.cli_start.sse
     name: Wire SSE transport
     status: pending
