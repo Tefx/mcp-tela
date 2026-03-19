@@ -9,9 +9,7 @@ from __future__ import annotations
 import asyncio
 import argparse
 import sys
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
 
 from tela.commands.audit_cmd import audit_command
 from tela.commands.connections_cmd import connections_command
@@ -230,8 +228,7 @@ def _handle_start(args: argparse.Namespace) -> int:
         file=sys.stderr,
     )
 
-    assert gateway_result.value.port is not None
-    return _serve_sse_gateway(gateway_result.value.port)
+    return _serve_sse_gateway()
 
 
 async def _run_stdio_gateway(
@@ -264,29 +261,17 @@ async def _run_stdio_gateway(
     return 0
 
 
-class _SSEHandler(BaseHTTPRequestHandler):
-    """Minimal HTTP handler to keep SSE transport process alive."""
+def _serve_sse_gateway() -> int:
+    """Run FastMCP SSE transport server until process termination."""
 
-    def do_GET(self) -> None:
-        """Return readiness payload for gateway liveness probes."""
+    runtime = get_runtime()
+    if runtime.upstream_server is None:
+        print("error: upstream MCP server not initialized", file=sys.stderr)
+        return 1
 
-        body = b'{"status":"ok"}'
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def log_message(self, format: str, *args: Any) -> None:
-        """Silence default access logs on stderr."""
-
-
-def _serve_sse_gateway(port: int) -> int:
-    """Run a long-lived HTTP server for SSE gateway liveness."""
-
-    server = ThreadingHTTPServer(("127.0.0.1", port), _SSEHandler)
     try:
-        server.serve_forever()
+        runtime.upstream_server.run(transport="sse")
     finally:
-        server.server_close()
+        asyncio.run(gateway_shutdown())
+
     return 0
