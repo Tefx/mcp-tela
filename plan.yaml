@@ -14975,3 +14975,42 @@ phases:
     depends_on:
     - invar1203.shell-result
     agent: software-architect
+  - id: invar1203.retest-full-guard
+    name: Run full Invar guard after 1.20.3 remediation
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), run the authoritative
+      full guard command from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - dependency resolution under the project-managed `uv run` path
+
+      - absence of findings rooted in `.claude/worktrees/**` and `.vectl/worktrees/**`
+
+      - closure of the remediated `escape_hatch_*`, `missing_contract`, and `shell_result`
+      families
+
+      - explicit classification of any remaining findings as debt if the phase is
+      not fully clean
+
+
+      Independence Level: L1
+
+      '
+    verification: '- Command expectation: `uv run invar guard --all`
+
+      - Evidence must include the actual command output summary, including errors/warnings/infos
+      and any remaining canonical signatures
+
+      - Pass condition: clean run, OR remaining findings are explicitly classified
+      with file-level rationale and no unresolved blocker categories from this phase
+
+      - If the command still cannot resolve dependencies, mark the phase blocked and
+      report the resolver failure verbatim'
+    depends_on:
+    - invar1203.freeze
+    agent: integration-verifier
