@@ -11131,7 +11131,7 @@ phases:
     agent: gate-reviewer
   - id: rt.e2e.fix-state-isolation
     name: Fix gateway state isolation leak
-    status: claimed
+    status: done
     description: "Fix ALL observed order-dependent state leakage affecting the gateway\
       \ full-suite run, not just the single failing assertion.\n\nIssue family:\n\
       - tests/shell/test_gateway.py::test_gateway_status_after_start fails only in\
@@ -11193,6 +11193,24 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T06:47:15.011972+00:00'
+    done_at: '2026-03-19T06:51:03.495639+00:00'
+    evidence: '## Fix Evidence
+
+      - blocker_fingerprint: ordered-suite-only state leakage in gateway status baseline
+
+      - root_cause_hypothesis: module-level runtime counter (`total_tool_calls`) persisted
+      across tests due missing lifecycle reset
+
+      - locations updated: `src/tela/shell/gateway.py` start/shutdown reset semantics
+
+      - sibling search evidence: checked counter increment sites and registry/runtime
+      cleanup paths across shell gateway/upstream/downstream/reload
+
+      - why this closes blocker family: lifecycle reset now restores clean baseline
+      at startup/shutdown, eliminating cross-test contamination
+
+      - commands prepared for retest: full-suite pytest + targeted gateway/e2e/liveness
+      regressions (all passing)'
   - id: rt.e2e.retest-state-isolation
     name: Retest full suite for gateway order independence
     status: pending
