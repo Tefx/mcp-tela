@@ -10955,7 +10955,7 @@ phases:
   steps:
   - id: rt.e2e.test
     name: Write end-to-end integration test
-    status: claimed
+    status: done
     description: 'Write end-to-end integration test: start a mock MCP server (using
       fastmcp), configure tela to connect to it, start tela, enumerate tools through
       tela, make a tools/call through tela, verify result forwarded correctly. NO
@@ -10982,6 +10982,37 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T06:04:57.936485+00:00'
+    done_at: '2026-03-19T06:29:45.813268+00:00'
+    evidence: 'Commit hash(es):
+
+      - a48ae06
+
+
+      Files changed:
+
+      - tests/integration/test_end_to_end.py
+
+
+      Test description:
+
+      - Mock server setup: real FastMCP stdio fixture server process
+
+      - Connection method: runtime start + gateway path, no `tool_lists`
+
+      - Assertions: tools enumerate through tela and `tools/call` forwards and returns
+      downstream result
+
+      - tool_lists used: NO (mandatory)
+
+
+      Verification:
+
+      - targeted and full E2E test module runs pass
+
+
+      Gaps/Notes:
+
+      - scope limited to E2E test additions'
   - id: rt.e2e.verify
     name: Run full test suite
     status: pending
