@@ -11149,12 +11149,14 @@ phases:
       - `rt.e2e.gate` now depends on retest step.'
   - id: rt.e2e.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: Gate review for E2E phase.
     verification: Full Gate. B4 resolved. Real integration evidence exists.
     depends_on:
     - rt.e2e.retest-state-isolation-loop2
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T07:02:56.998387+00:00'
   - id: rt.e2e.fix-state-isolation
     name: Fix gateway state isolation leak
     status: done
