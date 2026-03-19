@@ -11573,7 +11573,7 @@ phases:
   steps:
   - id: rt.liveness.probe
     name: Blind-tester Mode D liveness probe
-    status: claimed
+    status: done
     description: Run blind-tester Mode D against the completed system. All 4 tests
       in test_liveness.py must pass.
     verification: 'VERDICT: ALIVE. All 4 repro tests pass. stdio mode stays alive
@@ -11596,6 +11596,27 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-19T07:07:26.830174+00:00'
+    done_at: '2026-03-19T07:08:50.674069+00:00'
+    evidence: 'Liveness verdict: ALIVE
+
+      test_liveness.py results:
+
+      - test_stdio_ready_banner_not_on_stdout: pass
+
+      - test_stdio_responds_to_mcp_initialize: pass
+
+      - test_sse_mode_stays_alive: pass
+
+      - test_status_reports_meaningful_state: pass
+
+      Evidence:
+
+      - Run: .venv/bin/python -m pytest tests/repro/test_liveness.py -v --tb=short
+      -> 4 passed in 5.76s
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.liveness.gate
     name: Final gate
     status: pending
