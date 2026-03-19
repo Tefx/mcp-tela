@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import sys
 import tempfile
+from pathlib import Path
 
 import pytest
+from mcp import types
 
 from tela.commands.start import start_command
 from tela.core.models import (
+    AuthConfig,
     AuthMode,
     GatewayStatus,
     GatewayTransport,
+    Posture,
+    ProfileConfig,
     ServerConfig,
     TelaConfig,
 )
@@ -29,43 +36,57 @@ from tela.shell.gateway import (
 
 # --- GatewayStartupConfig model tests ---
 
+
 def test_gateway_startup_config_stdio_defaults() -> None:
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     assert config.transport == GatewayTransport.STDIO
     assert config.port is None
 
+
 def test_gateway_startup_config_sse_carries_port() -> None:
     config = GatewayStartupConfig(
-        transport=GatewayTransport.SSE, port=8080,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.SSE,
+        port=8080,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     assert config.transport == GatewayTransport.SSE
     assert config.port == 8080
 
+
 def test_gateway_startup_config_is_frozen() -> None:
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     with pytest.raises(AttributeError):
         config.transport = GatewayTransport.SSE  # type: ignore[misc]
 
+
 def test_gateway_startup_config_token_mode() -> None:
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.TOKEN, default_profile=None,
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.TOKEN,
+        default_profile=None,
     )
     assert config.auth_mode == AuthMode.TOKEN
 
 
 # --- Startup fail-fast tests ---
 
+
 def test_startup_fails_on_missing_config_file() -> None:
     result = start_command(config_path="/nonexistent/tela.yaml")
     assert result.is_err
+
 
 def test_startup_fails_on_invalid_yaml_shape() -> None:
     d = tempfile.mkdtemp()
@@ -75,6 +96,7 @@ def test_startup_fails_on_invalid_yaml_shape() -> None:
     result = start_command(config_path=p)
     assert result.is_err
 
+
 def test_startup_fails_on_open_mode_no_default() -> None:
     d = tempfile.mkdtemp()
     p = os.path.join(d, "tela.yaml")
@@ -83,27 +105,37 @@ def test_startup_fails_on_open_mode_no_default() -> None:
     result = start_command(config_path=p)
     assert result.is_err
 
+
 def test_startup_fails_on_open_mode_ambiguous_defaults() -> None:
     d = tempfile.mkdtemp()
     p = os.path.join(d, "tela.yaml")
     with open(p, "w") as f:
-        f.write("profiles:\n  dev:\n    name: dev\n    default: true\n  staging:\n    name: staging\n    default: true\nauth:\n  mode: open\n")
+        f.write(
+            "profiles:\n  dev:\n    name: dev\n    default: true\n  staging:\n    name: staging\n    default: true\nauth:\n  mode: open\n"
+        )
     result = start_command(config_path=p)
     assert result.is_err
+
 
 def test_startup_fails_on_unknown_cli_profile() -> None:
     d = tempfile.mkdtemp()
     p = os.path.join(d, "tela.yaml")
     with open(p, "w") as f:
-        f.write("profiles:\n  dev:\n    name: dev\n    default: true\nauth:\n  mode: open\n")
+        f.write(
+            "profiles:\n  dev:\n    name: dev\n    default: true\nauth:\n  mode: open\n"
+        )
     result = start_command(config_path=p, default_profile="nonexistent")
     assert result.is_err
 
+
 def test_bind_gateway_startup_fails_on_missing_config() -> None:
     from tela.core.models import RuntimeBindingContract
+
     runtime = RuntimeBindingContract(
         config_path="/nonexistent/tela.yaml",
-        transport=GatewayTransport.STDIO, port=None, cli_default_profile=None,
+        transport=GatewayTransport.STDIO,
+        port=None,
+        cli_default_profile=None,
     )
     result = bind_gateway_startup(runtime)
     assert result.is_err
@@ -111,36 +143,48 @@ def test_bind_gateway_startup_fails_on_missing_config() -> None:
 
 # --- GatewayStatus model tests ---
 
+
 def test_gateway_status_model_fields() -> None:
     status = GatewayStatus(
-        uptime_seconds=120.5, server_count=3,
+        uptime_seconds=120.5,
+        server_count=3,
         connected_servers=["srv1", "srv2", "srv3"],
-        active_connections=2, profile_count=4, total_tool_calls=100,
+        active_connections=2,
+        profile_count=4,
+        total_tool_calls=100,
     )
     assert status.uptime_seconds == 120.5
     assert status.server_count == 3
 
+
 def test_gateway_status_model_defaults() -> None:
     status = GatewayStatus(
-        uptime_seconds=0, server_count=0, active_connections=0,
-        profile_count=0, total_tool_calls=0,
+        uptime_seconds=0,
+        server_count=0,
+        active_connections=0,
+        profile_count=0,
+        total_tool_calls=0,
     )
     assert status.connected_servers == []
 
 
 # --- Gateway lifecycle (start/shutdown/status/connections) ---
 
+
 def test_gateway_start_succeeds_with_empty_config() -> None:
     """gateway_start with no servers succeeds."""
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     result = asyncio.run(gateway_start(config, tela_config=TelaConfig()))
     assert result.is_ok
     assert get_runtime().running is True
     # Cleanup
     asyncio.run(gateway_shutdown())
+
 
 def test_gateway_start_with_servers_and_tools() -> None:
     """gateway_start connects downstreams and registers tools."""
@@ -149,8 +193,10 @@ def test_gateway_start_with_servers_and_tools() -> None:
     )
     tool_lists = {"fs": [{"name": "read_file", "inputSchema": {}}]}
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     result = asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
     assert result.is_ok
@@ -161,6 +207,7 @@ def test_gateway_start_with_servers_and_tools() -> None:
 
     # Cleanup
     asyncio.run(gateway_shutdown())
+
 
 def test_gateway_start_fails_on_tool_conflict() -> None:
     """gateway_start fails fast on tool name conflicts."""
@@ -175,18 +222,23 @@ def test_gateway_start_fails_on_tool_conflict() -> None:
         "fs2": [{"name": "read_file", "inputSchema": {}}],
     }
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     result = asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
     assert result.is_err
     assert "TOOL_CONFLICT" in (result.error or "")
 
+
 def test_gateway_shutdown_clears_state() -> None:
     """gateway_shutdown clears runtime state."""
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     asyncio.run(gateway_start(config, tela_config=TelaConfig()))
     assert get_runtime().running is True
@@ -195,16 +247,23 @@ def test_gateway_shutdown_clears_state() -> None:
     assert result.is_ok
     assert get_runtime().running is False
 
+
 def test_gateway_status_after_start() -> None:
     """gateway_status reflects runtime state after start."""
     tela = TelaConfig(
         servers={"srv": ServerConfig(name="srv", command="cmd")},
-        profiles={"dev": __import__("tela.core.models", fromlist=["ProfileConfig"]).ProfileConfig(name="dev")},
+        profiles={
+            "dev": __import__(
+                "tela.core.models", fromlist=["ProfileConfig"]
+            ).ProfileConfig(name="dev")
+        },
     )
     tool_lists = {"srv": [{"name": "tool1", "inputSchema": {}}]}
     config = GatewayStartupConfig(
-        transport=GatewayTransport.STDIO, port=None,
-        auth_mode=AuthMode.OPEN, default_profile="dev",
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
     )
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
 
@@ -216,14 +275,219 @@ def test_gateway_status_after_start() -> None:
 
     asyncio.run(gateway_shutdown())
 
+
 def test_gateway_connections_empty_initially() -> None:
     """gateway_connections returns empty list initially."""
-    asyncio.run(gateway_start(
-        GatewayStartupConfig(
-            transport=GatewayTransport.STDIO, port=None,
-            auth_mode=AuthMode.OPEN, default_profile="dev",
-        ),
-        tela_config=TelaConfig(),
-    ))
+    asyncio.run(
+        gateway_start(
+            GatewayStartupConfig(
+                transport=GatewayTransport.STDIO,
+                port=None,
+                auth_mode=AuthMode.OPEN,
+                default_profile="dev",
+            ),
+            tela_config=TelaConfig(),
+        )
+    )
     assert asyncio.run(gateway_connections()) == []
     asyncio.run(gateway_shutdown())
+
+
+def test_fastmcp_tools_list_returns_filtered_tools() -> None:
+    """Low-level tools/list handler returns profile-filtered tools."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                ),
+                "shell": ServerConfig(
+                    name="shell",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [
+                {"name": "read_file", "inputSchema": {}},
+            ],
+            "shell": [{"name": "exec", "inputSchema": {}}],
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            names = sorted(tool.name for tool in response.root.tools)
+            assert names == ["read_file"]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
+    """tools/call handler enforces through upstream and strips _meta before forwarding."""
+
+    async def _scenario() -> None:
+        fixture_server = (
+            Path(__file__).resolve().parents[1] / "fixtures" / "fastmcp_stdio_server.py"
+        )
+        tela = TelaConfig(
+            servers={
+                "stdio": ServerConfig(
+                    name="stdio",
+                    command=sys.executable,
+                    args=[str(fixture_server)],
+                    default_posture=Posture.READ_WRITE,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"stdio": Posture.READ_WRITE},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        start_result = await gateway_start(config, tela_config=tela)
+        assert start_result.is_ok
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+
+            call_handler = server._mcp_server.request_handlers[types.CallToolRequest]
+            response = await call_handler(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="echo",
+                        arguments={
+                            "value": "hello",
+                            "_meta": {"trace_id": "tr-1"},
+                        },
+                    )
+                )
+            )
+
+            assert response.root.isError is False
+            assert response.root.structuredContent is not None
+            assert response.root.structuredContent["structuredContent"] == {
+                "result": "hello"
+            }
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_fastmcp_profiles_resource_registered() -> None:
+    """tela.profiles MCP resource is registered and readable."""
+
+    tela = TelaConfig(
+        profiles={
+            "dev": ProfileConfig(
+                name="dev",
+                default=True,
+                capabilities={"fs": Posture.READ_ONLY},
+            )
+        },
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+    )
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
+    )
+
+    asyncio.run(gateway_start(config, tela_config=tela, tool_lists={}))
+    try:
+        server = get_runtime().upstream_server
+        assert server is not None
+
+        resources = asyncio.run(server.list_resources())
+        assert any(resource.name == "tela.profiles" for resource in resources)
+
+        contents = asyncio.run(server.read_resource("tela://profiles"))
+        payload = json.loads(contents[0].content)
+        assert payload[0]["profile_name"] == "dev"
+    finally:
+        asyncio.run(gateway_shutdown())
+
+
+def test_fastmcp_tools_call_denies_unadmitted_family() -> None:
+    """tools/call denial comes from enforcement chain before forwarding."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={"shell": ServerConfig(name="shell", command="cmd")},
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_WRITE},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(
+            config,
+            tela_config=tela,
+            tool_lists={"shell": [{"name": "exec", "inputSchema": {}}]},
+        )
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            call_handler = server._mcp_server.request_handlers[types.CallToolRequest]
+            response = await call_handler(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(name="exec", arguments={}),
+                )
+            )
+
+            assert response.root.isError is True
+            assert "AUTHZ_DENY" in response.root.content[0].text
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())

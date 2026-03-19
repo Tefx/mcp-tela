@@ -8,10 +8,12 @@ Transport startup (stdio/SSE MCP server) is deferred.
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
 
 from tela.core.models import (
@@ -88,6 +90,67 @@ def _make_registry_tool_handler(server_name: str, tool_name: str):
         f"Forward MCP tool '{tool_name}' to downstream server '{server_name}'."
     )
     return _forward_tool
+
+
+def _register_profiles_resource(upstream_server: FastMCP) -> None:
+    """Register tela.profiles resource on the upstream FastMCP server."""
+
+    from tela.shell.upstream import handle_profiles_list
+
+    @upstream_server.resource(
+        "tela://profiles",
+        name="tela.profiles",
+        description="List configured tela profiles.",
+        mime_type="application/json",
+    )
+    def _profiles_resource() -> str:
+        return json.dumps(handle_profiles_list())
+
+
+def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
+    """Wire upstream handlers into FastMCP request handling."""
+
+    from tela.shell.upstream import (
+        handle_initialize,
+        handle_tools_call,
+        handle_tools_list,
+    )
+
+    async def _ensure_connection() -> ConnectionContext:
+        runtime = get_runtime()
+        if runtime.connections:
+            return runtime.connections[0]
+
+        init_result = await handle_initialize({})
+        if init_result.is_err:
+            raise RuntimeError(init_result.error or "INITIALIZE_REJECTED")
+
+        assert init_result.value is not None
+        return init_result.value
+
+    @upstream_server._mcp_server.list_tools()
+    async def _list_tools() -> list[mcp_types.Tool]:
+        connection = await _ensure_connection()
+        filtered_tools = await handle_tools_list(connection)
+        return [
+            mcp_types.Tool(
+                name=tool["name"],
+                inputSchema=dict(tool.get("inputSchema") or {}),
+                description="Upstream filtered tool.",
+            )
+            for tool in filtered_tools
+        ]
+
+    @upstream_server._mcp_server.call_tool(validate_input=False)
+    async def _call_tool(tool_name: str, arguments: dict[str, object]) -> dict:
+        connection = await _ensure_connection()
+        result = await handle_tools_call(connection, tool_name, dict(arguments))
+        if result.is_err:
+            assert result.error is not None
+            raise RuntimeError(f"{result.error.code}: {result.error.message}")
+
+        assert result.value is not None
+        return result.value
 
 
 def _register_registry_tools(upstream_server: FastMCP) -> None:
@@ -231,6 +294,8 @@ async def gateway_start(
         return Result(error=audit_result.error)
 
     upstream_server = _create_upstream_server(config)
+    _wire_upstream_handlers(upstream_server)
+    _register_profiles_resource(upstream_server)
     _register_registry_tools(upstream_server)
 
     # Store runtime state
