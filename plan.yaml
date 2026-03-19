@@ -10854,7 +10854,7 @@ phases:
       - covered by callback tests'
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
-  status: in_progress
+  status: done
   depends_on:
   - rt.reload_wire
   steps:
@@ -10926,7 +10926,7 @@ phases:
       - cleanup scoped to stale-annotation removal and justification alignment'
   - id: rt.escape_cleanup.gate
     name: Gate review
-    status: claimed
+    status: done
     description: Gate review focused on W7.
     verification: Quick Gate focused on W7. No STUB_MODULE or STALE_HATCH.
     depends_on:
@@ -10934,6 +10934,32 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T06:47:21.107153+00:00'
+    done_at: '2026-03-19T06:51:15.046093+00:00'
+    evidence: 'Artifact:
+
+      - escape cleanup gate audit over stale annotation removal and remaining justifications
+
+
+      Verification:
+
+      - invar guard pass confirmed
+
+      - no stale hatch text/patterns remain
+
+      - remaining annotations map to legitimate CLI/framework/test/deferred cases
+
+      - wiring cross-check confirms removed stale annotations correspond to now-wired
+      functions
+
+
+      Spec link:
+
+      - W7-oriented escape cleanup acceptance criteria
+
+
+      Result:
+
+      - Gate PASS'
 - id: rt.doctests
   name: Replace Pass Doctests
   status: done
