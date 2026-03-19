@@ -6,12 +6,17 @@ Tests verify the full path: CLI entrypoint -> start_command -> bind_gateway_star
 
 from __future__ import annotations
 
+import asyncio
 import os
+import sys
 import tempfile
+from pathlib import Path
 
 from tela.commands.start import start_command
 from tela.core.models import AuthMode, GatewayTransport
-from tela.shell.gateway import bind_gateway_startup
+from tela.shell.config_loader import load_config
+from tela.shell.gateway import bind_gateway_startup, gateway_shutdown, gateway_start
+from tela.shell.upstream import handle_initialize, handle_tools_call, handle_tools_list
 
 
 def _write_open_mode_config(
@@ -56,9 +61,7 @@ def test_full_path_cli_to_gateway_with_config_default() -> None:
 
 def test_full_path_cli_to_gateway_with_cli_override() -> None:
     """CLI --default-profile overrides config default:true."""
-    config_path, _ = _write_open_mode_config(
-        {"staging": True, "production": False}
-    )
+    config_path, _ = _write_open_mode_config({"staging": True, "production": False})
 
     runtime_result = start_command(
         config_path=config_path, default_profile="production"
@@ -134,7 +137,9 @@ def test_gateway_binds_same_profile_as_cli_authority() -> None:
     assert gateway_result.is_ok and gateway_result.value is not None
 
     # The profile in gateway config must be identical to what CLI resolved
-    assert gateway_result.value.default_profile == runtime_result.value.cli_default_profile
+    assert (
+        gateway_result.value.default_profile == runtime_result.value.cli_default_profile
+    )
 
 
 # --- Runtime readiness integration tests ---
@@ -210,3 +215,86 @@ def test_runtime_readiness_fail_fast_chain() -> None:
     # Gateway is never reached — this is fail-fast at startup
     # (We cannot call bind_gateway_startup because runtime_result has no value)
     assert runtime_result.value is None
+
+
+def test_end_to_end_real_stdio_server_enumerate_and_call() -> None:
+    """Start real FastMCP downstream process and verify tela forwards tools/call."""
+    server_script = (
+        Path(__file__).resolve().parents[1] / "fixtures" / "fastmcp_stdio_server.py"
+    )
+
+    config_content = "\n".join(
+        [
+            "servers:",
+            "  local_stdio:",
+            "    name: local_stdio",
+            f"    command: {sys.executable}",
+            "    args:",
+            f"      - {server_script}",
+            "    default_posture: read_only",
+            "profiles:",
+            "  dev:",
+            "    name: dev",
+            "    default: true",
+            "    capabilities:",
+            "      local_stdio: read_only",
+            "auth:",
+            "  mode: open",
+        ]
+    )
+
+    config_dir = tempfile.mkdtemp()
+    config_path = os.path.join(config_dir, "tela.yaml")
+    with open(config_path, "w") as config_file:
+        config_file.write(config_content)
+
+    runtime_result = start_command(config_path=config_path)
+    assert runtime_result.is_ok
+    assert runtime_result.value is not None
+
+    loaded_config_result = load_config(
+        Path(config_path),
+        default_profile=runtime_result.value.cli_default_profile,
+    )
+    assert loaded_config_result.is_ok
+    assert loaded_config_result.value is not None
+
+    startup_result = bind_gateway_startup(
+        runtime_result.value,
+        config=loaded_config_result.value,
+    )
+    assert startup_result.is_ok
+    assert startup_result.value is not None
+
+    async def _run() -> None:
+        start_result = await gateway_start(
+            startup_result.value,
+            tela_config=loaded_config_result.value,
+        )
+        assert start_result.is_ok
+
+        try:
+            initialize_result = await handle_initialize({})
+            assert initialize_result.is_ok
+            assert initialize_result.value is not None
+
+            tools = await handle_tools_list(initialize_result.value)
+            tool_names = sorted(tool["name"] for tool in tools)
+            assert "echo" in tool_names
+            assert "ping" in tool_names
+
+            call_result = await handle_tools_call(
+                initialize_result.value,
+                "echo",
+                {"value": "forwarded through tela"},
+            )
+            assert call_result.is_ok
+            assert call_result.value is not None
+            payload = call_result.value
+            assert payload["content"][0]["type"] == "text"
+            assert payload["content"][0]["text"] == "forwarded through tela"
+        finally:
+            shutdown_result = await gateway_shutdown()
+            assert shutdown_result.is_ok
+
+    asyncio.run(_run())
