@@ -10611,9 +10611,27 @@ phases:
   - id: rt.reload_wire.gate
     name: Gate review
     status: pending
-    description: Gate review for hot reload wiring.
-    verification: Quick Gate. W1 shows zero DEAD exports in reload.py.
+    description: 'Gate review for hot reload wiring.
+
+
+      Review focus:
+
+      - New test evidence exists for callback wiring reachability, runtime callers,
+      and re-enumeration trigger behavior
+
+      - Implementation evidence shows the runtime surface is actually wired, not just
+      exported
+
+      - Gate blocks if either implementation or test evidence is missing'
+    verification: '- `rt.reload_wire.test` provides explicit evidence for callback
+      wiring, runtime callers, and re-enumeration trigger behavior
+
+      - `rt.reload_wire.impl` shows the runtime reload surface is wired to real fastmcp
+      downstream callers
+
+      - W1 shows zero DEAD exports in reload.py'
     depends_on:
+    - rt.reload_wire.test
     - rt.reload_wire.impl
     agent: gate-reviewer
   - id: rt.reload_wire.test
