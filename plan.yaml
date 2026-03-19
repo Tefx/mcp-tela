@@ -12025,7 +12025,7 @@ phases:
     agent: gate-reviewer
   - id: rt.final_gate.should-fix-batch
     name: Batch SHOULD_FIX runtime wiring remediation
-    status: claimed
+    status: done
     description: 'Batched remediation for SHOULD_FIX findings from `rt.final_gate.wiring`.
 
 
@@ -12131,6 +12131,61 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T07:40:41.801369+00:00'
+    done_at: '2026-03-19T07:51:06.922776+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 7ff5f02c36cd0c05c0a8490108f7384caab406c0
+
+      - Files changed: src/tela/cli.py, src/tela/shell/gateway.py, src/tela/shell/reload.py,
+      src/tela/shell/upstream.py, tests/shell/test_cli_wiring.py, tests/shell/test_gateway.py,
+      tests/shell/test_upstream.py
+
+
+      Production path proof:
+
+      - reload path: CLI start flow -> config watcher callback -> gateway reload entry
+      -> reload.on_config_changed
+
+      - upstream path: gateway upstream handler wire-up -> handle_initialize -> resolve_initialize_profile_binding
+
+
+      Sibling search:
+
+      - searched reachability chains for gateway_reload_config_from_disk/_watch_config_changes/on_config_changed
+
+      - searched production invocation for resolve_initialize_profile_binding and
+      removed stale dead_export exposure for targeted symbol
+
+
+      Verification:
+
+      - Run: uv run pytest -q tests/shell/test_cli_wiring.py tests/shell/test_gateway.py::test_gateway_reload_config_from_disk_routes_through_reload_callback
+      tests/shell/test_upstream.py::test_handle_initialize_uses_profile_binding_resolver
+      tests/shell/test_upstream.py::test_handle_initialize_rejects_open_mode_without_resolved_profile
+      -> 4 passed
+
+      - Run: uv run pytest -q tests/shell/test_gateway.py::test_fastmcp_tools_list_returns_filtered_tools
+      tests/shell/test_gateway.py::test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream
+      -> 2 passed
+
+
+      Outcome:
+
+      - both_items_closed: true
+
+      - runtime_contract_clarified: true
+
+      - stale_test_only_hatches_remaining: 0 for targeted symbols
+
+
+      Spec link:
+
+      - Step rt.final_gate.should-fix-batch
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.final_gate.should-fix-retest
     name: Retest SHOULD_FIX runtime wiring remediation
     status: pending
