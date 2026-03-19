@@ -10478,7 +10478,7 @@ phases:
       - scope limited to stdio start wiring and transport behavior'
   - id: rt.cli_start.sse
     name: Wire SSE transport
-    status: claimed
+    status: done
     description: Wire SSE transport when --port is provided. Start HTTP SSE server
       on specified port. Process must stay alive and accept SSE connections.
     verification: tela start --port 8080 binds port and accepts SSE connections. test_liveness.py
@@ -10501,6 +10501,31 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T05:47:52.076425+00:00'
+    done_at: '2026-03-19T05:50:21.745439+00:00'
+    evidence: 'Commit hash(es):
+
+      - f710f35
+
+
+      Files changed:
+
+      - src/tela/cli.py
+
+
+      Verification:
+
+      - SSE server binds port: yes
+
+      - SSE connection accepted: yes (HTTP 200 with text/event-stream)
+
+      - liveness SSE test passes: yes
+
+      - full liveness repro suite passes
+
+
+      Gaps/Notes:
+
+      - change scoped to SSE start path only'
   - id: rt.cli_start.gate
     name: Gate review with liveness probe
     status: pending
