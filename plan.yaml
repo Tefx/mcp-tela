@@ -14797,7 +14797,7 @@ phases:
       - existing non-mirror repo findings remain for subsequent remediation steps.'
   - id: invar1203.escape-policy-baseline
     name: Re-baseline escape-hatch policy after scope hardening
-    status: claimed
+    status: done
     description: 'Reduce project-level escape-hatch policy overload after duplicate-scan
       suppression and define the remaining remediation envelope.
 
@@ -14850,6 +14850,28 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T08:47:14.630707+00:00'
+    done_at: '2026-03-19T08:49:12.255977+00:00'
+    evidence: "Artifact:\n- Commit hash(es): none (analysis-only)\n- Files changed:\
+      \ none\n\nFocused guard results (post scope-hardening):\n- escape_hatch_budget:\
+      \ 0\n- escape_hatch_project_limit: 0\n- escape_hatch_file_limit: 8 findings\
+      \ across 7 files\n- escape_hatch_non_suppressible: 13 findings across 9 files\n\
+      \nResidual violations by file:\n- src/tela/cli.py -> file_limit, non_suppressible\n\
+      - src/tela/core/contracts.py -> non_suppressible\n- src/tela/shell/audit.py\
+      \ -> file_limit, non_suppressible\n- src/tela/shell/downstream.py -> file_limit,\
+      \ non_suppressible\n- src/tela/shell/downstream_clients.py -> file_limit\n-\
+      \ src/tela/shell/gateway.py -> file_limit\n- src/tela/shell/upstream.py -> file_limit\n\
+      - src/tela/shell/upstream_utils.py -> file_limit\n- src/tela/commands/start.py\
+      \ -> non_suppressible\n- src/tela/commands/status_cmd.py -> non_suppressible\n\
+      - src/tela/commands/connections_cmd.py -> non_suppressible\n- src/tela/commands/profiles_cmd.py\
+      \ -> non_suppressible\n- src/tela/commands/audit_cmd.py -> non_suppressible\n\
+      \nClassification:\n- remediate_now:\n  - src/tela/core/contracts.py (core missing_contract/non-suppressible\
+      \ pressure)\n- carried_debt (for dedicated later steps):\n  - shell/CLI file_limit\
+      \ pressure surfaces\n  - shell/CLI non_suppressible dead_export surfaces requiring\
+      \ structural runtime/entrypoint handling\n\nVerification:\n- Run: uv run invar\
+      \ guard --all -> completed with real-tree findings only\n- Run: focused parser\
+      \ over guard JSON -> produced category counts and src file mapping above\n\n\
+      Spec link:\n- Step invar1203.escape-policy-baseline\n\nGaps/Notes:\n- Baseline\
+      \ step intentionally no code remediation."
   - id: invar1203.escape-policy-shell
     name: Remediate non-suppressible escape hatches in shell surfaces
     status: pending
