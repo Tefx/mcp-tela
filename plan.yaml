@@ -10556,7 +10556,7 @@ phases:
   steps:
   - id: rt.reload_wire.impl
     name: Wire hot reload to fastmcp downstream
-    status: claimed
+    status: done
     description: 'Implement hot-reload wiring against the already-defined test coverage
       for the fastmcp downstream runtime surface.
 
@@ -10610,6 +10610,42 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T06:14:36.391068+00:00'
+    done_at: '2026-03-19T06:24:05.593848+00:00'
+    evidence: 'Commit hash(es):
+
+      - 1f4320b
+
+
+      Files changed:
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/upstream.py
+
+      - tests/shell/test_downstream_runtime_connection.py
+
+      - tests/shell/test_gateway.py
+
+
+      Verification:
+
+      - set_notify_callback called at startup: yes (gateway startup wiring)
+
+      - on_server_reconnect triggered by downstream: yes (message-handler exception
+      path)
+
+      - Tool list update propagated: yes (tools/list_changed notification routed through
+      reload path)
+
+      - tests from `rt.reload_wire.test` pass in focused suites
+
+
+      Gaps/Notes:
+
+      - changed-scope invar guard reports pre-existing shell policy findings outside
+      acceptance criteria'
   - id: rt.reload_wire.gate
     name: Gate review
     status: pending
