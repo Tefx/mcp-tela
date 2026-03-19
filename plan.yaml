@@ -14623,3 +14623,53 @@ phases:
     clean or leaves explicitly classified residual debt with gate approval.
   depends_on:
   - cap.final_gate
+  steps:
+  - id: invar1203.resolve-deps
+    name: Restore resolvable Invar Guard 1.20.3 execution path
+    status: pending
+    description: 'Make `uv run invar guard --all` resolvable for this repo after the
+      dev dependency target changed to `invar-guard==1.20.3`.
+
+
+      Scope:
+
+      - Repair dev dependency resolution for `invar-guard==1.20.3`, or wire an approved
+      source mapping / alternate package source that keeps the project command family
+      on `uv run invar guard --all`
+
+      - Document the exact package source decision in repo-local configuration if
+      required by the approved resolution path
+
+      - Keep command-family consistency: do not normalize on global `invar` as the
+      steady-state project path unless the source-mapping decision explicitly requires
+      that fallback and records why
+
+
+      Known risks:
+
+      - Tool appears resolvable only via global install today, which hides project-environment
+      drift
+
+      - Symptom-only fixes such as pin churn without a verified resolver path are
+      insufficient
+
+
+      Out of scope:
+
+      - Product code changes unrelated to guard execution
+
+      - Broad dependency upgrades beyond what is necessary to restore the guard path
+
+      '
+    verification: '- Command expectation: `uv run invar guard --all --help` resolves
+      the project environment without missing-package errors
+
+      - Command expectation: `uv sync --dev` or the project-equivalent dependency
+      refresh completes with the chosen source mapping
+
+      - Evidence must state the exact resolution path used for `invar-guard==1.20.3`
+      and why it is approved
+
+      - If fallback to a mapped source is required, evidence must show the repo configuration
+      that makes the command reproducible for other agents'
+    agent: software-architect
