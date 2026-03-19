@@ -14713,7 +14713,7 @@ phases:
       - none'
   - id: invar1203.scope-hardening
     name: Constrain guard scope to tracked project sources
-    status: pending
+    status: claimed
     description: 'Harden guard scope so full scans do not recurse into transient worktree
       mirrors.
 
@@ -14754,6 +14754,8 @@ phases:
     depends_on:
     - invar1203.resolve-deps
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-19T08:40:53.931177+00:00'
   - id: invar1203.escape-policy-baseline
     name: Re-baseline escape-hatch policy after scope hardening
     status: pending
