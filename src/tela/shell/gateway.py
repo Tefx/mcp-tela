@@ -319,6 +319,7 @@ async def gateway_start(
 
     # Store runtime state
     async with _runtime_lock:
+        _runtime.total_tool_calls = 0
         _runtime.config = effective_config
         _runtime.startup_config = config
         _runtime.start_time = time.monotonic()
@@ -344,9 +345,12 @@ async def gateway_shutdown() -> Result[None, str]:
     disconnect_result = await disconnect_all()
     _set_reload_notify_callback(None)
     async with _runtime_lock:
+        _runtime.config = None
+        _runtime.startup_config = None
         _runtime.upstream_server = None
         _runtime.running = False
         _runtime.start_time = None
+        _runtime.total_tool_calls = 0
         _runtime.connections.clear()
     return disconnect_result
 
