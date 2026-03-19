@@ -14769,3 +14769,53 @@ phases:
     depends_on:
     - invar1203.scope-hardening
     agent: python-senior
+  - id: invar1203.escape-policy-shell
+    name: Remediate non-suppressible escape hatches in shell surfaces
+    status: pending
+    description: 'Reduce non-suppressible and per-file escape-hatch violations in
+      shell-heavy modules.
+
+
+      Priority files:
+
+      - `src/tela/shell/upstream.py`
+
+      - `src/tela/shell/downstream.py`
+
+      - `src/tela/shell/audit.py`
+
+      - `src/tela/shell/gateway.py`
+
+      - `src/tela/shell/reload.py`
+
+
+      Known risks from project history:
+
+      - Output and shell surface work tends to create sibling-path drift; search all
+      related emitters/helpers, not just the first flagged function
+
+      - Budget relief must come from removing or restructuring underlying anti-patterns,
+      not from reclassifying non-suppressible categories
+
+
+      Completion criteria:
+
+      - Address the true residual shell escape-hatch findings identified by the re-baseline
+      step
+
+      - Search for sibling occurrences of the same anti-pattern in adjacent shell
+      helpers before claiming done
+
+      '
+    verification: '- Command expectation: targeted guard run on the listed shell modules
+      shows reduced or eliminated `escape_hatch_non_suppressible` and `escape_hatch_file_limit`
+      findings for the touched files
+
+      - Evidence must name the anti-pattern families removed per file and include
+      sibling-search proof
+
+      - If any shell escape-hatch debt remains, evidence must classify it explicitly
+      for gate review rather than leaving it implicit'
+    depends_on:
+    - invar1203.escape-policy-baseline
+    agent: python-senior
