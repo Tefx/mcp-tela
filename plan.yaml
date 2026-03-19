@@ -11050,7 +11050,7 @@ phases:
       - Gate PASS'
 - id: rt.e2e
   name: End-to-End Integration Tests
-  status: in_progress
+  status: done
   depends_on:
   - rt.cli_start
   steps:
@@ -11149,7 +11149,7 @@ phases:
       - `rt.e2e.gate` now depends on retest step.'
   - id: rt.e2e.gate
     name: Gate review
-    status: claimed
+    status: done
     description: Gate review for E2E phase.
     verification: Full Gate. B4 resolved. Real integration evidence exists.
     depends_on:
@@ -11157,6 +11157,81 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T07:02:56.998387+00:00'
+    done_at: '2026-03-19T07:07:11.874800+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): none (verification-only gate step)
+
+      - Files changed: none
+
+
+      Gate protocol:
+
+      - Wiring audit (W1-W8): passed (CLI entrypoint, subcommands, handlers, integration
+      paths, config loading, gateway wiring, status/profiles/connections/audit wiring)
+
+      - Escape hatch audit: documented and within concentration limits; no stub modules
+      detected
+
+      - Runnable surface liveness/smoke: passed (stdio banner behavior, MCP initialize
+      response, SSE alive, status JSON)
+
+      - Real integration vs fixture evidence: confirmed real stdio downstream E2E
+      path exists and passes
+
+
+      Blind-tester Mode D (mandatory runnable-surface cross-check):
+
+      - Run: uv run pytest tests/repro/test_liveness.py -v --tb=short -> 4 passed
+
+      - Run: uv run pytest tests/repro/ -v --tb=short -> 50 passed
+
+      - Run: uv run tela --help -> shows expected subcommands
+
+      - Run: uv run tela status --json -> valid status JSON
+
+      - Run: uv run tela start --config /dev/null -> expected controlled failure path
+
+      - Findings: blocker=[], should_fix=[], suggestion=[], tech_debt=[]
+
+      - Verdict: PASS
+
+
+      Verification:
+
+      - Run: uv run pytest tests/ -v --tb=short -> 422 passed, 3 warnings
+
+      - Run: uv run pytest tests/integration/test_end_to_end.py tests/repro/test_liveness.py
+      -v --tb=short -> 16 passed
+
+
+      Issues:
+
+      - blocker: []
+
+      - should_fix: []
+
+      - suggestion: []
+
+      - tech_debt: ["Legacy ''tools:'' deprecation warnings in tests"]
+
+
+      Verdict:
+
+      - PASS
+
+      - Rationale: Gate and independent liveness checks both pass; no blocking or
+      should-fix issues remain.
+
+
+      Spec link:
+
+      - Step rt.e2e.gate
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.e2e.fix-state-isolation
     name: Fix gateway state isolation leak
     status: done
@@ -11492,7 +11567,7 @@ phases:
       - none'
 - id: rt.liveness
   name: Liveness Verification
-  status: locked
+  status: pending
   depends_on:
   - rt.e2e
   steps:
