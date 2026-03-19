@@ -10653,13 +10653,13 @@ phases:
     agent: gate-reviewer
 - id: rt.e2e
   name: End-to-End Integration Tests
-  status: pending
+  status: in_progress
   depends_on:
   - rt.cli_start
   steps:
   - id: rt.e2e.test
     name: Write end-to-end integration test
-    status: pending
+    status: claimed
     description: 'Write end-to-end integration test: start a mock MCP server (using
       fastmcp), configure tela to connect to it, start tela, enumerate tools through
       tela, make a tools/call through tela, verify result forwarded correctly. NO
@@ -10684,6 +10684,8 @@ phases:
 
       Gaps/Notes:'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T06:04:57.936485+00:00'
   - id: rt.e2e.verify
     name: Run full test suite
     status: pending
