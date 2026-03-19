@@ -14874,7 +14874,7 @@ phases:
       \ step intentionally no code remediation."
   - id: invar1203.escape-policy-shell
     name: Remediate non-suppressible escape hatches in shell surfaces
-    status: pending
+    status: claimed
     description: 'Reduce non-suppressible and per-file escape-hatch violations in
       shell-heavy modules.
 
@@ -14922,6 +14922,8 @@ phases:
     depends_on:
     - invar1203.escape-policy-baseline
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T08:50:00.264233+00:00'
   - id: invar1203.escape-policy-cli
     name: Remediate CLI escape-hatch limit violations
     status: pending
