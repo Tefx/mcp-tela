@@ -21,6 +21,31 @@ tela = "tela.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/tela"]
 
+[tool.invar.guard]
+exclude_paths = [
+    "tests",
+    "test",
+    "scripts",
+    ".venv",
+    "venv",
+    ".env",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".git",
+    ".hg",
+    ".svn",
+    "node_modules",
+    "dist",
+    "build",
+    ".tox",
+    "templates",
+    ".invar/examples",
+    ".claude/worktrees",
+    ".vectl/worktrees",
+]
+
 [dependency-groups]
 dev = [
     # `invar-guard==1.20.3` is not published in the default registry; use the
