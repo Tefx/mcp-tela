@@ -15622,7 +15622,7 @@ phases:
       classification.'
   - id: invar1203.retest-batched-should-fix
     name: Re-test batched should-fix full guard findings
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
       batched remediation from a fresh perspective.
 
@@ -15673,3 +15673,17 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T09:49:43.732387+00:00'
+    done_at: '2026-03-19T09:51:43.952298+00:00'
+    evidence: "Artifact:\n- Commit hash(es): none (verification-only)\n- Files changed:\
+      \ none\n\nVerification:\n- Run: uv run invar guard --all -> static errors=0;\
+      \ warnings/infos remain\n\nFamily checks:\n- audit_shell_result: PASS (targeted\
+      \ audit shell_result findings absent)\n- file_limit_downstream_clients: PASS\
+      \ (no file-limit overrun)\n- file_limit_upstream_utils: PASS (no file-limit\
+      \ overrun)\n- project_shell_result_budget: PASS (shell_result 4/5 within budget)\n\
+      - shell_complexity_debt: PASS (no residual shell_complexity_debt error)\n\n\
+      Findings classification:\n- blocker: []\n- should_fix: []\n- suggestion:\n \
+      \ - residual warning/info quality items (shell_pure_logic, partial_contract,\
+      \ redundant_type_contract, function_size, shell_too_complex)\n- tech_debt:\n\
+      \  - missing_doctest on ProfileConfig.tools\n  - review_suggested on token.py\n\
+      \nVerdict:\n- PASS\n- Rationale: all previously batched should-fix families\
+      \ are closed in cold retest environment.\n\nSpec link:\n- Step invar1203.retest-batched-should-fix"
