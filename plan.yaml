@@ -10260,7 +10260,7 @@ phases:
       - out-of-scope respected (no product downstream manager implementation changes).'
 - id: rt.upstream
   name: Upstream MCP Server via fastmcp
-  status: in_progress
+  status: done
   depends_on:
   - rt.downstream
   steps:
@@ -10381,7 +10381,7 @@ phases:
       - step scoped to upstream handler wiring only'
   - id: rt.upstream.gate
     name: Gate review
-    status: claimed
+    status: done
     description: Gate review for upstream phase.
     verification: Full Gate. W1 must show zero DEAD exports in upstream.py. All handler
       functions must have runtime callers.
@@ -10390,9 +10390,37 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T05:03:10.320428+00:00'
+    done_at: '2026-03-19T05:42:23.415656+00:00'
+    evidence: 'Artifact:
+
+      - upstream phase gate audit completed over upstream/gateway handlers and tests
+
+
+      Verification:
+
+      - type/lint/tests pass for upstream scope
+
+      - W1 wiring shows handler/runtime call paths in gateway/cli/reload/upstream
+
+      - escape-hatch audit completed with legitimate grounding
+
+      - runnable handler path exercised via FastMCP request handlers
+
+      - integration-vs-fixture distinction documented with real downstream subprocess
+      test
+
+
+      Spec link:
+
+      - upstream handler semantics and profile/tool enforcement contract
+
+
+      Result:
+
+      - Gate PASS'
 - id: rt.cli_start
   name: Wire tela start
-  status: locked
+  status: pending
   depends_on:
   - rt.upstream
   steps:
