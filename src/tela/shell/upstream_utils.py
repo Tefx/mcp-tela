@@ -20,7 +20,6 @@ from tela.core.models import (
 # --- tools/list filtering ---
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns list per tools/list filtering spec.
 def filter_tools_for_profile(
     all_tools: dict[str, list[ResolvedTool]],
@@ -94,7 +93,6 @@ def strip_meta(arguments: dict) -> tuple[dict, dict | None]:
     return stripped, meta
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns EnforcementResult per enforcement chain spec.
 def enforce_tool_call(
     tool_name: str,

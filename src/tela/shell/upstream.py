@@ -43,7 +43,7 @@ class InitializeContext:
     connection_metadata: Mapping[str, str]
 
 
-# @invar:allow dead_export: initialize wiring is connected in a later runtime step.
+# @invar:allow dead_export: profile binding resolver for upstream initialize flow.
 def resolve_initialize_profile_binding(
     *,
     resolved_default_profile: str | None,
@@ -118,7 +118,6 @@ def resolve_initialize_profile_binding(
 # --- MCP Handler functions ---
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow dead_param: contract stub preserves parameter signatures.
 async def handle_initialize(
     client_info: dict,
@@ -165,9 +164,7 @@ async def handle_initialize(
     return Result(value=ctx)
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def handle_tools_list(
     connection: ConnectionContext,
 ) -> list[dict]:
@@ -208,7 +205,6 @@ async def handle_tools_list(
     return [{"name": t.name, "inputSchema": t.schema_ or {}} for t in permitted]
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow dead_param: contract stub preserves parameter signatures.
 async def handle_tools_call(
     connection: ConnectionContext,
@@ -249,6 +245,8 @@ async def handle_tools_call(
         )
 
     # Strip _meta
+    # held_meta is for future audit emission (L2+ logging)
+    # @invar:allow dead_assign: held_meta reserved for future audit emission.
     stripped_args, held_meta = strip_meta(arguments)
 
     # Look up tool
@@ -288,7 +286,6 @@ async def handle_tools_call(
     return await call_tool(tool.server_name, tool_name, stripped_args)
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
 def handle_profiles_list() -> list[dict]:
     """Return list of configured profiles.
@@ -322,7 +319,6 @@ def handle_profiles_list() -> list[dict]:
     ]
 
 
-# @invar:allow dead_export: handler wiring is connected in gateway.runtime step.
 # @invar:allow dead_param: contract stub preserves parameter signatures.
 async def notify_tools_changed(
     connection: ConnectionContext,

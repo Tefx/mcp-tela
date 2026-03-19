@@ -108,6 +108,7 @@ class _ClientHandle:
 _clients: dict[str, _ClientHandle] = {}
 
 
+# @invar:allow shell_result: returns optional error string, validation helper.
 def _validate_transport_mode(
     server_name: str, server_config: ServerConfig
 ) -> str | None:
@@ -123,6 +124,7 @@ def _validate_transport_mode(
     return None
 
 
+# @invar:allow shell_result: returns _ClientHandle, raises on I/O failure.
 async def _open_stdio_client(
     server_name: str,
     server_config: ServerConfig,
@@ -158,6 +160,7 @@ async def _open_stdio_client(
         raise
 
 
+# @invar:allow shell_result: returns _ClientHandle, raises on I/O failure.
 async def _open_sse_client(
     server_name: str,
     server_config: ServerConfig,
@@ -186,6 +189,7 @@ async def _open_sse_client(
         raise
 
 
+# @invar:allow shell_result: returns _ClientHandle, raises on I/O failure.
 async def _open_client_for_server(
     server_name: str,
     server_config: ServerConfig,
@@ -312,6 +316,7 @@ def _build_downstream_message_handler(
     return _message_handler
 
 
+# @invar:allow shell_result: returns list[dict], raises on I/O failure.
 async def _enumerate_tools(session: ClientSession) -> list[dict[str, Any]]:
     """Enumerate all tools from a downstream session via MCP ``tools/list``."""
 
@@ -339,15 +344,13 @@ async def _close_all_clients_locked() -> None:
             continue
 
 
-# @invar:allow dead_export: registry accessor used by tests and gateway integration.
-# @invar:allow shell_result: returns registry object per module pattern, not a failable I/O boundary.
+# @invar:allow shell_result: returns registry object, simple accessor not failable I/O.
 def get_registry() -> DownstreamRegistry:
     """Return the module-level downstream registry."""
     return _registry
 
 
-# @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
-# @invar:allow dead_param: servers parameter used for tool enumeration.
+# @invar:allow dead_param: servers parameter unused in test-scaffold mode (tool_lists provided).
 async def connect_all(
     servers: dict[str, ServerConfig],
     tool_lists: dict[str, list[dict]] | None = None,
@@ -433,7 +436,6 @@ async def connect_all(
     return Result(value=None)
 
 
-# @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
 async def disconnect_all() -> Result[None, str]:
     """Disconnect all downstream servers and clear the registry.
 
@@ -455,7 +457,6 @@ async def disconnect_all() -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
 async def call_tool(
     server_name: str,
     tool_name: str,
@@ -529,7 +530,6 @@ async def call_tool(
     return Result(value=payload)
 
 
-# @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns dict per DESIGN.md spec, lookup not a failable I/O boundary.
 def get_all_tools() -> dict[str, list[ResolvedTool]]:
     """Return all resolved tools grouped by server name.
@@ -545,7 +545,6 @@ def get_all_tools() -> dict[str, list[ResolvedTool]]:
     return _registry.get_all_tools()
 
 
-# @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
 # @invar:allow shell_result: returns optional str per DESIGN.md spec, lookup not a failable I/O boundary.
 def get_tool_server(tool_name: str) -> str | None:
     """Look up which server owns a given tool name.
@@ -564,7 +563,7 @@ def get_tool_server(tool_name: str) -> str | None:
     return _registry.get_tool_server(tool_name)
 
 
-# @invar:allow dead_export: downstream wiring is connected in gateway.runtime step.
+# @invar:allow dead_export: hot-reload entrypoint for downstream tool re-enumeration.
 async def re_enumerate(
     server_name: str,
 ) -> Result[list[ResolvedTool], str]:

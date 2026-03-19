@@ -38,7 +38,6 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-# @invar:allow dead_export: audit wiring is connected in audit.runtime step.
 # @invar:allow shell_result: returns AuditEntry per DESIGN.md spec, data shaping not I/O.
 def build_audit_entry(
     level: AuditLevel,
@@ -120,7 +119,6 @@ _audit_lock = asyncio.Lock()
 _audit_log_path: Path | None = None
 
 
-# @invar:allow dead_export: audit wiring is connected in audit.runtime step.
 async def audit_init(config: "AuditConfig") -> Result[None, str]:
     """Initialize audit subsystem from AuditConfig.
 
@@ -144,7 +142,6 @@ async def audit_init(config: "AuditConfig") -> Result[None, str]:
     global _audit_log_path
 
     async with _audit_lock:
-
         expanded = Path(config.output).expanduser()
         if not expanded.is_absolute():
             expanded = expanded.resolve()
@@ -158,7 +155,7 @@ async def audit_init(config: "AuditConfig") -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow dead_export: audit configuration used by tests.
+# @invar:allow dead_export: test utility for audit subsystem.
 # @invar:allow shell_result: sets bounded store size, not failable I/O.
 async def audit_set_max_entries(max_entries: int) -> None:
     """Set maximum in-memory audit entries (FIFO eviction).
@@ -174,21 +171,20 @@ async def audit_set_max_entries(max_entries: int) -> None:
         _audit_entries = deque(old_entries[-max_entries:], maxlen=max_entries)
 
 
-# @invar:allow dead_export: audit accessor used by tests and integration.
+# @invar:allow dead_export: test accessor for audit subsystem.
 # @invar:allow shell_result: returns list, not a failable I/O boundary.
 def get_audit_entries() -> list[AuditEntry]:
     """Return all stored audit entries (for testing)."""
     return list(_audit_entries)
 
 
-# @invar:allow dead_export: audit accessor used by tests and integration.
+# @invar:allow dead_export: test utility for audit subsystem.
 # @invar:allow shell_result: returns None, state reset not failable I/O.
 def clear_audit_entries() -> None:
     """Clear all stored audit entries."""
     _audit_entries.clear()
 
 
-# @invar:allow dead_export: audit wiring is connected in audit.runtime step.
 async def audit_write(entry: AuditEntry) -> Result[None, str]:
     """Append an audit entry to the in-memory store and optional JSONL file.
 
@@ -227,7 +223,7 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow dead_export: audit wiring is connected in audit.runtime step.
+# @invar:allow dead_export: test utility for audit subsystem.
 async def audit_close() -> Result[None, str]:
     """Flush and close the audit log.
 
@@ -248,7 +244,6 @@ async def audit_close() -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow dead_export: audit wiring is connected in audit.runtime step.
 async def audit_query(
     since: str | None = None,
     limit: int = 100,
@@ -278,8 +273,10 @@ async def audit_query(
         try:
             since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
             entries = [
-                e for e in entries
-                if datetime.fromisoformat(e.timestamp.replace("Z", "+00:00")) >= since_dt
+                e
+                for e in entries
+                if datetime.fromisoformat(e.timestamp.replace("Z", "+00:00"))
+                >= since_dt
             ]
         except (ValueError, TypeError):
             return Result(error=f"AUDIT_QUERY_ERROR: invalid timestamp format: {since}")

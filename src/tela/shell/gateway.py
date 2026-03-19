@@ -194,14 +194,12 @@ _runtime = GatewayRuntime()
 _runtime_lock = asyncio.Lock()
 
 
-# @invar:allow dead_export: runtime accessor used by tests and gateway integration.
 # @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
 def get_runtime() -> GatewayRuntime:
     """Return the module-level gateway runtime."""
     return _runtime
 
 
-# @invar:allow dead_export: startup wiring is connected in a later runtime step.
 def bind_gateway_startup(
     runtime: RuntimeBindingContract,
     config: TelaConfig | None = None,
@@ -268,7 +266,6 @@ def bind_gateway_startup(
     )
 
 
-# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 async def gateway_start(
     config: GatewayStartupConfig,
     tela_config: TelaConfig | None = None,
@@ -331,7 +328,6 @@ async def gateway_start(
     return Result(value=None)
 
 
-# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 async def gateway_shutdown() -> Result[None, str]:
     """Graceful shutdown: stop accepting connections, close downstreams.
 
@@ -355,7 +351,6 @@ async def gateway_shutdown() -> Result[None, str]:
     return disconnect_result
 
 
-# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 # @invar:allow shell_result: returns GatewayStatus per DESIGN.md spec, not a failable I/O boundary.
 async def gateway_status() -> GatewayStatus:
     """Return current gateway runtime status.
@@ -384,7 +379,6 @@ async def gateway_status() -> GatewayStatus:
         )
 
 
-# @invar:allow dead_export: gateway lifecycle is connected in gateway.runtime step.
 # @invar:allow shell_result: returns list[ConnectionContext] per DESIGN.md spec, not a failable I/O boundary.
 async def gateway_connections() -> list[ConnectionContext]:
     """Return list of active upstream connections.

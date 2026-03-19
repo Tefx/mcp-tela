@@ -41,7 +41,6 @@ NotifyCallback = Callable[[str], Awaitable[None]]  # tools_digest -> None
 _notify_callback: NotifyCallback | None = None
 
 
-# @invar:allow dead_export: reload wiring is connected in reload.runtime step.
 # @invar:allow shell_result: sets callback, not a failable I/O boundary.
 def set_notify_callback(callback: NotifyCallback | None) -> None:
     """Set the upstream notification callback for tools/list_changed."""
@@ -49,7 +48,6 @@ def set_notify_callback(callback: NotifyCallback | None) -> None:
     _notify_callback = callback
 
 
-# @invar:allow dead_export: reload wiring is connected in reload.runtime step.
 async def on_tools_changed(
     server_name: str,
     server_config: ServerConfig,
@@ -113,7 +111,8 @@ async def on_tools_changed(
             warning_entry = build_audit_entry(
                 level=AuditLevel.L1,
                 connection=ConnectionContext(
-                    connection_id="system", profile_name="system",
+                    connection_id="system",
+                    profile_name="system",
                     connected_at="",
                 ),
                 tool_name=conflicts[0].tool_name,
@@ -139,7 +138,6 @@ async def on_tools_changed(
     return Result(value=None)
 
 
-# @invar:allow dead_export: reload wiring is connected in reload.runtime step.
 async def on_server_reconnect(
     server_name: str,
     server_config: ServerConfig,
@@ -171,7 +169,7 @@ async def on_server_reconnect(
     return await on_tools_changed(server_name, server_config, tool_list)
 
 
-# @invar:allow dead_export: reload wiring is connected in reload.runtime step.
+# @invar:allow dead_export: hot-reload entrypoint for config file changes.
 # @invar:allow dead_param: contract stub preserves parameter signatures.
 async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     """Handle configuration file change.
@@ -206,7 +204,8 @@ async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
         added = new_servers - old_servers
         # Servers present in both configs but with changed settings
         changed = {
-            name for name in old_servers & new_servers
+            name
+            for name in old_servers & new_servers
             if old_config.servers[name] != new_config.servers[name]
         }
 
