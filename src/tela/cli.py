@@ -218,38 +218,41 @@ def _handle_start(args: argparse.Namespace) -> Result[int, str]:
     assert gateway_result.value is not None
 
     if gateway_result.value.transport.value == "stdio":
-        return Result(
-            value=asyncio.run(
-                _run_stdio_gateway(
-                    startup_config=gateway_result.value,
-                    tela_config=config_result.value,
-                    config_path=Path(args.config),
-                )
-            )
-        )
-
-    return Result(
-        value=asyncio.run(
-            _run_sse_gateway(
+        run_result = asyncio.run(
+            _run_stdio_gateway(
                 startup_config=gateway_result.value,
                 tela_config=config_result.value,
                 config_path=Path(args.config),
             )
         )
+        if run_result.is_err:
+            return Result(error=run_result.error)
+        assert run_result.value is not None
+        return Result(value=run_result.value)
+
+    run_result = asyncio.run(
+        _serve_sse_gateway(
+            startup_config=gateway_result.value,
+            tela_config=config_result.value,
+            config_path=Path(args.config),
+        )
     )
+    if run_result.is_err:
+        return Result(error=run_result.error)
+    assert run_result.value is not None
+    return Result(value=run_result.value)
 
 
 async def _run_stdio_gateway(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
     config_path: Path,
-) -> int:
+) -> Result[int, str]:
     """Start gateway and run FastMCP stdio transport in one loop."""
 
     startup_result = await gateway_start(startup_config, tela_config=tela_config)
     if startup_result.is_err:
-        print(f"error: {startup_result.error}", file=sys.stderr)
-        return 1
+        return Result(error=startup_result.error)
 
     print(
         f"tela: ready (transport={startup_config.transport.value}, "
@@ -259,8 +262,7 @@ async def _run_stdio_gateway(
 
     runtime = get_runtime()
     if runtime.upstream_server is None:
-        print("error: upstream MCP server not initialized", file=sys.stderr)
-        return 1
+        return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
 
     stop_watcher = asyncio.Event()
     watcher_task = asyncio.create_task(
@@ -271,27 +273,30 @@ async def _run_stdio_gateway(
         )
     )
 
+    gateway_exit = 0
     try:
         await runtime.upstream_server.run_stdio_async()
+    except Exception as exc:
+        gateway_exit = 1
+        return Result(error=f"STDIO_RUN_FAILED: {exc}")
     finally:
         stop_watcher.set()
         await _await_task(watcher_task)
         await gateway_shutdown()
 
-    return 0
+    return Result(value=gateway_exit)
 
 
-async def _run_sse_gateway(
+async def _serve_sse_gateway(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
     config_path: Path,
-) -> int:
+) -> Result[int, str]:
     """Start gateway and run FastMCP SSE transport in one loop."""
 
     startup_result = await gateway_start(startup_config, tela_config=tela_config)
     if startup_result.is_err:
-        print(f"error: {startup_result.error}", file=sys.stderr)
-        return 1
+        return Result(error=startup_result.error)
 
     print(
         f"tela: ready (transport={startup_config.transport.value}, "
@@ -301,8 +306,7 @@ async def _run_sse_gateway(
 
     runtime = get_runtime()
     if runtime.upstream_server is None:
-        print("error: upstream MCP server not initialized", file=sys.stderr)
-        return 1
+        return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
 
     stop_watcher = asyncio.Event()
     watcher_task = asyncio.create_task(
@@ -313,14 +317,18 @@ async def _run_sse_gateway(
         )
     )
 
+    gateway_exit = 0
     try:
         await asyncio.to_thread(runtime.upstream_server.run, transport="sse")
+    except Exception as exc:
+        gateway_exit = 1
+        return Result(error=f"SSE_RUN_FAILED: {exc}")
     finally:
         stop_watcher.set()
         await _await_task(watcher_task)
         await gateway_shutdown()
 
-    return 0
+    return Result(value=gateway_exit)
 
 
 async def _watch_config_changes(
@@ -331,11 +339,18 @@ async def _watch_config_changes(
 ) -> None:
     """Poll config mtime and run hot-reload callback when it changes."""
 
-    last_mtime_ns = _config_mtime_ns(config_path)
+    last_mtime_result = _config_mtime_ns(config_path)
+    if last_mtime_result.is_err:
+        return
+    last_mtime_ns = last_mtime_result.value
 
     while not stop_event.is_set():
         await asyncio.sleep(CONFIG_WATCH_POLL_SECONDS)
-        current_mtime_ns = _config_mtime_ns(config_path)
+        current_mtime_result = _config_mtime_ns(config_path)
+        if current_mtime_result.is_err:
+            continue
+        current_mtime_ns = current_mtime_result.value
+
         if current_mtime_ns is None:
             continue
 
@@ -353,13 +368,13 @@ async def _watch_config_changes(
         last_mtime_ns = current_mtime_ns
 
 
-def _config_mtime_ns(config_path: Path) -> int | None:
+def _config_mtime_ns(config_path: Path) -> Result[int | None, str]:
     """Return file mtime (ns) for config watcher, or None if unreadable."""
 
     try:
-        return config_path.stat().st_mtime_ns
+        return Result(value=config_path.stat().st_mtime_ns)
     except OSError:
-        return None
+        return Result(value=None)
 
 
 async def _await_task(task: asyncio.Task[None]) -> None:

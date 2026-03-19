@@ -21,7 +21,7 @@ from tela.shell.downstream_clients import (
     _enumerate_tools,
     _open_sse_client as _transport_open_sse_client,
     _open_stdio_client as _transport_open_stdio_client,
-    _validate_transport_mode,
+    _validate_transport_mode as _transport_validate_transport_mode,
 )
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.config_loader import Result
@@ -38,36 +38,68 @@ async def _open_stdio_client(
     server_name: str,
     server_config: ServerConfig,
     message_handler: MessageHandlerFnT | None = None,
-) -> _ClientHandle:
+) -> Result[_ClientHandle, str]:
     """Compatibility wrapper for stdio transport opener."""
-
-    return await _transport_open_stdio_client(
-        server_name,
-        server_config,
-        message_handler=message_handler,
-    )
+    try:
+        return Result(
+            value=await _transport_open_stdio_client(
+                server_name,
+                server_config,
+                message_handler=message_handler,
+            )
+        )
+    except Exception as exc:
+        return Result(
+            error=(
+                "DOWNSTREAM_CONNECT_FAILED: "
+                f"server '{server_name}' stdio connect failed: {exc}"
+            )
+        )
 
 
 async def _open_sse_client(
     server_name: str,
     server_config: ServerConfig,
     message_handler: MessageHandlerFnT | None = None,
-) -> _ClientHandle:
+) -> Result[_ClientHandle, str]:
     """Compatibility wrapper for SSE transport opener."""
+    try:
+        return Result(
+            value=await _transport_open_sse_client(
+                server_name,
+                server_config,
+                message_handler=message_handler,
+            )
+        )
+    except Exception as exc:
+        return Result(
+            error=(
+                "DOWNSTREAM_CONNECT_FAILED: "
+                f"server '{server_name}' sse connect failed: {exc}"
+            )
+        )
 
-    return await _transport_open_sse_client(
-        server_name,
-        server_config,
-        message_handler=message_handler,
-    )
+
+def _validate_transport_mode(
+    server_name: str,
+    server_config: ServerConfig,
+) -> Result[None, str]:
+    """Validate server transport mode and return explicit error on mismatch."""
+    error = _transport_validate_transport_mode(server_name, server_config)
+    if error is not None:
+        return Result(error=error)
+    return Result(value=None)
 
 
 async def _open_client_for_server(
     server_name: str,
     server_config: ServerConfig,
     message_handler: MessageHandlerFnT | None = None,
-) -> _ClientHandle:
+) -> Result[_ClientHandle, str]:
     """Open a connected client handle from a server config transport."""
+    validation = _validate_transport_mode(server_name, server_config)
+    if validation.is_err:
+        return Result(error=validation.error)
 
     if server_config.command is not None:
         return await _open_stdio_client(
@@ -121,17 +153,20 @@ async def _handle_reconnect(
 ) -> None:
     """Attempt downstream reconnect and route updated tools into reload flow."""
 
-    try:
-        new_handle = await _open_client_for_server(
+    open_result = await _open_client_for_server(
+        server_name,
+        server_config,
+        message_handler=_build_downstream_message_handler(server_name, server_config),
+    )
+    if open_result.is_err:
+        logging.warning(
+            "Downstream reconnect failed for %s: %s",
             server_name,
-            server_config,
-            message_handler=_build_downstream_message_handler(
-                server_name, server_config
-            ),
+            open_result.error,
         )
-    except Exception as exc:
-        logging.warning("Downstream reconnect failed for %s: %s", server_name, exc)
         return
+    assert open_result.value is not None
+    new_handle = open_result.value
 
     async with _registry_lock:
         old_handle = _clients.get(server_name)
@@ -246,17 +281,17 @@ async def connect_all(
         all_resolved: dict[str, list[ResolvedTool]] = {}
 
         for server_name, server_config in servers.items():
-            validation_error = _validate_transport_mode(server_name, server_config)
-            if validation_error is not None:
+            validation_result = _validate_transport_mode(server_name, server_config)
+            if validation_result.is_err:
                 await _close_all_clients_locked()
                 _registry.clear()
-                return Result(error=validation_error)
+                return Result(error=validation_result.error)
 
             try:
                 if tool_lists is not None:
                     raw_tools = tool_lists.get(server_name, [])
                 else:
-                    client_handle = await _open_client_for_server(
+                    open_result = await _open_client_for_server(
                         server_name,
                         server_config,
                         message_handler=_build_downstream_message_handler(
@@ -264,6 +299,12 @@ async def connect_all(
                             server_config,
                         ),
                     )
+                    if open_result.is_err:
+                        await _close_all_clients_locked()
+                        _registry.clear()
+                        return Result(error=open_result.error)
+                    assert open_result.value is not None
+                    client_handle = open_result.value
                     _clients[server_name] = client_handle
                     raw_tools = await _enumerate_tools(client_handle.session)
             except Exception as exc:
