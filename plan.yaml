@@ -11938,6 +11938,112 @@ phases:
     depends_on:
     - rt.final_gate.blind
     agent: gate-reviewer
+  - id: rt.final_gate.should-fix-batch
+    name: Batch SHOULD_FIX runtime wiring remediation
+    status: pending
+    description: 'Batched remediation for SHOULD_FIX findings from `rt.final_gate.wiring`.
+
+
+      Address BOTH items in one pass, not just the first:
+
+      1. `reload.py:on_config_changed` is currently test-only behind a dead_export
+      hatch; add or clarify production file-watcher wiring so the runtime reload path
+      is reachable from the real watcher/entrypoint path.
+
+      2. `upstream.py:resolve_initialize_profile_binding` appears test-only; either
+      wire it into the production initialize flow or make the production reachability
+      contract explicit and consistent with the authoritative runtime design.
+
+
+      Scope and constraints:
+
+      - Touch only the runtime wiring / reachability surfaces needed to close these
+      SHOULD_FIX items.
+
+      - Preserve existing runnable server/CLI behavior and reload lifecycle semantics.
+
+      - Search for sibling wiring gaps beyond the named symbols before claiming done.
+
+      - If one item is intentionally non-runtime, document the authoritative source
+      and remove stale dead/test-only exposure so the public/runtime contract is unambiguous.
+
+
+      Target surfaces:
+
+      - reload runtime / file-watcher entrypoint boundary
+
+      - upstream initialize-flow boundary
+
+      - any shared registration/export files required for safe runtime reachability
+
+
+      Known risks:
+
+      - dead export or test-only hatches can mask missing production wiring
+
+      - wiring only the leaf function without the real entrypoint path leaves the
+      surface non-runnable
+
+      - shared registry/export edits can create partial reachability unless all call
+      paths are checked'
+    verification: '- Evidence identifies the exact production entrypoint/call path
+      for both symbols, or documents an authoritative runtime-deferral decision for
+      any intentionally non-runtime symbol.
+
+      - A focused regression proves `reload.py:on_config_changed` is reachable from
+      the real file-watcher/runtime path, not only from tests.
+
+      - A focused regression or trace proves `upstream.py:resolve_initialize_profile_binding`
+      is reachable from the production initialize flow, or that the production contract
+      was clarified and stale exposure removed.
+
+      - Sibling search confirms no equivalent dead/test-only wiring gaps remain in
+      the same runtime surfaces.'
+    evidence_template: '## Batched SHOULD_FIX Remediation Evidence
+
+
+      **Items addressed**:
+
+      - reload runtime/file-watcher wiring
+
+      - upstream initialize-flow reachability
+
+
+      **Production path proof**:
+
+      - reload path: <entrypoint -> watcher -> callback trace>
+
+      - upstream path: <entrypoint -> initialize flow -> binding trace>
+
+
+      **Tests or commands**:
+
+      ```
+
+      <paste exact targeted command/test names>
+
+      ```
+
+
+      **Sibling search**:
+
+      ```
+
+      <paste grep/import-trace results>
+
+      ```
+
+
+      **Outcome**:
+
+      - [ ] Both SHOULD_FIX items closed
+
+      - [ ] Runtime contract clarified where wiring is intentionally deferred
+
+      - [ ] No equivalent stale test-only hatch remains in the touched surfaces'
+    depends_on:
+    - rt.final_gate.wiring
+    agent: python-senior
 - id: cap.contract
   name: Define New Profile Contracts
   status: done
