@@ -11876,12 +11876,14 @@ phases:
       - none'
   - id: rt.doc_sync.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: Gate review for documentation sync.
     verification: Docs accurate and no deferred language remains.
     depends_on:
     - rt.doc_sync.impl
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T07:28:27.966610+00:00'
 - id: rt.final_gate
   name: Deep Review
   status: locked
