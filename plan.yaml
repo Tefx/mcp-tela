@@ -14987,7 +14987,7 @@ phases:
       - none'
   - id: invar1203.escape-policy-cli
     name: Remediate CLI escape-hatch limit violations
-    status: claimed
+    status: done
     description: 'Reduce remaining escape-hatch violations in CLI entry and command
       surfaces after shell remediation.
 
@@ -15028,6 +15028,55 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T08:57:58.076607+00:00'
+    done_at: '2026-03-19T09:02:43.507288+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): cc9093c43f39edd92e93275d4783f9ce76595620
+
+      - Files changed: src/tela/cli.py, src/tela/commands/start.py, src/tela/commands/status_cmd.py,
+      src/tela/commands/connections_cmd.py, src/tela/commands/profiles_cmd.py, src/tela/commands/audit_cmd.py
+
+
+      CLI remediation by file:
+
+      - Removed dead_export non-suppressible annotations from CLI command entrypoints
+      and cli main path.
+
+      - Refactored CLI start-handler flow to Result-based return path, reducing CLI
+      escape-hatch pressure.
+
+
+      Sibling search:
+
+      - dead_export scan across src/tela/commands/*.py -> none remaining
+
+      - command entrypoint definitions and dispatch imports verified across command
+      modules
+
+
+      Verification:
+
+      - Targeted guard parsing for cli.py + command files reports zero escape_hatch_non_suppressible
+      and zero escape_hatch_file_limit findings in the focus set
+
+      - Direct guard run for src/tela/cli.py shows zero dead_export/focus-category
+      findings
+
+
+      Residual CLI debt:
+
+      - Remaining CLI annotations in shell_result/shell_complexity families are outside
+      this step''s focus categories and explicitly non-blocking for this step
+
+
+      Spec link:
+
+      - Step invar1203.escape-policy-cli
+
+
+      Gaps/Notes:
+
+      - none'
   - id: invar1203.core-contracts
     name: Repair missing contracts in core contract helpers
     status: pending
