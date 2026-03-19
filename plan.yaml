@@ -11167,6 +11167,51 @@ phases:
     depends_on:
     - rt.e2e.verify
     agent: python-senior
+  - id: rt.e2e.retest-state-isolation
+    name: Retest full suite for gateway order independence
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the full
+      suite after the state-isolation fix and try to disprove the claim that gateway
+      runtime state is now isolated.
+
+
+      YOUR GOAL IS TO FIND ORDER-DEPENDENT LEAKAGE, not to confirm the happy path.
+
+
+      Required checks:
+
+      - Re-run the full test suite, including tests/shell/test_gateway.py::test_gateway_status_after_start
+      in normal suite order
+
+      - Explicitly verify the failing test no longer inherits total_tool_calls or
+      related gateway status state from prior tests
+
+      - Record whether any other gateway/runtime tests still show order dependence,
+      shared counter leakage, or dirty fixture state
+
+      - Use a fresh/cold test invocation for the suite run so cached process state
+      cannot hide leakage
+
+
+      Success means evidence is collected; if leakage is still found, that is a successful
+      verification outcome and should block the gate.'
+    verification: '- Run the full suite, not just the isolated failing test
+
+      - Evidence includes the exact suite command and actual output for tests/shell/test_gateway.py::test_gateway_status_after_start
+
+      - Evidence explicitly states whether any order-dependent leakage remains in
+      gateway/runtime status counters
+
+      - Verdict is PASS only if the full ordered suite shows no state leakage; otherwise
+      ISSUES_FOUND'
+    evidence_template: "## Verification Report\n- suite_command: <exact pytest command>\n\
+      - failing_test_observation: <pass/fail for tests/shell/test_gateway.py::test_gateway_status_after_start>\n\
+      - leakage_check: <whether total_tool_calls or sibling counters leaked from prior\
+      \ tests>\n- order_dependence_scan: <other tests checked / findings>\n- actual_output:\
+      \ |\n    <paste relevant pytest output>\n- verdict: PASS | ISSUES_FOUND"
+    depends_on:
+    - rt.e2e.fix-state-isolation
+    agent: integration-verifier
 - id: rt.liveness
   name: Liveness Verification
   status: locked
