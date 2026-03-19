@@ -15162,7 +15162,7 @@ phases:
       - none'
   - id: invar1203.shell-result
     name: Remediate shell_result findings in CLI and downstream helpers
-    status: claimed
+    status: done
     description: 'Remove or restructure `shell_result` findings in the flagged shell
       helpers.
 
@@ -15211,6 +15211,58 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T09:12:23.549435+00:00'
+    done_at: '2026-03-19T09:17:06.779664+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 710299a7495460ae0798f31f6a21ce36d134865d
+
+      - Files changed: src/tela/cli.py, src/tela/shell/downstream.py
+
+
+      Helper remediation:
+
+      - cli.py::_run_stdio_gateway -> Result[int,str] with explicit startup/runtime
+      error mapping
+
+      - cli.py::_serve_sse_gateway -> Result[int,str] with symmetric failure-path
+      mapping
+
+      - downstream.py::_open_stdio_client -> Result[_ClientHandle,str]
+
+      - downstream.py::_open_sse_client -> Result[_ClientHandle,str]
+
+      - downstream.py::_validate_transport_mode -> explicit Result validation path
+
+      - downstream.py::_open_client_for_server -> Result-based mode validation + open
+      flow
+
+      - connect_all/_handle_reconnect call-sites updated to consume Result paths coherently
+
+
+      Verification:
+
+      - targeted guard parsing confirms shell_result findings for src/tela/cli.py
+      and src/tela/shell/downstream.py reduced to zero for cited helpers
+
+      - focused failure-path probes confirm typed error handling for invalid transport
+      and stdio/SSE open failures
+
+
+      Compatibility/migration:
+
+      - internal helper call-site migration performed within module boundaries; no
+      public API break declared
+
+
+      Spec link:
+
+      - Step invar1203.shell-result
+
+
+      Gaps/Notes:
+
+      - non-shell_result guard findings may remain in downstream.py under other rule
+      families; cited shell_result family is cleared.'
   - id: invar1203.freeze
     name: Freeze remediation snapshot for full guard retest
     status: pending
