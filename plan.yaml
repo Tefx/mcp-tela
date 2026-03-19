@@ -11935,11 +11935,21 @@ phases:
     status: pending
     description: Full gate review. Must include the batched SHOULD_FIX remediation
       path from `rt.final_gate.wiring` before opening the final gate.
-    verification: 'Verdict: PASS. Zero BLOCKING. Gateway.runtime is genuinely done.'
+    verification: '- Final gate review includes evidence from `rt.final_gate.blind`
+      and `rt.final_gate.should-fix-retest`.
+
+      - No unresolved blocker findings remain.
+
+      - The two SHOULD_FIX wiring findings from `rt.final_gate.wiring` are either
+      closed by production wiring or resolved by authoritative contract clarification
+      with stale hatches removed.
+
+      - Final gate may open only after the remediation retest passes.'
     refs:
     - rt.final_gate.should-fix-retest
     depends_on:
     - rt.final_gate.blind
+    - rt.final_gate.should-fix-retest
     agent: gate-reviewer
   - id: rt.final_gate.should-fix-batch
     name: Batch SHOULD_FIX runtime wiring remediation
