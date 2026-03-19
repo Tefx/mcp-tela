@@ -15317,7 +15317,7 @@ phases:
       - Step invar1203.freeze'
   - id: invar1203.retest-full-guard
     name: Run full Invar guard after 1.20.3 remediation
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), run the authoritative
       full guard command from a fresh perspective.
 
@@ -15354,6 +15354,8 @@ phases:
     depends_on:
     - invar1203.freeze
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-19T09:18:59.975594+00:00'
   - id: invar1203.gate
     name: Gate review for Invar Guard 1.20.3 remediation
     status: pending
