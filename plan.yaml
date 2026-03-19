@@ -10550,7 +10550,7 @@ phases:
       \ behavior contract\n\nResult:\n- Gate PASS"
 - id: rt.reload_wire
   name: Wire Hot Reload
-  status: in_progress
+  status: done
   depends_on:
   - rt.cli_start
   steps:
@@ -10648,7 +10648,7 @@ phases:
       acceptance criteria'
   - id: rt.reload_wire.gate
     name: Gate review
-    status: claimed
+    status: done
     description: 'Gate review for hot reload wiring.
 
 
@@ -10674,6 +10674,33 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T06:25:16.992851+00:00'
+    done_at: '2026-03-19T06:29:58.032920+00:00'
+    evidence: 'Artifact:
+
+      - reload-wire phase gate audit over callback/runtime wiring and integration
+      tests
+
+
+      Verification:
+
+      - runtime callers verified for `set_notify_callback`, `on_tools_changed`, `on_server_reconnect`
+
+      - downstream message-handler wiring verified for tools-list change and reconnect
+      paths
+
+      - shell + integration hot-reload suites pass
+
+      - escape-hatch annotations reviewed and grounded
+
+
+      Spec link:
+
+      - rt.reload_wire test/impl acceptance surfaces
+
+
+      Result:
+
+      - Gate PASS'
   - id: rt.reload_wire.test
     name: Add hot reload wiring tests
     status: done
@@ -10827,7 +10854,7 @@ phases:
       - covered by callback tests'
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
-  status: locked
+  status: pending
   depends_on:
   - rt.reload_wire
   steps:
