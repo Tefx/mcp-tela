@@ -14947,3 +14947,31 @@ phases:
     depends_on:
     - invar1203.core-contracts
     agent: python-senior
+  - id: invar1203.freeze
+    name: Freeze remediation snapshot for full guard retest
+    status: pending
+    description: 'Freeze the repository state before the full-guard retest and gate
+      review.
+
+
+      Required freeze evidence:
+
+      - capture `git rev-parse HEAD`
+
+      - capture a clean `git status`
+
+      - declare the environment used for the retest
+
+      - state that no code changes are allowed until the retest and gate review complete
+
+      '
+    verification: '- Record `git rev-parse HEAD`
+
+      - Record `git status --short` showing a clean tree
+
+      - Record the active Python/uv environment declaration used for the retest
+
+      - Explicit statement: no code changes after freeze until retest and gate complete'
+    depends_on:
+    - invar1203.shell-result
+    agent: software-architect
