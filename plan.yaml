@@ -10860,7 +10860,7 @@ phases:
   steps:
   - id: rt.escape_cleanup.impl
     name: Remove stale escape hatch annotations
-    status: claimed
+    status: done
     description: Remove all @invar:allow dead_export annotations for functions that
       now have runtime callers. Remove dead_param annotations for parameters now used.
       Keep only legitimate escape hatches (CLI entry points, framework-called functions).
@@ -10880,6 +10880,50 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-19T06:30:45.740963+00:00'
+    done_at: '2026-03-19T06:43:21.916305+00:00'
+    evidence: 'Commit hash(es):
+
+      - 6d03f542aa8273ebe514058359556dd79567728d
+
+
+      Files changed:
+
+      - src/tela/shell/upstream_utils.py
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/upstream.py
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/reload.py
+
+      - src/tela/shell/audit.py
+
+      - src/tela/shell/config_loader.py
+
+
+      Annotations removed:
+
+      - 27 stale dead-export/dead-param suppressions removed
+
+
+      Annotations remaining:
+
+      - only justified CLI/framework entrypoints, test utilities, and explicitly deferred
+      runtime hooks
+
+
+      Verification:
+
+      - invar guard passes for post-change state
+
+      - no stub-module escape-hatch pattern remains in touched surfaces
+
+
+      Gaps/Notes:
+
+      - cleanup scoped to stale-annotation removal and justification alignment'
   - id: rt.escape_cleanup.gate
     name: Gate review
     status: pending
