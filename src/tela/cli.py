@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import asyncio
 import argparse
-import json
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,8 +19,14 @@ from tela.commands.profiles_cmd import profiles_command
 from tela.commands.start import start_command
 from tela.commands.status_cmd import status_command
 from tela.shell.config_loader import load_config
-from tela.shell.gateway import bind_gateway_startup, gateway_shutdown, gateway_start
-from tela.shell.upstream import handle_initialize
+from tela.shell.gateway import (
+    GatewayStartupConfig,
+    bind_gateway_startup,
+    gateway_shutdown,
+    gateway_start,
+    get_runtime,
+)
+from tela.core.models import TelaConfig
 
 
 # @invar:allow dead_export: CLI entrypoint is invoked by the command framework via pyproject.toml.
@@ -204,6 +209,14 @@ def _handle_start(args: argparse.Namespace) -> int:
 
     assert gateway_result.value is not None
 
+    if gateway_result.value.transport.value == "stdio":
+        return asyncio.run(
+            _run_stdio_gateway(
+                startup_config=gateway_result.value,
+                tela_config=config_result.value,
+            )
+        )
+
     startup_result = asyncio.run(
         gateway_start(gateway_result.value, tela_config=config_result.value)
     )
@@ -217,77 +230,36 @@ def _handle_start(args: argparse.Namespace) -> int:
         file=sys.stderr,
     )
 
+    assert gateway_result.value.port is not None
+    return _serve_sse_gateway(gateway_result.value.port)
+
+
+async def _run_stdio_gateway(
+    startup_config: GatewayStartupConfig,
+    tela_config: TelaConfig,
+) -> int:
+    """Start gateway and run FastMCP stdio transport in one loop."""
+
+    startup_result = await gateway_start(startup_config, tela_config=tela_config)
+    if startup_result.is_err:
+        print(f"error: {startup_result.error}", file=sys.stderr)
+        return 1
+
+    print(
+        f"tela: ready (transport={startup_config.transport.value}, "
+        f"profile={startup_config.default_profile})",
+        file=sys.stderr,
+    )
+
+    runtime = get_runtime()
+    if runtime.upstream_server is None:
+        print("error: upstream MCP server not initialized", file=sys.stderr)
+        return 1
+
     try:
-        if gateway_result.value.transport.value == "stdio":
-            return _serve_stdio_mcp()
-        assert gateway_result.value.port is not None
-        return _serve_sse_gateway(gateway_result.value.port)
+        await runtime.upstream_server.run_stdio_async()
     finally:
-        if gateway_result.value.transport.value == "stdio":
-            asyncio.run(gateway_shutdown())
-
-
-def _write_jsonrpc_response(request_id: Any, payload: dict[str, Any]) -> None:
-    """Write a JSON-RPC response on stdout and flush transport."""
-
-    if request_id is None:
-        return
-    wire = {"jsonrpc": "2.0", "id": request_id, **payload}
-    sys.stdout.write(json.dumps(wire) + "\n")
-    sys.stdout.flush()
-
-
-def _serve_stdio_mcp() -> int:
-    """Serve minimal JSON-RPC on stdio for MCP liveness."""
-
-    for raw_line in sys.stdin:
-        line = raw_line.strip()
-        if not line:
-            continue
-
-        try:
-            request = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-
-        if not isinstance(request, dict):
-            continue
-
-        request_id = request.get("id")
-        method = request.get("method")
-        if method == "initialize":
-            params = request.get("params", {})
-            client_info_raw = (
-                params.get("clientInfo", {}) if isinstance(params, dict) else {}
-            )
-            client_info = client_info_raw if isinstance(client_info_raw, dict) else {}
-            init_result = asyncio.run(handle_initialize(client_info=client_info))
-            if init_result.is_ok and init_result.value is not None:
-                _write_jsonrpc_response(
-                    request_id,
-                    {
-                        "result": {
-                            "capabilities": {},
-                            "connection": init_result.value.model_dump(),
-                        }
-                    },
-                )
-            else:
-                _write_jsonrpc_response(
-                    request_id,
-                    {
-                        "error": {
-                            "code": -32000,
-                            "message": init_result.error or "initialize failed",
-                        }
-                    },
-                )
-            continue
-
-        _write_jsonrpc_response(
-            request_id,
-            {"error": {"code": -32601, "message": "Method not found"}},
-        )
+        await gateway_shutdown()
 
     return 0
 
