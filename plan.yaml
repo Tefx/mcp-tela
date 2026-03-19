@@ -12190,7 +12190,7 @@ phases:
       - none'
   - id: rt.final_gate.should-fix-retest
     name: Retest SHOULD_FIX runtime wiring remediation
-    status: pending
+    status: claimed
     description: 'Independent retest for the batched SHOULD_FIX remediation from `rt.final_gate.wiring`.
 
 
@@ -12254,6 +12254,8 @@ phases:
     depends_on:
     - rt.final_gate.should-fix-batch
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-19T07:51:35.469204+00:00'
 - id: cap.contract
   name: Define New Profile Contracts
   status: done
