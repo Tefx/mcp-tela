@@ -14716,3 +14716,56 @@ phases:
     depends_on:
     - invar1203.resolve-deps
     agent: software-architect
+  - id: invar1203.escape-policy-baseline
+    name: Re-baseline escape-hatch policy after scope hardening
+    status: pending
+    description: 'Reduce project-level escape-hatch policy overload after duplicate-scan
+      suppression and define the remaining remediation envelope.
+
+
+      Root blocker family:
+
+      - `escape_hatch_budget`
+
+      - `escape_hatch_project_limit`
+
+      - `escape_hatch_file_limit`
+
+      - `escape_hatch_non_suppressible`
+
+
+      Tasks:
+
+      - Re-run focused guard analysis after scope hardening to identify the true residual
+      escape-hatch counts in `src/`
+
+      - Separate residual debt into: project-budget pressure, per-file limit pressure,
+      and non-suppressible categories
+
+      - Record which files must be remediated immediately versus which residual items,
+      if any, can be explicitly classified as debt for gate review
+
+
+      Why this step exists:
+
+      - The current budget number `3675/15` is inflated by transient worktree copies;
+      remediation must be based on the real source tree first
+
+
+      Out of scope:
+
+      - Final code edits in the shell and CLI files; those land in the dedicated follow-up
+      steps
+
+      '
+    verification: '- Command expectation: run a focused guard pass that reports residual
+      escape-hatch counts on the real source tree only
+
+      - Evidence must list the remaining `src/` files that still violate project budget
+      or file limits after scope hardening
+
+      - Evidence must classify each remaining category as: remediate-now or explicitly-carried
+      debt with rationale'
+    depends_on:
+    - invar1203.scope-hardening
+    agent: python-senior
