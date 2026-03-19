@@ -14797,7 +14797,7 @@ phases:
       - existing non-mirror repo findings remain for subsequent remediation steps.'
   - id: invar1203.escape-policy-baseline
     name: Re-baseline escape-hatch policy after scope hardening
-    status: pending
+    status: claimed
     description: 'Reduce project-level escape-hatch policy overload after duplicate-scan
       suppression and define the remaining remediation envelope.
 
@@ -14848,6 +14848,8 @@ phases:
     depends_on:
     - invar1203.scope-hardening
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T08:47:14.630707+00:00'
   - id: invar1203.escape-policy-shell
     name: Remediate non-suppressible escape hatches in shell surfaces
     status: pending
