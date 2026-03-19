@@ -11933,8 +11933,11 @@ phases:
   - id: rt.final_gate.review
     name: Full gate review
     status: pending
-    description: Full gate review. Final verdict.
+    description: Full gate review. Must include the batched SHOULD_FIX remediation
+      path from `rt.final_gate.wiring` before opening the final gate.
     verification: 'Verdict: PASS. Zero BLOCKING. Gateway.runtime is genuinely done.'
+    refs:
+    - rt.final_gate.should-fix-retest
     depends_on:
     - rt.final_gate.blind
     agent: gate-reviewer
