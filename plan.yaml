@@ -15426,7 +15426,7 @@ phases:
     agent: gate-reviewer
   - id: invar1203.fix-batched-should-fix
     name: Fix batched should-fix findings from full guard retest
-    status: pending
+    status: claimed
     description: 'Fix ALL should-fix findings reported by `invar1203.retest-full-guard`,
       not just the first failure family.
 
@@ -15556,6 +15556,8 @@ phases:
     depends_on:
     - invar1203.retest-full-guard
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T09:24:02.331565+00:00'
   - id: invar1203.retest-batched-should-fix
     name: Re-test batched should-fix full guard findings
     status: pending
