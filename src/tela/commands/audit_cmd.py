@@ -10,7 +10,6 @@ import asyncio
 from tela.shell.audit import audit_query
 
 
-# @invar:allow dead_export: CLI entrypoint is wired by the command framework.
 # @invar:allow shell_result: CLI handler returns int exit code per POSIX convention.
 # @shell_complexity: command must handle query errors and two output formats.
 def audit_command(
@@ -46,7 +45,6 @@ def audit_command(
     entries = result.value
 
     if json_output:
-
         for entry in entries:
             print(entry.model_dump_json())
     else:

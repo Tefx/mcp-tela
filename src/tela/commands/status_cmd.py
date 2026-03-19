@@ -11,7 +11,6 @@ import sys
 from tela.shell.gateway import gateway_status
 
 
-# @invar:allow dead_export: CLI entrypoint is wired by the command framework.
 # @invar:allow shell_result: CLI handler returns int exit code per POSIX convention.
 def status_command(json_output: bool = False) -> int:
     """Display gateway runtime status.

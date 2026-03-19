@@ -12,7 +12,6 @@ from tela.core.models import GatewayTransport, RuntimeBindingContract
 from tela.shell.config_loader import Result, load_config
 
 
-# @invar:allow dead_export: CLI entrypoint is wired by the command framework.
 def start_command(
     config_path: str = "tela.yaml",
     port: int | None = None,

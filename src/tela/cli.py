@@ -16,7 +16,7 @@ from tela.commands.connections_cmd import connections_command
 from tela.commands.profiles_cmd import profiles_command
 from tela.commands.start import start_command
 from tela.commands.status_cmd import status_command
-from tela.shell.config_loader import load_config
+from tela.shell.config_loader import Result, load_config
 from tela.shell.gateway import (
     GatewayStartupConfig,
     bind_gateway_startup,
@@ -31,7 +31,6 @@ from tela.core.models import TelaConfig
 CONFIG_WATCH_POLL_SECONDS = 0.5
 
 
-# @invar:allow dead_export: CLI entrypoint is invoked by the command framework via pyproject.toml.
 # @invar:allow shell_result: CLI entrypoint returns int exit code per POSIX convention.
 # @shell_orchestration: CLI entrypoint orchestrates argparse and command dispatch.
 def main(argv: list[str] | None = None) -> int:
@@ -153,7 +152,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.command == "start":
-        return _handle_start(args)
+        start_result = _handle_start(args)
+        if start_result.is_err:
+            print(f"error: {start_result.error}", file=sys.stderr)
+            return 1
+        assert start_result.value is not None
+        return start_result.value
     if args.command == "status":
         return status_command(json_output=args.json_output)
     if args.command == "profiles":
@@ -169,8 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
-# @invar:allow shell_result: CLI handler returns int exit code per POSIX convention.
-def _handle_start(args: argparse.Namespace) -> int:
+def _handle_start(args: argparse.Namespace) -> Result[int, str]:
     """Handle ``tela start`` by resolving config and binding gateway startup.
 
     Wires CLI arguments through the shared config authority path into
@@ -192,8 +195,7 @@ def _handle_start(args: argparse.Namespace) -> int:
     )
 
     if runtime_result.is_err:
-        print(f"error: {runtime_result.error}", file=sys.stderr)
-        return 1
+        return Result(error=runtime_result.error)
 
     assert runtime_result.value is not None
 
@@ -201,8 +203,7 @@ def _handle_start(args: argparse.Namespace) -> int:
         path=Path(args.config), default_profile=args.default_profile
     )
     if config_result.is_err:
-        print(f"error: {config_result.error}", file=sys.stderr)
-        return 1
+        return Result(error=config_result.error)
 
     assert config_result.value is not None
 
@@ -212,25 +213,28 @@ def _handle_start(args: argparse.Namespace) -> int:
     )
 
     if gateway_result.is_err:
-        print(f"error: {gateway_result.error}", file=sys.stderr)
-        return 1
+        return Result(error=gateway_result.error)
 
     assert gateway_result.value is not None
 
     if gateway_result.value.transport.value == "stdio":
-        return asyncio.run(
-            _run_stdio_gateway(
+        return Result(
+            value=asyncio.run(
+                _run_stdio_gateway(
+                    startup_config=gateway_result.value,
+                    tela_config=config_result.value,
+                    config_path=Path(args.config),
+                )
+            )
+        )
+
+    return Result(
+        value=asyncio.run(
+            _run_sse_gateway(
                 startup_config=gateway_result.value,
                 tela_config=config_result.value,
                 config_path=Path(args.config),
             )
-        )
-
-    return asyncio.run(
-        _run_sse_gateway(
-            startup_config=gateway_result.value,
-            tela_config=config_result.value,
-            config_path=Path(args.config),
         )
     )
 
