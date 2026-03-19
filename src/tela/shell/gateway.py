@@ -12,6 +12,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Awaitable, Callable
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
@@ -181,7 +182,9 @@ def _wire_reload_notifications() -> None:
     _set_reload_notify_callback(_notify_all_connections)
 
 
-def _set_reload_notify_callback(callback: object | None) -> None:
+def _set_reload_notify_callback(
+    callback: Callable[[str], Awaitable[None]] | None,
+) -> None:
     """Set reload notify callback with lazy import to avoid module cycles."""
 
     from tela.shell.reload import set_notify_callback

@@ -8,188 +8,60 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from contextlib import AsyncExitStack
-from dataclasses import dataclass
-from typing import Any
 
 from mcp import types as mcp_types
-from mcp.client.session import ClientSession, MessageHandlerFnT
-from mcp.client.sse import sse_client
-from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.client.session import MessageHandlerFnT
 from mcp.shared.session import RequestResponder
 
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
 from tela.core.models import ResolvedTool, ServerConfig, TelaError
+from tela.shell.downstream_clients import (
+    _ClientHandle,
+    _enumerate_tools,
+    _open_sse_client as _transport_open_sse_client,
+    _open_stdio_client as _transport_open_stdio_client,
+    _validate_transport_mode,
+)
+from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.config_loader import Result
-
-
-class DownstreamRegistry:
-    """In-memory registry of resolved tools from downstream servers.
-
-    Provides lookup by tool name and server name. The registry is populated
-    during connect_all and can be re-enumerated for hot reload.
-    """
-
-    def __init__(self) -> None:
-        self._tools_by_server: dict[str, list[ResolvedTool]] = {}
-        self._tool_to_server: dict[str, str] = {}
-
-    def register(self, server_name: str, tools: list[ResolvedTool]) -> None:
-        """Register resolved tools for a server, updating the flat lookup."""
-        # Remove old tools for this server first
-        self.unregister(server_name)
-        self._tools_by_server[server_name] = tools
-        for tool in tools:
-            self._tool_to_server[tool.name] = server_name
-
-    def unregister(self, server_name: str) -> None:
-        """Remove all tools for a server from the registry."""
-        tools = self._tools_by_server.pop(server_name, [])
-        for tool in tools:
-            if self._tool_to_server.get(tool.name) == server_name:
-                del self._tool_to_server[tool.name]
-
-    def get_all_tools(self) -> dict[str, list[ResolvedTool]]:
-        """Return all resolved tools grouped by server name."""
-        return dict(self._tools_by_server)
-
-    def get_tool_server(self, tool_name: str) -> str | None:
-        """Look up which server owns a given tool name."""
-        return self._tool_to_server.get(tool_name)
-
-    def get_tool(self, tool_name: str) -> ResolvedTool | None:
-        """Look up a resolved tool by name."""
-        server = self._tool_to_server.get(tool_name)
-        if server is None:
-            return None
-        for tool in self._tools_by_server.get(server, []):
-            if tool.name == tool_name:
-                return tool
-        return None
-
-    def snapshot(self) -> tuple[dict[str, list["ResolvedTool"]], dict[str, str]]:
-        """Snapshot full registry state for atomic rollback.
-
-        Returns shallow copies -- safe because ResolvedTool is immutable.
-        """
-        return (
-            {k: list(v) for k, v in self._tools_by_server.items()},
-            dict(self._tool_to_server),
-        )
-
-    def restore(
-        self, snap: tuple[dict[str, list["ResolvedTool"]], dict[str, str]]
-    ) -> None:
-        """Restore full registry state from snapshot (atomic rollback)."""
-        tools_by_server, tool_to_server = snap
-        self._tools_by_server = {k: list(v) for k, v in tools_by_server.items()}
-        self._tool_to_server = dict(tool_to_server)
-
-    def clear(self) -> None:
-        """Clear all registry entries."""
-        self._tools_by_server.clear()
-        self._tool_to_server.clear()
-
 
 # Module-level registry instance
 _registry = DownstreamRegistry()
 _registry_lock = asyncio.Lock()
 
 
-@dataclass
-class _ClientHandle:
-    """Connected downstream client session and transport lifecycle stack."""
-
-    session: ClientSession
-    stack: AsyncExitStack
-
-
 _clients: dict[str, _ClientHandle] = {}
 
 
-# @invar:allow shell_result: returns optional error string, validation helper.
-def _validate_transport_mode(
-    server_name: str, server_config: ServerConfig
-) -> str | None:
-    """Validate server transport shape and return an error if invalid."""
-
-    has_command = bool(server_config.command)
-    has_url = bool(server_config.url)
-    if has_command == has_url:
-        return (
-            "DOWNSTREAM_CONNECT_FAILED: "
-            f"server '{server_name}' must set exactly one transport: command or url"
-        )
-    return None
-
-
-# @invar:allow shell_result: returns _ClientHandle, raises on I/O failure.
 async def _open_stdio_client(
     server_name: str,
     server_config: ServerConfig,
     message_handler: MessageHandlerFnT | None = None,
 ) -> _ClientHandle:
-    """Open and initialize an MCP stdio client session for one server."""
+    """Compatibility wrapper for stdio transport opener."""
 
-    command = server_config.command
-    if command is None:
-        raise ValueError(f"server '{server_name}' is missing command")
-
-    params = StdioServerParameters(
-        command=command,
-        args=list(server_config.args),
-        env=dict(server_config.env),
+    return await _transport_open_stdio_client(
+        server_name,
+        server_config,
+        message_handler=message_handler,
     )
-    stack = AsyncExitStack()
-    try:
-        read_stream, write_stream = await stack.enter_async_context(
-            stdio_client(params)
-        )
-        session = await stack.enter_async_context(
-            ClientSession(
-                read_stream,
-                write_stream,
-                message_handler=message_handler,
-            )
-        )
-        await session.initialize()
-        return _ClientHandle(session=session, stack=stack)
-    except Exception:
-        await stack.aclose()
-        raise
 
 
-# @invar:allow shell_result: returns _ClientHandle, raises on I/O failure.
 async def _open_sse_client(
     server_name: str,
     server_config: ServerConfig,
     message_handler: MessageHandlerFnT | None = None,
 ) -> _ClientHandle:
-    """Open and initialize an MCP SSE client session for one server."""
+    """Compatibility wrapper for SSE transport opener."""
 
-    url = server_config.url
-    if url is None:
-        raise ValueError(f"server '{server_name}' is missing url")
-
-    stack = AsyncExitStack()
-    try:
-        read_stream, write_stream = await stack.enter_async_context(sse_client(url=url))
-        session = await stack.enter_async_context(
-            ClientSession(
-                read_stream,
-                write_stream,
-                message_handler=message_handler,
-            )
-        )
-        await session.initialize()
-        return _ClientHandle(session=session, stack=stack)
-    except Exception:
-        await stack.aclose()
-        raise
+    return await _transport_open_sse_client(
+        server_name,
+        server_config,
+        message_handler=message_handler,
+    )
 
 
-# @invar:allow shell_result: returns _ClientHandle, raises on I/O failure.
 async def _open_client_for_server(
     server_name: str,
     server_config: ServerConfig,
@@ -314,22 +186,6 @@ def _build_downstream_message_handler(
                 await _handle_tools_list_changed(server_name, server_config)
 
     return _message_handler
-
-
-# @invar:allow shell_result: returns list[dict], raises on I/O failure.
-async def _enumerate_tools(session: ClientSession) -> list[dict[str, Any]]:
-    """Enumerate all tools from a downstream session via MCP ``tools/list``."""
-
-    list_result = await session.list_tools()
-    tools = list(list_result.tools)
-    cursor = list_result.nextCursor
-
-    while cursor is not None:
-        list_result = await session.list_tools(cursor=cursor)
-        tools.extend(list_result.tools)
-        cursor = list_result.nextCursor
-
-    return [tool.model_dump(by_alias=True, exclude_none=True) for tool in tools]
 
 
 async def _close_all_clients_locked() -> None:
