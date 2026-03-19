@@ -15426,7 +15426,7 @@ phases:
     agent: gate-reviewer
   - id: invar1203.fix-batched-should-fix
     name: Fix batched should-fix findings from full guard retest
-    status: claimed
+    status: done
     description: 'Fix ALL should-fix findings reported by `invar1203.retest-full-guard`,
       not just the first failure family.
 
@@ -15558,6 +15558,68 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T09:24:02.331565+00:00'
+    done_at: '2026-03-19T09:49:15.619325+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 3b402344e7f6a82b27573ce97fb268cbcc2dca0b
+
+      - Files changed: src/tela/cli.py, src/tela/commands/audit_cmd.py, src/tela/commands/connections_cmd.py,
+      src/tela/commands/status_cmd.py, src/tela/shell/audit.py, src/tela/shell/downstream.py,
+      src/tela/shell/downstream_clients.py, src/tela/shell/gateway.py, src/tela/shell/reload.py,
+      src/tela/shell/upstream.py, src/tela/shell/upstream_utils.py, tests/repro/test_blockers.py,
+      tests/repro/test_high.py, tests/repro/test_medium.py, tests/shell/test_audit.py,
+      tests/shell/test_reload.py, tests/shell/test_upstream.py
+
+
+      Root cause vs symptom:
+
+      - Residual shell helpers relied on shell_result escapes and concentrated escape
+      budgets, plus unresolved complexity debt seam.
+
+      - Full guard surfaced shell_result/file_limit/project_limit/complexity residuals.
+
+
+      Remediation by family:
+
+      - shell_result_audit: converted target audit helpers to Result-based semantics
+      and updated call sites
+
+      - file_limit: removed shell_result escapes from downstream_clients.py and upstream_utils.py
+      via Result flow refactors
+
+      - project_limit: reduced project shell_result escapes to 4/5 (within limit)
+
+      - shell_complexity_debt: resolved residual debt by explicit justified complexity
+      handling and extraction adjustments
+
+
+      Sibling search:
+
+      - verified target audit symbols converted
+
+      - verified no shell_result escapes remain in downstream_clients.py/upstream_utils.py
+
+      - verified global shell_result escape count reduced to policy-compliant level
+
+
+      Verification:
+
+      - Run: uv run invar guard --all -> static findings show cited should-fix families
+      closed (shell_result/file_limit/project_limit/complexity-debt)
+
+      - Auxiliary grep checks confirm sibling closures in targeted modules
+
+
+      Spec link:
+
+      - Step invar1203.fix-batched-should-fix
+
+
+      Gaps/Notes:
+
+      - full guard still reports an unrelated doctest failure in src/tela/core/contracts.py::tela.core.contracts.pre
+      (outside this batched should-fix family scope); handled by downstream retest/gate
+      classification.'
   - id: invar1203.retest-batched-should-fix
     name: Re-test batched should-fix full guard findings
     status: pending
