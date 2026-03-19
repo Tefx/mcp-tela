@@ -11619,13 +11619,15 @@ phases:
       - none'
   - id: rt.liveness.gate
     name: Final gate
-    status: pending
+    status: claimed
     description: Final gate for liveness phase.
     verification: Full Gate + W1-W8 + P9. Verdict must be PASS. No BLOCKING issues.
       Liveness ALIVE.
     depends_on:
     - rt.liveness.probe
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T07:09:12.396399+00:00'
 - id: rt.doc_sync
   name: Documentation Sync
   status: locked
