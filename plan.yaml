@@ -11567,7 +11567,7 @@ phases:
       - none'
 - id: rt.liveness
   name: Liveness Verification
-  status: in_progress
+  status: done
   depends_on:
   - rt.e2e
   steps:
@@ -11749,7 +11749,7 @@ phases:
       - none'
   - id: rt.liveness.retest-should-fix-batch
     name: Independent retest for batched should-fix remediation
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, re-verify the batched remediation added
       after `rt.liveness.gate`.
 
@@ -11786,9 +11786,50 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T07:21:50.759545+00:00'
+    done_at: '2026-03-19T07:24:03.959857+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): none (verification-only)
+
+      - Files changed: none
+
+
+      Verification:
+
+      - Run: wc -l src/tela/shell/downstream.py src/tela/shell/downstream_clients.py
+      src/tela/shell/downstream_registry.py -> downstream.py 481 lines (<500)
+
+      - Run: uv run --group dev mypy src/tela/shell/gateway.py src/tela/shell/downstream.py
+      src/tela/shell/config_loader.py -> Success: no issues found
+
+      - Run: uv run --group dev pytest tests/shell/test_downstream.py tests/shell/test_downstream_runtime_connection.py
+      tests/shell/test_gateway.py tests/repro/test_liveness.py -q -> 78 passed
+
+      - Run: dependency check for types-PyYAML in pyproject.toml and uv.lock -> present
+
+
+      Issue closure:
+
+      - downstream_size: CLOSED
+
+      - gateway_callback_typing: CLOSED
+
+      - yaml_typing_support: CLOSED
+
+      - verdict: PASS
+
+
+      Spec link:
+
+      - Step rt.liveness.retest-should-fix-batch
+
+
+      Gaps/Notes:
+
+      - none'
 - id: rt.doc_sync
   name: Documentation Sync
-  status: locked
+  status: pending
   depends_on:
   - rt.liveness
   steps:
