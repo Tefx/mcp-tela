@@ -11682,6 +11682,43 @@ phases:
     depends_on:
     - rt.liveness.gate
     agent: python-senior
+  - id: rt.liveness.retest-should-fix-batch
+    name: Independent retest for batched should-fix remediation
+    status: pending
+    description: 'As an INDEPENDENT TESTER, re-verify the batched remediation added
+      after `rt.liveness.gate`.
+
+
+      Retest scope:
+
+      - Confirm `src/tela/shell/downstream.py` is now below the 500-line threshold
+      and the extraction did not break liveness-related behavior.
+
+      - Confirm the callback annotation at `src/tela/shell/gateway.py:189` matches
+      real usage and no related typing regressions remain.
+
+      - Confirm YAML typing support is present and the relevant mypy/type-check path
+      no longer fails on missing yaml stubs.
+
+
+      This retest must validate ALL issues from the gate follow-up batch, not just
+      rerun one command.
+
+      Finding additional issues is a successful retest outcome.'
+    verification: '- Run the targeted typing/lint verification that covers the gateway
+      annotation and YAML stub issue
+
+      - Confirm `src/tela/shell/downstream.py` line count is below 500 and extracted
+      runtime path remains intact
+
+      - Collect evidence for all three remediated issues with command output or file/line
+      proof
+
+      - Report PASS if all three are closed; otherwise report ISSUES_FOUND with exact
+      remaining gaps'
+    depends_on:
+    - rt.liveness.fix-should-fix-batch
+    agent: integration-verifier
 - id: rt.doc_sync
   name: Documentation Sync
   status: locked
