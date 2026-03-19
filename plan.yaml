@@ -10557,10 +10557,41 @@ phases:
   - id: rt.reload_wire.impl
     name: Wire hot reload to fastmcp downstream
     status: pending
-    description: Wire set_notify_callback, on_tools_changed, on_server_reconnect to
-      real fastmcp downstream notifications. Wire on_config_changed if applicable.
-    verification: Hot reload functions have runtime callers. Downstream tool list
-      change triggers re-enumeration.
+    description: 'Implement hot-reload wiring against the already-defined test coverage
+      for the fastmcp downstream runtime surface.
+
+
+      Scope:
+
+      - Wire `set_notify_callback`, `on_tools_changed`, and `on_server_reconnect`
+      to real fastmcp downstream notifications.
+
+      - Wire `on_config_changed` if that callback remains part of the supported runtime
+      surface.
+
+      - Preserve runtime caller reachability so the implementation satisfies the new
+      callback wiring tests rather than adding dead exports or unused hooks.
+
+
+      Rationale for ordering:
+
+      - This is a non-trivial runtime wiring feature with callback/lifecycle behavior,
+      so implementation now depends on explicit test coverage in the same phase.
+
+
+      Verification:
+
+      - Hot reload functions have runtime callers
+
+      - Downstream tool list change triggers re-enumeration
+
+      - Implementation satisfies the targeted reload wiring tests added in `rt.reload_wire.test`'
+    verification: '- Runtime wiring implementation satisfies the targeted tests from
+      `rt.reload_wire.test`
+
+      - Hot reload functions have real runtime callers
+
+      - Downstream tool-list change triggers re-enumeration through the runtime path'
     evidence_template: 'Commit hash(es):
 
       Files changed:
@@ -10574,6 +10605,8 @@ phases:
       - Tool list update propagated: yes/no
 
       Gaps/Notes:'
+    depends_on:
+    - rt.reload_wire.test
     agent: python-senior
   - id: rt.reload_wire.gate
     name: Gate review
