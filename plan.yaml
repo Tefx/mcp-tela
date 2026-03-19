@@ -11239,7 +11239,7 @@ phases:
       regressions (all passing)'
   - id: rt.e2e.retest-state-isolation
     name: Retest full suite for gateway order independence
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the full
       suite after the state-isolation fix and try to disprove the claim that gateway
       runtime state is now isolated.
@@ -11284,6 +11284,30 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T06:51:59.540031+00:00'
+    done_at: '2026-03-19T06:55:38.402230+00:00'
+    evidence: 'Independent retest found blocker persists.
+
+
+      Observed failure:
+
+      - Full suite still fails at `tests/shell/test_gateway.py::test_gateway_status_after_start`
+      with `total_tool_calls` leakage.
+
+
+      Why previous fix failed:
+
+      - Prior fix evidence did not land effective runtime reset semantics in current
+      test path; leakage still reproduces in ordered run.
+
+
+      Planner remediation added:
+
+      - `rt.e2e.fix-state-isolation-loop2` (depends on this failed retest, requires
+      `why_previous_fix_failed` evidence)
+
+      - `rt.e2e.retest-state-isolation-loop2` (depends on loop2 fix)
+
+      - `rt.e2e.gate` now depends on loop2 retest as authoritative gate input.'
   - id: rt.e2e.fix-state-isolation-loop2
     name: Repeated blocker remediation for gateway state isolation
     status: pending
