@@ -11829,7 +11829,7 @@ phases:
       - none'
 - id: rt.doc_sync
   name: Documentation Sync
-  status: in_progress
+  status: done
   depends_on:
   - rt.liveness
   steps:
@@ -11876,7 +11876,7 @@ phases:
       - none'
   - id: rt.doc_sync.gate
     name: Gate review
-    status: claimed
+    status: done
     description: Gate review for documentation sync.
     verification: Docs accurate and no deferred language remains.
     depends_on:
@@ -11884,9 +11884,22 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T07:28:27.966610+00:00'
+    done_at: '2026-03-19T07:30:49.446186+00:00'
+    evidence: "Artifact:\n- Commit hash(es): none (read-only gate review)\n- Files\
+      \ changed: none\n\nVerification:\n- Run: grep -rn \"deferred\" --include=\"\
+      *.py\" src/tela/shell/*.py src/tela/commands/*.py -> no matches\n- Run: grep\
+      \ -rn \"deferred\" --include=\"*.md\" README.md docs/ -> no matches\n- Run:\
+      \ uv run pytest -q -> 422 passed, 3 warnings\n- Run: uv run pytest --doctest-modules\
+      \ src/tela/shell/*.py src/tela/commands/*.py -> 34 passed\n\nIssues:\n- blocker:\
+      \ []\n- should_fix: []\n- suggestion: []\n- tech_debt:\n  - upstream.py reserved\
+      \ dead_assign for future audit emission (pre-existing)\n  - upstream.py dead_export\
+      \ annotation (pre-existing)\n  - start.py dead_export annotation (pre-existing)\n\
+      \nVerdict:\n- PASS\n- Rationale: documentation aligns with runtime behavior;\
+      \ no deferred-language regressions; tests pass.\n\nSpec link:\n- Step rt.doc_sync.gate\n\
+      \nGaps/Notes:\n- none"
 - id: rt.final_gate
   name: Deep Review
-  status: locked
+  status: pending
   depends_on:
   - rt.doc_sync
   - rt.escape_cleanup
