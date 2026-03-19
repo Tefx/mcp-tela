@@ -15079,7 +15079,7 @@ phases:
       - none'
   - id: invar1203.core-contracts
     name: Repair missing contracts in core contract helpers
-    status: pending
+    status: claimed
     description: 'Remediate `missing_contract` findings on `src/tela/core/contracts.py`
       for `pre`, `post`, `_meta_pre`, and `_meta_post`.
 
@@ -15115,6 +15115,8 @@ phases:
     depends_on:
     - invar1203.escape-policy-cli
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T09:06:06.424431+00:00'
   - id: invar1203.shell-result
     name: Remediate shell_result findings in CLI and downstream helpers
     status: pending
