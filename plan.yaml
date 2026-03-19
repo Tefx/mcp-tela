@@ -10926,12 +10926,14 @@ phases:
       - cleanup scoped to stale-annotation removal and justification alignment'
   - id: rt.escape_cleanup.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: Gate review focused on W7.
     verification: Quick Gate focused on W7. No STUB_MODULE or STALE_HATCH.
     depends_on:
     - rt.escape_cleanup.impl
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T06:47:21.107153+00:00'
 - id: rt.doctests
   name: Replace Pass Doctests
   status: done
