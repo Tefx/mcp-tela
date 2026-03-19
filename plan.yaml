@@ -11930,12 +11930,14 @@ phases:
       \nSpec link:\n- Step rt.final_gate.wiring"
   - id: rt.final_gate.integration
     name: Full P1-P9 integration verification
-    status: pending
+    status: claimed
     description: Full P1-P9 integration verification.
     verification: All 9 protocols PASS. P9 ALIVE.
     depends_on:
     - rt.final_gate.wiring
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-19T07:36:43.596410+00:00'
   - id: rt.final_gate.blind
     name: Blind-tester Mode D
     status: pending
