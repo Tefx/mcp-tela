@@ -14860,3 +14860,41 @@ phases:
     depends_on:
     - invar1203.escape-policy-shell
     agent: python-senior
+  - id: invar1203.core-contracts
+    name: Repair missing contracts in core contract helpers
+    status: pending
+    description: 'Remediate `missing_contract` findings on `src/tela/core/contracts.py`
+      for `pre`, `post`, `_meta_pre`, and `_meta_post`.
+
+
+      Required outcomes:
+
+      - Add non-vacuous contracts where guard now requires them
+
+      - Keep the contract layer authoritative for core contract metadata helpers
+
+      - Ensure contracts reference real parameters and express meaningful checks rather
+      than identity-style placeholders
+
+
+      Known risks:
+
+      - Contract fixes that satisfy the checker syntactically but do not constrain
+      behavior will fail later contract-strength review
+
+      - Helper-level contract changes can affect multiple downstream call sites; preserve
+      the published helper semantics while strengthening the declarations
+
+      '
+    verification: '- Command expectation: targeted guard run on `src/tela/core/contracts.py`
+      clears the reported `missing_contract` findings for `pre`, `post`, `_meta_pre`,
+      and `_meta_post`
+
+      - Evidence must show the added contract intent for each helper and explain why
+      it is non-vacuous
+
+      - If helper signatures need adjustment, evidence must state the downstream compatibility
+      impact explicitly'
+    depends_on:
+    - invar1203.escape-policy-cli
+    agent: python-senior
