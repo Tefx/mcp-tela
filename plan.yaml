@@ -11969,7 +11969,7 @@ phases:
     agent: gate-reviewer
   - id: rt.final_gate.should-fix-batch
     name: Batch SHOULD_FIX runtime wiring remediation
-    status: pending
+    status: claimed
     description: 'Batched remediation for SHOULD_FIX findings from `rt.final_gate.wiring`.
 
 
@@ -12073,6 +12073,8 @@ phases:
     depends_on:
     - rt.final_gate.wiring
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T07:40:41.801369+00:00'
   - id: rt.final_gate.should-fix-retest
     name: Retest SHOULD_FIX runtime wiring remediation
     status: pending
