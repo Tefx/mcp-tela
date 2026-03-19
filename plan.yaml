@@ -14898,3 +14898,52 @@ phases:
     depends_on:
     - invar1203.escape-policy-cli
     agent: python-senior
+  - id: invar1203.shell-result
+    name: Remediate shell_result findings in CLI and downstream helpers
+    status: pending
+    description: 'Remove or restructure `shell_result` findings in the flagged shell
+      helpers.
+
+
+      Flagged helpers:
+
+      - `src/tela/cli.py::_run_stdio_gateway`
+
+      - `src/tela/cli.py::_serve_sse_gateway`
+
+      - `src/tela/shell/downstream.py::_open_stdio_client`
+
+      - `src/tela/shell/downstream.py::_open_sse_client`
+
+      - `src/tela/shell/downstream.py::_open_client_for_server`
+
+      - `src/tela/shell/downstream.py::_validate_transport_mode`
+
+
+      Failure-mode checklist:
+
+      - transport-mode validation remains explicit
+
+      - helper returns and error paths are consistent across stdio and SSE flows
+
+      - CLI gateway startup helpers and downstream connection helpers do not diverge
+      in result-handling conventions
+
+
+      Out-of-scope guardrail:
+
+      - Do not broaden this step into unrelated runtime behavior changes outside the
+      flagged helper/result semantics unless required to close the guard finding family
+
+      '
+    verification: '- Command expectation: targeted guard run on `src/tela/cli.py`
+      and `src/tela/shell/downstream.py` clears the cited `shell_result` findings
+
+      - Evidence must cover both main-path and failure-path result handling for stdio
+      and SSE helper flows
+
+      - Proof must state whether any compatibility wrappers or helper call-site migrations
+      were required'
+    depends_on:
+    - invar1203.core-contracts
+    agent: python-senior
