@@ -14987,7 +14987,7 @@ phases:
       - none'
   - id: invar1203.escape-policy-cli
     name: Remediate CLI escape-hatch limit violations
-    status: pending
+    status: claimed
     description: 'Reduce remaining escape-hatch violations in CLI entry and command
       surfaces after shell remediation.
 
@@ -15026,6 +15026,8 @@ phases:
     depends_on:
     - invar1203.escape-policy-shell
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T08:57:58.076607+00:00'
   - id: invar1203.core-contracts
     name: Repair missing contracts in core contract helpers
     status: pending
