@@ -128,8 +128,14 @@ async def handle_initialize(
     Creates a ConnectionContext and registers the connection.
 
     Examples:
-        >>> # handle_initialize requires gateway to be started
-        >>> pass  # doctest: +SKIP
+        >>> import asyncio
+        >>> from tela.shell.gateway import get_runtime
+        >>> get_runtime().config = None  # Gateway not started
+        >>> result = asyncio.run(handle_initialize({}))
+        >>> result.is_err
+        True
+        >>> "GATEWAY_NOT_STARTED" in result.error
+        True
 
     Args:
         client_info: MCP clientInfo dict.
@@ -170,8 +176,13 @@ async def handle_tools_list(
     Returns filtered tool list for the bound profile.
 
     Examples:
-        >>> # handle_tools_list requires gateway to be started
-        >>> pass  # doctest: +SKIP
+        >>> import asyncio
+        >>> from tela.shell.gateway import get_runtime
+        >>> from tela.core.models import ConnectionContext
+        >>> get_runtime().config = None  # Gateway not started
+        >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        >>> asyncio.run(handle_tools_list(conn))
+        []
 
     Args:
         connection: Active upstream connection context.
@@ -209,8 +220,16 @@ async def handle_tools_call(
     Runs enforcement chain and forwards to downstream.
 
     Examples:
-        >>> # handle_tools_call requires gateway to be started
-        >>> pass  # doctest: +SKIP
+        >>> import asyncio
+        >>> from tela.shell.gateway import get_runtime
+        >>> from tela.core.models import ConnectionContext
+        >>> get_runtime().config = None  # Gateway not started
+        >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        >>> result = asyncio.run(handle_tools_call(conn, "read_file", {"path": "/tmp"}))
+        >>> result.is_err
+        True
+        >>> "GATEWAY_NOT_STARTED" in result.error.code
+        True
 
     Args:
         connection: Active upstream connection context.
@@ -277,8 +296,10 @@ def handle_profiles_list() -> list[dict]:
     Returns list of configured profiles.
 
     Examples:
-        >>> # handle_profiles_list requires gateway to be started
-        >>> pass  # doctest: +SKIP
+        >>> from tela.shell.gateway import get_runtime
+        >>> get_runtime().config = None  # Gateway not started
+        >>> handle_profiles_list()
+        []
 
     Returns:
         List of profile dicts once implemented.

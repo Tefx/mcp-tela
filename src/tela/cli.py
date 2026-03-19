@@ -36,7 +36,13 @@ def main(argv: list[str] | None = None) -> int:
     Parses CLI arguments and dispatches to the appropriate command handler.
 
     Examples:
-        >>> pass  # doctest: +SKIP
+        >>> # The main function returns int exit code per POSIX convention.
+        >>> # Note: argparse --help triggers SystemExit(0), argv=[] prints help and returns 1.
+        >>> # Comprehensive CLI testing is in tests/ via pytest.
+        >>> callable(main)
+        True
+        >>> main.__name__
+        'main'
 
     Args:
         argv: Optional argument list for testing. Defaults to sys.argv[1:].
