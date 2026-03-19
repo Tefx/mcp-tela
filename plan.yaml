@@ -10823,7 +10823,7 @@ phases:
     agent: gate-reviewer
 - id: rt.doctests
   name: Replace Pass Doctests
-  status: in_progress
+  status: done
   depends_on:
   - rt.cli_start
   steps:
@@ -10877,7 +10877,7 @@ phases:
       - scope limited to doctest replacement in specified files'
   - id: rt.doctests.gate
     name: Gate review
-    status: claimed
+    status: done
     description: Gate review for doctests phase.
     verification: Quick Gate. B5 resolved. Zero pass doctests.
     depends_on:
@@ -10885,6 +10885,30 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T06:14:30.092401+00:00'
+    done_at: '2026-03-19T06:23:55.128494+00:00'
+    evidence: 'Artifact:
+
+      - doctest replacement commit and gate audit reviewed
+
+
+      Verification:
+
+      - no remaining `>>> pass` doctests in `src/`
+
+      - doctest execution for touched modules passes
+
+      - applicability sections reviewed (wiring/escape/runnable/integration all N/A
+      for pure doctest cleanup)
+
+
+      Spec link:
+
+      - rt.doctests phase objective
+
+
+      Result:
+
+      - Gate PASS'
 - id: rt.e2e
   name: End-to-End Integration Tests
   status: in_progress
