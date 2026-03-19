@@ -11930,7 +11930,7 @@ phases:
       \nSpec link:\n- Step rt.final_gate.wiring"
   - id: rt.final_gate.integration
     name: Full P1-P9 integration verification
-    status: claimed
+    status: done
     description: Full P1-P9 integration verification.
     verification: All 9 protocols PASS. P9 ALIVE.
     depends_on:
@@ -11938,6 +11938,62 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T07:36:43.596410+00:00'
+    done_at: '2026-03-19T07:50:51.828527+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): none (verification-only)
+
+      - Files changed: none
+
+
+      Protocols:
+
+      - P1: PASS (full suite green: 422 passed)
+
+      - P2: PASS (integration tests avoid fake seam boundary mocking)
+
+      - P3: N/A (no live infra claim)
+
+      - P4: N/A (no external live service claim)
+
+      - P5: N/A (no UI framework claim)
+
+      - P6: PASS (mock-island companions exist for real runtime paths)
+
+      - P7: PASS (coverage healthy; no broad untested core)
+
+      - P8: PASS (all CLI commands reachable and functional)
+
+      - P9: PASS (liveness ALIVE: stdio init works, SSE stays alive, status meaningful)
+
+
+      Issues:
+
+      - blocker: []
+
+      - should_fix: []
+
+      - suggestion: ["Increase CLI surface coverage depth beyond current baseline"]
+
+      - tech_debt: []
+
+
+      Verdict:
+
+      - PASS
+
+      - Rationale: integration and liveness protocols pass with no blocking or should-fix
+      findings.
+
+
+      Spec link:
+
+      - Step rt.final_gate.integration
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.final_gate.blind
     name: Blind-tester Mode D
     status: pending
