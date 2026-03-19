@@ -14616,3 +14616,10 @@ phases:
       - Identical override constraint
 
       - No contradictions found'
+- id: invar1203
+  name: Invar Guard 1.20.3 Remediation
+  status: pending
+  gate: Phase closes only after full `uv run invar guard --all` is runnable and either
+    clean or leaves explicitly classified residual debt with gate approval.
+  depends_on:
+  - cap.final_gate
