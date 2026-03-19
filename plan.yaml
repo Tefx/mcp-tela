@@ -12044,6 +12044,72 @@ phases:
     depends_on:
     - rt.final_gate.wiring
     agent: python-senior
+  - id: rt.final_gate.should-fix-retest
+    name: Retest SHOULD_FIX runtime wiring remediation
+    status: pending
+    description: 'Independent retest for the batched SHOULD_FIX remediation from `rt.final_gate.wiring`.
+
+
+      As `wiring-auditor`, verify from a fresh audit perspective that BOTH reported
+      SHOULD_FIX items are now closed:
+
+      1. production file-watcher reachability for `reload.py:on_config_changed`
+
+      2. production initialize-flow reachability or clarified runtime contract for
+      `upstream.py:resolve_initialize_profile_binding`
+
+
+      Your goal is to find remaining wiring ambiguity, dead exports, stale hatches,
+      or test-only reachability that still bypasses the real runtime path.'
+    verification: '- Re-run targeted wiring audit checks for both SHOULD_FIX items.
+
+      - Confirm evidence shows real production/runtime reachability rather than test-only
+      invocation.
+
+      - Confirm any clarified non-runtime contract is backed by authoritative design/spec
+      references and no stale export hatch remains.
+
+      - Report PASS only if both items are closed and no residual ambiguity remains
+      in the affected runtime surfaces.'
+    evidence_template: '## SHOULD_FIX Retest Report
+
+
+      **Reviewer**: wiring-auditor
+
+      **Source step**: rt.final_gate.should-fix-batch
+
+
+      **Checks**:
+
+      - reload production path verified: yes/no
+
+      - upstream production path or clarified contract verified: yes/no
+
+      - stale dead/test-only hatches remain: yes/no
+
+
+      **Commands / traces reviewed**:
+
+      ```
+
+      <paste exact audit commands or trace sources>
+
+      ```
+
+
+      **Findings**:
+
+      | Severity | Issue | Location | Notes |
+
+      | --- | --- | --- | --- |
+
+      | <blocker|should_fix|suggestion> | <issue or none> | <path> | <detail> |
+
+
+      **Verdict**: PASS | ISSUES_FOUND'
+    depends_on:
+    - rt.final_gate.should-fix-batch
+    agent: wiring-auditor
 - id: cap.contract
   name: Define New Profile Contracts
   status: done
