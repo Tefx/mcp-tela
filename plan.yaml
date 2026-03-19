@@ -14874,7 +14874,7 @@ phases:
       \ step intentionally no code remediation."
   - id: invar1203.escape-policy-shell
     name: Remediate non-suppressible escape hatches in shell surfaces
-    status: claimed
+    status: done
     description: 'Reduce non-suppressible and per-file escape-hatch violations in
       shell-heavy modules.
 
@@ -14924,6 +14924,67 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T08:50:00.264233+00:00'
+    done_at: '2026-03-19T08:57:35.530784+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): e6f7ba510c718e9a14576b7eb8a24b16197f4f4e
+
+      - Files changed: src/tela/shell/upstream.py, src/tela/shell/downstream.py, src/tela/shell/audit.py,
+      src/tela/shell/gateway.py, src/tela/shell/reload.py, src/tela/commands/status_cmd.py,
+      src/tela/commands/connections_cmd.py
+
+
+      Anti-pattern remediation by file:
+
+      - upstream.py: reduced dead_param/shell_result suppressions by wiring actual
+      parameter/result flow for tools/profile handlers
+
+      - downstream.py: shifted accessor surfaces toward Result wrappers and removed
+      inline dead_export suppression pathing
+
+      - audit.py: converted test-only public helpers to private implementations with
+      compatibility aliases, removing targeted inline suppressions
+
+      - gateway.py: adapted wiring to Result-based upstream/profile/tool paths; added
+      audit_close lifecycle handling; Result-wrapped status/connection helpers
+
+      - reload.py: reinforced runtime usage path for re_enumerate and digest path
+      wiring
+
+      - status_cmd.py, connections_cmd.py: CLI unwrapping for new Result surfaces
+
+
+      Sibling search:
+
+      - scanned shell modules for remaining `@invar:allow shell_result` and `@invar:allow
+      dead_export`
+
+      - targeted dead_export suppressions in priority shell modules reduced to zero
+
+
+      Verification:
+
+      - Focused guard checks on priority shell modules report escape_hatch_non_suppressible=0
+      and escape_hatch_file_limit=0
+
+      - Full-guard JSON parser confirms zero focus-category findings for targeted
+      priority files
+
+
+      Residual debt:
+
+      - Adjacent non-priority helpers (e.g. downstream_clients.py, upstream_utils.py)
+      retain shell_result pressure for later steps
+
+
+      Spec link:
+
+      - Step invar1203.escape-policy-shell
+
+
+      Gaps/Notes:
+
+      - none'
   - id: invar1203.escape-policy-cli
     name: Remediate CLI escape-hatch limit violations
     status: pending
