@@ -11749,7 +11749,7 @@ phases:
       - none'
   - id: rt.liveness.retest-should-fix-batch
     name: Independent retest for batched should-fix remediation
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, re-verify the batched remediation added
       after `rt.liveness.gate`.
 
@@ -11784,6 +11784,8 @@ phases:
     depends_on:
     - rt.liveness.fix-should-fix-batch
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-19T07:21:50.759545+00:00'
 - id: rt.doc_sync
   name: Documentation Sync
   status: locked
