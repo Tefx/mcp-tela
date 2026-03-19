@@ -192,6 +192,34 @@ def _set_reload_notify_callback(
     set_notify_callback(callback)
 
 
+async def gateway_reload_config_from_disk(
+    config_path: Path,
+    default_profile: str | None,
+) -> Result[None, str]:
+    """Load config from disk and apply runtime hot-reload callback.
+
+    This is the production runtime callback target for config-file watcher
+    integrations.
+
+    Args:
+        config_path: Path to runtime config file.
+        default_profile: CLI default-profile override.
+
+    Returns:
+        Result[None, str] from config reload application.
+    """
+
+    config_result = load_config(path=config_path, default_profile=default_profile)
+    if config_result.is_err:
+        return Result(error=config_result.error)
+
+    assert config_result.value is not None
+
+    from tela.shell.reload import on_config_changed
+
+    return await on_config_changed(config_result.value)
+
+
 # Module-level runtime state
 _runtime = GatewayRuntime()
 _runtime_lock = asyncio.Lock()

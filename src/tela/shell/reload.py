@@ -169,7 +169,7 @@ async def on_server_reconnect(
     return await on_tools_changed(server_name, server_config, tool_list)
 
 
-# @invar:allow dead_export: hot-reload entrypoint for config file changes.
+# Production callback target for runtime config-file watcher wiring.
 # @invar:allow dead_param: contract stub preserves parameter signatures.
 async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     """Handle configuration file change.

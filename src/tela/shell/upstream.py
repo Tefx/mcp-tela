@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from typing import Mapping
 
 from tela.core.models import (
+    AuthMode,
     ConnectionContext,
     DefaultProfileResolutionStatus,
     EnforcementVerdict,
@@ -41,7 +42,6 @@ class InitializeContext:
     connection_metadata: Mapping[str, str]
 
 
-# @invar:allow dead_export: profile binding resolver for upstream initialize flow.
 def resolve_initialize_profile_binding(
     *,
     resolved_default_profile: str | None,
@@ -148,8 +148,30 @@ async def handle_initialize(
     connection_id = f"conn_{uuid.uuid4().hex[:8]}"
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    # In open mode, use the resolved default profile
-    profile_name = runtime.config.resolved_default_profile or "default"
+    if runtime.config.auth.mode == AuthMode.OPEN:
+        status = (
+            DefaultProfileResolutionStatus.RESOLVED
+            if runtime.config.resolved_default_profile is not None
+            else DefaultProfileResolutionStatus.MISSING
+        )
+
+        binding_result = resolve_initialize_profile_binding(
+            resolved_default_profile=runtime.config.resolved_default_profile,
+            default_resolution_status=status,
+            context=InitializeContext(
+                connection_metadata={
+                    str(key): str(value) for key, value in client_info.items()
+                }
+            ),
+        )
+        if binding_result.is_err:
+            return Result(error=binding_result.error)
+
+        assert binding_result.value is not None
+        profile_name = binding_result.value.resolved_default_profile
+        assert profile_name is not None
+    else:
+        profile_name = runtime.config.resolved_default_profile or "default"
 
     ctx = ConnectionContext(
         connection_id=connection_id,

@@ -190,6 +190,81 @@ def test_handle_initialize_returns_connection_context() -> None:
     assert r.is_err
 
 
+def test_handle_initialize_uses_profile_binding_resolver(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """handle_initialize must call resolver in open mode."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ProfileConfig,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import (
+        InitializeContext,
+        handle_initialize,
+    )
+
+    calls: list[InitializeContext] = []
+
+    def _fake_resolve(
+        *,
+        resolved_default_profile: str | None,
+        default_resolution_status: DefaultProfileResolutionStatus,
+        context: InitializeContext,
+    ) -> Result[InitializeProfileBinding, str]:
+        calls.append(context)
+        assert resolved_default_profile == "dev"
+        assert default_resolution_status == DefaultProfileResolutionStatus.RESOLVED
+        return Result(
+            value=InitializeProfileBinding(
+                status=DefaultProfileResolutionStatus.RESOLVED,
+                resolved_default_profile="dev",
+            )
+        )
+
+    monkeypatch.setattr(
+        "tela.shell.upstream.resolve_initialize_profile_binding",
+        _fake_resolve,
+    )
+
+    get_runtime().config = TelaConfig(
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+    )
+    get_runtime().connections.clear()
+
+    result = asyncio.run(handle_initialize({"client": "desktop"}))
+
+    assert result.is_ok
+    assert len(calls) == 1
+    assert calls[0].connection_metadata == {"client": "desktop"}
+
+
+def test_handle_initialize_rejects_open_mode_without_resolved_profile() -> None:
+    """handle_initialize must reject open mode when profile resolution is missing."""
+    import asyncio
+
+    from tela.core.models import AuthConfig, AuthMode, TelaConfig
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import handle_initialize
+
+    get_runtime().config = TelaConfig(
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile=None,
+    )
+    get_runtime().connections.clear()
+
+    result = asyncio.run(handle_initialize({}))
+    assert result.is_err
+    assert "INITIALIZE_REJECTED" in (result.error or "")
+
+
 def test_handle_tools_list_returns_empty_when_no_gateway() -> None:
     """handle_tools_list returns empty list when gateway not started."""
     import asyncio

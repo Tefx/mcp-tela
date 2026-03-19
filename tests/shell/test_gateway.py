@@ -26,6 +26,7 @@ from tela.core.models import (
 from tela.shell.gateway import (
     GatewayStartupConfig,
     bind_gateway_startup,
+    gateway_reload_config_from_disk,
     gateway_connections,
     gateway_shutdown,
     gateway_start,
@@ -216,6 +217,42 @@ def test_gateway_start_sets_and_clears_reload_notify_callback(
     shutdown_result = asyncio.run(gateway_shutdown())
     assert shutdown_result.is_ok
     assert callbacks[-1] is None
+
+
+def test_gateway_reload_config_from_disk_routes_through_reload_callback(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Production reload entrypoint loads file and forwards to on_config_changed."""
+
+    config_path = tmp_path / "tela.yaml"
+    config_path.write_text(
+        "profiles:\n  dev:\n    name: dev\n    default: true\nauth:\n  mode: open\n",
+        encoding="utf-8",
+    )
+
+    captured: list[TelaConfig] = []
+
+    async def _fake_on_config_changed(new_config: TelaConfig):
+        captured.append(new_config)
+        from tela.shell.config_loader import Result
+
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        "tela.shell.reload.on_config_changed",
+        _fake_on_config_changed,
+    )
+
+    result = asyncio.run(
+        gateway_reload_config_from_disk(
+            config_path=config_path,
+            default_profile=None,
+        )
+    )
+
+    assert result.is_ok
+    assert len(captured) == 1
+    assert captured[0].resolved_default_profile == "dev"
 
 
 def test_gateway_start_with_servers_and_tools() -> None:

@@ -21,10 +21,14 @@ from tela.shell.gateway import (
     GatewayStartupConfig,
     bind_gateway_startup,
     gateway_shutdown,
+    gateway_reload_config_from_disk,
     gateway_start,
     get_runtime,
 )
 from tela.core.models import TelaConfig
+
+
+CONFIG_WATCH_POLL_SECONDS = 0.5
 
 
 # @invar:allow dead_export: CLI entrypoint is invoked by the command framework via pyproject.toml.
@@ -218,28 +222,23 @@ def _handle_start(args: argparse.Namespace) -> int:
             _run_stdio_gateway(
                 startup_config=gateway_result.value,
                 tela_config=config_result.value,
+                config_path=Path(args.config),
             )
         )
 
-    startup_result = asyncio.run(
-        gateway_start(gateway_result.value, tela_config=config_result.value)
+    return asyncio.run(
+        _run_sse_gateway(
+            startup_config=gateway_result.value,
+            tela_config=config_result.value,
+            config_path=Path(args.config),
+        )
     )
-    if startup_result.is_err:
-        print(f"error: {startup_result.error}", file=sys.stderr)
-        return 1
-
-    print(
-        f"tela: ready (transport={gateway_result.value.transport.value}, "
-        f"profile={gateway_result.value.default_profile})",
-        file=sys.stderr,
-    )
-
-    return _serve_sse_gateway()
 
 
 async def _run_stdio_gateway(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
+    config_path: Path,
 ) -> int:
     """Start gateway and run FastMCP stdio transport in one loop."""
 
@@ -259,25 +258,115 @@ async def _run_stdio_gateway(
         print("error: upstream MCP server not initialized", file=sys.stderr)
         return 1
 
+    stop_watcher = asyncio.Event()
+    watcher_task = asyncio.create_task(
+        _watch_config_changes(
+            config_path=config_path,
+            default_profile=startup_config.default_profile,
+            stop_event=stop_watcher,
+        )
+    )
+
     try:
         await runtime.upstream_server.run_stdio_async()
     finally:
+        stop_watcher.set()
+        await _await_task(watcher_task)
         await gateway_shutdown()
 
     return 0
 
 
-def _serve_sse_gateway() -> int:
-    """Run FastMCP SSE transport server until process termination."""
+async def _run_sse_gateway(
+    startup_config: GatewayStartupConfig,
+    tela_config: TelaConfig,
+    config_path: Path,
+) -> int:
+    """Start gateway and run FastMCP SSE transport in one loop."""
+
+    startup_result = await gateway_start(startup_config, tela_config=tela_config)
+    if startup_result.is_err:
+        print(f"error: {startup_result.error}", file=sys.stderr)
+        return 1
+
+    print(
+        f"tela: ready (transport={startup_config.transport.value}, "
+        f"profile={startup_config.default_profile})",
+        file=sys.stderr,
+    )
 
     runtime = get_runtime()
     if runtime.upstream_server is None:
         print("error: upstream MCP server not initialized", file=sys.stderr)
         return 1
 
+    stop_watcher = asyncio.Event()
+    watcher_task = asyncio.create_task(
+        _watch_config_changes(
+            config_path=config_path,
+            default_profile=startup_config.default_profile,
+            stop_event=stop_watcher,
+        )
+    )
+
     try:
-        runtime.upstream_server.run(transport="sse")
+        await asyncio.to_thread(runtime.upstream_server.run, transport="sse")
     finally:
-        asyncio.run(gateway_shutdown())
+        stop_watcher.set()
+        await _await_task(watcher_task)
+        await gateway_shutdown()
 
     return 0
+
+
+async def _watch_config_changes(
+    *,
+    config_path: Path,
+    default_profile: str | None,
+    stop_event: asyncio.Event,
+) -> None:
+    """Poll config mtime and run hot-reload callback when it changes."""
+
+    last_mtime_ns = _config_mtime_ns(config_path)
+
+    while not stop_event.is_set():
+        await asyncio.sleep(CONFIG_WATCH_POLL_SECONDS)
+        current_mtime_ns = _config_mtime_ns(config_path)
+        if current_mtime_ns is None:
+            continue
+
+        if last_mtime_ns is not None and current_mtime_ns <= last_mtime_ns:
+            continue
+
+        reload_result = await gateway_reload_config_from_disk(
+            config_path=config_path,
+            default_profile=default_profile,
+        )
+        if reload_result.is_err:
+            print(
+                f"warning: config reload failed: {reload_result.error}", file=sys.stderr
+            )
+        last_mtime_ns = current_mtime_ns
+
+
+def _config_mtime_ns(config_path: Path) -> int | None:
+    """Return file mtime (ns) for config watcher, or None if unreadable."""
+
+    try:
+        return config_path.stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+async def _await_task(task: asyncio.Task[None]) -> None:
+    """Await or cancel watcher task during shutdown."""
+
+    if task.done():
+        await task
+        return
+
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        return
