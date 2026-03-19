@@ -14673,3 +14673,46 @@ phases:
       - If fallback to a mapped source is required, evidence must show the repo configuration
       that makes the command reproducible for other agents'
     agent: software-architect
+  - id: invar1203.scope-hardening
+    name: Constrain guard scope to tracked project sources
+    status: pending
+    description: 'Harden guard scope so full scans do not recurse into transient worktree
+      mirrors.
+
+
+      Required exclusions:
+
+      - `.claude/worktrees/**`
+
+      - `.vectl/worktrees/**`
+
+
+      Tasks:
+
+      - Update the authoritative guard configuration or invocation wiring so full
+      guard scans only the intended project tree
+
+      - Ensure the chosen approach works for future full scans without requiring manual
+      path pruning by the executor
+
+
+      Known risks:
+
+      - Duplicate findings are currently dominated by mirrored worktrees (`.claude/worktrees`,
+      `.vectl/worktrees`), making budgets and file limits meaningless
+
+      - A local one-off command tweak is insufficient if normal project guard entrypoints
+      still scan the transient directories
+
+      '
+    verification: '- Command expectation: `uv run invar guard --all` or the repo-authoritative
+      wrapper reports no findings rooted in `.claude/worktrees/` or `.vectl/worktrees/`
+
+      - Evidence must include the exact config or invocation change that excludes
+      both transient directory families
+
+      - Proof must compare at least one before/after finding summary showing that
+      duplicate worktree locations disappeared'
+    depends_on:
+    - invar1203.resolve-deps
+    agent: software-architect
