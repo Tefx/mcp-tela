@@ -14819,3 +14819,44 @@ phases:
     depends_on:
     - invar1203.escape-policy-baseline
     agent: python-senior
+  - id: invar1203.escape-policy-cli
+    name: Remediate CLI escape-hatch limit violations
+    status: pending
+    description: 'Reduce remaining escape-hatch violations in CLI entry and command
+      surfaces after shell remediation.
+
+
+      Priority files:
+
+      - `src/tela/cli.py`
+
+      - `src/tela/cli/commands/`
+
+
+      Gate Preview (what the gate will reject):
+
+      1. Budget relief that only fixes `src/tela/cli.py` while leaving equivalent
+      command-path anti-patterns in `src/tela/cli/commands/`
+
+      2. Residual file-limit violations without explicit debt classification
+
+      3. Command-family drift where fixes only pass under a non-project guard invocation
+
+
+      Out of scope:
+
+      - Runtime feature changes unrelated to the flagged guard categories
+
+      '
+    verification: '- Command expectation: targeted guard run on `src/tela/cli.py`
+      and `src/tela/cli/commands` shows file-limit improvement and no silent command-path
+      regressions
+
+      - Evidence must include sibling-search coverage across CLI commands, not just
+      the top flagged file
+
+      - Any remaining CLI escape-hatch items must be explicitly classified with rationale
+      for gate review'
+    depends_on:
+    - invar1203.escape-policy-shell
+    agent: python-senior
