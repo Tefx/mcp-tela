@@ -15535,3 +15535,54 @@ phases:
     depends_on:
     - invar1203.retest-full-guard
     agent: python-senior
+  - id: invar1203.retest-batched-should-fix
+    name: Re-test batched should-fix full guard findings
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
+      batched remediation from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: full `uv run invar guard --all` completes against the remediated
+      tree
+
+      - Edge cases: shell-result helper coverage in `src/tela/shell/audit.py`, file-level
+      escape-hatch budgets, and project-wide shell-result budget all stay within policy
+      together
+
+      - Error scenarios: any remaining `shell_complexity_debt` or regression in related
+      shell modules is surfaced and recorded
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      A test that finds nothing must justify the coverage achieved.
+
+
+      Independence Level: L2
+
+      If this step verifies symbolic testing (`CrossHair`, `Hypothesis`, `invar guard`),
+      require a fresh/cold environment and the exact project command family.'
+    verification: '- Run the exact project command in a fresh/cold environment: `uv
+      run invar guard --all`
+
+      - Confirm the guard output no longer reports the four `shell_result` findings
+      in `src/tela/shell/audit.py`
+
+      - Confirm `escape_hatch_file_limit` is no longer exceeded in `src/tela/shell/downstream_clients.py`
+      or `src/tela/shell/upstream_utils.py`
+
+      - Confirm `escape_hatch_project_limit` is no longer exceeded for the project
+      shell_result budget
+
+      - Confirm no `shell_complexity_debt` error remains in the authoritative guard
+      output
+
+      - Record any residual findings by category with exact output excerpts'
+    depends_on:
+    - invar1203.fix-batched-should-fix
+    agent: integration-verifier
