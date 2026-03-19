@@ -11567,13 +11567,13 @@ phases:
       - none'
 - id: rt.liveness
   name: Liveness Verification
-  status: pending
+  status: in_progress
   depends_on:
   - rt.e2e
   steps:
   - id: rt.liveness.probe
     name: Blind-tester Mode D liveness probe
-    status: pending
+    status: claimed
     description: Run blind-tester Mode D against the completed system. All 4 tests
       in test_liveness.py must pass.
     verification: 'VERDICT: ALIVE. All 4 repro tests pass. stdio mode stays alive
@@ -11594,6 +11594,8 @@ phases:
 
       Gaps/Notes:'
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-19T07:07:26.830174+00:00'
   - id: rt.liveness.gate
     name: Final gate
     status: pending
