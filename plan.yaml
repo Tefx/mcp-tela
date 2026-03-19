@@ -11410,7 +11410,7 @@ phases:
       - none'
   - id: rt.e2e.retest-state-isolation-loop2
     name: Retest repeated gateway state isolation blocker family
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the authoritative
       full-suite path after the repeated state-isolation remediation and try to disprove
       the claim that total_tool_calls leakage is gone.
@@ -11448,6 +11448,8 @@ phases:
     depends_on:
     - rt.e2e.fix-state-isolation-loop2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-19T07:00:39.100603+00:00'
 - id: rt.liveness
   name: Liveness Verification
   status: locked
