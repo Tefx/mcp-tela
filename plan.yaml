@@ -11284,6 +11284,50 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T06:51:59.540031+00:00'
+  - id: rt.e2e.fix-state-isolation-loop2
+    name: Repeated blocker remediation for gateway state isolation
+    status: pending
+    description: "Fix ALL remaining blockers in the repeated gateway state-isolation\
+      \ family.\n\nsymbolic_testing: false\nprior_loop:\n  - rt.e2e.fix-state-isolation\n\
+      \  - rt.e2e.retest-state-isolation\nremaining_blocker: Full suite still fails\
+      \ at tests/shell/test_gateway.py::test_gateway_status_after_start because total_tool_calls\
+      \ leakage persists.\nwhy_new_loop: Prior remediation did not land effective\
+      \ code on the authoritative failure path, so the blocker family remains open.\n\
+      why_previous_fix_failed: REQUIRED evidence. Explain exactly why rt.e2e.fix-state-isolation\
+      \ did not change the real state owner or reset path exercised by the full ordered\
+      \ suite.\n\n## Root Cause vs Symptom\n- Root cause: identify the actual owner\
+      \ and lifecycle path that preserves total_tool_calls across tests, including\
+      \ any missed startup/status/reset route.\n- Symptom: tests/shell/test_gateway.py::test_gateway_status_after_start\
+      \ still observes leaked total_tool_calls state in full-suite order.\n- Why this\
+      \ fix is not surface-level: it must update the authoritative runtime/test isolation\
+      \ path, not a sibling helper that the failing suite does not execute.\n\n##\
+      \ Blockers to Fix (ALL of these, not just the first)\n### B1: total_tool_calls\
+      \ leakage still reaches gateway status after start\nLocations: tests/shell/test_gateway.py::test_gateway_status_after_start\
+      \ plus every runtime writer/reset/read path for total_tool_calls and adjacent\
+      \ gateway status counters\nRemediation: trace the exact ordered-suite execution\
+      \ path, repair the real state owner/reset lifecycle, and prove the reset occurs\
+      \ before status is observed in the failing test path.\nGrep hint: rg -n \"total_tool_calls|gateway\
+      \ status|status_after_start|tool_calls\" src tests\nIMPORTANT: Search for siblings\
+      \ beyond the listed location, including module-level mutable registries, startup\
+      \ hooks, fixture setup/teardown, and cached gateway/runtime instances.\n\n##\
+      \ Completion Criteria\n- ALL blockers fixed, not just the assertion site\n-\
+      \ Sibling search completed for runtime counters/reset paths\n- why_previous_fix_failed\
+      \ evidence is explicit and specific to the missed code path\n- No stale total_tool_calls\
+      \ state remains on the authoritative full-suite path"
+    verification: '- Main path: targeted regression proves a fresh gateway status
+      after start reports total_tool_calls=0 on the real suite path
+
+      - Failure path: full ordered suite covers tests/shell/test_gateway.py::test_gateway_status_after_start
+      and shows no leaked counter state
+
+      - Evidence includes explicit why_previous_fix_failed analysis, authoritative
+      state-owner identification, and sibling-search results
+
+      - Proof: the repaired reset/isolation path is the one exercised by the failing
+      suite, not only an adjacent helper'
+    depends_on:
+    - rt.e2e.retest-state-isolation
+    agent: python-senior
 - id: rt.liveness
   name: Liveness Verification
   status: locked
