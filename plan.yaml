@@ -11996,12 +11996,14 @@ phases:
       - none'
   - id: rt.final_gate.blind
     name: Blind-tester Mode D
-    status: pending
+    status: claimed
     description: Blind-tester Mode D final verification.
     verification: 'VERDICT: ALIVE'
     depends_on:
     - rt.final_gate.integration
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-19T07:51:32.488027+00:00'
   - id: rt.final_gate.review
     name: Full gate review
     status: pending
