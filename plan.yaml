@@ -10648,7 +10648,7 @@ phases:
       acceptance criteria'
   - id: rt.reload_wire.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: 'Gate review for hot reload wiring.
 
 
@@ -10672,6 +10672,8 @@ phases:
     - rt.reload_wire.test
     - rt.reload_wire.impl
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T06:25:16.992851+00:00'
   - id: rt.reload_wire.test
     name: Add hot reload wiring tests
     status: done
