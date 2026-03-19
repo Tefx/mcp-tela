@@ -15403,3 +15403,135 @@ phases:
     depends_on:
     - invar1203.retest-full-guard
     agent: gate-reviewer
+  - id: invar1203.fix-batched-should-fix
+    name: Fix batched should-fix findings from full guard retest
+    status: pending
+    description: 'Fix ALL should-fix findings reported by `invar1203.retest-full-guard`,
+      not just the first failure family.
+
+
+      symbolic_testing: true
+
+      prior_loop:
+
+      - invar1203.shell-result
+
+      - invar1203.retest-full-guard
+
+      remaining_blocker: residual should-fix findings in `shell_result`, `escape_hatch_file_limit`,
+      `escape_hatch_project_limit`, and `shell_complexity_debt`
+
+      why_new_loop: the prior remediation/retest chain proved the main path is runnable,
+      but the full guard still reports residual policy debt that must be closed before
+      final review
+
+      why_previous_fix_failed: earlier remediation closed the initial blocker set
+      but did not reduce all shell-result findings, file-local escape-hatch counts,
+      project budget overage, or the remaining shell complexity debt item surfaced
+      by the authoritative full guard
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: shell helper surfaces still accumulate cross-cutting contract
+      and escape-hatch pressure faster than policy cleanup reduced it, so the authoritative
+      guard continues to flag budget and complexity residuals
+
+      - Symptom: `uv run invar guard --all` still reports 4 `shell_result` errors
+      in `src/tela/shell/audit.py`, file/project escape-hatch limit overruns, and
+      one `shell_complexity_debt` finding
+
+      - Why this fix is not surface-level: the worker must close every listed family
+      and search sibling patterns instead of patching only the first reported line
+
+
+      ## Should-Fix Families (ALL of these, not just the first)
+
+      ### 1. shell_result in `src/tela/shell/audit.py`
+
+      Locations: `_compute_param_hash`, `_now_iso`, `build_audit_entry`, `_get_audit_entries`
+
+      Remediation: remove remaining `shell_result` violations by aligning helper contracts/return
+      semantics with the project shell conventions and updating any adjacent helper
+      paths that still rely on the same anti-pattern
+
+      Grep hint: rg -n "_compute_param_hash|_now_iso|build_audit_entry|_get_audit_entries|shell_result"
+      src/tela/shell/audit.py src/tela/shell
+
+      IMPORTANT: search sibling helpers in `src/tela/shell/` for the same shell-result
+      anti-pattern beyond these four symbols
+
+
+      ### 2. escape_hatch_file_limit overruns
+
+      Locations: `src/tela/shell/downstream_clients.py` (5/2), `src/tela/shell/upstream_utils.py`
+      (3/2)
+
+      Remediation: reduce or justify escape hatches by refactoring shell-facing helpers
+      so each file fits the configured per-file budget without adding new suppressions
+
+      Grep hint: rg -n "escape_hatch|shell_result|result" src/tela/shell/downstream_clients.py
+      src/tela/shell/upstream_utils.py
+
+      IMPORTANT: search for sibling escape-hatch concentration in nearby shell modules
+      before claiming done
+
+
+      ### 3. escape_hatch_project_limit overrun
+
+      Locations: project shell_result budget 16/5
+
+      Remediation: reduce the project-wide shell-result escape-hatch footprint to
+      the configured budget by removing residual escape hatches in the touched shell
+      modules and any directly related sibling modules uncovered by the search
+
+      Grep hint: rg -n "escape_hatch" src/tela/shell
+
+      IMPORTANT: provide evidence that the project total drops to policy, not just
+      that two files improved locally
+
+
+      ### 4. shell_complexity_debt residual
+
+      Locations: authoritative full-guard output location retained from `invar1203.retest-full-guard`
+
+      Remediation: eliminate the remaining shell complexity debt finding or reduce
+      the underlying complexity seam through extraction/simplification consistent
+      with existing shell architecture
+
+      Grep hint: rg -n "shell_complexity_debt|complexity|too complex|cyclomatic" src/tela/shell
+
+      IMPORTANT: identify the exact residual symbol/file from fresh guard output and
+      fix the root complexity seam, not only local formatting
+
+
+      ## Completion Criteria
+
+      - ALL four should-fix families closed
+
+      - Sibling search completed for each family
+
+      - No new instances of the same anti-patterns introduced
+
+      - Command family remains locked to `uv run invar guard --all`
+
+      - Retest is expected to run in a fresh/cold environment'
+    verification: '- Run the exact project command: `uv run invar guard --all`
+
+      - shell_result check: no `shell_result` findings remain for `_compute_param_hash`,
+      `_now_iso`, `build_audit_entry`, or `_get_audit_entries`
+
+      - escape_hatch_file_limit check: `src/tela/shell/downstream_clients.py` and
+      `src/tela/shell/upstream_utils.py` are at or below per-file budget
+
+      - escape_hatch_project_limit check: project shell_result budget is at or below
+      5 total
+
+      - shell_complexity_debt check: the residual complexity finding is removed or
+      explicitly shown closed by the same guard run
+
+      - Sibling-search evidence explains why the change closes each family rather
+      than only the first reported symptom'
+    depends_on:
+    - invar1203.retest-full-guard
+    agent: python-senior
