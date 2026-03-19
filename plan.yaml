@@ -11310,7 +11310,7 @@ phases:
       - `rt.e2e.gate` now depends on loop2 retest as authoritative gate input.'
   - id: rt.e2e.fix-state-isolation-loop2
     name: Repeated blocker remediation for gateway state isolation
-    status: claimed
+    status: done
     description: "Fix ALL remaining blockers in the repeated gateway state-isolation\
       \ family.\n\nsymbolic_testing: false\nprior_loop:\n  - rt.e2e.fix-state-isolation\n\
       \  - rt.e2e.retest-state-isolation\nremaining_blocker: Full suite still fails\
@@ -11354,6 +11354,60 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T06:56:56.837467+00:00'
+    done_at: '2026-03-19T07:00:05.416566+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 71499dd
+
+      - Files changed: src/tela/shell/gateway.py
+
+
+      Why previous fix failed:
+
+      - The prior loop remediation did not land on the authoritative lifecycle path
+      in src/tela/shell/gateway.py, so gateway_start/gateway_shutdown still did not
+      reset runtime counters.
+
+      - Full ordered suite path remained: upstream increments runtime.total_tool_calls,
+      then gateway_status_after_start reads same module-level runtime without reset.
+
+
+      Root cause:
+
+      - Authoritative state owner is module-level GatewayRuntime (_runtime) in src/tela/shell/gateway.py.
+
+      - total_tool_calls is mutated in src/tela/shell/upstream.py and read in gateway_status();
+      missing reset at lifecycle boundaries caused cross-test leakage.
+
+
+      Sibling search:
+
+      - Searched src/** and tests/** for total_tool_calls/tool_call_count/gateway
+      lifecycle/reset status paths.
+
+      - Found writer: src/tela/shell/upstream.py (runtime.total_tool_calls += 1).
+
+      - Found reader and lifecycle boundary: src/tela/shell/gateway.py; fixed at authoritative
+      boundary.
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_gateway.py::test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream
+      tests/shell/test_gateway.py::test_gateway_status_after_start -v --tb=short ->
+      2 passed
+
+      - Run: uv run pytest tests/ -v --tb=short -> 422 passed, 3 warnings
+
+
+      Spec link:
+
+      - Step rt.e2e.fix-state-isolation-loop2 (B1 blocker remediation)
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.e2e.retest-state-isolation-loop2
     name: Retest repeated gateway state isolation blocker family
     status: pending
