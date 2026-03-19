@@ -11619,7 +11619,7 @@ phases:
       - none'
   - id: rt.liveness.gate
     name: Final gate
-    status: claimed
+    status: done
     description: Final gate for liveness phase.
     verification: Full Gate + W1-W8 + P9. Verdict must be PASS. No BLOCKING issues.
       Liveness ALIVE.
@@ -11628,6 +11628,18 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T07:09:12.396399+00:00'
+    done_at: '2026-03-19T07:13:47.083556+00:00'
+    evidence: "Artifact:\n- Commit hash(es): none (verification-only)\n- Files changed:\
+      \ none\n\nGate protocol:\n- Wiring audit (W1-W8): PASS\n- Liveness (P9): PASS\
+      \ (4/4 liveness tests passed)\n- Full suite: 422 passed, 3 warnings\n\nIssues:\n\
+      - blocker: []\n- should_fix:\n  - src/tela/shell/downstream.py exceeds 500-line\
+      \ threshold\n  - callback type annotation mismatch at src/tela/shell/gateway.py:189\n\
+      \  - missing yaml type stubs for mypy\n- suggestion: []\n- tech_debt: []\n\n\
+      Verdict:\n- PASS_WITH_SHOULD_FIX\n- Rationale: no blockers; liveness and wiring\
+      \ gates pass; should-fix items captured.\n\nBatched remediation:\n- Planner\
+      \ added rt.liveness.fix-should-fix-batch (depends_on rt.liveness.gate)\n- Planner\
+      \ added rt.liveness.retest-should-fix-batch (depends_on rt.liveness.fix-should-fix-batch)\n\
+      \nSpec link:\n- Step rt.liveness.gate"
   - id: rt.liveness.fix-should-fix-batch
     name: Batch should-fix remediation from rt.liveness.gate
     status: pending
