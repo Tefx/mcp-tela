@@ -7,23 +7,22 @@ from __future__ import annotations
 
 import asyncio
 
+from tela.shell.config_loader import Result
 from tela.shell.audit import audit_query
 
 
-# @invar:allow shell_result: CLI handler returns int exit code per POSIX convention.
-# @shell_complexity: command must handle query errors and two output formats.
 def audit_command(
     since: str | None = None,
     limit: int = 100,
     json_output: bool = False,
-) -> int:
+) -> Result[int, str]:
     """Query and display audit log entries.
 
     Examples:
         >>> from tela.shell.audit import clear_audit_entries
         >>> clear_audit_entries()
-        >>> audit_command(limit=0)
-        0
+        >>> audit_command(limit=0).is_ok
+        True
 
     Args:
         since: ISO-8601 timestamp or relative duration filter.
@@ -31,15 +30,26 @@ def audit_command(
         json_output: Whether to output JSON.
 
     Returns:
-        Process exit code.
+        Result with process exit code.
     """
+    run_result = _run_audit_command(since=since, limit=limit, json_output=json_output)
+    if run_result.is_err:
+        return Result(error=run_result.error)
+    return Result(value=0)
+
+
+# @shell_complexity: command handles query errors and dual output formatting.
+def _run_audit_command(
+    since: str | None,
+    limit: int,
+    json_output: bool,
+) -> Result[None, str]:
+    """Execute audit query and render entries."""
+
     result = asyncio.run(audit_query(since=since, limit=limit))
 
     if result.is_err:
-        import sys
-
-        print(f"error: {result.error}", file=sys.stderr)
-        return 1
+        return Result(error=result.error)
 
     assert result.value is not None
     entries = result.value
@@ -47,11 +57,11 @@ def audit_command(
     if json_output:
         for entry in entries:
             print(entry.model_dump_json())
-    else:
-        for entry in entries:
-            verdict = entry.verdict.value.upper()
-            print(
-                f"[{entry.timestamp}] {verdict} {entry.tool_name} ({entry.server_name}) profile={entry.profile_name}"
-            )
+        return Result(value=None)
 
-    return 0
+    for entry in entries:
+        verdict = entry.verdict.value.upper()
+        print(
+            f"[{entry.timestamp}] {verdict} {entry.tool_name} ({entry.server_name}) profile={entry.profile_name}"
+        )
+    return Result(value=None)

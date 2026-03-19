@@ -61,6 +61,7 @@ class TestM5TimestampComparison:
         # Query with Z format should still match
         result = asyncio.run(audit_query(since="2026-01-15T11:00:00Z"))
         assert result.is_ok
+        assert result.value is not None
         assert len(result.value) == 1
 
 
@@ -96,7 +97,9 @@ class TestM6BoundedAuditStore:
                 await audit_write(entry)
 
         asyncio.run(write_ten())
-        entries = get_audit_entries()
+        entries_result = get_audit_entries()
+        assert entries_result.is_ok and entries_result.value is not None
+        entries = entries_result.value
         assert len(entries) <= 5
         # Oldest should be evicted, newest preserved
         assert entries[-1].tool_name == "tool_9"

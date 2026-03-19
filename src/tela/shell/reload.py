@@ -42,11 +42,11 @@ NotifyCallback = Callable[[str], Awaitable[None]]  # tools_digest -> None
 _notify_callback: NotifyCallback | None = None
 
 
-# @invar:allow shell_result: sets callback, not a failable I/O boundary.
-def set_notify_callback(callback: NotifyCallback | None) -> None:
+def set_notify_callback(callback: NotifyCallback | None) -> Result[None, str]:
     """Set the upstream notification callback for tools/list_changed."""
     global _notify_callback
     _notify_callback = callback
+    return Result(value=None)
 
 
 async def on_tools_changed(
@@ -109,7 +109,7 @@ async def on_tools_changed(
             )
 
             # Emit TOOL_CONFLICT audit warning
-            warning_entry = build_audit_entry(
+            warning_entry_result = build_audit_entry(
                 level=AuditLevel.L1,
                 connection=ConnectionContext(
                     connection_id="system",
@@ -125,7 +125,10 @@ async def on_tools_changed(
                     error_message=conflict_desc,
                 ),
             )
-            await audit_write(warning_entry)
+            if warning_entry_result.is_err:
+                return Result(error=warning_entry_result.error)
+            assert warning_entry_result.value is not None
+            _ = await audit_write(warning_entry_result.value)
 
             return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
 
@@ -174,7 +177,6 @@ async def on_server_reconnect(
 
 
 # Production callback target for runtime config-file watcher wiring.
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     """Handle configuration file change.
 

@@ -159,15 +159,30 @@ def main(argv: list[str] | None = None) -> int:
         assert start_result.value is not None
         return start_result.value
     if args.command == "status":
-        return status_command(json_output=args.json_output)
+        status_result = status_command(json_output=args.json_output)
+        if status_result.is_err:
+            print(f"error: {status_result.error}", file=sys.stderr)
+            return 1
+        assert status_result.value is not None
+        return status_result.value
     if args.command == "profiles":
         return profiles_command(config_path=args.config, json_output=args.json_output)
     if args.command == "connections":
-        return connections_command(json_output=args.json_output)
+        connections_result = connections_command(json_output=args.json_output)
+        if connections_result.is_err:
+            print(f"error: {connections_result.error}", file=sys.stderr)
+            return 1
+        assert connections_result.value is not None
+        return connections_result.value
     if args.command == "audit":
-        return audit_command(
+        audit_result = audit_command(
             since=args.since, limit=args.limit, json_output=args.json_output
         )
+        if audit_result.is_err:
+            print(f"error: {audit_result.error}", file=sys.stderr)
+            return 1
+        assert audit_result.value is not None
+        return audit_result.value
 
     parser.print_help()
     return 1

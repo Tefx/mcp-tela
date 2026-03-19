@@ -24,18 +24,22 @@ from tela.core.models import (
 from tela.shell.config_loader import Result
 
 
-def _compute_param_hash(arguments: dict) -> str:
+def _compute_param_hash(arguments: dict) -> Result[str, str]:
     """Compute SHA-256 hash of tool arguments for L2+ audit entries."""
-    serialized = json.dumps(arguments, sort_keys=True, separators=(",", ":"))
+    try:
+        serialized = json.dumps(arguments, sort_keys=True, separators=(",", ":"))
+    except (TypeError, ValueError) as exc:
+        return Result(error=f"AUDIT_ENTRY_ERROR: cannot serialize arguments: {exc}")
     digest = hashlib.sha256(serialized.encode()).hexdigest()[:16]
-    return f"sha256:{digest}"
+    return Result(value=f"sha256:{digest}")
 
 
-def _now_iso() -> str:
+def _now_iso() -> Result[str, str]:
     """Return current UTC timestamp in ISO-8601 format."""
-    return datetime.now(timezone.utc).isoformat()
+    return Result(value=datetime.now(timezone.utc).isoformat())
 
 
+# @shell_complexity: entry builder conditionally populates fields by audit level contract.
 def build_audit_entry(
     level: AuditLevel,
     connection: ConnectionContext,
@@ -47,7 +51,7 @@ def build_audit_entry(
     request_content: dict | None = None,
     response_content: dict | None = None,
     meta: MetaField | None = None,
-) -> AuditEntry:
+) -> Result[AuditEntry, str]:
     """Build an AuditEntry respecting audit level filtering.
 
     L1: tool name, verdict, latency
@@ -59,10 +63,12 @@ def build_audit_entry(
         >>> from tela.core.models import AuditLevel, ConnectionContext, EnforcementResult, EnforcementVerdict
         >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
         >>> allow = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
-        >>> entry = build_audit_entry(AuditLevel.L1, conn, "read_file", "fs", allow, latency_ms=5.0)
-        >>> entry.tool_name
+        >>> entry_result = build_audit_entry(AuditLevel.L1, conn, "read_file", "fs", allow, latency_ms=5.0)
+        >>> entry_result.is_ok
+        True
+        >>> entry_result.value.tool_name
         'read_file'
-        >>> entry.param_hash is None
+        >>> entry_result.value.param_hash is None
         True
 
     Args:
@@ -78,11 +84,20 @@ def build_audit_entry(
         meta: Held _meta.
 
     Returns:
-        AuditEntry with fields populated per audit level.
+        Result[AuditEntry, str] with fields populated per audit level.
     """
     param_hash: str | None = None
     if level in (AuditLevel.L2, AuditLevel.L3) and arguments is not None:
-        param_hash = _compute_param_hash(arguments)
+        hash_result = _compute_param_hash(arguments)
+        if hash_result.is_err:
+            return Result(error=hash_result.error)
+        assert hash_result.value is not None
+        param_hash = hash_result.value
+
+    now_result = _now_iso()
+    if now_result.is_err:
+        return Result(error=now_result.error)
+    assert now_result.value is not None
 
     entry_request: dict | None = None
     entry_response: dict | None = None
@@ -90,21 +105,23 @@ def build_audit_entry(
         entry_request = request_content
         entry_response = response_content
 
-    return AuditEntry(
-        timestamp=_now_iso(),
-        level=level,
-        connection_id=connection.connection_id,
-        profile_name=connection.profile_name,
-        tool_name=tool_name,
-        server_name=server_name,
-        verdict=result.verdict,
-        denied_by=result.denied_by,
-        error_code=result.error_code,
-        latency_ms=latency_ms,
-        param_hash=param_hash,
-        request_content=entry_request,
-        response_content=entry_response,
-        meta=meta,
+    return Result(
+        value=AuditEntry(
+            timestamp=now_result.value,
+            level=level,
+            connection_id=connection.connection_id,
+            profile_name=connection.profile_name,
+            tool_name=tool_name,
+            server_name=server_name,
+            verdict=result.verdict,
+            denied_by=result.denied_by,
+            error_code=result.error_code,
+            latency_ms=latency_ms,
+            param_hash=param_hash,
+            request_content=entry_request,
+            response_content=entry_response,
+            meta=meta,
+        )
     )
 
 
@@ -166,9 +183,9 @@ async def _audit_set_max_entries(max_entries: int) -> None:
         _audit_entries = deque(old_entries[-max_entries:], maxlen=max_entries)
 
 
-def _get_audit_entries() -> list[AuditEntry]:
+def _get_audit_entries() -> Result[list[AuditEntry], str]:
     """Return all stored audit entries (for testing)."""
-    return list(_audit_entries)
+    return Result(value=list(_audit_entries))
 
 
 def _clear_audit_entries() -> None:
@@ -192,7 +209,10 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
         >>> r = asyncio.run(audit_write(entry))
         >>> r.is_ok
         True
-        >>> len(get_audit_entries())
+        >>> entries_result = get_audit_entries()
+        >>> entries_result.is_ok
+        True
+        >>> len(entries_result.value)
         1
 
     Args:

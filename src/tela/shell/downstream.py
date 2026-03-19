@@ -19,6 +19,7 @@ from tela.core.models import ResolvedTool, ServerConfig, TelaError
 from tela.shell.downstream_clients import (
     _ClientHandle,
     _enumerate_tools,
+    _open_client_for_server as _transport_open_client_for_server,
     _open_sse_client as _transport_open_sse_client,
     _open_stdio_client as _transport_open_stdio_client,
     _validate_transport_mode as _transport_validate_transport_mode,
@@ -40,21 +41,11 @@ async def _open_stdio_client(
     message_handler: MessageHandlerFnT | None = None,
 ) -> Result[_ClientHandle, str]:
     """Compatibility wrapper for stdio transport opener."""
-    try:
-        return Result(
-            value=await _transport_open_stdio_client(
-                server_name,
-                server_config,
-                message_handler=message_handler,
-            )
-        )
-    except Exception as exc:
-        return Result(
-            error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
-                f"server '{server_name}' stdio connect failed: {exc}"
-            )
-        )
+    return await _transport_open_stdio_client(
+        server_name,
+        server_config,
+        message_handler=message_handler,
+    )
 
 
 async def _open_sse_client(
@@ -63,21 +54,11 @@ async def _open_sse_client(
     message_handler: MessageHandlerFnT | None = None,
 ) -> Result[_ClientHandle, str]:
     """Compatibility wrapper for SSE transport opener."""
-    try:
-        return Result(
-            value=await _transport_open_sse_client(
-                server_name,
-                server_config,
-                message_handler=message_handler,
-            )
-        )
-    except Exception as exc:
-        return Result(
-            error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
-                f"server '{server_name}' sse connect failed: {exc}"
-            )
-        )
+    return await _transport_open_sse_client(
+        server_name,
+        server_config,
+        message_handler=message_handler,
+    )
 
 
 def _validate_transport_mode(
@@ -85,10 +66,7 @@ def _validate_transport_mode(
     server_config: ServerConfig,
 ) -> Result[None, str]:
     """Validate server transport mode and return explicit error on mismatch."""
-    error = _transport_validate_transport_mode(server_name, server_config)
-    if error is not None:
-        return Result(error=error)
-    return Result(value=None)
+    return _transport_validate_transport_mode(server_name, server_config)
 
 
 async def _open_client_for_server(
@@ -97,21 +75,43 @@ async def _open_client_for_server(
     message_handler: MessageHandlerFnT | None = None,
 ) -> Result[_ClientHandle, str]:
     """Open a connected client handle from a server config transport."""
-    validation = _validate_transport_mode(server_name, server_config)
-    if validation.is_err:
-        return Result(error=validation.error)
-
-    if server_config.command is not None:
-        return await _open_stdio_client(
-            server_name,
-            server_config,
-            message_handler=message_handler,
-        )
-    return await _open_sse_client(
+    return await _transport_open_client_for_server(
         server_name,
         server_config,
         message_handler=message_handler,
     )
+
+
+async def _swap_client_handle(server_name: str, new_handle: _ClientHandle) -> None:
+    """Replace one client handle and close any prior handle best-effort."""
+
+    async with _registry_lock:
+        old_handle = _clients.get(server_name)
+        _clients[server_name] = new_handle
+
+    if old_handle is not None:
+        try:
+            await old_handle.stack.aclose()
+        except Exception:
+            return
+
+
+async def _enumerate_client_tools(
+    server_name: str,
+    handle: _ClientHandle,
+) -> Result[list[dict], str]:
+    """Enumerate tools for one connected client handle."""
+
+    tools_result = await _enumerate_tools(handle.session)
+    if tools_result.is_err:
+        return Result(
+            error=(
+                "DOWNSTREAM_UNAVAILABLE: "
+                f"re-enumeration failed for server '{server_name}': {tools_result.error}"
+            )
+        )
+    assert tools_result.value is not None
+    return Result(value=tools_result.value)
 
 
 async def _handle_tools_list_changed(
@@ -126,15 +126,16 @@ async def _handle_tools_list_changed(
     if client is None:
         return
 
-    try:
-        raw_tools = await _enumerate_tools(client.session)
-    except Exception as exc:
+    raw_tools_result = await _enumerate_client_tools(server_name, client)
+    if raw_tools_result.is_err:
         logging.warning(
             "Failed downstream tool re-enumeration for %s: %s",
             server_name,
-            exc,
+            raw_tools_result.error,
         )
         return
+    assert raw_tools_result.value is not None
+    raw_tools = raw_tools_result.value
 
     from tela.shell.reload import on_tools_changed
 
@@ -168,25 +169,18 @@ async def _handle_reconnect(
     assert open_result.value is not None
     new_handle = open_result.value
 
-    async with _registry_lock:
-        old_handle = _clients.get(server_name)
-        _clients[server_name] = new_handle
+    await _swap_client_handle(server_name, new_handle)
 
-    if old_handle is not None:
-        try:
-            await old_handle.stack.aclose()
-        except Exception:
-            pass
-
-    try:
-        raw_tools = await _enumerate_tools(new_handle.session)
-    except Exception as exc:
+    raw_tools_result = await _enumerate_client_tools(server_name, new_handle)
+    if raw_tools_result.is_err:
         logging.warning(
             "Downstream reconnect enumeration failed for %s: %s",
             server_name,
-            exc,
+            raw_tools_result.error,
         )
         return
+    assert raw_tools_result.value is not None
+    raw_tools = raw_tools_result.value
 
     from tela.shell.reload import on_server_reconnect
 
@@ -241,7 +235,7 @@ def get_registry() -> DownstreamRegistry:
     return _registry
 
 
-# @invar:allow dead_param: servers parameter unused in test-scaffold mode (tool_lists provided).
+# @shell_complexity: startup path coordinates transport connection, enumeration, and conflict rollback.
 async def connect_all(
     servers: dict[str, ServerConfig],
     tool_lists: dict[str, list[dict]] | None = None,
@@ -287,35 +281,36 @@ async def connect_all(
                 _registry.clear()
                 return Result(error=validation_result.error)
 
-            try:
-                if tool_lists is not None:
-                    raw_tools = tool_lists.get(server_name, [])
-                else:
-                    open_result = await _open_client_for_server(
+            if tool_lists is not None:
+                raw_tools = tool_lists.get(server_name, [])
+            else:
+                open_result = await _open_client_for_server(
+                    server_name,
+                    server_config,
+                    message_handler=_build_downstream_message_handler(
                         server_name,
                         server_config,
-                        message_handler=_build_downstream_message_handler(
-                            server_name,
-                            server_config,
-                        ),
-                    )
-                    if open_result.is_err:
-                        await _close_all_clients_locked()
-                        _registry.clear()
-                        return Result(error=open_result.error)
-                    assert open_result.value is not None
-                    client_handle = open_result.value
-                    _clients[server_name] = client_handle
-                    raw_tools = await _enumerate_tools(client_handle.session)
-            except Exception as exc:
-                await _close_all_clients_locked()
-                _registry.clear()
-                return Result(
-                    error=(
-                        "DOWNSTREAM_CONNECT_FAILED: "
-                        f"server '{server_name}' connection/enumeration failed: {exc}"
-                    )
+                    ),
                 )
+                if open_result.is_err:
+                    await _close_all_clients_locked()
+                    _registry.clear()
+                    return Result(error=open_result.error)
+                assert open_result.value is not None
+                client_handle = open_result.value
+                _clients[server_name] = client_handle
+                tools_result = await _enumerate_tools(client_handle.session)
+                if tools_result.is_err:
+                    await _close_all_clients_locked()
+                    _registry.clear()
+                    return Result(
+                        error=(
+                            "DOWNSTREAM_CONNECT_FAILED: "
+                            f"server '{server_name}' connection/enumeration failed: {tools_result.error}"
+                        )
+                    )
+                assert tools_result.value is not None
+                raw_tools = tools_result.value
 
             resolved = resolve_tools(server_name, server_config, raw_tools)
             all_resolved[server_name] = resolved
@@ -458,6 +453,7 @@ def get_tool_server(tool_name: str) -> Result[str | None, str]:
     return Result(value=_registry.get_tool_server(tool_name))
 
 
+# @shell_complexity: re-enumeration validates live runtime and server ownership before registry update.
 async def re_enumerate(
     server_name: str,
 ) -> Result[list[ResolvedTool], str]:
@@ -504,16 +500,16 @@ async def re_enumerate(
                 )
             )
 
-        try:
-            raw_tools = await _enumerate_tools(client.session)
-        except Exception as exc:
+        tools_result = await _enumerate_tools(client.session)
+        if tools_result.is_err:
             return Result(
                 error=(
                     "DOWNSTREAM_UNAVAILABLE: "
-                    f"re-enumeration failed for server '{server_name}': {exc}"
+                    f"re-enumeration failed for server '{server_name}': {tools_result.error}"
                 )
             )
 
-        resolved = resolve_tools(server_name, server_config, raw_tools)
+        assert tools_result.value is not None
+        resolved = resolve_tools(server_name, server_config, tools_result.value)
         _registry.register(server_name, resolved)
         return Result(value=resolved)

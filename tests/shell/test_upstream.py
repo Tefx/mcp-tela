@@ -465,8 +465,9 @@ def test_filter_tools_admits_matching_family() -> None:
     }
     profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
-    assert len(result) == 1
-    assert result[0].name == "read_file"
+    assert result.is_ok and result.value is not None
+    assert len(result.value) == 1
+    assert result.value[0].name == "read_file"
 
 
 def test_filter_tools_excludes_unadmitted_family() -> None:
@@ -486,7 +487,8 @@ def test_filter_tools_excludes_unadmitted_family() -> None:
     }
     profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = filter_tools_for_profile(tools, profile, {"shell": Posture.NONE})
-    assert len(result) == 0
+    assert result.is_ok and result.value is not None
+    assert len(result.value) == 0
 
 
 def test_filter_tools_excludes_posture_exceedance() -> None:
@@ -506,7 +508,8 @@ def test_filter_tools_excludes_posture_exceedance() -> None:
     }
     profile = ProfileConfig(name="reader", capabilities={"fs": Posture.READ_ONLY})
     result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
-    assert len(result) == 0
+    assert result.is_ok and result.value is not None
+    assert len(result.value) == 0
 
 
 def test_filter_tools_respects_capability_ceiling() -> None:
@@ -535,8 +538,9 @@ def test_filter_tools_respects_capability_ceiling() -> None:
         capabilities={"fs": Posture.READ_ONLY},
     )
     result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
-    assert len(result) == 1
-    assert result[0].name == "read_file"
+    assert result.is_ok and result.value is not None
+    assert len(result.value) == 1
+    assert result.value[0].name == "read_file"
 
 
 def test_filter_tools_multiple_servers() -> None:
@@ -576,7 +580,8 @@ def test_filter_tools_multiple_servers() -> None:
     result = filter_tools_for_profile(
         tools, profile, {"fs": Posture.NONE, "git": Posture.NONE, "shell": Posture.NONE}
     )
-    names = {t.name for t in result}
+    assert result.is_ok and result.value is not None
+    names = {t.name for t in result.value}
     assert names == {"read_file", "git_status"}
 
 
@@ -587,7 +592,9 @@ def test_strip_meta_removes_meta() -> None:
     """_meta is stripped from arguments."""
     from tela.shell.upstream_utils import strip_meta
 
-    stripped, meta = strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}})
+    strip_result = strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}})
+    assert strip_result.is_ok and strip_result.value is not None
+    stripped, meta = strip_result.value
     assert stripped == {"path": "/tmp"}
     assert meta == {"trace_id": "t1"}
 
@@ -596,7 +603,9 @@ def test_strip_meta_no_meta() -> None:
     """Arguments without _meta return None for held meta."""
     from tela.shell.upstream_utils import strip_meta
 
-    stripped, meta = strip_meta({"path": "/tmp"})
+    strip_result = strip_meta({"path": "/tmp"})
+    assert strip_result.is_ok and strip_result.value is not None
+    stripped, meta = strip_result.value
     assert stripped == {"path": "/tmp"}
     assert meta is None
 
@@ -605,7 +614,9 @@ def test_strip_meta_empty_arguments() -> None:
     """Empty arguments."""
     from tela.shell.upstream_utils import strip_meta
 
-    stripped, meta = strip_meta({})
+    strip_result = strip_meta({})
+    assert strip_result.is_ok and strip_result.value is not None
+    stripped, meta = strip_result.value
     assert stripped == {}
     assert meta is None
 
@@ -623,7 +634,8 @@ def test_enforce_tool_call_allows() -> None:
     )
     profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = enforce_tool_call("read_file", tool, profile, Posture.NONE)
-    assert result.verdict.value == "allow"
+    assert result.is_ok and result.value is not None
+    assert result.value.verdict.value == "allow"
 
 
 def test_enforce_tool_call_denies() -> None:
@@ -636,4 +648,5 @@ def test_enforce_tool_call_denies() -> None:
     )
     profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     result = enforce_tool_call("exec", tool, profile, Posture.NONE)
-    assert result.verdict.value == "deny"
+    assert result.is_ok and result.value is not None
+    assert result.value.verdict.value == "deny"

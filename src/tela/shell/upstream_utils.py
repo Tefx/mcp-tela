@@ -15,17 +15,17 @@ from tela.core.models import (
     ProfileConfig,
     ResolvedTool,
 )
+from tela.shell.config_loader import Result
 
 
 # --- tools/list filtering ---
 
 
-# @invar:allow shell_result: returns list per tools/list filtering spec.
 def filter_tools_for_profile(
     all_tools: dict[str, list[ResolvedTool]],
     profile: ProfileConfig,
     server_default_postures: dict[str, Posture],
-) -> list[ResolvedTool]:
+) -> Result[list[ResolvedTool], str]:
     """Filter resolved tools to those permitted by a profile.
 
     A tool is included if and only if:
@@ -38,9 +38,9 @@ def filter_tools_for_profile(
         >>> tools = {"fs": [ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)]}
         >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
         >>> result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
-        >>> len(result)
+        >>> len(result.value)
         1
-        >>> result[0].name
+        >>> result.value[0].name
         'read_file'
 
     Args:
@@ -49,7 +49,7 @@ def filter_tools_for_profile(
         server_default_postures: Server name to default posture mapping.
 
     Returns:
-        List of tools permitted by the profile.
+        Result containing tools permitted by the profile.
     """
 
     allowed_token = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
@@ -62,44 +62,42 @@ def filter_tools_for_profile(
             if result.verdict == EnforcementVerdict.ALLOW:
                 permitted.append(tool)
 
-    return permitted
+    return Result(value=permitted)
 
 
 # --- tools/call with _meta stripping ---
 
 
-# @invar:allow shell_result: returns tuple per _meta extraction spec, not a failable I/O boundary.
-def strip_meta(arguments: dict) -> tuple[dict, dict | None]:
+def strip_meta(arguments: dict) -> Result[tuple[dict, dict | None], str]:
     """Strip _meta from tool call arguments.
 
     Returns (stripped_arguments, held_meta). held_meta is None if _meta
     was not present.
 
     Examples:
-        >>> strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}})
+        >>> strip_meta({"path": "/tmp", "_meta": {"trace_id": "t1"}}).value
         ({'path': '/tmp'}, {'trace_id': 't1'})
-        >>> strip_meta({"path": "/tmp"})
+        >>> strip_meta({"path": "/tmp"}).value
         ({'path': '/tmp'}, None)
 
     Args:
         arguments: Raw tool call arguments.
 
     Returns:
-        Tuple of (stripped arguments, held _meta or None).
+        Result containing tuple of (stripped arguments, held _meta or None).
     """
 
     meta = arguments.get("_meta")
     stripped = {k: v for k, v in arguments.items() if k != "_meta"}
-    return stripped, meta
+    return Result(value=(stripped, meta))
 
 
-# @invar:allow shell_result: returns EnforcementResult per enforcement chain spec.
 def enforce_tool_call(
     tool_name: str,
     tool: ResolvedTool,
     profile: ProfileConfig,
     default_posture: Posture,
-) -> EnforcementResult:
+) -> Result[EnforcementResult, str]:
     """Run enforcement chain for a tool call in open mode (no token).
 
     Open mode uses a pre-allowed token result.
@@ -108,7 +106,7 @@ def enforce_tool_call(
         >>> from tela.core.models import ResolvedTool, ProfileConfig, Posture
         >>> tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
         >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
-        >>> enforce_tool_call("read_file", tool, profile, Posture.NONE).verdict
+        >>> enforce_tool_call("read_file", tool, profile, Posture.NONE).value.verdict
         <EnforcementVerdict.ALLOW: 'allow'>
 
     Args:
@@ -118,8 +116,10 @@ def enforce_tool_call(
         default_posture: Server's default posture.
 
     Returns:
-        EnforcementResult.
+        Result containing enforcement verdict.
     """
 
     allowed_token = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
-    return enforce(tool_name, tool, profile, allowed_token, default_posture)
+    return Result(
+        value=enforce(tool_name, tool, profile, allowed_token, default_posture)
+    )

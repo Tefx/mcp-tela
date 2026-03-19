@@ -35,6 +35,12 @@ def _teardown() -> None:
     asyncio.run(disconnect_all())
 
 
+def _runtime():
+    from tela.shell.gateway import get_runtime
+
+    return get_runtime()
+
+
 # --- on_tools_changed: accepted ---
 
 
@@ -141,7 +147,7 @@ def test_on_config_changed_sets_runtime_config() -> None:
     """on_config_changed updates the runtime config reference."""
     from tela.shell.gateway import get_runtime
 
-    runtime = get_runtime()
+    runtime = _runtime()
     old_config = runtime.config  # Save current config
 
     try:
@@ -160,7 +166,7 @@ def test_on_config_changed_detects_server_removal() -> None:
     from tela.shell.gateway import get_runtime
     from tela.shell.downstream import get_all_tools
 
-    runtime = get_runtime()
+    runtime = _runtime()
     old_config_ref = runtime.config
 
     # Setup: connect with initial servers
@@ -182,7 +188,8 @@ def test_on_config_changed_detects_server_removal() -> None:
         assert result.is_ok
         assert runtime.config == new_config
         # Registry should be cleared after disconnect
-        assert get_all_tools() == {}
+        tools_result = get_all_tools()
+        assert tools_result.is_ok and tools_result.value == {}
     finally:
         runtime.config = old_config_ref
 
@@ -191,7 +198,7 @@ def test_on_config_changed_identical_config_no_reconnect() -> None:
     """When old and new configs are identical, no disconnect/reconnect occurs."""
     from tela.shell.gateway import get_runtime
 
-    runtime = get_runtime()
+    runtime = _runtime()
     old_config_ref = runtime.config
 
     try:
@@ -222,7 +229,7 @@ def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
     """
     from tela.shell.gateway import get_runtime
 
-    runtime = get_runtime()
+    runtime = _runtime()
     old_config_ref = runtime.config
 
     # Setup: initial config
@@ -477,9 +484,10 @@ def test_on_tools_changed_conflict_emits_audit_warning() -> None:
             [{"name": "read_file", "inputSchema": {}}],
         )
     )
-    entries = get_audit_entries()
-    assert len(entries) == 1
-    assert entries[0].error_code == "TOOL_CONFLICT"
+    entries_result = get_audit_entries()
+    assert entries_result.is_ok and entries_result.value is not None
+    assert len(entries_result.value) == 1
+    assert entries_result.value[0].error_code == "TOOL_CONFLICT"
     clear_audit_entries()
     _teardown()
 

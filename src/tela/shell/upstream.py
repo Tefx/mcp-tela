@@ -116,6 +116,7 @@ def resolve_initialize_profile_binding(
 # --- MCP Handler functions ---
 
 
+# @shell_complexity: open-mode initialize resolves profile authority and validation branches.
 async def handle_initialize(
     client_info: dict,
 ) -> Result[ConnectionContext, str]:
@@ -126,7 +127,8 @@ async def handle_initialize(
     Examples:
         >>> import asyncio
         >>> from tela.shell.gateway import get_runtime
-        >>> get_runtime().config = None  # Gateway not started
+        >>> runtime = get_runtime()
+        >>> runtime.config = None  # Gateway not started
         >>> result = asyncio.run(handle_initialize({}))
         >>> result.is_err
         True
@@ -183,6 +185,7 @@ async def handle_initialize(
     return Result(value=ctx)
 
 
+# @shell_complexity: tool listing enforces profile binding and per-server posture defaults.
 async def handle_tools_list(
     connection: ConnectionContext,
 ) -> Result[list[dict], str]:
@@ -194,7 +197,8 @@ async def handle_tools_list(
         >>> import asyncio
         >>> from tela.shell.gateway import get_runtime
         >>> from tela.core.models import ConnectionContext
-        >>> get_runtime().config = None  # Gateway not started
+        >>> runtime = get_runtime()
+        >>> runtime.config = None  # Gateway not started
         >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
         >>> asyncio.run(handle_tools_list(conn))
         []
@@ -225,12 +229,19 @@ async def handle_tools_list(
     for sname, scfg in runtime.config.servers.items():
         server_default_postures[sname] = scfg.default_posture
 
-    permitted = filter_tools_for_profile(all_tools, profile, server_default_postures)
+    permitted_result = filter_tools_for_profile(
+        all_tools, profile, server_default_postures
+    )
+    if permitted_result.is_err:
+        return Result(error=permitted_result.error)
+    assert permitted_result.value is not None
+    permitted = permitted_result.value
     return Result(
         value=[{"name": t.name, "inputSchema": t.schema_ or {}} for t in permitted]
     )
 
 
+# @shell_complexity: tool call path validates runtime/profile/tool and enforcement chain outcomes.
 async def handle_tools_call(
     connection: ConnectionContext,
     tool_name: str,
@@ -244,7 +255,8 @@ async def handle_tools_call(
         >>> import asyncio
         >>> from tela.shell.gateway import get_runtime
         >>> from tela.core.models import ConnectionContext
-        >>> get_runtime().config = None  # Gateway not started
+        >>> runtime = get_runtime()
+        >>> runtime.config = None  # Gateway not started
         >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
         >>> result = asyncio.run(handle_tools_call(conn, "read_file", {"path": "/tmp"}))
         >>> result.is_err
@@ -269,10 +281,17 @@ async def handle_tools_call(
             )
         )
 
-    # Strip _meta
-    # held_meta is for future audit emission (L2+ logging)
-    # @invar:allow dead_assign: held_meta reserved for future audit emission.
-    stripped_args, held_meta = strip_meta(arguments)
+    stripped_result = strip_meta(arguments)
+    if stripped_result.is_err:
+        return Result(
+            error=TelaError(
+                code="INTERNAL_ERROR",
+                message=str(stripped_result.error or "Failed to strip _meta"),
+            )
+        )
+    assert stripped_result.value is not None
+    stripped_args, held_meta = stripped_result.value
+    _ = held_meta
 
     # Look up tool
     tool = get_registry().get_tool(tool_name)
@@ -296,7 +315,16 @@ async def handle_tools_call(
     # Enforce
     server_config = runtime.config.servers.get(tool.server_name)
     default_posture = server_config.default_posture if server_config else Posture.NONE
-    enforcement = enforce_tool_call(tool_name, tool, profile, default_posture)
+    enforcement_result = enforce_tool_call(tool_name, tool, profile, default_posture)
+    if enforcement_result.is_err:
+        return Result(
+            error=TelaError(
+                code="INTERNAL_ERROR",
+                message=str(enforcement_result.error or "Enforcement unavailable"),
+            )
+        )
+    assert enforcement_result.value is not None
+    enforcement = enforcement_result.value
 
     if enforcement.verdict == EnforcementVerdict.DENY:
         return Result(
@@ -318,7 +346,8 @@ def handle_profiles_list() -> Result[list[dict], str]:
 
     Examples:
         >>> from tela.shell.gateway import get_runtime
-        >>> get_runtime().config = None  # Gateway not started
+        >>> runtime = get_runtime()
+        >>> runtime.config = None  # Gateway not started
         >>> handle_profiles_list()
         []
 

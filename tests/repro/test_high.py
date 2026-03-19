@@ -77,8 +77,9 @@ class TestH2ConcurrentAuditWrites:
             await asyncio.gather(*tasks)
 
         asyncio.run(write_many())
-        entries = get_audit_entries()
-        assert len(entries) == 50
+        entries_result = get_audit_entries()
+        assert entries_result.is_ok and entries_result.value is not None
+        assert len(entries_result.value) == 50
 
 
 # --- H3: No NotImplementedError stubs ---

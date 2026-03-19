@@ -62,23 +62,26 @@ class TestB1WireCliSubcommands:
         assert exc_info.value.code == 0
 
     def test_status_command_callable(self) -> None:
-        """tela status returns int exit code without crash."""
+        """tela status returns Result-wrapped exit code without crash."""
         from tela.commands.status_cmd import status_command
 
         result = status_command(json_output=False)
-        assert isinstance(result, int)
+        assert result.is_ok
+        assert result.value == 0
 
     def test_connections_command_callable(self) -> None:
         from tela.commands.connections_cmd import connections_command
 
         result = connections_command(json_output=False)
-        assert isinstance(result, int)
+        assert result.is_ok
+        assert result.value == 0
 
     def test_audit_command_callable(self) -> None:
         from tela.commands.audit_cmd import audit_command
 
         result = audit_command(json_output=False)
-        assert isinstance(result, int)
+        assert result.is_ok
+        assert result.value == 0
 
 
 # --- B2: Wire AuditConfig into audit writer ---
@@ -155,13 +158,15 @@ class TestB2AuditConfigWiring:
         l1 = build_audit_entry(
             AuditLevel.L1, conn, "t1", "s1", allow, arguments={"key": "val"}
         )
-        assert l1.param_hash is None
+        assert l1.is_ok and l1.value is not None
+        assert l1.value.param_hash is None
 
         l2 = build_audit_entry(
             AuditLevel.L2, conn, "t1", "s1", allow, arguments={"key": "val"}
         )
-        assert l2.param_hash is not None
-        assert l2.param_hash.startswith("sha256:")
+        assert l2.is_ok and l2.value is not None
+        assert l2.value.param_hash is not None
+        assert l2.value.param_hash.startswith("sha256:")
 
 
 # --- B3: Fix parse_config name injection ---
@@ -213,9 +218,7 @@ class TestB4RollbackIsolation:
         from tela.shell.downstream import DownstreamRegistry
 
         reg = DownstreamRegistry()
-        tool_fs = ResolvedTool(
-            name="read_file", server_name="fs", family="filesystem"
-        )
+        tool_fs = ResolvedTool(name="read_file", server_name="fs", family="filesystem")
         tool_custom = ResolvedTool(
             name="custom_tool", server_name="custom", family="custom"
         )
@@ -225,9 +228,12 @@ class TestB4RollbackIsolation:
         snap = reg.snapshot()
 
         # Corrupt registry
-        reg.register("custom", [
-            ResolvedTool(name="read_file", server_name="custom", family="custom"),
-        ])
+        reg.register(
+            "custom",
+            [
+                ResolvedTool(name="read_file", server_name="custom", family="custom"),
+            ],
+        )
         # read_file now owned by custom
         assert reg.get_tool_server("read_file") == "custom"
 
@@ -241,9 +247,7 @@ class TestB4RollbackIsolation:
         from tela.shell.downstream import DownstreamRegistry
 
         reg = DownstreamRegistry()
-        tool_fs = ResolvedTool(
-            name="read_file", server_name="fs", family="filesystem"
-        )
+        tool_fs = ResolvedTool(name="read_file", server_name="fs", family="filesystem")
         tool_write = ResolvedTool(
             name="write_file", server_name="fs", family="filesystem"
         )
@@ -257,10 +261,13 @@ class TestB4RollbackIsolation:
         snap = reg.snapshot()
 
         # Simulate rejected reload of custom that corrupts fs mapping
-        reg.register("custom", [
-            ResolvedTool(name="read_file", server_name="custom", family="custom"),
-            ResolvedTool(name="new_tool", server_name="custom", family="custom"),
-        ])
+        reg.register(
+            "custom",
+            [
+                ResolvedTool(name="read_file", server_name="custom", family="custom"),
+                ResolvedTool(name="new_tool", server_name="custom", family="custom"),
+            ],
+        )
 
         # After corruption, fs tools are lost
         assert reg.get_tool_server("read_file") == "custom"

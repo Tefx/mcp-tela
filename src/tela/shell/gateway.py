@@ -111,6 +111,7 @@ def _register_profiles_resource(upstream_server: FastMCP) -> None:
         return json.dumps(result.value)
 
 
+# @shell_complexity: wiring composes initialize/list/call adapters for FastMCP boundary.
 def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     """Wire upstream handlers into FastMCP request handling."""
 
@@ -200,7 +201,7 @@ def _set_reload_notify_callback(
 
     from tela.shell.reload import set_notify_callback
 
-    set_notify_callback(callback)
+    _ = set_notify_callback(callback)
 
 
 async def gateway_reload_config_from_disk(
