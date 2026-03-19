@@ -10744,7 +10744,7 @@ phases:
   steps:
   - id: rt.doctests.impl
     name: Replace pass doctests with real ones
-    status: claimed
+    status: done
     description: 'Replace all `>>> pass  # doctest: +SKIP` in upstream.py and cli.py
       with real doctests that exercise the functions.'
     verification: Zero pass-only doctests in src/. All doctests pass. grep '>>> pass'
@@ -10762,6 +10762,34 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-19T06:00:13.856211+00:00'
+    done_at: '2026-03-19T06:08:30.351756+00:00'
+    evidence: 'Commit hash(es):
+
+      - cd27993b0d60f1cdac7665530b2bb58932703cd8
+
+
+      Files changed:
+
+      - src/tela/shell/upstream.py
+
+      - src/tela/cli.py
+
+
+      Doctests replaced:
+
+      - 5 `>>> pass  # doctest: +SKIP` examples replaced with real executable doctests
+
+
+      Verification:
+
+      - `grep ''>>> pass'' src/` -> no matches
+
+      - doctest runs for touched modules pass
+
+
+      Gaps/Notes:
+
+      - scope limited to doctest replacement in specified files'
   - id: rt.doctests.gate
     name: Gate review
     status: pending
