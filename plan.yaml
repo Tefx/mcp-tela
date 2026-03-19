@@ -10636,7 +10636,7 @@ phases:
     agent: gate-reviewer
   - id: rt.reload_wire.test
     name: Add hot reload wiring tests
-    status: claimed
+    status: done
     description: 'Test step: add targeted coverage for fastmcp hot-reload wiring before
       runtime implementation.
 
@@ -10704,6 +10704,87 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-19T06:09:14.046670+00:00'
+    done_at: '2026-03-19T06:13:25.833419+00:00'
+    evidence: '## Test Evidence
+
+
+      **Callback wiring tests**:
+
+      - `test_set_notify_callback_clear_removes_callback` - tests/shell/test_reload.py
+      - confirms `set_notify_callback(None)` clears callback
+
+      - `test_on_tools_changed_calls_notify_callback` - tests/shell/test_reload.py
+      - confirms accepted reload calls notification callback with digest
+
+      - `test_on_server_reconnect_calls_notify_callback_via_delegation` - tests/shell/test_reload.py
+      - confirms `on_server_reconnect` delegates to `on_tools_changed` and triggers
+      notification
+
+
+      **Runtime caller coverage**:
+
+      - `test_on_tools_changed_adds_new_tool` - registry update via `on_tools_changed`
+
+      - `test_on_tools_changed_removes_old_tool` - registry removal via `on_tools_changed`
+
+      - `test_on_tools_changed_rejects_conflict` - conflict detection path
+
+      - `test_on_server_reconnect_updates_tools` - server reconnect delegation
+
+
+      **Re-enumeration trigger proof**:
+
+      - `test_re_enumeration_updates_registry_via_reload` - confirms tool-list changes
+      flow through `on_tools_changed` to registry
+
+      - `test_re_enumeration_preserves_other_servers` - confirms other servers preserved
+      during re-enumeration
+
+      - `test_conflict_rollback_restores_all_servers_state` - confirms atomic rollback
+      restores ALL servers
+
+
+      **Config-changed coverage**:
+
+      - `test_on_config_changed_updates_runtime` - deferred (test already existed)
+
+      - `test_on_config_changed_sets_runtime_config` - covered: updates runtime config
+      reference
+
+      - `test_on_config_changed_detects_server_removal` - covered: detects removed
+      servers, triggers disconnect
+
+      - `test_on_config_changed_identical_config_no_reconnect` - covered: identical
+      config skips reconnect
+
+      - `test_on_config_changed_server_change_triggers_reconnect_error` - covered:
+      verifies reconnect path attempted
+
+
+      **Negative/assertive dead path checks**:
+
+      - `test_on_tools_changed_conflict_does_not_call_notify_callback` - confirms
+      rejected reload does NOT call notification callback
+
+
+      **Verification**:
+
+      - Run: `uv run pytest tests/shell/test_reload.py -v` -> 18 passed
+
+      - Run: `uv run pytest tests/shell/test_reload.py tests/shell/test_upstream.py
+      tests/shell/test_gateway.py tests/integration/test_hot_reload.py -v` -> 126
+      passed
+
+      - Run: `invar_guard --changed` -> passed (static, doctest, no issues)
+
+
+      **Gaps/Notes**:
+
+      - All `on_config_changed` paths covered except actual successful reconnect (requires
+      real MCP server - deferred to integration tests)
+
+      - `notify_tools_changed` in upstream.py is a pass-through to `_notify_callback`
+      - covered by callback tests'
 - id: rt.escape_cleanup
   name: Remove Stale Escape Hatches
   status: locked
