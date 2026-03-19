@@ -10420,7 +10420,7 @@ phases:
       - Gate PASS'
 - id: rt.cli_start
   name: Wire tela start
-  status: in_progress
+  status: done
   depends_on:
   - rt.upstream
   steps:
@@ -10528,7 +10528,7 @@ phases:
       - change scoped to SSE start path only'
   - id: rt.cli_start.gate
     name: Gate review with liveness probe
-    status: claimed
+    status: done
     description: Gate review with blind-tester Mode D liveness probe.
     verification: Full Gate + blind-tester Mode D. tela start must be ALIVE (not DEAD_ON_ARRIVAL).
       All 4 tests in test_liveness.py must pass.
@@ -10537,9 +10537,20 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T05:51:00.322183+00:00'
+    done_at: '2026-03-19T05:59:24.385015+00:00'
+    evidence: "Artifact:\n- commits reviewed: `rt.cli_start.stdio` and `rt.cli_start.sse`\
+      \ merges\n- independent Mode D probe executed by blind-tester\n\nVerification:\n\
+      - Full liveness suite passes for stdio + SSE + status\n- wiring audit confirms\
+      \ cli/gateway lifecycle callers and cleanup paths\n- escape-hatch audit completed\
+      \ with grounded annotations\n- runnable surface verified by independent black-box\
+      \ probe:\n  - stdio stays alive and returns MCP initialize response\n  - stdout\
+      \ transport remains clean (no banner pollution)\n  - SSE binds port and `/sse`\
+      \ endpoint responds\n- integration evidence confirms subprocess-based probes\
+      \ and real transport paths\n\nSpec link:\n- CLI start surface and transport\
+      \ behavior contract\n\nResult:\n- Gate PASS"
 - id: rt.reload_wire
   name: Wire Hot Reload
-  status: locked
+  status: pending
   depends_on:
   - rt.cli_start
   steps:
@@ -10608,7 +10619,7 @@ phases:
     agent: gate-reviewer
 - id: rt.doctests
   name: Replace Pass Doctests
-  status: locked
+  status: pending
   depends_on:
   - rt.cli_start
   steps:
@@ -10640,7 +10651,7 @@ phases:
     agent: gate-reviewer
 - id: rt.e2e
   name: End-to-End Integration Tests
-  status: locked
+  status: pending
   depends_on:
   - rt.cli_start
   steps:
