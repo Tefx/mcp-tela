@@ -11328,6 +11328,46 @@ phases:
     depends_on:
     - rt.e2e.retest-state-isolation
     agent: python-senior
+  - id: rt.e2e.retest-state-isolation-loop2
+    name: Retest repeated gateway state isolation blocker family
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the authoritative
+      full-suite path after the repeated state-isolation remediation and try to disprove
+      the claim that total_tool_calls leakage is gone.
+
+
+      YOUR GOAL IS TO FIND REMAINING ORDER-DEPENDENT LEAKAGE, not to confirm the happy
+      path.
+
+
+      Required checks:
+
+      - Re-run the full suite in normal order, explicitly covering tests/shell/test_gateway.py::test_gateway_status_after_start
+
+      - Verify the exact failing path now observes total_tool_calls=0 after start
+      and does not inherit prior suite state
+
+      - Check adjacent gateway/runtime status counters for sibling leakage if the
+      main failure is resolved
+
+      - Use a fresh/cold invocation so cached process state cannot hide remaining
+      leakage
+
+
+      Success means evidence is collected; if leakage is still found, that is a successful
+      verification outcome and should block the gate.'
+    verification: '- Run the full suite, not just the isolated test
+
+      - Evidence includes the exact suite command and actual output for tests/shell/test_gateway.py::test_gateway_status_after_start
+
+      - Evidence states whether total_tool_calls or adjacent counters still leak across
+      test boundaries
+
+      - Verdict is PASS only if the ordered full-suite run shows no state leakage;
+      otherwise ISSUES_FOUND'
+    depends_on:
+    - rt.e2e.fix-state-isolation-loop2
+    agent: integration-verifier
 - id: rt.liveness
   name: Liveness Verification
   status: locked
