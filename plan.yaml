@@ -12055,7 +12055,7 @@ phases:
       - none'
   - id: rt.final_gate.review
     name: Full gate review
-    status: pending
+    status: claimed
     description: Full gate review. Must include the batched SHOULD_FIX remediation
       path from `rt.final_gate.wiring` before opening the final gate.
     verification: '- Final gate review includes evidence from `rt.final_gate.blind`
@@ -12074,6 +12074,8 @@ phases:
     - rt.final_gate.blind
     - rt.final_gate.should-fix-retest
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T07:55:54.349721+00:00'
   - id: rt.final_gate.should-fix-batch
     name: Batch SHOULD_FIX runtime wiring remediation
     status: done
