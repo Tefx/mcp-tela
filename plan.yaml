@@ -12239,7 +12239,7 @@ phases:
       - none'
   - id: rt.final_gate.should-fix-retest
     name: Retest SHOULD_FIX runtime wiring remediation
-    status: claimed
+    status: done
     description: 'Independent retest for the batched SHOULD_FIX remediation from `rt.final_gate.wiring`.
 
 
@@ -12305,6 +12305,54 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-19T07:51:35.469204+00:00'
+    done_at: '2026-03-19T07:55:27.966422+00:00'
+    evidence: 'SHOULD_FIX Retest Report
+
+      Reviewer: wiring-auditor
+
+      Source step: rt.final_gate.should-fix-batch
+
+
+      Checks:
+
+      - reload production path verified: yes (CLI start -> config watcher -> gateway
+      reload -> reload.on_config_changed)
+
+      - upstream production path or clarified contract verified: yes (gateway initialize
+      handler path reaches resolve_initialize_profile_binding in open-mode flow)
+
+      - stale dead/test-only hatches remain: no for targeted symbols
+
+
+      Commands / traces reviewed:
+
+      - grep/trace on gateway_reload_config_from_disk/_watch_config_changes/on_config_changed
+
+      - grep/trace on resolve_initialize_profile_binding production invocation
+
+      - dead_export scan for targeted symbols
+
+      - Run: uv run pytest tests/shell/test_cli_wiring.py tests/shell/test_gateway.py
+      tests/shell/test_upstream.py tests/shell/test_reload.py -> 79 passed
+
+
+      Findings:
+
+      - blocker: []
+
+      - should_fix: []
+
+      - suggestion: []
+
+      - tech_debt: []
+
+
+      Verdict: PASS
+
+
+      Spec link:
+
+      - Step rt.final_gate.should-fix-retest'
 - id: cap.contract
   name: Define New Profile Contracts
   status: done
