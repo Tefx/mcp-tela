@@ -15265,7 +15265,7 @@ phases:
       families; cited shell_result family is cleared.'
   - id: invar1203.freeze
     name: Freeze remediation snapshot for full guard retest
-    status: claimed
+    status: done
     description: 'Freeze the repository state before the full-guard retest and gate
       review.
 
@@ -15293,6 +15293,28 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-19T09:17:28.171705+00:00'
+    done_at: '2026-03-19T09:18:37.372755+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 194f1630e9611d27f989bfec9bd81bb55f703c67
+
+      - Files changed: none
+
+
+      Freeze snapshot:
+
+      - head: 194f1630e9611d27f989bfec9bd81bb55f703c67
+
+      - git_status_short: clean (empty)
+
+      - environment: uv 0.10.11; Python 3.12.12 via uv run python
+
+      - freeze_statement: no code changes after freeze until retest and gate complete
+
+
+      Spec link:
+
+      - Step invar1203.freeze'
   - id: invar1203.retest-full-guard
     name: Run full Invar guard after 1.20.3 remediation
     status: pending
