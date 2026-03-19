@@ -10324,7 +10324,7 @@ phases:
       - transport run-loop execution remains for subsequent upstream transport steps'
   - id: rt.upstream.handlers
     name: Wire upstream handlers to fastmcp server
-    status: claimed
+    status: done
     description: Wire handle_tools_list, handle_tools_call, handle_initialize to the
       fastmcp server's request handling. Register tela.profiles as MCP resource. Ensure
       enforcement chain runs on every tools/call. Ensure _meta stripping works.
@@ -10350,6 +10350,35 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T04:53:30.728155+00:00'
+    done_at: '2026-03-19T05:02:37.756725+00:00'
+    evidence: 'Commit hash(es):
+
+      - b8c7b7c
+
+
+      Files changed:
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_gateway.py
+
+
+      Verification:
+
+      - tools/list returns filtered tools via FastMCP handler path
+
+      - tools/call performs enforcement and forwards allowed calls
+
+      - `_meta` stripped before downstream forwarding
+
+      - `tela.profiles` resource registered and readable (`tela://profiles`)
+
+      - focused gateway tests pass for list/call/resource behavior
+
+
+      Gaps/Notes:
+
+      - step scoped to upstream handler wiring only'
   - id: rt.upstream.gate
     name: Gate review
     status: pending
