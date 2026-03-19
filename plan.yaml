@@ -14713,7 +14713,7 @@ phases:
       - none'
   - id: invar1203.scope-hardening
     name: Constrain guard scope to tracked project sources
-    status: claimed
+    status: done
     description: 'Harden guard scope so full scans do not recurse into transient worktree
       mirrors.
 
@@ -14756,6 +14756,45 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-19T08:40:53.931177+00:00'
+    done_at: '2026-03-19T08:46:43.603620+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 60db82627f7b4ab80de8d811c896445ac867adb3
+
+      - Files changed: pyproject.toml
+
+
+      Change:
+
+      - Added [tool.invar.guard] configuration with exclude_paths including `.claude/worktrees`
+      and `.vectl/worktrees`.
+
+
+      Verification:
+
+      - Before/after comparator confirmed mirrored-worktree rooted findings dropped
+      to zero for both excluded families.
+
+      - Synthetic mirror-tree check with `uv run invar guard --all` confirmed zero
+      findings rooted in `.claude/worktrees/` and `.vectl/worktrees/` (while unrelated
+      repo findings remain).
+
+
+      Before/After summary:
+
+      - before: .claude/worktrees=10, .vectl/worktrees=10
+
+      - after: .claude/worktrees=0, .vectl/worktrees=0
+
+
+      Spec link:
+
+      - Step invar1203.scope-hardening
+
+
+      Gaps/Notes:
+
+      - existing non-mirror repo findings remain for subsequent remediation steps.'
   - id: invar1203.escape-policy-baseline
     name: Re-baseline escape-hatch policy after scope hardening
     status: pending
