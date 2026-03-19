@@ -11088,7 +11088,7 @@ phases:
       - scope limited to E2E test additions'
   - id: rt.e2e.verify
     name: Run full test suite
-    status: claimed
+    status: done
     description: Run full test suite including new E2E tests.
     verification: All tests pass. P2 shows no fake seam in new E2E tests. P9 shows
       tela start stays alive.
@@ -11097,6 +11097,28 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T06:31:05.215027+00:00'
+    done_at: '2026-03-19T06:46:22.039867+00:00'
+    evidence: 'Verification step detected blocker and remediation chain was created.
+
+
+      Observed failure:
+
+      - `tests/shell/test_gateway.py::test_gateway_status_after_start` fails in full-suite
+      order due state leakage (`total_tool_calls` retains prior value).
+
+
+      Context:
+
+      - E2E tests and liveness tests pass; failure is full-suite isolation leak.
+
+
+      Planner remediation added:
+
+      - `rt.e2e.fix-state-isolation` (depends on `rt.e2e.verify`)
+
+      - `rt.e2e.retest-state-isolation` (depends on fix)
+
+      - `rt.e2e.gate` now depends on retest step.'
   - id: rt.e2e.gate
     name: Gate review
     status: pending
