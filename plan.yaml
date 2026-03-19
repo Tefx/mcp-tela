@@ -11105,6 +11105,68 @@ phases:
     depends_on:
     - rt.e2e.verify
     agent: gate-reviewer
+  - id: rt.e2e.fix-state-isolation
+    name: Fix gateway state isolation leak
+    status: pending
+    description: "Fix ALL observed order-dependent state leakage affecting the gateway\
+      \ full-suite run, not just the single failing assertion.\n\nIssue family:\n\
+      - tests/shell/test_gateway.py::test_gateway_status_after_start fails only in\
+      \ full-suite order\n- observed leak: total_tool_calls=1 when the test expects\
+      \ 0\n- likely scope includes gateway runtime state reset, shared counters/registries,\
+      \ and test fixture cleanup between runs\n\n## Root Cause vs Symptom\n- Root\
+      \ cause: shared mutable gateway/runtime state survives across test boundaries\
+      \ or startup paths\n- Symptom: test passes in isolation but fails after earlier\
+      \ tests mutate state\n- Why this fix is not surface-level: it must identify\
+      \ and reset the true shared state owner instead of masking the assertion\n\n\
+      ## Blockers to Fix (ALL of these, not just the first)\n- Identify every mutable\
+      \ runtime counter/store/registry contributing to gateway status totals\n- Ensure\
+      \ gateway startup/status paths begin from a clean baseline for each test run\
+      \ where isolation is required\n- Ensure test fixtures/helpers perform explicit\
+      \ reset/cleanup where runtime state is intentionally shared in production but\
+      \ must not leak across tests\n- Search sibling state holders beyond the failing\
+      \ assertion path; do not stop at the first counter\n\n## Systemic Search Instructions\n\
+      - Grep for total_tool_calls and adjacent gateway status fields to trace all\
+      \ write sites and readers\n- Grep for module-level mutable containers, singleton\
+      \ registries, caches, or counters in gateway/runtime surfaces\n- Check fixture\
+      \ teardown/reset hooks used by shell/gateway tests and startup helpers\n\n##\
+      \ Hardened Acceptance\n- Failure-mode checklist:\n  - isolated single-test run\
+      \ starts from zero state\n  - full-suite ordered run preserves zero baseline\
+      \ for this test\n  - explicit reset semantics are defined, not incidental\n\
+      \  - stale runtime state cannot override fresh test setup\n  - partial cleanup\
+      \ does not leave counters/registers dirty for later tests\n- State semantics:\n\
+      \  - last-writer-wins applies only within an intentional runtime session, not\
+      \ across test cases\n  - baseline status counters for a fresh test/server start\
+      \ must be preserved exactly\n  - backward-compatible behavior may keep runtime\
+      \ accumulation inside one live session, but test harness boundaries must reset\
+      \ it\n- Out-of-scope guardrail:\n  - broad behavior changes to production gateway\
+      \ accounting are out of scope unless required to make isolation correct\n\n\
+      ## Known Risks\n- Module-level mutable state may need concurrency-safe ownership\
+      \ and explicit reset semantics\n- Hot-path startup helpers may re-use process-global\
+      \ registries and corrupt later tests if cleanup is incomplete"
+    verification: '- Main path: targeted regression coverage proves gateway status
+      after start reports zero tool calls on a fresh run
+
+      - Failure path: ordered/full-suite regression proves no order-dependent leakage
+      remains after prior gateway/tool activity
+
+      - Proof: identified shared-state owners have explicit reset/cleanup coverage
+      and no parallel sibling state holder is left unaddressed'
+    evidence_template: '## Fix Evidence
+
+      - blocker_fingerprint: gateway state leakage / total_tool_calls baseline contamination
+
+      - root_cause_hypothesis: <shared mutable state owner and why it leaked>
+
+      - locations updated: <files>
+
+      - sibling search evidence: <counters/registries/fixtures checked>
+
+      - why this closes the blocker family: <reason>
+
+      - commands prepared for retest: pytest -q'
+    depends_on:
+    - rt.e2e.verify
+    agent: python-senior
 - id: rt.liveness
   name: Liveness Verification
   status: locked
