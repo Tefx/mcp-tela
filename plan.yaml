@@ -11310,7 +11310,7 @@ phases:
       - `rt.e2e.gate` now depends on loop2 retest as authoritative gate input.'
   - id: rt.e2e.fix-state-isolation-loop2
     name: Repeated blocker remediation for gateway state isolation
-    status: pending
+    status: claimed
     description: "Fix ALL remaining blockers in the repeated gateway state-isolation\
       \ family.\n\nsymbolic_testing: false\nprior_loop:\n  - rt.e2e.fix-state-isolation\n\
       \  - rt.e2e.retest-state-isolation\nremaining_blocker: Full suite still fails\
@@ -11352,6 +11352,8 @@ phases:
     depends_on:
     - rt.e2e.retest-state-isolation
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T06:56:56.837467+00:00'
   - id: rt.e2e.retest-state-isolation-loop2
     name: Retest repeated gateway state isolation blocker family
     status: pending
