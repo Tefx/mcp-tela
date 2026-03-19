@@ -10381,13 +10381,15 @@ phases:
       - step scoped to upstream handler wiring only'
   - id: rt.upstream.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: Gate review for upstream phase.
     verification: Full Gate. W1 must show zero DEAD exports in upstream.py. All handler
       functions must have runtime callers.
     depends_on:
     - rt.upstream.handlers
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T05:03:10.320428+00:00'
 - id: rt.cli_start
   name: Wire tela start
   status: locked
