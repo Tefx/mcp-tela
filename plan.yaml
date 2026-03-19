@@ -14618,7 +14618,7 @@ phases:
       - No contradictions found'
 - id: invar1203
   name: Invar Guard 1.20.3 Remediation
-  status: in_progress
+  status: done
   gate: Phase closes only after full `uv run invar guard --all` is runnable and either
     clean or leaves explicitly classified residual debt with gate approval.
   depends_on:
@@ -15379,7 +15379,7 @@ phases:
       \ should-fix categories require a single batched remediation before gate."
   - id: invar1203.gate
     name: Gate review for Invar Guard 1.20.3 remediation
-    status: claimed
+    status: done
     description: 'Gate review: verify the `invar1203` remediation phase meets the
       quality bar.
 
@@ -15426,6 +15426,21 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T09:52:19.892482+00:00'
+    done_at: '2026-03-19T09:58:54.935830+00:00'
+    evidence: "Artifact:\n- Commit hash(es): verification against current remediation\
+      \ chain (freeze 194f163; batched fix 3b40234)\n- Files changed: none (gate verification\
+      \ step)\n\nGate protocol:\n- Process consistency: freeze -> retest -> batched\
+      \ fix -> retest-batched -> gate chain coherent\n- Escape-hatch families: targeted\
+      \ families closed; project shell_result budget within configured limit\n- Reproducibility:\
+      \ `uv run invar guard --all` resolves and executes in project environment\n\
+      - Exclusion effectiveness: no findings rooted in `.claude/worktrees/**` or `.vectl/worktrees/**`\n\
+      \nIssues:\n- blocker: []\n- should_fix: []\n- suggestion:\n  - residual warning-level\
+      \ quality advisories (function size, shell_pure_logic, partial/redundant contracts)\n\
+      \  - pre-existing contracts doctest mismatch classified outside targeted should-fix\
+      \ family\n- tech_debt:\n  - remaining warning/info debt tracked for future quality\
+      \ passes\n\nVerdict:\n- PASS\n- Rationale: targeted invar1203 remediation objectives\
+      \ are satisfied with reproducible command path and no blocker findings in targeted\
+      \ families.\n\nSpec link:\n- Step invar1203.gate"
   - id: invar1203.fix-batched-should-fix
     name: Fix batched should-fix findings from full guard retest
     status: done
