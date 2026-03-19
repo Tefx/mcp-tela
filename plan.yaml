@@ -11628,6 +11628,60 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T07:09:12.396399+00:00'
+  - id: rt.liveness.fix-should-fix-batch
+    name: Batch should-fix remediation from rt.liveness.gate
+    status: pending
+    description: 'Fix ALL should-fix issues reported by `rt.liveness.gate` in one
+      batched remediation step.
+
+
+      Issues to close in this batch:
+
+      1. Reduce `src/tela/shell/downstream.py` below the 500-line maintainability
+      threshold (currently 625 lines) by extracting coherent helpers/modules without
+      changing runtime behavior.
+
+      2. Correct the callback type annotation mismatch at `src/tela/shell/gateway.py:189`
+      so the declared callable contract matches actual usage and downstream call sites.
+
+      3. Add or wire the missing YAML typing support required for mypy so the typed
+      check no longer fails on missing yaml stubs.
+
+
+      Completion requirements:
+
+      - Address ALL three issues, not just the first one.
+
+      - Preserve existing runtime and liveness behavior while refactoring `downstream.py`.
+
+      - Search for sibling type mismatches or YAML typing gaps beyond the cited locations
+      before claiming done.
+
+      - Document any extracted module boundaries or stub dependency changes in evidence.
+
+
+      Root Cause vs Symptom:
+
+      - Root cause: residual maintainability and typing debt remained after the liveness
+      gate because non-blocking quality findings were deferred.
+
+      - Symptom: oversized shell module, callback annotation drift, and mypy failure
+      from missing YAML stubs.
+
+      - Why this fix is not surface-level: it must close the structural/file-size
+      issue and align typing/tooling expectations, not just suppress a single error.'
+    verification: '- `src/tela/shell/downstream.py` is reduced below 500 lines with
+      runtime-preserving extraction evidence
+
+      - callback annotation at `src/tela/shell/gateway.py:189` matches actual callable
+      usage and type checks cleanly
+
+      - mypy or project typing command runs without missing YAML stub failure
+
+      - evidence includes sibling-search results for related typing/stub issues'
+    depends_on:
+    - rt.liveness.gate
+    agent: python-senior
 - id: rt.doc_sync
   name: Documentation Sync
   status: locked
