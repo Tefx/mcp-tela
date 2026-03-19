@@ -386,8 +386,7 @@ async def call_tool(
     return Result(value=payload)
 
 
-# @invar:allow shell_result: returns dict per DESIGN.md spec, lookup not a failable I/O boundary.
-def get_all_tools() -> dict[str, list[ResolvedTool]]:
+def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:
     """Return all resolved tools grouped by server name.
 
     Examples:
@@ -398,11 +397,10 @@ def get_all_tools() -> dict[str, list[ResolvedTool]]:
         Server name to resolved tool list mapping.
     """
 
-    return _registry.get_all_tools()
+    return Result(value=_registry.get_all_tools())
 
 
-# @invar:allow shell_result: returns optional str per DESIGN.md spec, lookup not a failable I/O boundary.
-def get_tool_server(tool_name: str) -> str | None:
+def get_tool_server(tool_name: str) -> Result[str | None, str]:
     """Look up which server owns a given tool name.
 
     Examples:
@@ -416,10 +414,9 @@ def get_tool_server(tool_name: str) -> str | None:
         Server name or None if not found.
     """
 
-    return _registry.get_tool_server(tool_name)
+    return Result(value=_registry.get_tool_server(tool_name))
 
 
-# @invar:allow dead_export: hot-reload entrypoint for downstream tool re-enumeration.
 async def re_enumerate(
     server_name: str,
 ) -> Result[list[ResolvedTool], str]:

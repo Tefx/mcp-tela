@@ -24,7 +24,6 @@ from tela.core.models import (
 from tela.shell.config_loader import Result
 
 
-# @invar:allow shell_result: returns hash string, pure data shaping not I/O.
 def _compute_param_hash(arguments: dict) -> str:
     """Compute SHA-256 hash of tool arguments for L2+ audit entries."""
     serialized = json.dumps(arguments, sort_keys=True, separators=(",", ":"))
@@ -32,13 +31,11 @@ def _compute_param_hash(arguments: dict) -> str:
     return f"sha256:{digest}"
 
 
-# @invar:allow shell_result: returns timestamp string, minimal I/O.
 def _now_iso() -> str:
     """Return current UTC timestamp in ISO-8601 format."""
     return datetime.now(timezone.utc).isoformat()
 
 
-# @invar:allow shell_result: returns AuditEntry per DESIGN.md spec, data shaping not I/O.
 def build_audit_entry(
     level: AuditLevel,
     connection: ConnectionContext,
@@ -155,14 +152,12 @@ async def audit_init(config: "AuditConfig") -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow dead_export: test utility for audit subsystem.
-# @invar:allow shell_result: sets bounded store size, not failable I/O.
-async def audit_set_max_entries(max_entries: int) -> None:
+async def _audit_set_max_entries(max_entries: int) -> None:
     """Set maximum in-memory audit entries (FIFO eviction).
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(audit_set_max_entries(100))
+        >>> asyncio.run(_audit_set_max_entries(100))
     """
     global _audit_entries, _AUDIT_MAX_ENTRIES
     async with _audit_lock:
@@ -171,16 +166,12 @@ async def audit_set_max_entries(max_entries: int) -> None:
         _audit_entries = deque(old_entries[-max_entries:], maxlen=max_entries)
 
 
-# @invar:allow dead_export: test accessor for audit subsystem.
-# @invar:allow shell_result: returns list, not a failable I/O boundary.
-def get_audit_entries() -> list[AuditEntry]:
+def _get_audit_entries() -> list[AuditEntry]:
     """Return all stored audit entries (for testing)."""
     return list(_audit_entries)
 
 
-# @invar:allow dead_export: test utility for audit subsystem.
-# @invar:allow shell_result: returns None, state reset not failable I/O.
-def clear_audit_entries() -> None:
+def _clear_audit_entries() -> None:
     """Clear all stored audit entries."""
     _audit_entries.clear()
 
@@ -223,7 +214,6 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow dead_export: test utility for audit subsystem.
 async def audit_close() -> Result[None, str]:
     """Flush and close the audit log.
 
@@ -281,3 +271,9 @@ async def audit_query(
         except (ValueError, TypeError):
             return Result(error=f"AUDIT_QUERY_ERROR: invalid timestamp format: {since}")
     return Result(value=entries[-limit:])
+
+
+# Backward-compatible test hooks.
+audit_set_max_entries = _audit_set_max_entries
+get_audit_entries = _get_audit_entries
+clear_audit_entries = _clear_audit_entries

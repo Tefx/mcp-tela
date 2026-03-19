@@ -32,6 +32,7 @@ from tela.shell.downstream import (
     disconnect_all,
     get_all_tools,
     get_registry,
+    re_enumerate,
 )
 
 
@@ -130,7 +131,9 @@ async def on_tools_changed(
 
         # Success: notify upstream if callback set
         if _notify_callback is not None:
-            tool_names = sorted(t.name for ts in get_all_tools().values() for t in ts)
+            tool_names = sorted(
+                t.name for ts in registry.get_all_tools().values() for t in ts
+            )
             raw = ":".join(tool_names).encode()
             digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
             await _notify_callback(digest)
@@ -166,6 +169,7 @@ async def on_server_reconnect(
     Returns:
         Result[None, str].
     """
+    _ = await re_enumerate(server_name)
     return await on_tools_changed(server_name, server_config, tool_list)
 
 

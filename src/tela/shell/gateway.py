@@ -26,7 +26,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.config_loader import Result, load_config
-from tela.shell.audit import audit_init
+from tela.shell.audit import audit_close, audit_init
 from tela.shell.downstream import call_tool, connect_all, disconnect_all, get_all_tools
 
 
@@ -59,14 +59,13 @@ class GatewayRuntime:
     upstream_server: FastMCP | None = None
 
 
-# @invar:allow shell_result: returns FastMCP runtime object for gateway lifecycle wiring.
-def _create_upstream_server(config: GatewayStartupConfig) -> FastMCP:
+def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str]:
     """Create FastMCP server instance from gateway transport config."""
 
     if config.transport == GatewayTransport.SSE and config.port is not None:
-        return FastMCP("tela-gateway", port=config.port)
+        return Result(value=FastMCP("tela-gateway", port=config.port))
 
-    return FastMCP("tela-gateway")
+    return Result(value=FastMCP("tela-gateway"))
 
 
 def _make_registry_tool_handler(server_name: str, tool_name: str):
@@ -105,7 +104,11 @@ def _register_profiles_resource(upstream_server: FastMCP) -> None:
         mime_type="application/json",
     )
     def _profiles_resource() -> str:
-        return json.dumps(handle_profiles_list())
+        result = handle_profiles_list()
+        if result.is_err:
+            raise RuntimeError(result.error or "PROFILE_LIST_REJECTED")
+        assert result.value is not None
+        return json.dumps(result.value)
 
 
 def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
@@ -132,7 +135,11 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     @upstream_server._mcp_server.list_tools()
     async def _list_tools() -> list[mcp_types.Tool]:
         connection = await _ensure_connection()
-        filtered_tools = await handle_tools_list(connection)
+        tools_result = await handle_tools_list(connection)
+        if tools_result.is_err:
+            raise RuntimeError(tools_result.error or "TOOLS_LIST_REJECTED")
+        assert tools_result.value is not None
+        filtered_tools = tools_result.value
         return [
             mcp_types.Tool(
                 name=tool["name"],
@@ -157,7 +164,11 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 def _register_registry_tools(upstream_server: FastMCP) -> None:
     """Register all resolved registry tools as FastMCP tools."""
 
-    for server_name, resolved_tools in get_all_tools().items():
+    all_tools_result = get_all_tools()
+    if all_tools_result.is_err:
+        return
+    assert all_tools_result.value is not None
+    for server_name, resolved_tools in all_tools_result.value.items():
         for resolved_tool in resolved_tools:
             upstream_server.add_tool(
                 _make_registry_tool_handler(server_name, resolved_tool.name),
@@ -342,7 +353,11 @@ async def gateway_start(
     if audit_result.is_err:
         return Result(error=audit_result.error)
 
-    upstream_server = _create_upstream_server(config)
+    upstream_server_result = _create_upstream_server(config)
+    if upstream_server_result.is_err:
+        return Result(error=upstream_server_result.error)
+    assert upstream_server_result.value is not None
+    upstream_server = upstream_server_result.value
     _wire_upstream_handlers(upstream_server)
     _register_profiles_resource(upstream_server)
     _register_registry_tools(upstream_server)
@@ -374,6 +389,9 @@ async def gateway_shutdown() -> Result[None, str]:
     """
 
     disconnect_result = await disconnect_all()
+    audit_close_result = await audit_close()
+    if audit_close_result.is_err:
+        return audit_close_result
     _set_reload_notify_callback(None)
     async with _runtime_lock:
         _runtime.config = None
@@ -386,8 +404,7 @@ async def gateway_shutdown() -> Result[None, str]:
     return disconnect_result
 
 
-# @invar:allow shell_result: returns GatewayStatus per DESIGN.md spec, not a failable I/O boundary.
-async def gateway_status() -> GatewayStatus:
+async def gateway_status() -> Result[GatewayStatus, str]:
     """Return current gateway runtime status.
 
     Examples:
@@ -400,22 +417,27 @@ async def gateway_status() -> GatewayStatus:
     """
 
     async with _runtime_lock:
-        all_tools = get_all_tools()
+        all_tools_result = get_all_tools()
+        if all_tools_result.is_err:
+            return Result(error=all_tools_result.error)
+        assert all_tools_result.value is not None
+        all_tools = all_tools_result.value
         uptime = time.monotonic() - _runtime.start_time if _runtime.start_time else 0.0
         profile_count = len(_runtime.config.profiles) if _runtime.config else 0
 
-        return GatewayStatus(
-            uptime_seconds=uptime,
-            server_count=len(all_tools),
-            connected_servers=list(all_tools.keys()),
-            active_connections=len(_runtime.connections),
-            profile_count=profile_count,
-            total_tool_calls=_runtime.total_tool_calls,
+        return Result(
+            value=GatewayStatus(
+                uptime_seconds=uptime,
+                server_count=len(all_tools),
+                connected_servers=list(all_tools.keys()),
+                active_connections=len(_runtime.connections),
+                profile_count=profile_count,
+                total_tool_calls=_runtime.total_tool_calls,
+            )
         )
 
 
-# @invar:allow shell_result: returns list[ConnectionContext] per DESIGN.md spec, not a failable I/O boundary.
-async def gateway_connections() -> list[ConnectionContext]:
+async def gateway_connections() -> Result[list[ConnectionContext], str]:
     """Return list of active upstream connections.
 
     Examples:
@@ -428,4 +450,4 @@ async def gateway_connections() -> list[ConnectionContext]:
     """
 
     async with _runtime_lock:
-        return list(_runtime.connections)
+        return Result(value=list(_runtime.connections))

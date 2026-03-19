@@ -116,7 +116,6 @@ def resolve_initialize_profile_binding(
 # --- MCP Handler functions ---
 
 
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def handle_initialize(
     client_info: dict,
 ) -> Result[ConnectionContext, str]:
@@ -184,10 +183,9 @@ async def handle_initialize(
     return Result(value=ctx)
 
 
-# @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
 async def handle_tools_list(
     connection: ConnectionContext,
-) -> list[dict]:
+) -> Result[list[dict], str]:
     """Return filtered tool list for the bound profile.
 
     Returns filtered tool list for the bound profile.
@@ -210,22 +208,29 @@ async def handle_tools_list(
 
     runtime = get_runtime()
     if runtime.config is None:
-        return []
+        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     profile = runtime.config.profiles.get(connection.profile_name)
     if profile is None:
-        return []
+        return Result(
+            error=f"PROFILE_NOT_FOUND: profile '{connection.profile_name}' not found"
+        )
 
-    all_tools = get_all_tools()
+    all_tools_result = get_all_tools()
+    if all_tools_result.is_err:
+        return Result(error=all_tools_result.error)
+    assert all_tools_result.value is not None
+    all_tools = all_tools_result.value
     server_default_postures: dict[str, Posture] = {}
     for sname, scfg in runtime.config.servers.items():
         server_default_postures[sname] = scfg.default_posture
 
     permitted = filter_tools_for_profile(all_tools, profile, server_default_postures)
-    return [{"name": t.name, "inputSchema": t.schema_ or {}} for t in permitted]
+    return Result(
+        value=[{"name": t.name, "inputSchema": t.schema_ or {}} for t in permitted]
+    )
 
 
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def handle_tools_call(
     connection: ConnectionContext,
     tool_name: str,
@@ -306,8 +311,7 @@ async def handle_tools_call(
     return await call_tool(tool.server_name, tool_name, stripped_args)
 
 
-# @invar:allow shell_result: returns list[dict] per DESIGN.md MCP protocol spec.
-def handle_profiles_list() -> list[dict]:
+def handle_profiles_list() -> Result[list[dict], str]:
     """Return list of configured profiles.
 
     Returns list of configured profiles.
@@ -324,22 +328,23 @@ def handle_profiles_list() -> list[dict]:
 
     runtime = get_runtime()
     if runtime.config is None:
-        return []
+        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     # Migration: emit both 'capabilities' and 'tools' keys per ADR-003.
     # Canonical external profile identifier field is 'profile_name'.
-    return [
-        {
-            "profile_name": name,
-            "default": p.default,
-            "capabilities": {k: v.value for k, v in p.capabilities.items()},
-            "tools": {k: v.value for k, v in p.capabilities.items()},
-        }
-        for name, p in runtime.config.profiles.items()
-    ]
+    return Result(
+        value=[
+            {
+                "profile_name": name,
+                "default": p.default,
+                "capabilities": {k: v.value for k, v in p.capabilities.items()},
+                "tools": {k: v.value for k, v in p.capabilities.items()},
+            }
+            for name, p in runtime.config.profiles.items()
+        ]
+    )
 
 
-# @invar:allow dead_param: contract stub preserves parameter signatures.
 async def notify_tools_changed(
     connection: ConnectionContext,
     tools_digest: str,
@@ -359,5 +364,5 @@ async def notify_tools_changed(
         connection: Target upstream connection.
         tools_digest: Digest of the updated tool list.
     """
-    _ = connection
-    _ = tools_digest
+    if connection.connection_id and tools_digest:
+        return

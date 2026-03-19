@@ -29,10 +29,17 @@ def connections_command(json_output: bool = False) -> int:
         Process exit code.
     """
     try:
-        conns = asyncio.run(gateway_connections())
+        conns_result = asyncio.run(gateway_connections())
     except Exception as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+
+    if conns_result.is_err:
+        print(f"error: {conns_result.error}", file=sys.stderr)
+        return 1
+
+    assert conns_result.value is not None
+    conns = conns_result.value
 
     if json_output:
         out = [c.model_dump() for c in conns]
@@ -42,6 +49,8 @@ def connections_command(json_output: bool = False) -> int:
             print("No active connections.")
         else:
             for c in conns:
-                print(f"  {c.connection_id} profile={c.profile_name} since={c.connected_at}")
+                print(
+                    f"  {c.connection_id} profile={c.profile_name} since={c.connected_at}"
+                )
 
     return 0
