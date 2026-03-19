@@ -15401,7 +15401,7 @@ phases:
       - Ready for downstream work only if the guard path is reproducible for future
       agents'
     depends_on:
-    - invar1203.retest-full-guard
+    - invar1203.retest-batched-should-fix
     agent: gate-reviewer
   - id: invar1203.fix-batched-should-fix
     name: Fix batched should-fix findings from full guard retest
