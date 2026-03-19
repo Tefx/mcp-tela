@@ -10619,13 +10619,13 @@ phases:
     agent: gate-reviewer
 - id: rt.doctests
   name: Replace Pass Doctests
-  status: pending
+  status: in_progress
   depends_on:
   - rt.cli_start
   steps:
   - id: rt.doctests.impl
     name: Replace pass doctests with real ones
-    status: pending
+    status: claimed
     description: 'Replace all `>>> pass  # doctest: +SKIP` in upstream.py and cli.py
       with real doctests that exercise the functions.'
     verification: Zero pass-only doctests in src/. All doctests pass. grep '>>> pass'
@@ -10641,6 +10641,8 @@ phases:
 
       Gaps/Notes:'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-19T06:00:13.856211+00:00'
   - id: rt.doctests.gate
     name: Gate review
     status: pending
