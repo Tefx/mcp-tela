@@ -11103,7 +11103,7 @@ phases:
     description: Gate review for E2E phase.
     verification: Full Gate. B4 resolved. Real integration evidence exists.
     depends_on:
-    - rt.e2e.verify
+    - rt.e2e.retest-state-isolation
     agent: gate-reviewer
   - id: rt.e2e.fix-state-isolation
     name: Fix gateway state isolation leak
