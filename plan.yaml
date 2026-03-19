@@ -15379,7 +15379,7 @@ phases:
       \ should-fix categories require a single batched remediation before gate."
   - id: invar1203.gate
     name: Gate review for Invar Guard 1.20.3 remediation
-    status: pending
+    status: claimed
     description: 'Gate review: verify the `invar1203` remediation phase meets the
       quality bar.
 
@@ -15424,6 +15424,8 @@ phases:
     depends_on:
     - invar1203.retest-batched-should-fix
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-19T09:52:19.892482+00:00'
   - id: invar1203.fix-batched-should-fix
     name: Fix batched should-fix findings from full guard retest
     status: done
