@@ -12,6 +12,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from mcp.server.fastmcp import FastMCP
+
 from tela.core.models import (
     AuthMode,
     ConnectionContext,
@@ -22,7 +24,7 @@ from tela.core.models import (
 )
 from tela.shell.config_loader import Result, load_config
 from tela.shell.audit import audit_init
-from tela.shell.downstream import connect_all, disconnect_all, get_all_tools
+from tela.shell.downstream import call_tool, connect_all, disconnect_all, get_all_tools
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,56 @@ class GatewayRuntime:
     connections: list[ConnectionContext] = field(default_factory=list)
     total_tool_calls: int = 0
     running: bool = False
+    upstream_server: FastMCP | None = None
+
+
+# @invar:allow shell_result: returns FastMCP runtime object for gateway lifecycle wiring.
+def _create_upstream_server(config: GatewayStartupConfig) -> FastMCP:
+    """Create FastMCP server instance from gateway transport config."""
+
+    if config.transport == GatewayTransport.SSE and config.port is not None:
+        return FastMCP("tela-gateway", port=config.port)
+
+    return FastMCP("tela-gateway")
+
+
+def _make_registry_tool_handler(server_name: str, tool_name: str):
+    """Build per-tool FastMCP handler that forwards to downstream server."""
+
+    async def _forward_tool(**arguments: object) -> dict:
+        result = await call_tool(
+            server_name=server_name,
+            tool_name=tool_name,
+            arguments=dict(arguments),
+        )
+        if result.is_err:
+            assert result.error is not None
+            raise RuntimeError(f"{result.error.code}: {result.error.message}")
+
+        assert result.value is not None
+        return result.value
+
+    safe_name = "".join(ch if ch.isalnum() else "_" for ch in tool_name)
+    _forward_tool.__name__ = f"tool_{safe_name}"
+    _forward_tool.__doc__ = (
+        f"Forward MCP tool '{tool_name}' to downstream server '{server_name}'."
+    )
+    return _forward_tool
+
+
+def _register_registry_tools(upstream_server: FastMCP) -> None:
+    """Register all resolved registry tools as FastMCP tools."""
+
+    for server_name, resolved_tools in get_all_tools().items():
+        for resolved_tool in resolved_tools:
+            upstream_server.add_tool(
+                _make_registry_tool_handler(server_name, resolved_tool.name),
+                name=resolved_tool.name,
+                description=(
+                    f"Forwarded downstream tool '{resolved_tool.name}' "
+                    f"from server '{server_name}'."
+                ),
+            )
 
 
 # Module-level runtime state
@@ -169,9 +221,7 @@ async def gateway_start(
     effective_config = tela_config or TelaConfig()
 
     # Connect downstream servers
-    connect_result = await connect_all(
-        effective_config.servers, tool_lists=tool_lists
-    )
+    connect_result = await connect_all(effective_config.servers, tool_lists=tool_lists)
     if connect_result.is_err:
         return Result(error=connect_result.error)
 
@@ -180,12 +230,16 @@ async def gateway_start(
     if audit_result.is_err:
         return Result(error=audit_result.error)
 
+    upstream_server = _create_upstream_server(config)
+    _register_registry_tools(upstream_server)
+
     # Store runtime state
     async with _runtime_lock:
         _runtime.config = effective_config
         _runtime.startup_config = config
         _runtime.start_time = time.monotonic()
         _runtime.running = True
+        _runtime.upstream_server = upstream_server
 
     return Result(value=None)
 
@@ -206,6 +260,7 @@ async def gateway_shutdown() -> Result[None, str]:
 
     disconnect_result = await disconnect_all()
     async with _runtime_lock:
+        _runtime.upstream_server = None
         _runtime.running = False
         _runtime.start_time = None
         _runtime.connections.clear()
