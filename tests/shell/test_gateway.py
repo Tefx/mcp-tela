@@ -186,6 +186,38 @@ def test_gateway_start_succeeds_with_empty_config() -> None:
     asyncio.run(gateway_shutdown())
 
 
+def test_gateway_start_sets_and_clears_reload_notify_callback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """gateway_start wires reload notify callback, gateway_shutdown clears it."""
+
+    callbacks: list[object | None] = []
+
+    def _capture_set_notify_callback(callback: object | None) -> None:
+        callbacks.append(callback)
+
+    monkeypatch.setattr(
+        "tela.shell.gateway._set_reload_notify_callback",
+        _capture_set_notify_callback,
+    )
+
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
+    )
+
+    start_result = asyncio.run(gateway_start(config, tela_config=TelaConfig()))
+    assert start_result.is_ok
+    assert len(callbacks) >= 1
+    assert callable(callbacks[0])
+
+    shutdown_result = asyncio.run(gateway_shutdown())
+    assert shutdown_result.is_ok
+    assert callbacks[-1] is None
+
+
 def test_gateway_start_with_servers_and_tools() -> None:
     """gateway_start connects downstreams and registers tools."""
     tela = TelaConfig(

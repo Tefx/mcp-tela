@@ -7,13 +7,16 @@ enumeration, resolved-tool registry construction, and tool call forwarding.
 from __future__ import annotations
 
 import asyncio
+import logging
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from typing import Any
 
-from mcp.client.session import ClientSession
+from mcp import types as mcp_types
+from mcp.client.session import ClientSession, MessageHandlerFnT
 from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.shared.session import RequestResponder
 
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
@@ -121,7 +124,9 @@ def _validate_transport_mode(
 
 
 async def _open_stdio_client(
-    server_name: str, server_config: ServerConfig
+    server_name: str,
+    server_config: ServerConfig,
+    message_handler: MessageHandlerFnT | None = None,
 ) -> _ClientHandle:
     """Open and initialize an MCP stdio client session for one server."""
 
@@ -140,7 +145,11 @@ async def _open_stdio_client(
             stdio_client(params)
         )
         session = await stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(
+                read_stream,
+                write_stream,
+                message_handler=message_handler,
+            )
         )
         await session.initialize()
         return _ClientHandle(session=session, stack=stack)
@@ -150,7 +159,9 @@ async def _open_stdio_client(
 
 
 async def _open_sse_client(
-    server_name: str, server_config: ServerConfig
+    server_name: str,
+    server_config: ServerConfig,
+    message_handler: MessageHandlerFnT | None = None,
 ) -> _ClientHandle:
     """Open and initialize an MCP SSE client session for one server."""
 
@@ -162,7 +173,11 @@ async def _open_sse_client(
     try:
         read_stream, write_stream = await stack.enter_async_context(sse_client(url=url))
         session = await stack.enter_async_context(
-            ClientSession(read_stream, write_stream)
+            ClientSession(
+                read_stream,
+                write_stream,
+                message_handler=message_handler,
+            )
         )
         await session.initialize()
         return _ClientHandle(session=session, stack=stack)
@@ -172,13 +187,129 @@ async def _open_sse_client(
 
 
 async def _open_client_for_server(
-    server_name: str, server_config: ServerConfig
+    server_name: str,
+    server_config: ServerConfig,
+    message_handler: MessageHandlerFnT | None = None,
 ) -> _ClientHandle:
     """Open a connected client handle from a server config transport."""
 
     if server_config.command is not None:
-        return await _open_stdio_client(server_name, server_config)
-    return await _open_sse_client(server_name, server_config)
+        return await _open_stdio_client(
+            server_name,
+            server_config,
+            message_handler=message_handler,
+        )
+    return await _open_sse_client(
+        server_name,
+        server_config,
+        message_handler=message_handler,
+    )
+
+
+async def _handle_tools_list_changed(
+    server_name: str,
+    server_config: ServerConfig,
+) -> None:
+    """Re-enumerate server tools after downstream list-changed notification."""
+
+    async with _registry_lock:
+        client = _clients.get(server_name)
+
+    if client is None:
+        return
+
+    try:
+        raw_tools = await _enumerate_tools(client.session)
+    except Exception as exc:
+        logging.warning(
+            "Failed downstream tool re-enumeration for %s: %s",
+            server_name,
+            exc,
+        )
+        return
+
+    from tela.shell.reload import on_tools_changed
+
+    result = await on_tools_changed(server_name, server_config, raw_tools)
+    if result.is_err:
+        logging.warning(
+            "Rejected downstream tool-list update for %s: %s",
+            server_name,
+            result.error,
+        )
+
+
+async def _handle_reconnect(
+    server_name: str,
+    server_config: ServerConfig,
+) -> None:
+    """Attempt downstream reconnect and route updated tools into reload flow."""
+
+    try:
+        new_handle = await _open_client_for_server(
+            server_name,
+            server_config,
+            message_handler=_build_downstream_message_handler(
+                server_name, server_config
+            ),
+        )
+    except Exception as exc:
+        logging.warning("Downstream reconnect failed for %s: %s", server_name, exc)
+        return
+
+    async with _registry_lock:
+        old_handle = _clients.get(server_name)
+        _clients[server_name] = new_handle
+
+    if old_handle is not None:
+        try:
+            await old_handle.stack.aclose()
+        except Exception:
+            pass
+
+    try:
+        raw_tools = await _enumerate_tools(new_handle.session)
+    except Exception as exc:
+        logging.warning(
+            "Downstream reconnect enumeration failed for %s: %s",
+            server_name,
+            exc,
+        )
+        return
+
+    from tela.shell.reload import on_server_reconnect
+
+    result = await on_server_reconnect(server_name, server_config, raw_tools)
+    if result.is_err:
+        logging.warning(
+            "Rejected downstream reconnect update for %s: %s",
+            server_name,
+            result.error,
+        )
+
+
+def _build_downstream_message_handler(
+    server_name: str,
+    server_config: ServerConfig,
+):
+    """Build per-server message handler for downstream notifications/events."""
+
+    async def _message_handler(
+        message: (
+            RequestResponder[mcp_types.ServerRequest, mcp_types.ClientResult]
+            | mcp_types.ServerNotification
+            | Exception
+        ),
+    ) -> None:
+        if isinstance(message, Exception):
+            await _handle_reconnect(server_name, server_config)
+            return
+
+        if isinstance(message, mcp_types.ServerNotification):
+            if isinstance(message.root, mcp_types.ToolListChangedNotification):
+                await _handle_tools_list_changed(server_name, server_config)
+
+    return _message_handler
 
 
 async def _enumerate_tools(session: ClientSession) -> list[dict[str, Any]]:
@@ -267,7 +398,12 @@ async def connect_all(
                     raw_tools = tool_lists.get(server_name, [])
                 else:
                     client_handle = await _open_client_for_server(
-                        server_name, server_config
+                        server_name,
+                        server_config,
+                        message_handler=_build_downstream_message_handler(
+                            server_name,
+                            server_config,
+                        ),
                     )
                     _clients[server_name] = client_handle
                     raw_tools = await _enumerate_tools(client_handle.session)

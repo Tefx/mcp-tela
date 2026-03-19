@@ -343,7 +343,5 @@ async def notify_tools_changed(
         connection: Target upstream connection.
         tools_digest: Digest of the updated tool list.
     """
-    from tela.shell.reload import _notify_callback
-
-    if _notify_callback is not None:
-        await _notify_callback(tools_digest)
+    _ = connection
+    _ = tools_digest

@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from mcp import types as mcp_types
 from mcp.types import ListToolsResult, Tool
 
 from tela.core.models import ServerConfig, TelaConfig
@@ -75,9 +76,11 @@ def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
     async def _fake_open_client_for_server(
         server_name: str,
         server_config: ServerConfig,
+        message_handler: Any | None = None,
     ) -> downstream._ClientHandle:
         del server_name
         del server_config
+        del message_handler
         return downstream._ClientHandle(session=FakeSession(), stack=fake_stack)
 
     monkeypatch.setattr(
@@ -128,17 +131,21 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
     async def _fake_open_sse_client(
         server_name: str,
         server_config: ServerConfig,
+        message_handler: Any | None = None,
     ) -> downstream._ClientHandle:
         assert server_name == "remote"
         assert server_config.url == "http://localhost:8765/sse"
+        del message_handler
         return downstream._ClientHandle(session=FakeSession(), stack=FakeStack())
 
     async def _fail_open_stdio_client(
         server_name: str,
         server_config: ServerConfig,
+        message_handler: Any | None = None,
     ) -> downstream._ClientHandle:
         del server_name
         del server_config
+        del message_handler
         raise AssertionError("stdio path must not be used for SSE server")
 
     monkeypatch.setattr(downstream, "_open_sse_client", _fake_open_sse_client)
@@ -247,9 +254,11 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
     async def _fake_open_client_for_server(
         server_name: str,
         server_config: ServerConfig,
+        message_handler: Any | None = None,
     ) -> downstream._ClientHandle:
         del server_name
         del server_config
+        del message_handler
         return downstream._ClientHandle(session=fake_session, stack=FakeStack())
 
     monkeypatch.setattr(
@@ -281,3 +290,129 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
 
     cleanup = asyncio.run(downstream.disconnect_all())
     assert cleanup.is_ok
+
+
+def test_message_handler_routes_tools_changed_notification(monkeypatch: Any) -> None:
+    """Downstream notifications/tools/list_changed triggers reload on_tools_changed."""
+    from tela.shell.config_loader import Result
+
+    observed: dict[str, Any] = {}
+
+    class FakeSession:
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            del cursor
+            del params
+            return ListToolsResult(
+                tools=[
+                    Tool(name="t1", inputSchema={"type": "object"}),
+                    Tool(name="t2", inputSchema={"type": "object"}),
+                ],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    async def _fake_on_tools_changed(
+        server_name: str,
+        server_config: ServerConfig,
+        new_tool_list: list[dict],
+    ) -> Result[None, str]:
+        observed["server_name"] = server_name
+        observed["server_config"] = server_config
+        observed["new_tool_list"] = new_tool_list
+        return Result(value=None)
+
+    monkeypatch.setattr("tela.shell.reload.on_tools_changed", _fake_on_tools_changed)
+
+    server_config = ServerConfig(name="mocked", command="unused")
+    downstream._clients["mocked"] = downstream._ClientHandle(
+        session=FakeSession(),
+        stack=FakeStack(),
+    )
+    handler = downstream._build_downstream_message_handler("mocked", server_config)
+
+    try:
+        asyncio.run(
+            handler(
+                mcp_types.ServerNotification(
+                    root=mcp_types.ToolListChangedNotification(
+                        method="notifications/tools/list_changed"
+                    )
+                )
+            )
+        )
+    finally:
+        downstream._clients.clear()
+
+    assert observed["server_name"] == "mocked"
+    assert observed["server_config"] == server_config
+    tool_names = sorted(tool["name"] for tool in observed["new_tool_list"])
+    assert tool_names == ["t1", "t2"]
+
+
+def test_message_handler_routes_reconnect_exception(monkeypatch: Any) -> None:
+    """Downstream exception path attempts reconnect and triggers reload reconnect."""
+    from tela.shell.config_loader import Result
+
+    observed: dict[str, Any] = {}
+
+    class FakeSession:
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            del cursor
+            del params
+            return ListToolsResult(
+                tools=[Tool(name="after_reconnect", inputSchema={})],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> downstream._ClientHandle:
+        del server_name
+        del server_config
+        del message_handler
+        return downstream._ClientHandle(session=FakeSession(), stack=FakeStack())
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        observed["server_name"] = server_name
+        observed["server_config"] = server_config
+        observed["tool_list"] = tool_list
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream,
+        "_open_client_for_server",
+        _fake_open_client_for_server,
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect",
+        _fake_on_server_reconnect,
+    )
+
+    server_config = ServerConfig(name="mocked", command="unused")
+    handler = downstream._build_downstream_message_handler("mocked", server_config)
+
+    try:
+        asyncio.run(handler(RuntimeError("downstream receive loop dropped")))
+    finally:
+        downstream._clients.clear()
+
+    assert observed["server_name"] == "mocked"
+    assert observed["server_config"] == server_config
+    assert observed["tool_list"][0]["name"] == "after_reconnect"

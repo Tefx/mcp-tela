@@ -168,6 +168,27 @@ def _register_registry_tools(upstream_server: FastMCP) -> None:
             )
 
 
+def _wire_reload_notifications() -> None:
+    """Bridge reload digest callback into upstream notification broadcaster."""
+
+    from tela.shell.upstream import notify_tools_changed
+
+    async def _notify_all_connections(tools_digest: str) -> None:
+        runtime = get_runtime()
+        for connection in list(runtime.connections):
+            await notify_tools_changed(connection, tools_digest)
+
+    _set_reload_notify_callback(_notify_all_connections)
+
+
+def _set_reload_notify_callback(callback: object | None) -> None:
+    """Set reload notify callback with lazy import to avoid module cycles."""
+
+    from tela.shell.reload import set_notify_callback
+
+    set_notify_callback(callback)
+
+
 # Module-level runtime state
 _runtime = GatewayRuntime()
 _runtime_lock = asyncio.Lock()
@@ -297,6 +318,7 @@ async def gateway_start(
     _wire_upstream_handlers(upstream_server)
     _register_profiles_resource(upstream_server)
     _register_registry_tools(upstream_server)
+    _wire_reload_notifications()
 
     # Store runtime state
     async with _runtime_lock:
@@ -324,6 +346,7 @@ async def gateway_shutdown() -> Result[None, str]:
     """
 
     disconnect_result = await disconnect_all()
+    _set_reload_notify_callback(None)
     async with _runtime_lock:
         _runtime.upstream_server = None
         _runtime.running = False
