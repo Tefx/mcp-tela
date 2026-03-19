@@ -11129,7 +11129,7 @@ phases:
     agent: gate-reviewer
   - id: rt.e2e.fix-state-isolation
     name: Fix gateway state isolation leak
-    status: pending
+    status: claimed
     description: "Fix ALL observed order-dependent state leakage affecting the gateway\
       \ full-suite run, not just the single failing assertion.\n\nIssue family:\n\
       - tests/shell/test_gateway.py::test_gateway_status_after_start fails only in\
@@ -11189,6 +11189,8 @@ phases:
     depends_on:
     - rt.e2e.verify
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T06:47:15.011972+00:00'
   - id: rt.e2e.retest-state-isolation
     name: Retest full suite for gateway order independence
     status: pending
