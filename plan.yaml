@@ -15014,3 +15014,50 @@ phases:
     depends_on:
     - invar1203.freeze
     agent: integration-verifier
+  - id: invar1203.gate
+    name: Gate review for Invar Guard 1.20.3 remediation
+    status: pending
+    description: 'Gate review: verify the `invar1203` remediation phase meets the
+      quality bar.
+
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Phase addresses toolchain resolution plus cross-cutting policy findings
+
+      - Historical rework risk is high for shell/output-adjacent files
+
+      - Final acceptance depends on authoritative full-guard evidence, not local spot
+      fixes
+
+
+      cross_cutting_focus:
+
+      - project command-family consistency for `uv run invar guard --all`
+
+      - exclusion of transient worktree directories from full scans
+
+      - closure or explicit classification of `escape_hatch_*`, `missing_contract`,
+      and `shell_result` findings
+
+
+      Independence: gate agent must remain independent from the implementation agent
+      used in this phase.
+
+      '
+    verification: '- All phase steps completed successfully
+
+      - Freeze evidence present and consistent with retest evidence
+
+      - Full `uv run invar guard --all` output reviewed
+
+      - No unresolved blocker-class findings remain in the targeted remediation families,
+      unless explicitly accepted as classified debt with rationale
+
+      - Ready for downstream work only if the guard path is reproducible for future
+      agents'
+    depends_on:
+    - invar1203.retest-full-guard
+    agent: gate-reviewer
