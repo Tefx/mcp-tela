@@ -11835,7 +11835,7 @@ phases:
   steps:
   - id: rt.doc_sync.impl
     name: Update documentation to match runtime
-    status: claimed
+    status: done
     description: Update README.md and docs/USAGE.md to reflect actual working state.
       Update INTERFACES.md if any contracts changed. Remove 'deferred' language from
       module docstrings.
@@ -11844,6 +11844,36 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-19T07:24:22.542101+00:00'
+    done_at: '2026-03-19T07:28:11.763066+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): a42992bf0807e799b30c7d84f2adab18ab8c1bc8
+
+      - Files changed: src/tela/shell/gateway.py, src/tela/shell/upstream.py, src/tela/commands/start.py
+
+
+      Verification:
+
+      - Run: grep -n "deferred" --include="*.py" src/tela/shell/*.py src/tela/commands/*.py
+      -> no matches
+
+      - Run: grep -n "deferred" --include="*.md" README.md docs/USAGE.md docs/INTERFACES.md
+      -> no matches
+
+      - Run: uv run pytest -q -> 422 passed, 3 warnings
+
+      - Run: uv run pytest --doctest-modules src/tela/shell/upstream.py src/tela/shell/gateway.py
+      src/tela/commands/start.py -> 12 passed
+
+
+      Spec link:
+
+      - Step rt.doc_sync.impl
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.doc_sync.gate
     name: Gate review
     status: pending
