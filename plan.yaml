@@ -11899,7 +11899,7 @@ phases:
       \nGaps/Notes:\n- none"
 - id: rt.final_gate
   name: Deep Review
-  status: in_progress
+  status: done
   depends_on:
   - rt.doc_sync
   - rt.escape_cleanup
@@ -12055,7 +12055,7 @@ phases:
       - none'
   - id: rt.final_gate.review
     name: Full gate review
-    status: claimed
+    status: done
     description: Full gate review. Must include the batched SHOULD_FIX remediation
       path from `rt.final_gate.wiring` before opening the final gate.
     verification: '- Final gate review includes evidence from `rt.final_gate.blind`
@@ -12076,6 +12076,19 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-19T07:55:54.349721+00:00'
+    done_at: '2026-03-19T08:01:30.038269+00:00'
+    evidence: "Artifact:\n- Commit hash(es): none\n- Files changed: none (verify-only\
+      \ purity)\n\nGate protocol:\n- Wiring audit: prior SHOULD_FIX items verified\
+      \ closed by production path evidence\n- Escape hatch audit: documented hatches,\
+      \ no stale targeted hatches\n- Runnable surface liveness: ALIVE (blind-tester\
+      \ Mode D pass)\n- Integration authenticity: real runtime/CLI paths verified,\
+      \ no protocol-boundary fixture injection\n\nIssues:\n- blocker: []\n- should_fix:\
+      \ []\n- suggestion:\n  - consider moving audit test utilities to test_support\
+      \ module\n  - increase CLI surface coverage depth\n- tech_debt:\n  - documented\
+      \ audit/dead_param utility annotations remain\n\nVerdict:\n- PASS\n- Rationale:\
+      \ final gate criteria satisfied; remediation path completed and retested; no\
+      \ unresolved blockers.\n\nSpec link:\n- Step rt.final_gate.review\n\nGaps/Notes:\n\
+      - none"
   - id: rt.final_gate.should-fix-batch
     name: Batch SHOULD_FIX runtime wiring remediation
     status: done
