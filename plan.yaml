@@ -15162,7 +15162,7 @@ phases:
       - none'
   - id: invar1203.shell-result
     name: Remediate shell_result findings in CLI and downstream helpers
-    status: pending
+    status: claimed
     description: 'Remove or restructure `shell_result` findings in the flagged shell
       helpers.
 
@@ -15209,6 +15209,8 @@ phases:
     depends_on:
     - invar1203.core-contracts
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T09:12:23.549435+00:00'
   - id: invar1203.freeze
     name: Freeze remediation snapshot for full guard retest
     status: pending
