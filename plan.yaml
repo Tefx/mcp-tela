@@ -15317,7 +15317,7 @@ phases:
       - Step invar1203.freeze'
   - id: invar1203.retest-full-guard
     name: Run full Invar guard after 1.20.3 remediation
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), run the authoritative
       full guard command from a fresh perspective.
 
@@ -15356,6 +15356,27 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-19T09:18:59.975594+00:00'
+    done_at: '2026-03-19T09:23:37.096665+00:00'
+    evidence: "Artifact:\n- Commit hash(es): none (verification-only)\n- Files changed:\
+      \ none\n\nVerification:\n- Run: uv run invar guard --all -> failed; errors=9\
+      \ warnings=30 infos=19\n\nFindings summary:\n- worktree_paths_present: no (no\
+      \ findings rooted in .claude/worktrees or .vectl/worktrees)\n- remediated families\
+      \ status:\n  - escape_hatch_non_suppressible: 0\n  - missing_contract: 0\n-\
+      \ remaining high-impact families:\n  - shell_result errors in src/tela/shell/audit.py\n\
+      \  - escape_hatch_file_limit in src/tela/shell/downstream_clients.py and src/tela/shell/upstream_utils.py\n\
+      \  - escape_hatch_project_limit (shell_result budget over limit)\n  - shell_complexity_debt\
+      \ error remains\n\nIssue classification:\n- blocker: []\n- should_fix:\n  -\
+      \ src/tela/shell/audit.py shell_result errors (4)\n  - downstream_clients.py\
+      \ and upstream_utils.py file-limit pressure\n  - project-level shell_result\
+      \ budget overflow\n  - shell_complexity_debt residual\n- suggestion:\n  - security\
+      \ review suggested in token.py\n  - additional doctest/contract quality improvements\
+      \ in core modules\n- tech_debt:\n  - residual shell_pure_logic/shell_too_complex\
+      \ warnings\n\nBatched remediation planning:\n- Added invar1203.fix-batched-should-fix\
+      \ (depends_on invar1203.retest-full-guard)\n- Added invar1203.retest-batched-should-fix\
+      \ (depends_on invar1203.fix-batched-should-fix)\n- Updated invar1203.gate to\
+      \ depend on invar1203.retest-batched-should-fix\n\nVerdict:\n- ISSUES_FOUND\n\
+      - Rationale: dependency resolution and scope hardening are validated, but remaining\
+      \ should-fix categories require a single batched remediation before gate."
   - id: invar1203.gate
     name: Gate review for Invar Guard 1.20.3 remediation
     status: pending
