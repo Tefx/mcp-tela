@@ -11996,7 +11996,7 @@ phases:
       - none'
   - id: rt.final_gate.blind
     name: Blind-tester Mode D
-    status: claimed
+    status: done
     description: Blind-tester Mode D final verification.
     verification: 'VERDICT: ALIVE'
     depends_on:
@@ -12004,6 +12004,55 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-19T07:51:32.488027+00:00'
+    done_at: '2026-03-19T07:55:19.442574+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): none (verification-only)
+
+      - Files changed: none
+
+
+      Verification:
+
+      - Run: SSE stay-alive probe -> ALIVE
+
+      - Run: stdio banner placement probe -> ALIVE (stderr only)
+
+      - Run: MCP initialize handshake probe -> ALIVE
+
+      - Run: status/profiles/connections/audit CLI probes -> ALIVE
+
+      - Run: tool list and tool call forwarding probe -> ALIVE
+
+      - Run: enforcement deny probe -> ALIVE behavior with expected rejection
+
+
+      Issues:
+
+      - blocker: []
+
+      - should_fix: []
+
+      - suggestion: []
+
+      - tech_debt: []
+
+
+      Verdict:
+
+      - ALIVE
+
+      - Rationale: runnable surfaces and black-box command flows all function as expected.
+
+
+      Spec link:
+
+      - Step rt.final_gate.blind
+
+
+      Gaps/Notes:
+
+      - none'
   - id: rt.final_gate.review
     name: Full gate review
     status: pending
