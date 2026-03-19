@@ -11239,7 +11239,7 @@ phases:
       regressions (all passing)'
   - id: rt.e2e.retest-state-isolation
     name: Retest full suite for gateway order independence
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the full
       suite after the state-isolation fix and try to disprove the claim that gateway
       runtime state is now isolated.
@@ -11282,6 +11282,8 @@ phases:
     depends_on:
     - rt.e2e.fix-state-isolation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-19T06:51:59.540031+00:00'
 - id: rt.liveness
   name: Liveness Verification
   status: locked
