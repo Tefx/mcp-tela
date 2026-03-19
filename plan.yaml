@@ -15079,7 +15079,7 @@ phases:
       - none'
   - id: invar1203.core-contracts
     name: Repair missing contracts in core contract helpers
-    status: claimed
+    status: done
     description: 'Remediate `missing_contract` findings on `src/tela/core/contracts.py`
       for `pre`, `post`, `_meta_pre`, and `_meta_post`.
 
@@ -15117,6 +15117,49 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-19T09:06:06.424431+00:00'
+    done_at: '2026-03-19T09:12:00.588361+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): 293a7b32bf4fb5583ceab23885e27a6c750928dd
+
+      - Files changed: src/tela/core/contracts.py
+
+
+      Contract intent by helper:
+
+      - pre: enforce callable predicate input and callable decorator output
+
+      - post: enforce callable predicate input and callable decorator output
+
+      - _meta_pre: enforce callable predicate input and callable decorator output
+
+      - _meta_post: enforce callable predicate input and callable decorator output
+
+
+      Verification:
+
+      - targeted guard run for src/tela/core/contracts.py reports zero missing_contract
+      findings for pre/post/_meta_pre/_meta_post
+
+      - full-guard parsed count for missing_contract in src/tela/core/contracts.py
+      is zero
+
+      - import/smoke invocation confirms helper behavior remains callable and compatible
+
+
+      Compatibility impact:
+
+      - none (signatures unchanged)
+
+
+      Spec link:
+
+      - Step invar1203.core-contracts
+
+
+      Gaps/Notes:
+
+      - none'
   - id: invar1203.shell-result
     name: Remediate shell_result findings in CLI and downstream helpers
     status: pending
