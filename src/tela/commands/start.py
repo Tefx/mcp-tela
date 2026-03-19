@@ -1,8 +1,7 @@
 """Start command surface for open-mode runtime binding.
 
 Implements CLI-to-runtime binding for default-profile resolution using the
-shared config authority helper. Gateway startup orchestration and upstream
-initialize handling are deferred to sibling runtime steps.
+shared config authority helper. Gateway startup is wired via tela.cli.
 """
 
 from __future__ import annotations
@@ -32,7 +31,6 @@ def start_command(
 
     This step resolves the default profile via the shared config authority
     helper (``load_config`` -> ``resolve_open_mode_default_profile``).
-    Gateway startup orchestration is deferred.
 
     Examples:
         >>> import tempfile, os
@@ -56,9 +54,7 @@ def start_command(
         binding contract on success, or an error string on failure.
     """
 
-    config_result = load_config(
-        path=Path(config_path), default_profile=default_profile
-    )
+    config_result = load_config(path=Path(config_path), default_profile=default_profile)
 
     if config_result.is_err:
         return Result(error=config_result.error)

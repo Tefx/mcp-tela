@@ -3,8 +3,6 @@
 Implements the upstream-facing MCP protocol handler interfaces. Open-mode
 initialize binding is preserved from prior implementation. tools/list filtering
 uses the enforcement chain. tools/call strips _meta and runs enforcement.
-
-Audit emission is deferred to audit.runtime.
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 
 This module implements the gateway lifecycle: start (load config, connect
 downstreams), shutdown (disconnect downstreams), status, and connections.
-Transport startup (stdio/SSE MCP server) is deferred.
+Transport startup (stdio/SSE) is wired via CLI in tela.cli.
 """
 
 from __future__ import annotations
