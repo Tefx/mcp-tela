@@ -10266,7 +10266,7 @@ phases:
   steps:
   - id: rt.upstream.server
     name: Create fastmcp server in gateway.py
-    status: claimed
+    status: done
     description: Create a fastmcp FastMCP server instance in gateway.py. Define how
       tools from the registry are registered as MCP tools on the server. Wire gateway_start
       to create and configure the server. Wire gateway_shutdown to stop it.
@@ -10288,6 +10288,40 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-18T21:08:29.855695+00:00'
+    done_at: '2026-03-19T04:52:51.276582+00:00'
+    evidence: 'Commit hash(es):
+
+      - 3b9c243
+
+
+      Files changed:
+
+      - src/tela/shell/gateway.py
+
+
+      Verification:
+
+      - FastMCP() instantiated in gateway_start: yes (`gateway_start` calls `_create_upstream_server(config)`
+      and stores `_runtime.upstream_server`)
+
+      - Tools registered from registry: yes (`_register_registry_tools` iterates `get_all_tools()`
+      and registers each resolved tool)
+
+      - gateway_shutdown stops server: yes (`gateway_shutdown` clears `_runtime.upstream_server`
+      and lifecycle state)
+
+
+      Command evidence:
+
+      - changed-scope invar guard passed
+
+      - runtime probe confirms server created, tool names registered, and shutdown
+      clears server reference
+
+
+      Gaps/Notes:
+
+      - transport run-loop execution remains for subsequent upstream transport steps'
   - id: rt.upstream.handlers
     name: Wire upstream handlers to fastmcp server
     status: pending
