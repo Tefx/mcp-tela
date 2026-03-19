@@ -11642,7 +11642,7 @@ phases:
       \nSpec link:\n- Step rt.liveness.gate"
   - id: rt.liveness.fix-should-fix-batch
     name: Batch should-fix remediation from rt.liveness.gate
-    status: pending
+    status: claimed
     description: 'Fix ALL should-fix issues reported by `rt.liveness.gate` in one
       batched remediation step.
 
@@ -11694,6 +11694,8 @@ phases:
     depends_on:
     - rt.liveness.gate
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-19T07:14:01.919791+00:00'
   - id: rt.liveness.retest-should-fix-batch
     name: Independent retest for batched should-fix remediation
     status: pending
