@@ -14626,7 +14626,7 @@ phases:
   steps:
   - id: invar1203.resolve-deps
     name: Restore resolvable Invar Guard 1.20.3 execution path
-    status: claimed
+    status: done
     description: 'Make `uv run invar guard --all` resolvable for this repo after the
       dev dependency target changed to `invar-guard==1.20.3`.
 
@@ -14675,6 +14675,42 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-19T08:35:12.132702+00:00'
+    done_at: '2026-03-19T08:39:33.520616+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): b91fab30102f28fb14313ec1a3bc1d7fa37b8cb9
+
+      - Files changed: pyproject.toml, uv.lock
+
+
+      Resolution path:
+
+      - Added dev dependency invar-tools==1.20.3 as the published package providing
+      the `invar` CLI used by `uv run invar guard --all`.
+
+      - Removed unresolved reliance on registry-missing invar-guard package.
+
+      - Updated lockfile for reproducible `uv sync --dev`.
+
+
+      Verification:
+
+      - Run: uv sync --dev -> resolved and checked successfully
+
+      - Run: uv run invar guard --all --help -> succeeds without missing-package errors
+
+      - Run: uv run python -c "import shutil; print(shutil.which(''invar''))" -> project
+      .venv path
+
+
+      Spec link:
+
+      - Step invar1203.resolve-deps
+
+
+      Gaps/Notes:
+
+      - none'
   - id: invar1203.scope-hardening
     name: Constrain guard scope to tracked project sources
     status: pending
