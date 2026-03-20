@@ -620,7 +620,7 @@ def test_tools_list_enumeration_populates_registry() -> None:
 def test_tools_list_empty_for_server() -> None:
     """tools/list returning empty list results in empty tool set for that server."""
     servers = {"srv": ServerConfig(name="srv", command="cmd")}
-    tool_lists = {"srv": []}  # Empty tool list
+    tool_lists: dict[str, list[dict]] = {"srv": []}  # Empty tool list
     result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
     assert result.is_ok
 
