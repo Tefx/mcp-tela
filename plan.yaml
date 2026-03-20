@@ -16612,7 +16612,7 @@ phases:
       - INVAR.md'
   - id: post_invar.final_audit.blackbox
     name: Post-Invar black-box runtime verification
-    status: claimed
+    status: done
     description: "step_type: verification\nagent_source: default\ntags: [\"integration\"\
       ]\nspec_refs:\n- docs/USAGE.md\n- docs/INTERFACES.md#tela-interface-specification/2-cli-surface\n\
       - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface\ntouch_paths:\n\
@@ -16640,6 +16640,28 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-20T22:02:47.692034+00:00'
+    done_at: '2026-03-20T22:05:20.587761+00:00'
+    evidence: 'Artifact:
+
+      - PR: black-box evidence session ses_2f2bcb31fffexRu3oj4CiTyg4m
+
+
+      Verification:
+
+      - Run: repro liveness/high/blocker suites and real CLI status/connections plus
+      load_config path -> runtime path evidence captured
+
+      - Output includes direct command results and confirms failure surfaces are not
+      silently masked
+
+
+      Spec link:
+
+      - docs/USAGE.md
+
+      - docs/INTERFACES.md#tela-interface-specification/2-cli-surface
+
+      - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface'
   - id: post_invar.final_audit.gate
     name: Final gate after post-Invar supplementation
     status: pending
