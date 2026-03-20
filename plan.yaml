@@ -16794,7 +16794,7 @@ phases:
       - tests/integration/test_audit_levels.py'
   - id: post_invar.final_audit.retest-spec-audit-issues
     name: Retest spec audit issues
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -16874,3 +16874,28 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-20T21:57:51.379751+00:00'
+    done_at: '2026-03-20T21:59:06.050980+00:00'
+    evidence: 'Artifact:
+
+      - PR: independent retest evidence in step session ses_2f2cb8b74ffegQAy2WyvbcmD12
+
+
+      Verification:
+
+      - Run: uv run pytest tests/integration/test_audit_levels.py::test_upstream_strips_meta_before_downstream_forwarding
+      -v -> passed
+
+      - Run: uv run pytest --doctest-modules src/tela/core/contracts.py -v -> 2 passed
+
+      - Run: rg -n "tests/blind" docs/USAGE.md -> no matches
+
+      - Run: rg -n "tests/repro" docs/USAGE.md -> canonical reference present
+
+
+      Spec link:
+
+      - docs/USAGE.md
+
+      - src/tela/core/contracts.py
+
+      - tests/integration/test_audit_levels.py'
