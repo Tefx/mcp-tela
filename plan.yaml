@@ -15970,7 +15970,7 @@ phases:
       - pyproject.toml[project.dependencies]'
   - id: post_invar.test_alignment.gate
     name: Gate post-Invar test alignment
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -16005,6 +16005,33 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-20T21:15:49.510302+00:00'
+    done_at: '2026-03-20T21:22:35.115888+00:00'
+    evidence: 'Artifact:
+
+      - PR: gate-reviewer evidence session ses_2f2e4e8aaffey1VWpqxDGXTaas
+
+
+      Verification:
+
+      - Run: pytest suite for touched surfaces -> passed (transport/config/repro scope)
+
+      - Run: full downstream file verification after loop2 remediation -> 47 passed
+      in independent retest
+
+      - Issue classification: 1 SHOULD_FIX (type annotation at tests/shell/test_downstream.py:623)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#tela-interface-specification/3-configuration-contract/3-1-servers
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior
+
+
+      Remediation protocol:
+
+      - Created batched SHOULD_FIX follow-up steps in phase: post_invar.test_alignment.fix-should-fix-type-annotation
+      and post_invar.test_alignment.retest-should-fix-type-annotation'
   - id: post_invar.test_alignment.fix-result-wrapper-assertions
     name: Fix Result-wrapper downstream assertions
     status: done
