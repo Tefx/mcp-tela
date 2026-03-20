@@ -16001,6 +16001,47 @@ phases:
     - post_invar.test_alignment.dependency-sensitive-repro
     - post_invar.test_alignment.verify
     agent: gate-reviewer
+  - id: post_invar.test_alignment.fix-result-wrapper-assertions
+    name: Fix Result-wrapper downstream assertions
+    status: pending
+    description: 'step_type: implementation
+
+      Fix the blocked downstream assertion family in `tests/shell/test_downstream.py`
+      caused by API contract drift where `get_tool_server` and `get_all_tools` now
+      return Result wrappers.
+
+
+      Scope is constrained to this blocker family only:
+
+      - update affected assertions to unwrap/assert on Result values correctly
+
+      - cover all 11 listed failing assertions in `tests/shell/test_downstream.py`
+
+      - do not broaden into unrelated downstream transport or production-code contract
+      changes
+
+
+      Known blocker family:
+
+      - stale test expectations assume raw values instead of Result wrappers
+
+      - gate evidence showed a narrow `-k "transport"` filter can miss these failures;
+      fix must align assertions with current contract so the full file passes
+
+      '
+    verification: '- `tests/shell/test_downstream.py` passes for the affected `get_tool_server`
+      / `get_all_tools` API assertions
+
+      - Updated assertions explicitly unwrap or assert on Result wrapper semantics
+      for all listed failures
+
+      - Scope remains limited to `tests/shell/test_downstream.py` Result-wrapper assertion
+      drift
+
+      '
+    depends_on:
+    - post_invar.test_alignment.verify
+    agent: python-executor
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
