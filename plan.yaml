@@ -16106,7 +16106,7 @@ phases:
     agent: integration-verifier
   - id: post_invar.test_alignment.fix-result-wrapper-assertions-loop2
     name: Fix residual Result-wrapper assertion at downstream line 298
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       prior_loop:
@@ -16157,6 +16157,26 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-20T21:10:31.522790+00:00'
+    done_at: '2026-03-20T21:11:59.744418+00:00'
+    evidence: 'Artifact:
+
+      - PR: 1d6482b
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_downstream.py::test_connect_all_fails_on_tool_conflict
+      -v -> passed
+
+      - Run: uv run pytest tests/shell/test_downstream.py::test_connect_all_no_conflict_different_names
+      tests/shell/test_downstream.py::test_disconnect_all_clears_registry -v -> 2
+      passed
+
+
+      Spec link:
+
+      - post_invar.test_alignment.fix-result-wrapper-assertions-loop2 residual assertion
+      contract in tests/shell/test_downstream.py'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions-loop2
     name: Retest residual Result-wrapper assertion after loop 2 fix
     status: pending
