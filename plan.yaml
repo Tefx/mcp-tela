@@ -16653,7 +16653,7 @@ phases:
     agent: gate-reviewer
   - id: post_invar.final_audit.fix-spec-audit-issues
     name: Fix spec audit issues
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -16768,6 +16768,8 @@ phases:
     depends_on:
     - post_invar.final_audit.wiring
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T21:43:17.407204+00:00'
   - id: post_invar.final_audit.retest-spec-audit-issues
     name: Retest spec audit issues
     status: pending
