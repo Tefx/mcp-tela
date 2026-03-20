@@ -16066,7 +16066,7 @@ phases:
       None, str]'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions
     name: Retest Result-wrapper downstream assertions
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (`integration-verifier`), re-run the downstream test
@@ -16104,6 +16104,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.fix-result-wrapper-assertions
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-20T21:12:23.101813+00:00'
   - id: post_invar.test_alignment.fix-result-wrapper-assertions-loop2
     name: Fix residual Result-wrapper assertion at downstream line 298
     status: done
