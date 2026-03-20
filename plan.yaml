@@ -16612,7 +16612,7 @@ phases:
       - INVAR.md'
   - id: post_invar.final_audit.blackbox
     name: Post-Invar black-box runtime verification
-    status: pending
+    status: claimed
     description: "step_type: verification\nagent_source: default\ntags: [\"integration\"\
       ]\nspec_refs:\n- docs/USAGE.md\n- docs/INTERFACES.md#tela-interface-specification/2-cli-surface\n\
       - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface\ntouch_paths:\n\
@@ -16638,6 +16638,8 @@ phases:
     depends_on:
     - post_invar.final_audit.spec
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-20T22:02:47.692034+00:00'
   - id: post_invar.final_audit.gate
     name: Final gate after post-Invar supplementation
     status: pending
