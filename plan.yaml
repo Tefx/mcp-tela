@@ -16664,7 +16664,7 @@ phases:
       - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface'
   - id: post_invar.final_audit.gate
     name: Final gate after post-Invar supplementation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -16703,6 +16703,8 @@ phases:
     - post_invar.final_audit.spec
     - post_invar.final_audit.blackbox
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-20T22:05:38.939001+00:00'
   - id: post_invar.final_audit.fix-spec-audit-issues
     name: Fix spec audit issues
     status: done
