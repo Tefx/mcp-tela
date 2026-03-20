@@ -16951,3 +16951,129 @@ phases:
       - src/tela/core/contracts.py
 
       - tests/integration/test_audit_levels.py'
+  - id: post_invar.final_audit.fix-result-wrapper-drift-batch
+    name: Fix Result wrapper drift batch
+    status: pending
+    description: 'step_type: implementation
+
+      Fix ALL findings from `post_invar.final_audit.gate` in one batched remediation
+      pass.
+
+
+      ## Blockers and should-fix items (ALL of these, not just the first)
+
+      - Update affected `tests/shell` and `tests/integration` assertions so shell-result
+      migration expectations unwrap `Result.value` at all 31 reported locations.
+
+      - Update doctests in `src/tela/shell/downstream.py` and `src/tela/shell/upstream.py`
+      so documented examples reflect Result wrapping and unwrap expectations consistently.
+
+      - Resolve the mypy `no-redef` finding in `src/tela/core/contracts.py`.
+
+      - Resolve the listed ruff unused-import findings in touched files from this
+      blocker family.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: shell-result migration changed outward assertion/documentation
+      expectations, but residual tests/doctests and a small lint/type cleanup set
+      still target the pre-wrapper surface.
+
+      - Symptom: gate found 31 stale assertion/doctest locations plus mypy/ruff follow-on
+      findings.
+
+      - Why this fix is not surface-level: it must update the full reported drift
+      set across shell tests, integration tests, doctests, and cleanup findings in
+      one consistent batch instead of patching isolated assertions.
+
+
+      ## Search and completion instructions
+
+      - Search siblings beyond the reported lines so every Result-wrapper expectation
+      in the touched shell/integration suites is aligned, not only the first failing
+      examples.
+
+      - Keep scope limited to assertion/doctest/lint-type drift required by the gate
+      findings; do not introduce new behavior changes.
+
+
+      ## Touch scope
+
+      - `tests/shell/**`
+
+      - `tests/integration/**`
+
+      - `src/tela/shell/downstream.py`
+
+      - `src/tela/shell/upstream.py`
+
+      - `src/tela/core/contracts.py`
+
+
+      known_risks:
+
+      - Result-wrapper drift can hide in doctests and narrative assertions even after
+      pytest expectations are fixed.
+
+      - Mixed shell/integration updates can miss sibling assertions unless the entire
+      reported family is searched.
+
+
+      verification: targeted retest step must prove all shell/integration/doctest,
+      mypy, and ruff findings are cleared with command/output evidence.'
+    verification: '- All reported Result-wrapper assertion and doctest drift locations
+      are updated in one batch
+
+      - `src/tela/core/contracts.py` no longer triggers mypy `no-redef`
+
+      - Listed ruff unused-import findings for touched files are removed
+
+      - Retest step will provide independent command/output evidence'
+    depends_on:
+    - post_invar.final_audit.gate
+    agent: python-executor
+  - id: post_invar.final_audit.retest-result-wrapper-drift-batch
+    name: Retest Result wrapper drift batch
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (`integration-verifier`), validate the batched Result-wrapper
+      drift remediation from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Retest scope:
+
+      - targeted shell and integration pytest coverage for the touched assertion suites
+
+      - doctests for `src/tela/shell/downstream.py` and `src/tela/shell/upstream.py`
+
+      - mypy check for `src/tela/core/contracts.py`
+
+      - ruff check for touched files from the remediation batch
+
+
+      Explicit evidence is mandatory: paste the exact commands executed and the actual
+      key output for each command; `tests pass` summaries without command/output proof
+      are insufficient.
+
+
+      Independence Level: L1'
+    verification: '- Run targeted pytest for touched shell/integration suites plus
+      doctests for `src/tela/shell/downstream.py` and `src/tela/shell/upstream.py`
+
+      - Run `mypy src/tela/core/contracts.py`
+
+      - Run `ruff check` on the touched files from this remediation batch
+
+      - Evidence must include exact commands and actual output snippets for pytest,
+      mypy, and ruff
+
+      - Any remaining Result-wrapper drift, mypy `no-redef`, or unused-import findings
+      are reported as issues found'
+    depends_on:
+    - post_invar.final_audit.fix-result-wrapper-drift-batch
+    agent: integration-verifier
