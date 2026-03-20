@@ -15803,7 +15803,7 @@ phases:
       - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior'
   - id: post_invar.test_alignment.dependency-sensitive-repro
     name: Harden dependency-sensitive repro coverage
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       agent_source: default
@@ -15864,6 +15864,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.transport-contract-tests
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T20:40:49.695813+00:00'
   - id: post_invar.test_alignment.verify
     name: Independent verification of post-Invar test alignment
     status: pending
