@@ -15887,7 +15887,7 @@ phases:
       - docs/USAGE.md#pattern-1-stdio-client-integration'
   - id: post_invar.test_alignment.verify
     name: Independent verification of post-Invar test alignment
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -15940,6 +15940,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.dependency-sensitive-repro
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-20T20:45:16.222027+00:00'
   - id: post_invar.test_alignment.gate
     name: Gate post-Invar test alignment
     status: pending
