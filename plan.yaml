@@ -16272,7 +16272,7 @@ phases:
       contract'
   - id: post_invar.test_alignment.fix-should-fix-type-annotation
     name: Fix should-fix type annotation
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
 
@@ -16319,6 +16319,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.gate
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T21:22:53.664308+00:00'
   - id: post_invar.test_alignment.retest-should-fix-type-annotation
     name: Retest should-fix type annotation
     status: pending
