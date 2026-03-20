@@ -16001,6 +16001,7 @@ phases:
     - post_invar.test_alignment.dependency-sensitive-repro
     - post_invar.test_alignment.verify
     - post_invar.test_alignment.retest-result-wrapper-assertions
+    - post_invar.test_alignment.retest-result-wrapper-assertions-loop2
     agent: gate-reviewer
   - id: post_invar.test_alignment.fix-result-wrapper-assertions
     name: Fix Result-wrapper downstream assertions
