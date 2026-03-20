@@ -16794,7 +16794,7 @@ phases:
       - tests/integration/test_audit_levels.py'
   - id: post_invar.final_audit.retest-spec-audit-issues
     name: Retest spec audit issues
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -16872,3 +16872,5 @@ phases:
     depends_on:
     - post_invar.final_audit.fix-spec-audit-issues
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-20T21:57:51.379751+00:00'
