@@ -16181,7 +16181,7 @@ phases:
       contract in tests/shell/test_downstream.py'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions-loop2
     name: Retest residual Result-wrapper assertion after loop 2 fix
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (`integration-verifier`), validate the single residual
@@ -16221,6 +16221,25 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-20T21:12:30.241725+00:00'
+    done_at: '2026-03-20T21:15:10.362756+00:00'
+    evidence: 'Artifact:
+
+      - PR: verification-only step in loop2 worktree (no code changes)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_downstream.py -v -> 47 passed
+
+      - Check: `-k "transport"` alone is insufficient and was not used as sole proof
+
+      - Check: line 298 assertion verified as get_all_tools().value == {}
+
+
+      Spec link:
+
+      - post_invar.test_alignment.retest-result-wrapper-assertions-loop2 verification
+      contract'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
