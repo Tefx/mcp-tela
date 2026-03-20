@@ -16767,3 +16767,83 @@ phases:
     depends_on:
     - post_invar.final_audit.wiring
     agent: python-executor
+  - id: post_invar.final_audit.retest-spec-audit-issues
+    name: Retest spec audit issues
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/USAGE.md
+
+      - INVAR.md
+
+      - src/tela/core/contracts.py doctests
+
+      - tests/integration/test_audit_levels.py
+
+
+      touch_paths:
+
+      - tests/integration/test_audit_levels.py
+
+      - src/tela/core/contracts.py
+
+      - docs/USAGE.md
+
+      harness_refs:
+
+      - pytest tests/integration/test_audit_levels.py
+
+      - pytest doctest collection for src/tela/core/contracts.py
+
+      - documentation path consistency grep/check
+
+
+      As an INDEPENDENT TESTER (`integration-verifier`), validate the batched spec-audit
+      fixes from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Required checks:
+
+      - targeted pytest proving the `strip_meta` usage in `tests/integration/test_audit_levels.py`
+      now passes with the correct `Result` handling
+
+      - doctest check proving `src/tela/core/contracts.py` now expects and observes
+      `PreContractError`
+
+      - doc path consistency check proving `docs/USAGE.md` references `tests/repro`
+      instead of legacy `tests/blind`
+
+      - evidence MUST include actual commands and actual outcomes, not a generic "tests
+      pass" summary
+
+
+      Independence Level: L1'
+    verification: '- Run targeted pytest for `tests/integration/test_audit_levels.py`
+      covering the `strip_meta` path and record the exact command plus outcome
+
+      - Run doctest verification for `src/tela/core/contracts.py` and record the exact
+      command plus outcome
+
+      - Run a doc path consistency check for `docs/USAGE.md` showing `tests/repro`
+      is present and legacy `tests/blind` is absent, with exact command plus outcome
+
+      - Verdict is PASS or ISSUES_FOUND with concrete locations and pasted command
+      results'
+    evidence_template: "## Verification Report\n\n**Tester**: integration-verifier\
+      \ (independent of implementation)\n**Scope**: post_invar final audit spec-fix\
+      \ regression checks\n**Independence Level**: L1\n\n### Test Execution\n- Commands\
+      \ executed:\n  ```\n  <exact pytest / doctest / grep commands>\n  ```\n- Actual\
+      \ outcomes:\n  ```\n  <stdout/stderr or key result lines>\n  ```\n\n### Checks\n\
+      - strip_meta integration path: PASS|ISSUES_FOUND\n- contracts doctest expectation:\
+      \ PASS|ISSUES_FOUND\n- docs repro-path consistency: PASS|ISSUES_FOUND\n\n###\
+      \ Verdict\n- [ ] PASS\n- [ ] ISSUES_FOUND\n- [ ] INCOMPLETE"
+    depends_on:
+    - post_invar.final_audit.fix-spec-audit-issues
+    agent: integration-verifier
