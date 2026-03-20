@@ -16414,7 +16414,7 @@ phases:
   steps:
   - id: post_invar.final_audit.wiring
     name: Post-Invar wiring audit
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -16485,6 +16485,29 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-20T21:27:30.875233+00:00'
+    done_at: '2026-03-20T21:31:34.760108+00:00'
+    evidence: 'Artifact:
+
+      - PR: wiring-auditor evidence session ses_2f2da2d46ffejy64ji4BllOTUP
+
+
+      Verification:
+
+      - Static wiring audit confirms runtime reachability, command registration, config-field
+      consumption, and escape hatch legitimacy
+
+      - No orphaned public runtime surfaces identified in post-invar remediation tail
+
+
+      Spec link:
+
+      - docs/DESIGN.md#tela-design/module-boundaries
+
+      - docs/INTERFACES.md#tela-interface-specification/2-cli-surface
+
+      - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract'
   - id: post_invar.final_audit.spec
     name: Post-Invar spec conformance audit
     status: pending
