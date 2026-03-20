@@ -16154,6 +16154,46 @@ phases:
       - Evidence must state that the change was limited to this missed assertion and
       did not alter unrelated downstream tests or production code'
     agent: python-executor
+  - id: post_invar.test_alignment.retest-result-wrapper-assertions-loop2
+    name: Retest residual Result-wrapper assertion after loop 2 fix
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (`integration-verifier`), validate the single residual
+      Result-wrapper assertion fix from a fresh perspective.
+
+
+      Scope is intentionally narrow:
+
+      - verify the corrected assertion near `tests/shell/test_downstream.py:298`
+
+      - verify the entire `tests/shell/test_downstream.py` file still passes after
+      that focused edit
+
+      - do not treat targeted subsets as sufficient evidence
+
+
+      Required coverage:
+
+      - run full `uv run pytest tests/shell/test_downstream.py -v`
+
+      - explicitly state that `-k "transport"` alone is insufficient and was not accepted
+      as sole proof
+
+      - confirm no residual raw `get_all_tools()` assertion remains in this file under
+      full-file execution
+
+
+      Independence Level: L1'
+    verification: '- Run full `uv run pytest tests/shell/test_downstream.py -v`
+
+      - Evidence must explicitly state that `-k "transport"` alone is insufficient
+
+      - Full-file execution passes with no remaining failure from the residual Result-wrapper
+      assertion near line 298'
+    depends_on:
+    - post_invar.test_alignment.fix-result-wrapper-assertions-loop2
+    agent: integration-verifier
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
