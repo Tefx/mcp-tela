@@ -16702,6 +16702,7 @@ phases:
     - post_invar.final_audit.wiring
     - post_invar.final_audit.spec
     - post_invar.final_audit.blackbox
+    - post_invar.final_audit.retest-result-wrapper-drift-batch
     agent: gate-reviewer
   - id: post_invar.final_audit.fix-spec-audit-issues
     name: Fix spec audit issues
