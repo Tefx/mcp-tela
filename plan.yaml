@@ -16510,7 +16510,7 @@ phases:
       - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract'
   - id: post_invar.final_audit.spec
     name: Post-Invar spec conformance audit
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -16581,6 +16581,8 @@ phases:
     depends_on:
     - post_invar.final_audit.wiring
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-20T21:39:25.395434+00:00'
   - id: post_invar.final_audit.blackbox
     name: Post-Invar black-box runtime verification
     status: pending
