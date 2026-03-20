@@ -16580,6 +16580,7 @@ phases:
       - Verdict is PASS or ISSUES_FOUND with concrete locations'
     depends_on:
     - post_invar.final_audit.wiring
+    - post_invar.final_audit.retest-spec-audit-issues
     agent: doc-reviewer
   - id: post_invar.final_audit.blackbox
     name: Post-Invar black-box runtime verification
