@@ -15803,7 +15803,7 @@ phases:
       - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior'
   - id: post_invar.test_alignment.dependency-sensitive-repro
     name: Harden dependency-sensitive repro coverage
-    status: claimed
+    status: done
     description: 'step_type: test
 
       agent_source: default
@@ -15866,6 +15866,25 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-20T20:40:49.695813+00:00'
+    done_at: '2026-03-20T20:44:55.773750+00:00'
+    evidence: 'Artifact:
+
+      - PR: 9b2ee25
+
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_medium.py::TestM7FastMCPImportable -v
+      -> 1 passed
+
+      - Run: uv run ruff check tests/repro/test_medium.py -> all checks passed
+
+
+      Spec link:
+
+      - pyproject.toml[project.dependencies]
+
+      - docs/USAGE.md#pattern-1-stdio-client-integration'
   - id: post_invar.test_alignment.verify
     name: Independent verification of post-Invar test alignment
     status: pending
