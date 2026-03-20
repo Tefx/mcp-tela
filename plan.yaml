@@ -15709,6 +15709,76 @@ phases:
   status: pending
   depends_on:
   - invar1203
+  steps:
+  - id: post_invar.test_alignment.transport-contract-tests
+    name: Align transport contract tests with authoritative validation path
+    status: pending
+    description: 'step_type: test
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/INTERFACES.md#tela-interface-specification/3-configuration-contract/3-1-servers
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior
+
+      touch_paths:
+
+      - tests/shell/test_downstream.py
+
+      - tests/core/test_config.py
+
+      - src/tela/core/config.py
+
+      - src/tela/shell/config_loader.py
+
+      harness_refs:
+
+      - tests/core/test_config.py
+
+      - tests/shell/test_downstream.py
+
+      - load_config() contract path
+
+      consumer_surfaces:
+
+      - CLI config loading
+
+      - downstream connect_all runtime
+
+
+      Replace outdated TODO-style transport tests that still describe validation as
+      future work. The step must prove the current authoritative contract path instead
+      of documenting obsolete behavior.
+
+
+      Required updates:
+
+      - remove or rewrite the two `future validation` tests in `tests/shell/test_downstream.py`
+      so they assert the real contract boundary (`validate_config` and/or `load_config`)
+      rather than permissive model construction
+
+      - keep one focused model-shape test only if it is explicitly labeled as model-layer
+      permissiveness and does not imply missing implementation
+
+      - preserve spec-derived fixtures for `command`-only, `url`-only, missing-transport,
+      and mixed-transport cases
+
+      - cite the exact INTERFACES transport requirements in test naming/docstrings
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one fixture MUST use the exact documented minimal server format from
+      the spec and must not rely on convenience fields beyond the documented contract.'
+    verification: '- Targeted regression proves missing transport and mixed transport
+      are rejected on the authoritative validation path
+
+      - No remaining TODO/future-validation wording in transport contract tests
+
+      - Evidence cites the exact spec sections used by the rewritten fixtures'
+    agent: python-executor
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
