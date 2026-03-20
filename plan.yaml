@@ -15897,6 +15897,39 @@ phases:
     depends_on:
     - post_invar.test_alignment.dependency-sensitive-repro
     agent: integration-verifier
+  - id: post_invar.test_alignment.gate
+    name: Gate post-Invar test alignment
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - Phase touches test contract drift and dependency-sensitive repro behavior
+      after a large remediation wave
+
+      cross_cutting_focus:
+
+      - transport contract tests reflect current implementation, not stale expectations
+
+      - repro checks do not silently skip declared runtime dependencies
+
+
+      Gate review: verify the post-Invar test-alignment phase is complete and evidence
+      is specific enough to trust downstream audits.'
+    verification: '- All phase steps completed
+
+      - Updated tests align with authoritative spec/validation path
+
+      - Evidence quality is sufficient for downstream final audit
+
+      - No unresolved blocker from the independent verification step'
+    depends_on:
+    - post_invar.test_alignment.transport-contract-tests
+    - post_invar.test_alignment.dependency-sensitive-repro
+    - post_invar.test_alignment.verify
+    agent: gate-reviewer
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
