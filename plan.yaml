@@ -16650,3 +16650,120 @@ phases:
     - post_invar.final_audit.spec
     - post_invar.final_audit.blackbox
     agent: gate-reviewer
+  - id: post_invar.final_audit.fix-spec-audit-issues
+    name: Fix spec audit issues
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/USAGE.md
+
+      - INVAR.md
+
+      - src/tela/core/contracts.py doctests
+
+      - tests/integration/test_audit_levels.py
+
+
+      touch_paths:
+
+      - tests/integration/test_audit_levels.py
+
+      - src/tela/core/contracts.py
+
+      - docs/USAGE.md
+
+      harness_refs:
+
+      - pytest doctest collection
+
+      - audit level integration regression
+
+      - usage-doc repro path references
+
+
+      Fix ALL of these, not just the first, so `post_invar.final_audit.spec` can run
+      against aligned tests, contracts, and docs.
+
+
+      ## Blockers to Fix (ALL of these)
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: post-Invar audit artifacts diverged across integration tests,
+      doctest expectations, and usage docs.
+
+      - Symptom: spec audit reports direct `Result` unpacking in audit-level integration
+      coverage, doctest expects `AssertionError` instead of `PreContractError`, and
+      docs still point to legacy `tests/blind` repro paths.
+
+      - Why this fix is not surface-level: update each authoritative consumer so tests,
+      contract docs, and usage docs all reflect the settled `Result` and contract
+      error behavior.
+
+
+      ### B1: strip_meta Result is unpacked directly in audit-level integration coverage
+
+      Locations: tests/integration/test_audit_levels.py:240
+
+      Remediation: update the targeted integration assertion path to consume the `strip_meta`
+      `Result` object using the established success/error access pattern instead of
+      tuple-style unpacking.
+
+      Grep hint: rg -n "strip_meta" tests/integration/test_audit_levels.py tests
+
+      IMPORTANT: search for sibling usages beyond the listed location.
+
+
+      ### B2: contracts doctest expects the wrong exception type
+
+      Locations: src/tela/core/contracts.py
+
+      Remediation: align the doctest expectation with the actual `PreContractError`
+      raised by the precondition machinery and ensure the doctest wording matches
+      runtime behavior.
+
+      Grep hint: rg -n "AssertionError|PreContractError" src/tela/core/contracts.py
+
+      IMPORTANT: search for sibling doctest expectations in the same module.
+
+
+      ### B3: usage docs still reference legacy repro path
+
+      Locations: docs/USAGE.md
+
+      Remediation: replace legacy `tests/blind` references with the canonical `tests/repro`
+      path and verify nearby usage text stays internally consistent.
+
+      Grep hint: rg -n "tests/blind|tests/repro" docs/USAGE.md docs
+
+      IMPORTANT: search for sibling legacy path references beyond the listed location.
+
+
+      ## Completion Criteria
+
+      - ALL three audit findings are fixed
+
+      - sibling search completed for each finding family
+
+      - no remaining legacy `tests/blind` reference exists in the targeted usage docs
+      scope
+
+      - doctest expectation and integration test usage match current runtime semantics'
+    verification: '- Main path: targeted updates align the integration test, contracts
+      doctest, and usage docs with current settled behavior
+
+      - Failure path: sibling searches confirm no remaining direct `strip_meta` unpacking
+      in the targeted integration scope, no stale `AssertionError` expectation in
+      the touched doctest scope, and no legacy `tests/blind` path in the targeted
+      usage-doc scope
+
+      - Proof: evidence for the follow-on retest must be able to cite exact commands
+      and outcomes for all three fixes'
+    depends_on:
+    - post_invar.final_audit.wiring
+    agent: python-executor
