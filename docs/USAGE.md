@@ -680,10 +680,6 @@ Check, in order:
 2. tool override check
 3. posture ceiling comparison
 
-### A legacy document references `tests/blind/`
-
-Use `tests/repro/` as the canonical executable fallback suite.
-
 ## Validation and testing
 
 Use these commands from the repository root:

@@ -237,7 +237,9 @@ def test_upstream_strips_meta_before_downstream_forwarding() -> None:
     from tela.shell.upstream_utils import strip_meta
 
     args = {"path": "/tmp", "_meta": {"trace_id": "tr-1"}}
-    stripped, held_meta = strip_meta(args)
+    result = strip_meta(args)
+    assert result.is_ok
+    stripped, held_meta = result.value
     assert "_meta" not in stripped
     assert held_meta is not None
     assert held_meta["trace_id"] == "tr-1"
