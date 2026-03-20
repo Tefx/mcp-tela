@@ -295,7 +295,7 @@ def test_connect_all_fails_on_tool_conflict() -> None:
     assert "read_file" in (result.error or "")
 
     # Registry must be cleared on conflict
-    assert get_all_tools() == {}
+    assert get_all_tools().value == {}
 
 
 def test_connect_all_no_conflict_different_names() -> None:
