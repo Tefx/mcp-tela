@@ -190,12 +190,12 @@ def test_connect_all_registers_tools() -> None:
     result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
     assert result.is_ok
 
-    assert get_tool_server("read_file") == "fs"
-    assert get_tool_server("write_file") == "fs"
-    assert get_tool_server("git_status") == "git"
-    assert get_tool_server("nonexistent") is None
+    assert get_tool_server("read_file").value == "fs"
+    assert get_tool_server("write_file").value == "fs"
+    assert get_tool_server("git_status").value == "git"
+    assert get_tool_server("nonexistent").value is None
 
-    all_tools = get_all_tools()
+    all_tools = get_all_tools().value
     assert len(all_tools["fs"]) == 2
     assert len(all_tools["git"]) == 1
 
@@ -317,19 +317,19 @@ def test_disconnect_all_clears_registry() -> None:
     servers = {"srv": ServerConfig(name="srv", command="cmd")}
     tool_lists = {"srv": [{"name": "tool", "inputSchema": {}}]}
     asyncio.run(connect_all(servers, tool_lists=tool_lists))
-    assert get_tool_server("tool") == "srv"
+    assert get_tool_server("tool").value == "srv"
 
     result = asyncio.run(disconnect_all())
     assert result.is_ok
-    assert get_tool_server("tool") is None
-    assert get_all_tools() == {}
+    assert get_tool_server("tool").value is None
+    assert get_all_tools().value == {}
 
 
 def test_connect_all_empty_servers() -> None:
     """connect_all with no servers produces empty registry."""
     result = asyncio.run(connect_all({}))
     assert result.is_ok
-    assert get_all_tools() == {}
+    assert get_all_tools().value == {}
 
 
 # --- Remaining stubs ---
@@ -563,11 +563,11 @@ def test_disconnect_all_after_connect_clears_registry() -> None:
     tool_lists = {"srv": [{"name": "tool", "inputSchema": {}}]}
 
     asyncio.run(connect_all(servers, tool_lists=tool_lists))
-    assert get_tool_server("tool") == "srv"
+    assert get_tool_server("tool").value == "srv"
 
     asyncio.run(disconnect_all())
-    assert get_tool_server("tool") is None
-    assert get_all_tools() == {}
+    assert get_tool_server("tool").value is None
+    assert get_all_tools().value == {}
 
 
 def test_connect_all_clears_previous_state() -> None:
@@ -576,7 +576,7 @@ def test_connect_all_clears_previous_state() -> None:
     servers1 = {"srv1": ServerConfig(name="srv1", command="cmd1")}
     tool_lists1 = {"srv1": [{"name": "tool_a", "inputSchema": {}}]}
     asyncio.run(connect_all(servers1, tool_lists=tool_lists1))
-    assert get_tool_server("tool_a") == "srv1"
+    assert get_tool_server("tool_a").value == "srv1"
 
     # Second connect with different server
     servers2 = {"srv2": ServerConfig(name="srv2", command="cmd2")}
@@ -584,8 +584,8 @@ def test_connect_all_clears_previous_state() -> None:
     asyncio.run(connect_all(servers2, tool_lists=tool_lists2))
 
     # Previous tools should be cleared
-    assert get_tool_server("tool_a") is None
-    assert get_tool_server("tool_b") == "srv2"
+    assert get_tool_server("tool_a").value is None
+    assert get_tool_server("tool_b").value == "srv2"
 
     asyncio.run(disconnect_all())
 
@@ -672,7 +672,7 @@ def test_connect_all_empty_server_dict() -> None:
     result = asyncio.run(connect_all({}))
     assert result.is_ok
     assert result.value is None
-    assert get_all_tools() == {}
+    assert get_all_tools().value == {}
 
 
 def test_registry_empty_after_failed_connect() -> None:
@@ -694,7 +694,7 @@ def test_registry_empty_after_failed_connect() -> None:
     assert result.is_err
 
     # Registry must be cleared on conflict
-    assert get_all_tools() == {}
+    assert get_all_tools().value == {}
 
 
 def test_registry_snapshot_restore_mechanism() -> None:
@@ -756,12 +756,12 @@ def test_disconnect_all_clears_all_servers() -> None:
     }
     asyncio.run(connect_all(servers, tool_lists=tool_lists))
 
-    all_tools = get_all_tools()
+    all_tools = get_all_tools().value
     assert len(all_tools) == 3
 
     asyncio.run(disconnect_all())
 
-    all_tools = get_all_tools()
+    all_tools = get_all_tools().value
     assert len(all_tools) == 0
 
 
@@ -773,7 +773,7 @@ def test_connect_all_then_disconnect_all_is_clean_state() -> None:
     # Connect
     result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
     assert result.is_ok
-    assert get_tool_server("tool") == "srv"
+    assert get_tool_server("tool").value == "srv"
 
     # Verify registry state
     registry = get_registry()
@@ -788,9 +788,9 @@ def test_connect_all_then_disconnect_all_is_clean_state() -> None:
     assert result.is_ok
 
     # Verify clean state
-    assert get_tool_server("tool") is None
+    assert get_tool_server("tool").value is None
     assert registry.get_tool("tool") is None
-    assert get_all_tools() == {}
+    assert get_all_tools().value == {}
 
 
 # --- Transport contract validation (INTERFACES.md 3.1, 9.1) ---
