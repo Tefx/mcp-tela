@@ -15779,6 +15779,69 @@ phases:
 
       - Evidence cites the exact spec sections used by the rewritten fixtures'
     agent: python-executor
+  - id: post_invar.test_alignment.dependency-sensitive-repro
+    name: Harden dependency-sensitive repro coverage
+    status: pending
+    description: 'step_type: test
+
+      agent_source: default
+
+      spec_refs:
+
+      - pyproject.toml[project.dependencies]
+
+      - docs/USAGE.md#pattern-1-stdio-client-integration
+
+      touch_paths:
+
+      - tests/repro/test_medium.py
+
+      - pyproject.toml
+
+      harness_refs:
+
+      - tests/repro/
+
+      - uv run pytest tests/repro/ -q
+
+      consumer_surfaces:
+
+      - packaging/runtime dependency availability
+
+      - repro suite expectations
+
+
+      Review dependency-sensitive repro checks and remove avoidable blind spots.
+
+
+      Required scope:
+
+      - assess whether `FastMCP importable` should remain skip-based now that `fastmcp`
+      is a declared runtime dependency
+
+      - if skip remains necessary, the test description and evidence contract must
+      explain the environment boundary explicitly
+
+      - otherwise convert the check into an asserted runtime dependency proof so the
+      repro suite fails when the packaged runtime is incomplete
+
+      - keep the step bounded to test/repro intent; do not broaden into packaging
+      redesign
+
+
+      Out-of-scope guardrail:
+
+      - no dependency version changes unless strictly required by evidence
+
+      - no unrelated repro-suite refactors'
+    verification: '- Repro dependency check behavior is explicit and non-misleading
+
+      - Evidence states whether missing `fastmcp` is a blocker vs environment exception
+
+      - `tests/repro/` no longer silently hides a declared runtime dependency regression'
+    depends_on:
+    - post_invar.test_alignment.transport-contract-tests
+    agent: python-executor
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
