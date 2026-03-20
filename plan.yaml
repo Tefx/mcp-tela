@@ -16103,6 +16103,57 @@ phases:
     depends_on:
     - post_invar.test_alignment.fix-result-wrapper-assertions
     agent: integration-verifier
+  - id: post_invar.test_alignment.fix-result-wrapper-assertions-loop2
+    name: Fix residual Result-wrapper assertion at downstream line 298
+    status: pending
+    description: 'step_type: implementation
+
+      prior_loop:
+
+      - post_invar.test_alignment.fix-result-wrapper-assertions
+
+      - post_invar.test_alignment.retest-result-wrapper-assertions
+
+      remaining_blocker: `tests/shell/test_downstream.py` still contains one missed
+      raw assertion around line 298: `assert get_all_tools() == {}` must unwrap the
+      Result `.value` contract.
+
+      why_new_loop: prior remediation covered the broader assertion family but missed
+      one residual location that still fails under full-file execution.
+
+      why_previous_fix_failed: the first fix step corrected most stale Result-wrapper
+      assertions but did not sweep the final `get_all_tools()` raw equality assertion
+      near line 298.
+
+
+      Fix ONLY this residual assertion in `tests/shell/test_downstream.py`.
+
+
+      Scope constraints:
+
+      - edit only the missed assertion around line 298 so it asserts on the Result
+      wrapper `.value`
+
+      - do not broaden into transport behavior, production code, or unrelated test
+      cleanup
+
+      - preserve the rest of the file unless required for that single assertion correction
+
+
+      Known risk:
+
+      - a narrow `-k "transport"` run can miss this family; the fix must be written
+      for the full-file contract, not the filtered subset.
+
+      '
+    verification: '- Edit only the missed residual assertion around `tests/shell/test_downstream.py:298`
+      so it unwraps/asserts on `.value`
+
+      - No other scope expansion beyond that single residual assertion family location
+
+      - Evidence must state that the change was limited to this missed assertion and
+      did not alter unrelated downstream tests or production code'
+    agent: python-executor
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
