@@ -16004,7 +16004,7 @@ phases:
     agent: gate-reviewer
   - id: post_invar.test_alignment.fix-result-wrapper-assertions
     name: Fix Result-wrapper downstream assertions
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       Fix the blocked downstream assertion family in `tests/shell/test_downstream.py`
@@ -16043,6 +16043,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.verify
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T20:53:18.688185+00:00'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions
     name: Retest Result-wrapper downstream assertions
     status: pending
