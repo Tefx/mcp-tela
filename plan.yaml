@@ -15712,7 +15712,7 @@ phases:
   steps:
   - id: post_invar.test_alignment.transport-contract-tests
     name: Align transport contract tests with authoritative validation path
-    status: claimed
+    status: done
     description: 'step_type: test
 
       agent_source: default
@@ -15781,6 +15781,26 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-20T20:33:46.066867+00:00'
+    done_at: '2026-03-20T20:40:30.256449+00:00'
+    evidence: 'Artifact:
+
+      - PR: 687837c
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_downstream.py tests/core/test_config.py
+      -v -k "transport" -> 7 passed, 59 deselected
+
+      - Run: uv run ruff check tests/shell/test_downstream.py tests/core/test_config.py
+      -> all checks passed
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#tela-interface-specification/3-configuration-contract/3-1-servers
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior'
   - id: post_invar.test_alignment.dependency-sensitive-repro
     name: Harden dependency-sensitive repro coverage
     status: pending
