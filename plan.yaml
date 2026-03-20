@@ -15970,7 +15970,7 @@ phases:
       - pyproject.toml[project.dependencies]'
   - id: post_invar.test_alignment.gate
     name: Gate post-Invar test alignment
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -16003,6 +16003,8 @@ phases:
     - post_invar.test_alignment.retest-result-wrapper-assertions
     - post_invar.test_alignment.retest-result-wrapper-assertions-loop2
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-20T21:15:49.510302+00:00'
   - id: post_invar.test_alignment.fix-result-wrapper-assertions
     name: Fix Result-wrapper downstream assertions
     status: done
