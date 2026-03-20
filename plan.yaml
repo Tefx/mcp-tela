@@ -16106,7 +16106,7 @@ phases:
     agent: integration-verifier
   - id: post_invar.test_alignment.fix-result-wrapper-assertions-loop2
     name: Fix residual Result-wrapper assertion at downstream line 298
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       prior_loop:
@@ -16155,6 +16155,8 @@ phases:
       - Evidence must state that the change was limited to this missed assertion and
       did not alter unrelated downstream tests or production code'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T21:10:31.522790+00:00'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions-loop2
     name: Retest residual Result-wrapper assertion after loop 2 fix
     status: pending
