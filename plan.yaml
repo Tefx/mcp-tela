@@ -16408,13 +16408,13 @@ phases:
       - post_invar.test_alignment.gate should-fix finding on tool_lists annotation'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
-  status: pending
+  status: in_progress
   depends_on:
   - post_invar.test_alignment
   steps:
   - id: post_invar.final_audit.wiring
     name: Post-Invar wiring audit
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -16483,6 +16483,8 @@ phases:
 
       - CLI and gateway wiring is still coherent after the remediation tail'
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-20T21:27:30.875233+00:00'
   - id: post_invar.final_audit.spec
     name: Post-Invar spec conformance audit
     status: pending
