@@ -15706,7 +15706,7 @@ phases:
       \ are closed in cold retest environment.\n\nSpec link:\n- Step invar1203.retest-batched-should-fix"
 - id: post_invar.test_alignment
   name: Post-Invar Test Alignment
-  status: in_progress
+  status: done
   depends_on:
   - invar1203
   steps:
@@ -16342,7 +16342,7 @@ phases:
       - post_invar.test_alignment.gate should-fix finding for tool_lists annotation'
   - id: post_invar.test_alignment.retest-should-fix-type-annotation
     name: Retest should-fix type annotation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
 
@@ -16389,9 +16389,26 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-20T21:25:53.025056+00:00'
+    done_at: '2026-03-20T21:27:19.262268+00:00'
+    evidence: 'Artifact:
+
+      - PR: verification evidence against commit 392769f
+
+
+      Verification:
+
+      - Run: uv run mypy tests/shell/test_downstream.py --ignore-missing-imports ->
+      success, no issues
+
+      - Run: uv run pytest tests/shell/test_downstream.py -v -> 47 passed
+
+
+      Spec link:
+
+      - post_invar.test_alignment.gate should-fix finding on tool_lists annotation'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
-  status: locked
+  status: pending
   depends_on:
   - post_invar.test_alignment
   steps:
