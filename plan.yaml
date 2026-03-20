@@ -17031,7 +17031,9 @@ phases:
 
       - Retest step will provide independent command/output evidence'
     depends_on:
-    - post_invar.final_audit.gate
+    - post_invar.final_audit.wiring
+    - post_invar.final_audit.spec
+    - post_invar.final_audit.blackbox
     agent: python-executor
   - id: post_invar.final_audit.retest-result-wrapper-drift-batch
     name: Retest Result wrapper drift batch
