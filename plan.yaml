@@ -15935,3 +15935,75 @@ phases:
   status: locked
   depends_on:
   - post_invar.test_alignment
+  steps:
+  - id: post_invar.final_audit.wiring
+    name: Post-Invar wiring audit
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/DESIGN.md#tela-design/module-boundaries
+
+      - docs/INTERFACES.md#tela-interface-specification/2-cli-surface
+
+      - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract
+
+      touch_paths:
+
+      - src/tela/cli.py
+
+      - src/tela/commands/
+
+      - src/tela/shell/
+
+      - src/tela/core/
+
+      harness_refs:
+
+      - CLI entrypoint
+
+      - gateway startup path
+
+      - downstream client registry
+
+      consumer_surfaces:
+
+      - CLI
+
+      - MCP upstream server
+
+      - downstream fastmcp client
+
+      - persisted config readers
+
+
+      Wiring completeness audit after the Invar remediation tail.
+
+
+      REQUIRED CHECKS:
+
+      1. Export/runtime reachability for public shell and core helpers touched by
+      `invar1203`
+
+      2. CLI command registration and dispatch completeness
+
+      3. Config-field consumption for runtime surfaces affected by shell_result /
+      contract remediation
+
+      4. No stale escape-hatch or dead helper path remains after the final remediation
+      wave
+
+
+      Use grep/import-trace/runtime-path evidence, not assertions.'
+    verification: '- Evidence lists any orphaned public surfaces or confirms none
+      remain
+
+      - Runtime-facing helpers touched by `invar1203` have reachable consumers
+
+      - CLI and gateway wiring is still coherent after the remediation tail'
+    agent: wiring-auditor
