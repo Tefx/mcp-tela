@@ -15704,3 +15704,8 @@ phases:
       \  - missing_doctest on ProfileConfig.tools\n  - review_suggested on token.py\n\
       \nVerdict:\n- PASS\n- Rationale: all previously batched should-fix families\
       \ are closed in cold retest environment.\n\nSpec link:\n- Step invar1203.retest-batched-should-fix"
+- id: post_invar.test_alignment
+  name: Post-Invar Test Alignment
+  status: pending
+  depends_on:
+  - invar1203
