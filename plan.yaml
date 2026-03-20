@@ -16342,7 +16342,7 @@ phases:
       - post_invar.test_alignment.gate should-fix finding for tool_lists annotation'
   - id: post_invar.test_alignment.retest-should-fix-type-annotation
     name: Retest should-fix type annotation
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
 
@@ -16387,6 +16387,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.fix-should-fix-type-annotation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-20T21:25:53.025056+00:00'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
