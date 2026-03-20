@@ -16181,7 +16181,7 @@ phases:
       contract in tests/shell/test_downstream.py'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions-loop2
     name: Retest residual Result-wrapper assertion after loop 2 fix
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (`integration-verifier`), validate the single residual
@@ -16219,6 +16219,8 @@ phases:
     depends_on:
     - post_invar.test_alignment.fix-result-wrapper-assertions-loop2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-20T21:12:30.241725+00:00'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
