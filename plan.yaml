@@ -16080,3 +16080,31 @@ phases:
     depends_on:
     - post_invar.final_audit.wiring
     agent: doc-reviewer
+  - id: post_invar.final_audit.blackbox
+    name: Post-Invar black-box runtime verification
+    status: pending
+    description: "step_type: verification\nagent_source: default\ntags: [\"integration\"\
+      ]\nspec_refs:\n- docs/USAGE.md\n- docs/INTERFACES.md#tela-interface-specification/2-cli-surface\n\
+      - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface\ntouch_paths:\n\
+      - src/tela/cli.py\n- src/tela/commands/\n- src/tela/shell/gateway.py\n- tests/repro/\n\
+      harness_refs:\n- CLI invocation path\n- repro fixtures\n- runtime startup path\n\
+      consumer_surfaces:\n- CLI\n- stdio transport\n- SSE transport assumptions\n\
+      - repro consumers\n\nIntegration companion: provide end-to-end real-path evidence\
+      \ on the settled repo state.\n\nRequired scope:\n- exercise at least one real\
+      \ CLI command path and one config-loading path\n- verify the runtime entrypoint\
+      \ still starts through the documented path\n- confirm the updated repro/test\
+      \ assumptions surface failures instead of silently masking them\n\nevidence_template:\
+      \ |\n  ## Integration Evidence\n\n  **Command or test exercising the full path**:\n\
+      \  ```\n  <exact command or test name that invokes source through sink>\n  ```\n\
+      \n  **Actual output** (paste, not \"tests pass\"):\n  ```\n  <stdout/stderr\
+      \ or test runner output>\n  ```\n\n  **Path exercised**: <source module> ->\
+      \ ... -> <sink module>"
+    verification: '- Main path: at least one real CLI/runtime invocation is evidenced
+
+      - Failure path: evidence shows updated tests/repro would surface contract or
+      dependency regressions
+
+      - Proof includes exact command/output, not summary only'
+    depends_on:
+    - post_invar.final_audit.spec
+    agent: blind-tester
