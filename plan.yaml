@@ -15887,7 +15887,7 @@ phases:
       - docs/USAGE.md#pattern-1-stdio-client-integration'
   - id: post_invar.test_alignment.verify
     name: Independent verification of post-Invar test alignment
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -15942,6 +15942,32 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-20T20:45:16.222027+00:00'
+    done_at: '2026-03-20T20:47:32.077402+00:00'
+    evidence: 'Artifact:
+
+      - PR: verification evidence from integration-verifier run in step worktree (no
+      code changes)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_downstream.py tests/core/test_config.py
+      -v -k "transport" -> 7 passed, 59 deselected
+
+      - Run: uv run pytest tests/repro/test_medium.py::TestM7FastMCPImportable -v
+      -> 1 passed
+
+      - Run: uv run pytest tests/repro/ -q -> 49 passed, 1 failed (documented unrelated
+      pre-existing failure)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#tela-interface-specification/3-configuration-contract/3-1-servers
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior
+
+      - pyproject.toml[project.dependencies]'
   - id: post_invar.test_alignment.gate
     name: Gate post-Invar test alignment
     status: pending
