@@ -16042,6 +16042,46 @@ phases:
     depends_on:
     - post_invar.test_alignment.verify
     agent: python-executor
+  - id: post_invar.test_alignment.retest-result-wrapper-assertions
+    name: Retest Result-wrapper downstream assertions
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (`integration-verifier`), re-run the downstream test
+      surface for the Result-wrapper assertion blocker family after the batched fix.
+
+
+      You are validating that the fix closes the full failing family without the prior
+      filter loophole.
+
+
+      Required coverage:
+
+      - run the full `tests/shell/test_downstream.py -v` suite
+
+      - run targeted transport/repro checks only as supplemental evidence
+
+      - explicitly forbid relying only on `-k "transport"` or any equivalently narrow
+      filter as proof of completion
+
+      - confirm the previously failing `get_tool_server` / `get_all_tools` assertions
+      now pass under full-file execution
+
+      '
+    verification: '- Run full `pytest tests/shell/test_downstream.py -v`
+
+      - Run any targeted transport/repro checks only in addition to the full-file
+      run
+
+      - Evidence must explicitly state that `-k "transport"` alone is insufficient
+      and was not used as the sole proof
+
+      - No remaining failures in the Result-wrapper assertion family
+
+      '
+    depends_on:
+    - post_invar.test_alignment.fix-result-wrapper-assertions
+    agent: integration-verifier
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
