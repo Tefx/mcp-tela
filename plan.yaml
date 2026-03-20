@@ -16108,3 +16108,44 @@ phases:
     depends_on:
     - post_invar.final_audit.spec
     agent: blind-tester
+  - id: post_invar.final_audit.gate
+    name: Final gate after post-Invar supplementation
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - This is the closing audit after all major remediation waves
+
+      - Phase mixes wiring, doc/spec conformance, and black-box runtime verification
+
+      - Goal is to certify there are no residual planning gaps in implementation/test/wiring/review
+      coverage
+
+      cross_cutting_focus:
+
+      - no stale future-work wording remains for implemented behavior
+
+      - no post-remediation wiring drift remains
+
+      - runtime/docs/tests agree on the same contract facts
+
+
+      As an INDEPENDENT REVIEWER, assess whether the repository now has complete coverage
+      for the remaining implementation, test, wiring, and review obligations identified
+      during the supplemental planning pass.'
+    verification: '- All supplemental phase steps completed successfully
+
+      - Evidence quality is specific and reviewable
+
+      - Any remaining issues are explicitly classified as blocker/should_fix/suggestion/tech_debt
+
+      - Repository is ready to treat implementation/test/wiring/review planning as
+      closed'
+    depends_on:
+    - post_invar.final_audit.wiring
+    - post_invar.final_audit.spec
+    - post_invar.final_audit.blackbox
+    agent: gate-reviewer
