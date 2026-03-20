@@ -112,13 +112,28 @@ class TestM6BoundedAuditStore:
 
 
 class TestM7FastMCPImportable:
-    """M7: FastMCP must be importable."""
+    """M7: FastMCP must be importable as runtime dependency proof.
 
-    def test_fastmcp_importable(self) -> None:
-        try:
-            from mcp.server.fastmcp import FastMCP  # noqa: F401
-        except ImportError:
-            pytest.skip("mcp package not installed")
+    Per pyproject.toml, fastmcp>=2.0.0 is a declared runtime dependency.
+    This test proves the packaged runtime is complete by asserting the
+    dependency is available at import time.
+
+    Since fastmcp is declared in project.dependencies, a missing import
+    indicates a packaging regression, not an environment exception.
+    Test failure must surface this regression rather than skip silently.
+    """
+
+    def test_fastmcp_v2_importable(self) -> None:
+        """Assert fastmcp (FastMCP v2+) is importable via canonical path.
+
+        FastMCP v2+ uses 'from fastmcp import FastMCP' as the canonical import.
+        This test proves the packaged runtime dependency is available.
+        If this test fails, the packaging or dependency installation is broken.
+        """
+        from fastmcp import FastMCP  # noqa: F401
+
+        # Import succeeded - the declared runtime dependency is available
+        # No exception means the packaged runtime is complete
 
 
 # --- M8: Unset env var errors ---
