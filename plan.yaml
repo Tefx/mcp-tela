@@ -16653,7 +16653,7 @@ phases:
     agent: gate-reviewer
   - id: post_invar.final_audit.fix-spec-audit-issues
     name: Fix spec audit issues
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -16770,6 +16770,28 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-20T21:43:17.407204+00:00'
+    done_at: '2026-03-20T21:57:19.675219+00:00'
+    evidence: 'Artifact:
+
+      - PR: 94d3f77
+
+
+      Verification:
+
+      - Run: uv run pytest --doctest-modules src/tela/core/contracts.py tests/integration/test_audit_levels.py
+      -v -> 14 passed
+
+      - Checks: strip_meta usage aligned to Result handling; contracts doctest aligned
+      to PreContractError; docs/USAGE no tests/blind legacy reference
+
+
+      Spec link:
+
+      - docs/USAGE.md
+
+      - src/tela/core/contracts.py doctests
+
+      - tests/integration/test_audit_levels.py'
   - id: post_invar.final_audit.retest-spec-audit-issues
     name: Retest spec audit issues
     status: pending
