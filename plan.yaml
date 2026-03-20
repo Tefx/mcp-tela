@@ -15706,13 +15706,13 @@ phases:
       \ are closed in cold retest environment.\n\nSpec link:\n- Step invar1203.retest-batched-should-fix"
 - id: post_invar.test_alignment
   name: Post-Invar Test Alignment
-  status: pending
+  status: in_progress
   depends_on:
   - invar1203
   steps:
   - id: post_invar.test_alignment.transport-contract-tests
     name: Align transport contract tests with authoritative validation path
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       agent_source: default
@@ -15779,6 +15779,8 @@ phases:
 
       - Evidence cites the exact spec sections used by the rewritten fixtures'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T20:33:46.066867+00:00'
   - id: post_invar.test_alignment.dependency-sensitive-repro
     name: Harden dependency-sensitive repro coverage
     status: pending
