@@ -16004,7 +16004,7 @@ phases:
     agent: gate-reviewer
   - id: post_invar.test_alignment.fix-result-wrapper-assertions
     name: Fix Result-wrapper downstream assertions
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       Fix the blocked downstream assertion family in `tests/shell/test_downstream.py`
@@ -16045,6 +16045,24 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-20T20:53:18.688185+00:00'
+    done_at: '2026-03-20T20:57:51.630905+00:00'
+    evidence: 'Artifact:
+
+      - PR: 5e978c7
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_downstream.py -v -> 47 passed
+
+
+      Spec link:
+
+      - src/tela/shell/downstream.py:get_all_tools return contract Result[dict[str,
+      list[ResolvedTool]], str]
+
+      - src/tela/shell/downstream.py:get_tool_server return contract Result[str |
+      None, str]'
   - id: post_invar.test_alignment.retest-result-wrapper-assertions
     name: Retest Result-wrapper downstream assertions
     status: pending
