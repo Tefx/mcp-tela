@@ -793,38 +793,159 @@ def test_connect_all_then_disconnect_all_is_clean_state() -> None:
     assert get_all_tools() == {}
 
 
-# --- ServerConfig validation for transport ---
+# --- Transport contract validation (INTERFACES.md 3.1, 9.1) ---
 
 
-def test_server_config_rejects_both_command_and_url() -> None:
-    """ServerConfig with both command and url is invalid per INTERFACES.md 9.1.
+def test_transport_mixed_command_and_url_rejected_by_validate_config() -> None:
+    """Mixed transport (both command and url) is rejected at validation boundary.
 
-    Per spec: mixed transport fields (command and url both set) are invalid
-    and must be rejected as a config/runtime contract violation.
+    Per INTERFACES.md sections 3.1 and 9.1:
+    - Required transport choice: command OR url, not both
+    - Mixed transport fields are invalid and must be rejected as config contract violation
 
-    Note: Current model validation does not enforce this; tests document the
-    expected future validation contract.
+    This test proves the authoritative validation path in `validate_config` enforces
+    the contract, not permissive model construction.
     """
-    # Pydantic model currently allows both, but this is a config error
-    # that should be caught during validation (future enforcement)
-    config = ServerConfig(name="invalid", command="cmd", url="http://host/sse")
-    # Document current behavior (no validation) vs expected behavior
-    # This test documents that validation should be added
-    assert config.command == "cmd"
-    assert config.url == "http://host/sse"
-    # TODO: Add validation in config parsing step to reject this
+    from tela.core.config import validate_config
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ProfileConfig,
+        ServerConfig,
+        TelaConfig,
+    )
+
+    # Per spec 3.1: minimal server format is name + transport
+    config = TelaConfig(
+        servers={"bad": ServerConfig(name="bad", command="cmd", url="http://host/sse")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+
+    # Contract boundary: validate_config must reject ambiguous transport
+    assert len(errors) == 1
+    assert "SERVER_AMBIGUOUS_TRANSPORT" in errors[0]
+    assert "'bad'" in errors[0]
 
 
-def test_server_config_requires_transport() -> None:
-    """ServerConfig requires exactly one transport (command OR url).
+def test_transport_missing_both_command_and_url_rejected_by_validate_config() -> None:
+    """Missing transport (neither command nor url) is rejected at validation boundary.
 
-    A server config without any transport is invalid.
+    Per INTERFACES.md sections 3.1 and 9.1:
+    - Required transport choice: command OR url
+    - A server without any transport is invalid
 
-    Note: Current model allows this; tests document expected future validation.
+    This test proves the authoritative validation path in `validate_config` enforces
+    the contract, not permissive model construction.
     """
-    # Pydantic model currently allows neither, but this is a config error
-    config = ServerConfig(name="invalid")
-    # Document current behavior (no validation) vs expected behavior
-    assert config.command is None
-    assert config.url is None
-    # TODO: Add validation in config parsing step to require exactly one transport
+    from tela.core.config import validate_config
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ProfileConfig,
+        ServerConfig,
+        TelaConfig,
+    )
+
+    # ServerConfig model is permissive at construction; validation happens at config boundary
+    config = TelaConfig(
+        servers={"bad": ServerConfig(name="bad")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+
+    # Contract boundary: validate_config must reject missing transport
+    assert len(errors) == 1
+    assert "SERVER_MISSING_TRANSPORT" in errors[0]
+    assert "'bad'" in errors[0]
+
+
+def test_transport_command_only_is_valid_per_spec() -> None:
+    """Server with only command is valid per INTERFACES.md 3.1 minimal server format.
+
+    Per spec 3.1:
+    - command for stdio
+    - Minimal format: name + command (no convenience fields required)
+    """
+    from tela.core.config import validate_config
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ProfileConfig,
+        ServerConfig,
+        TelaConfig,
+    )
+
+    # Exact documented minimal server format: name + command
+    config = TelaConfig(
+        servers={"fs": ServerConfig(name="fs", command="npx")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    assert errors == []
+
+
+def test_transport_url_only_is_valid_per_spec() -> None:
+    """Server with only url is valid per INTERFACES.md 3.1 minimal server format.
+
+    Per spec 3.1:
+    - url for SSE
+    - Minimal format: name + url (no convenience fields required)
+    """
+    from tela.core.config import validate_config
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ProfileConfig,
+        ServerConfig,
+        TelaConfig,
+    )
+
+    # Exact documented minimal server format: name + url
+    config = TelaConfig(
+        servers={"remote": ServerConfig(name="remote", url="http://host:8080/sse")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    assert errors == []
+
+
+def test_transport_validation_via_load_config_path() -> None:
+    """Transport validation is enforced through the full load_config path.
+
+    Per INTERFACES.md 9.1: connect_all must reject mixed/missing transport as
+    config/runtime contract violation. The validation happens in validate_config
+    which is called by load_config.
+    """
+    from pathlib import Path
+    from tela.shell.config_loader import load_config
+
+    # Create temp config with missing transport
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        f.write(
+            "servers:\n"
+            "  bad:\n"
+            "    name: bad\n"
+            "profiles:\n"
+            "  dev:\n"
+            "    name: dev\n"
+            "    default: true\n"
+            "auth:\n"
+            "  mode: open\n"
+        )
+        f.flush()
+        config_path = Path(f.name)
+
+    try:
+        result = load_config(config_path)
+        # Contract enforcement: load_config must return error for invalid config
+        assert result.is_err
+        assert "SERVER_MISSING_TRANSPORT" in (result.error or "")
+    finally:
+        config_path.unlink(missing_ok=True)
