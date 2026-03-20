@@ -15970,7 +15970,7 @@ phases:
       - pyproject.toml[project.dependencies]'
   - id: post_invar.test_alignment.gate
     name: Gate post-Invar test alignment
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -16001,6 +16001,8 @@ phases:
     - post_invar.test_alignment.dependency-sensitive-repro
     - post_invar.test_alignment.verify
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-20T20:47:52.173472+00:00'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
