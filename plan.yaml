@@ -16954,7 +16954,7 @@ phases:
       - tests/integration/test_audit_levels.py'
   - id: post_invar.final_audit.fix-result-wrapper-drift-batch
     name: Fix Result wrapper drift batch
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       Fix ALL findings from `post_invar.final_audit.gate` in one batched remediation
@@ -17036,6 +17036,8 @@ phases:
     - post_invar.final_audit.spec
     - post_invar.final_audit.blackbox
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-20T22:11:43.134699+00:00'
   - id: post_invar.final_audit.retest-result-wrapper-drift-batch
     name: Retest Result wrapper drift batch
     status: pending
