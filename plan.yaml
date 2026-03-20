@@ -15842,6 +15842,61 @@ phases:
     depends_on:
     - post_invar.test_alignment.transport-contract-tests
     agent: python-executor
+  - id: post_invar.test_alignment.verify
+    name: Independent verification of post-Invar test alignment
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/INTERFACES.md#tela-interface-specification/3-configuration-contract/3-1-servers
+
+      - docs/INTERFACES.md#tela-interface-specification/9-downstream-fastmcp-client-contract/9-1-connect-all-transport-behavior
+
+      touch_paths:
+
+      - tests/shell/test_downstream.py
+
+      - tests/repro/test_medium.py
+
+      - tests/core/test_config.py
+
+      harness_refs:
+
+      - tests/core/test_config.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/repro/
+
+
+      As an INDEPENDENT TESTER, validate that the aligned tests now exercise the real
+      authoritative paths and no longer encode obsolete future-work assumptions.
+
+
+      Independence Level: L1
+
+      Test for:
+
+      - happy-path transport fixtures
+
+      - missing/mixed transport rejection on the real validation path
+
+      - dependency-sensitive repro behavior for declared runtime dependencies
+
+      - residual misleading TODO/future-validation wording in the touched tests'
+    verification: '- Run targeted transport and repro suites exercising the updated
+      tests
+
+      - Evidence includes actual commands and whether failures would now surface correctly
+
+      - Verification is successful whether it passes cleanly or finds issues that
+      require remediation'
+    depends_on:
+    - post_invar.test_alignment.dependency-sensitive-repro
+    agent: integration-verifier
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
