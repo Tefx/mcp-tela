@@ -16007,3 +16007,76 @@ phases:
 
       - CLI and gateway wiring is still coherent after the remediation tail'
     agent: wiring-auditor
+  - id: post_invar.final_audit.spec
+    name: Post-Invar spec conformance audit
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+      - docs/USAGE.md
+
+      - INVAR.md
+
+      touch_paths:
+
+      - src/tela/core/
+
+      - src/tela/shell/
+
+      - src/tela/cli.py
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+      - docs/USAGE.md
+
+      - INVAR.md
+
+      harness_refs:
+
+      - authoritative docs
+
+      - contract-oriented tests
+
+      consumer_surfaces:
+
+      - CLI
+
+      - config parsing
+
+      - gateway runtime
+
+      - guard/contract expectations
+
+
+      Compare the settled implementation and tests against the authoritative docs
+      after Invar Guard remediation and test alignment.
+
+
+      Required checks:
+
+      - config/transport/auth behavior still matches the documented contract
+
+      - CLI/runtime behavior described in docs has corresponding implemented surfaces
+
+      - Invar-related command-family and contract language remains accurate after
+      `invar1203`
+
+      - test wording/docs do not imply future work where implementation already exists'
+    verification: '- Conformance report cites spec section to implementation/test
+      location
+
+      - Any doc drift is surfaced explicitly as issues, not hand-waved
+
+      - Verdict is PASS or ISSUES_FOUND with concrete locations'
+    depends_on:
+    - post_invar.final_audit.wiring
+    agent: doc-reviewer
