@@ -16243,6 +16243,102 @@ phases:
 
       - post_invar.test_alignment.retest-result-wrapper-assertions-loop2 verification
       contract'
+  - id: post_invar.test_alignment.fix-should-fix-type-annotation
+    name: Fix should-fix type annotation
+    status: pending
+    description: 'step_type: implementation
+
+
+      Fix only the remaining SHOULD_FIX from `post_invar.test_alignment.gate`: add
+      an explicit type annotation for `tool_lists` in `tests/shell/test_downstream.py`
+      around the reported line 623.
+
+
+      Scope is intentionally minimal:
+
+      - touch `tests/shell/test_downstream.py` only
+
+      - annotate `tool_lists` explicitly
+
+      - no unrelated refactors, assertion rewrites, or helper changes
+
+
+      spec_refs:
+
+      - gate finding from `post_invar.test_alignment.gate`
+
+
+      touch_paths:
+
+      - tests/shell/test_downstream.py
+
+
+      harness_refs:
+
+      - mypy/type-check path for `tests/shell/test_downstream.py`
+
+
+      known_risks:
+
+      - keep the change local so the remediation does not reopen prior downstream
+      assertion loops'
+    verification: '- Add an explicit annotation for `tool_lists` in `tests/shell/test_downstream.py`
+
+      - Run file-scoped type checking sufficient to prove the reported warning is
+      addressed
+
+      - Evidence must show the remediation is limited to the type annotation issue
+      only'
+    depends_on:
+    - post_invar.test_alignment.gate
+    agent: python-executor
+  - id: post_invar.test_alignment.retest-should-fix-type-annotation
+    name: Retest should-fix type annotation
+    status: pending
+    description: 'step_type: verification
+
+
+      As an INDEPENDENT TESTER (`integration-verifier`), verify the type-annotation
+      remediation from `post_invar.test_alignment.fix-should-fix-type-annotation`
+      from a fresh perspective.
+
+
+      Validate only this issue family:
+
+      - the mypy warning for `tool_lists` in `tests/shell/test_downstream.py` is gone
+
+      - the file''s relevant tests still pass
+
+
+      spec_refs:
+
+      - gate finding from `post_invar.test_alignment.gate`
+
+
+      touch_paths:
+
+      - tests/shell/test_downstream.py
+
+
+      harness_refs:
+
+      - mypy/type-check path for `tests/shell/test_downstream.py`
+
+      - downstream shell test file execution
+
+
+      Independence Level: L1'
+    verification: '- Independently confirm the `tool_lists` warning no longer appears
+      for `tests/shell/test_downstream.py`
+
+      - Run the relevant tests for `tests/shell/test_downstream.py` and confirm they
+      still pass
+
+      - Evidence must include actual command(s) used and the outcome for both type
+      checking and tests'
+    depends_on:
+    - post_invar.test_alignment.fix-should-fix-type-annotation
+    agent: integration-verifier
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
   status: locked
