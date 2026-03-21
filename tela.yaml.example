@@ -8,7 +8,7 @@
 #
 # Quick Start:
 #   cp tela.yaml.example tela.yaml
-#   tela start --config tela.yaml
+#   tela connect --config tela.yaml
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -131,10 +131,9 @@ servers:
 # -----------------------------------------------------------------------------
 # Profiles define access control rules for connected clients.
 # Each profile specifies:
-#   - Which tool families are accessible (tools)
+#   - Which tool families are accessible (capabilities)
 #   - Maximum posture level per family
 #   - Per-tool allow/deny overrides
-#   - Side-effect policy (allow mutations or read-only)
 #
 # When auth.mode is "open", one profile MUST have default: true
 #
@@ -261,7 +260,10 @@ profiles:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
-    
+      # tela_admin grants access to introspection tools:
+      # tela.status, tela.connections, tela.audit, tela.profiles
+      tela_admin: "read_only"
+
     # Per-tool fine control within family posture ceiling
     # NOTE: The structure requires 'overrides' nesting:
     #   tool_overrides:
@@ -447,10 +449,9 @@ audit:
 # =============================================================================
 #
 # Start the gateway:
-#   tela start --config tela.yaml                                 # stdio
-#   tela start --config tela.yaml --port 8080                     # Streamable HTTP (default)
-#   tela start --config tela.yaml --port 8080 --transport sse     # Legacy SSE
-#   tela start --config tela.yaml --default-profile developer
+#   tela connect --config tela.yaml                                # auto-discover/auto-start
+#   tela serve --config tela.yaml --port 8080                      # explicit server
+#   tela serve --config tela.yaml --host 0.0.0.0 --port 8080      # LAN deployment
 #
 # Inspect state:
 #   tela status [--json]
@@ -524,8 +525,10 @@ audit:
 # SEE ALSO
 # =============================================================================
 #
-# Documentation: docs/DESIGN.md
-# CLI Reference:  tela --help
+# Operator Guide:    docs/USAGE.md
+# Interface Spec:    docs/INTERFACES.md
+# Architecture:      docs/DESIGN.md
+# CLI Reference:     tela --help
 # Built-in Profiles: src/tela/core/catalog.py
 #
 # =============================================================================

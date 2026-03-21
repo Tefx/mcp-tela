@@ -19,12 +19,18 @@ It does not own:
 ## 2. CLI Surface
 
 ```text
-tela start [--config path] [--port port] [--transport {stdio,sse,http}] [--default-profile name]
-tela status [--json]
+tela connect [--config path] [--default-profile name] [--server host:port]
+tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec]
+tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
-tela audit [--json] [--since T] [--limit N]
+tela audit   [--json] [--since T] [--limit N]
 ```
+
+`tela connect` is the client entry point (stdio bridge with auto-discover/auto-start).
+`tela serve` is the server entry point (HTTP gateway).
+Query commands (`status`, `connections`, `audit`) discover the running server via
+`~/.tela/gateway.lock` and query over HTTP.
 
 ## 3. Configuration Contract
 
@@ -66,9 +72,11 @@ profiles:
     capabilities:
       filesystem: read_write
       git: read_only
+      tela_admin: read_only
     tool_overrides:
       filesystem:
-        delete_file: deny
+        overrides:
+          delete_file: deny
 ```
 
 Normative rules:
@@ -88,6 +96,17 @@ In token mode, a CapabilityToken binds the connection to one profile.
 ### 3.4 Audit
 
 Audit logging is configured independently of authorization semantics.
+
+Levels: `L1` (minimal), `L2` (standard), `L3` (verbose diagnostic).
+
+Each `AuditEntry` includes:
+- `timestamp`, `level`, `instance_id`, `connection_id`, `profile_name`
+- `tool_name`, `server_name`, `verdict`, `denied_by`, `error_code`
+- `latency_ms`, `param_hash` (L2+), `request_content`/`response_content` (L3)
+- `meta` (trace fields from `_meta` argument)
+
+`instance_id` is generated per `tela serve` invocation and identifies the
+server instance that produced each entry.
 
 ## 4. Posture Model
 
@@ -146,7 +165,48 @@ Approval and runtime read-only behavior are owned by the runtime layer.
 The upstream MCP surface exposes:
 - filtered `tools/list`
 - authorized `tools/call`
-- profile inspection via `tela.profiles`
+- introspection tools (`tela.status`, `tela.connections`, `tela.audit`, `tela.profiles`)
+
+### 7.1 Introspection Tools
+
+| Tool | Family | Posture | Description |
+|------|--------|---------|-------------|
+| `tela.status` | `tela_admin` | `read_only` | Gateway runtime status |
+| `tela.connections` | `tela_admin` | `read_only` | Active upstream connections |
+| `tela.audit` | `tela_admin` | `read_only` | Audit log query |
+| `tela.profiles` | `tela_admin` | `read_only` | Profile configuration |
+
+The `tela.` prefix is reserved. Downstream tools with this prefix are rejected
+as conflicts.
+
+### 7.2 HTTP Endpoints
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `GET /health` | None | Liveness check: `{"status":"ok","pid":N}` |
+| `GET /status` | Bearer token | Full runtime status |
+| `POST /connect` | Bearer token | Register bridge connection |
+| `POST /disconnect` | Bearer token | Unregister bridge connection |
+| `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint |
+
+### 7.3 Lockfile Contract
+
+Location: `~/.tela/gateway.lock`
+
+```json
+{
+  "pid": 12345,
+  "host": "127.0.0.1",
+  "port": 49152,
+  "token": "bearer-token-here",
+  "started_at": "2026-03-22T10:00:00Z",
+  "config_path": "/path/to/tela.yaml",
+  "version": "0.1.0"
+}
+```
+
+Written atomically by `tela serve` on startup. Deleted on shutdown.
+Stale detection via PID liveness check.
 
 ### `tela.profiles`
 

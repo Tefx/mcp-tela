@@ -12,11 +12,9 @@ Use tela when you want to:
 - constrain tool usage by profile
 - enforce read-only or destructive ceilings by family
 - centralize audit logging
-- share a single gateway across multiple agents
+- share a single gateway across multiple agents without duplicating downstream processes
 
 ## Documentation map
-
-Use the docs in this order:
 
 - `README.md`: quickest way to understand what tela is and how to launch it
 - `docs/USAGE.md`: operator guide, deployment patterns, and worked examples
@@ -26,28 +24,21 @@ Use the docs in this order:
 
 ## Mental model
 
-At runtime, tela works like this:
-
 ```text
-MCP client(s) -> tela -> downstream MCP servers
+MCP client ──stdio──→ tela connect ──HTTP──→ tela serve ──stdio/HTTP──→ downstream servers
 ```
 
-tela does not replace downstream servers. It brokers access to them.
+`tela connect` is what your MCP host launches. It bridges stdio to a shared
+`tela serve` gateway. Multiple clients share one gateway — downstream servers
+are spawned once.
 
 ## Installation
-
-Install from the project root:
 
 ```bash
 pip install -e .
 ```
 
-If you use `uv`, the same editable install pattern works through your existing
-workflow.
-
 ## First-time setup
-
-Copy the example configuration and edit it for your environment:
 
 ```bash
 cp tela.yaml.example tela.yaml
@@ -130,6 +121,7 @@ profiles:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
+      tela_admin: "read_only"
     tool_overrides:
       filesystem:
         overrides:
@@ -139,6 +131,9 @@ profiles:
           force_push: "allow"
     default: true
 ```
+
+The `tela_admin` family controls access to introspection tools
+(`tela.status`, `tela.connections`, `tela.audit`, `tela.profiles`).
 
 Important notes:
 
@@ -161,12 +156,6 @@ tela ships with seven built-in profile templates:
 These are defined in `src/tela/core/catalog.py` and demonstrated in
 `tela.yaml.example`.
 
-You can:
-
-- rely on them as defaults
-- override them by reusing the same profile name in your config
-- define custom profiles alongside them
-
 ### `auth`
 
 tela supports two authentication modes.
@@ -178,8 +167,7 @@ auth:
   mode: "open"
 ```
 
-Use open mode only in trusted environments. Any client that can connect can use
-tela, subject to profile restrictions.
+Use open mode only in trusted environments.
 
 #### Token mode
 
@@ -193,84 +181,8 @@ auth:
 
 Use token mode for shared or production deployments.
 
-Best practices:
-
-- use environment variables for secrets
-- rotate keys by keeping the previous validation key in the second slot
-- do not commit secrets to source control
-
-#### Token mode end-to-end example
-
-This is a practical pattern for a shared internal deployment.
-
-1. Export the secrets.
-2. Start tela in token mode.
-3. Point clients at the shared gateway.
-
-Example environment:
-
-```bash
-export TELA_SECRET="replace-with-primary-secret"
-export TELA_SECRET_PREVIOUS="replace-with-previous-secret"
-export TELA_STATE="$HOME/.tela"
-```
-
-Example config:
-
-```yaml
-servers:
-  fs:
-    command: "mcp-filesystem"
-    args: ["--root", "/shared-workspace"]
-    family: "filesystem"
-  github:
-    url: "http://localhost:3001/sse"
-    family: "git"
-
-profiles:
-  team_safe:
-    capabilities:
-      filesystem: "read_write"
-      git: "read_only"
-    tool_overrides:
-      filesystem:
-        overrides:
-          delete_file: "deny"
-    default: true
-
-auth:
-  mode: "token"
-  secrets:
-    - "${TELA_SECRET}"
-    - "${TELA_SECRET_PREVIOUS}"
-
-audit:
-  level: "L3"
-  output: "${TELA_STATE}/audit.jsonl"
-```
-
-Start the shared gateway:
-
-```bash
-tela start --config tela.yaml --port 8080
-```
-
-Operational notes:
-
-- use `token` mode when the gateway is shared by multiple users or agents
-- keep the current signing key first and the previous validation key second
-- prefer conservative shared profiles and explicit per-tool denies
-- use `L3` audit logging when you need stronger operational traceability
-
-Token auth flow:
-
-```text
-client -> presents token metadata -> tela
-      -> tela validates signature and expiry using configured secrets
-      -> tela binds the request to an allowed profile
-      -> tela applies posture, tool override, and side-effect checks
-      -> tela forwards allowed calls to downstream MCP servers
-```
+Note: The gateway also generates a per-instance bearer token (stored in the
+lockfile) to protect HTTP endpoints. This is independent of config `auth.mode`.
 
 ### `audit`
 
@@ -279,7 +191,7 @@ Audit logs are written as JSONL.
 ```yaml
 audit:
   level: "L2"
-  output: "${TELA_STATE}/audit.jsonl"
+  output: "~/.tela/audit.jsonl"
 ```
 
 Audit levels:
@@ -288,239 +200,173 @@ Audit levels:
 - `L2`: standard operational detail
 - `L3`: verbose diagnostic detail
 
+Each audit entry includes an `instance_id` field identifying which server
+instance produced it.
+
 ## Running tela
 
-### stdio mode
-
-Start tela without `--port` when your MCP client launches it as a child process:
+### `tela connect` (recommended for most users)
 
 ```bash
-tela start --config tela.yaml
+tela connect --config tela.yaml
 ```
 
-This is the standard local-development setup.
+This is the standard entry point. Your MCP host launches this as a child
+process. Under the hood it:
 
-Behavioral note:
+1. Checks `~/.tela/gateway.lock` for a running server
+2. Auto-starts one if needed (random port, detached process)
+3. Bridges stdio ↔ HTTP
 
-- each MCP client usually launches its own `tela` process in stdio mode
-- multiple agents can use tela this way, but they normally do not share one process
+Multiple `tela connect` instances share the same server. Downstream servers
+are spawned once.
 
-### Remote mode (HTTP / SSE)
+MCP host configuration:
 
-Start tela with `--port` when you want a shared gateway process:
+```json
+{
+  "mcpServers": {
+    "tela": {
+      "command": "tela",
+      "args": ["connect", "--config", "tela.yaml"]
+    }
+  }
+}
+```
+
+### `tela serve` (explicit server)
 
 ```bash
-tela start --config tela.yaml --port 8080                    # Streamable HTTP (default)
-tela start --config tela.yaml --port 8080 --transport sse    # Legacy SSE
+tela serve --config tela.yaml --port 8080
+tela serve --config tela.yaml --host 0.0.0.0 --port 8080     # LAN
 ```
 
-Use remote mode when:
+Use when you need explicit control over host/port. Writes a lockfile so
+`tela connect` and query commands can discover it.
 
-- multiple agents should share the same gateway
-- you want one long-lived gateway process
-- you want to centralize audit and connection state more cleanly
+Direct HTTP client configuration:
 
-Streamable HTTP is the default remote transport (MCP 2025-03-26+). Use
-`--transport sse` only when clients require the legacy SSE protocol.
+```json
+{
+  "mcpServers": {
+    "tela": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+### Auto-shutdown
+
+When `tela connect` auto-starts a server, it shuts down after 5 minutes of
+idle time (no connected bridges). Configurable via `--idle-timeout`. Set to `0`
+to disable.
+
+Manually started servers (`tela serve`) never auto-shutdown.
 
 ## Client connection patterns
 
-### Pattern 1: stdio client integration
-
-Typical MCP client configuration:
+### Pattern 1: local development (recommended)
 
 ```json
 {
   "mcpServers": {
     "tela": {
       "command": "tela",
-      "args": ["start", "--config", "tela.yaml"]
+      "args": ["connect", "--config", "tela.yaml"]
     }
   }
 }
 ```
 
-This is the easiest integration path.
+Multiple Claude Code / OpenCode instances share one auto-managed gateway.
 
-### Example: Claude Code style stdio configuration
+### Pattern 2: shared gateway (LAN or team)
 
-```json
-{
-  "mcpServers": {
-    "tela": {
-      "command": "tela",
-      "args": ["start", "--config", "tela.yaml"]
-    }
-  }
-}
-```
-
-This pattern is representative of local MCP hosts that launch child processes.
-
-### Example: generic local MCP host
-
-If your MCP host asks for an executable plus arguments, use:
-
-```text
-command: tela
-args: start --config tela.yaml
-```
-
-If your host supports environment variables, pass token secrets there rather
-than hardcoding them into config files.
-
-### Pattern 2: shared gateway over HTTP or SSE
-
-Start the gateway:
+Start the server explicitly:
 
 ```bash
-tela start --config tela.yaml --port 8080
+tela serve --config tela.yaml --host 0.0.0.0 --port 8080
 ```
 
-Then point multiple clients at the same network endpoint using your client's
-HTTP or SSE remote MCP configuration model.
+Clients connect via HTTP:
 
-The exact client-side format depends on the MCP host application.
-
-### Example: Streamable HTTP client configuration (recommended)
-
-Modern MCP hosts use the Streamable HTTP transport. Point the client at the
-`/mcp` endpoint:
-
-```text
-name: tela
-transport: http
-url: http://localhost:8080/mcp
+```json
+{
+  "mcpServers": {
+    "tela": {
+      "type": "http",
+      "url": "http://gateway-host:8080/mcp"
+    }
+  }
+}
 ```
 
-### Example: legacy SSE client configuration
+Or via `tela connect` with explicit server:
 
-Older MCP hosts may only support SSE. Start tela with `--transport sse` and
-point the client at the `/sse` endpoint:
-
-```text
-name: tela
-transport: sse
-url: http://localhost:8080/sse
+```json
+{
+  "mcpServers": {
+    "tela": {
+      "command": "tela",
+      "args": ["connect", "--server", "gateway-host:8080"]
+    }
+  }
+}
 ```
-
-If your host supports headers or auth metadata, attach whatever that host uses
-to carry your token-mode credentials.
-
-### Example: shared internal gateway pattern
-
-```text
-gateway process: tela start --config tela.yaml --port 8080
-client endpoint: http://gateway-host:8080/mcp     (Streamable HTTP)
-```
-
-This is the recommended shape when multiple agents should share one tela
-instance instead of each launching its own stdio child process.
 
 ### Practical client guidance
 
-- use `stdio` if your host expects a local command to launch
-- use `HTTP` (Streamable HTTP) for shared remote gateways with modern clients
-- use `SSE` only when clients do not support Streamable HTTP
+- use `tela connect` as the default — it handles everything automatically
+- use `tela serve` when you need fixed host/port for LAN or CI
 - prefer `open` mode only for local trusted environments
-- prefer `token` mode for shared agent infrastructure
-- for quick local setup, the example config's custom `developer` profile is the simplest default
-- for policy-centric setups, start from built-in profiles such as `modify_local` or `execute_safe`
-
-## Choosing a transport
-
-### Use stdio when
-
-- you are running locally
-- you want the simplest setup
-- one client owning one gateway process is acceptable
-
-### Use HTTP (Streamable HTTP) when
-
-- multiple agents should share one tela instance
-- you want one operational surface for logs and status
-- you are deploying tela as a reusable service
-- your clients support the MCP 2025-03-26+ spec
-
-This is the default when `--port` is provided.
-
-### Use SSE when
-
-- your MCP clients only support the legacy SSE transport
-- you need backward compatibility with older MCP hosts
-
-Select with `--transport sse`.
+- prefer `token` mode for shared infrastructure
 
 ## Multi-agent deployment patterns
 
-### Pattern A: independent local agents
+### Pattern A: shared local gateway (default)
 
-Each agent launches its own `tela` child process.
+Multiple agents share one auto-managed tela.
 
 ```text
-Agent A -> tela A -> downstream servers
-Agent B -> tela B -> downstream servers
-Agent C -> tela C -> downstream servers
+Agent A ──connect──┐
+Agent B ──connect──┤──→ tela serve (auto) ──→ downstream servers (1 copy each)
+Agent C ──connect──┘
 ```
 
-Choose this when:
-
-- agents run on one developer machine
-- isolated sessions are desirable
-- duplicate downstream connections are acceptable
-
-Operational tradeoff:
-
-- simplest setup
-- least shared state
-- highest process duplication
+This is the default behavior. No manual server management needed.
 
 ### Pattern B: shared team gateway
 
-One HTTP or SSE gateway is shared by many clients or agents.
+One explicit gateway for a team.
 
 ```text
-Agent A ---\
-Agent B ----> shared tela gateway -> downstream servers
-Agent C ---/
+Agent A ──HTTP──┐
+Agent B ──HTTP──┤──→ tela serve (manual, LAN) ──→ downstream servers
+Agent C ──HTTP──┘
 ```
 
-Choose this when:
-
-- multiple agents should see the same gateway surface
-- you want centralized audit logs
-- you want one place to manage auth and profiles
-
-Operational tradeoff:
-
-- better resource efficiency
-- easier shared operations
-- requires a more service-oriented deployment model
+Use `tela serve --host 0.0.0.0 --port 8080` with token auth.
 
 ### Pattern C: mixed mode
 
-It is valid to run both modes at once.
-
-Examples:
-
-- developers use local stdio instances for experimentation
-- automation or shared assistants use one SSE deployment
-
-This is often the most practical rollout path.
+- developers use `tela connect` locally
+- CI/shared agents connect directly to a team gateway via HTTP
 
 ## Suggested deployment recipes
 
 ### Recipe: one developer, one workstation
 
 - auth mode: `open`
-- transport: `stdio`
-- default profile: custom `developer` profile from `tela.yaml.example`
+- entry: `tela connect --config tela.yaml`
+- default profile: custom `developer` profile
 - audit level: `L2`
 
 ### Recipe: shared internal gateway
 
 - auth mode: `token`
-- transport: `HTTP` (Streamable HTTP, default with `--port`)
+- entry: `tela serve --host 0.0.0.0 --port 8080`
 - default profile: conservative shared profile
 - audit level: `L3`
 - secrets: environment variables only
@@ -528,64 +374,58 @@ This is often the most practical rollout path.
 ### Recipe: CI or bot operator
 
 - auth mode: `token`
-- transport: `HTTP` or `SSE` depending on CI client support
+- entry: direct HTTP to `tela serve`
 - profile: purpose-built automation profile
-- side effects: explicitly allowed only where needed
 
 ## CLI reference
 
-### Start the gateway
+### `tela connect`
 
 ```bash
-tela start --config tela.yaml
+tela connect [--config path] [--default-profile name] [--server host:port]
 ```
 
-Options:
+- `--config`: configuration file path (default: `tela.yaml`)
+- `--default-profile`: override the open-mode default profile
+- `--server`: explicit server address as `host:port` (e.g. `192.168.1.10:8080`; skip auto-discover/auto-start)
 
-- `--config`: configuration file path, default `tela.yaml`
-- `--port`: start remote transport (default: Streamable HTTP; omit for stdio)
-- `--transport`: transport protocol (`stdio`, `sse`, `http`; default: `http` when `--port` given)
-- `--default-profile`: override the open-mode default profile selected from config
-
-Examples:
+### `tela serve`
 
 ```bash
-tela start --config tela.yaml                                 # stdio
-tela start --config tela.yaml --port 8080                     # Streamable HTTP
-tela start --config tela.yaml --port 8080 --transport sse     # Legacy SSE
-tela start --config tela.yaml --default-profile developer
+tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec]
 ```
 
-### Inspect gateway state
+- `--config`: configuration file path (default: `tela.yaml`)
+- `--port`: port to bind (default: `0` for ephemeral)
+- `--host`: bind address (default: `127.0.0.1`)
+- `--default-profile`: override the open-mode default profile
+- `--idle-timeout`: seconds before auto-shutdown on idle (default: `300`, `0` to disable)
+
+### Query commands
 
 ```bash
-tela status
-tela status --json
+tela status [--json]
+tela profiles [--config path] [--json]
+tela connections [--json]
+tela audit [--json] [--since T] [--limit N]
 ```
 
-### List profiles
+Query commands discover the running server via `~/.tela/gateway.lock`.
 
-```bash
-tela profiles --config tela.yaml
-tela profiles --config tela.yaml --json
-```
+## Introspection
 
-### List active connections
+The gateway exposes MCP tools for runtime queries:
 
-```bash
-tela connections
-tela connections --json
-```
+| Tool | Description |
+|------|-------------|
+| `tela.status` | Uptime, server count, connection count |
+| `tela.connections` | Active upstream connections |
+| `tela.audit` | Query audit log entries |
+| `tela.profiles` | List configured profiles |
 
-### Query the audit log
-
-```bash
-tela audit
-tela audit --limit 50
-tela audit --since "1h"
-tela audit --since "2026-01-01T00:00:00Z"
-tela audit --json
-```
+These belong to the `tela_admin` family. Add `tela_admin: "read_only"` to a
+profile's capabilities to grant access. Profiles without `tela_admin` cannot
+see these tools.
 
 ## Environment variables
 
@@ -597,107 +437,6 @@ Common variables:
 - `TELA_SECRET_PREVIOUS`
 - `TELA_STATE`
 - `HOME`
-
-Example:
-
-```bash
-export TELA_SECRET="replace-with-real-secret"
-export TELA_STATE="$HOME/.tela"
-```
-
-## Practical setup examples
-
-### Local single-user development
-
-```yaml
-servers:
-  fs:
-    command: "mcp-filesystem"
-    args: ["--root", "/workspace"]
-    family: "filesystem"
-
-profiles:
-  developer:
-    capabilities:
-      filesystem: "read_write"
-    default: true
-
-auth:
-  mode: "open"
-
-audit:
-  level: "L2"
-  output: "./audit.jsonl"
-```
-
-Recommended run command:
-
-```bash
-tela start --config tela.yaml --default-profile developer
-```
-
-### Shared gateway for multiple agents
-
-```yaml
-servers:
-  fs:
-    command: "mcp-filesystem"
-    args: ["--root", "/shared-workspace"]
-    family: "filesystem"
-  github:
-    url: "http://localhost:3001/sse"
-    family: "git"
-
-profiles:
-  developer:
-    capabilities:
-      filesystem: "read_write"
-      git: "read_write"
-    default: true
-
-auth:
-  mode: "token"
-  secrets:
-    - "${TELA_SECRET}"
-
-audit:
-  level: "L3"
-  output: "/var/log/tela/audit.jsonl"
-```
-
-Recommended run command:
-
-```bash
-tela start --config tela.yaml --port 8080
-```
-
-## Core FAQ
-
-### Does stdio mean only one agent can use tela?
-
-No. Multiple agents can use tela in stdio mode, but each client usually starts
-its own `tela` child process.
-
-### When should I use stdio?
-
-Use `stdio` when the MCP host launches local child processes and you want the
-simplest possible setup.
-
-### When should I use HTTP (Streamable HTTP)?
-
-Use `HTTP` when multiple agents or clients should share one long-lived gateway.
-This is the default when `--port` is provided.
-
-### When should I use SSE?
-
-Use `SSE` only when your MCP clients do not support Streamable HTTP. Select it
-with `--transport sse`.
-
-### Which profile naming pattern should I follow?
-
-Use built-in names like `modify_local` and `execute_safe` when you want to stay
-close to the built-in catalog. Use custom names like `developer` and
-`team_safe` when you are documenting deployment-specific policy intent.
 
 ## Troubleshooting
 
@@ -713,8 +452,7 @@ Check that each server defines exactly one transport:
 - `command` for stdio
 - `url` for SSE (default) or Streamable HTTP (`transport: http`)
 
-Not both `command` and `url`, and not neither. If using Streamable HTTP for a
-downstream server, set both `url` and `transport: http`.
+Not both `command` and `url`, and not neither.
 
 ### A tool is unexpectedly unavailable
 
@@ -724,15 +462,22 @@ Check, in order:
 2. tool override check
 3. posture ceiling comparison
 
-## Validation and testing
+### `tela status` shows empty state
 
-Use these commands from the repository root:
+Ensure a server is running. Check `~/.tela/gateway.lock` exists and is not
+stale. Query commands need a running server to report state.
+
+### Server won't start (port conflict)
+
+If using a fixed port (`--port 8080`), check for existing processes on that
+port. Use `--port 0` (default) to let the OS assign an available port.
+
+## Validation and testing
 
 ```bash
 uv run pytest -q
 uv run pytest --doctest-modules src/tela/
 uv run invar guard --all
-uv run pytest tests/repro/ -q
 ```
 
 ## Related files
