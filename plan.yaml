@@ -17153,7 +17153,7 @@ phases:
   steps:
   - id: gw.foundation.contract.lockfile-and-bearer-token-contracts
     name: Lockfile and bearer token contracts
-    status: pending
+    status: claimed
     description: "Define contracts for LockfileData model, lockfile I/O, and bearer\
       \ token generation.\n\nSpec refs: INTERFACES.md 7.3 (lockfile), INTERFACES.md\
       \ 7.4 (bearer token)\n\nLockfileData model MUST contain ALL 7 fields from INTERFACES.md\
@@ -17186,6 +17186,8 @@ phases:
     - docs/INTERFACES.md
     - src/tela/core/models.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-21T19:48:08.385933+00:00'
   - id: gw.foundation.contract.http-endpoint-and-middleware-contracts
     name: HTTP endpoint and middleware contracts
     status: done
