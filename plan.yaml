@@ -17797,7 +17797,7 @@ phases:
     agent: gate-reviewer
   - id: gw.foundation.impl.fix-export-is-stale
     name: Fix lockfile stale helper export and read path
-    status: claimed
+    status: done
     description: 'Fix the wiring blocker for lockfile stale detection.
 
 
@@ -17850,6 +17850,17 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T20:51:39.628766+00:00'
+    done_at: '2026-03-21T20:54:28.411645+00:00'
+    evidence: 'Implemented and verified lockfile stale refactor in `src/tela/shell/lockfile.py`:
+      exported `is_stale` in `__all__`, changed `read_lockfile()` to call `is_stale(data)`
+      for stale detection, and preserved existing PID-staleness semantics and error
+      formatting. Verification: `uv run pytest tests/shell/test_lockfile.py` (6 passed),
+      `uv run ruff check src/tela/shell/lockfile.py tests/shell/test_lockfile.py`
+      (all checks passed), `uv run mypy src/tela/shell/lockfile.py tests/shell/test_lockfile.py`
+      (no issues). Ran `invar` guard: MCP wrapper reported tooling instability; CLI
+      `uvx invar-tools guard --all` executed and failed due unrelated pre-existing
+      baseline issues (project-wide contract/complexity budgets), not from this file.
+      No code changes beyond scoped lockfile module.'
   - id: gw.foundation.impl.reaudit-export-is-stale
     name: Re-run wiring audit for lockfile stale helper export
     status: pending
