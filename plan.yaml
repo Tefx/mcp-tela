@@ -17996,7 +17996,7 @@ phases:
   steps:
   - id: gw.http.contract.http-route-handler-contracts
     name: HTTP route handler contracts
-    status: claimed
+    status: done
     description: "Define contracts for all HTTP route handlers per INTERFACES.md 7.2.\n\
       \nSpec refs: INTERFACES.md 7.2\n\nEndpoints:\n| Endpoint | Auth | Purpose |\n\
       |----------|------|---------|\n| GET /health | None | Liveness: {status:ok,\
@@ -18020,6 +18020,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T21:03:07.491123+00:00'
+    done_at: '2026-03-21T21:06:45.425142+00:00'
+    evidence: 'Commit hash(es): cb6fd6d7e984439e1d8d8152d8c6bed8358a79cc
+
+      Files changed:
+
+      - src/tela/shell/http_routes.py
+
+      Verification:
+
+      - Run: invar_invar_guard --changed true -> passed
+
+      - Run: uv run pyright src/tela/shell/http_routes.py -> 0 errors
+
+      - Run: uv run ruff check src/tela/shell/http_routes.py -> all checks passed
+
+      - Run: uv run pytest tests/shell/test_http_auth.py -> 6 passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2
+
+      Gaps/Notes:
+
+      - contract stubs only; no implementation logic'
   - id: gw.http.contract.gate-http-contracts
     name: 'Gate: HTTP contracts'
     status: pending
