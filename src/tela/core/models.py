@@ -324,6 +324,29 @@ class GatewayStatus(BaseModel):
     total_tool_calls: int
 
 
+class HealthResponse(BaseModel):
+    """Liveness response for `GET /health`."""
+
+    status: str = "ok"
+    pid: int
+
+
+class StatusResponse(GatewayStatus):
+    """Full runtime status response for `GET /status`."""
+
+
+class ConnectRequest(BaseModel):
+    """Registration payload for bridge connection endpoints."""
+
+    connection_id: str
+
+
+class DisconnectRequest(BaseModel):
+    """Deregistration payload for bridge connection endpoints."""
+
+    connection_id: str
+
+
 class TelaError(BaseModel):
     """Structured error response."""
 
