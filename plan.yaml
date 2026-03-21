@@ -17568,3 +17568,55 @@ phases:
   status: locked
   depends_on:
   - gw.foundation.impl
+  steps:
+  - id: gw.http.contract.http-route-handler-contracts
+    name: HTTP route handler contracts
+    status: pending
+    description: "Define contracts for all HTTP route handlers per INTERFACES.md 7.2.\n\
+      \nSpec refs: INTERFACES.md 7.2\n\nEndpoints:\n| Endpoint | Auth | Purpose |\n\
+      |----------|------|---------|\n| GET /health | None | Liveness: {status:ok,\
+      \ pid:N} |\n| GET /status | Bearer | Full runtime status |\n| POST /connect\
+      \ | Bearer | Register bridge connection |\n| POST /disconnect | Bearer | Unregister\
+      \ bridge connection |\n| POST /mcp | Bearer | MCP Streamable HTTP endpoint |\n\
+      \nFile: src/tela/shell/http_routes.py (new)\n\nEach handler signature with @pre/@post,\
+      \ docstring, stub body.\nBearer auth check delegated to validate_bearer_token\
+      \ from http_auth.py.\n\nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - 5 handler signatures\n  - Auth requirements in docstrings\n  - stubs only"
+    verification: '- All 5 endpoints have handler stubs
+
+      - Auth requirements documented per INTERFACES.md 7.2
+
+      - No implementation logic
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/shell/http_auth.py
+    agent: python-executor
+  - id: gw.http.contract.gate-http-contracts
+    name: 'Gate: HTTP contracts'
+    status: pending
+    description: 'Gate review: Verify HTTP endpoint contracts match INTERFACES.md
+      7.2 exactly.
+
+
+      review_depth: STANDARD
+
+
+      Block if:
+
+      - Missing any of the 5 endpoints
+
+      - Auth requirements incorrect (/health should be no-auth, rest Bearer)
+
+      - Implementation logic in stubs'
+    verification: '- All 5 endpoints present
+
+      - Auth requirements correct
+
+      - No implementation logic
+
+      - invar guard clean'
+    depends_on:
+    - gw.http.contract.http-route-handler-contracts
+    agent: gate-reviewer
