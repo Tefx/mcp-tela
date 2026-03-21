@@ -18471,3 +18471,8 @@ phases:
     depends_on:
     - gw.doc_sync.update-documentation-for-connect-serve
     agent: gate-reviewer
+- id: gw.deep_review
+  name: Deep Review (Independent Multi-Agent Audit)
+  status: locked
+  depends_on:
+  - gw.doc_sync
