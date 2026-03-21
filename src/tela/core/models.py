@@ -324,6 +324,28 @@ class GatewayStatus(BaseModel):
     total_tool_calls: int
 
 
+class LockfileData(BaseModel):
+    """Persisted gateway lockfile contract.
+
+    Required fields:
+    - pid: Process id of the running gateway.
+    - host: Host bound by gateway startup.
+    - port: Port bound by gateway startup.
+    - token: Bearer token stored for local client reuse.
+    - started_at: ISO-8601 start timestamp.
+    - config_path: Source config path used at startup.
+    - version: Gateway/runtime contract version.
+    """
+
+    pid: int
+    host: str
+    port: int
+    token: str
+    started_at: str
+    config_path: str
+    version: str
+
+
 class HealthResponse(BaseModel):
     """Liveness response for `GET /health`."""
 
