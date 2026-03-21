@@ -17061,7 +17061,7 @@ phases:
       - post_invar.final_audit.gate blocker remediation batch'
   - id: post_invar.final_audit.retest-result-wrapper-drift-batch
     name: Retest Result wrapper drift batch
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (`integration-verifier`), validate the batched Result-wrapper
@@ -17103,3 +17103,5 @@ phases:
     depends_on:
     - post_invar.final_audit.fix-result-wrapper-drift-batch
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-21T05:12:42.598671+00:00'
