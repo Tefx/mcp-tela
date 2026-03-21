@@ -16408,7 +16408,7 @@ phases:
       - post_invar.test_alignment.gate should-fix finding on tool_lists annotation'
 - id: post_invar.final_audit
   name: Post-Invar Final Audit
-  status: in_progress
+  status: done
   depends_on:
   - post_invar.test_alignment
   steps:
@@ -16664,7 +16664,7 @@ phases:
       - docs/INTERFACES.md#tela-interface-specification/7-mcp-surface'
   - id: post_invar.final_audit.gate
     name: Final gate after post-Invar supplementation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -16706,6 +16706,24 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-21T05:15:37.975339+00:00'
+    done_at: '2026-03-21T05:22:02.911626+00:00'
+    evidence: 'Artifact:
+
+      - PR: final gate evidence session ses_2f12d9aeeffeQqh1NNOhJh6zFj
+
+
+      Verification:
+
+      - Independent gate review confirms all supplemental final-audit steps complete
+      with reviewable evidence
+
+      - Issue classification: no blockers, no should-fix, one non-blocking suggestion
+      documented
+
+
+      Spec link:
+
+      - post_invar.final_audit closing gate criteria'
   - id: post_invar.final_audit.fix-spec-audit-issues
     name: Fix spec audit issues
     status: done
