@@ -20,6 +20,43 @@ LOCKFILE_DIRECTORY_MODE = 0o700
 LOCKFILE_FILE_MODE = 0o600
 
 
+__all__ = [
+    "LOCKFILE_PATH",
+    "LOCKFILE_TMP_SUFFIX",
+    "LOCKFILE_DIRECTORY_MODE",
+    "LOCKFILE_FILE_MODE",
+    "is_stale",
+    "write_lockfile",
+    "read_lockfile",
+    "delete_lockfile",
+    "generate_bearer_token",
+]
+
+
+class _IsStale:
+    """Predicate used by lockfile stale checks."""
+
+    def __call__(self, lockfile: LockfileData) -> bool:
+        """Return True when lockfile's PID does not resolve to a live process."""
+
+        try:
+            os.kill(lockfile.pid, 0)
+        except OverflowError:
+            return True
+        except ProcessLookupError:
+            return True
+        except PermissionError:
+            # Process exists but we lack permission to signal it.
+            return False
+        except OSError:
+            return True
+
+        return False
+
+
+is_stale = _IsStale()
+
+
 @pre(lambda data: isinstance(data, LockfileData))
 @post(
     lambda result: (
@@ -98,21 +135,7 @@ def read_lockfile() -> Result[LockfileData, str]:
     except Exception as exc:
         return Result(error=f"LOCKFILE_PARSE_ERROR: {exc}")
 
-    try:
-        os.kill(data.pid, 0)
-    except OverflowError:
-        return Result(error=f"LOCKFILE_STALE: invalid pid {data.pid}")
-    except ProcessLookupError:
-        return Result(
-            error=(
-                f"LOCKFILE_STALE: no live process found for pid {data.pid}; "
-                "lockfile should be considered stale"
-            )
-        )
-    except PermissionError:
-        # Process exists but we lack permission to signal it.
-        pass
-    except OSError:
+    if is_stale(data):
         return Result(
             error=(
                 f"LOCKFILE_STALE: no live process found for pid {data.pid}; "
