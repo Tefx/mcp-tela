@@ -17485,7 +17485,7 @@ phases:
       limited to middleware contract tests'
   - id: gw.foundation.test.gate-foundation-tests
     name: 'Gate: foundation tests'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify foundation test phase completeness.
 
 
@@ -17516,6 +17516,8 @@ phases:
     - gw.foundation.test.lockfile-and-bearer-token-tests
     - gw.foundation.test.http-auth-middleware-tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-21T20:24:32.192065+00:00'
 - id: gw.foundation.impl
   name: Gateway Foundation Implementation
   status: locked
