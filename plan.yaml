@@ -17252,3 +17252,8 @@ phases:
     - gw.foundation.contract.lockfile-and-bearer-token-contracts
     - gw.foundation.contract.http-endpoint-and-middleware-contracts
     agent: gate-reviewer
+- id: gw.foundation.test
+  name: Gateway Foundation Tests
+  status: locked
+  depends_on:
+  - gw.foundation.contract
