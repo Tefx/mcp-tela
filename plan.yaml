@@ -17990,7 +17990,7 @@ phases:
       - no code changes in this verify-only step'
 - id: gw.http.contract
   name: HTTP Endpoints Contract
-  status: in_progress
+  status: done
   depends_on:
   - gw.foundation.impl
   steps:
@@ -18046,7 +18046,7 @@ phases:
       - contract stubs only; no implementation logic'
   - id: gw.http.contract.gate-http-contracts
     name: 'Gate: HTTP contracts'
-    status: claimed
+    status: done
     description: 'Gate review: Verify HTTP endpoint contracts match INTERFACES.md
       7.2 exactly.
 
@@ -18073,9 +18073,55 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-21T21:07:03.574621+00:00'
+    done_at: '2026-03-21T21:10:38.342256+00:00'
+    evidence: 'Verdict: PASS
+
+      Wiring audit:
+
+      - W1..W8 pass for endpoint presence, auth requirements, stub purity, typing,
+      auth helper import, contracts, and export tuple
+
+      Escape hatch audit:
+
+      - annotations_found: no in http_routes.py
+
+      Findings:
+
+      - suggestion TECH-01: placeholder variable assignments before NotImplementedError
+      are benign contract hints
+
+      Verification:
+
+      - Run: pyright src/tela/shell/http_routes.py -> 0 errors
+
+      - Run: ruff check src/tela/shell/http_routes.py -> all checks passed
+
+      - Run: invar guard changed=true -> passed
+
+      Gate checks:
+
+      - all 5 endpoints present
+
+      - /health no-auth; others bearer-auth
+
+      - no implementation logic
+
+      Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2
+
+      Gaps/Notes:
+
+      - repo-wide invar-all errors are pre-existing and unrelated'
 - id: gw.http.impl
   name: HTTP Endpoints Implementation
-  status: locked
+  status: pending
   depends_on:
   - gw.http.contract
   steps:
