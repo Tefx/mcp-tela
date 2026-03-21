@@ -17539,7 +17539,7 @@ phases:
   steps:
   - id: gw.foundation.impl.implement-lockfile-i-o
     name: Implement lockfile I/O
-    status: pending
+    status: claimed
     description: 'Implement lockfile read/write/delete and stale detection.
 
 
@@ -17596,6 +17596,8 @@ phases:
     - docs/INTERFACES.md
     - src/tela/shell/config_loader.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-21T20:33:17.824194+00:00'
   - id: gw.foundation.impl.implement-bearer-token-and-http-auth
     name: Implement bearer token and HTTP auth
     status: claimed
