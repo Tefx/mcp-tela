@@ -17863,7 +17863,7 @@ phases:
       No code changes beyond scoped lockfile module.'
   - id: gw.foundation.impl.reaudit-export-is-stale
     name: Re-run wiring audit for lockfile stale helper export
-    status: pending
+    status: claimed
     description: 'Re-run the wiring audit after the lockfile stale helper fix.
 
 
@@ -17897,6 +17897,8 @@ phases:
     depends_on:
     - gw.foundation.impl.fix-export-is-stale
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-21T20:55:09.843987+00:00'
 - id: gw.http.contract
   name: HTTP Endpoints Contract
   status: locked
