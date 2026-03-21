@@ -18402,3 +18402,8 @@ phases:
     depends_on:
     - gw.spec_conformance.spec-conformance-audit
     agent: gate-reviewer
+- id: gw.doc_sync
+  name: Documentation Sync
+  status: locked
+  depends_on:
+  - gw.spec_conformance
