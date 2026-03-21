@@ -18137,3 +18137,8 @@ phases:
     - gw.bridge.implement-stdio-http-bridge
     - gw.bridge.tela-connect-liveness-probe
     agent: gate-reviewer
+- id: gw.teardown
+  name: Replace tela start with connect/serve
+  status: locked
+  depends_on:
+  - gw.bridge
