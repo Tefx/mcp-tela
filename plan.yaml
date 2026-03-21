@@ -17214,3 +17214,41 @@ phases:
     - docs/INTERFACES.md
     - src/tela/core/models.py
     agent: python-executor
+  - id: gw.foundation.contract.gate-foundation-contracts
+    name: 'Gate: foundation contracts'
+    status: pending
+    description: 'Gate review: Verify foundation contract phase completion and quality.
+
+
+      review_depth: STANDARD
+
+
+      YOU ARE THE QUALITY GATE. Block if:
+
+      - LockfileData missing any of the 7 INTERFACES.md 7.3 fields (pid, host, port,
+      token, started_at, config_path, version)
+
+      - Atomic write not in lockfile contract
+
+      - hmac.compare_digest not in bearer validation contract
+
+      - generate_bearer_token not using secrets.token_urlsafe(32)
+
+      - Any implementation logic present in contract stubs
+
+      - invar guard failures'
+    verification: '- All 7 lockfile fields present
+
+      - Atomic write contract present
+
+      - hmac.compare_digest specified
+
+      - secrets.token_urlsafe(32) specified
+
+      - No implementation logic in stubs
+
+      - invar guard clean'
+    depends_on:
+    - gw.foundation.contract.lockfile-and-bearer-token-contracts
+    - gw.foundation.contract.http-endpoint-and-middleware-contracts
+    agent: gate-reviewer
