@@ -17335,7 +17335,7 @@ phases:
   steps:
   - id: gw.foundation.test.lockfile-and-bearer-token-tests
     name: Lockfile and bearer token tests
-    status: claimed
+    status: done
     description: 'Write tests for lockfile I/O and bearer token generation contracts.
 
 
@@ -17389,6 +17389,37 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T20:20:40.742906+00:00'
+    done_at: '2026-03-21T20:22:52.530232+00:00'
+    evidence: 'Commit hash(es): 363e915, 3886de9
+
+      Files changed:
+
+      - tests/shell/test_lockfile.py
+
+      - tests/shell/test_bearer_token.py
+
+      Verification:
+
+      - Coverage map includes all 9 required scenarios (write/read/delete/stale/token)
+
+      - Spec fixture conformance: exact 7 fields [pid,host,port,token,started_at,config_path,version],
+      no extras
+
+      - Run: uv run python -m compileall tests/shell/test_lockfile.py tests/shell/test_bearer_token.py
+      -> success
+
+      - Run: uv run pytest tests/shell/test_lockfile.py tests/shell/test_bearer_token.py
+      -> fails currently due expected NotImplementedError stubs in product lockfile
+      functions
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.3, §7.4
+
+      Gaps/Notes:
+
+      - Step is test-authoring only; runtime implementation deferred to gw.foundation.impl
+      phase; no src/ changes were made'
   - id: gw.foundation.test.http-auth-middleware-tests
     name: HTTP auth middleware tests
     status: done
