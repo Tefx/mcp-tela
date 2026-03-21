@@ -72,7 +72,8 @@ Each server entry declares one downstream MCP server.
 You must use exactly one transport per server:
 
 - `command` for stdio
-- `url` for SSE
+- `url` for SSE (legacy, default when `transport` is omitted)
+- `url` + `transport: http` for Streamable HTTP (MCP 2025-03-26+)
 
 Minimal stdio example:
 
@@ -84,12 +85,22 @@ servers:
     family: "filesystem"
 ```
 
-Minimal SSE example:
+Minimal SSE example (legacy):
 
 ```yaml
 servers:
   github:
     url: "http://localhost:3001/sse"
+    family: "git"
+```
+
+Minimal Streamable HTTP example:
+
+```yaml
+servers:
+  github:
+    url: "http://localhost:3001/mcp"
+    transport: http
     family: "git"
 ```
 
@@ -294,19 +305,23 @@ Behavioral note:
 - each MCP client usually launches its own `tela` process in stdio mode
 - multiple agents can use tela this way, but they normally do not share one process
 
-### SSE mode
+### Remote mode (HTTP / SSE)
 
 Start tela with `--port` when you want a shared gateway process:
 
 ```bash
-tela start --config tela.yaml --port 8080
+tela start --config tela.yaml --port 8080                    # Streamable HTTP (default)
+tela start --config tela.yaml --port 8080 --transport sse    # Legacy SSE
 ```
 
-Use SSE mode when:
+Use remote mode when:
 
 - multiple agents should share the same gateway
 - you want one long-lived gateway process
 - you want to centralize audit and connection state more cleanly
+
+Streamable HTTP is the default remote transport (MCP 2025-03-26+). Use
+`--transport sse` only when clients require the legacy SSE protocol.
 
 ## Client connection patterns
 
@@ -354,7 +369,7 @@ args: start --config tela.yaml
 If your host supports environment variables, pass token secrets there rather
 than hardcoding them into config files.
 
-### Pattern 2: shared gateway over SSE
+### Pattern 2: shared gateway over HTTP or SSE
 
 Start the gateway:
 
@@ -363,16 +378,25 @@ tela start --config tela.yaml --port 8080
 ```
 
 Then point multiple clients at the same network endpoint using your client's
-SSE or remote MCP configuration model.
+HTTP or SSE remote MCP configuration model.
 
 The exact client-side format depends on the MCP host application.
 
-### Example: generic SSE client configuration
+### Example: Streamable HTTP client configuration (recommended)
 
-Many MCP hosts use a URL-based remote server definition. In those cases, point
-the client at the shared tela endpoint you started with `--port`.
+Modern MCP hosts use the Streamable HTTP transport. Point the client at the
+`/mcp` endpoint:
 
-Conceptually, the configuration looks like this:
+```text
+name: tela
+transport: http
+url: http://localhost:8080/mcp
+```
+
+### Example: legacy SSE client configuration
+
+Older MCP hosts may only support SSE. Start tela with `--transport sse` and
+point the client at the `/sse` endpoint:
 
 ```text
 name: tela
@@ -387,7 +411,7 @@ to carry your token-mode credentials.
 
 ```text
 gateway process: tela start --config tela.yaml --port 8080
-client endpoint: http://gateway-host:8080/sse
+client endpoint: http://gateway-host:8080/mcp     (Streamable HTTP)
 ```
 
 This is the recommended shape when multiple agents should share one tela
@@ -396,13 +420,14 @@ instance instead of each launching its own stdio child process.
 ### Practical client guidance
 
 - use `stdio` if your host expects a local command to launch
-- use `SSE` if your host can connect to a shared remote MCP endpoint
+- use `HTTP` (Streamable HTTP) for shared remote gateways with modern clients
+- use `SSE` only when clients do not support Streamable HTTP
 - prefer `open` mode only for local trusted environments
 - prefer `token` mode for shared agent infrastructure
 - for quick local setup, the example config's custom `developer` profile is the simplest default
 - for policy-centric setups, start from built-in profiles such as `modify_local` or `execute_safe`
 
-## Choosing between stdio and SSE
+## Choosing a transport
 
 ### Use stdio when
 
@@ -410,11 +435,21 @@ instance instead of each launching its own stdio child process.
 - you want the simplest setup
 - one client owning one gateway process is acceptable
 
-### Use SSE when
+### Use HTTP (Streamable HTTP) when
 
 - multiple agents should share one tela instance
 - you want one operational surface for logs and status
 - you are deploying tela as a reusable service
+- your clients support the MCP 2025-03-26+ spec
+
+This is the default when `--port` is provided.
+
+### Use SSE when
+
+- your MCP clients only support the legacy SSE transport
+- you need backward compatibility with older MCP hosts
+
+Select with `--transport sse`.
 
 ## Multi-agent deployment patterns
 
@@ -442,7 +477,7 @@ Operational tradeoff:
 
 ### Pattern B: shared team gateway
 
-One SSE gateway is shared by many clients or agents.
+One HTTP or SSE gateway is shared by many clients or agents.
 
 ```text
 Agent A ---\
@@ -485,7 +520,7 @@ This is often the most practical rollout path.
 ### Recipe: shared internal gateway
 
 - auth mode: `token`
-- transport: `SSE`
+- transport: `HTTP` (Streamable HTTP, default with `--port`)
 - default profile: conservative shared profile
 - audit level: `L3`
 - secrets: environment variables only
@@ -493,7 +528,7 @@ This is often the most practical rollout path.
 ### Recipe: CI or bot operator
 
 - auth mode: `token`
-- transport: usually `SSE`
+- transport: `HTTP` or `SSE` depending on CI client support
 - profile: purpose-built automation profile
 - side effects: explicitly allowed only where needed
 
@@ -508,14 +543,16 @@ tela start --config tela.yaml
 Options:
 
 - `--config`: configuration file path, default `tela.yaml`
-- `--port`: start SSE transport instead of stdio
+- `--port`: start remote transport (default: Streamable HTTP; omit for stdio)
+- `--transport`: transport protocol (`stdio`, `sse`, `http`; default: `http` when `--port` given)
 - `--default-profile`: override the open-mode default profile selected from config
 
 Examples:
 
 ```bash
-tela start --config tela.yaml
-tela start --config tela.yaml --port 8080
+tela start --config tela.yaml                                 # stdio
+tela start --config tela.yaml --port 8080                     # Streamable HTTP
+tela start --config tela.yaml --port 8080 --transport sse     # Legacy SSE
 tela start --config tela.yaml --default-profile developer
 ```
 
@@ -646,9 +683,15 @@ its own `tela` child process.
 Use `stdio` when the MCP host launches local child processes and you want the
 simplest possible setup.
 
+### When should I use HTTP (Streamable HTTP)?
+
+Use `HTTP` when multiple agents or clients should share one long-lived gateway.
+This is the default when `--port` is provided.
+
 ### When should I use SSE?
 
-Use `SSE` when multiple agents or clients should share one long-lived gateway.
+Use `SSE` only when your MCP clients do not support Streamable HTTP. Select it
+with `--transport sse`.
 
 ### Which profile naming pattern should I follow?
 
@@ -667,10 +710,11 @@ Check that exactly one profile is suitable as the default, or pass
 
 Check that each server defines exactly one transport:
 
-- `command`
-- or `url`
+- `command` for stdio
+- `url` for SSE (default) or Streamable HTTP (`transport: http`)
 
-Not both, and not neither.
+Not both `command` and `url`, and not neither. If using Streamable HTTP for a
+downstream server, set both `url` and `transport: http`.
 
 ### A tool is unexpectedly unavailable
 

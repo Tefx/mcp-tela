@@ -10,7 +10,7 @@ policy enforcement, and audit logging.
 - Applies family-based posture ceilings and per-tool overrides
 - Supports open mode or token-based authentication
 - Emits structured audit logs at `L1`, `L2`, or `L3`
-- Supports local stdio usage and shared SSE gateway mode
+- Supports stdio, SSE, and Streamable HTTP (MCP 2025-03-26+) transports
 - Ships with a built-in profile catalog for common access patterns
 
 ## Quick start
@@ -52,7 +52,8 @@ Then wire your MCP host to launch:
 
 This uses the example file's custom `developer` profile for a practical local
 default. Use this for local stdio-based development. Switch to `--port 8080`
-when you want one shared SSE gateway for multiple agents.
+when you want one shared gateway for multiple agents (defaults to Streamable
+HTTP; use `--transport sse` for legacy SSE).
 
 ## Configuration at a glance
 
@@ -107,15 +108,18 @@ tela start --config tela.yaml
 This is the simplest local setup. In practice, each client or agent usually
 launches its own `tela` process in stdio mode.
 
-### SSE mode
+### Remote mode (HTTP / SSE)
 
-Use SSE when you want one shared gateway process that multiple clients can use.
+Use `--port` when you want one shared gateway process that multiple clients can
+connect to over the network.
 
 ```bash
-tela start --config tela.yaml --port 8080
+tela start --config tela.yaml --port 8080                    # Streamable HTTP (default)
+tela start --config tela.yaml --port 8080 --transport sse    # Legacy SSE
 ```
 
-This starts a long-lived gateway process and exposes it over SSE.
+Streamable HTTP (MCP 2025-03-26+) is the default remote transport. SSE is
+retained for backward compatibility with older MCP clients.
 
 ## Connecting an MCP client
 
@@ -135,7 +139,8 @@ This starts a long-lived gateway process and exposes it over SSE.
 ### Which mode should you choose?
 
 - `stdio`: best for simple local development and one-client-per-process setups
-- `SSE`: best when multiple agents or clients should share the same gateway
+- `HTTP` (Streamable HTTP): best for shared gateways with modern MCP clients
+- `SSE`: use when clients only support the legacy SSE transport
 
 ## Architecture patterns
 
@@ -163,12 +168,12 @@ flowchart LR
 
 Use this when simplicity matters more than shared runtime state.
 
-### SSE: many clients, one shared tela gateway
+### Remote: many clients, one shared tela gateway
 
 ```text
                  +----------------------------------+
                  |      tela shared gateway         |
-                 |       SSE endpoint :8080         |
+                 |    HTTP or SSE endpoint :8080    |
                  +----------------+-----------------+
                                   |
                     +-------------+-------------+
@@ -179,17 +184,17 @@ Use this when simplicity matters more than shared runtime state.
                | server  |   | server  |   | server  |
                +---------+   +---------+   +---------+
 
-+-------------+    HTTP/SSE    +--------------------------+
-| MCP Client  | <----------->  | shared tela SSE endpoint |
-| / Agent A   |                +--------------------------+
++-------------+  HTTP/SSE  +-----------------------------+
+| MCP Client  | <--------> | shared tela gateway :8080   |
+| / Agent A   |            +-----------------------------+
 +-------------+
 
-+-------------+    HTTP/SSE
++-------------+  HTTP/SSE
 | MCP Client  | <----------------------------------------+
 | / Agent B   |                                          |
 +-------------+                                          |
                                                          same gateway
-+-------------+    HTTP/SSE                              |
++-------------+  HTTP/SSE                                |
 | MCP Client  | <----------------------------------------+
 | / Agent C   |
 +-------------+
@@ -197,7 +202,7 @@ Use this when simplicity matters more than shared runtime state.
 
 ```mermaid
 flowchart LR
-  A[Client or Agent A] <--> T[tela shared SSE gateway]
+  A[Client or Agent A] <--> T[tela shared gateway]
   B[Client or Agent B] <--> T
   C[Client or Agent C] <--> T
   T --> FS[filesystem MCP]
@@ -239,9 +244,15 @@ its own `tela` child process.
 Use `stdio` for local development, simple MCP host integration, and situations
 where per-client processes are acceptable.
 
+### When should I use HTTP (Streamable HTTP)?
+
+Use `HTTP` when multiple agents or clients should share one long-lived gateway.
+This is the default when `--port` is provided.
+
 ### When should I use SSE?
 
-Use `SSE` when multiple agents or clients should share one long-lived gateway.
+Use `SSE` only when your MCP clients do not support Streamable HTTP. Select it
+with `--transport sse`.
 
 ### Which profile name should I start with?
 
@@ -252,7 +263,7 @@ want to align closely with the built-in catalog semantics.
 ## CLI
 
 ```text
-tela start [--config path] [--port port] [--default-profile name]
+tela start [--config path] [--port port] [--transport {stdio,sse,http}] [--default-profile name]
 tela status [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]

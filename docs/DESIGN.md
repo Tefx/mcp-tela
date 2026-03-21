@@ -80,6 +80,17 @@ I/O and process edges:
 - audit output
 - reload orchestration
 
+#### Transports
+
+Upstream (gateway → MCP clients):
+- `stdio`: default, launched as child process
+- `http`: Streamable HTTP (MCP 2025-03-26+), default when `--port` is given
+- `sse`: legacy SSE, selected with `--transport sse`
+
+Downstream (gateway → MCP servers):
+- `command`: stdio subprocess
+- `url`: SSE (default) or Streamable HTTP (`transport: http`)
+
 ### `commands/`
 
 CLI entrypoints only.

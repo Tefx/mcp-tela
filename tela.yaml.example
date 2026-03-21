@@ -19,7 +19,9 @@
 # classify its tools (family, posture, overrides).
 #
 # Key rules:
-#   - Use EITHER 'command' (stdio) OR 'url' (SSE), NOT both
+#   - Use EITHER 'command' (stdio) OR 'url' (remote), NOT both
+#   - When using 'url', transport defaults to SSE (legacy)
+#   - Set 'transport: http' alongside 'url' for Streamable HTTP (MCP 2025-03-26+)
 #   - The YAML key is the server name (e.g., 'fs', 'github')
 #   - 'family' is optional and overrides auto-detection
 #   - 'default_posture' sets the baseline for all tools from this server
@@ -65,18 +67,28 @@ servers:
         posture: "destructive"
 
   # ===========================================================================
-  # Example: Remote SSE-based MCP server
+  # Example: Remote SSE-based MCP server (legacy)
   # ===========================================================================
   github:
     # REQUIRED: SSE endpoint URL (HTTP/HTTPS)
-    # Use 'url' for SSE transport, 'command' for stdio transport
+    # Use 'url' for remote transport, 'command' for stdio transport
+    # SSE is the default when 'transport' is omitted (backward-compatible)
     url: "http://localhost:3001/sse"
-    
+
     # OPTIONAL: Tool family
     family: "git"
-    
+
     # DEFAULT: No explicit posture (inherit from profile)
     default_posture: "none"
+
+  # ===========================================================================
+  # Example: Remote Streamable HTTP server (MCP 2025-03-26+, recommended)
+  # ===========================================================================
+  # github_http:
+  #   url: "http://localhost:3001/mcp"
+  #   transport: http          # Streamable HTTP (modern MCP transport)
+  #   family: "git"
+  #   default_posture: "none"
 
   # ===========================================================================
   # Example: Execution server (code/execution environments)
@@ -408,10 +420,6 @@ audit:
 #   family won't be covered by any built-in profile. You must define a
 #   custom profile that includes that family.
 #
-# Side-Effect Policy:
-#   - "allow"     : Allow tools with side effects (within posture ceiling)
-#   - "read_only": Block tools marked as having side effects
-#
 # =============================================================================
 # ENVIRONMENT VARIABLES
 # =============================================================================
@@ -439,8 +447,9 @@ audit:
 # =============================================================================
 #
 # Start the gateway:
-#   tela start --config tela.yaml
-#   tela start --config tela.yaml --port 8080  # SSE transport
+#   tela start --config tela.yaml                                 # stdio
+#   tela start --config tela.yaml --port 8080                     # Streamable HTTP (default)
+#   tela start --config tela.yaml --port 8080 --transport sse     # Legacy SSE
 #   tela start --config tela.yaml --default-profile developer
 #
 # Inspect state:
