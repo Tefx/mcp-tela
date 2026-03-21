@@ -17273,7 +17273,7 @@ phases:
       and the new bearer auth helper'
   - id: gw.foundation.contract.gate-foundation-contracts
     name: 'Gate: foundation contracts'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify foundation contract phase completion and quality.
 
 
@@ -17309,6 +17309,8 @@ phases:
     - gw.foundation.contract.lockfile-and-bearer-token-contracts
     - gw.foundation.contract.http-endpoint-and-middleware-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-21T19:58:33.676516+00:00'
 - id: gw.foundation.test
   name: Gateway Foundation Tests
   status: locked
