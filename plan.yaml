@@ -18341,3 +18341,8 @@ phases:
     - gw.teardown.wiring-audit-cli-teardown
     - gw.teardown.end-to-end-cli-integration-test
     agent: gate-reviewer
+- id: gw.spec_conformance
+  name: Spec Conformance Verification
+  status: locked
+  depends_on:
+  - gw.teardown
