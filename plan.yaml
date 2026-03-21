@@ -17383,3 +17383,8 @@ phases:
     - gw.foundation.test.lockfile-and-bearer-token-tests
     - gw.foundation.test.http-auth-middleware-tests
     agent: gate-reviewer
+- id: gw.foundation.impl
+  name: Gateway Foundation Implementation
+  status: locked
+  depends_on:
+  - gw.foundation.test
