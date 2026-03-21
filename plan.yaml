@@ -17760,9 +17760,8 @@ phases:
 
       - invar guard clean'
     depends_on:
-    - gw.foundation.impl.implement-lockfile-i-o
-    - gw.foundation.impl.implement-bearer-token-and-http-auth
     - gw.foundation.impl.wiring-audit-foundation-impl
+    - gw.foundation.impl.reaudit-export-is-stale
     agent: gate-reviewer
   - id: gw.foundation.impl.fix-export-is-stale
     name: Fix lockfile stale helper export and read path
