@@ -18142,3 +18142,202 @@ phases:
   status: locked
   depends_on:
   - gw.bridge
+  steps:
+  - id: gw.teardown.wire-connect-serve-into-cli-remove-start
+    name: Wire connect/serve into CLI, remove start
+    status: pending
+    description: 'Replace tela start with tela connect and tela serve in CLI entrypoint.
+
+
+      Spec refs: INTERFACES.md 2 (CLI surface)
+
+
+      Files:
+
+      - src/tela/cli.py (major rewrite: replace start with connect/serve)
+
+      - src/tela/commands/start.py (remove or deprecate)
+
+
+      Acceptance criteria:
+
+      - Remove ''start'' subcommand from argparse
+
+      - Add ''connect'' subcommand with args: --config, --default-profile, --server,
+      --token
+
+      - Add ''serve'' subcommand with args: --config, --port, --host, --default-profile,
+      --idle-timeout, --token
+
+      - Wire connect to connect_cmd.py, serve to serve_cmd.py
+
+      - Remove _handle_start, _run_stdio_gateway, _serve_remote_gateway from cli.py
+
+      - Keep config watcher logic (move to serve if needed)
+
+      - All query commands (status, connections, audit) now discover via lockfile
+      + HTTP instead of in-process
+
+
+      This is a serial integration step: touches the shared CLI registry.
+
+
+      tags: [integration]
+
+
+      step_type: implementation'
+    verification: '- tela connect --help shows correct args
+
+      - tela serve --help shows correct args
+
+      - tela start no longer exists
+
+      - Query commands use lockfile discovery
+
+      - No import errors
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/cli.py
+    - src/tela/commands/start.py
+    agent: python-executor
+  - id: gw.teardown.update-query-commands-for-http-discovery
+    name: Update query commands for HTTP discovery
+    status: pending
+    description: 'Update status, connections, and audit commands to discover running
+      server via lockfile and query over HTTP.
+
+
+      Spec refs: INTERFACES.md 2, DESIGN.md
+
+
+      Files:
+
+      - src/tela/commands/status_cmd.py
+
+      - src/tela/commands/connections_cmd.py
+
+      - src/tela/commands/audit_cmd.py
+
+
+      Current state: These commands access in-process gateway state.
+
+      New state: These commands read lockfile, get bearer token, query HTTP endpoints.
+
+
+      Acceptance criteria:
+
+      - Read lockfile to get host, port, token
+
+      - Query GET /status, GET /status (connections), GET /status (audit) with bearer
+      token
+
+      - Handle: no lockfile (server not running), stale lockfile, connection refused
+
+      - --json flag still works
+
+
+      step_type: implementation'
+    verification: '- Query commands discover via lockfile
+
+      - Bearer token used in HTTP requests
+
+      - Error handling for no server / stale lockfile
+
+      - --json output works
+
+      - Tests pass
+
+      - invar guard passes'
+    refs:
+    - src/tela/commands/status_cmd.py
+    - src/tela/commands/connections_cmd.py
+    - src/tela/commands/audit_cmd.py
+    - src/tela/shell/lockfile.py
+    depends_on:
+    - gw.teardown.wire-connect-serve-into-cli-remove-start
+    agent: python-executor
+  - id: gw.teardown.wiring-audit-cli-teardown
+    name: 'Wiring audit: CLI teardown'
+    status: pending
+    description: 'Wiring completeness audit after CLI refactor.
+
+
+      REQUIRED CHECKS:
+
+      1. tela connect registered in CLI entrypoint
+
+      2. tela serve registered in CLI entrypoint
+
+      3. tela start removed from CLI entrypoint
+
+      4. All query commands use lockfile discovery (no in-process gateway access)
+
+      5. No orphan imports from removed start.py code
+
+      6. No dead code from old _handle_start / _run_stdio_gateway / _serve_remote_gateway'
+    verification: '- connect and serve registered
+
+      - start removed
+
+      - No orphan imports
+
+      - No dead code
+
+      - invar guard clean'
+    depends_on:
+    - gw.teardown.wire-connect-serve-into-cli-remove-start
+    - gw.teardown.update-query-commands-for-http-discovery
+    agent: integration-verifier
+  - id: gw.teardown.end-to-end-cli-integration-test
+    name: End-to-end CLI integration test
+    status: pending
+    description: "Integration test: verify full CLI surface works end-to-end.\n\n\
+      tags: [integration]\n\nTests:\n1. tela serve starts, creates lockfile, serves\
+      \ /health\n2. tela connect discovers server, bridges MCP, disconnects on exit\n\
+      3. tela status --json returns valid status via HTTP\n4. tela profiles --json\
+      \ returns profiles\n5. tela connections --json shows active connections\n6.\
+      \ tela audit --json returns audit entries\n7. tela start returns error (removed\
+      \ command)\n\nevidence_template: |\n  ## Integration Evidence\n  **Command or\
+      \ test exercising the full path**:\n  ```\n  <exact command>\n  ```\n  **Actual\
+      \ output**:\n  ```\n  <stdout/stderr>\n  ```\n  **Path exercised**: CLI -> lockfile\
+      \ -> HTTP -> gateway"
+    verification: '- All 7 test scenarios pass
+
+      - End-to-end path verified with actual output
+
+      - No regressions in query commands'
+    refs:
+    - docs/INTERFACES.md
+    depends_on:
+    - gw.teardown.wiring-audit-cli-teardown
+    agent: blind-tester
+  - id: gw.teardown.gate-cli-teardown
+    name: 'Gate: CLI teardown'
+    status: pending
+    description: "Gate review: Verify CLI refactor complete and old start command\
+      \ removed.\n\nreview_depth: THOROUGH\nreview_depth_rationale: Major refactor\
+      \ touching CLI registry (shared file), removing existing command, adding two\
+      \ new runtime commands.\n\ncross_cutting_focus:\n  - No residual start command\
+      \ references\n  - All CLI args match INTERFACES.md 2 exactly\n  - Query commands\
+      \ use HTTP discovery (not in-process)\n\nBlock if:\n- tela start still accessible\n\
+      - Any CLI arg missing from INTERFACES.md 2\n- Query commands still use in-process\
+      \ state\n- Integration test failed\n- Dead code remaining"
+    verification: '- start removed
+
+      - connect/serve wired
+
+      - Query commands HTTP-based
+
+      - Integration test passed
+
+      - No dead code
+
+      - invar guard clean'
+    depends_on:
+    - gw.teardown.wire-connect-serve-into-cli-remove-start
+    - gw.teardown.update-query-commands-for-http-discovery
+    - gw.teardown.wiring-audit-cli-teardown
+    - gw.teardown.end-to-end-cli-integration-test
+    agent: gate-reviewer
