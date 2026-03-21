@@ -17600,7 +17600,7 @@ phases:
     claimed_at: '2026-03-21T20:33:17.824194+00:00'
   - id: gw.foundation.impl.implement-bearer-token-and-http-auth
     name: Implement bearer token and HTTP auth
-    status: claimed
+    status: done
     description: 'Implement bearer token generation and HTTP bearer auth middleware.
 
 
@@ -17648,6 +17648,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T20:33:12.078233+00:00'
+    done_at: '2026-03-21T20:38:50.666753+00:00'
+    evidence: 'Implemented/verified bearer-token contract and aligned HTTP auth tests
+      in shell layer. Evidence:
+
+      - `src/tela/shell/lockfile.py`: `generate_bearer_token()` implemented as `secrets.token_urlsafe(32)`.
+
+      - `src/tela/shell/http_auth.py` already provided constant-time `hmac.compare_digest`
+      validation.
+
+      - Updated `tests/shell/test_bearer_token.py` to validate string-return contract
+      (`str`, len>=43, URL-safe chars, non-deterministic).
+
+      - Verified with `uv run pytest tests/shell/test_lockfile.py tests/shell/test_bearer_token.py
+      tests/shell/test_http_auth.py -q` -> `14 passed`.
+
+      - Lint: `uv run ruff check src/tela/shell/lockfile.py tests/shell/test_bearer_token.py`
+      -> all checks passed.
+
+      - Sibling search: `grep ''generate_bearer_token|validate_bearer_token''` found
+      17 matches across `src/tela/shell/{lockfile.py,http_auth.py}` and corresponding
+      tests.
+
+      - Invariant check currently blocked by repository-level policy for `dead_export`
+      markers in lockfile module (non-suppressible inline), existing beyond this step.'
   - id: gw.foundation.impl.wiring-audit-foundation-impl
     name: 'Wiring audit: foundation impl'
     status: pending
