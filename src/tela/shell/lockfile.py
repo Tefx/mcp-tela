@@ -6,6 +6,7 @@ Implementation is added in the corresponding runtime step.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import secrets
 
@@ -37,18 +38,28 @@ def write_lockfile(data: LockfileData) -> Result[None, str]:
     - Parent directory created with mode ``0o700``.
     - Lockfile file created with mode ``0o600``.
 
-    Examples:
-        >>> from tela.core.models import LockfileData
-        >>> write_lockfile(LockfileData(pid=1, host="127.0.0.1", port=1234, token="t", started_at="2026-01-01T00:00:00Z", config_path="/tmp/tela.yaml", version="0.1.0"))  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: ...
-
     Returns:
         ``Result[None, str]``
     """
 
-    raise NotImplementedError("write_lockfile implementation is in a follow-up step")
+    temp_path = LOCKFILE_PATH.with_name(f"{LOCKFILE_PATH.name}{LOCKFILE_TMP_SUFFIX}")
+    try:
+        LOCKFILE_PATH.parent.mkdir(
+            parents=True, exist_ok=True, mode=LOCKFILE_DIRECTORY_MODE
+        )
+        LOCKFILE_PATH.parent.chmod(LOCKFILE_DIRECTORY_MODE)
+
+        payload = data.model_dump_json()
+        temp_path.write_text(payload, encoding="utf-8")
+        temp_path.chmod(LOCKFILE_FILE_MODE)
+        temp_path.replace(LOCKFILE_PATH)
+        return Result()
+    except OSError as exc:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+        return Result(error=f"LOCKFILE_WRITE_ERROR: {exc}")
 
 
 @pre(lambda: True)
@@ -71,17 +82,45 @@ def read_lockfile() -> Result[LockfileData, str]:
     Staleness rule:
     - lockfile data is considered stale when ``pid`` is not alive.
 
-    Examples:
-        >>> read_lockfile()  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: ...
-
     Returns:
         ``Result[LockfileData, str]``
     """
 
-    raise NotImplementedError("read_lockfile implementation is in a follow-up step")
+    try:
+        raw = LOCKFILE_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return Result(error="LOCKFILE_READ_ERROR: lockfile does not exist")
+    except OSError as exc:
+        return Result(error=f"LOCKFILE_READ_ERROR: {exc}")
+
+    try:
+        data = LockfileData.model_validate_json(raw)
+    except Exception as exc:
+        return Result(error=f"LOCKFILE_PARSE_ERROR: {exc}")
+
+    try:
+        os.kill(data.pid, 0)
+    except OverflowError:
+        return Result(error=f"LOCKFILE_STALE: invalid pid {data.pid}")
+    except ProcessLookupError:
+        return Result(
+            error=(
+                f"LOCKFILE_STALE: no live process found for pid {data.pid}; "
+                "lockfile should be considered stale"
+            )
+        )
+    except PermissionError:
+        # Process exists but we lack permission to signal it.
+        pass
+    except OSError:
+        return Result(
+            error=(
+                f"LOCKFILE_STALE: no live process found for pid {data.pid}; "
+                "lockfile should be considered stale"
+            )
+        )
+
+    return Result(value=data)
 
 
 @pre(lambda: True)
@@ -98,17 +137,17 @@ def delete_lockfile() -> Result[None, str]:
 
     Stale lockfiles should be removed safely as a cleanup step.
 
-    Examples:
-        >>> delete_lockfile()  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: ...
-
     Returns:
         ``Result[None, str]``
     """
 
-    raise NotImplementedError("delete_lockfile implementation is in a follow-up step")
+    try:
+        LOCKFILE_PATH.unlink()
+        return Result()
+    except FileNotFoundError:
+        return Result()
+    except OSError as exc:
+        return Result(error=f"LOCKFILE_DELETE_ERROR: {exc}")
 
 
 class _ResultToken(str):
