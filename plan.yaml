@@ -17918,3 +17918,8 @@ phases:
     - gw.serve.implement-idle-shutdown-manager
     - gw.serve.tela-serve-liveness-probe
     agent: gate-reviewer
+- id: gw.conflict
+  name: tela. Prefix Conflict Rejection
+  status: locked
+  depends_on:
+  - gw.serve
