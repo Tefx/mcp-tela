@@ -17758,7 +17758,7 @@ phases:
       - docs/INTERFACES.md §7.3 §7.4'
   - id: gw.foundation.impl.gate-foundation-impl
     name: 'Gate: foundation impl'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify foundation implementation phase.
 
 
@@ -17795,6 +17795,8 @@ phases:
     - gw.foundation.impl.wiring-audit-foundation-impl
     - gw.foundation.impl.reaudit-export-is-stale
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-21T20:58:15.244816+00:00'
   - id: gw.foundation.impl.fix-export-is-stale
     name: Fix lockfile stale helper export and read path
     status: done
