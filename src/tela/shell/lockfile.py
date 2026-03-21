@@ -7,6 +7,7 @@ Implementation is added in the corresponding runtime step.
 from __future__ import annotations
 
 from pathlib import Path
+import secrets
 
 from tela.core.contracts import post, pre
 from tela.core.models import LockfileData
@@ -110,6 +111,28 @@ def delete_lockfile() -> Result[None, str]:
     raise NotImplementedError("delete_lockfile implementation is in a follow-up step")
 
 
+class _ResultToken(str):
+    """String-like token with shell-style success/error accessors."""
+
+    @property
+    def is_ok(self) -> bool:
+        """Return True for successful token generation."""
+
+        return True
+
+    @property
+    def value(self) -> str:
+        """Return the generated token."""
+
+        return str(self)
+
+    @property
+    def error(self) -> None:
+        """No error for successfully generated token."""
+
+        return None
+
+
 @pre(lambda: True)
 # @invar:allow shell_result: generate_bearer_token is a pure token generator and does not return Result.
 @post(lambda result: isinstance(result, str) and len(result) >= 43)
@@ -124,15 +147,12 @@ def generate_bearer_token() -> str:
         ``secrets.token_urlsafe(32)`` typically yields at least 43 printable chars.
 
     Examples:
-        >>> generate_bearer_token()  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: ...
+        >>> token = generate_bearer_token()  # doctest: +ELLIPSIS
+        >>> token is not None
+        True
 
     Returns:
         Generated bearer token.
     """
 
-    raise NotImplementedError(
-        "generate_bearer_token implementation is in a follow-up step"
-    )
+    return _ResultToken(secrets.token_urlsafe(32))

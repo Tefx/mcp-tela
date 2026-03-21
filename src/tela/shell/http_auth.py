@@ -8,7 +8,7 @@ import hmac
 
 # @invar:allow shell_orchestration: middleware boundary requires bool return for auth gate contract.
 # @invar:allow shell_result: explicit bool contract required by middleware signature.
-def _validate_bearer_token(request_token: str, expected_token: str) -> bool:
+def validate_bearer_token(request_token: str, expected_token: str) -> bool:
     """Validate bearer token using constant-time comparison.
 
     Implementations must use ``hmac.compare_digest`` for constant-time token
@@ -18,5 +18,5 @@ def _validate_bearer_token(request_token: str, expected_token: str) -> bool:
     return hmac.compare_digest(request_token, expected_token)
 
 
-# Public contract symbol referenced by middleware wiring.
-validate_bearer_token = _validate_bearer_token
+# Internal compatibility symbol used by current tests and call-sites.
+_validate_bearer_token = validate_bearer_token
