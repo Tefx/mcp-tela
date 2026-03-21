@@ -17699,7 +17699,7 @@ phases:
       markers in lockfile module (non-suppressible inline), existing beyond this step.'
   - id: gw.foundation.impl.wiring-audit-foundation-impl
     name: 'Wiring audit: foundation impl'
-    status: claimed
+    status: done
     description: 'Wiring completeness audit: verify every new public symbol is reachable.
 
 
@@ -17726,6 +17726,36 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-21T20:51:06.202137+00:00'
+    done_at: '2026-03-21T20:51:12.828804+00:00'
+    evidence: 'Audit result: BLOCKER detected.
+
+      Verification:
+
+      - Run: uv run invar guard -> passed (0 errors, 0 warnings)
+
+      - Run: uv run pytest tests/shell/test_lockfile.py -> 6 passed
+
+      - Run: uv run pytest tests/shell/test_bearer_token.py tests/shell/test_http_auth.py
+      -> 8 passed
+
+      Reachability findings:
+
+      - Importable: LockfileData, write_lockfile, read_lockfile, delete_lockfile,
+      generate_bearer_token, validate_bearer_token
+
+      - Missing export: is_stale (logic currently inlined inside read_lockfile)
+
+      Contract checks:
+
+      - @pre/@post non-vacuous; no identity lambdas found
+
+      Outcome:
+
+      - Remediation planned via gw.foundation.impl.fix-export-is-stale then gw.foundation.impl.reaudit-export-is-stale
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.3 §7.4'
   - id: gw.foundation.impl.gate-foundation-impl
     name: 'Gate: foundation impl'
     status: pending
