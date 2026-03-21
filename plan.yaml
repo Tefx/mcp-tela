@@ -17335,7 +17335,7 @@ phases:
   steps:
   - id: gw.foundation.test.lockfile-and-bearer-token-tests
     name: Lockfile and bearer token tests
-    status: pending
+    status: claimed
     description: 'Write tests for lockfile I/O and bearer token generation contracts.
 
 
@@ -17387,6 +17387,8 @@ phases:
     refs:
     - docs/INTERFACES.md
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-21T20:11:40.697313+00:00'
   - id: gw.foundation.test.http-auth-middleware-tests
     name: HTTP auth middleware tests
     status: claimed
