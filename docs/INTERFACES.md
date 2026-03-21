@@ -19,8 +19,8 @@ It does not own:
 ## 2. CLI Surface
 
 ```text
-tela connect [--config path] [--default-profile name] [--server host:port]
-tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec]
+tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
+tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--token tok]
 tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -207,6 +207,23 @@ Location: `~/.tela/gateway.lock`
 
 Written atomically by `tela serve` on startup. Deleted on shutdown.
 Stale detection via PID liveness check.
+
+### 7.4 Bearer Token
+
+Every `tela serve` instance auto-generates a bearer token on startup using
+`secrets.token_urlsafe(32)`. The token is:
+
+- printed to stderr for operator visibility
+- stored in the lockfile `token` field
+- required on all HTTP endpoints except `GET /health`
+- validated via constant-time comparison (`hmac.compare_digest`)
+
+Override with `--token` or `TELA_BEARER_TOKEN` for fixed tokens in
+automation/CI. Local `tela connect` reads the token from the lockfile
+automatically. Remote clients pass it via `--token` or `TELA_BEARER_TOKEN`.
+
+This bearer token is independent of config `auth.mode` (which controls
+MCP-level profile binding via CapabilityToken).
 
 ### `tela.profiles`
 

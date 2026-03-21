@@ -156,8 +156,8 @@ These are controlled by the `tela_admin` family in profiles.
 ## CLI
 
 ```text
-tela connect [--config path] [--default-profile name] [--server host:port]
-tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec]
+tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
+tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--token tok]
 tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -185,16 +185,27 @@ servers (`tela serve`) never auto-shutdown.
 
 ### How is the gateway protected?
 
-Every `tela serve` instance generates a bearer token stored in the lockfile
-(`~/.tela/gateway.lock`). All HTTP endpoints require this token. `tela connect`
-reads it automatically. Direct HTTP clients must provide it as an
-`Authorization: Bearer <token>` header. This is independent of config
-`auth.mode` (which controls MCP-level profile binding).
+Every `tela serve` instance auto-generates a bearer token, prints it to stderr,
+and stores it in the lockfile (`~/.tela/gateway.lock`). All HTTP endpoints
+require this token. `tela connect` reads it automatically from the lockfile.
+Remote clients pass it via `--token` or `TELA_BEARER_TOKEN`. Use `--token` on
+`tela serve` to set a fixed token for automation/CI. This is independent of
+config `auth.mode` (which controls MCP-level profile binding).
 
 ### What about LAN deployment?
 
-Use `tela serve --host 0.0.0.0 --port 8080` for LAN. Remote clients use
-`tela connect --server <ip>:8080` or connect directly via HTTP.
+```bash
+tela serve --host 0.0.0.0 --port 8080
+# prints: tela: bearer token: tela_tok_a1b2c3d4...
+```
+
+Copy the printed token and give it to remote clients:
+
+```bash
+tela connect --server 192.168.1.10:8080 --token "tela_tok_a1b2c3d4..."
+# or
+TELA_BEARER_TOKEN="tela_tok_a1b2c3d4..." tela connect --server 192.168.1.10:8080
+```
 
 ## Testing
 

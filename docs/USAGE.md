@@ -181,8 +181,10 @@ auth:
 
 Use token mode for shared or production deployments.
 
-Note: The gateway also generates a per-instance bearer token (stored in the
-lockfile) to protect HTTP endpoints. This is independent of config `auth.mode`.
+Note: The gateway also auto-generates a per-instance bearer token on every
+startup. It is printed to stderr and stored in the lockfile. This protects
+HTTP endpoints and is independent of config `auth.mode`. Use `--token` on
+`tela serve` to set a fixed token, or set `TELA_BEARER_TOKEN`.
 
 ### `audit`
 
@@ -288,33 +290,25 @@ Start the server explicitly:
 
 ```bash
 tela serve --config tela.yaml --host 0.0.0.0 --port 8080
+# prints: tela: bearer token: tela_tok_a1b2c3d4...
 ```
 
-Clients connect via HTTP:
+Copy the printed bearer token and distribute to clients.
 
-```json
-{
-  "mcpServers": {
-    "tela": {
-      "type": "http",
-      "url": "http://gateway-host:8080/mcp"
-    }
-  }
-}
-```
-
-Or via `tela connect` with explicit server:
+Remote clients via `tela connect`:
 
 ```json
 {
   "mcpServers": {
     "tela": {
       "command": "tela",
-      "args": ["connect", "--server", "gateway-host:8080"]
+      "args": ["connect", "--server", "gateway-host:8080", "--token", "tela_tok_a1b2c3d4..."]
     }
   }
 }
 ```
+
+Or set `TELA_BEARER_TOKEN` as an environment variable instead of `--token`.
 
 ### Practical client guidance
 
@@ -382,17 +376,18 @@ Use `tela serve --host 0.0.0.0 --port 8080` with token auth.
 ### `tela connect`
 
 ```bash
-tela connect [--config path] [--default-profile name] [--server host:port]
+tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
 ```
 
 - `--config`: configuration file path (default: `tela.yaml`)
 - `--default-profile`: override the open-mode default profile
 - `--server`: explicit server address as `host:port` (e.g. `192.168.1.10:8080`; skip auto-discover/auto-start)
+- `--token`: bearer token for remote server auth (or set `TELA_BEARER_TOKEN`)
 
 ### `tela serve`
 
 ```bash
-tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec]
+tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--token tok]
 ```
 
 - `--config`: configuration file path (default: `tela.yaml`)
@@ -400,6 +395,9 @@ tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--
 - `--host`: bind address (default: `127.0.0.1`)
 - `--default-profile`: override the open-mode default profile
 - `--idle-timeout`: seconds before auto-shutdown on idle (default: `300`, `0` to disable)
+- `--token`: fixed bearer token override (default: auto-generated; or set `TELA_BEARER_TOKEN`)
+
+The bearer token is always printed to stderr on startup for easy copy-paste.
 
 ### Query commands
 
@@ -435,6 +433,7 @@ Common variables:
 
 - `TELA_SECRET`
 - `TELA_SECRET_PREVIOUS`
+- `TELA_BEARER_TOKEN`
 - `TELA_STATE`
 - `HOME`
 

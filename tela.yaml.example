@@ -374,14 +374,12 @@ audit:
   #     - Tool name, profile, timestamp
   #     - Minimal overhead, suitable for high-traffic
   #
-  # L2: Standard (RECOMMENDED) - Log tool invocations and results
-  #     - Full request/response bodies
-  #     - Connection context
+  # L2: Standard (RECOMMENDED) - Log tool invocations with parameter hash
+  #     - L1 fields plus param_hash and connection context
   #     - Good balance of detail and performance
   #
-  # L3: Verbose - Full request/response with extended metadata
-  #     - All L2 information plus internal routing details
-  #     - Includes tool resolution, family mapping, posture enforcement
+  # L3: Verbose - Full request/response content
+  #     - All L2 fields plus full request/response bodies
   #     - Higher overhead, use for debugging
   #
   level: "L2"
@@ -433,10 +431,11 @@ audit:
 #
 # Common variables:
 #
-#   TELA_SECRET         - Primary HMAC secret (token mode)
+#   TELA_SECRET          - Primary HMAC secret (token mode)
 #   TELA_SECRET_PREVIOUS - Secondary secret for rotation
-#   TELA_STATE          - State directory for audit logs
-#   HOME                - User home directory
+#   TELA_BEARER_TOKEN    - Fixed bearer token for tela serve / tela connect
+#   TELA_STATE           - State directory for audit logs
+#   HOME                 - User home directory
 #
 # Example:
 #   secrets:
