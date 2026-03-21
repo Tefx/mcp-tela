@@ -17817,6 +17817,42 @@ phases:
     depends_on:
     - gw.foundation.impl.wiring-audit-foundation-impl
     agent: python-executor
+  - id: gw.foundation.impl.reaudit-export-is-stale
+    name: Re-run wiring audit for lockfile stale helper export
+    status: pending
+    description: 'Re-run the wiring audit after the lockfile stale helper fix.
+
+
+      As an independent verifier, repeat the wiring audit checks relevant to the blocker
+      and confirm the foundation implementation surface is now wired correctly.
+
+
+      Required checks:
+
+      1. `is_stale` is exported and importable with the required signature
+
+      2. No orphan export remains for the lockfile stale helper
+
+      3. `read_lockfile` now reaches the shared helper instead of retaining inlined
+      stale logic
+
+      4. Any wiring-audit command or import-trace used for the original audit is rerun
+      against the updated surface
+
+
+      This step is a focused re-audit for the blocker, not a new implementation step.'
+    verification: '- Wiring audit evidence shows `is_stale` is importable from the
+      intended export surface
+
+      - Import/reachability checks pass for the lockfile API set
+
+      - Re-audit confirms `read_lockfile` uses the shared stale helper
+
+      - Any blocker from `gw.foundation.impl.wiring-audit-foundation-impl` specific
+      to `is_stale` is closed'
+    depends_on:
+    - gw.foundation.impl.fix-export-is-stale
+    agent: integration-verifier
 - id: gw.http.contract
   name: HTTP Endpoints Contract
   status: locked
