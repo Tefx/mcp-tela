@@ -17153,7 +17153,7 @@ phases:
   steps:
   - id: gw.foundation.contract.lockfile-and-bearer-token-contracts
     name: Lockfile and bearer token contracts
-    status: claimed
+    status: done
     description: "Define contracts for LockfileData model, lockfile I/O, and bearer\
       \ token generation.\n\nSpec refs: INTERFACES.md 7.3 (lockfile), INTERFACES.md\
       \ 7.4 (bearer token)\n\nLockfileData model MUST contain ALL 7 fields from INTERFACES.md\
@@ -17188,6 +17188,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T19:48:08.385933+00:00'
+    done_at: '2026-03-21T19:53:06.048257+00:00'
+    evidence: 'Commit hash(es): 1d06c25
+
+      Files changed:
+
+      - src/tela/core/models.py
+
+      - src/tela/shell/lockfile.py
+
+      Verification:
+
+      - Run: uv run mypy src/tela/core/models.py src/tela/shell/lockfile.py -> passed
+
+      - Run: uv run pytest tests/core/test_models.py -> 35 passed
+
+      - Run: invar guard --all -> failed due pre-existing unrelated issues
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.3, §7.4
+
+      Gaps/Notes:
+
+      - Contract stubs intentionally use NotImplementedError; runtime implementation
+      deferred'
   - id: gw.foundation.contract.http-endpoint-and-middleware-contracts
     name: HTTP endpoint and middleware contracts
     status: done
