@@ -17145,3 +17145,8 @@ phases:
       Spec link:
 
       - post_invar.final_audit.gate remediation retest requirements'
+- id: gw.foundation.contract
+  name: Gateway Foundation Contracts
+  status: pending
+  depends_on:
+  - post_invar.final_audit
