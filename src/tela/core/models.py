@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping
 
+from typing import Literal
+
 from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 from tela.core.contracts import post, pre
@@ -93,7 +95,7 @@ class ServerConfig(BaseModel):
     command: str | None = None
     args: list[str] = Field(default_factory=list)
     url: str | None = None
-    transport: str | None = None
+    transport: Literal["http"] | None = None
     env: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)

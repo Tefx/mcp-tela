@@ -19,7 +19,7 @@ It does not own:
 ## 2. CLI Surface
 
 ```text
-tela start [--config path] [--port port] [--default-profile name]
+tela start [--config path] [--port port] [--transport {stdio,sse,http}] [--default-profile name]
 tela status [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -40,7 +40,8 @@ Each server defines one downstream MCP provider.
 
 Required transport choice:
 - `command` for stdio
-- or `url` for SSE
+- `url` for SSE (legacy, default when `transport` is omitted)
+- `url` + `transport: http` for Streamable HTTP (MCP 2025-03-26+)
 
 Optional gateway controls:
 - `family`
@@ -207,6 +208,10 @@ connection mode per server:
 - stdio server contract: `ServerConfig.command` is required; client connect uses
   `command`, `args`, and `env` from config.
 - SSE server contract: `ServerConfig.url` is required; client connect uses `url`.
+  This is the default when `transport` is omitted.
+- Streamable HTTP server contract: `ServerConfig.url` is required and
+  `ServerConfig.transport` must be `"http"`; client connect uses
+  `streamable_http_client`.
 - mixed transport fields (`command` and `url` both set) are invalid and must be
   rejected as a config/runtime contract violation.
 

@@ -467,6 +467,25 @@ def test_http_config_has_url_and_transport(http_server_config: ServerConfig) -> 
     assert http_server_config.command is None
 
 
+def test_server_config_rejects_invalid_transport() -> None:
+    """ServerConfig.transport only accepts 'http' or None."""
+    import pytest
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        ServerConfig(name="bad", url="http://localhost/mcp", transport="ftp")  # type: ignore[arg-type]
+
+    with pytest.raises(ValidationError):
+        ServerConfig(name="bad", url="http://localhost/mcp", transport="sse")  # type: ignore[arg-type]
+
+    # Valid values
+    ok_none = ServerConfig(name="ok", url="http://localhost/mcp")
+    assert ok_none.transport is None
+
+    ok_http = ServerConfig(name="ok", url="http://localhost/mcp", transport="http")
+    assert ok_http.transport == "http"
+
+
 def test_minimal_sse_config_url_only(
     minimal_sse_config: ServerConfig,
 ) -> None:
@@ -532,6 +551,60 @@ def test_mixed_stdio_and_sse_servers_in_connect_all(
     assert len(all_tools) == 2
     assert "filesystem" in all_tools
     assert "remote_service" in all_tools
+
+    asyncio.run(disconnect_all())
+
+
+def test_http_connect_all_registers_tools_from_tool_lists(
+    http_server_config: ServerConfig,
+) -> None:
+    """connect_all with Streamable HTTP server config registers tools."""
+    servers = {"remote_http": http_server_config}
+    tool_lists = {
+        "remote_http": [
+            {"name": "query_api", "inputSchema": {"type": "object"}},
+        ],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    tools = registry.get_all_tools()
+    assert "remote_http" in tools
+    assert len(tools["remote_http"]) == 1
+
+    tool = registry.get_tool("query_api")
+    assert tool is not None
+    assert tool.server_name == "remote_http"
+
+    asyncio.run(disconnect_all())
+
+
+def test_mixed_stdio_sse_and_http_servers_in_connect_all(
+    stdio_server_config: ServerConfig,
+    sse_server_config: ServerConfig,
+    http_server_config: ServerConfig,
+) -> None:
+    """connect_all supports mixed stdio, SSE, and HTTP server configurations."""
+    servers = {
+        "filesystem": stdio_server_config,
+        "remote_sse": sse_server_config,
+        "remote_http": http_server_config,
+    }
+    tool_lists = {
+        "filesystem": [{"name": "read_file", "inputSchema": {}}],
+        "remote_sse": [{"name": "fetch_data", "inputSchema": {}}],
+        "remote_http": [{"name": "query_api", "inputSchema": {}}],
+    }
+    result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
+    assert result.is_ok
+
+    registry = get_registry()
+    all_tools = registry.get_all_tools()
+    assert len(all_tools) == 3
+    assert "filesystem" in all_tools
+    assert "remote_sse" in all_tools
+    assert "remote_http" in all_tools
 
     asyncio.run(disconnect_all())
 
