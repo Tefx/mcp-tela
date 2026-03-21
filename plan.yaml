@@ -17150,3 +17150,67 @@ phases:
   status: pending
   depends_on:
   - post_invar.final_audit
+  steps:
+  - id: gw.foundation.contract.lockfile-and-bearer-token-contracts
+    name: Lockfile and bearer token contracts
+    status: pending
+    description: "Define contracts for LockfileData model, lockfile I/O, and bearer\
+      \ token generation.\n\nSpec refs: INTERFACES.md 7.3 (lockfile), INTERFACES.md\
+      \ 7.4 (bearer token)\n\nLockfileData model MUST contain ALL 7 fields from INTERFACES.md\
+      \ 7.3:\n- pid: int\n- host: str\n- port: int\n- token: str\n- started_at: str\
+      \ (ISO 8601)\n- config_path: str\n- version: str\n\nLockfile I/O contracts:\n\
+      - write_lockfile: writes LockfileData to ~/.tela/gateway.lock\n- ATOMIC WRITE:\
+      \ write to temp file, then os.rename (GAP 4)\n- File permissions 0o600. Directory\
+      \ created with 0o700.\n- read_lockfile: reads and parses lockfile, returns Result[LockfileData,\
+      \ str]\n- delete_lockfile: removes lockfile on shutdown\n- stale detection:\
+      \ check PID liveness\n\nBearer token generation contract (GAP 1):\n- generate_bearer_token()\
+      \ -> str: uses secrets.token_urlsafe(32)\n- Token lifecycle is a unit: generate,\
+      \ print to stderr, store in lockfile token field\n\nFiles:\n- src/tela/core/models.py\
+      \ (LockfileData)\n- src/tela/shell/lockfile.py (new: lockfile I/O)\n\nstep_type:\
+      \ contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - LockfileData model\
+      \ with all 7 fields\n  - write_lockfile / read_lockfile / delete_lockfile signatures\
+      \ with @pre/@post\n  - generate_bearer_token signature with @post\n  - stubs\
+      \ with raise NotImplementedError"
+    verification: '- LockfileData has exactly 7 fields matching INTERFACES.md 7.3
+
+      - write_lockfile signature includes atomic rename contract
+
+      - generate_bearer_token uses secrets.token_urlsafe(32) in contract
+
+      - All functions have @pre/@post contracts and doctests
+
+      - No implementation logic (stubs only)
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/core/models.py
+    agent: python-executor
+  - id: gw.foundation.contract.http-endpoint-and-middleware-contracts
+    name: HTTP endpoint and middleware contracts
+    status: pending
+    description: "Define contracts for HTTP endpoint models and bearer auth middleware.\n\
+      \nSpec refs: INTERFACES.md 7.2 (HTTP endpoints), INTERFACES.md 7.4 (bearer token\
+      \ validation)\n\nHTTP endpoint models:\n- HealthResponse: {status: str, pid:\
+      \ int}\n- StatusResponse: full runtime status\n- ConnectRequest / DisconnectRequest:\
+      \ bridge registration\n\nBearer auth middleware contract:\n- validate_bearer_token(request_token:\
+      \ str, expected_token: str) -> bool\n- MUST use hmac.compare_digest for constant-time\
+      \ comparison (GAP 5)\n- GET /health requires NO auth\n- All other endpoints\
+      \ require Bearer token\n\nFiles:\n- src/tela/core/models.py (response/request\
+      \ models)\n- src/tela/shell/http_auth.py (new: bearer validation)\n\nstep_type:\
+      \ contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - Request/response\
+      \ models\n  - validate_bearer_token signature with hmac.compare_digest in docstring\n\
+      \  - stubs only"
+    verification: '- validate_bearer_token docstring specifies hmac.compare_digest
+
+      - HealthResponse matches INTERFACES.md 7.2 {status:ok, pid:N}
+
+      - All models have type annotations
+
+      - No implementation logic
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/core/models.py
+    agent: python-executor
