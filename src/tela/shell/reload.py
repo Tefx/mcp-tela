@@ -30,7 +30,6 @@ from tela.shell.downstream import (
     _registry_lock,
     connect_all,
     disconnect_all,
-    get_all_tools,
     get_registry,
     re_enumerate,
 )

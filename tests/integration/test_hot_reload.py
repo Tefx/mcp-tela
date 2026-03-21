@@ -39,7 +39,7 @@ def test_re_enumerate_updates_registry() -> None:
 
     # Initial connect with 1 tool
     asyncio.run(connect_all(servers, tool_lists={"fs": [{"name": "read_file", "inputSchema": {}}]}))
-    assert get_tool_server("read_file") == "fs"
+    assert get_tool_server("read_file").value == "fs"
 
     # Simulate re-enumeration with 2 tools (re-connect with updated list)
     asyncio.run(connect_all(servers, tool_lists={
@@ -48,8 +48,8 @@ def test_re_enumerate_updates_registry() -> None:
             {"name": "write_file", "inputSchema": {}},
         ]
     }))
-    assert get_tool_server("read_file") == "fs"
-    assert get_tool_server("write_file") == "fs"
+    assert get_tool_server("read_file").value == "fs"
+    assert get_tool_server("write_file").value == "fs"
     asyncio.run(disconnect_all())
 
 
@@ -61,15 +61,15 @@ def test_re_enumerate_removes_old_tools() -> None:
     asyncio.run(connect_all(servers, tool_lists={
         "fs": [{"name": "tool_a", "inputSchema": {}}, {"name": "tool_b", "inputSchema": {}}]
     }))
-    assert get_tool_server("tool_a") == "fs"
-    assert get_tool_server("tool_b") == "fs"
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value == "fs"
 
     # Re-enumerate: only tool_a
     asyncio.run(connect_all(servers, tool_lists={
         "fs": [{"name": "tool_a", "inputSchema": {}}]
     }))
-    assert get_tool_server("tool_a") == "fs"
-    assert get_tool_server("tool_b") is None
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value is None
     asyncio.run(disconnect_all())
 
 
@@ -103,7 +103,7 @@ def test_connect_all_rejects_conflict_preserves_empty() -> None:
     result = asyncio.run(connect_all(servers, tool_lists=tool_lists))
     assert result.is_err
     assert "TOOL_CONFLICT" in (result.error or "")
-    assert get_all_tools() == {}
+    assert get_all_tools().value == {}
 
 
 # --- No-drop-connection invariant shapes ---
@@ -166,7 +166,7 @@ def test_tools_digest_from_registry() -> None:
 
     all_tools = get_all_tools()
     # Compute a simple digest from tool names
-    tool_names = sorted(t.name for ts in all_tools.values() for t in ts)
+    tool_names = sorted(t.name for ts in all_tools.value.values() for t in ts)
     digest = ":".join(tool_names)
     assert digest == "read_file:write_file"
     asyncio.run(disconnect_all())

@@ -426,7 +426,7 @@ def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:
     """Return all resolved tools grouped by server name.
 
     Examples:
-        >>> get_all_tools()
+        >>> get_all_tools().value
         {}
 
     Returns:
@@ -440,7 +440,7 @@ def get_tool_server(tool_name: str) -> Result[str | None, str]:
     """Look up which server owns a given tool name.
 
     Examples:
-        >>> get_tool_server("nonexistent") is None
+        >>> get_tool_server("nonexistent").value is None
         True
 
     Args:

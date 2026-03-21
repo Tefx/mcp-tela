@@ -12,6 +12,7 @@ from mcp.types import ListToolsResult, Tool
 
 from tela.core.models import ServerConfig, TelaConfig
 from tela.shell import downstream
+from tela.shell.config_loader import Result
 from tela.shell.gateway import get_runtime
 
 
@@ -33,16 +34,17 @@ def test_connect_all_enumerates_real_stdio_server() -> None:
     assert result.is_ok
 
     tools = downstream.get_all_tools()
-    assert "local_stdio" in tools
-    assert len(tools["local_stdio"]) >= 1
-    assert downstream.get_tool_server("ping") == "local_stdio"
+    assert tools.is_ok
+    assert "local_stdio" in tools.value
+    assert len(tools.value["local_stdio"]) >= 1
+    assert downstream.get_tool_server("ping").value == "local_stdio"
 
     first_disconnect = asyncio.run(downstream.disconnect_all())
     second_disconnect = asyncio.run(downstream.disconnect_all())
     assert first_disconnect.is_ok
     assert second_disconnect.is_ok
     assert downstream._clients == {}
-    assert downstream.get_all_tools() == {}
+    assert downstream.get_all_tools().value == {}
 
 
 def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
@@ -77,11 +79,11 @@ def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
         server_name: str,
         server_config: ServerConfig,
         message_handler: Any | None = None,
-    ) -> downstream._ClientHandle:
+    ) -> Result[downstream._ClientHandle, str]:
         del server_name
         del server_config
         del message_handler
-        return downstream._ClientHandle(session=FakeSession(), stack=fake_stack)
+        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=fake_stack))
 
     monkeypatch.setattr(
         downstream,
@@ -98,13 +100,13 @@ def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
 
     result = asyncio.run(downstream.connect_all(servers))
     assert result.is_ok
-    assert downstream.get_tool_server("mock_tool") == "mocked"
+    assert downstream.get_tool_server("mock_tool").value == "mocked"
 
     cleanup = asyncio.run(downstream.disconnect_all())
     assert cleanup.is_ok
     assert fake_stack.closed is True
     assert downstream._clients == {}
-    assert downstream.get_all_tools() == {}
+    assert downstream.get_all_tools().value == {}
 
 
 def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
@@ -128,28 +130,18 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
         async def aclose(self) -> None:
             return None
 
-    async def _fake_open_sse_client(
+    async def _fake_open_client_for_sse(
         server_name: str,
         server_config: ServerConfig,
         message_handler: Any | None = None,
-    ) -> downstream._ClientHandle:
+    ) -> Result[downstream._ClientHandle, str]:
+        # Verify SSE transport path selected by URL
         assert server_name == "remote"
         assert server_config.url == "http://localhost:8765/sse"
         del message_handler
-        return downstream._ClientHandle(session=FakeSession(), stack=FakeStack())
+        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))
 
-    async def _fail_open_stdio_client(
-        server_name: str,
-        server_config: ServerConfig,
-        message_handler: Any | None = None,
-    ) -> downstream._ClientHandle:
-        del server_name
-        del server_config
-        del message_handler
-        raise AssertionError("stdio path must not be used for SSE server")
-
-    monkeypatch.setattr(downstream, "_open_sse_client", _fake_open_sse_client)
-    monkeypatch.setattr(downstream, "_open_stdio_client", _fail_open_stdio_client)
+    monkeypatch.setattr(downstream, "_open_client_for_server", _fake_open_client_for_sse)
 
     result = asyncio.run(
         downstream.connect_all(
@@ -162,7 +154,7 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
         )
     )
     assert result.is_ok
-    assert downstream.get_tool_server("sse_tool") == "remote"
+    assert downstream.get_tool_server("sse_tool").value == "remote"
 
     cleanup = asyncio.run(downstream.disconnect_all())
     assert cleanup.is_ok
@@ -255,11 +247,11 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
         server_name: str,
         server_config: ServerConfig,
         message_handler: Any | None = None,
-    ) -> downstream._ClientHandle:
+    ) -> Result[downstream._ClientHandle, str]:
         del server_name
         del server_config
         del message_handler
-        return downstream._ClientHandle(session=fake_session, stack=FakeStack())
+        return Result(value=downstream._ClientHandle(session=fake_session, stack=FakeStack()))
 
     monkeypatch.setattr(
         downstream,
@@ -270,8 +262,8 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
     servers = {"mocked": ServerConfig(name="mocked", command="unused-command")}
     connect_result = asyncio.run(downstream.connect_all(servers))
     assert connect_result.is_ok
-    assert downstream.get_tool_server("initial_tool") == "mocked"
-    assert downstream.get_tool_server("new_tool") is None
+    assert downstream.get_tool_server("initial_tool").value == "mocked"
+    assert downstream.get_tool_server("new_tool").value is None
 
     runtime = get_runtime()
     previous_config = runtime.config
@@ -283,8 +275,8 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
         tool_names = sorted(tool.name for tool in re_enum_result.value)
         assert tool_names == ["initial_tool", "new_tool"]
 
-        assert downstream.get_tool_server("initial_tool") == "mocked"
-        assert downstream.get_tool_server("new_tool") == "mocked"
+        assert downstream.get_tool_server("initial_tool").value == "mocked"
+        assert downstream.get_tool_server("new_tool").value == "mocked"
     finally:
         runtime.config = previous_config
 
@@ -379,11 +371,11 @@ def test_message_handler_routes_reconnect_exception(monkeypatch: Any) -> None:
         server_name: str,
         server_config: ServerConfig,
         message_handler: Any | None = None,
-    ) -> downstream._ClientHandle:
+    ) -> Result[downstream._ClientHandle, str]:
         del server_name
         del server_config
         del message_handler
-        return downstream._ClientHandle(session=FakeSession(), stack=FakeStack())
+        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))
 
     async def _fake_on_server_reconnect(
         server_name: str,

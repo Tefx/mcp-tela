@@ -30,7 +30,15 @@ class TestL5PureFunctionsInCore:
 
     def test_no_io_imports_in_core(self) -> None:
         core_dir = Path("src/tela/core")
-        io_modules = {"os", "subprocess", "shutil", "socket", "http", "urllib", "requests"}
+        io_modules = {
+            "os",
+            "subprocess",
+            "shutil",
+            "socket",
+            "http",
+            "urllib",
+            "requests",
+        }
 
         for py_file in core_dir.glob("*.py"):
             if py_file.name in ("__init__.py", "contracts.py"):
@@ -42,9 +50,7 @@ class TestL5PureFunctionsInCore:
                     if stripped.startswith("#"):
                         continue
                     if f"import {mod}" in stripped or f"from {mod}" in stripped:
-                        pytest.fail(
-                            f"{py_file.name} has I/O import: {stripped}"
-                        )
+                        pytest.fail(f"{py_file.name} has I/O import: {stripped}")
 
 
 # --- L11: __init__.py exists ---
@@ -102,8 +108,10 @@ class TestL17DigestSHA256:
         """Verify audit param hash uses SHA-256."""
         from tela.shell.audit import _compute_param_hash
 
-        h = _compute_param_hash({"key": "value"})
-        assert h.startswith("sha256:")
+        result = _compute_param_hash({"key": "value"})
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.startswith("sha256:")
 
 
 # --- L18: License exists ---
@@ -147,8 +155,13 @@ class TestL20ProfileCatalog:
         from tela.core.catalog import BUILTIN_PROFILES
 
         expected = {
-            "read_only", "fetch_external", "modify_local",
-            "send_external", "orchestrate", "execute_safe", "execute_full",
+            "read_only",
+            "fetch_external",
+            "modify_local",
+            "send_external",
+            "orchestrate",
+            "execute_safe",
+            "execute_full",
         }
         assert set(BUILTIN_PROFILES.keys()) == expected
 

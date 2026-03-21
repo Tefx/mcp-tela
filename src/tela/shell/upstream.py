@@ -200,8 +200,9 @@ async def handle_tools_list(
         >>> runtime = get_runtime()
         >>> runtime.config = None  # Gateway not started
         >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
-        >>> asyncio.run(handle_tools_list(conn))
-        []
+        >>> result = asyncio.run(handle_tools_list(conn))
+        >>> result.is_err and "GATEWAY_NOT_STARTED" in result.error
+        True
 
     Args:
         connection: Active upstream connection context.
@@ -348,8 +349,9 @@ def handle_profiles_list() -> Result[list[dict], str]:
         >>> from tela.shell.gateway import get_runtime
         >>> runtime = get_runtime()
         >>> runtime.config = None  # Gateway not started
-        >>> handle_profiles_list()
-        []
+        >>> result = handle_profiles_list()
+        >>> result.is_err and "GATEWAY_NOT_STARTED" in result.error
+        True
 
     Returns:
         List of profile dicts once implemented.

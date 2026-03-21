@@ -204,10 +204,7 @@ def test_handle_initialize_uses_profile_binding_resolver(
     )
     from tela.shell.config_loader import Result
     from tela.shell.gateway import get_runtime
-    from tela.shell.upstream import (
-        InitializeContext,
-        handle_initialize,
-    )
+    from tela.shell.upstream import handle_initialize
 
     calls: list[InitializeContext] = []
 
@@ -277,7 +274,9 @@ def test_handle_tools_list_returns_empty_when_no_gateway() -> None:
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
     result = asyncio.run(handle_tools_list(conn))
-    assert result == []
+    assert result.is_err
+    assert result.error is not None
+    assert "GATEWAY_NOT_STARTED" in result.error
 
 
 def test_handle_tools_call_returns_error_when_no_gateway() -> None:
@@ -302,7 +301,9 @@ def test_handle_profiles_list_returns_empty_when_no_gateway() -> None:
 
     get_runtime().config = None
     result = handle_profiles_list()
-    assert result == []
+    assert result.is_err
+    assert result.error is not None
+    assert "GATEWAY_NOT_STARTED" in result.error
 
 
 def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
@@ -328,7 +329,7 @@ def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
 
     result = handle_profiles_list()
 
-    assert result == [
+    assert result.value == [
         {
             "profile_name": "dev",
             "default": False,

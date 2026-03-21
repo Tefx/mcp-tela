@@ -57,7 +57,7 @@ def test_on_tools_changed_adds_new_tool() -> None:
         )
     )
     assert result.is_ok
-    assert get_tool_server("write_file") == "fs"
+    assert get_tool_server("write_file").value == "fs"
     _teardown()
 
 
@@ -78,8 +78,8 @@ def test_on_tools_changed_removes_old_tool() -> None:
         on_tools_changed("fs", servers["fs"], [{"name": "tool_a", "inputSchema": {}}])
     )
     assert result.is_ok
-    assert get_tool_server("tool_a") == "fs"
-    assert get_tool_server("tool_b") is None
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value is None
     _teardown()
 
 
@@ -111,7 +111,7 @@ def test_on_tools_changed_rejects_conflict() -> None:
     assert result.is_err
     assert "TOOL_CONFLICT" in (result.error or "")
     # Previous tools preserved
-    assert get_tool_server("other_tool") == "custom"
+    assert get_tool_server("other_tool").value == "custom"
     _teardown()
 
 
@@ -131,7 +131,7 @@ def test_on_server_reconnect_updates_tools() -> None:
         )
     )
     assert result.is_ok
-    assert get_tool_server("new_tool") == "fs"
+    assert get_tool_server("new_tool").value == "fs"
     _teardown()
 
 
@@ -145,7 +145,6 @@ def test_on_config_changed_updates_runtime() -> None:
 
 def test_on_config_changed_sets_runtime_config() -> None:
     """on_config_changed updates the runtime config reference."""
-    from tela.shell.gateway import get_runtime
 
     runtime = _runtime()
     old_config = runtime.config  # Save current config
@@ -163,7 +162,6 @@ def test_on_config_changed_sets_runtime_config() -> None:
 
 def test_on_config_changed_detects_server_removal() -> None:
     """on_config_changed detects removed servers and triggers disconnect."""
-    from tela.shell.gateway import get_runtime
     from tela.shell.downstream import get_all_tools
 
     runtime = _runtime()
@@ -196,7 +194,6 @@ def test_on_config_changed_detects_server_removal() -> None:
 
 def test_on_config_changed_identical_config_no_reconnect() -> None:
     """When old and new configs are identical, no disconnect/reconnect occurs."""
-    from tela.shell.gateway import get_runtime
 
     runtime = _runtime()
     old_config_ref = runtime.config
@@ -227,7 +224,6 @@ def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
     This test verifies the reconnect path is attempted. For actual connection
     tests, use the integration tests with real MCP servers.
     """
-    from tela.shell.gateway import get_runtime
 
     runtime = _runtime()
     old_config_ref = runtime.config
@@ -503,8 +499,8 @@ def test_re_enumeration_updates_registry_via_reload() -> None:
     )
 
     # Initial state
-    assert get_tool_server("tool_a") == "fs"
-    assert get_tool_server("tool_b") is None
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value is None
 
     # Re-enumerate via on_tools_changed
     result = asyncio.run(
@@ -521,9 +517,9 @@ def test_re_enumeration_updates_registry_via_reload() -> None:
     assert result.is_ok
 
     # Registry reflects all three tools
-    assert get_tool_server("tool_a") == "fs"
-    assert get_tool_server("tool_b") == "fs"
-    assert get_tool_server("tool_c") == "fs"
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value == "fs"
+    assert get_tool_server("tool_c").value == "fs"
 
     _teardown()
 
@@ -558,10 +554,10 @@ def test_re_enumeration_preserves_other_servers() -> None:
     assert result.is_ok
 
     # fs tools updated
-    assert get_tool_server("read_file") == "fs"
-    assert get_tool_server("write_file") == "fs"
+    assert get_tool_server("read_file").value == "fs"
+    assert get_tool_server("write_file").value == "fs"
     # git tools preserved
-    assert get_tool_server("git_status") == "git"
+    assert get_tool_server("git_status").value == "git"
 
     _teardown()
 
@@ -596,7 +592,7 @@ def test_conflict_rollback_restores_all_servers_state() -> None:
     assert "TOOL_CONFLICT" in (result.error or "")
 
     # Both servers' tools should be preserved (rollback)
-    assert get_tool_server("tool_a") == "fs"
-    assert get_tool_server("tool_b") == "git"
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value == "git"
 
     _teardown()

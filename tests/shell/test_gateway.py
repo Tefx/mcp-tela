@@ -271,8 +271,8 @@ def test_gateway_start_with_servers_and_tools() -> None:
     assert result.is_ok
 
     status = asyncio.run(gateway_status())
-    assert status.server_count == 1
-    assert "fs" in status.connected_servers
+    assert status.value.server_count == 1
+    assert "fs" in status.value.connected_servers
 
     # Cleanup
     asyncio.run(gateway_shutdown())
@@ -337,10 +337,10 @@ def test_gateway_status_after_start() -> None:
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
 
     status = asyncio.run(gateway_status())
-    assert status.server_count == 1
-    assert status.profile_count == 1
-    assert status.active_connections == 0
-    assert status.total_tool_calls == 0
+    assert status.value.server_count == 1
+    assert status.value.profile_count == 1
+    assert status.value.active_connections == 0
+    assert status.value.total_tool_calls == 0
 
     asyncio.run(gateway_shutdown())
 
@@ -358,7 +358,7 @@ def test_gateway_connections_empty_initially() -> None:
             tela_config=TelaConfig(),
         )
     )
-    assert asyncio.run(gateway_connections()) == []
+    assert asyncio.run(gateway_connections()).value == []
     asyncio.run(gateway_shutdown())
 
 

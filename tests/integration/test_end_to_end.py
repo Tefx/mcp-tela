@@ -278,8 +278,9 @@ def test_end_to_end_real_stdio_server_enumerate_and_call() -> None:
             assert initialize_result.is_ok
             assert initialize_result.value is not None
 
-            tools = await handle_tools_list(initialize_result.value)
-            tool_names = sorted(tool["name"] for tool in tools)
+            tools_result = await handle_tools_list(initialize_result.value)
+            assert tools_result.is_ok
+            tool_names = sorted(tool["name"] for tool in tools_result.value)
             assert "echo" in tool_names
             assert "ping" in tool_names
 

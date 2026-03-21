@@ -17,13 +17,7 @@ from __future__ import annotations
 import pytest
 
 from tela.core.config import ConfigContractError, parse_config
-from tela.core.models import (
-    AuthConfig,
-    AuthMode,
-    ProfileConfig,
-    ServerConfig,
-    TelaConfig,
-)
+from tela.core.models import ServerConfig
 
 
 # --- Default behavior tests ---
