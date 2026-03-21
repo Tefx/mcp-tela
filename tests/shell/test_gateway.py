@@ -60,6 +60,17 @@ def test_gateway_startup_config_sse_carries_port() -> None:
     assert config.port == 8080
 
 
+def test_gateway_startup_config_http_carries_port() -> None:
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.HTTP,
+        port=8080,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
+    )
+    assert config.transport == GatewayTransport.HTTP
+    assert config.port == 8080
+
+
 def test_gateway_startup_config_is_frozen() -> None:
     config = GatewayStartupConfig(
         transport=GatewayTransport.STDIO,

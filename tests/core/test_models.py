@@ -133,6 +133,7 @@ class TestEnums:
     def test_gateway_transport_values(self) -> None:
         assert GatewayTransport.STDIO.value == "stdio"
         assert GatewayTransport.SSE.value == "sse"
+        assert GatewayTransport.HTTP.value == "http"
 
     def test_audit_level_values(self) -> None:
         assert AuditLevel.L1.value == "L1"
@@ -244,6 +245,16 @@ class TestContractDataclasses:
             port=8080,
             cli_default_profile="dev",
         )
+        assert rb.port == 8080
+
+    def test_runtime_binding_http(self) -> None:
+        rb = RuntimeBindingContract(
+            config_path="tela.yaml",
+            transport=GatewayTransport.HTTP,
+            port=8080,
+            cli_default_profile="dev",
+        )
+        assert rb.transport == GatewayTransport.HTTP
         assert rb.port == 8080
 
     def test_initialize_profile_binding_resolved(self) -> None:

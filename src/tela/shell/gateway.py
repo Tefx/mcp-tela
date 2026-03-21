@@ -2,7 +2,7 @@
 
 This module implements the gateway lifecycle: start (load config, connect
 downstreams), shutdown (disconnect downstreams), status, and connections.
-Transport startup (stdio/SSE) is wired via CLI in tela.cli.
+Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 """
 
 from __future__ import annotations
@@ -36,7 +36,8 @@ class GatewayStartupConfig:
 
     Semantics:
     - stdio is the default transport.
-    - SSE is optional and enabled only when an explicit port is provided.
+    - HTTP (Streamable HTTP) is the default remote transport when a port is given.
+    - SSE is the legacy remote transport, retained for backward compatibility.
     - open mode requires no token and must carry an explicit default profile.
     """
 
@@ -62,7 +63,7 @@ class GatewayRuntime:
 def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str]:
     """Create FastMCP server instance from gateway transport config."""
 
-    if config.transport == GatewayTransport.SSE and config.port is not None:
+    if config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP) and config.port is not None:
         return Result(value=FastMCP("tela-gateway", port=config.port))
 
     return Result(value=FastMCP("tela-gateway"))

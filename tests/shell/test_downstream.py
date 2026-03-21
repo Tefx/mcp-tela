@@ -74,6 +74,16 @@ def minimal_stdio_config() -> ServerConfig:
 
 
 @pytest.fixture
+def http_server_config() -> ServerConfig:
+    """ServerConfig for a Streamable HTTP downstream MCP server."""
+    return ServerConfig(
+        name="remote_http",
+        url="http://localhost:8080/mcp",
+        transport="http",
+    )
+
+
+@pytest.fixture
 def minimal_sse_config() -> ServerConfig:
     """Minimal SSE config with url only."""
     return ServerConfig(
@@ -448,6 +458,13 @@ def test_sse_config_has_url(sse_server_config: ServerConfig) -> None:
     """SSE ServerConfig has url field."""
     assert sse_server_config.url == "http://localhost:8080/sse"
     assert sse_server_config.command is None
+
+
+def test_http_config_has_url_and_transport(http_server_config: ServerConfig) -> None:
+    """Streamable HTTP ServerConfig has url and transport='http'."""
+    assert http_server_config.url == "http://localhost:8080/mcp"
+    assert http_server_config.transport == "http"
+    assert http_server_config.command is None
 
 
 def test_minimal_sse_config_url_only(

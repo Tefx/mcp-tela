@@ -36,10 +36,15 @@ class AuthMode(str, Enum):
 
 
 class GatewayTransport(str, Enum):
-    """Gateway transport contract for runtime startup."""
+    """Gateway transport contract for runtime startup.
+
+    ``HTTP`` is the MCP Streamable HTTP transport (spec 2025-03-26+).
+    ``SSE`` is the legacy SSE transport, retained for backward compatibility.
+    """
 
     STDIO = "stdio"
     SSE = "sse"
+    HTTP = "http"
 
 
 class DefaultProfileResolutionStatus(str, Enum):
@@ -76,12 +81,19 @@ class ToolOverride(BaseModel):
 
 
 class ServerConfig(BaseModel):
-    """Configuration for a single downstream server."""
+    """Configuration for a single downstream server.
+
+    Transport selection:
+    - ``command`` set → stdio
+    - ``url`` set + ``transport == "http"`` → Streamable HTTP (MCP 2025-03-26+)
+    - ``url`` set (default) → SSE (legacy, backward-compatible)
+    """
 
     name: str
     command: str | None = None
     args: list[str] = Field(default_factory=list)
     url: str | None = None
+    transport: str | None = None
     env: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
@@ -327,7 +339,8 @@ class RuntimeBindingContract:
 
     Contract semantics:
     - `transport=GatewayTransport.STDIO` when CLI omits `--port`.
-    - `transport=GatewayTransport.SSE` when CLI provides `--port`.
+    - `transport=GatewayTransport.HTTP` when CLI provides `--port` (default remote).
+    - `transport=GatewayTransport.SSE` when CLI provides `--port --transport sse`.
     - `cli_default_profile` reflects `--default-profile` without guessing.
     """
 

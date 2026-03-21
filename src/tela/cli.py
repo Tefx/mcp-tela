@@ -71,7 +71,13 @@ def main(argv: list[str] | None = None) -> int:
         "--port",
         type=int,
         default=None,
-        help="SSE port (omit for stdio transport)",
+        help="Remote transport port (default: Streamable HTTP; omit for stdio)",
+    )
+    start_parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "http"],
+        default=None,
+        help="Transport protocol (default: http when --port given, else stdio)",
     )
     start_parser.add_argument(
         "--default-profile",
@@ -207,6 +213,7 @@ def _handle_start(args: argparse.Namespace) -> Result[int, str]:
         config_path=args.config,
         port=args.port,
         default_profile=args.default_profile,
+        transport=args.transport,
     )
 
     if runtime_result.is_err:
@@ -246,7 +253,7 @@ def _handle_start(args: argparse.Namespace) -> Result[int, str]:
         return Result(value=run_result.value)
 
     run_result = asyncio.run(
-        _serve_sse_gateway(
+        _serve_remote_gateway(
             startup_config=gateway_result.value,
             tela_config=config_result.value,
             config_path=Path(args.config),
@@ -302,19 +309,20 @@ async def _run_stdio_gateway(
     return Result(value=gateway_exit)
 
 
-async def _serve_sse_gateway(
+async def _serve_remote_gateway(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
     config_path: Path,
 ) -> Result[int, str]:
-    """Start gateway and run FastMCP SSE transport in one loop."""
+    """Start gateway and run FastMCP remote transport (SSE or HTTP) in one loop."""
 
     startup_result = await gateway_start(startup_config, tela_config=tela_config)
     if startup_result.is_err:
         return Result(error=startup_result.error)
 
+    transport_value = startup_config.transport.value
     print(
-        f"tela: ready (transport={startup_config.transport.value}, "
+        f"tela: ready (transport={transport_value}, "
         f"profile={startup_config.default_profile})",
         file=sys.stderr,
     )
@@ -334,10 +342,13 @@ async def _serve_sse_gateway(
 
     gateway_exit = 0
     try:
-        await asyncio.to_thread(runtime.upstream_server.run, transport="sse")
+        if transport_value == "http":
+            await runtime.upstream_server.run_streamable_http_async()
+        else:
+            await runtime.upstream_server.run_sse_async()
     except Exception as exc:
         gateway_exit = 1
-        return Result(error=f"SSE_RUN_FAILED: {exc}")
+        return Result(error=f"{transport_value.upper()}_RUN_FAILED: {exc}")
     finally:
         stop_watcher.set()
         await _await_task(watcher_task)

@@ -13,6 +13,7 @@ from typing import Any
 from mcp.client.session import ClientSession, MessageHandlerFnT
 from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.client.streamable_http import streamable_http_client
 
 from tela.core.models import ServerConfig
 from tela.shell.config_loader import Result
@@ -120,12 +121,55 @@ async def _open_sse_client(
         )
 
 
+async def _open_streamable_http_client(
+    server_name: str,
+    server_config: ServerConfig,
+    message_handler: MessageHandlerFnT | None = None,
+) -> Result[_ClientHandle, str]:
+    """Open and initialize an MCP Streamable HTTP client session for one server."""
+
+    url = server_config.url
+    if url is None:
+        return Result(
+            error=f"DOWNSTREAM_CONNECT_FAILED: server '{server_name}' is missing url"
+        )
+
+    stack = AsyncExitStack()
+    try:
+        read_stream, write_stream, _ = await stack.enter_async_context(
+            streamable_http_client(url=url)
+        )
+        session = await stack.enter_async_context(
+            ClientSession(
+                read_stream,
+                write_stream,
+                message_handler=message_handler,
+            )
+        )
+        await session.initialize()
+        return Result(value=_ClientHandle(session=session, stack=stack))
+    except Exception as exc:
+        await stack.aclose()
+        return Result(
+            error=(
+                "DOWNSTREAM_CONNECT_FAILED: "
+                f"server '{server_name}' streamable http connect failed: {exc}"
+            )
+        )
+
+
 async def _open_client_for_server(
     server_name: str,
     server_config: ServerConfig,
     message_handler: MessageHandlerFnT | None = None,
 ) -> Result[_ClientHandle, str]:
-    """Open a connected client handle from a server config transport."""
+    """Open a connected client handle from a server config transport.
+
+    Transport dispatch:
+    - ``command`` set → stdio
+    - ``url`` set + ``transport == "http"`` → Streamable HTTP
+    - ``url`` set (default) → SSE (legacy)
+    """
 
     validation = _validate_transport_mode(server_name, server_config)
     if validation.is_err:
@@ -133,6 +177,12 @@ async def _open_client_for_server(
 
     if server_config.command is not None:
         return await _open_stdio_client(
+            server_name,
+            server_config,
+            message_handler=message_handler,
+        )
+    if server_config.transport == "http":
+        return await _open_streamable_http_client(
             server_name,
             server_config,
             message_handler=message_handler,

@@ -16,6 +16,7 @@ def start_command(
     config_path: str = "tela.yaml",
     port: int | None = None,
     default_profile: str | None = None,
+    transport: str | None = None,
 ) -> Result[RuntimeBindingContract, str]:
     """Start command entrypoint for CLI runtime binding.
 
@@ -26,7 +27,8 @@ def start_command(
 
     Transport contract:
     - Default transport is stdio when ``--port`` is omitted.
-    - SSE transport is selected only when `--port` is provided.
+    - HTTP (Streamable HTTP) is the default when ``--port`` is provided.
+    - SSE is selected only when ``--transport sse`` is explicitly given.
 
     This step resolves the default profile via the shared config authority
     helper (``load_config`` -> ``resolve_open_mode_default_profile``).
@@ -45,8 +47,9 @@ def start_command(
 
     Args:
         config_path: Local runtime config path.
-        port: Optional SSE port.
+        port: Optional remote transport port.
         default_profile: Optional CLI default profile override.
+        transport: Explicit transport override (``stdio``, ``sse``, ``http``).
 
     Returns:
         ``Result[RuntimeBindingContract, str]`` with the resolved runtime
@@ -61,7 +64,12 @@ def start_command(
     config = config_result.value
     assert config is not None  # guaranteed by is_ok
 
-    transport = GatewayTransport.SSE if port is not None else GatewayTransport.STDIO
+    if transport is not None:
+        resolved_transport = GatewayTransport(transport)
+    elif port is not None:
+        resolved_transport = GatewayTransport.HTTP
+    else:
+        resolved_transport = GatewayTransport.STDIO
 
     # Use the resolved default profile from the shared authority helper.
     # In open mode, load_config already called resolve_open_mode_default_profile
@@ -71,7 +79,7 @@ def start_command(
     return Result(
         value=RuntimeBindingContract(
             config_path=config_path,
-            transport=transport,
+            transport=resolved_transport,
             port=port,
             cli_default_profile=resolved_profile,
         )

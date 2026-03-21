@@ -159,7 +159,7 @@ def test_sse_mode_stays_alive():
 
         proc = subprocess.Popen(
             [sys.executable, "-m", "tela", "start", "--config", config_path,
-             "--port", "18932", "--default-profile", "dev"],
+             "--port", "18932", "--transport", "sse", "--default-profile", "dev"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

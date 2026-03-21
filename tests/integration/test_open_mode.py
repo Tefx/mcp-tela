@@ -29,10 +29,10 @@ from tela.shell.upstream import InitializeContext, resolve_initialize_profile_bi
 # --- Existing contract declaration tests (preserved) ---
 
 
-def test_start_contract_declares_stdio_default_and_sse_opt_in() -> None:
+def test_start_contract_declares_stdio_default_and_remote_opt_in() -> None:
     source = Path("src/tela/commands/start.py").read_text(encoding="utf-8")
     assert "Default transport is stdio" in source
-    assert "SSE transport is selected only when `--port` is provided" in source
+    assert "HTTP (Streamable HTTP) is the default" in source
 
 
 def test_upstream_contract_declares_no_profile_selection_from_metadata() -> None:

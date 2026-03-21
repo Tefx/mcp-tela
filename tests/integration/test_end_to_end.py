@@ -76,21 +76,32 @@ def test_full_path_cli_to_gateway_with_cli_override() -> None:
     assert gateway_result.value.default_profile == "production"
 
 
-def test_full_path_cli_to_gateway_with_sse_port() -> None:
-    """SSE transport when --port is provided."""
+def test_full_path_cli_to_gateway_with_port_defaults_to_http() -> None:
+    """--port without --transport defaults to Streamable HTTP."""
     config_path, _ = _write_open_mode_config({"dev": True})
 
     runtime_result = start_command(config_path=config_path, port=8080)
     assert runtime_result.is_ok
     assert runtime_result.value is not None
-    assert runtime_result.value.transport == GatewayTransport.SSE
+    assert runtime_result.value.transport == GatewayTransport.HTTP
     assert runtime_result.value.port == 8080
 
     gateway_result = bind_gateway_startup(runtime_result.value)
     assert gateway_result.is_ok
     assert gateway_result.value is not None
-    assert gateway_result.value.transport == GatewayTransport.SSE
+    assert gateway_result.value.transport == GatewayTransport.HTTP
     assert gateway_result.value.port == 8080
+
+
+def test_full_path_cli_to_gateway_with_sse_transport() -> None:
+    """--port --transport sse selects legacy SSE."""
+    config_path, _ = _write_open_mode_config({"dev": True})
+
+    runtime_result = start_command(config_path=config_path, port=8080, transport="sse")
+    assert runtime_result.is_ok
+    assert runtime_result.value is not None
+    assert runtime_result.value.transport == GatewayTransport.SSE
+    assert runtime_result.value.port == 8080
 
 
 def test_full_path_rejects_missing_default() -> None:
@@ -169,11 +180,27 @@ def test_runtime_readiness_open_mode_stdio() -> None:
     assert gw.default_profile == "production"
 
 
-def test_runtime_readiness_open_mode_sse() -> None:
-    """SSE transport runtime readiness with explicit port."""
+def test_runtime_readiness_open_mode_http() -> None:
+    """HTTP transport runtime readiness with explicit port (default remote)."""
     config_path, _ = _write_open_mode_config({"dev": True})
 
     runtime_result = start_command(config_path=config_path, port=3000)
+    assert runtime_result.is_ok and runtime_result.value is not None
+
+    gateway_result = bind_gateway_startup(runtime_result.value)
+    assert gateway_result.is_ok and gateway_result.value is not None
+
+    gw = gateway_result.value
+    assert gw.transport == GatewayTransport.HTTP
+    assert gw.port == 3000
+    assert gw.default_profile == "dev"
+
+
+def test_runtime_readiness_open_mode_sse_explicit() -> None:
+    """SSE transport runtime readiness with explicit --transport sse."""
+    config_path, _ = _write_open_mode_config({"dev": True})
+
+    runtime_result = start_command(config_path=config_path, port=3000, transport="sse")
     assert runtime_result.is_ok and runtime_result.value is not None
 
     gateway_result = bind_gateway_startup(runtime_result.value)
