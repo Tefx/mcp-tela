@@ -18407,3 +18407,67 @@ phases:
   status: locked
   depends_on:
   - gw.spec_conformance
+  steps:
+  - id: gw.doc_sync.update-documentation-for-connect-serve
+    name: Update documentation for connect/serve
+    status: pending
+    description: 'Sync all project documentation with the new connect/serve architecture.
+
+
+      Files:
+
+      - docs/DESIGN.md: update runtime architecture, process model, module boundaries
+
+      - docs/USAGE.md: update CLI examples (if exists)
+
+      - README.md: update CLI quick reference (if exists)
+
+
+      REQUIRED:
+
+      - Remove all references to ''tela start''
+
+      - Add ''tela connect'' and ''tela serve'' documentation
+
+      - Document lockfile, bearer token, auto-discover, auto-start
+
+      - Document idle shutdown behavior
+
+      - Document --token/TELA_BEARER_TOKEN override
+
+      - Document --server skip-discover mode
+
+      - Document auth layer independence (bearer vs auth.mode)'
+    verification: '- No references to tela start in docs
+
+      - connect/serve documented
+
+      - Lockfile and token lifecycle documented
+
+      - Override modes documented'
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    agent: doc-reviewer
+  - id: gw.doc_sync.gate-doc-sync
+    name: 'Gate: doc sync'
+    status: pending
+    description: 'Gate review: Documentation completeness.
+
+
+      review_depth: STANDARD
+
+
+      Block if:
+
+      - tela start still referenced in docs
+
+      - Major feature undocumented (lockfile, token, auto-start, idle shutdown)'
+    verification: '- No stale start references
+
+      - All new features documented
+
+      - Examples accurate'
+    depends_on:
+    - gw.doc_sync.update-documentation-for-connect-serve
+    agent: gate-reviewer
