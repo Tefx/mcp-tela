@@ -17496,3 +17496,70 @@ phases:
     refs:
     - docs/INTERFACES.md
     agent: python-executor
+  - id: gw.foundation.impl.wiring-audit-foundation-impl
+    name: 'Wiring audit: foundation impl'
+    status: pending
+    description: 'Wiring completeness audit: verify every new public symbol is reachable.
+
+
+      REQUIRED CHECKS:
+
+      1. Export reachability: LockfileData, write_lockfile, read_lockfile, delete_lockfile,
+      is_stale, generate_bearer_token, validate_bearer_token all exported and importable
+
+      2. No orphan exports
+
+      3. All @pre/@post contracts are non-vacuous (no identity lambdas)
+
+      4. invar guard clean'
+    verification: '- All symbols importable
+
+      - No orphan exports
+
+      - Contracts non-vacuous
+
+      - invar guard clean'
+    depends_on:
+    - gw.foundation.impl.implement-lockfile-i-o
+    - gw.foundation.impl.implement-bearer-token-and-http-auth
+    agent: integration-verifier
+  - id: gw.foundation.impl.gate-foundation-impl
+    name: 'Gate: foundation impl'
+    status: pending
+    description: 'Gate review: Verify foundation implementation phase.
+
+
+      review_depth: STANDARD
+
+
+      Block if:
+
+      - Lockfile write not atomic (must use temp + rename)
+
+      - hmac.compare_digest not used for token validation
+
+      - secrets.token_urlsafe(32) not used for generation
+
+      - Any of the 7 lockfile fields missing
+
+      - File permissions not 0o600/0o700
+
+      - Tests failing
+
+      - invar guard failures'
+    verification: '- All tests pass
+
+      - Atomic write verified
+
+      - hmac.compare_digest confirmed
+
+      - secrets.token_urlsafe(32) confirmed
+
+      - All 7 lockfile fields present
+
+      - invar guard clean'
+    depends_on:
+    - gw.foundation.impl.implement-lockfile-i-o
+    - gw.foundation.impl.implement-bearer-token-and-http-auth
+    - gw.foundation.impl.wiring-audit-foundation-impl
+    agent: gate-reviewer
