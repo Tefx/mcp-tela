@@ -18346,3 +18346,59 @@ phases:
   status: locked
   depends_on:
   - gw.teardown
+  steps:
+  - id: gw.spec_conformance.spec-conformance-audit
+    name: Spec conformance audit
+    status: pending
+    description: "Spec conformance verification: compare implemented behavior against\
+      \ INTERFACES.md and DESIGN.md.\n\nThis is NOT 'do tests pass' -- it is 'does\
+      \ the implementation match what the spec says.'\n\nREQUIRED CHECKS:\n1. CLI\
+      \ surface: all args from INTERFACES.md 2 match actual argparse definitions\n\
+      2. HTTP endpoints: all 5 from INTERFACES.md 7.2 present with correct auth requirements\n\
+      3. Lockfile: all 7 fields from INTERFACES.md 7.3 present in LockfileData and\
+      \ in actual JSON output\n4. Bearer token: secrets.token_urlsafe(32), hmac.compare_digest,\
+      \ stderr print, lockfile storage (INTERFACES.md 7.4)\n5. tela. prefix reservation:\
+      \ downstream tools with tela.* prefix rejected (INTERFACES.md 7.1)\n6. Idle\
+      \ shutdown: auto-start vs manual behavioral fork (DESIGN.md)\n7. Auth layers:\
+      \ bearer token independent of auth.mode (INTERFACES.md 7.4)\n8. --token/TELA_BEARER_TOKEN\
+      \ override on both serve and connect (INTERFACES.md 7.4)\n9. --server skip-auto-discover\
+      \ on connect (INTERFACES.md 2)\n\nFor EACH requirement, cite spec section and\
+      \ implementation file:line.\n\nevidence_template: |\n  ## Spec Conformance Report\n\
+      \  | Spec Section | Requirement | Implementation File:Line | Match? | Notes\
+      \ |\n  |-------------|-------------|-------------------------|--------|-------|\n\
+      \  | 7.3 | 7 lockfile fields | src/tela/core/models.py:NN | yes/no | |\n  |\
+      \ ... | ... | ... | ... | |\n  \n  Non-conformances found: N\n  Verdict: PASS\
+      \ | ISSUES_FOUND"
+    verification: '- All 9 checks completed
+
+      - Each cites spec section and implementation location
+
+      - Non-conformances documented
+
+      - Verdict rendered'
+    refs:
+    - docs/INTERFACES.md
+    - docs/DESIGN.md
+    agent: doc-reviewer
+  - id: gw.spec_conformance.gate-spec-conformance
+    name: 'Gate: spec conformance'
+    status: pending
+    description: 'Gate review: Verify spec conformance audit is thorough.
+
+
+      review_depth: STANDARD
+
+
+      Block if:
+
+      - Any of the 9 checks missing
+
+      - Non-conformances found but not addressed'
+    verification: '- All 9 checks present
+
+      - Non-conformances either fixed or escalated
+
+      - Spec-code alignment confirmed'
+    depends_on:
+    - gw.spec_conformance.spec-conformance-audit
+    agent: gate-reviewer
