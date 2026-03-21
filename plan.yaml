@@ -18476,3 +18476,134 @@ phases:
   status: locked
   depends_on:
   - gw.doc_sync
+  steps:
+  - id: gw.deep_review.full-wiring-audit
+    name: Full wiring audit
+    status: pending
+    description: 'Complete system wiring audit for all gateway refactor code.
+
+
+      Verify:
+
+      - Every public export has a runtime caller
+
+      - tela connect and tela serve registered in CLI
+
+      - All HTTP endpoints registered in server
+
+      - All lockfile functions called from serve/connect commands
+
+      - No NotImplementedError stubs remain in non-test code
+
+      - No write-only fields
+
+      - tela start removed entirely (no dead imports)'
+    verification: '- All exports have callers
+
+      - No orphans
+
+      - No stubs
+
+      - No dead code
+
+      - invar guard clean'
+    refs:
+    - src/tela/cli.py
+    agent: integration-verifier
+  - id: gw.deep_review.architecture-and-concurrency-review
+    name: Architecture and concurrency review
+    status: pending
+    description: 'Review module boundaries, dependency direction, and concurrency
+      safety.
+
+
+      Specifically check:
+
+      - Module-level mutable state has concurrency protection (idle shutdown counter,
+      connection tracker)
+
+      - No cross-module state corruption paths
+
+      - Core/Shell boundary respected (lockfile I/O in shell, models in core)
+
+      - Import direction correct (shell -> core, not core -> shell)
+
+      - Bearer token stored only in lockfile and server memory (no global mutable)
+
+      - Idle shutdown timer properly cancelled on new connection'
+    verification: '- Concurrency safe
+
+      - Boundaries correct
+
+      - No mutable state leaks
+
+      - Import direction correct'
+    depends_on:
+    - gw.deep_review.full-wiring-audit
+    agent: software-architect
+  - id: gw.deep_review.black-box-spec-verification
+    name: Black-box spec verification
+    status: pending
+    description: 'Using ONLY the spec and CLI --help (no implementation source):
+
+
+      1. Start tela serve, verify lockfile appears with 7 fields
+
+      2. Verify bearer token printed to stderr
+
+      3. Verify GET /health returns {status:ok, pid:N} without auth
+
+      4. Verify GET /status requires bearer auth
+
+      5. Start tela connect, verify bridge works
+
+      6. Verify tela status --json returns valid JSON
+
+      7. Verify --token override on tela serve
+
+      8. Verify TELA_BEARER_TOKEN override on tela connect
+
+      9. Verify tela start returns error
+
+      10. Verify downstream tool with tela.* prefix is rejected'
+    verification: '- All 10 black-box checks pass
+
+      - Evidence shows actual command output
+
+      - No implementation source consulted'
+    depends_on:
+    - gw.deep_review.full-wiring-audit
+    agent: blind-tester
+  - id: gw.deep_review.final-deep-review-gate
+    name: Final deep review gate
+    status: pending
+    description: 'Final gate review for the entire gateway refactor.
+
+
+      review_depth: THOROUGH
+
+      review_depth_rationale: Final gate for major architectural refactor (start ->
+      connect/serve).
+
+
+      Block if:
+
+      - Any deep review agent found blockers
+
+      - Wiring audit found orphans
+
+      - Architecture review found concurrency issues
+
+      - Black-box verification failed
+
+      - Spec conformance gaps remain'
+    verification: '- All deep review agents passed
+
+      - No blockers remaining
+
+      - Gateway refactor complete and verified'
+    depends_on:
+    - gw.deep_review.full-wiring-audit
+    - gw.deep_review.architecture-and-concurrency-review
+    - gw.deep_review.black-box-spec-verification
+    agent: gate-reviewer
