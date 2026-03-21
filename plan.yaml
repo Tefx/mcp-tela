@@ -17539,7 +17539,7 @@ phases:
   steps:
   - id: gw.foundation.impl.implement-lockfile-i-o
     name: Implement lockfile I/O
-    status: claimed
+    status: done
     description: 'Implement lockfile read/write/delete and stale detection.
 
 
@@ -17598,6 +17598,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T20:41:39.269207+00:00'
+    done_at: '2026-03-21T20:45:46.668959+00:00'
+    evidence: 'Commit hash(es): b98a50f05dca88189c61aead3169393bbd6f3f22
+
+      Files changed:
+
+      - src/tela/shell/lockfile.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_lockfile.py -> 6 passed
+
+      - Run: uv run invar guard -> passed with warnings only
+
+      - Run: uv run mypy src/tela/shell/lockfile.py -> no issues
+
+      - Run: uv run ruff check src/tela/shell/lockfile.py -> all checks passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.3
+
+      Gaps/Notes:
+
+      - Remaining invar warnings are pre-existing/non-blocking architecture style
+      warnings; no functional gaps for this step'
   - id: gw.foundation.impl.implement-bearer-token-and-http-auth
     name: Implement bearer token and HTTP auth
     status: done
