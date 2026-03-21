@@ -17754,3 +17754,167 @@ phases:
   status: locked
   depends_on:
   - gw.http.impl
+  steps:
+  - id: gw.serve.implement-tela-serve-command
+    name: Implement tela serve command
+    status: pending
+    description: "Implement the tela serve CLI command: HTTP gateway server entry\
+      \ point.\n\nSpec refs: INTERFACES.md 2 (CLI surface), 7.3 (lockfile), 7.4 (bearer\
+      \ token)\n\nFile: src/tela/commands/serve_cmd.py (new)\n\nCLI args per INTERFACES.md\
+      \ 2:\n  tela serve [--config path] [--port N] [--host addr] [--default-profile\
+      \ name] [--idle-timeout sec] [--token tok]\n\nAcceptance criteria:\n\n### Token\
+      \ lifecycle (GAP 1):\n- On startup: generate bearer token via generate_bearer_token()\
+      \ (secrets.token_urlsafe(32))\n- Print token to stderr for operator visibility\n\
+      - Store token in lockfile token field\n- This is a single lifecycle unit: generate\
+      \ -> print -> store\n\n### Token override (GAP 2):\n- --token CLI flag overrides\
+      \ auto-generated token\n- TELA_BEARER_TOKEN env var overrides auto-generated\
+      \ token\n- Priority: --token > TELA_BEARER_TOKEN > auto-generated\n\n### Lockfile:\n\
+      - Write lockfile atomically on startup (all 7 fields)\n- Delete lockfile on\
+      \ shutdown (including signal handling)\n- instance_id generated per invocation\
+      \ for audit\n\n### Idle shutdown (GAP 6):\n- Auto-started servers (no explicit\
+      \ --idle-timeout 0) auto-shutdown when all bridge connections close and idle\
+      \ timeout expires\n- Manually started servers with --idle-timeout 0 never auto-shutdown\n\
+      - Default idle timeout: 300 seconds (5 min)\n- Track active bridge connections\
+      \ via /connect and /disconnect\n\n### Server startup:\n- Load config, connect\
+      \ downstreams, start HTTP server\n- Bind to --host (default 127.0.0.1) and --port\
+      \ (default: ephemeral)\n- Start config file watcher for hot-reload\n\nstep_type:\
+      \ implementation"
+    verification: '- serve_cmd.py exists with all CLI args from INTERFACES.md 2
+
+      - Token lifecycle: generate -> stderr -> lockfile
+
+      - --token and TELA_BEARER_TOKEN override work
+
+      - Lockfile written atomically on startup, deleted on shutdown
+
+      - Idle shutdown logic present
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/shell/lockfile.py
+    - src/tela/shell/http_routes.py
+    - src/tela/shell/gateway.py
+    agent: python-senior
+  - id: gw.serve.implement-idle-shutdown-manager
+    name: Implement idle shutdown manager
+    status: pending
+    description: 'Implement connection tracking and idle shutdown logic.
+
+
+      Spec refs: INTERFACES.md 7.2 (/connect, /disconnect)
+
+
+      File: src/tela/shell/idle_shutdown.py (new)
+
+
+      Acceptance criteria (GAP 6):
+
+      - Track active bridge connections (increment on POST /connect, decrement on
+      POST /disconnect)
+
+      - When connection count drops to 0, start idle timer
+
+      - When idle timer expires, initiate graceful shutdown
+
+      - New connection arriving resets idle timer
+
+      - --idle-timeout 0 disables auto-shutdown entirely
+
+      - Thread/asyncio safe: connection tracking must handle concurrent connect/disconnect
+
+
+      ## Module-Level Mutable State (hardened acceptance):
+
+      - Connection count is mutable state: must use asyncio.Lock for concurrent access
+
+      - Cleanup/reset: state cleared on server shutdown
+
+      - Bounded growth: connection count is bounded by bridge count (small)
+
+      - Isolation: single server instance, no cross-instance state
+
+
+      step_type: implementation'
+    verification: '- Connection tracking increments/decrements correctly
+
+      - Idle timer starts when count reaches 0
+
+      - --idle-timeout 0 disables shutdown
+
+      - Concurrent access safe (asyncio.Lock)
+
+      - Tests pass
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    agent: python-executor
+  - id: gw.serve.tela-serve-liveness-probe
+    name: tela serve liveness probe
+    status: pending
+    description: 'Black-box liveness verification: actually start tela serve and verify
+      it runs.
+
+
+      Verify:
+
+      1. tela serve starts and binds to a port
+
+      2. GET /health returns {status:ok, pid:N}
+
+      3. Bearer token printed to stderr
+
+      4. Lockfile written with all 7 fields
+
+      5. Server stays alive for at least 5 seconds
+
+      6. Graceful shutdown on SIGTERM
+
+      7. Lockfile deleted after shutdown
+
+
+      This is a Mode D liveness probe for the serve runtime surface.'
+    verification: '- Server starts and stays alive
+
+      - /health returns 200
+
+      - Token on stderr
+
+      - Lockfile present with 7 fields
+
+      - Clean shutdown on SIGTERM
+
+      - Lockfile removed after shutdown'
+    depends_on:
+    - gw.serve.implement-tela-serve-command
+    - gw.serve.implement-idle-shutdown-manager
+    agent: blind-tester
+  - id: gw.serve.gate-tela-serve
+    name: 'Gate: tela serve'
+    status: pending
+    description: "Gate review: Verify tela serve phase completion.\n\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale: Runtime surface (server), token lifecycle\
+      \ (security), idle shutdown (state management).\n\ncross_cutting_focus:\n  -\
+      \ Token lifecycle completeness (generate -> stderr -> lockfile)\n  - --token/TELA_BEARER_TOKEN\
+      \ override\n  - Idle shutdown behavioral fork (auto vs manual)\n  - Lockfile\
+      \ atomicity\n\nBlock if:\n- Token not printed to stderr\n- --token override\
+      \ not implemented\n- TELA_BEARER_TOKEN override not implemented\n- Idle shutdown\
+      \ with --idle-timeout 0 still shuts down\n- Lockfile not atomic\n- Liveness\
+      \ probe failed"
+    verification: '- Token lifecycle complete
+
+      - Override flags work
+
+      - Idle shutdown correct
+
+      - Liveness probe passed
+
+      - All tests pass
+
+      - invar guard clean'
+    depends_on:
+    - gw.serve.implement-tela-serve-command
+    - gw.serve.implement-idle-shutdown-manager
+    - gw.serve.tela-serve-liveness-probe
+    agent: gate-reviewer
