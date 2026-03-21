@@ -17388,3 +17388,111 @@ phases:
   status: locked
   depends_on:
   - gw.foundation.test
+  steps:
+  - id: gw.foundation.impl.implement-lockfile-i-o
+    name: Implement lockfile I/O
+    status: pending
+    description: 'Implement lockfile read/write/delete and stale detection.
+
+
+      Spec refs: INTERFACES.md 7.3
+
+
+      File: src/tela/shell/lockfile.py
+
+
+      Acceptance criteria (GAP 4 incorporated):
+
+      - write_lockfile uses atomic rename: write to temp file in same dir, then os.rename
+
+      - File permissions 0o600 on lockfile
+
+      - Directory ~/.tela created with 0o700 if not exists
+
+      - read_lockfile parses JSON, returns Result[LockfileData, str]
+
+      - delete_lockfile removes file, returns Result[None, str]
+
+      - is_stale(lockfile: LockfileData) -> bool: checks os.kill(pid, 0)
+
+      - All 7 fields from INTERFACES.md 7.3 written and read
+
+
+      Pattern: Follow Result pattern from src/tela/shell/config_loader.py
+
+
+      ## Failure-mode checklist (hardened acceptance - persistence surface)
+
+      - Missing directory: create with 0o700
+
+      - Partial write: atomic rename prevents
+
+      - Corrupt JSON: read_lockfile returns error Result
+
+      - Stale PID (process dead): is_stale returns True
+
+      - Permission denied: return error Result
+
+
+      step_type: implementation'
+    verification: '- pytest tests/shell/test_lockfile.py passes
+
+      - Atomic write verified (temp + rename)
+
+      - All 7 fields roundtrip correctly
+
+      - Stale detection works
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/shell/config_loader.py
+    agent: python-executor
+  - id: gw.foundation.impl.implement-bearer-token-and-http-auth
+    name: Implement bearer token and HTTP auth
+    status: pending
+    description: 'Implement bearer token generation and HTTP bearer auth middleware.
+
+
+      Spec refs: INTERFACES.md 7.4
+
+
+      Files:
+
+      - src/tela/shell/lockfile.py (generate_bearer_token function)
+
+      - src/tela/shell/http_auth.py (validate_bearer_token)
+
+
+      Bearer token generation (GAP 1):
+
+      - generate_bearer_token() -> str: return secrets.token_urlsafe(32)
+
+      - This is the unit: generate, print to stderr, store in lockfile
+
+      - The serve command orchestrates this lifecycle (Phase 6 wires it)
+
+
+      HTTP auth middleware (GAP 5):
+
+      - validate_bearer_token(request_token: str, expected_token: str) -> bool
+
+      - Uses hmac.compare_digest(request_token, expected_token) for constant-time
+      comparison
+
+      - NOT the == operator
+
+
+      step_type: implementation'
+    verification: '- pytest tests/shell/test_bearer_token.py passes
+
+      - pytest tests/shell/test_http_auth.py passes
+
+      - hmac.compare_digest used (grep confirms no == for token comparison)
+
+      - secrets.token_urlsafe(32) used
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    agent: python-executor
