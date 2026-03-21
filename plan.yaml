@@ -17764,6 +17764,59 @@ phases:
     - gw.foundation.impl.implement-bearer-token-and-http-auth
     - gw.foundation.impl.wiring-audit-foundation-impl
     agent: gate-reviewer
+  - id: gw.foundation.impl.fix-export-is-stale
+    name: Fix lockfile stale helper export and read path
+    status: pending
+    description: 'Fix the wiring blocker for lockfile stale detection.
+
+
+      Implement and export `is_stale(lockfile: LockfileData) -> bool` from the foundation
+      implementation module, then refactor `read_lockfile` to call the exported helper
+      instead of keeping stale detection logic inlined.
+
+
+      Required scope:
+
+      - Add the missing exported symbol with the exact public signature required by
+      the wiring audit
+
+      - Update the module export surface so `is_stale` is importable alongside `LockfileData`,
+      `write_lockfile`, `read_lockfile`, and `delete_lockfile`
+
+      - Replace duplicated/inlined stale detection inside `read_lockfile` with a call
+      to `is_stale`
+
+      - Keep stale semantics unchanged except for the extraction/export needed for
+      reachability
+
+
+      Files likely touched:
+
+      - gateway foundation lockfile implementation module
+
+      - corresponding package export surface (`__init__.py` or equivalent)
+
+
+      Out of scope:
+
+      - behavior changes to lockfile freshness rules
+
+      - unrelated auth or bearer token code
+
+
+      Known risk:
+
+      - Do not add a second stale-definition path; `read_lockfile` and public callers
+      must share the same helper.'
+    verification: '- Exported symbol `is_stale` exists with signature `is_stale(lockfile:
+      LockfileData) -> bool`
+
+      - `read_lockfile` calls the helper instead of duplicating stale detection inline
+
+      - Targeted import/reachability check for the lockfile module succeeds'
+    depends_on:
+    - gw.foundation.impl.wiring-audit-foundation-impl
+    agent: python-executor
 - id: gw.http.contract
   name: HTTP Endpoints Contract
   status: locked
