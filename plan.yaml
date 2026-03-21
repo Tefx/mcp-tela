@@ -17749,3 +17749,8 @@ phases:
     - gw.http.impl.implement-http-route-handlers
     - gw.http.impl.http-endpoint-tests
     agent: gate-reviewer
+- id: gw.serve
+  name: tela serve Command
+  status: locked
+  depends_on:
+  - gw.http.impl
