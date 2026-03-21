@@ -17620,3 +17620,8 @@ phases:
     depends_on:
     - gw.http.contract.http-route-handler-contracts
     agent: gate-reviewer
+- id: gw.http.impl
+  name: HTTP Endpoints Implementation
+  status: locked
+  depends_on:
+  - gw.http.contract
