@@ -17329,7 +17329,7 @@ phases:
       \ is tracked as tech debt and deferred to implementation phase"
 - id: gw.foundation.test
   name: Gateway Foundation Tests
-  status: pending
+  status: in_progress
   depends_on:
   - gw.foundation.contract
   steps:
@@ -17389,7 +17389,7 @@ phases:
     agent: python-executor
   - id: gw.foundation.test.http-auth-middleware-tests
     name: HTTP auth middleware tests
-    status: pending
+    status: claimed
     description: 'Write tests for bearer token validation middleware.
 
 
@@ -17425,6 +17425,8 @@ phases:
     refs:
     - docs/INTERFACES.md
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-21T20:11:35.934245+00:00'
   - id: gw.foundation.test.gate-foundation-tests
     name: 'Gate: foundation tests'
     status: pending
