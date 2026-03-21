@@ -17923,3 +17923,63 @@ phases:
   status: locked
   depends_on:
   - gw.serve
+  steps:
+  - id: gw.conflict.enforce-tela-prefix-reservation
+    name: Enforce tela. prefix reservation
+    status: pending
+    description: "Add tela. prefix reservation enforcement to conflict detection.\n\
+      \nSpec refs: INTERFACES.md 7.1\n\nFile: src/tela/core/conflict.py\n\nINTERFACES.md\
+      \ 7.1: 'The tela. prefix is reserved. Downstream tools with this prefix are\
+      \ rejected as conflicts.'\n\nCurrent state: detect_conflicts() only detects\
+      \ duplicate tool names across servers. It does NOT check for reserved prefix\
+      \ violations.\n\nAcceptance criteria (GAP 3):\n- Add detect_prefix_conflicts(all_tools)\
+      \ or extend detect_conflicts to also flag downstream tools whose name starts\
+      \ with 'tela.'\n- These are rejected regardless of how many servers expose them\
+      \ (even 1 server with a tela.* tool is a conflict)\n- Return a distinct error\
+      \ or conflict type so the caller can differentiate prefix violation from name\
+      \ collision\n- @pre/@post contracts and doctest\n\nThis is a small, single-file\
+      \ change following the existing pattern in conflict.py.\n\nsimple_feature_exception:\n\
+      \  approved: true\n  conditions_met:\n    - single_symbol_or_tiny_ui\n    -\
+      \ no_cross_module_coordination\n    - no_meaningful_side_effects\n    - obvious_existing_pattern\n\
+      \  pattern_reference: src/tela/core/conflict.py::detect_conflicts\n\nstep_type:\
+      \ implementation (combined with contract per simple-feature exception)"
+    verification: '- detect_prefix_conflicts or extended detect_conflicts catches
+      tela.* tools
+
+      - Doctest shows tela.foo from downstream rejected
+
+      - @pre/@post contracts present
+
+      - Existing detect_conflicts tests still pass
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - src/tela/core/conflict.py
+    agent: python-executor
+  - id: gw.conflict.gate-tela-prefix-enforcement
+    name: 'Gate: tela. prefix enforcement'
+    status: pending
+    description: 'Gate review: Verify tela. prefix reservation is enforced.
+
+
+      review_depth: STANDARD
+
+
+      Block if:
+
+      - Downstream tool named ''tela.anything'' not detected as conflict
+
+      - Introspection tools (tela.status etc) falsely flagged
+
+      - Existing conflict detection broken'
+    verification: '- tela.* downstream tools rejected
+
+      - Introspection tools not flagged (they are upstream, not downstream)
+
+      - Existing tests pass
+
+      - invar guard clean'
+    depends_on:
+    - gw.conflict.enforce-tela-prefix-reservation
+    agent: gate-reviewer
