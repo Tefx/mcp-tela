@@ -17699,7 +17699,7 @@ phases:
       markers in lockfile module (non-suppressible inline), existing beyond this step.'
   - id: gw.foundation.impl.wiring-audit-foundation-impl
     name: 'Wiring audit: foundation impl'
-    status: claimed
+    status: pending
     description: 'Wiring completeness audit: verify every new public symbol is reachable.
 
 
@@ -17724,8 +17724,6 @@ phases:
     - gw.foundation.impl.implement-lockfile-i-o
     - gw.foundation.impl.implement-bearer-token-and-http-auth
     agent: integration-verifier
-    claimed_by: integration-verifier
-    claimed_at: '2026-03-21T20:46:32.391628+00:00'
   - id: gw.foundation.impl.gate-foundation-impl
     name: 'Gate: foundation impl'
     status: pending
