@@ -56,3 +56,5 @@ plan-dashboard.html
 .vectl/
 
 plan.yaml.lock
+
+.mcp.json
