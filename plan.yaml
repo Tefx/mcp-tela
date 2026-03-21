@@ -18046,7 +18046,7 @@ phases:
       - contract stubs only; no implementation logic'
   - id: gw.http.contract.gate-http-contracts
     name: 'Gate: HTTP contracts'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify HTTP endpoint contracts match INTERFACES.md
       7.2 exactly.
 
@@ -18071,6 +18071,8 @@ phases:
     depends_on:
     - gw.http.contract.http-route-handler-contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-21T21:07:03.574621+00:00'
 - id: gw.http.impl
   name: HTTP Endpoints Implementation
   status: locked
