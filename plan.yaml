@@ -17329,7 +17329,7 @@ phases:
       \ is tracked as tech debt and deferred to implementation phase"
 - id: gw.foundation.test
   name: Gateway Foundation Tests
-  status: in_progress
+  status: done
   depends_on:
   - gw.foundation.contract
   steps:
@@ -17485,7 +17485,7 @@ phases:
       limited to middleware contract tests'
   - id: gw.foundation.test.gate-foundation-tests
     name: 'Gate: foundation tests'
-    status: claimed
+    status: done
     description: 'Gate review: Verify foundation test phase completeness.
 
 
@@ -17518,9 +17518,22 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-21T20:24:32.192065+00:00'
+    done_at: '2026-03-21T20:32:56.456321+00:00'
+    evidence: "Verdict: PASS\nWiring audit:\n- W1..W8 all pass for test artifact wiring/importability/public\
+      \ symbol coverage\nEscape hatch audit:\n- annotations_found: yes in source auth/lockfile\
+      \ files; justified; none in tests\nFindings:\n- severity: suggestion\n  id:\
+      \ S1\n  detail: tests fail until implementation phase completes (expected for\
+      \ contract stubs)\nVerification:\n- Run: python import checks for three test\
+      \ modules -> success\n- Run: grep test counts and dead_export annotations ->\
+      \ expected\nGate checks:\n- Atomic write test present\n- 7 lockfile fields coverage\
+      \ present\n- hmac.compare_digest usage test present\n- spec fixture conformance\
+      \ present\n- no implementation logic in tests\nCommit hash(es): 363e915, 3886de9,\
+      \ 38c3fa2\nFiles changed:\n- tests/shell/test_lockfile.py\n- tests/shell/test_bearer_token.py\n\
+      - tests/shell/test_http_auth.py\nSpec link:\n- docs/INTERFACES.md §7.3 §7.4\n\
+      Gaps/Notes:\n- none"
 - id: gw.foundation.impl
   name: Gateway Foundation Implementation
-  status: locked
+  status: pending
   depends_on:
   - gw.foundation.test
   steps:
