@@ -17863,7 +17863,7 @@ phases:
       No code changes beyond scoped lockfile module.'
   - id: gw.foundation.impl.reaudit-export-is-stale
     name: Re-run wiring audit for lockfile stale helper export
-    status: claimed
+    status: done
     description: 'Re-run the wiring audit after the lockfile stale helper fix.
 
 
@@ -17899,6 +17899,41 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-21T20:55:09.843987+00:00'
+    done_at: '2026-03-21T20:58:01.525269+00:00'
+    evidence: 'Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Verification:
+
+      - Run: uv run invar guard -> passed (0 errors, 0 warnings)
+
+      - Run: uv run pytest tests/shell/test_lockfile.py tests/shell/test_bearer_token.py
+      tests/shell/test_http_auth.py -v -> 14 passed
+
+      - Run: python import checks for is_stale and lockfile exports -> all importable
+
+      Reachability:
+
+      - is_stale exported in __all__ and used by read_lockfile
+
+      - write_lockfile/read_lockfile/delete_lockfile/generate_bearer_token all importable
+
+      Findings:
+
+      - blocker `is_stale` export issue resolved
+
+      - suggestion: direct unit test for is_stale could be added later
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.3 §7.4
+
+      Gaps/Notes:
+
+      - no code changes in this verify-only step'
 - id: gw.http.contract
   name: HTTP Endpoints Contract
   status: locked
