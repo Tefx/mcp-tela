@@ -17188,7 +17188,7 @@ phases:
     agent: python-executor
   - id: gw.foundation.contract.http-endpoint-and-middleware-contracts
     name: HTTP endpoint and middleware contracts
-    status: claimed
+    status: done
     description: "Define contracts for HTTP endpoint models and bearer auth middleware.\n\
       \nSpec refs: INTERFACES.md 7.2 (HTTP endpoints), INTERFACES.md 7.4 (bearer token\
       \ validation)\n\nHTTP endpoint models:\n- HealthResponse: {status: str, pid:\
@@ -17216,6 +17216,34 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T19:38:00.030704+00:00'
+    done_at: '2026-03-21T19:45:44.115716+00:00'
+    evidence: 'Implemented HTTP endpoint contracts in `src/tela/core/models.py` by
+      adding `HealthResponse`, `StatusResponse`, `ConnectRequest`, and `DisconnectRequest`
+      with docstrings and fields matching `INTERFACES.md` §7.2 and migration-safe
+      token payload shapes.
+
+      Added `src/tela/shell/http_auth.py` with bearer-token compare helper using `hmac.compare_digest`,
+      plus public alias `validate_bearer_token = _validate_bearer_token` for middleware
+      wiring.
+
+      Validation:
+
+      - `invar_invar_guard -- changed=True` (static passed, 0 errors, 3 warnings only)
+
+      - `uv run mypy src/tela/core/models.py src/tela/shell/http_auth.py` (passed)
+
+      - `uv run pytest tests/core/test_models.py -q` (35 passed)
+
+      Sibling/pattern checks performed:
+
+      - grep `validate_bearer_token` over `src/` found only the new shell module and
+      its public alias
+
+      - grep `HealthResponse|StatusResponse|ConnectRequest|DisconnectRequest` over
+      `src/` found only definitions in `src/tela/core/models.py`
+
+      - grep `hmac.compare_digest` over `src/` confirms one existing use in `tela/core/token.py`
+      and the new bearer auth helper'
   - id: gw.foundation.contract.gate-foundation-contracts
     name: 'Gate: foundation contracts'
     status: pending
