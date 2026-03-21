@@ -17988,3 +17988,152 @@ phases:
   status: locked
   depends_on:
   - gw.conflict
+  steps:
+  - id: gw.bridge.implement-tela-connect-command
+    name: Implement tela connect command
+    status: pending
+    description: "Implement the tela connect CLI command: stdio bridge client entry\
+      \ point.\n\nSpec refs: INTERFACES.md 2 (CLI surface), DESIGN.md (process model,\
+      \ service discovery, connection lifecycle)\n\nFile: src/tela/commands/connect_cmd.py\
+      \ (new)\n\nCLI args per INTERFACES.md 2:\n  tela connect [--config path] [--default-profile\
+      \ name] [--server host:port] [--token tok]\n\nAcceptance criteria:\n\n### Service\
+      \ discovery:\n- Read ~/.tela/gateway.lock to find running server\n- Stale lockfile\
+      \ detection (PID not alive): treat as no server running\n- Use lockfile host:port\
+      \ and token for connection\n\n### Auto-start:\n- If no running server found,\
+      \ auto-start tela serve as detached subprocess\n- Wait for lockfile to appear\
+      \ (with timeout)\n- Read token from new lockfile\n- NOTE: lockfile write-side\
+      \ race (two connects spawning simultaneously) must be handled with retry logic.\
+      \ Evidence must demonstrate retry.\n\n### Token override (GAP 2):\n- --token\
+      \ CLI flag for remote server auth\n- TELA_BEARER_TOKEN env var for remote server\
+      \ auth\n- Priority: --token > TELA_BEARER_TOKEN > lockfile token\n\n### Skip-auto-discover\
+      \ (GAP 2):\n- --server host:port skips lockfile discovery entirely\n- Requires\
+      \ --token or TELA_BEARER_TOKEN for auth\n\n### Bridge lifecycle (DESIGN.md):\n\
+      1. POST /connect to register bridge connection\n2. Bridge active: stdio <->\
+      \ HTTP MCP session forwarding\n3. On exit: POST /disconnect to deregister\n\
+      4. Clean disconnect even on SIGTERM/SIGINT\n\n### Auth layer note:\n- Bearer\
+      \ token (lockfile/--token) and auth.mode (CapabilityToken) are independent auth\
+      \ layers\n- Bearer protects HTTP transport, auth.mode controls MCP profile binding\n\
+      \nstep_type: implementation"
+    verification: '- connect_cmd.py exists with all CLI args
+
+      - Auto-discover via lockfile works
+
+      - Auto-start spawns server and waits for lockfile
+
+      - --token and TELA_BEARER_TOKEN override work
+
+      - --server host:port skips discovery
+
+      - Bridge lifecycle: /connect -> forward -> /disconnect
+
+      - Retry logic for concurrent auto-start race
+
+      - invar guard passes'
+    refs:
+    - docs/INTERFACES.md
+    - docs/DESIGN.md
+    - src/tela/shell/lockfile.py
+    agent: python-senior
+  - id: gw.bridge.implement-stdio-http-bridge
+    name: Implement stdio-HTTP bridge
+    status: pending
+    description: 'Implement the stdio <-> HTTP MCP session bridge used by tela connect.
+
+
+      Spec refs: DESIGN.md (process model)
+
+
+      File: src/tela/shell/bridge.py (new)
+
+
+      The bridge:
+
+      - Reads MCP JSON-RPC from stdin
+
+      - Forwards to POST /mcp on the tela serve HTTP endpoint with Bearer auth
+
+      - Reads HTTP response and writes to stdout
+
+      - Handles session lifecycle (initialize, tool calls, shutdown)
+
+      - Graceful shutdown on stdin EOF or SIGTERM
+
+
+      This is the transport adapter between MCP stdio protocol and HTTP Streamable
+      transport.
+
+
+      step_type: implementation'
+    verification: '- Bridge reads stdin, forwards to HTTP, writes stdout
+
+      - Bearer token included in HTTP requests
+
+      - Graceful shutdown on stdin EOF
+
+      - Tests pass
+
+      - invar guard passes'
+    refs:
+    - docs/DESIGN.md
+    agent: python-senior
+  - id: gw.bridge.tela-connect-liveness-probe
+    name: tela connect liveness probe
+    status: pending
+    description: 'Black-box liveness verification: start tela serve, then tela connect,
+      verify end-to-end.
+
+
+      Verify:
+
+      1. tela serve starts (use ephemeral port)
+
+      2. tela connect discovers server via lockfile
+
+      3. MCP initialize handshake completes through the bridge
+
+      4. tools/list returns expected tools
+
+      5. tela connect exit triggers /disconnect
+
+      6. Connection count on server decrements
+
+
+      This is a Mode D liveness probe for the connect runtime surface.'
+    verification: '- End-to-end: serve -> connect -> initialize -> tools/list -> disconnect
+
+      - Lockfile discovery works
+
+      - Bridge forwards MCP messages
+
+      - Clean disconnect on exit'
+    depends_on:
+    - gw.bridge.implement-tela-connect-command
+    - gw.bridge.implement-stdio-http-bridge
+    agent: blind-tester
+  - id: gw.bridge.gate-tela-connect
+    name: 'Gate: tela connect'
+    status: pending
+    description: "Gate review: Verify tela connect phase completion.\n\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale: Runtime surface (client bridge), auto-start\
+      \ race condition, two independent auth layers.\n\ncross_cutting_focus:\n  -\
+      \ Auto-start race condition handling (retry logic)\n  - Bearer token vs auth.mode\
+      \ independence\n  - --token/TELA_BEARER_TOKEN/--server override modes\n  - Clean\
+      \ disconnect lifecycle\n\nBlock if:\n- Auto-start race not handled\n- --token\
+      \ override missing\n- --server skip-discovery missing\n- Bridge does not forward\
+      \ MCP messages end-to-end\n- Liveness probe failed"
+    verification: '- All override modes work
+
+      - Auto-start race handled
+
+      - Bridge end-to-end verified
+
+      - Liveness probe passed
+
+      - All tests pass
+
+      - invar guard clean'
+    depends_on:
+    - gw.bridge.implement-tela-connect-command
+    - gw.bridge.implement-stdio-http-bridge
+    - gw.bridge.tela-connect-liveness-probe
+    agent: gate-reviewer
