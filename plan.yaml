@@ -17990,13 +17990,13 @@ phases:
       - no code changes in this verify-only step'
 - id: gw.http.contract
   name: HTTP Endpoints Contract
-  status: pending
+  status: in_progress
   depends_on:
   - gw.foundation.impl
   steps:
   - id: gw.http.contract.http-route-handler-contracts
     name: HTTP route handler contracts
-    status: pending
+    status: claimed
     description: "Define contracts for all HTTP route handlers per INTERFACES.md 7.2.\n\
       \nSpec refs: INTERFACES.md 7.2\n\nEndpoints:\n| Endpoint | Auth | Purpose |\n\
       |----------|------|---------|\n| GET /health | None | Liveness: {status:ok,\
@@ -18018,6 +18018,8 @@ phases:
     - docs/INTERFACES.md
     - src/tela/shell/http_auth.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-21T21:03:07.491123+00:00'
   - id: gw.http.contract.gate-http-contracts
     name: 'Gate: HTTP contracts'
     status: pending
