@@ -17391,7 +17391,7 @@ phases:
     claimed_at: '2026-03-21T20:11:40.697313+00:00'
   - id: gw.foundation.test.http-auth-middleware-tests
     name: HTTP auth middleware tests
-    status: claimed
+    status: done
     description: 'Write tests for bearer token validation middleware.
 
 
@@ -17429,6 +17429,29 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-21T20:11:35.934245+00:00'
+    done_at: '2026-03-21T20:19:50.577218+00:00'
+    evidence: 'Commit hash(es): 38c3fa2590435476395fa8e83a4aef04b2218bf7
+
+      Files changed:
+
+      - tests/shell/test_http_auth.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_http_auth.py -> 6 passed
+
+      - Run: uv run ruff check tests/shell/test_http_auth.py -> all checks passed
+
+      - Run: invar_invar_guard changed=true -> passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2 §7.4
+
+      Gaps/Notes:
+
+      - includes route-level /health bypass case; endpoint integration assertions
+      limited to middleware contract tests'
   - id: gw.foundation.test.gate-foundation-tests
     name: 'Gate: foundation tests'
     status: pending
