@@ -17257,3 +17257,129 @@ phases:
   status: locked
   depends_on:
   - gw.foundation.contract
+  steps:
+  - id: gw.foundation.test.lockfile-and-bearer-token-tests
+    name: Lockfile and bearer token tests
+    status: pending
+    description: 'Write tests for lockfile I/O and bearer token generation contracts.
+
+
+      Spec refs: INTERFACES.md 7.3, 7.4
+
+
+      Tests MUST cover:
+
+      1. write_lockfile produces valid JSON with all 7 fields
+
+      2. write_lockfile is atomic (temp file + os.rename pattern)
+
+      3. File permissions are 0o600, directory 0o700
+
+      4. read_lockfile parses all 7 fields correctly
+
+      5. read_lockfile returns error for missing/corrupt file
+
+      6. delete_lockfile removes the file
+
+      7. Stale lockfile detection (PID not alive)
+
+      8. generate_bearer_token returns URL-safe string of expected length
+
+      9. generate_bearer_token produces unique tokens across calls
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one test fixture MUST use the EXACT lockfile JSON format from INTERFACES.md
+      7.3 (all 7 fields, no extras).
+
+
+      Files:
+
+      - tests/shell/test_lockfile.py (new)
+
+      - tests/shell/test_bearer_token.py (new)
+
+
+      step_type: test'
+    verification: '- Tests written for all 9 items above
+
+      - At least one spec-derived minimal fixture
+
+      - Tests are executable (can import, no syntax errors)
+
+      - No product implementation code'
+    refs:
+    - docs/INTERFACES.md
+    agent: python-executor
+  - id: gw.foundation.test.http-auth-middleware-tests
+    name: HTTP auth middleware tests
+    status: pending
+    description: 'Write tests for bearer token validation middleware.
+
+
+      Spec refs: INTERFACES.md 7.2, 7.4
+
+
+      Tests MUST cover:
+
+      1. Valid token passes validation
+
+      2. Invalid token rejected
+
+      3. Missing Authorization header rejected
+
+      4. Malformed Bearer prefix rejected
+
+      5. Constant-time comparison (hmac.compare_digest) is used, not == operator
+
+      6. GET /health requires no auth (route-level, tested when endpoints exist)
+
+
+      Files:
+
+      - tests/shell/test_http_auth.py (new)
+
+
+      step_type: test'
+    verification: '- All 6 test cases written
+
+      - Tests are executable
+
+      - No product implementation code'
+    refs:
+    - docs/INTERFACES.md
+    agent: python-executor
+  - id: gw.foundation.test.gate-foundation-tests
+    name: 'Gate: foundation tests'
+    status: pending
+    description: 'Gate review: Verify foundation test phase completeness.
+
+
+      review_depth: STANDARD
+
+
+      Block if:
+
+      - Missing test for atomic write
+
+      - Missing test for all 7 lockfile fields
+
+      - Missing test for hmac.compare_digest usage
+
+      - No spec-derived minimal fixture
+
+      - Tests contain implementation logic'
+    verification: '- All test files present and importable
+
+      - Coverage of all 7 lockfile fields
+
+      - Atomic write test present
+
+      - hmac.compare_digest test present
+
+      - Spec-fixture conformance present'
+    depends_on:
+    - gw.foundation.test.lockfile-and-bearer-token-tests
+    - gw.foundation.test.http-auth-middleware-tests
+    agent: gate-reviewer
