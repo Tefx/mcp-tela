@@ -17563,3 +17563,8 @@ phases:
     - gw.foundation.impl.implement-bearer-token-and-http-auth
     - gw.foundation.impl.wiring-audit-foundation-impl
     agent: gate-reviewer
+- id: gw.http.contract
+  name: HTTP Endpoints Contract
+  status: locked
+  depends_on:
+  - gw.foundation.impl
