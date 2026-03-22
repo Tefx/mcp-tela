@@ -47,10 +47,6 @@ def test_serve_lockfile_written_then_deleted(
 ) -> None:
     """Serve flow writes lockfile at startup and deletes it on shutdown."""
 
-    class _FakeServer:
-        async def run_streamable_http_async(self) -> None:
-            await asyncio.sleep(0.01)
-
     writes: list[object] = []
     deletes: list[bool] = []
 
@@ -68,9 +64,23 @@ def test_serve_lockfile_written_then_deleted(
         _ = args
         _ = kwargs
         runtime = get_runtime()
-        runtime.upstream_server = _FakeServer()
+        runtime.upstream_server = object()
         runtime.running = True
         return Result(value=None)
+
+    async def _fake_launch_streamable_http_server(
+        *, upstream_server: object, host: str, requested_port: int
+    ) -> Result[serve_cmd._HttpServerHandle, str]:
+        _ = upstream_server
+        _ = host
+        task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
+        return Result(
+            value=serve_cmd._HttpServerHandle(
+                task=task,
+                bound_port=requested_port,
+                request_shutdown=lambda: None,
+            )
+        )
 
     async def _fake_gateway_shutdown() -> Result[None, str]:
         runtime = get_runtime()
@@ -111,6 +121,11 @@ def test_serve_lockfile_written_then_deleted(
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
     monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
+    monkeypatch.setattr(
+        serve_cmd,
+        "_launch_streamable_http_server",
+        _fake_launch_streamable_http_server,
+    )
     monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
     monkeypatch.setattr(serve_cmd, "delete_lockfile", _fake_delete_lockfile)
     monkeypatch.setattr(serve_cmd, "_watch_config_changes", _fake_watch_config_changes)
@@ -133,6 +148,108 @@ def test_serve_lockfile_written_then_deleted(
     assert getattr(lock_data, "port") == 8123
     assert getattr(lock_data, "token") == "cli-token"
     assert len(deletes) == 1
+
+
+def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Port ``0`` must publish the actual OS-selected port in lockfile."""
+
+    writes: list[object] = []
+    published_port = 49152
+
+    def _fake_load_config(path: Path | None = None, default_profile: str | None = None):
+        _ = path
+        _ = default_profile
+        return Result(
+            value=TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+            )
+        )
+
+    async def _fake_gateway_start(*args, **kwargs) -> Result[None, str]:
+        _ = args
+        _ = kwargs
+        runtime = get_runtime()
+        runtime.upstream_server = object()
+        runtime.running = True
+        return Result(value=None)
+
+    async def _fake_gateway_shutdown() -> Result[None, str]:
+        runtime = get_runtime()
+        runtime.upstream_server = None
+        runtime.running = False
+        runtime.connections.clear()
+        return Result(value=None)
+
+    async def _fake_launch_streamable_http_server(
+        *, upstream_server: object, host: str, requested_port: int
+    ) -> Result[serve_cmd._HttpServerHandle, str]:
+        _ = upstream_server
+        _ = host
+        assert requested_port == 0
+        task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
+        return Result(
+            value=serve_cmd._HttpServerHandle(
+                task=task,
+                bound_port=published_port,
+                request_shutdown=lambda: None,
+            )
+        )
+
+    def _fake_write_lockfile(data):
+        writes.append(data)
+        return Result(value=None)
+
+    async def _fake_watch_config_changes(
+        *,
+        config_path: Path,
+        default_profile: str | None,
+        stop_event: asyncio.Event,
+    ) -> None:
+        _ = config_path
+        _ = default_profile
+        await stop_event.wait()
+
+    async def _fake_idle_shutdown_watch(
+        *,
+        idle_timeout_seconds: int,
+        stop_event: asyncio.Event,
+        poll_interval_seconds: float = 1.0,
+    ) -> None:
+        _ = idle_timeout_seconds
+        _ = stop_event
+        _ = poll_interval_seconds
+        return
+
+    monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
+    monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
+    monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
+    monkeypatch.setattr(
+        serve_cmd,
+        "_launch_streamable_http_server",
+        _fake_launch_streamable_http_server,
+    )
+    monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
+    monkeypatch.setattr(serve_cmd, "delete_lockfile", lambda: Result(value=None))
+    monkeypatch.setattr(serve_cmd, "_watch_config_changes", _fake_watch_config_changes)
+    monkeypatch.setattr(serve_cmd, "_idle_shutdown_watch", _fake_idle_shutdown_watch)
+    monkeypatch.setattr(serve_cmd, "_package_version", lambda: Result(value="0.1.0"))
+
+    result = serve_cmd.serve_command(
+        config_path=str(tmp_path / "tela.yaml"),
+        port=0,
+        host="127.0.0.1",
+        default_profile="dev",
+        idle_timeout=0,
+        token="cli-token",
+    )
+
+    assert result.is_ok
+    assert len(writes) == 1
+    assert getattr(writes[0], "port") == published_port
+    assert getattr(writes[0], "port") > 0
 
 
 def test_idle_shutdown_sets_stop_event_when_connections_stay_idle() -> None:

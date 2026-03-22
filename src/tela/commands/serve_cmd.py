@@ -11,9 +11,13 @@ import os
 import signal
 import sys
 import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
+
+from mcp.server.fastmcp import FastMCP
 
 from tela.core.models import AuthMode, GatewayTransport, LockfileData, TelaConfig
 from tela.shell.config_loader import Result, load_config
@@ -27,6 +31,17 @@ from tela.shell.lockfile import delete_lockfile, generate_bearer_token, write_lo
 
 
 CONFIG_WATCH_POLL_SECONDS = 0.5
+HTTP_SERVER_BIND_TIMEOUT_SECONDS = 5.0
+HTTP_SERVER_SHUTDOWN_TIMEOUT_SECONDS = 2.0
+
+
+@dataclass(frozen=True)
+class _HttpServerHandle:
+    """Track running Streamable HTTP server task and bound port."""
+
+    task: asyncio.Task[None]
+    bound_port: int
+    request_shutdown: Callable[[], None]
 
 
 # @shell_complexity: serve command validates CLI contracts and delegates lifecycle wiring.
@@ -147,11 +162,30 @@ async def _run_serve_gateway(
         return Result(error=version_result.error)
     assert version_result.value is not None
 
+    runtime = get_runtime()
+    if runtime.upstream_server is None:
+        await gateway_shutdown()
+        delete_lockfile()
+        _restore_bearer_token_env(old_token)
+        return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
+
+    http_server_result = await _launch_streamable_http_server(
+        upstream_server=runtime.upstream_server,
+        host=startup_config.host,
+        requested_port=startup_config.port or 0,
+    )
+    if http_server_result.is_err:
+        await gateway_shutdown()
+        _restore_bearer_token_env(old_token)
+        return Result(error=http_server_result.error)
+    assert http_server_result.value is not None
+    http_server = http_server_result.value
+
     lockfile_result = write_lockfile(
         LockfileData(
             pid=os.getpid(),
             host=startup_config.host,
-            port=startup_config.port or 0,
+            port=http_server.bound_port,
             token=bearer_token,
             started_at=started_at_result.value,
             config_path=str(config_path.resolve()),
@@ -159,16 +193,10 @@ async def _run_serve_gateway(
         )
     )
     if lockfile_result.is_err:
+        await _stop_http_server(http_server)
         await gateway_shutdown()
         _restore_bearer_token_env(old_token)
         return Result(error=lockfile_result.error)
-
-    runtime = get_runtime()
-    if runtime.upstream_server is None:
-        await gateway_shutdown()
-        delete_lockfile()
-        _restore_bearer_token_env(old_token)
-        return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
 
     stop_event = asyncio.Event()
     _install_signal_handlers(stop_event)
@@ -186,34 +214,25 @@ async def _run_serve_gateway(
         )
     )
     stop_task = asyncio.create_task(stop_event.wait())
-    server_task = asyncio.create_task(
-        runtime.upstream_server.run_streamable_http_async()
-    )
 
     error: str | None = None
     try:
         done, _pending = await asyncio.wait(
-            {server_task, stop_task},
+            {http_server.task, stop_task},
             return_when=asyncio.FIRST_COMPLETED,
         )
-        if server_task in done:
-            if server_task.cancelled():
+        if http_server.task in done:
+            if http_server.task.cancelled():
                 error = "HTTP_RUN_CANCELLED: streamable HTTP server cancelled"
             else:
-                server_exc = server_task.exception()
+                server_exc = http_server.task.exception()
                 if server_exc is not None:
                     error = f"HTTP_RUN_FAILED: {server_exc}"
-        else:
-            if not server_task.done():
-                server_task.cancel()
-                try:
-                    await server_task
-                except asyncio.CancelledError:
-                    pass
     finally:
         stop_event.set()
         await _await_task(watcher_task)
         await _await_task(idle_task)
+        await _stop_http_server(http_server)
         stop_task.cancel()
         try:
             await stop_task
@@ -227,6 +246,113 @@ async def _run_serve_gateway(
     if error is not None:
         return Result(error=error)
     return Result(value=None)
+
+
+# @shell_complexity: startup requires observing uvicorn socket bind before lockfile publication.
+async def _launch_streamable_http_server(
+    *,
+    upstream_server: FastMCP,
+    host: str,
+    requested_port: int,
+) -> Result[_HttpServerHandle, str]:
+    """Start Streamable HTTP server and resolve the actual bound port."""
+
+    import uvicorn
+
+    app = upstream_server.streamable_http_app()
+    log_level = str(
+        getattr(getattr(upstream_server, "settings", None), "log_level", "info")
+    )
+    config = uvicorn.Config(
+        app,
+        host=host,
+        port=requested_port,
+        log_level=log_level.lower(),
+    )
+    server = uvicorn.Server(config)
+    task: asyncio.Task[None] = asyncio.create_task(server.serve())
+
+    deadline = time.monotonic() + HTTP_SERVER_BIND_TIMEOUT_SECONDS
+    while time.monotonic() < deadline:
+        if task.done():
+            if task.cancelled():
+                return Result(
+                    error="HTTP_RUN_CANCELLED: streamable HTTP server cancelled"
+                )
+            server_exc = task.exception()
+            if server_exc is None:
+                return Result(
+                    error="HTTP_RUN_FAILED: streamable HTTP server exited early"
+                )
+            return Result(error=f"HTTP_RUN_FAILED: {server_exc}")
+
+        bound_port = _extract_bound_port(server)
+        if bound_port is not None:
+            return Result(
+                value=_HttpServerHandle(
+                    task=task,
+                    bound_port=bound_port,
+                    request_shutdown=lambda: setattr(server, "should_exit", True),
+                )
+            )
+
+        await asyncio.sleep(0.01)
+
+    await _stop_http_server(
+        _HttpServerHandle(
+            task=task,
+            bound_port=requested_port,
+            request_shutdown=lambda: setattr(server, "should_exit", True),
+        )
+    )
+    return Result(
+        error=(
+            "HTTP_BIND_TIMEOUT: timed out waiting for streamable HTTP server to bind"
+        )
+    )
+
+
+# @invar:allow shell_result: helper introspects in-memory uvicorn state and cannot fail at I/O boundary.
+# @shell_complexity: loops through uvicorn listener/socket structures to resolve bound port.
+def _extract_bound_port(server: object) -> int | None:
+    """Read resolved listen port from uvicorn server sockets."""
+
+    listeners = getattr(server, "servers", None)
+    if not listeners:
+        return None
+
+    for listener in listeners:
+        sockets = getattr(listener, "sockets", None)
+        if not sockets:
+            continue
+        for socket in sockets:
+            sockname = socket.getsockname()
+            if isinstance(sockname, tuple) and len(sockname) >= 2:
+                port = int(sockname[1])
+                if port > 0:
+                    return port
+
+    return None
+
+
+async def _stop_http_server(server: _HttpServerHandle) -> None:
+    """Request graceful HTTP server stop and await task completion."""
+
+    if server.task.done():
+        await server.task
+        return
+
+    server.request_shutdown()
+    try:
+        await asyncio.wait_for(
+            server.task, timeout=HTTP_SERVER_SHUTDOWN_TIMEOUT_SECONDS
+        )
+    except asyncio.TimeoutError:
+        server.task.cancel()
+        try:
+            await server.task
+        except asyncio.CancelledError:
+            return
 
 
 def _install_signal_handlers(stop_event: asyncio.Event) -> None:

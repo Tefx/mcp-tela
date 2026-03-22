@@ -150,6 +150,44 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
     assert waits == [0.3, connect_cmd.LOCKFILE_WAIT_TIMEOUT_SECONDS]
 
 
+def test_connect_discovery_uses_published_lockfile_port(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Connect discovery must use the lockfile's published bound port."""
+
+    lockfile = LockfileData(
+        pid=1234,
+        host="127.0.0.1",
+        port=49152,
+        token="lock-token",
+        started_at="2026-03-22T10:00:00Z",
+        config_path="/tmp/tela.yaml",
+        version="0.1.0",
+    )
+
+    calls: list[tuple[str, int, str]] = []
+
+    def _fake_run_bridge(
+        *, host: str, port: int, bearer_token: str
+    ) -> Result[None, str]:
+        calls.append((host, port, bearer_token))
+        return Result(value=None)
+
+    monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
+    monkeypatch.setattr(connect_cmd, "read_lockfile", lambda: Result(value=lockfile))
+    monkeypatch.setattr(connect_cmd, "_run_bridge", _fake_run_bridge)
+
+    result = connect_cmd.connect_command(
+        config_path="tela.yaml",
+        default_profile=None,
+        server=None,
+        token=None,
+    )
+
+    assert result.is_ok
+    assert calls == [("127.0.0.1", 49152, "lock-token")]
+
+
 def test_bridge_lifecycle_posts_connect_and_disconnect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
