@@ -18204,7 +18204,7 @@ phases:
       auth enforcement implemented'
   - id: gw.http.impl.http-endpoint-tests
     name: HTTP endpoint tests
-    status: pending
+    status: claimed
     description: 'Write integration tests for all HTTP endpoints.
 
 
@@ -18240,6 +18240,8 @@ phases:
     depends_on:
     - gw.http.impl.implement-http-route-handlers
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T06:37:39.281290+00:00'
   - id: gw.http.impl.gate-http-implementation
     name: 'Gate: HTTP implementation'
     status: pending
