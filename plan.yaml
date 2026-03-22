@@ -20999,7 +20999,7 @@ phases:
       - Deep review wiring-audit acceptance criteria in plan step `gw.deep_review.full-wiring-audit`'
   - id: gw.deep_review.architecture-and-concurrency-review
     name: Architecture and concurrency review
-    status: claimed
+    status: done
     description: 'Review module boundaries, dependency direction, and concurrency
       safety.
 
@@ -21030,6 +21030,49 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-22T10:32:00.559106+00:00'
+    done_at: '2026-03-22T10:45:32.966227+00:00'
+    evidence: 'Artifact:
+
+      - Task: ses_2eaee0326ffeLaP0qHjZT3Yt2w (software-architect)
+
+      - Planner remediation task: ses_2eadb3bfeffeEHe4mVXYFF37Oo
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_idle_shutdown.py tests/shell/test_http_routes.py
+      tests/shell/test_serve_cmd.py -q -> 52 passed
+
+      - Run: uv run invar guard -> passed (0 errors, 0 warnings)
+
+      - Run: grep checks across core/shell import direction -> core does not import
+      shell; shell depends on core
+
+      - Run: lock/connections/token path scans identified concurrency and token-storage
+      findings
+
+
+      Findings (blocking):
+
+      - Idle-shutdown manager logic exists but is not integrated into production runtime
+      path.
+
+      - `runtime.connections` access is not consistently synchronized across modules.
+
+      - Bearer token is exported through process environment path contrary to intended
+      confinement.
+
+
+      Batched remediation created:
+
+      - gw.deep_review.fix-runtime-shutdown-lock-token
+
+      - gw.deep_review.retest-runtime-shutdown-lock-token
+
+
+      Spec link:
+
+      - Deep review architecture/concurrency criteria in plan step `gw.deep_review.architecture-and-concurrency-review`'
   - id: gw.deep_review.black-box-spec-verification
     name: Black-box spec verification
     status: done
