@@ -23281,7 +23281,7 @@ phases:
       \ verdict."
   - id: tw.gate.fix-final-regate-invar
     name: Fix final re-gate invar regression blocker family
-    status: claimed
+    status: done
     description: "Fix ALL blockers found after failed `tw.gate.final-regate`, not\
       \ just the first symptom.\n\nVerification scope: `phase-check` protecting the\
       \ replacement re-gate path and tw.gate phase completion.\n\nsymbolic_testing:\
@@ -23375,6 +23375,59 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T20:09:11.060562+00:00'
+    done_at: '2026-03-22T20:13:12.341885+00:00'
+    evidence: '## Blocker Remediation Evidence
+
+
+      Files changed
+
+      - src/tela/core/contracts.py
+
+
+      Core remediation
+
+      - Removed alias-based decorator usage that hid canonical contract decorators
+      from invar detection.
+
+      - Restored canonical `@pre` / `@post` contract surface for `_meta_pre`, `_meta_post`,
+      `pre`, `post`.
+
+      - Preserved mypy compatibility via file-scoped handling of intentional `pre`/`post`
+      shadowing pattern, without API rename.
+
+
+      Sibling search
+
+      - Command: `rg -n "deal_(pre|post)|_meta_(pre|post)|\bpre\b|\bpost\b" src/tela/core/contracts.py
+      tests`
+
+      - Result: canonical decorator usage present; alias pattern removed from contracts
+      surface.
+
+
+      Verification
+
+      - `uv run mypy src/tela/core/contracts.py`: success
+
+      - `uv run invar guard --all`: passed (errors=0)
+
+
+      Root cause vs symptom
+
+      - Root cause: aliasing decorators (`@deal_pre`/`@deal_post`) broke invar contract
+      discovery expectations.
+
+      - Symptom: 4 missing_contract errors in contracts module.
+
+      - Why previous fix failed: optimized for mypy no-redef only.
+
+      - Why this fix closes family: restores invar-visible decorator shape while retaining
+      mypy-clean typing path.
+
+
+      Artifact
+
+      - Commit: 3d3d066'
   - id: tw.gate.retest-final-regate-invar
     name: Retest final re-gate invar regression blocker family
     status: pending
