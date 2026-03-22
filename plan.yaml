@@ -22679,7 +22679,7 @@ phases:
     agent: gate-reviewer
   - id: tw.gate.fix-invar-guard-blockers
     name: Fix invar guard blocker family
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by `invar guard --all` for `tw.gate.invar-guard`.
 
 
@@ -22787,6 +22787,8 @@ phases:
     depends_on:
     - tw.gate.invar-guard
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T19:36:51.591299+00:00'
   - id: tw.gate.retest-invar-guard
     name: Retest invar guard after blocker fix
     status: pending
