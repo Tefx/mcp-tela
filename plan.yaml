@@ -20621,13 +20621,13 @@ phases:
       - Retest step performed validation-only; no source edits required.'
 - id: gw.spec_conformance
   name: Spec Conformance Verification
-  status: pending
+  status: in_progress
   depends_on:
   - gw.teardown
   steps:
   - id: gw.spec_conformance.spec-conformance-audit
     name: Spec conformance audit
-    status: pending
+    status: claimed
     description: "Spec conformance verification: compare implemented behavior against\
       \ INTERFACES.md and DESIGN.md.\n\nThis is NOT 'do tests pass' -- it is 'does\
       \ the implementation match what the spec says.'\n\nREQUIRED CHECKS:\n1. CLI\
@@ -20658,6 +20658,8 @@ phases:
     - docs/INTERFACES.md
     - docs/DESIGN.md
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-22T10:13:05.100869+00:00'
   - id: gw.spec_conformance.gate-spec-conformance
     name: 'Gate: spec conformance'
     status: pending
