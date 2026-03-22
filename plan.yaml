@@ -21514,7 +21514,7 @@ phases:
   - id: gw.deep_review.fix-runtime-shutdown-lock-token
     name: Fix production runtime wiring, shared connection locking, and bearer token
       containment
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by the architecture/concurrency deep review.
 
 
@@ -21703,6 +21703,8 @@ phases:
     depends_on:
     - gw.deep_review.architecture-and-concurrency-review
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T10:46:12.812249+00:00'
   - id: gw.deep_review.retest-runtime-shutdown-lock-token
     name: Re-test runtime shutdown wiring, shared connection locking, and bearer token
       containment
