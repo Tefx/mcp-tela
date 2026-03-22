@@ -20278,7 +20278,7 @@ phases:
       - audit empty-array output is valid when no tool calls occurred'
   - id: gw.teardown.gate-cli-teardown
     name: 'Gate: CLI teardown'
-    status: claimed
+    status: pending
     description: "Gate review: Verify CLI refactor complete and old start command\
       \ removed.\n\nreview_depth: THOROUGH\nreview_depth_rationale: Major refactor\
       \ touching CLI registry (shared file), removing existing command, adding two\
@@ -20306,8 +20306,6 @@ phases:
     - gw.teardown.fix-query-command-repro-tests-for-remote-server
     - gw.teardown.retest-cli-teardown-query-command-integration
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-22T09:59:55.282095+00:00'
   - id: gw.teardown.fix-query-command-repro-tests-for-remote-server
     name: Fix stale query-command repro tests for remote server behavior
     status: done
