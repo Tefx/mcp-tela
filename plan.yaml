@@ -19605,7 +19605,7 @@ phases:
       - retest closed test-only blocker by validating corrected field assertions'
   - id: gw.bridge.fix-query-commands-remote-state
     name: Fix query commands to discover remote server state
-    status: claimed
+    status: done
     description: 'Fix ALL query-command runtime drift found by gw.bridge gate.
 
 
@@ -19742,6 +19742,49 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T09:03:45.933008+00:00'
+    done_at: '2026-03-22T09:11:17.175750+00:00'
+    evidence: 'Commit hash(es): 5ca0b3b
+
+      Files changed:
+
+      - src/tela/commands/status_cmd.py
+
+      - src/tela/commands/connections_cmd.py
+
+      - src/tela/commands/audit_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      - src/tela/core/models.py
+
+      - src/tela/shell/http_routes.py
+
+      - tests/shell/test_query_commands_remote_state.py
+
+      - tests/repro/test_query_commands_remote_state.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_query_commands_remote_state.py tests/repro/test_query_commands_remote_state.py
+      tests/shell/test_http_routes.py -> 29 passed
+
+      - Run: invar guard changed files -> passed (warnings only)
+
+      Sibling search:
+
+      - Run: grep for local in-process query helpers in commands -> no remaining direct
+      gateway_status/gateway_connections/audit_query paths
+
+      - Run: grep for query_remote_state usage -> present in all three query commands
+
+      Spec link:
+
+      - docs/INTERFACES.md §2 §7.2 §7.3
+
+      Gaps/Notes:
+
+      - /status payload extended with connections and audit_entries for unified remote
+      query source'
   - id: gw.bridge.retest-query-commands-remote-state
     name: Mode D retest of remote query command behavior
     status: pending
