@@ -23200,7 +23200,7 @@ phases:
       - PASS'
   - id: tw.gate.final-regate
     name: Re-gate final verification after blocker retest
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (`gate-reviewer`), replace the failed
       `tw.gate.final` verdict by reviewing the remediation path for the final blocker
       family.
@@ -23264,3 +23264,5 @@ phases:
     depends_on:
     - tw.gate.retest-final-blockers
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T20:04:04.767432+00:00'
