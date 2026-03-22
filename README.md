@@ -166,11 +166,14 @@ tela audit   [--json] [--since T] [--limit N]
 
 ## Core FAQ
 
-### Why `tela connect` instead of `tela start`?
+### Why two commands?
 
-`tela connect` auto-discovers a running gateway or starts one. Multiple clients
-share the same gateway, avoiding duplicate downstream processes. Old `tela start`
-spawned independent processes per client.
+`tela connect` and `tela serve` separate concerns:
+- `tela connect` is the client bridge — it auto-discovers or auto-starts a shared gateway
+- `tela serve` is the actual gateway — it runs downstream servers and handles HTTP
+
+Multiple `tela connect` instances share one `tela serve`, avoiding duplicate
+downstream processes and centralized configuration.
 
 ### Can multiple agents share one gateway?
 

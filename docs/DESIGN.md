@@ -55,6 +55,28 @@ The lockfile contains `pid`, `port`, and `token` for auth.
 3. `tela connect` exits → `POST /disconnect` → server deregisters
 4. Last connection gone + idle timeout → server auto-shuts down (if auto-started)
 
+### Idle shutdown
+
+When a `tela serve` process is auto-started by `tela connect`, it monitors active
+connections. After the last connection closes, an idle timer starts (default 300s).
+If no new connections arrive before the timeout, the server shuts down.
+
+- Configurable via `--idle-timeout`
+- Set to `0` to disable auto-shutdown (servers started via `tela serve` default to this)
+- Manually-started servers (`tela serve`) never auto-shutdown regardless of timeout
+
+### Token override modes
+
+The bearer token protecting HTTP endpoints can be set via:
+
+1. `--token` CLI option (highest precedence)
+2. `TELA_BEARER_TOKEN` environment variable
+3. Auto-generated on startup (default)
+
+For remote clients, the lockfile token is read automatically. To skip lockfile
+discovery and connect to an explicit server, use `--server host:port` which
+requires `--token` or `TELA_BEARER_TOKEN` (lockfile discovery is disabled).
+
 ## Core Concepts
 
 ### Profiles
@@ -147,7 +169,12 @@ CLI entrypoints only:
 | Config `auth.mode: token` | CapabilityToken with HMAC | Binds connection to profile |
 | Config `auth.mode: open` | No token needed | Uses default profile |
 
-Both layers are independent and apply simultaneously.
+Both layers are independent and apply simultaneously:
+
+- **Bearer token** (lockfile or `--token`/`TELA_BEARER_TOKEN`): protects the HTTP transport layer
+- **Config `auth.mode`** (open/token): controls MCP-level profile binding
+- You can have `auth.mode: open` (no CapabilityToken) and still require the bearer token for HTTP access
+- You can override the bearer token with `--token` without changing profile authorization
 
 ## Ownership Rules
 
