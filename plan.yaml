@@ -19399,7 +19399,7 @@ phases:
       - fix limited to bound-port publication and aligned discovery regressions'
   - id: gw.bridge.retest-lockfile-actual-port
     name: Retest connect liveness after lockfile port fix
-    status: pending
+    status: claimed
     description: 'Independent retest for the ephemeral-port discovery blocker.
 
 
@@ -19425,6 +19425,8 @@ phases:
     depends_on:
     - gw.bridge.fix-lockfile-actual-port
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-22T08:23:28.136753+00:00'
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
