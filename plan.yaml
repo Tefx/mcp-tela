@@ -20278,7 +20278,7 @@ phases:
       - audit empty-array output is valid when no tool calls occurred'
   - id: gw.teardown.gate-cli-teardown
     name: 'Gate: CLI teardown'
-    status: claimed
+    status: done
     description: "Gate review: Verify CLI refactor complete and old start command\
       \ removed.\n\nreview_depth: THOROUGH\nreview_depth_rationale: Major refactor\
       \ touching CLI registry (shared file), removing existing command, adding two\
@@ -20308,6 +20308,20 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T10:04:14.137703+00:00'
+    done_at: '2026-03-22T10:09:09.973266+00:00'
+    evidence: "Artifact:\n- Task: ses_2eaff090cffenE11DPXT2neDIj (gate-reviewer)\n\
+      - Outcome: FAIL with blocker findings; remediation batched via planner task\
+      \ ses_2eafbea75ffe9WpNt8ghORLRd6\n\nVerification:\n- Run: uv run tela start\
+      \ --help -> invalid choice: 'start' (serve/connect/query commands exposed)\n\
+      - Run: uv run pytest tests/shell/test_cli_wiring.py -> FAILED with AttributeError\
+      \ on monkeypatch target `tela.commands.serve_cmd.gateway_reload_config_from_disk`\n\
+      - Run: uv run pytest tests/repro/test_blockers.py -> 18 passed\n- Run: uv run\
+      \ invar guard --all -> includes dead_export issue for start_command without\
+      \ escape hatch\n\nSpec link:\n- docs/INTERFACES.md §2 (CLI surface)\n\nGate\
+      \ verdict and batching:\n- Blocker 1: stale monkeypatch target in tests/shell/test_cli_wiring.py\n\
+      - Blocker 2: missing `@invar:allow dead_export` annotation for src/tela/commands/start.py:start_command\n\
+      - Batched remediation created in one fix step plus one retest step:\n  - gw.teardown.fix-gate-cli-teardown-blockers\n\
+      \  - gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites"
   - id: gw.teardown.fix-query-command-repro-tests-for-remote-server
     name: Fix stale query-command repro tests for remote server behavior
     status: done
