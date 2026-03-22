@@ -20453,6 +20453,83 @@ phases:
       Gaps/Notes:
 
       - no-server and mocked remote-success query-command paths verified'
+  - id: gw.teardown.fix-gate-cli-teardown-blockers
+    name: Fix gate-cli teardown blockers
+    status: pending
+    description: 'Batched remediation for the failed `gw.teardown.gate-cli-teardown`
+      review. Fix BOTH blockers in one pass, not just the first.
+
+
+      Blockers to close:
+
+      1. Update `tests/shell/test_cli_wiring.py` monkeypatch target so it patches
+      the symbol actually used by the CLI wiring path: replace the stale `tela.commands.serve_cmd.gateway_reload_config_from_disk`
+      target with `tela.shell.gateway.gateway_reload_config_from_disk`.
+
+      2. Add the required `@invar:allow dead_export` annotation for `start_command`
+      in `src/tela/commands/start.py` so the retained CLI entrypoint is explicitly
+      justified.
+
+
+      Scope guardrails:
+
+      - Touch only the blocker locations and the minimum supporting assertions/imports
+      needed for these fixes.
+
+      - Do not change teardown behavior or unrelated phases.
+
+      - Provide sibling-search evidence that no equivalent stale monkeypatch target
+      or missing dead_export escape hatch remains in the affected teardown/start command
+      surfaces.'
+    verification: '- Targeted regression proof shows `tests/shell/test_cli_wiring.py`
+      patches `tela.shell.gateway.gateway_reload_config_from_disk` and no stale `tela.commands.serve_cmd.gateway_reload_config_from_disk`
+      target remains in the affected teardown wiring tests.
+
+      - `src/tela/commands/start.py` contains `@invar:allow dead_export` on the `start_command`
+      export path.
+
+      - Focused verification for both blocker families passes without changing unrelated
+      teardown acceptance behavior.'
+    refs:
+    - tests/shell/test_cli_wiring.py
+    - src/tela/commands/start.py
+    depends_on:
+    - gw.teardown.gate-cli-teardown
+    agent: python-executor
+  - id: gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites
+    name: Retest gate-cli teardown blockers and prerequisites
+    status: pending
+    description: 'Independent retest for the blockers found by `gw.teardown.gate-cli-teardown`
+      and the narrow gate prerequisites they affect.
+
+
+      Retest scope:
+
+      - Re-run targeted verification covering CLI wiring monkeypatch behavior in `tests/shell/test_cli_wiring.py`.
+
+      - Re-check the retained `start_command` dead-export annotation requirement in
+      `src/tela/commands/start.py`.
+
+      - Confirm the core teardown acceptance checks previously passing remain green
+      after the blocker fixes.
+
+
+      This retest is successful if it finds issues or proves the blockers are closed
+      with specific evidence; vague "tests pass" reporting is insufficient.'
+    verification: '- Execute the targeted test command(s) or equivalent focused verification
+      for `tests/shell/test_cli_wiring.py` and capture actual output.
+
+      - Verify `start_command` now carries the required `@invar:allow dead_export`
+      annotation and report the exact code location.
+
+      - Confirm gate prerequisites for CLI teardown remain satisfied after the fix,
+      with explicit note that core teardown acceptance stayed green.'
+    refs:
+    - tests/shell/test_cli_wiring.py
+    - src/tela/commands/start.py
+    depends_on:
+    - gw.teardown.fix-gate-cli-teardown-blockers
+    agent: integration-verifier
 - id: gw.spec_conformance
   name: Spec Conformance Verification
   status: locked
