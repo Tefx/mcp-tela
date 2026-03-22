@@ -18296,6 +18296,134 @@ phases:
     - gw.http.impl.implement-http-route-handlers
     - gw.http.impl.http-endpoint-tests
     agent: gate-reviewer
+  - id: gw.http.impl.fix-http-liveness-blockers
+    name: Fix HTTP liveness blockers
+    status: pending
+    description: 'Fix ALL blockers found by the gw.http.impl HTTP liveness audit on
+      the mounted runtime surface.
+
+
+      step_type: implementation
+
+      symbolic_testing: false
+
+      agent_source: default
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: the HTTP runtime surface is not fully wired to the documented
+      FastMCP HTTP entrypoint and auth boundary, so mounted routes and CLI launch
+      behavior diverge from INTERFACES.md 7.2.
+
+      - Symptom: /health, /status, /connect, and /disconnect return 404 on the actual
+      mounted surface; CLI calls nonexistent FastMCP APIs; mounted auth behavior is
+      not proven to match the spec.
+
+      - Why this fix is not surface-level: it must correct runtime wiring, valid FastMCP
+      launch API usage, and mounted auth enforcement together rather than patching
+      individual handlers in isolation.
+
+
+      ### B1: HTTP handlers not mounted on runtime surface
+
+      Locations: src/anima/gateway/, src/anima/shell/, runtime HTTP entrypoint wiring
+
+      Remediation: mount the implemented handlers onto the real FastMCP HTTP runtime
+      so /health, /status, /connect, and /disconnect resolve on the served surface
+      rather than only existing as internal handler code.
+
+      Grep hint: search for the HTTP route registration and mounted app wiring for
+      /health, /status, /connect, and /disconnect across gateway and shell entrypoints.
+
+      IMPORTANT: search for sibling registration gaps beyond the listed endpoints.
+
+
+      ### B2: CLI uses nonexistent FastMCP methods
+
+      Locations: tela serve CLI/runtime startup path using FastMCP launch methods
+
+      Remediation: replace run_streamable_http_async and run_sse_async usage with
+      valid FastMCP API calls supported by the installed library and ensure the CLI
+      startup path invokes the correct runtime mode.
+
+      Grep hint: search for run_streamable_http_async and run_sse_async usages and
+      for sibling FastMCP launch calls in the same startup flow.
+
+      IMPORTANT: remove all nonexistent method references in the affected launch path,
+      not just the first call site.
+
+
+      ### B3: Mounted endpoint auth behavior must match spec
+
+      Locations: mounted HTTP auth middleware or route protection boundary for /health,
+      /status, /connect, /disconnect
+
+      Remediation: ensure /health remains unauthenticated on the mounted surface while
+      protected endpoints enforce bearer authentication consistently after routing
+      is wired.
+
+      Grep hint: search mounted HTTP auth checks, bearer enforcement, and endpoint
+      allowlists/guards around /health, /status, /connect, and /disconnect.
+
+      IMPORTANT: verify sibling auth paths on the mounted surface, not only direct
+      handler logic.
+
+
+      ## KNOWN RISKS (from project history)
+
+      - Integration wiring can pass unit tests while failing at the real runtime surface.
+      Do not stop at handler-level tests; verify through the served HTTP entrypoint.
+
+      - Runtime/output paths have previously regressed due to incomplete sibling search.
+      Audit all startup and route-registration branches in the same launch path.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Handler code exists but the served surface still returns 404.
+
+      2. CLI startup still references nonexistent FastMCP methods or wrong runtime
+      mode.
+
+      3. /health requires auth or protected endpoints allow unauthenticated access
+      on the mounted surface.
+
+      4. Evidence that only unit tests passed without mounted-surface proof.
+
+
+      ## Completion Criteria
+
+      - ALL blockers fixed, not just the first observed 404
+
+      - Mounted HTTP surface serves /health, /status, /connect, and /disconnect at
+      the documented runtime path
+
+      - CLI uses valid FastMCP launch APIs only
+
+      - Mounted auth boundary matches spec: /health open, protected endpoints require
+      bearer
+
+      - Sibling search evidence provided for route registration and auth enforcement
+      paths'
+    verification: '- Main path: mounted-surface regression covers /health, /status,
+      /connect, and /disconnect through the real HTTP entrypoint
+
+      - Failure path: regression covers unauthenticated /health success and unauthorized
+      protected-endpoint rejection on the mounted surface
+
+      - Proof: no remaining references to nonexistent FastMCP methods in the affected
+      CLI/runtime launch path
+
+      - Proof: sibling search evidence shows route-registration and auth-boundary
+      gaps were checked across the same runtime path'
+    depends_on:
+    - gw.http.impl.implement-http-route-handlers
+    - gw.http.impl.http-endpoint-tests
+    agent: python-senior
 - id: gw.serve
   name: tela serve Command
   status: locked
