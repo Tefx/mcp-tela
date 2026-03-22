@@ -18493,7 +18493,7 @@ phases:
       guard passed'
   - id: gw.http.impl.retest-http-liveness-mounted-surface
     name: Retest mounted HTTP surface and auth behavior
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the mounted
       HTTP runtime surface from a fresh perspective after the liveness blocker fix.
 
@@ -18579,6 +18579,50 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T06:59:58.274739+00:00'
+    done_at: '2026-03-22T07:03:08.938867+00:00'
+    evidence: 'Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Verification:
+
+      - Run: uv run pytest -v tests/shell/test_gateway.py::test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary
+      tests/shell/test_gateway.py::test_serve_remote_gateway_uses_fastmcp_run_method
+      -> 3 passed
+
+      - Run: uv run pytest -v tests/shell/test_http_routes.py tests/shell/test_http_auth.py
+      -> 30 passed
+
+      - Run: rg "run_streamable_http_async|run_sse_async" src/ -> no matches
+
+      Mounted Endpoint Results:
+
+      - /health: 200 without auth
+
+      - /status: 401 without auth, 200 with valid bearer
+
+      - /connect: 401 without auth, 200 with valid bearer
+
+      - /disconnect: 401 without auth, 200 with valid bearer
+
+      Auth Boundary Results:
+
+      - /health without bearer: pass
+
+      - protected without/invalid bearer: pass
+
+      - protected with valid bearer: pass
+
+      Verdict:
+
+      - PASS
+
+      Gaps/Notes:
+
+      - real mounted-surface proof produced via gateway integration tests and validation
+      script'
 - id: gw.serve
   name: tela serve Command
   status: locked
