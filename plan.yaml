@@ -18835,7 +18835,7 @@ phases:
       APIs'
   - id: gw.serve.tela-serve-liveness-probe
     name: tela serve liveness probe
-    status: claimed
+    status: done
     description: 'Black-box liveness verification: actually start tela serve and verify
       it runs.
 
@@ -18875,6 +18875,23 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T07:21:40.415153+00:00'
+    done_at: '2026-03-22T07:46:16.925397+00:00'
+    evidence: 'Mode: D
+
+      Verdict: PASS
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_serve_liveness.py -v -> 7 passed
+
+      Findings:
+
+      - No blockers; all 7 liveness checks satisfied
+
+      Gaps/Notes:
+
+      - Verified startup, health endpoint, token/lockfile lifecycle, uptime >=5s,
+      SIGTERM graceful shutdown, lockfile cleanup'
   - id: gw.serve.gate-tela-serve
     name: 'Gate: tela serve'
     status: pending
