@@ -20308,7 +20308,7 @@ phases:
     agent: gate-reviewer
   - id: gw.teardown.fix-query-command-repro-tests-for-remote-server
     name: Fix stale query-command repro tests for remote server behavior
-    status: pending
+    status: claimed
     description: 'Fix ALL stale teardown repro tests in `tests/repro/test_blockers.py`
       that still assume query commands succeed without a running server after the
       query-command move to lockfile + HTTP.
@@ -20369,6 +20369,8 @@ phases:
     - gw.teardown.update-query-commands-for-http-discovery
     - gw.teardown.end-to-end-cli-integration-test
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T09:56:05.357459+00:00'
   - id: gw.teardown.retest-cli-teardown-query-command-integration
     name: Retest CLI teardown integration after query-command repro fix
     status: pending
