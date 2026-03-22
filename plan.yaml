@@ -19115,7 +19115,7 @@ phases:
   steps:
   - id: gw.bridge.implement-tela-connect-command
     name: Implement tela connect command
-    status: pending
+    status: claimed
     description: "Implement the tela connect CLI command: stdio bridge client entry\
       \ point.\n\nSpec refs: INTERFACES.md 2 (CLI surface), DESIGN.md (process model,\
       \ service discovery, connection lifecycle)\n\nFile: src/tela/commands/connect_cmd.py\
@@ -19158,6 +19158,8 @@ phases:
     - docs/DESIGN.md
     - src/tela/shell/lockfile.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T07:58:00.064285+00:00'
   - id: gw.bridge.implement-stdio-http-bridge
     name: Implement stdio-HTTP bridge
     status: claimed
