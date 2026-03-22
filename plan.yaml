@@ -22275,7 +22275,7 @@ phases:
   steps:
   - id: tw.impl.gateway-secrets
     name: Pass auth secrets through gateway startup
-    status: claimed
+    status: done
     description: Pass auth secrets from config through gateway startup into GatewayRuntime
       state. Add secrets field to GatewayRuntime, populate from TelaConfig.auth.secrets
       in gateway_start
@@ -22283,6 +22283,15 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T19:04:38.106532+00:00'
+    done_at: '2026-03-22T19:06:28.748023+00:00'
+    evidence: "Code diff\n- src/tela/shell/gateway.py\n  - Added `secrets: list[str]\
+      \ = field(default_factory=list)` to `GatewayRuntime`\n  - In `gateway_start`,\
+      \ populated `_runtime.secrets = list(effective_config.auth.secrets)`\n  - In\
+      \ `gateway_shutdown`, reset `_runtime.secrets = []`\n\nVerification\n- invar\
+      \ guard: passed (0 errors; warnings reported as pre-existing/static)\n- pytest\
+      \ tests/shell/test_gateway.py: 26 passed\n\nCommit hash(es)\n- (from worker\
+      \ branch) implementation committed before handoff\n\nFiles changed\n- src/tela/shell/gateway.py\n\
+      \nGaps/Notes\n- No out-of-scope issues reported."
   - id: tw.impl.wire-validate-token
     name: Wire validate_token into handle_initialize
     status: pending
