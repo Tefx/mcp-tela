@@ -22837,7 +22837,7 @@ phases:
       artifact.'
   - id: tw.gate.retest-invar-guard
     name: Retest invar guard after blocker fix
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), rerun `invar
       guard --all` after `tw.gate.fix-invar-guard-blockers` completes.
 
@@ -22891,3 +22891,36 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T19:47:22.288421+00:00'
+    done_at: '2026-03-22T19:48:50.914580+00:00'
+    evidence: "## Verification Report: invar guard --all (Retest After Blocker Fix)\n\
+      \n**Date**: 2026-03-23T03:52Z\n**Verifier**: integration-verifier\n**Scope**:\
+      \ Full static analysis, doctests, contracts, escape-hatch budgets in fresh/cold\
+      \ worktree\n\n### Command Executed\n```bash\ncd .vectl/worktrees/tw.gate.retest-invar-guard\
+      \ && uv run invar guard --all\n```\n\n### Results Summary\n\n| Check | Result\
+      \ | Evidence |\n|-------|--------|----------|\n| Static Analysis | PASS | `errors:\
+      \ 0`, `warnings: 39`, `infos: 10` |\n| Doctest | PASS | `passed: true`, `output:\
+      \ \"\"` |\n| Contracts | PASS | All Core functions have @pre/@post decorators\
+      \ |\n| Escape-Hatch Budget | PASS | `12/15` used (within limit) |\n| Dead Exports\
+      \ | WARN | 4 dead exports detected (non-blocking) |\n| CrossHair | SKIP | No\
+      \ core files found for property testing |\n\n### Evidence Levels\n\n| Level\
+      \ | Status |\n|-------|--------|\n| L1 (Contracts) | PASS |\n| L2 (Real Wiring)\
+      \ | N/A (static analysis) |\n| L3 (Live Service) | N/A |\n\n### Previous Blockers\
+      \ - All Fixed\n\n| Blocker | Status | Fix Applied |\n|---------|--------|-------------|\n\
+      | core/contracts.py missing contracts | PASS | Added @pre/@post decorators,\
+      \ fixed doctests |\n| dead_export suppression (start.py) | PASS | Removed suppression,\
+      \ added real export via __init__.py |\n| shell_pure_logic in idle_shutdown.py\
+      \ | PASS | Removed escape hatch, function refactored to return Result |\n| shell_pure_logic\
+      \ budget exceeded | PASS | Reduced from 17 to 12 (within 15 limit) |\n\n###\
+      \ Remaining Warnings (Non-Blocking)\n\n1. **function_size** (3): CLI functions\
+      \ exceed 100 lines - informational\n2. **partial_contract** (8): Some parameters\
+      \ missing constraints - informational\n3. **shell_pure_logic** (15): Shell functions\
+      \ could move to Core - architectural suggestion\n4. **dead_export** (4): Unused\
+      \ shell functions - cleanup opportunity\n5. **escape_hatch_budget** (1): 12/15\
+      \ used - within limit\n\n### Exit Code\n0 (success)\n\n### Raw JSON Output Summary\n\
+      ```json\n{\n  \"status\": \"passed\",\n  \"static\": { \"passed\": true, \"\
+      errors\": 0, \"warnings\": 39, \"infos\": 10 },\n  \"doctest\": { \"passed\"\
+      : true, \"output\": \"\" },\n  \"escape_hatches\": { \"count\": 4, \"gating\"\
+      : { \"status\": \"warning\", \"budget\": {\"used\": 12, \"limit\": 15} } }\n\
+      }\n```\n\n### Conclusion\nAll prior blockers from tw.gate.fix-invar-guard-blockers\
+      \ have been successfully resolved. The invar guard now passes with zero errors.\
+      \ Remaining warnings are architectural suggestions and do not block gate progression."
