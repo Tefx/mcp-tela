@@ -22650,10 +22650,17 @@ phases:
     name: Final gate review
     status: pending
     description: 'Final gate review: all phases complete, no regressions, token auth
-      wired end-to-end'
+      wired end-to-end. Downstream progression is blocked until `tw.gate.retest-invar-guard`
+      verifies the batched invar remediation path.'
+    verification: '- Final gate review runs only after `tw.gate.retest-invar-guard`
+
+      - No unresolved blocker remains from the prior `invar guard --all` failure family
+
+      - Repo-wide contract, dead export, and escape-hatch budget compliance is evidenced
+      by the retest path'
     evidence_template: Final gate review checklist
     depends_on:
-    - tw.gate.invar-guard
+    - tw.gate.retest-invar-guard
     agent: gate-reviewer
   - id: tw.gate.fix-invar-guard-blockers
     name: Fix invar guard blocker family
