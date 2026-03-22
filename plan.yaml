@@ -19281,8 +19281,8 @@ phases:
 
       Dependency note:
 
-      - Do not run until gw.bridge.retest-lockfile-actual-port closes the ephemeral-port
-      lockfile blocker.'
+      - Do not run until gw.bridge.retest-liveness-payload closes the status-payload
+      fixture blocker.'
     verification: '- End-to-end: serve -> connect -> initialize -> tools/list -> disconnect
 
       - Lockfile discovery works
@@ -19291,7 +19291,7 @@ phases:
 
       - Clean disconnect on exit'
     depends_on:
-    - gw.bridge.retest-lockfile-actual-port
+    - gw.bridge.retest-liveness-payload
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T08:26:08.590304+00:00'
