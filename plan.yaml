@@ -22108,3 +22108,12 @@ phases:
       connection to profile) and DESIGN.md (two independent auth layers)
     evidence_template: Spec section quotes + implementation mapping
     agent: doc-reviewer
+  - id: tw.gate.invar-guard
+    name: Run invar guard --all
+    status: pending
+    description: Run invar guard --all to verify all contracts, doctests, and architecture
+      rules pass
+    evidence_template: Full invar guard output pasted
+    depends_on:
+    - tw.gate.spec-conformance
+    agent: integration-verifier
