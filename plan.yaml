@@ -18721,7 +18721,7 @@ phases:
     agent: python-senior
   - id: gw.serve.implement-idle-shutdown-manager
     name: Implement idle shutdown manager
-    status: claimed
+    status: pending
     description: 'Implement connection tracking and idle shutdown logic.
 
 
@@ -18773,8 +18773,6 @@ phases:
     refs:
     - docs/INTERFACES.md
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-22T07:07:50.742745+00:00'
   - id: gw.serve.tela-serve-liveness-probe
     name: tela serve liveness probe
     status: pending
