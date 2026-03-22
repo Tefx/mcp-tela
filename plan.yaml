@@ -22323,10 +22323,18 @@ phases:
     name: 'Gate review: token wire implementation'
     status: claimed
     description: 'Gate review: implementation is correct, backward compatible, no
-      stub remnants'
+      stub remnants, and dedicated token-mode handle_initialize integration coverage
+      is independently verified before downstream progression'
+    verification: '- Implementation wiring remains correct and backward compatible
+
+      - Dedicated token-mode handle_initialize integration retest evidence reviewed
+      and accepted
+
+      - No unresolved blockers or should-fix gaps remain before tw.gate phase proceeds'
     evidence_template: Gate review checklist completed
     depends_on:
     - tw.impl.wire-validate-token
+    - tw.impl.retest-handle-initialize-token-mode
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T19:10:48.892037+00:00'
