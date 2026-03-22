@@ -18127,7 +18127,7 @@ phases:
   steps:
   - id: gw.http.impl.implement-http-route-handlers
     name: Implement HTTP route handlers
-    status: claimed
+    status: pending
     description: 'Implement all 5 HTTP route handlers per INTERFACES.md 7.2.
 
 
@@ -18176,8 +18176,6 @@ phases:
     - docs/INTERFACES.md
     - src/tela/shell/http_auth.py
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-21T21:10:54.799920+00:00'
   - id: gw.http.impl.http-endpoint-tests
     name: HTTP endpoint tests
     status: pending
