@@ -22655,3 +22655,113 @@ phases:
     depends_on:
     - tw.gate.invar-guard
     agent: gate-reviewer
+  - id: tw.gate.fix-invar-guard-blockers
+    name: Fix invar guard blocker family
+    status: pending
+    description: 'Fix ALL blockers found by `invar guard --all` for `tw.gate.invar-guard`.
+
+
+      symbolic_testing: true
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+      - Missing required contracts in `src/tela/core/contracts.py`
+
+      - Escape-hatch budget overages at project scope
+
+      - Escape-hatch budget overage in the affected file scope
+
+      - Non-suppressible `dead_export` in `src/tela/commands/start.py`
+
+
+      ## Root Cause vs Symptom:
+
+      - Root cause: contract coverage and architecture-governance debt remain unresolved
+      after the original gate run, so repo-wide guard enforcement still intersects
+      the final phase gate
+
+      - Symptom: `invar guard --all` reports 8 blocking errors across contract completeness,
+      escape-hatch budget enforcement, and dead export policy
+
+      - Why this fix is not surface-level: the worker must remove or justify the blocker
+      family at the owning code locations and clear sibling occurrences where the
+      same anti-pattern remains
+
+
+      ## Remediation instructions:
+
+      ### Contract blockers
+
+      Locations: `src/tela/core/contracts.py`
+
+      Remediation: add the missing `@pre`/`@post` contracts and at least one doctest
+      for each affected Core function, following `AGENTS.md` and `INVAR.md` requirements;
+      keep Core free of I/O imports.
+
+      Grep hint: search Core functions in `src/tela/core/contracts.py` lacking `@pre`,
+      `@post`, or doctest coverage and repair every sibling function the guard flags.
+
+
+      ### Escape-hatch budget blockers
+
+      Locations: project-wide and file-scoped guard findings
+
+      Remediation: remove stale escape hatches, replace them with real fixes where
+      possible, and reduce any remaining hatches so both project and file budgets
+      are within policy.
+
+      Grep hint: search for `@invar:allow` annotations and compare each remaining
+      hatch against live need and budget ownership; clear sibling stale hatches beyond
+      the first reported file.
+
+
+      ### Dead export blocker
+
+      Locations: `src/tela/commands/start.py`
+
+      Remediation: resolve the non-suppressible `dead_export` by either wiring the
+      export into a real runtime caller or removing the dead public surface; suppression
+      is not allowed.
+
+      Grep hint: search import and registration paths for the exported symbol from
+      `src/tela/commands/start.py` and audit sibling command exports for the same
+      orphaned pattern.
+
+
+      ## Completion Criteria:
+
+      - ALL blocker families above are resolved
+
+      - Sibling search completed for contracts, escape hatches, and orphan exports
+
+      - No stale or budget-breaking `@invar:allow` remains in the affected scope
+
+      - The `src/tela/commands/start.py` dead export is eliminated by real usage or
+      removal, not suppression
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable must contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.'
+    verification: '- Command lock: rerun the exact required command family `invar
+      guard --all` only in the retest step; this fix step must prepare the codebase
+      for that command
+
+      - Evidence identifies the exact contract additions in `src/tela/core/contracts.py`
+
+      - Evidence identifies every removed or retained `@invar:allow` and why retained
+      hatches remain within budget
+
+      - Evidence shows how the `src/tela/commands/start.py` dead export was eliminated
+      without suppression
+
+      - Root-cause evidence explains why the change closes the blocker family, not
+      only the first observed symptom'
+    depends_on:
+    - tw.gate.invar-guard
+    agent: python-senior
