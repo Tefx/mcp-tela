@@ -18264,7 +18264,7 @@ phases:
       bearer); no additional edits required for this step'
   - id: gw.http.impl.gate-http-implementation
     name: 'Gate: HTTP implementation'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify HTTP implementation matches INTERFACES.md 7.2
       after mounted-surface remediation.
 
@@ -18323,6 +18323,8 @@ phases:
     - gw.http.impl.http-endpoint-tests
     - gw.http.impl.retest-http-liveness-mounted-surface
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T07:03:34.544765+00:00'
   - id: gw.http.impl.fix-http-liveness-blockers
     name: Fix HTTP liveness blockers
     status: done
