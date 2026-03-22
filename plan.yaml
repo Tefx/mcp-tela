@@ -23430,7 +23430,7 @@ phases:
       - Commit: 3d3d066'
   - id: tw.gate.retest-final-regate-invar
     name: Retest final re-gate invar regression blocker family
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
       remediation for the failed `tw.gate.final-regate` blocker family from a fresh
       perspective.
@@ -23486,6 +23486,8 @@ phases:
     depends_on:
     - tw.gate.fix-final-regate-invar
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T20:13:30.716931+00:00'
   - id: tw.gate.final-regate2
     name: Replacement re-gate after invar regression retest
     status: pending
