@@ -20231,7 +20231,7 @@ phases:
       - start.py retained only as deprecated/testing compatibility module'
   - id: gw.teardown.end-to-end-cli-integration-test
     name: End-to-end CLI integration test
-    status: claimed
+    status: done
     description: "Integration test: verify full CLI surface works end-to-end.\n\n\
       tags: [integration]\n\nTests:\n1. tela serve starts, creates lockfile, serves\
       \ /health\n2. tela connect discovers server, bridges MCP, disconnects on exit\n\
@@ -20254,6 +20254,28 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T09:48:35.850429+00:00'
+    done_at: '2026-03-22T09:51:27.916090+00:00'
+    evidence: 'Mode: D
+
+      Verdict: PASS
+
+      Verification:
+
+      - End-to-end scenarios validated for serve startup/lockfile/health
+
+      - connect discovery + bridge lifecycle and cleanup
+
+      - status/profiles/connections/audit JSON outputs
+
+      - start command rejected as invalid
+
+      Findings:
+
+      - suggestion: all scenarios passed under integration probe
+
+      Gaps/Notes:
+
+      - audit empty-array output is valid when no tool calls occurred'
   - id: gw.teardown.gate-cli-teardown
     name: 'Gate: CLI teardown'
     status: pending
