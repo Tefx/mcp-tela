@@ -20916,7 +20916,7 @@ phases:
       idle shutdown, and override behavior documentation present)'
 - id: gw.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
-  status: in_progress
+  status: done
   depends_on:
   - gw.doc_sync
   steps:
@@ -21152,7 +21152,7 @@ phases:
       - Verification performed without consulting implementation source files.'
   - id: gw.deep_review.final-deep-review-gate
     name: Final deep review gate
-    status: claimed
+    status: done
     description: 'Final gate review for the entire gateway refactor.
 
 
@@ -21189,6 +21189,50 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T11:10:21.746567+00:00'
+    done_at: '2026-03-22T11:20:25.157344+00:00'
+    evidence: 'Artifact:
+
+      - Task: ses_2eac2729effeVHcJVgBaN9C5MG (gate-reviewer)
+
+
+      Verification:
+
+      - Run: uv run invar guard -> passed (0 errors, 0 warnings)
+
+      - Run: uv run pytest tests/core tests/shell tests/integration -> passing
+
+      - Run: final deep-review evidence audit across all gw.deep_review steps -> no
+      blockers remaining
+
+      - Run: smoke/liveness checks (serve, lockfile fields, health/status auth behavior,
+      start removal) -> pass
+
+
+      Wiring audit:
+
+      - W1-W8 checks reported complete (CLI registration, no start command, HTTP wiring,
+      lockfile integration, no production stubs, no write-only fields, no dead start
+      imports)
+
+
+      Escape hatch audit:
+
+      - reviewed; no blocking issues
+
+
+      Spec link:
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+
+      Gate verdict:
+
+      - PASS
+
+      - Non-blocking SHOULD_FIX items documented: legacy repro tests still expecting
+      deprecated start behavior and one connections-type assertion mismatch'
   - id: gw.deep_review.fix-bridge-orphan-exports
     name: Fix bridge orphan exports and dead-export finding
     status: done
