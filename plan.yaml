@@ -20304,6 +20304,69 @@ phases:
     - gw.teardown.wiring-audit-cli-teardown
     - gw.teardown.end-to-end-cli-integration-test
     agent: gate-reviewer
+  - id: gw.teardown.fix-query-command-repro-tests-for-remote-server
+    name: Fix stale query-command repro tests for remote server behavior
+    status: pending
+    description: 'Fix ALL stale teardown repro tests in `tests/repro/test_blockers.py`
+      that still assume query commands succeed without a running server after the
+      query-command move to lockfile + HTTP.
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+      - Query-command callability tests currently encode the old in-process success
+      path
+
+      - Updated assertions must check the correct `NO_RUNNING_SERVER` behavior when
+      no server is running, OR explicitly exercise a properly mocked remote HTTP path
+      when validating remote success behavior
+
+
+      ## Root Cause vs Symptom:
+
+      - Root cause: test expectations still target the pre-migration in-process query-command
+      contract instead of the current lockfile + HTTP runtime contract
+
+      - Symptom: teardown blocker remains because repro tests pass/fail against obsolete
+      success semantics
+
+      - Why this fix is not surface-level: update the fixture/setup and assertions
+      so the tests prove the real runtime contract rather than relaxing expectations
+
+
+      ## Known risks:
+
+      - Query commands must not silently fall back to in-process state
+
+      - Tests must distinguish no-server error behavior from mocked remote-success
+      behavior
+
+      - Avoid reintroducing stale assumptions in sibling query-command repro cases
+      in the same module
+
+
+      ## Completion Criteria:
+
+      - ALL affected query-command repro tests in `tests/repro/test_blockers.py` are
+      updated
+
+      - At least one path asserts `NO_RUNNING_SERVER` with no running server
+
+      - Any retained success-path coverage uses an explicit mocked remote HTTP path
+
+      - Sibling stale expectations in the same file are searched and corrected'
+    verification: '- `tests/repro/test_blockers.py` query-command callability coverage
+      reflects lockfile + HTTP behavior
+
+      - No stale expectation remains that query commands succeed without a running
+      server
+
+      - Evidence identifies whether each updated case is `NO_RUNNING_SERVER` or mocked
+      remote success'
+    depends_on:
+    - gw.teardown.update-query-commands-for-http-discovery
+    - gw.teardown.end-to-end-cli-integration-test
+    agent: python-executor
 - id: gw.spec_conformance
   name: Spec Conformance Verification
   status: locked
