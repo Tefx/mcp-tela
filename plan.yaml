@@ -19315,6 +19315,45 @@ phases:
     - gw.bridge.implement-stdio-http-bridge
     - gw.bridge.tela-connect-liveness-probe
     agent: gate-reviewer
+  - id: gw.bridge.fix-lockfile-actual-port
+    name: Fix lockfile ephemeral-port discovery
+    status: pending
+    description: 'Fix lockfile publication for ephemeral binding in the tela serve/tela
+      connect bridge path.
+
+
+      Issue:
+
+      - Lockfile writes port 0 when the server starts with --port 0, so discovery
+      points tela connect at an unusable endpoint.
+
+
+      Required outcomes:
+
+      - Persist the actual bound port, not the requested port value, when serve binds
+      ephemerally
+
+      - Keep connect discovery aligned with the runtime lockfile contract
+
+      - Cover the failure path where requested port is 0 but the bound socket port
+      is non-zero
+
+      - Search sibling lockfile/runtime publication paths so no alternate writer still
+      emits port 0
+
+
+      Out-of-scope:
+
+      - New discovery transports or lockfile schema redesign
+
+      - Non-bridge connect UX changes
+
+
+      verification":"- Main path: focused regression covers serve --port 0 publishing
+      the actual bound port and connect discovery succeeding\n- Failure path: regression
+      proves lockfile no longer records port 0 after ephemeral bind\n- Proof: sibling
+      search shows no remaining lockfile writer on this path emits requested port
+      instead of actual bound port","agent":"python-senior"}},{'
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
