@@ -19109,7 +19109,7 @@ phases:
       - minor invar info-level redundant type-contract note only'
 - id: gw.bridge
   name: tela connect Command (Client Bridge)
-  status: pending
+  status: in_progress
   depends_on:
   - gw.conflict
   steps:
@@ -19160,7 +19160,7 @@ phases:
     agent: python-senior
   - id: gw.bridge.implement-stdio-http-bridge
     name: Implement stdio-HTTP bridge
-    status: pending
+    status: claimed
     description: 'Implement the stdio <-> HTTP MCP session bridge used by tela connect.
 
 
@@ -19200,6 +19200,8 @@ phases:
     refs:
     - docs/DESIGN.md
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T07:57:55.403672+00:00'
   - id: gw.bridge.tela-connect-liveness-probe
     name: tela connect liveness probe
     status: pending
