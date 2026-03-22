@@ -22019,18 +22019,20 @@ phases:
       mismatch.'
 - id: tw.contract
   name: Token Wire Contract
-  status: pending
+  status: in_progress
   depends_on:
   - gw.deep_review
   steps:
   - id: tw.contract.define-token-init
     name: Define token-mode initialize contract
-    status: pending
+    status: claimed
     description: 'Define contract for token-mode initialize: handle_initialize accepts
       CapabilityToken, validates via core.token.validate_token, binds connection to
       token''s profile_name'
     evidence_template: Contract signature defined, invar sig output pasted
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T18:47:45.225567+00:00'
   - id: tw.contract.gate
     name: 'Gate review: token wire contract'
     status: pending
