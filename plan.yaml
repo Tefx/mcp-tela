@@ -19326,7 +19326,7 @@ phases:
     agent: gate-reviewer
   - id: gw.bridge.fix-lockfile-actual-port
     name: Fix lockfile ephemeral-port discovery
-    status: pending
+    status: claimed
     description: 'Fix lockfile publication for ephemeral binding in the tela serve/tela
       connect bridge path.
 
@@ -19365,6 +19365,8 @@ phases:
       - Proof: sibling search shows no remaining lockfile writer on this path emits
       requested port instead of actual bound port'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T08:16:09.920875+00:00'
   - id: gw.bridge.retest-lockfile-actual-port
     name: Retest connect liveness after lockfile port fix
     status: pending
