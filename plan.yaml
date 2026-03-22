@@ -22976,3 +22976,92 @@ phases:
     depends_on:
     - tw.gate.final
     agent: python-senior
+  - id: tw.gate.retest-final-blockers
+    name: Retest final gate blocker family
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
+      blocker family remediated after failed final gate `tw.gate.final` from a fresh
+      perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Verification scope: `phase-check` protecting `tw.gate.final-regate` and tw.gate
+      phase completion.
+
+
+      Test for:
+
+      - Happy path: current runnable verification path uses the supported CLI/runtime
+      surfaces and no longer expects `tela start`
+
+      - Edge cases: contract decorators in `src/tela/core/contracts.py` type-check
+      without `no-redef` regressions
+
+      - Error scenarios: shell serve command tests use production-shaped `Result`
+      values rather than permissive string mocks
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1.'
+    verification: '- phase-check protecting `tw.gate.final-regate`
+
+      - Re-run the focused blocker-family verification covering liveness repro, mypy/contracts
+      typing, and shell serve command test realism
+
+      - Evidence must include actual commands and outputs for each blocker class,
+      plus whether any residual sibling issue remains'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier
+
+      **Scope**: tw.gate final blocker family retest
+
+      **Independence Level**: L1
+
+
+      ### Commands executed
+
+      ```
+
+      <paste exact focused commands>
+
+      ```
+
+
+      ### Outputs
+
+      ```
+
+      <paste actual stdout/stderr snippets>
+
+      ```
+
+
+      ### Blocker-family verdict
+
+      | Blocker family | Status | Evidence |
+
+      | --- | --- | --- |
+
+      | stale `tela start` references | PASS/ISSUES_FOUND | <details> |
+
+      | contracts.py `pre`/`post` mypy no-redef | PASS/ISSUES_FOUND | <details> |
+
+      | serve cmd `Result` mock realism | PASS/ISSUES_FOUND | <details> |
+
+
+      ### Residual issues
+
+      <none or list>
+
+
+      ### Verdict
+
+      PASS | ISSUES_FOUND | INCOMPLETE'
+    depends_on:
+    - tw.gate.fix-final-blockers
+    agent: integration-verifier
