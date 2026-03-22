@@ -20278,7 +20278,7 @@ phases:
       - audit empty-array output is valid when no tool calls occurred'
   - id: gw.teardown.gate-cli-teardown
     name: 'Gate: CLI teardown'
-    status: claimed
+    status: pending
     description: "Gate review: Verify CLI refactor complete and old start command\
       \ removed.\n\nreview_depth: THOROUGH\nreview_depth_rationale: Major refactor\
       \ touching CLI registry (shared file), removing existing command, adding two\
@@ -20304,8 +20304,6 @@ phases:
     - gw.teardown.wiring-audit-cli-teardown
     - gw.teardown.end-to-end-cli-integration-test
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-22T09:51:51.772952+00:00'
 - id: gw.spec_conformance
   name: Spec Conformance Verification
   status: locked
