@@ -20999,7 +20999,7 @@ phases:
       - Deep review wiring-audit acceptance criteria in plan step `gw.deep_review.full-wiring-audit`'
   - id: gw.deep_review.architecture-and-concurrency-review
     name: Architecture and concurrency review
-    status: pending
+    status: claimed
     description: 'Review module boundaries, dependency direction, and concurrency
       safety.
 
@@ -21028,6 +21028,8 @@ phases:
     depends_on:
     - gw.deep_review.full-wiring-audit
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-22T10:31:37.057960+00:00'
   - id: gw.deep_review.black-box-spec-verification
     name: Black-box spec verification
     status: pending
