@@ -20549,7 +20549,7 @@ phases:
       - Scope intentionally limited to two gate blockers and their targeted regressions.'
   - id: gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites
     name: Retest gate-cli teardown blockers and prerequisites
-    status: pending
+    status: claimed
     description: 'Independent retest for the blockers found by `gw.teardown.gate-cli-teardown`
       and the narrow gate prerequisites they affect.
 
@@ -20581,6 +20581,8 @@ phases:
     depends_on:
     - gw.teardown.fix-gate-cli-teardown-blockers
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T10:11:31.954246+00:00'
 - id: gw.spec_conformance
   name: Spec Conformance Verification
   status: locked
