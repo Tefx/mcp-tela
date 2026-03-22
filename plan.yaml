@@ -22366,7 +22366,7 @@ phases:
       \ should-fix batched remediation now tracked in plan."
   - id: tw.impl.fix-handle-initialize-token-mode
     name: Fix dedicated token-mode handle_initialize integration coverage
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by gate review.
 
 
@@ -22428,6 +22428,8 @@ phases:
     depends_on:
     - tw.impl.wire-validate-token
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T19:21:26.827284+00:00'
   - id: tw.impl.retest-handle-initialize-token-mode
     name: Retest dedicated token-mode handle_initialize integration coverage
     status: pending
