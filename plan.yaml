@@ -22663,7 +22663,7 @@ phases:
       \ path established."
   - id: tw.gate.final
     name: Final gate review
-    status: pending
+    status: claimed
     description: 'Final gate review: all phases complete, no regressions, token auth
       wired end-to-end. Downstream progression is blocked until `tw.gate.retest-invar-guard`
       verifies the batched invar remediation path.'
@@ -22677,6 +22677,8 @@ phases:
     depends_on:
     - tw.gate.retest-invar-guard
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T19:49:48.860465+00:00'
   - id: tw.gate.fix-invar-guard-blockers
     name: Fix invar guard blocker family
     status: done
