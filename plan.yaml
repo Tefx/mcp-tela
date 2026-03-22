@@ -19732,6 +19732,91 @@ phases:
     - gw.bridge.retest-lockfile-actual-port
     - gw.bridge.tela-connect-liveness-probe
     agent: python-senior
+  - id: gw.bridge.retest-query-commands-remote-state
+    name: Mode D retest of remote query command behavior
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`blind-tester`), validate that CLI query
+      commands reflect the remote running server state rather than local in-process
+      state.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Scope:
+
+      - `tela status`
+
+      - `tela connections`
+
+      - `tela audit`
+
+
+      Spec refs:
+
+      - `docs/INTERFACES.md` -> `2. CLI Surface`
+
+      - `docs/INTERFACES.md` -> `7.2 HTTP Endpoints`
+
+      - `docs/INTERFACES.md` -> `7.3 Lockfile Contract`
+
+      - `docs/INTERFACES.md` -> `3.4 Audit`
+
+
+      Mode D verification requirements:
+
+      - Start a real `tela serve` instance and let it publish `~/.tela/gateway.lock`
+
+      - Exercise the CLI query commands as external client commands, not helper calls
+
+      - Prove each command reflects live remote state from the running server
+
+      - Verify at least one failure path for missing/stale lockfile discovery
+
+
+      Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or pytest target that invokes CLI -> lockfile discovery -> HTTP
+      endpoint>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: `tela <query command>` -> lockfile discovery -> bearer token
+      -> HTTP gateway -> CLI output
+
+
+      Independence Level: L2
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS. A test that
+      finds nothing must justify the coverage achieved.'
+    verification: '- End-to-end Mode D evidence shows `status`, `connections`, and
+      `audit` querying a live remote server through lockfile discovery
+
+      - Evidence includes exact commands/tests and actual output, not only a pass
+      summary
+
+      - Failure path covers missing or stale lockfile behavior
+
+      - Any discovered drift is documented as findings rather than hidden'
+    depends_on:
+    - gw.bridge.fix-query-commands-remote-state
+    agent: blind-tester
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
