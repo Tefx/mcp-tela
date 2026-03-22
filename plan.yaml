@@ -19986,7 +19986,7 @@ phases:
   steps:
   - id: gw.teardown.wire-connect-serve-into-cli-remove-start
     name: Wire connect/serve into CLI, remove start
-    status: claimed
+    status: done
     description: 'Replace tela start with tela connect and tela serve in CLI entrypoint.
 
 
@@ -20045,6 +20045,36 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T09:29:07.338331+00:00'
+    done_at: '2026-03-22T09:41:40.071760+00:00'
+    evidence: 'Commit hash(es): 8ecb2d0
+
+      Files changed:
+
+      - src/tela/cli.py
+
+      - src/tela/commands/start.py
+
+      - tests/repro/test_blockers.py
+
+      - tests/shell/test_cli_wiring.py
+
+      - tests/shell/test_gateway.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_cli_wiring.py tests/repro/test_blockers.py::TestB1WireCliSubcommands
+      tests/shell/test_gateway.py tests/shell/test_serve_cmd.py -v --tb=short -> wiring
+      checks pass; unrelated server-dependent failures noted
+
+      - Run: uv run invar guard src/tela/cli.py -> passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §2
+
+      Gaps/Notes:
+
+      - start.py retained as deprecated/internal test compatibility surface'
   - id: gw.teardown.update-query-commands-for-http-discovery
     name: Update query commands for HTTP discovery
     status: pending
