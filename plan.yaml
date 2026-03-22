@@ -22941,7 +22941,7 @@ phases:
       \ Remaining warnings are architectural suggestions and do not block gate progression."
   - id: tw.gate.fix-final-blockers
     name: Fix final gate blocker family
-    status: claimed
+    status: done
     description: "Fix ALL blockers found by failed final gate `tw.gate.final`.\n\n\
       ## Blockers to Fix (ALL of these, not just the first)\n1. Update liveness coverage\
       \ so tests and repros no longer reference the removed `tela start` CLI surface\
@@ -22991,6 +22991,70 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T19:55:27.305956+00:00'
+    done_at: '2026-03-22T20:01:30.244031+00:00'
+    evidence: '## Final Gate Blocker Fix Report
+
+
+      Prior loop
+
+      - tw.gate.final (failed)
+
+
+      Blocker coverage
+
+      1) Stale CLI liveness references
+
+      - Removed/updated `tela start` references in affected liveness/repro tests to
+      current `serve`/`connect` contract paths.
+
+      - Worker grep reports no remaining stale references in affected test surfaces.
+
+
+      2) Mypy `no-redef` for `pre`/`post`
+
+      - Updated `src/tela/core/contracts.py` to alias imported deal decorators (`deal_pre`/`deal_post`)
+      while preserving exported wrapper semantics.
+
+      - Targeted mypy check reported success for contracts module.
+
+
+      3) Serve command mock realism
+
+      - Updated `tests/shell/test_serve_cmd.py` mock for `generate_bearer_token` to
+      return `Result(value=...)` shape, matching production signature.
+
+
+      Sibling search evidence (reported)
+
+      - stale start refs: none found in tests search
+
+      - contracts import/redef pattern: alias import + wrapper defs coexist without
+      redefinition error
+
+      - serve command mock pattern: Result-shaped mock present at target site
+
+
+      Root cause closure
+
+      - Aligns verification artifacts and test doubles with current runtime/type contracts
+      across CLI, typing, and shell Result conventions; not just a single assertion
+      patch.
+
+
+      Verification
+
+      - `uv run ruff check src/tela/core/contracts.py tests/shell/test_serve_cmd.py
+      tests/repro/test_liveness.py`: pass
+
+      - `uv run pytest tests/shell/test_serve_cmd.py tests/repro/test_liveness.py
+      -v --tb=short`: 9 passed
+
+      - `uv run mypy src/tela/core/contracts.py`: success
+
+
+      Artifact
+
+      - Commit: 89b3f02'
   - id: tw.gate.retest-final-blockers
     name: Retest final gate blocker family
     status: pending
