@@ -18325,7 +18325,7 @@ phases:
     agent: gate-reviewer
   - id: gw.http.impl.fix-http-liveness-blockers
     name: Fix HTTP liveness blockers
-    status: claimed
+    status: done
     description: 'Fix ALL blockers found by the gw.http.impl HTTP liveness audit on
       the mounted runtime surface.
 
@@ -18453,6 +18453,44 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T06:48:21.989185+00:00'
+    done_at: '2026-03-22T06:59:13.099240+00:00'
+    evidence: 'Commit hash(es): 224016e, bdc67b2
+
+      Files changed:
+
+      - src/tela/cli.py
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_gateway.py
+
+      Verification:
+
+      - Run: uv run pytest -q tests/shell/test_gateway.py::test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary
+      tests/shell/test_gateway.py::test_serve_remote_gateway_uses_fastmcp_run_method
+      -> 3 passed
+
+      - Run: uv run pytest -q tests/shell/test_http_routes.py tests/shell/test_http_auth.py
+      -> 30 passed
+
+      - Run: rg "run_streamable_http_async|run_sse_async" src/tela/cli.py -> no matches
+
+      Sibling search:
+
+      - Run: rg "custom_route\(\"/(health|status|connect|disconnect)\"" src/tela/shell/gateway.py
+      -> mounted registrations found for all four routes
+
+      - Run: rg "_extract_bearer_token|TELA_BEARER_TOKEN|AUTH_INVALID_TOKEN" src/tela/shell/gateway.py
+      src/tela/shell/http_auth.py -> auth boundary checks present
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2 §7.4
+
+      Gaps/Notes:
+
+      - full-repo invar-all contains unrelated pre-existing findings; changed-scope
+      guard passed'
   - id: gw.http.impl.retest-http-liveness-mounted-surface
     name: Retest mounted HTTP surface and auth behavior
     status: pending
