@@ -19037,7 +19037,7 @@ phases:
       type field'
   - id: gw.conflict.gate-tela-prefix-enforcement
     name: 'Gate: tela. prefix enforcement'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify tela. prefix reservation is enforced.
 
 
@@ -19061,6 +19061,8 @@ phases:
     depends_on:
     - gw.conflict.enforce-tela-prefix-reservation
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T07:55:45.952549+00:00'
 - id: gw.bridge
   name: tela connect Command (Client Bridge)
   status: locked
