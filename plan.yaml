@@ -21326,7 +21326,7 @@ phases:
       - Commit: e47e1a56b40e060e13d17751b7c4ed0cf36d780b'
   - id: gw.deep_review.retest-bridge-orphan-exports
     name: Re-run focused wiring audit for bridge exports
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), re-run the wiring
       audit checks for the bridge path after orphan-export remediation.
 
@@ -21411,3 +21411,5 @@ phases:
     depends_on:
     - gw.deep_review.fix-bridge-orphan-exports
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T10:41:20.302728+00:00'
