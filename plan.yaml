@@ -20077,7 +20077,7 @@ phases:
       - start.py retained as deprecated/internal test compatibility surface'
   - id: gw.teardown.update-query-commands-for-http-discovery
     name: Update query commands for HTTP discovery
-    status: claimed
+    status: done
     description: 'Update status, connections, and audit commands to discover running
       server via lockfile and query over HTTP.
 
@@ -20133,6 +20133,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T09:42:31.595898+00:00'
+    done_at: '2026-03-22T09:44:23.009903+00:00'
+    evidence: 'Commit hash(es): none (already implemented prior to this step)
+
+      Files changed:
+
+      - none
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_query_commands_remote_state.py tests/repro/test_query_commands_remote_state.py
+      -v -> 5 passed
+
+      - Run: uv run invar guard src/tela/commands/status_cmd.py src/tela/commands/connections_cmd.py
+      src/tela/commands/audit_cmd.py src/tela/commands/remote_state.py -> passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §2
+
+      - docs/DESIGN.md
+
+      Gaps/Notes:
+
+      - lockfile+HTTP discovery behavior already present through shared query_remote_state
+      helper'
   - id: gw.teardown.wiring-audit-cli-teardown
     name: 'Wiring audit: CLI teardown'
     status: pending
