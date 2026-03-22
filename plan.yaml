@@ -19115,7 +19115,7 @@ phases:
   steps:
   - id: gw.bridge.implement-tela-connect-command
     name: Implement tela connect command
-    status: claimed
+    status: done
     description: "Implement the tela connect CLI command: stdio bridge client entry\
       \ point.\n\nSpec refs: INTERFACES.md 2 (CLI surface), DESIGN.md (process model,\
       \ service discovery, connection lifecycle)\n\nFile: src/tela/commands/connect_cmd.py\
@@ -19160,6 +19160,34 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T07:58:00.064285+00:00'
+    done_at: '2026-03-22T08:07:17.768473+00:00'
+    evidence: 'Commit hash(es): 5b1d35f
+
+      Files changed:
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/cli.py
+
+      - tests/shell/test_connect_cmd.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_connect_cmd.py -v -> 6 passed
+
+      - Run: uv run pytest tests/shell/test_cli_wiring.py -v -> 1 passed
+
+      - Run: invar guard changed=true -> passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §2
+
+      - docs/DESIGN.md
+
+      Gaps/Notes:
+
+      - full repo sweep not run; scoped verification per step'
   - id: gw.bridge.implement-stdio-http-bridge
     name: Implement stdio-HTTP bridge
     status: claimed
