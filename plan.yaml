@@ -22765,3 +22765,57 @@ phases:
     depends_on:
     - tw.gate.invar-guard
     agent: python-senior
+  - id: tw.gate.retest-invar-guard
+    name: Retest invar guard after blocker fix
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), rerun `invar
+      guard --all` after `tw.gate.fix-invar-guard-blockers` completes.
+
+
+      YOUR GOAL IS TO FIND REMAINING PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: all contracts, doctests, dead export checks, and escape-hatch
+      budgets pass repo-wide
+
+      - Edge cases: no residual file-budget or project-budget overages remain after
+      cleanup
+
+      - Error scenarios: any remaining missing contract, orphan export, or stale escape
+      hatch is reported with exact blocker details
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      A test that finds nothing must justify the coverage achieved.
+
+
+      Independence Level: L1
+
+
+      If this step verifies symbolic testing (`CrossHair`, `Hypothesis`, `invar guard`),
+      require a fresh/cold environment and the exact project command family.'
+    verification: '- Run the exact command `invar guard --all` in a fresh/cold environment
+
+      - Capture blocker/non-blocker findings for contract coverage, escape-hatch budgets,
+      and dead exports
+
+      - Report whether the previous 8 blocking errors are cleared, narrowed, or replaced
+      by a smaller blocker family
+
+      - Evidence must include the actual command and the relevant output summary'
+    evidence_template: "## Verification Report\n\n**Tester**: integration-verifier\
+      \ (independent of implementation)\n**Scope**: `tw.gate.fix-invar-guard-blockers`\n\
+      **Independence Level**: L1\n\n### Test Execution\n- Commands executed:\n  ```\n\
+      \  invar guard --all\n  ```\n- Environment: fresh/cold\n- Output summary: <paste\
+      \ key blocker lines or PASS output>\n\n### Issues Found\n| Severity | Description\
+      \ | Location | Reproduction |\n| --- | --- | --- | --- |\n| blocker | <issue>\
+      \ | <file:line or guard rule> | `invar guard --all` |\n\n### Coverage Assessment\n\
+      - Repo-wide guard path verified: yes/no\n- Prior blocker family rechecked: contracts\
+      \ / budgets / dead_export\n- NOT tested: <anything omitted>\n\n### Verdict\n\
+      - PASS | ISSUES_FOUND | INCOMPLETE"
+    depends_on:
+    - tw.gate.fix-invar-guard-blockers
+    agent: integration-verifier
