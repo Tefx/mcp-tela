@@ -22054,6 +22054,14 @@ phases:
     evidence_template: Test file path, test names, pytest output (expected failures
       OK at this stage)
     agent: python-executor
+  - id: tw.test.gate
+    name: 'Gate review: token wire tests'
+    status: pending
+    description: 'Gate review: test coverage adequate for token-mode initialize path'
+    evidence_template: Gate review checklist completed
+    depends_on:
+    - tw.test.token-mode-init
+    agent: gate-reviewer
 - id: tw.impl
   name: Token Wire Implementation
   status: locked
