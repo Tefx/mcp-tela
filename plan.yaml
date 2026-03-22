@@ -21032,7 +21032,7 @@ phases:
     claimed_at: '2026-03-22T10:32:00.559106+00:00'
   - id: gw.deep_review.black-box-spec-verification
     name: Black-box spec verification
-    status: pending
+    status: claimed
     description: 'Using ONLY the spec and CLI --help (no implementation source):
 
 
@@ -21063,6 +21063,8 @@ phases:
     depends_on:
     - gw.deep_review.full-wiring-audit
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-22T10:32:06.407481+00:00'
   - id: gw.deep_review.final-deep-review-gate
     name: Final deep review gate
     status: pending
