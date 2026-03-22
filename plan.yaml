@@ -21052,3 +21052,118 @@ phases:
     - gw.deep_review.architecture-and-concurrency-review
     - gw.deep_review.black-box-spec-verification
     agent: gate-reviewer
+  - id: gw.deep_review.fix-bridge-orphan-exports
+    name: Fix bridge orphan exports and dead-export finding
+    status: pending
+    description: 'Fix the deep-review wiring audit blocker for orphan exports in `src/tela/shell/bridge.py`.
+
+
+      Resolve ALL of these, not just the first:
+
+      - `StdioHttpBridge` export has no production caller or approved dead-export
+      justification
+
+      - `BridgeConfig` export has no production caller or approved dead-export justification
+
+      - any sibling dead-export pattern in the bridge path uncovered while fixing
+      the above
+
+
+      Root Cause vs Symptom:
+
+      - Root cause: bridge shell exports remain publicly exposed after gateway refactor
+      without runtime callers or explicit `@invar:allow dead_export` justification
+
+      - Symptom: wiring audit reports orphan exports and phase criteria `no orphans/no
+      dead code` fail
+
+      - Why this fix is not surface-level: it must either wire the exports into a
+      real production call path or remove/narrow the unused public surface with matching
+      import/export cleanup
+
+
+      Required search scope:
+
+      - inspect `src/tela/shell/bridge.py` public exports and their import graph
+
+      - inspect sibling package exports that may re-export these symbols
+
+      - confirm no production caller is relying on the current public surface before
+      removing or narrowing it
+
+
+      Grep hints:
+
+      - `rg "StdioHttpBridge|BridgeConfig" src/tela`
+
+      - `rg "from tela\.shell\.bridge import|import .*bridge" src/tela`
+
+
+      Out-of-scope guardrail:
+
+      - do not broaden bridge functionality or add placeholder callers just to satisfy
+      the audit
+
+      - do not add `@invar:allow dead_export` unless there is a legitimate framework-only
+      entrypoint case and the evidence explains why
+
+      '
+    verification: '- Bridge path no longer exposes orphan exports without a production
+      caller or justified escape hatch
+
+      - Focused search shows no dead-export regressions for `StdioHttpBridge` or `BridgeConfig`
+
+      - Any import/export cleanup needed by the fix is completed consistently across
+      affected bridge surfaces'
+    evidence_template: '## Bridge Orphan Export Fix Evidence
+
+
+      **Files changed**:
+
+      ```
+
+      <paste file list>
+
+      ```
+
+
+      **Resolution chosen**:
+
+      - [ ] removed or narrowed unused exports
+
+      - [ ] wired export to a real production caller
+
+      - [ ] justified framework-only dead export with `@invar:allow dead_export`
+
+
+      **Import/export search evidence**:
+
+      ```bash
+
+      rg "StdioHttpBridge|BridgeConfig" src/tela
+
+      ```
+
+
+      **Sibling search evidence**:
+
+      ```bash
+
+      rg "from tela\.shell\.bridge import|import .*bridge" src/tela
+
+      ```
+
+
+      **Why this closes the blocker family**:
+
+      - <explain root cause closure, not just the local edit>
+
+
+      **Remaining dead-export allowances**:
+
+      - <none or justified list>
+
+      '
+    depends_on:
+    - gw.deep_review.full-wiring-audit
+    agent: python-executor
