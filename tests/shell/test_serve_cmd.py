@@ -28,7 +28,11 @@ def test_token_override_priority_cli_over_env_over_generated(
     """Token precedence must be ``--token`` > ``TELA_BEARER_TOKEN`` > generated."""
 
     monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
-    monkeypatch.setattr(serve_cmd, "generate_bearer_token", lambda: "generated-token")
+    monkeypatch.setattr(
+        serve_cmd,
+        "generate_bearer_token",
+        lambda: Result(value="generated-token"),
+    )
     generated = serve_cmd._resolve_bearer_token(None)
     assert generated.is_ok
     assert generated.value == "generated-token"

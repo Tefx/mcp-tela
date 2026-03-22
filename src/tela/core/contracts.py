@@ -13,12 +13,12 @@ from __future__ import annotations
 import functools
 from typing import Any, Callable
 
-from deal import post
-from deal import pre
+from deal import post as deal_post
+from deal import pre as deal_pre
 
 
-@pre(lambda predicate: callable(predicate))
-@post(lambda result: callable(result))
+@deal_pre(lambda predicate: callable(predicate))
+@deal_post(lambda result: callable(result))
 def _meta_pre(
     predicate: Callable[..., bool],
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -37,8 +37,8 @@ def _meta_pre(
     return decorator
 
 
-@pre(lambda predicate: callable(predicate))
-@post(lambda result: callable(result))
+@deal_pre(lambda predicate: callable(predicate))
+@deal_post(lambda result: callable(result))
 def _meta_post(
     predicate: Callable[[Any], bool],
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -61,8 +61,8 @@ _pre_alias = _meta_pre
 _post_alias = _meta_post
 
 
-@pre(lambda predicate: callable(predicate))
-@post(lambda result: callable(result))
+@deal_pre(lambda predicate: callable(predicate))
+@deal_post(lambda result: callable(result))
 @_pre_alias(lambda predicate: callable(predicate))
 @_post_alias(lambda result: callable(result))
 def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
@@ -106,8 +106,8 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     return decorator
 
 
-@pre(lambda predicate: callable(predicate))
-@post(lambda result: callable(result))
+@deal_pre(lambda predicate: callable(predicate))
+@deal_post(lambda result: callable(result))
 @_pre_alias(lambda predicate: callable(predicate))
 @_post_alias(lambda result: callable(result))
 def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:

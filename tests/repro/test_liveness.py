@@ -1,8 +1,8 @@
 """Liveness probe: verify tela gateway actually starts and serves MCP traffic.
 
 Expected (per README.md, docs/INTERFACES.md, docs/USAGE.md):
-  - stdio mode: process stays alive while stdin is open, responds to MCP initialize
-  - SSE mode: process binds to --port and stays alive, accepts HTTP connections
+  - stdio mode: `tela connect` stays alive while stdin is open, responds to MCP initialize
+  - HTTP gateway mode: `tela serve --port` stays alive and accepts HTTP connections
   - "tela: ready" banner goes to stderr (not stdout), since stdout IS the MCP transport
   - CLI subcommands (status, profiles, connections, audit) produce meaningful output
 
@@ -53,8 +53,16 @@ def test_stdio_ready_banner_not_on_stdout():
         config_path = _write_minimal_config(tmp_dir)
 
         proc = subprocess.Popen(
-            [sys.executable, "-m", "tela", "start", "--config", config_path,
-             "--default-profile", "dev"],
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "connect",
+                "--config",
+                config_path,
+                "--default-profile",
+                "dev",
+            ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -86,58 +94,90 @@ def test_stdio_responds_to_mcp_initialize():
     with tempfile.TemporaryDirectory() as tmp_dir:
         config_path = _write_minimal_config(tmp_dir)
 
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+                "--default-profile",
+                "dev",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        time.sleep(2)
+
         proc = subprocess.Popen(
-            [sys.executable, "-m", "tela", "start", "--config", config_path,
-             "--default-profile", "dev"],
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "connect",
+                "--config",
+                config_path,
+                "--default-profile",
+                "dev",
+            ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
 
-        # Send MCP initialize request (newline-delimited JSON-RPC)
-        init_request = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "probe", "version": "0.1"},
-            },
-        })
+        init_request_bytes = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "probe", "version": "0.1"},
+                },
+            }
+        ).encode("utf-8")
+        framed_request = (
+            f"Content-Length: {len(init_request_bytes)}\r\n\r\n".encode("ascii")
+            + init_request_bytes
+        )
 
         try:
-            proc.stdin.write((init_request + "\n").encode())
+            proc.stdin.write(framed_request)
             proc.stdin.flush()
 
-            # Wait for response with timeout
             import select
 
-            ready, _, _ = select.select([proc.stdout], [], [], 5.0)
+            ready, _, _ = select.select([proc.stdout], [], [], 10.0)
             assert ready, (
                 "Liveness: stdio mode did not respond to MCP initialize "
-                "within 5 seconds. The gateway accepts connections but does "
+                "within 10 seconds. The gateway accepts connections but does "
                 "not speak the MCP protocol."
             )
 
-            response_line = proc.stdout.readline().decode("utf-8", errors="replace")
-            # Filter out non-JSON lines (like the ready banner)
-            lines = response_line.strip().split("\n")
-            json_responses = []
-            for line in lines:
-                line = line.strip()
-                if line.startswith("{"):
-                    try:
-                        json_responses.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        pass
+            header_bytes = b""
+            while b"\r\n\r\n" not in header_bytes:
+                chunk = proc.stdout.read(1)
+                assert chunk, "Liveness: EOF while reading MCP response headers"
+                header_bytes += chunk
 
-            assert json_responses, (
-                f"Liveness: No valid JSON-RPC response to initialize. "
-                f"Raw stdout: {response_line!r}"
+            header_text = header_bytes.decode("ascii", errors="replace")
+            content_length = None
+            for line in header_text.split("\r\n"):
+                if line.lower().startswith("content-length:"):
+                    content_length = int(line.split(":", 1)[1].strip())
+                    break
+
+            assert content_length is not None, (
+                f"Liveness: Missing Content-Length header in response: {header_text!r}"
             )
 
-            resp = json_responses[0]
+            body = proc.stdout.read(content_length)
+            resp = json.loads(body.decode("utf-8", errors="replace"))
             assert "result" in resp or "error" in resp, (
                 f"Liveness: Response is not a valid JSON-RPC response: {resp!r}"
             )
@@ -146,26 +186,38 @@ def test_stdio_responds_to_mcp_initialize():
             proc.stdin.close()
             proc.terminate()
             proc.wait(timeout=5)
+            serve_proc.terminate()
+            serve_proc.wait(timeout=5)
 
 
-def test_sse_mode_stays_alive():
-    """SSE mode must bind to the given port and stay alive.
+def test_http_mode_stays_alive():
+    """HTTP gateway mode must bind to the given port and stay alive.
 
-    Per README.md: 'tela start --config tela.yaml --port 8080' starts a
-    long-lived gateway process and exposes it over SSE.
+    Per README.md: 'tela serve --config tela.yaml --port 8080' starts a
+    long-lived gateway process and exposes it over HTTP.
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
         config_path = _write_minimal_config(tmp_dir)
 
         proc = subprocess.Popen(
-            [sys.executable, "-m", "tela", "start", "--config", config_path,
-             "--port", "18932", "--transport", "sse", "--default-profile", "dev"],
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+                "--default-profile",
+                "dev",
+            ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
 
-        # SSE should stay alive for at least 3 seconds
+        # HTTP gateway should stay alive for at least 3 seconds
         time.sleep(3)
 
         poll_result = proc.poll()
@@ -175,8 +227,8 @@ def test_sse_mode_stays_alive():
             stderr_data = proc.stderr.read().decode("utf-8", errors="replace")
 
             assert False, (
-                f"Liveness: SSE mode exited immediately with code {poll_result}. "
-                f"Expected a long-lived process bound to port 18932. "
+                f"Liveness: HTTP gateway exited immediately with code {poll_result}. "
+                "Expected a long-lived process on an ephemeral port. "
                 f"stdout={stdout_data!r}, stderr={stderr_data!r}"
             )
         else:
@@ -190,24 +242,49 @@ def test_status_reports_meaningful_state():
     Per docs/INTERFACES.md: 'tela status' prints uptime, connected downstream
     servers, active connections, profile count.
 
-    When called standalone (no running gateway), it is acceptable to show zeros,
-    but profile_count should reflect loaded config if available.
+    This query requires a running gateway discoverable via lockfile.
     """
-    result = subprocess.run(
-        [sys.executable, "-m", "tela", "status", "--json"],
-        capture_output=True,
-        text=True,
-        timeout=10,
-    )
-    assert result.returncode == 0, (
-        f"Liveness: 'tela status --json' failed with code {result.returncode}. "
-        f"stderr={result.stderr!r}"
-    )
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        config_path = _write_minimal_config(tmp_dir)
 
-    data = json.loads(result.stdout)
-    assert "uptime_seconds" in data, (
-        f"Liveness: status output missing 'uptime_seconds': {data!r}"
-    )
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+                "--default-profile",
+                "dev",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        try:
+            time.sleep(2)
+            result = subprocess.run(
+                [sys.executable, "-m", "tela", "status", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            assert result.returncode == 0, (
+                f"Liveness: 'tela status --json' failed with code {result.returncode}. "
+                f"stderr={result.stderr!r}"
+            )
+
+            data = json.loads(result.stdout)
+            assert "uptime_seconds" in data, (
+                f"Liveness: status output missing 'uptime_seconds': {data!r}"
+            )
+        finally:
+            serve_proc.terminate()
+            serve_proc.wait(timeout=5)
 
 
 if __name__ == "__main__":
@@ -216,7 +293,7 @@ if __name__ == "__main__":
     tests = [
         test_stdio_ready_banner_not_on_stdout,
         test_stdio_responds_to_mcp_initialize,
-        test_sse_mode_stays_alive,
+        test_http_mode_stays_alive,
         test_status_reports_meaningful_state,
     ]
 
