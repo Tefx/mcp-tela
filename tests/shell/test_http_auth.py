@@ -22,15 +22,19 @@ def _simulate_http_auth_gate(
         return False
 
     presented_token = auth_header[len(bearer_prefix) :]
-    return http_auth.validate_bearer_token(presented_token, expected_token)
+    return http_auth.validate_bearer_token(presented_token, expected_token).is_ok
 
 
 def test_validate_bearer_token_accepts_valid_token() -> None:
-    assert http_auth.validate_bearer_token("correct-token", "correct-token") is True
+    result = http_auth.validate_bearer_token("correct-token", "correct-token")
+    assert result.is_ok
+    assert result.error is None
 
 
 def test_validate_bearer_token_rejects_invalid_token() -> None:
-    assert http_auth.validate_bearer_token("wrong-token", "correct-token") is False
+    result = http_auth.validate_bearer_token("wrong-token", "correct-token")
+    assert result.is_err
+    assert result.error == "AUTH_INVALID_TOKEN: bearer token validation failed"
 
 
 def test_http_auth_gate_rejects_missing_authorization_header() -> None:

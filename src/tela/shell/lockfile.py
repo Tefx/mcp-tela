@@ -173,32 +173,16 @@ def delete_lockfile() -> Result[None, str]:
         return Result(error=f"LOCKFILE_DELETE_ERROR: {exc}")
 
 
-class _ResultToken(str):
-    """String-like token with shell-style success/error accessors."""
-
-    @property
-    def is_ok(self) -> bool:
-        """Return True for successful token generation."""
-
-        return True
-
-    @property
-    def value(self) -> str:
-        """Return the generated token."""
-
-        return str(self)
-
-    @property
-    def error(self) -> None:
-        """No error for successfully generated token."""
-
-        return None
-
-
 @pre(lambda: True)
-# @invar:allow shell_result: generate_bearer_token is a pure token generator and does not return Result.
-@post(lambda result: isinstance(result, str) and len(result) >= 43)
-def generate_bearer_token() -> str:
+@post(
+    lambda result: (
+        isinstance(result, Result)
+        and result.error is None
+        and isinstance(result.value, str)
+        and len(result.value) >= 43
+    )
+)
+def generate_bearer_token() -> Result[str, str]:
     """Generate bearer token for gateway startup.
 
     MUST use ``secrets.token_urlsafe(32)`` and return the generated token string.
@@ -209,12 +193,15 @@ def generate_bearer_token() -> str:
         ``secrets.token_urlsafe(32)`` typically yields at least 43 printable chars.
 
     Examples:
-        >>> token = generate_bearer_token()  # doctest: +ELLIPSIS
+        >>> result = generate_bearer_token()
+        >>> result.is_ok
+        True
+        >>> token = result.value
         >>> token is not None
         True
 
     Returns:
-        Generated bearer token.
+        Result containing generated bearer token.
     """
 
-    return _ResultToken(secrets.token_urlsafe(32))
+    return Result(value=secrets.token_urlsafe(32))

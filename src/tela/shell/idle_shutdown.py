@@ -185,7 +185,6 @@ _manager: IdleShutdownManager | None = None
 
 
 # @invar:allow shell_result: accessor returns manager instance directly, not a failable I/O boundary.
-# @invar:allow shell_pure_logic: module-level accessor is trivial state reader.
 def get_idle_manager() -> IdleShutdownManager | None:
     """Return the module-level idle shutdown manager, or None if not initialized.
 
@@ -221,7 +220,7 @@ async def init_idle_manager(
         >>> result.value.timeout_seconds
         30.0
         >>> # Reset global state for test isolation
-        >>> _reset_idle_manager()
+        >>> _ = _reset_idle_manager()
     """
     global _manager
 
@@ -249,7 +248,7 @@ async def shutdown_idle_manager() -> Result[None, str]:
     Examples:
         >>> import asyncio
         >>> async def dummy_shutdown(): pass
-        >>> _reset_idle_manager()
+        >>> _ = _reset_idle_manager()
         >>> _ = asyncio.run(init_idle_manager(30.0, dummy_shutdown))
         >>> result = asyncio.run(shutdown_idle_manager())
         >>> result.is_ok
@@ -266,12 +265,11 @@ async def shutdown_idle_manager() -> Result[None, str]:
     return Result(value=None)
 
 
-# @invar:allow shell_pure_logic: test isolation helper resets global state.
-# @invar:allow shell_result: test isolation helper returns None directly.
-def _reset_idle_manager() -> None:
+def _reset_idle_manager() -> Result[None, str]:
     """Reset module-level manager (for test isolation only).
 
     This is NOT part of the public API.
     """
     global _manager
     _manager = None
+    return Result(value=None)

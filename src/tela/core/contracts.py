@@ -13,12 +13,12 @@ from __future__ import annotations
 import functools
 from typing import Any, Callable
 
-from deal import post as deal_post
-from deal import pre as deal_pre
+from deal import post
+from deal import pre
 
 
-@deal_pre(lambda predicate: callable(predicate))
-@deal_post(lambda result: callable(result))
+@pre(lambda predicate: callable(predicate))
+@post(lambda result: callable(result))
 def _meta_pre(
     predicate: Callable[..., bool],
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -37,8 +37,8 @@ def _meta_pre(
     return decorator
 
 
-@deal_pre(lambda predicate: callable(predicate))
-@deal_post(lambda result: callable(result))
+@pre(lambda predicate: callable(predicate))
+@post(lambda result: callable(result))
 def _meta_post(
     predicate: Callable[[Any], bool],
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -61,8 +61,8 @@ _pre_alias = _meta_pre
 _post_alias = _meta_post
 
 
-@deal_pre(lambda predicate: callable(predicate))
-@deal_post(lambda result: callable(result))
+@pre(lambda predicate: callable(predicate))
+@post(lambda result: callable(result))
 @_pre_alias(lambda predicate: callable(predicate))
 @_post_alias(lambda result: callable(result))
 def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
@@ -81,10 +81,10 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
         ...     return x + y
         >>> calc(1)
         1
-        >>> calc(-1)  # doctest: +ELLIPSIS
+        >>> calc(-1)
         Traceback (most recent call last):
         ...
-        AssertionError: Precondition failed for calc
+        AssertionError: Precondition failed for calc...
 
     Args:
         predicate: Callable that accepts the same args as the decorated function.
@@ -106,8 +106,8 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     return decorator
 
 
-@deal_pre(lambda predicate: callable(predicate))
-@deal_post(lambda result: callable(result))
+@pre(lambda predicate: callable(predicate))
+@post(lambda result: callable(result))
 @_pre_alias(lambda predicate: callable(predicate))
 @_post_alias(lambda result: callable(result))
 def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
@@ -119,7 +119,7 @@ def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
         >>> post(None)  # doctest: +ELLIPSIS
         Traceback (most recent call last):
         ...
-        deal.PreContractError: ...
+        AssertionError: Precondition failed for post...
         >>> @post(lambda result: result >= 0)
         ... def abs_val(x: int) -> int:
         ...     return x if x >= 0 else -x
@@ -128,10 +128,10 @@ def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
         >>> @post(lambda result: result > 0)
         ... def bad() -> int:
         ...     return -1
-        >>> bad()  # doctest: +ELLIPSIS
+        >>> bad()
         Traceback (most recent call last):
         ...
-        AssertionError: Postcondition failed for bad
+        AssertionError: Postcondition failed for bad...
 
     Args:
         predicate: Callable that accepts the return value.

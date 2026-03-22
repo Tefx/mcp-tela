@@ -37,7 +37,13 @@ def query_remote_state() -> Result[RemoteGatewayState, str]:
 
     lockfile_result = read_lockfile()
     if lockfile_result.is_err:
-        return Result(error=_map_lockfile_error(lockfile_result.error))
+        detail = lockfile_result.error or "lockfile unavailable"
+        return Result(
+            error=(
+                "NO_RUNNING_SERVER: no running tela server found via "
+                f"~/.tela/gateway.lock ({detail})"
+            )
+        )
     assert lockfile_result.value is not None
 
     payload_result = _fetch_status_payload(lockfile_result.value)
@@ -46,17 +52,6 @@ def query_remote_state() -> Result[RemoteGatewayState, str]:
     assert payload_result.value is not None
 
     return _parse_remote_state(payload_result.value)
-
-
-# @invar:allow shell_result: helper only maps internal error text to user-facing message.
-def _map_lockfile_error(error: str | None) -> str:
-    """Map lockfile failures to a clear user-facing no-server error."""
-
-    detail = error or "lockfile unavailable"
-    return (
-        "NO_RUNNING_SERVER: no running tela server found via "
-        f"~/.tela/gateway.lock ({detail})"
-    )
 
 
 def _fetch_status_payload(lockfile: LockfileData) -> Result[dict[str, object], str]:

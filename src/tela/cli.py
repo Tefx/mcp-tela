@@ -213,7 +213,15 @@ def main(argv: list[str] | None = None) -> int:
         assert connect_result.value is not None
         return connect_result.value
     if args.command == "profiles":
-        return profiles_command(config_path=args.config, json_output=args.json_output)
+        profiles_result = profiles_command(
+            config_path=args.config,
+            json_output=args.json_output,
+        )
+        if profiles_result.is_err:
+            print(f"error: {profiles_result.error}", file=sys.stderr)
+            return 1
+        assert profiles_result.value is not None
+        return profiles_result.value
     if args.command == "connections":
         connections_result = connections_command(json_output=args.json_output)
         if connections_result.is_err:

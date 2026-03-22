@@ -77,8 +77,9 @@ def handle_status(
         True
     """
 
-    if not validate_bearer_token(request_token, expected_token):
-        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+    auth_result = validate_bearer_token(request_token, expected_token)
+    if auth_result.is_err:
+        return Result(error=auth_result.error)
 
     runtime = get_runtime()
     if runtime.config is None or not runtime.running:
@@ -155,8 +156,9 @@ def handle_connect(
         True
     """
 
-    if not validate_bearer_token(request_token, expected_token):
-        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+    auth_result = validate_bearer_token(request_token, expected_token)
+    if auth_result.is_err:
+        return Result(error=auth_result.error)
 
     runtime = get_runtime()
     if runtime.config is None or not runtime.running:
@@ -226,8 +228,9 @@ def handle_disconnect(
         True
     """
 
-    if not validate_bearer_token(request_token, expected_token):
-        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+    auth_result = validate_bearer_token(request_token, expected_token)
+    if auth_result.is_err:
+        return Result(error=auth_result.error)
 
     runtime = get_runtime()
     if runtime.config is None or not runtime.running:
@@ -285,8 +288,9 @@ def handle_mcp(
         True
     """
 
-    if not validate_bearer_token(request_token, expected_token):
-        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+    auth_result = validate_bearer_token(request_token, expected_token)
+    if auth_result.is_err:
+        return Result(error=auth_result.error)
 
     runtime = get_runtime()
     if runtime.config is None or not runtime.running:

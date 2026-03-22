@@ -127,7 +127,11 @@ def _resolve_bearer_token(cli_token: str | None) -> Result[str, str]:
     if env_token is not None:
         return Result(value=env_token)
 
-    return Result(value=str(generate_bearer_token()))
+    generated_result = generate_bearer_token()
+    if generated_result.is_err:
+        return Result(error=generated_result.error)
+    assert generated_result.value is not None
+    return Result(value=generated_result.value)
 
 
 # @shell_complexity: lifecycle orchestration coordinates startup, signals, server run, and cleanup.
@@ -278,7 +282,18 @@ async def _launch_streamable_http_server(
                 )
             return Result(error=f"HTTP_RUN_FAILED: {server_exc}")
 
-        bound_port = _extract_bound_port(server)
+        bound_port_result = _extract_bound_port(server)
+        if bound_port_result.is_err:
+            await _stop_http_server(
+                _HttpServerHandle(
+                    task=task,
+                    bound_port=requested_port,
+                    request_shutdown=lambda: setattr(server, "should_exit", True),
+                )
+            )
+            return Result(error=bound_port_result.error)
+
+        bound_port = bound_port_result.value
         if bound_port is not None:
             return Result(
                 value=_HttpServerHandle(
@@ -304,14 +319,13 @@ async def _launch_streamable_http_server(
     )
 
 
-# @invar:allow shell_result: helper introspects in-memory uvicorn state and cannot fail at I/O boundary.
 # @shell_complexity: loops through uvicorn listener/socket structures to resolve bound port.
-def _extract_bound_port(server: object) -> int | None:
+def _extract_bound_port(server: object) -> Result[int | None, str]:
     """Read resolved listen port from uvicorn server sockets."""
 
     listeners = getattr(server, "servers", None)
     if not listeners:
-        return None
+        return Result(value=None)
 
     for listener in listeners:
         sockets = getattr(listener, "sockets", None)
@@ -322,9 +336,9 @@ def _extract_bound_port(server: object) -> int | None:
             if isinstance(sockname, tuple) and len(sockname) >= 2:
                 port = int(sockname[1])
                 if port > 0:
-                    return port
+                    return Result(value=port)
 
-    return None
+    return Result(value=None)
 
 
 async def _stop_http_server(server: _HttpServerHandle) -> None:

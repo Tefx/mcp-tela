@@ -24,7 +24,6 @@ from tela.core.models import TelaConfig
 from tela.shell.result import Result  # noqa: F401
 
 
-# @invar:allow shell_complexity: loader orchestrates parse/validate/authority handoff.
 def load_config(
     path: Path | None = None, default_profile: str | None = None
 ) -> Result[TelaConfig, str]:
