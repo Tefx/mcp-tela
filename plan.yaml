@@ -19346,14 +19346,16 @@ phases:
 
       - New discovery transports or lockfile schema redesign
 
-      - Non-bridge connect UX changes
+      - Non-bridge connect UX changes'
+    verification: '- Main path: focused regression covers serve --port 0 publishing
+      the actual bound port and connect discovery succeeding
 
+      - Failure path: regression proves lockfile no longer records port 0 after ephemeral
+      bind
 
-      verification":"- Main path: focused regression covers serve --port 0 publishing
-      the actual bound port and connect discovery succeeding\n- Failure path: regression
-      proves lockfile no longer records port 0 after ephemeral bind\n- Proof: sibling
-      search shows no remaining lockfile writer on this path emits requested port
-      instead of actual bound port","agent":"python-senior"}},{'
+      - Proof: sibling search shows no remaining lockfile writer on this path emits
+      requested port instead of actual bound port'
+    agent: python-senior
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
