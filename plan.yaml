@@ -19517,6 +19517,34 @@ phases:
     - gw.bridge.implement-tela-connect-command
     - gw.bridge.implement-stdio-http-bridge
     agent: python-executor
+  - id: gw.bridge.retest-liveness-payload
+    name: Retest liveness probe after payload fixture fix
+    status: pending
+    description: 'Independently rerun the liveness repro after the test-only payload-field
+      fix.
+
+
+      Verify:
+
+      - The corrected repro path now reads the status payload contract using `active_connections`
+
+      - The liveness probe passes without requiring any bridge/runtime implementation
+      changes
+
+      - Connection count assertions remain consistent before and after disconnect
+      on the same repro path
+
+
+      This retest closes the test-only blocker before the broader liveness probe and
+      gate proceed.'
+    verification: '- Run the liveness repro suite after the fixture/assertion fix
+
+      - Evidence shows the probe passes with the corrected status payload field expectations
+
+      - Notes confirm the blocker was test-only, not an implementation defect'
+    depends_on:
+    - gw.bridge.fix-liveness-payload
+    agent: blind-tester
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
