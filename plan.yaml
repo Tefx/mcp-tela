@@ -20765,13 +20765,13 @@ phases:
       - PASS'
 - id: gw.doc_sync
   name: Documentation Sync
-  status: pending
+  status: in_progress
   depends_on:
   - gw.spec_conformance
   steps:
   - id: gw.doc_sync.update-documentation-for-connect-serve
     name: Update documentation for connect/serve
-    status: pending
+    status: claimed
     description: 'Sync all project documentation with the new connect/serve architecture.
 
 
@@ -20810,6 +20810,8 @@ phases:
     - docs/DESIGN.md
     - docs/INTERFACES.md
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-22T10:17:32.311825+00:00'
   - id: gw.doc_sync.gate-doc-sync
     name: 'Gate: doc sync'
     status: pending
