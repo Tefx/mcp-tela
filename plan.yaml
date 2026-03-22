@@ -18265,18 +18265,33 @@ phases:
   - id: gw.http.impl.gate-http-implementation
     name: 'Gate: HTTP implementation'
     status: pending
-    description: 'Gate review: Verify HTTP implementation matches INTERFACES.md 7.2.
+    description: 'Gate review: Verify HTTP implementation matches INTERFACES.md 7.2
+      after mounted-surface remediation.
 
 
-      review_depth: STANDARD
+      step_type: gate
 
-      review_depth_rationale: HTTP endpoints are a runtime surface requiring liveness
-      verification.
+      review_depth: THOROUGH
+
+      review_depth_rationale: HTTP endpoints are a runtime surface; prior liveness
+      audit found missing mounted routes, invalid FastMCP startup APIs, and auth-boundary
+      drift on the served surface.
+
+
+      cross_cutting_focus:
+
+      - mounted runtime surface exposes all documented endpoints
+
+      - CLI/runtime startup uses valid FastMCP APIs only
+
+      - auth boundary is consistent on the served surface
 
 
       Block if:
 
-      - Any endpoint missing
+      - Any endpoint missing or still returning 404 on the mounted surface
+
+      - CLI/runtime launch still references nonexistent FastMCP methods
 
       - Auth bypass on protected endpoints
 
@@ -18284,17 +18299,29 @@ phases:
 
       - hmac.compare_digest not used
 
-      - Tests failing'
-    verification: '- All 5 endpoints match INTERFACES.md 7.2
+      - Retest evidence lacks real mounted-surface proof
 
-      - Bearer auth correct
+      - Tests failing'
+    verification: '- All 5 endpoints match INTERFACES.md 7.2 on the mounted runtime
+      surface
+
+      - Bearer auth correct: /health open, protected endpoints require bearer
+
+      - Retest evidence includes real-path mounted-surface command/output proof
+
+      - CLI/runtime startup uses valid FastMCP API calls only
 
       - Tests pass
 
       - invar guard clean'
+    refs:
+    - INTERFACES.md
+    - src/anima/gateway
+    - src/anima/shell
     depends_on:
     - gw.http.impl.implement-http-route-handlers
     - gw.http.impl.http-endpoint-tests
+    - gw.http.impl.retest-http-liveness-mounted-surface
     agent: gate-reviewer
   - id: gw.http.impl.fix-http-liveness-blockers
     name: Fix HTTP liveness blockers
