@@ -20469,7 +20469,7 @@ phases:
       - no-server and mocked remote-success query-command paths verified'
   - id: gw.teardown.fix-gate-cli-teardown-blockers
     name: Fix gate-cli teardown blockers
-    status: pending
+    status: claimed
     description: 'Batched remediation for the failed `gw.teardown.gate-cli-teardown`
       review. Fix BOTH blockers in one pass, not just the first.
 
@@ -20510,6 +20510,8 @@ phases:
     depends_on:
     - gw.teardown.gate-cli-teardown
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T10:09:18.399816+00:00'
   - id: gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites
     name: Retest gate-cli teardown blockers and prerequisites
     status: pending
