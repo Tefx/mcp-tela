@@ -20303,6 +20303,8 @@ phases:
     - gw.teardown.update-query-commands-for-http-discovery
     - gw.teardown.wiring-audit-cli-teardown
     - gw.teardown.end-to-end-cli-integration-test
+    - gw.teardown.fix-query-command-repro-tests-for-remote-server
+    - gw.teardown.retest-cli-teardown-query-command-integration
     agent: gate-reviewer
   - id: gw.teardown.fix-query-command-repro-tests-for-remote-server
     name: Fix stale query-command repro tests for remote server behavior
