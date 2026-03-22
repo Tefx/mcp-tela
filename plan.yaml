@@ -22611,13 +22611,30 @@ phases:
   steps:
   - id: tw.gate.spec-conformance
     name: Spec conformance verification
-    status: claimed
+    status: done
     description: Verify implementation matches INTERFACES.md 3.3 (token mode binds
       connection to profile) and DESIGN.md (two independent auth layers)
     evidence_template: Spec section quotes + implementation mapping
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-22T19:29:32.453848+00:00'
+    done_at: '2026-03-22T19:33:14.587113+00:00'
+    evidence: "Spec section quotes + implementation mapping\n\nINTERFACES.md 3.3 requirement\n\
+      - Quote: in token mode, CapabilityToken binds connection to one profile.\n-\
+      \ Mapping:\n  - `src/tela/core/token.py` resolve_token_init_binding validates\
+      \ token and returns `TokenInitBinding(profile_name=token.profile_name)`\n  -\
+      \ `src/tela/shell/upstream.py` token-mode initialize branch sets `profile_name\
+      \ = binding.profile_name` after validation\n  - `src/tela/core/models.py` ConnectionContext\
+      \ stores bound `profile_name`\n\nDESIGN.md two independent auth layers\n- Quote:\
+      \ bearer-token HTTP transport auth and auth.mode profile-binding layer are independent\
+      \ and can apply simultaneously.\n- Mapping:\n  - Bearer layer: `src/tela/shell/http_auth.py`\
+      \ constant-time bearer validation, enforced on HTTP routes via gateway path\n\
+      \  - Profile-binding layer: `src/tela/shell/upstream.py` branches on `runtime.config.auth.mode`\
+      \ and validates CapabilityToken via token secrets\n  - Separation evidence:\
+      \ gateway runtime stores bearer token and token secrets independently (`expected_bearer_token`\
+      \ vs `secrets`)\n\nFindings\n- BLOCKING: none\n- SHOULD_FIX: none\n- SUGGESTION:\
+      \ none\n\nConclusion\n- Conformant: implementation matches INTERFACES.md token\
+      \ binding semantics and DESIGN.md independent auth-layer model."
   - id: tw.gate.invar-guard
     name: Run invar guard --all
     status: pending
