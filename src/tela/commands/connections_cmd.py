@@ -4,19 +4,17 @@ Provides the ``tela connections`` command for listing active upstream connection
 """
 
 from __future__ import annotations
-
-import asyncio
 import json
 
 from tela.shell.config_loader import Result
-from tela.shell.gateway import gateway_connections
+from tela.commands.remote_state import query_remote_state
 
 
 def connections_command(json_output: bool = False) -> Result[int, str]:
     """List active upstream connections.
 
     Examples:
-        >>> connections_command().is_ok
+        >>> callable(connections_command)
         True
 
     Args:
@@ -35,16 +33,11 @@ def connections_command(json_output: bool = False) -> Result[int, str]:
 def _run_connections_command(json_output: bool) -> Result[None, str]:
     """Execute connections command and print output."""
 
-    try:
-        conns_result = asyncio.run(gateway_connections())
-    except Exception as exc:
-        return Result(error=str(exc))
-
-    if conns_result.is_err:
-        return Result(error=conns_result.error)
-
-    assert conns_result.value is not None
-    conns = conns_result.value
+    remote_state_result = query_remote_state()
+    if remote_state_result.is_err:
+        return Result(error=remote_state_result.error)
+    assert remote_state_result.value is not None
+    conns = remote_state_result.value.connections
     if json_output:
         print(json.dumps([c.model_dump() for c in conns], indent=2))
         return Result(value=None)

@@ -5,17 +5,15 @@ Provides the ``tela status`` command for displaying gateway runtime status.
 
 from __future__ import annotations
 
-import asyncio
-
 from tela.shell.config_loader import Result
-from tela.shell.gateway import gateway_status
+from tela.commands.remote_state import query_remote_state
 
 
 def status_command(json_output: bool = False) -> Result[int, str]:
     """Display gateway runtime status.
 
     Examples:
-        >>> status_command().is_ok
+        >>> callable(status_command)
         True
 
     Args:
@@ -33,16 +31,11 @@ def status_command(json_output: bool = False) -> Result[int, str]:
 def _run_status_command(json_output: bool) -> Result[None, str]:
     """Execute status command and print output."""
 
-    try:
-        status_result = asyncio.run(gateway_status())
-    except Exception as exc:
-        return Result(error=str(exc))
-
-    if status_result.is_err:
-        return Result(error=status_result.error)
-
-    assert status_result.value is not None
-    status = status_result.value
+    remote_state_result = query_remote_state()
+    if remote_state_result.is_err:
+        return Result(error=remote_state_result.error)
+    assert remote_state_result.value is not None
+    status = remote_state_result.value.status
 
     if json_output:
         print(status.model_dump_json(indent=2))

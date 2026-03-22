@@ -19,6 +19,7 @@ from tela.core.models import (
 )
 from tela.core.contracts import post, pre
 from tela.shell.config_loader import Result
+from tela.shell.audit import get_audit_entries
 from tela.shell.gateway import get_runtime
 from tela.shell.http_auth import validate_bearer_token
 
@@ -95,6 +96,10 @@ def handle_status(
         connected_servers = list(runtime.config.servers.keys())
 
     profile_count = len(runtime.config.profiles) if runtime.config else 0
+    audit_entries_result = get_audit_entries()
+    if audit_entries_result.is_err:
+        return Result(error=f"AUDIT_QUERY_ERROR: {audit_entries_result.error}")
+    assert audit_entries_result.value is not None
 
     return Result(
         value=StatusResponse(
@@ -104,6 +109,8 @@ def handle_status(
             active_connections=len(runtime.connections),
             profile_count=profile_count,
             total_tool_calls=runtime.total_tool_calls,
+            connections=list(runtime.connections),
+            audit_entries=audit_entries_result.value,
         )
     )
 

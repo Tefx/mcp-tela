@@ -356,6 +356,9 @@ class HealthResponse(BaseModel):
 class StatusResponse(GatewayStatus):
     """Full runtime status response for `GET /status`."""
 
+    connections: list[ConnectionContext] = Field(default_factory=list)
+    audit_entries: list[AuditEntry] = Field(default_factory=list)
+
 
 class ConnectRequest(BaseModel):
     """Registration payload for bridge connection endpoints."""
