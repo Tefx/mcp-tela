@@ -48,9 +48,10 @@ class GatewayStartupConfig:
     """
 
     transport: GatewayTransport
-    port: int | None
-    auth_mode: AuthMode
-    default_profile: str | None
+    port: int | None = None
+    auth_mode: AuthMode = AuthMode.TOKEN
+    default_profile: str | None = None
+    host: str = "127.0.0.1"
 
 
 @dataclass
@@ -183,7 +184,13 @@ def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str
         config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
         and config.port is not None
     ):
-        return Result(value=FastMCP("tela-gateway", port=config.port))
+        return Result(
+            value=FastMCP(
+                "tela-gateway",
+                host=config.host,
+                port=config.port,
+            )
+        )
 
     return Result(value=FastMCP("tela-gateway"))
 
@@ -422,6 +429,7 @@ def bind_gateway_startup(
     return Result(
         value=GatewayStartupConfig(
             transport=runtime.transport,
+            host="127.0.0.1",
             port=runtime.port,
             auth_mode=AuthMode(auth_mode),
             default_profile=runtime.cli_default_profile,

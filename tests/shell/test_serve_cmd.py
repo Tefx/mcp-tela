@@ -1,0 +1,152 @@
+"""Tests for ``tela serve`` command wiring and lifecycle behavior."""
+
+from __future__ import annotations
+
+import asyncio
+from pathlib import Path
+
+import pytest
+
+from tela.cli import main
+from tela.commands import serve_cmd
+from tela.core.models import AuthConfig, AuthMode, TelaConfig
+from tela.shell.config_loader import Result
+from tela.shell.gateway import get_runtime
+
+
+def test_serve_subcommand_exists() -> None:
+    """CLI must expose ``tela serve`` command parser."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["serve", "--help"])
+    assert exc_info.value.code == 0
+
+
+def test_token_override_priority_cli_over_env_over_generated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Token precedence must be ``--token`` > ``TELA_BEARER_TOKEN`` > generated."""
+
+    monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
+    monkeypatch.setattr(serve_cmd, "generate_bearer_token", lambda: "generated-token")
+    generated = serve_cmd._resolve_bearer_token(None)
+    assert generated.is_ok
+    assert generated.value == "generated-token"
+
+    monkeypatch.setenv("TELA_BEARER_TOKEN", "env-token")
+    env_selected = serve_cmd._resolve_bearer_token(None)
+    assert env_selected.is_ok
+    assert env_selected.value == "env-token"
+    cli_selected = serve_cmd._resolve_bearer_token("cli-token")
+    assert cli_selected.is_ok
+    assert cli_selected.value == "cli-token"
+
+
+def test_serve_lockfile_written_then_deleted(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Serve flow writes lockfile at startup and deletes it on shutdown."""
+
+    class _FakeServer:
+        async def run_streamable_http_async(self) -> None:
+            await asyncio.sleep(0.01)
+
+    writes: list[object] = []
+    deletes: list[bool] = []
+
+    def _fake_load_config(path: Path | None = None, default_profile: str | None = None):
+        _ = path
+        _ = default_profile
+        return Result(
+            value=TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+            )
+        )
+
+    async def _fake_gateway_start(*args, **kwargs) -> Result[None, str]:
+        _ = args
+        _ = kwargs
+        runtime = get_runtime()
+        runtime.upstream_server = _FakeServer()
+        runtime.running = True
+        return Result(value=None)
+
+    async def _fake_gateway_shutdown() -> Result[None, str]:
+        runtime = get_runtime()
+        runtime.upstream_server = None
+        runtime.running = False
+        runtime.connections.clear()
+        return Result(value=None)
+
+    def _fake_write_lockfile(data):
+        writes.append(data)
+        return Result(value=None)
+
+    def _fake_delete_lockfile():
+        deletes.append(True)
+        return Result(value=None)
+
+    async def _fake_watch_config_changes(
+        *,
+        config_path: Path,
+        default_profile: str | None,
+        stop_event: asyncio.Event,
+    ) -> None:
+        _ = config_path
+        _ = default_profile
+        await stop_event.wait()
+
+    async def _fake_idle_shutdown_watch(
+        *,
+        idle_timeout_seconds: int,
+        stop_event: asyncio.Event,
+        poll_interval_seconds: float = 1.0,
+    ) -> None:
+        _ = idle_timeout_seconds
+        _ = stop_event
+        _ = poll_interval_seconds
+        return
+
+    monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
+    monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
+    monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
+    monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
+    monkeypatch.setattr(serve_cmd, "delete_lockfile", _fake_delete_lockfile)
+    monkeypatch.setattr(serve_cmd, "_watch_config_changes", _fake_watch_config_changes)
+    monkeypatch.setattr(serve_cmd, "_idle_shutdown_watch", _fake_idle_shutdown_watch)
+    monkeypatch.setattr(serve_cmd, "_package_version", lambda: Result(value="0.1.0"))
+
+    result = serve_cmd.serve_command(
+        config_path=str(tmp_path / "tela.yaml"),
+        port=8123,
+        host="127.0.0.1",
+        default_profile="dev",
+        idle_timeout=0,
+        token="cli-token",
+    )
+
+    assert result.is_ok
+    assert len(writes) == 1
+    lock_data = writes[0]
+    assert getattr(lock_data, "host") == "127.0.0.1"
+    assert getattr(lock_data, "port") == 8123
+    assert getattr(lock_data, "token") == "cli-token"
+    assert len(deletes) == 1
+
+
+def test_idle_shutdown_sets_stop_event_when_connections_stay_idle() -> None:
+    """Idle watcher must request shutdown when no active connections exist."""
+
+    async def _scenario() -> bool:
+        stop_event = asyncio.Event()
+        runtime = get_runtime()
+        runtime.connections.clear()
+        await serve_cmd._idle_shutdown_watch(
+            idle_timeout_seconds=1,
+            stop_event=stop_event,
+            poll_interval_seconds=0.01,
+        )
+        return stop_event.is_set()
+
+    assert asyncio.run(_scenario()) is True

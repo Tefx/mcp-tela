@@ -1,6 +1,6 @@
 """CLI entrypoint for tela.
 
-Wires all five subcommands (start, status, profiles, connections, audit)
+Wires subcommands (start, serve, status, profiles, connections, audit)
 into the argparse-based CLI dispatcher per INTERFACES.md.
 """
 
@@ -14,6 +14,7 @@ from pathlib import Path
 from tela.commands.audit_cmd import audit_command
 from tela.commands.connections_cmd import connections_command
 from tela.commands.profiles_cmd import profiles_command
+from tela.commands.serve_cmd import serve_command
 from tela.commands.start import start_command
 from tela.commands.status_cmd import status_command
 from tela.shell.config_loader import Result, load_config
@@ -83,6 +84,41 @@ def main(argv: list[str] | None = None) -> int:
         "--default-profile",
         default=None,
         help="Open-mode default profile override",
+    )
+
+    # --- serve ---
+    serve_parser = subparsers.add_parser("serve", help="Start the tela HTTP gateway")
+    serve_parser.add_argument(
+        "--config",
+        default="tela.yaml",
+        help="Path to configuration file (default: tela.yaml)",
+    )
+    serve_parser.add_argument(
+        "--port",
+        type=int,
+        default=0,
+        help="HTTP bind port (default: 0 for ephemeral)",
+    )
+    serve_parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="HTTP bind address (default: 127.0.0.1)",
+    )
+    serve_parser.add_argument(
+        "--default-profile",
+        default=None,
+        help="Open-mode default profile override",
+    )
+    serve_parser.add_argument(
+        "--idle-timeout",
+        type=int,
+        default=300,
+        help="Idle timeout seconds before shutdown (default: 300, 0 to disable)",
+    )
+    serve_parser.add_argument(
+        "--token",
+        default=None,
+        help="Bearer token override (default: TELA_BEARER_TOKEN or generated)",
     )
 
     # --- status ---
@@ -171,6 +207,20 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         assert status_result.value is not None
         return status_result.value
+    if args.command == "serve":
+        serve_result = serve_command(
+            config_path=args.config,
+            port=args.port,
+            host=args.host,
+            default_profile=args.default_profile,
+            idle_timeout=args.idle_timeout,
+            token=args.token,
+        )
+        if serve_result.is_err:
+            print(f"error: {serve_result.error}", file=sys.stderr)
+            return 1
+        assert serve_result.value is not None
+        return serve_result.value
     if args.command == "profiles":
         return profiles_command(config_path=args.config, json_output=args.json_output)
     if args.command == "connections":
