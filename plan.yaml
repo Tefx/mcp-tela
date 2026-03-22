@@ -18680,7 +18680,7 @@ phases:
   steps:
   - id: gw.serve.implement-tela-serve-command
     name: Implement tela serve command
-    status: claimed
+    status: done
     description: "Implement the tela serve CLI command: HTTP gateway server entry\
       \ point.\n\nSpec refs: INTERFACES.md 2 (CLI surface), 7.3 (lockfile), 7.4 (bearer\
       \ token)\n\nFile: src/tela/commands/serve_cmd.py (new)\n\nCLI args per INTERFACES.md\
@@ -18721,6 +18721,36 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T07:08:35.030576+00:00'
+    done_at: '2026-03-22T07:20:35.986255+00:00'
+    evidence: 'Commit hash(es): 9e7cf50
+
+      Files changed:
+
+      - src/tela/commands/serve_cmd.py
+
+      - src/tela/cli.py
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_serve_cmd.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_serve_cmd.py -> 4 passed
+
+      - Run: uv run pytest tests/shell/test_gateway.py tests/shell/test_cli_wiring.py
+      tests/repro/test_blockers.py::TestB1WireCliSubcommands -> 38 passed
+
+      - Run: invar guard changed-files -> passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §2 §7.3 §7.4
+
+      Gaps/Notes:
+
+      - existing tela start flow retained; lockfile port for --port 0 not reconciled
+      post-bind in this step'
   - id: gw.serve.implement-idle-shutdown-manager
     name: Implement idle shutdown manager
     status: done
