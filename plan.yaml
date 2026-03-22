@@ -18204,7 +18204,7 @@ phases:
       auth enforcement implemented'
   - id: gw.http.impl.http-endpoint-tests
     name: HTTP endpoint tests
-    status: claimed
+    status: done
     description: 'Write integration tests for all HTTP endpoints.
 
 
@@ -18242,6 +18242,26 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T06:37:39.281290+00:00'
+    done_at: '2026-03-22T06:42:08.808972+00:00'
+    evidence: 'Commit hash(es): none (tests already present from prior implementation
+      step)
+
+      Files changed:
+
+      - none
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_http_routes.py -v -> 24 passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2 §7.4
+
+      Gaps/Notes:
+
+      - Coverage maps to all 6 required test groups (health/status/connect/disconnect/mcp/invalid
+      bearer); no additional edits required for this step'
   - id: gw.http.impl.gate-http-implementation
     name: 'Gate: HTTP implementation'
     status: pending
