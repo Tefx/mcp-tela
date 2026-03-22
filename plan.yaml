@@ -20858,7 +20858,7 @@ phases:
       - idle shutdown behavior documented'
   - id: gw.doc_sync.gate-doc-sync
     name: 'Gate: doc sync'
-    status: pending
+    status: claimed
     description: 'Gate review: Documentation completeness.
 
 
@@ -20878,6 +20878,8 @@ phases:
     depends_on:
     - gw.doc_sync.update-documentation-for-connect-serve
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T10:20:54.242581+00:00'
 - id: gw.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
