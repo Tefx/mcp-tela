@@ -19546,7 +19546,7 @@ phases:
       independent retest/validation'
   - id: gw.bridge.retest-liveness-payload
     name: Retest liveness probe after payload fixture fix
-    status: pending
+    status: claimed
     description: 'Independently rerun the liveness repro after the test-only payload-field
       fix.
 
@@ -19572,6 +19572,8 @@ phases:
     depends_on:
     - gw.bridge.fix-liveness-payload
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-22T08:49:29.211124+00:00'
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
