@@ -23057,7 +23057,7 @@ phases:
       - Commit: 89b3f02'
   - id: tw.gate.retest-final-blockers
     name: Retest final gate blocker family
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
       blocker family remediated after failed final gate `tw.gate.final` from a fresh
       perspective.
@@ -23146,6 +23146,58 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T20:01:52.746706+00:00'
+    done_at: '2026-03-22T20:03:48.195580+00:00'
+    evidence: '## Verification Report
+
+
+      Tester: integration-verifier
+
+      Scope: tw.gate final blocker family retest
+
+      Independence Level: L1
+
+
+      Commands executed
+
+      - `grep -R -nE ''tela\s+start|"start".*--config|"start".*--port'' tests --include=''*.py''`
+
+      - `uv run mypy src/tela/core/contracts.py`
+
+      - `uv run ruff check src/tela/core/contracts.py tests/shell/test_serve_cmd.py
+      tests/repro/test_liveness.py`
+
+      - `uv run pytest tests/shell/test_serve_cmd.py tests/repro/test_liveness.py
+      -v --tb=short`
+
+
+      Outputs summary
+
+      - stale `tela start` refs: no matches in tests search
+
+      - mypy contracts module: success, no issues
+
+      - ruff targeted check: all checks passed
+
+      - pytest targeted suites: 9 passed
+
+
+      Blocker-family verdict
+
+      - stale `tela start` references: PASS
+
+      - contracts.py pre/post mypy no-redef: PASS
+
+      - serve cmd Result mock realism: PASS
+
+
+      Residual issues
+
+      - none
+
+
+      Verdict
+
+      - PASS'
   - id: tw.gate.final-regate
     name: Re-gate final verification after blocker retest
     status: pending
