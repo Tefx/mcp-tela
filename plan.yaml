@@ -18973,7 +18973,7 @@ phases:
       - no blocking issues'
 - id: gw.conflict
   name: tela. Prefix Conflict Rejection
-  status: in_progress
+  status: done
   depends_on:
   - gw.serve
   steps:
@@ -19037,7 +19037,7 @@ phases:
       type field'
   - id: gw.conflict.gate-tela-prefix-enforcement
     name: 'Gate: tela. prefix enforcement'
-    status: claimed
+    status: done
     description: 'Gate review: Verify tela. prefix reservation is enforced.
 
 
@@ -19063,9 +19063,53 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T07:55:45.952549+00:00'
+    done_at: '2026-03-22T07:57:29.882934+00:00'
+    evidence: 'Verdict: PASS
+
+      Wiring audit:
+
+      - reserved prefix detection active and conflict typed as PREFIX_VIOLATION
+
+      - introspection names from downstream also blocked under reserved-prefix rule
+
+      - legacy NAME_COLLISION behavior preserved
+
+      Escape hatch audit:
+
+      - none in conflict module
+
+      Findings:
+
+      - none blocking
+
+      Verification:
+
+      - Run: invar guard src/tela/core/conflict.py -> passed
+
+      - Run: pytest tests/core/test_conflict.py -v -> 5 passed
+
+      - Run: doctest src/tela/core/conflict.py -> 13 passed
+
+      Gate checks:
+
+      - all gate block conditions cleared
+
+      Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.1
+
+      Gaps/Notes:
+
+      - minor invar info-level redundant type-contract note only'
 - id: gw.bridge
   name: tela connect Command (Client Bridge)
-  status: locked
+  status: pending
   depends_on:
   - gw.conflict
   steps:
