@@ -66,6 +66,7 @@ class GatewayRuntime:
     running: bool = False
     upstream_server: FastMCP | None = None
     expected_bearer_token: str | None = None
+    secrets: list[str] = field(default_factory=list)
 
 
 def _extract_bearer_token(request: Request) -> Result[str, str]:
@@ -518,6 +519,7 @@ async def gateway_start(
         _runtime.running = True
         _runtime.upstream_server = upstream_server
         _runtime.expected_bearer_token = expected_bearer_token
+        _runtime.secrets = list(effective_config.auth.secrets)
 
     return Result(value=None)
 
@@ -549,6 +551,7 @@ async def gateway_shutdown() -> Result[None, str]:
         _runtime.total_tool_calls = 0
         _runtime.connections.clear()
         _runtime.expected_bearer_token = None
+        _runtime.secrets = []
     return disconnect_result
 
 
