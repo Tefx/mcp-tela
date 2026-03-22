@@ -22117,3 +22117,12 @@ phases:
     depends_on:
     - tw.gate.spec-conformance
     agent: integration-verifier
+  - id: tw.gate.final
+    name: Final gate review
+    status: pending
+    description: 'Final gate review: all phases complete, no regressions, token auth
+      wired end-to-end'
+    evidence_template: Final gate review checklist
+    depends_on:
+    - tw.gate.invar-guard
+    agent: gate-reviewer
