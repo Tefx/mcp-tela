@@ -19356,6 +19356,34 @@ phases:
       - Proof: sibling search shows no remaining lockfile writer on this path emits
       requested port instead of actual bound port'
     agent: python-senior
+  - id: gw.bridge.retest-lockfile-actual-port
+    name: Retest connect liveness after lockfile port fix
+    status: pending
+    description: 'Independent retest for the ephemeral-port discovery blocker.
+
+
+      Re-run the connect liveness path after the lockfile fix and verify:
+
+      - tela serve started with --port 0 publishes the actual bound port in the lockfile
+
+      - tela connect discovers the server from that lockfile without manual port override
+
+      - MCP initialize handshake and tools/list succeed across the bridge
+
+      - connect shutdown still triggers clean disconnect semantics
+
+
+      This retest is focused on the blocker path before the broader liveness probe
+      and gate proceed.'
+    verification: '- Re-run the end-to-end serve --port 0 -> connect discovery ->
+      initialize -> tools/list -> disconnect flow
+
+      - Evidence shows lockfile contains the bound non-zero port
+
+      - Discovery succeeds without manual port override'
+    depends_on:
+    - gw.bridge.fix-lockfile-actual-port
+    agent: blind-tester
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
