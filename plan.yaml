@@ -19980,13 +19980,13 @@ phases:
       - no blockers; sibling parity through shared query helper confirmed'
 - id: gw.teardown
   name: Replace tela start with connect/serve
-  status: pending
+  status: in_progress
   depends_on:
   - gw.bridge
   steps:
   - id: gw.teardown.wire-connect-serve-into-cli-remove-start
     name: Wire connect/serve into CLI, remove start
-    status: pending
+    status: claimed
     description: 'Replace tela start with tela connect and tela serve in CLI entrypoint.
 
 
@@ -20043,6 +20043,8 @@ phases:
     - src/tela/cli.py
     - src/tela/commands/start.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T09:29:07.338331+00:00'
   - id: gw.teardown.update-query-commands-for-http-discovery
     name: Update query commands for HTTP discovery
     status: pending
