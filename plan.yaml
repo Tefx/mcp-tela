@@ -20771,7 +20771,7 @@ phases:
   steps:
   - id: gw.doc_sync.update-documentation-for-connect-serve
     name: Update documentation for connect/serve
-    status: claimed
+    status: done
     description: 'Sync all project documentation with the new connect/serve architecture.
 
 
@@ -20812,6 +20812,50 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-22T10:17:32.311825+00:00'
+    done_at: '2026-03-22T10:20:42.233146+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 6bfb767 (docs sync for connect/serve architecture)
+
+
+      Verification:
+
+      - Run: grep -rn "tela start" --include="*.md" . -> no matches
+
+      - Run: grep -rn "tela connect\|tela serve" --include="*.md" docs/ README.md
+      -> multiple matches (coverage present)
+
+      - Run: grep -rn "gateway.lock\|lockfile" --include="*.md" docs/ README.md ->
+      lockfile references present
+
+      - Run: grep -rn "TELA_BEARER_TOKEN\|bearer token" --include="*.md" docs/ README.md
+      -> token lifecycle references present
+
+
+      Files changed:
+
+      - README.md (removed start references; connect/serve explanation)
+
+      - docs/DESIGN.md (idle shutdown behavior, token override modes, auth-layer independence
+      details)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+
+      Coverage notes:
+
+      - connect/serve documented
+
+      - lockfile + bearer token lifecycle documented
+
+      - --token / TELA_BEARER_TOKEN / --server skip-discover modes documented
+
+      - idle shutdown behavior documented'
   - id: gw.doc_sync.gate-doc-sync
     name: 'Gate: doc sync'
     status: pending
