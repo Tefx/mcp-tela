@@ -19980,7 +19980,7 @@ phases:
       - no blockers; sibling parity through shared query helper confirmed'
 - id: gw.teardown
   name: Replace tela start with connect/serve
-  status: in_progress
+  status: done
   depends_on:
   - gw.bridge
   steps:
@@ -20549,7 +20549,7 @@ phases:
       - Scope intentionally limited to two gate blockers and their targeted regressions.'
   - id: gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites
     name: Retest gate-cli teardown blockers and prerequisites
-    status: claimed
+    status: done
     description: 'Independent retest for the blockers found by `gw.teardown.gate-cli-teardown`
       and the narrow gate prerequisites they affect.
 
@@ -20583,9 +20583,45 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T10:11:31.954246+00:00'
+    done_at: '2026-03-22T10:12:43.978431+00:00'
+    evidence: 'Artifact:
+
+      - Branch commit: 468bcbd (vectl/step-gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites)
+
+      - Parent merged fix commit on main: bcc3e94
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_cli_wiring.py -v -> 1 passed
+
+      - Run: grep -rn "tela.commands.serve_cmd.gateway_reload_config_from_disk" tests/
+      src/ -> no matches
+
+      - Run: grep -n "@invar:allow dead_export" src/tela/commands/start.py -> line
+      23
+
+      - Run: uv run pytest tests/repro/test_blockers.py -v -> 18 passed
+
+      - Run: uv run pytest tests/shell/test_gateway.py -v -> 26 passed
+
+      - Run: uv run tela --help -> lists {serve,connect,status,profiles,connections,audit};
+      no start command
+
+
+      Spec link:
+
+      - docs/INTERFACES.md §2 (CLI surface)
+
+      - docs/INTERFACES.md §7.4 (bearer + command behavior context)
+
+
+      Gaps/Notes:
+
+      - Retest step performed validation-only; no source edits required.'
 - id: gw.spec_conformance
   name: Spec Conformance Verification
-  status: locked
+  status: pending
   depends_on:
   - gw.teardown
   steps:
