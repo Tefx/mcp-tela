@@ -21658,3 +21658,128 @@ phases:
     depends_on:
     - gw.deep_review.architecture-and-concurrency-review
     agent: python-senior
+  - id: gw.deep_review.retest-runtime-shutdown-lock-token
+    name: Re-test runtime shutdown wiring, shared connection locking, and bearer token
+      containment
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (software-architect), validate from a
+      fresh perspective that all three architecture/concurrency findings are closed.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Validate ALL of the following with explicit commands and recorded outputs:
+
+      1. Idle-shutdown manager is integrated into the production runtime path used
+      by real gateway serve/connect startup.
+
+      2. `runtime.connections` access now follows one shared synchronization discipline
+      across modules.
+
+      3. Bearer token handling no longer leaks through process-global `TELA_BEARER_TOKEN`
+      and remains lockfile/server-memory scoped.
+
+
+      Test for:
+
+      - Happy path: production runtime entrypoint routes through the intended idle-shutdown
+      lifecycle owner.
+
+      - Edge cases: sibling startup/reload or bridge paths that used to bypass lifecycle
+      wiring.
+
+      - Error scenarios: cross-module connection reads/writes without the shared lock
+      boundary; env-building helpers that still propagate `TELA_BEARER_TOKEN`.
+
+      - Security/compliance: bearer token stays out of global process environment.
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+
+      Independence Level: L2
+
+
+      Use exact verification commands below and paste the real outputs into evidence.'
+    verification: '- Run `rg -n "idle[-_ ]shutdown|IdleShutdown|shutdown manager|idle
+      timeout" src tests` and confirm the production entrypoint path is the one wired
+      to the idle-shutdown manager
+
+      - Run `rg -n "runtime\.connections|connections\b" src --glob ''*.py''` and confirm
+      all remaining cross-module access points use the shared synchronization boundary
+
+      - Run `rg -n "TELA_BEARER_TOKEN|bearer token|Authorization|lockfile" src tests`
+      and confirm no process-global bearer-token export path remains
+
+      - Run a focused runtime/integration command that exercises the real serve/connect
+      path and paste the actual command plus output proving the runtime starts with
+      the intended lifecycle path
+
+      - Report PASS or ISSUES_FOUND for all three findings explicitly'
+    evidence_template: '## Retest Report
+
+
+      **Tester**: software-architect (independent of implementation)
+
+      **Scope**: idle-shutdown runtime wiring, shared connection locking, bearer-token
+      containment
+
+      **Independence Level**: L2
+
+
+      ### Commands executed
+
+      ```bash
+
+      rg -n "idle[-_ ]shutdown|IdleShutdown|shutdown manager|idle timeout" src tests
+
+      rg -n "runtime\.connections|connections\b" src --glob ''*.py''
+
+      rg -n "TELA_BEARER_TOKEN|bearer token|Authorization|lockfile" src tests
+
+      <exact focused runtime/integration command>
+
+      ```
+
+
+      ### Outputs
+
+      ```text
+
+      <paste actual output excerpts for each command>
+
+      ```
+
+
+      ### Finding-by-finding verdict
+
+      - Idle-shutdown manager integrated into production runtime path: PASS|ISSUES_FOUND
+      - <details>
+
+      - `runtime.connections` follows shared lock discipline: PASS|ISSUES_FOUND -
+      <details>
+
+      - `TELA_BEARER_TOKEN` no longer leaks to process-global env: PASS|ISSUES_FOUND
+      - <details>
+
+
+      ### Coverage notes
+
+      - startup/reload sibling paths checked: <list>
+
+      - connection reader/writer sibling paths checked: <list>
+
+      - env propagation sibling paths checked: <list>
+
+
+      ### Final verdict
+
+      - PASS
+
+      - ISSUES_FOUND
+
+      - INCOMPLETE'
+    depends_on:
+    - gw.deep_review.fix-runtime-shutdown-lock-token
+    agent: software-architect
