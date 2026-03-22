@@ -1,6 +1,6 @@
 """CLI entrypoint for tela.
 
-Wires subcommands (start, serve, status, profiles, connections, audit)
+Wires subcommands (start, connect, serve, status, profiles, connections, audit)
 into the argparse-based CLI dispatcher per INTERFACES.md.
 """
 
@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 from tela.commands.audit_cmd import audit_command
+from tela.commands.connect_cmd import connect_command
 from tela.commands.connections_cmd import connections_command
 from tela.commands.profiles_cmd import profiles_command
 from tela.commands.serve_cmd import serve_command
@@ -34,6 +35,7 @@ CONFIG_WATCH_POLL_SECONDS = 0.5
 
 # @invar:allow shell_result: CLI entrypoint returns int exit code per POSIX convention.
 # @shell_orchestration: CLI entrypoint orchestrates argparse and command dispatch.
+# @shell_complexity: CLI dispatch intentionally branches across command entrypoints.
 def main(argv: list[str] | None = None) -> int:
     """Main CLI entrypoint for tela.
 
@@ -119,6 +121,31 @@ def main(argv: list[str] | None = None) -> int:
         "--token",
         default=None,
         help="Bearer token override (default: TELA_BEARER_TOKEN or generated)",
+    )
+
+    # --- connect ---
+    connect_parser = subparsers.add_parser(
+        "connect", help="Start stdio bridge to tela HTTP gateway"
+    )
+    connect_parser.add_argument(
+        "--config",
+        default="tela.yaml",
+        help="Path to configuration file (default: tela.yaml)",
+    )
+    connect_parser.add_argument(
+        "--default-profile",
+        default=None,
+        help="Open-mode default profile override for auto-started serve",
+    )
+    connect_parser.add_argument(
+        "--server",
+        default=None,
+        help="Explicit gateway endpoint as host:port",
+    )
+    connect_parser.add_argument(
+        "--token",
+        default=None,
+        help="Bearer token override (default: env, then lockfile)",
     )
 
     # --- status ---
@@ -221,6 +248,18 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         assert serve_result.value is not None
         return serve_result.value
+    if args.command == "connect":
+        connect_result = connect_command(
+            config_path=args.config,
+            default_profile=args.default_profile,
+            server=args.server,
+            token=args.token,
+        )
+        if connect_result.is_err:
+            print(f"error: {connect_result.error}", file=sys.stderr)
+            return 1
+        assert connect_result.value is not None
+        return connect_result.value
     if args.command == "profiles":
         return profiles_command(config_path=args.config, json_output=args.json_output)
     if args.command == "connections":
@@ -244,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
+# @shell_complexity: start path handles multiple startup/config/runtime branches.
 def _handle_start(args: argparse.Namespace) -> Result[int, str]:
     """Handle ``tela start`` by resolving config and binding gateway startup.
 
@@ -359,6 +399,7 @@ async def _run_stdio_gateway(
     return Result(value=gateway_exit)
 
 
+# @shell_complexity: remote startup handles transport selection and shutdown branches.
 async def _serve_remote_gateway(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
@@ -407,6 +448,7 @@ async def _serve_remote_gateway(
     return Result(value=gateway_exit)
 
 
+# @shell_complexity: watcher handles multiple change/error control-flow branches.
 async def _watch_config_changes(
     *,
     config_path: Path,
@@ -453,6 +495,7 @@ def _config_mtime_ns(config_path: Path) -> Result[int | None, str]:
         return Result(value=None)
 
 
+# @shell_orchestration: async task cancellation is lifecycle cleanup plumbing.
 async def _await_task(task: asyncio.Task[None]) -> None:
     """Await or cancel watcher task during shutdown."""
 
