@@ -22031,6 +22031,15 @@ phases:
       token''s profile_name'
     evidence_template: Contract signature defined, invar sig output pasted
     agent: python-executor
+  - id: tw.contract.gate
+    name: 'Gate review: token wire contract'
+    status: pending
+    description: 'Gate review: contract definitions are consistent with INTERFACES.md
+      3.3 and DESIGN.md auth layers'
+    evidence_template: Gate review checklist completed
+    depends_on:
+    - tw.contract.define-token-init
+    agent: gate-reviewer
 - id: tw.test
   name: Token Wire Tests
   status: locked
