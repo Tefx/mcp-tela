@@ -22032,3 +22032,8 @@ phases:
   status: locked
   depends_on:
   - tw.test
+- id: tw.gate
+  name: Final Verification
+  status: locked
+  depends_on:
+  - tw.impl
