@@ -23596,7 +23596,7 @@ phases:
       - liveness tests updated: VERIFIED (tests pass)'
   - id: tw.gate.final-regate2
     name: Replacement re-gate after invar regression retest
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (`gate-reviewer`), replace the blocked
       `tw.gate.final-regate` path by reviewing the remediation for the invar regression
       blocker family.
@@ -23671,3 +23671,5 @@ phases:
     depends_on:
     - tw.gate.retest-final-regate-invar
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T20:18:06.766435+00:00'
