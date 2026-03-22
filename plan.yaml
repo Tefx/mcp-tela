@@ -22019,7 +22019,7 @@ phases:
       mismatch.'
 - id: tw.contract
   name: Token Wire Contract
-  status: in_progress
+  status: done
   depends_on:
   - gw.deep_review
   steps:
@@ -22049,7 +22049,7 @@ phases:
       \nGaps/Notes\n- No additional gaps reported."
   - id: tw.contract.gate
     name: 'Gate review: token wire contract'
-    status: claimed
+    status: done
     description: 'Gate review: contract definitions are consistent with INTERFACES.md
       3.3 and DESIGN.md auth layers'
     evidence_template: Gate review checklist completed
@@ -22058,9 +22058,74 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T18:52:14.362752+00:00'
+    done_at: '2026-03-22T18:55:54.232997+00:00'
+    evidence: 'Gate review completed for token wire contract consistency.
+
+
+      Gate checklist
+
+      - INTERFACES.md 3.3 authentication alignment: PASS
+
+      - INTERFACES.md 6.1 connection bind alignment: PASS
+
+      - DESIGN.md auth layers alignment: PASS
+
+      - Core zone contract compliance (@pre/@post/doctests): PASS
+
+
+      Wiring audit (W1-W8 or equivalent)
+
+      - W1 export/import path check: PASS for core contract symbols
+
+      - W2 shell import requirement: not expected in this contract-only step
+
+      - W3 reference visibility in src/tela: PASS
+
+      - W4 runtime caller presence: not required at contract definition stage
+
+      - W5 dependency/importability check: PASS
+
+      - W6 contract coverage in token core module: PASS
+
+      - W7 placeholder/stub scan in touched modules: PASS
+
+      - W8 dead-export/escape risk in scope: PASS
+
+
+      Escape hatch audit
+
+      - @invar:allow in scope (src/tela/core/token.py, src/tela/core/models.py): none
+
+
+      Evidence type qualification
+
+      - Evidence is unit/contract-level (doctests + core tests), not full integration
+      wiring
+
+      - Integration wiring is explicitly out-of-scope for this step and planned in
+      downstream implementation phases
+
+
+      Verification
+
+      - invar guard: PASS (0 errors)
+
+      - pytest tests/core/test_token.py tests/core/test_models.py: 45 passed
+
+
+      Verdict
+
+      - No blocking issues found for tw.contract phase gate; contract definitions
+      are consistent with INTERFACES.md and DESIGN.md.
+
+
+      Gaps/Notes
+
+      - Shell-level wiring verification deferred to downstream tw.impl/tw.gate steps
+      by plan design.'
 - id: tw.test
   name: Token Wire Tests
-  status: locked
+  status: pending
   depends_on:
   - tw.contract
   steps:
