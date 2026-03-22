@@ -12,7 +12,12 @@ import json
 from datetime import datetime
 
 from tela.core.contracts import pre, post
-from tela.core.models import CapabilityToken, EnforcementResult, EnforcementVerdict
+from tela.core.models import (
+    CapabilityToken,
+    EnforcementResult,
+    EnforcementVerdict,
+    TokenInitBinding,
+)
 
 
 @pre(
@@ -134,6 +139,56 @@ def validate_token(
         )
 
     return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+
+
+@pre(
+    lambda token, secrets, now_iso: (
+        isinstance(token, CapabilityToken)
+        and len(token.token_id) > 0
+        and len(token.profile_name) > 0
+        and len(token.signature) > 0
+        and isinstance(secrets, list)
+        and len(secrets) > 0
+        and isinstance(now_iso, str)
+        and len(now_iso) > 0
+    )
+)
+@post(lambda result: isinstance(result, TokenInitBinding))
+def resolve_token_init_binding(
+    token: CapabilityToken,
+    secrets: list[str],
+    now_iso: str,
+) -> TokenInitBinding:
+    """Resolve token-mode initialization binding.
+
+    Validates the capability token and binds the connection to the token's
+    profile name. Shell must reject initialization if the returned binding
+    has `token_result.verdict == DENY`.
+
+    Examples:
+        >>> fields = {"token_id": "tok_1", "profile_name": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> sig = compute_signature(fields, "secret1")
+        >>> tok = CapabilityToken(**fields, signature=sig)
+        >>> binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
+        >>> binding.token_result.verdict
+        <EnforcementVerdict.ALLOW: 'allow'>
+        >>> binding.profile_name
+        'dev'
+        >>> bad_tok = CapabilityToken(**fields, signature="invalid_sig")
+        >>> binding = resolve_token_init_binding(bad_tok, ["secret1"], "2026-06-01T00:00:00Z")
+        >>> binding.token_result.verdict
+        <EnforcementVerdict.DENY: 'deny'>
+
+    Args:
+        token: Capability token from upstream client.
+        secrets: List of HMAC secrets (primary + rotation keys).
+        now_iso: Current time in ISO-8601 format.
+
+    Returns:
+        TokenInitBinding with validation result and profile binding.
+    """
+    token_result = validate_token(token, secrets, now_iso)
+    return TokenInitBinding(token_result=token_result, profile_name=token.profile_name)
 
 
 @pre(

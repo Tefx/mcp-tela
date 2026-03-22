@@ -411,3 +411,24 @@ class InitializeProfileBinding:
 
     status: DefaultProfileResolutionStatus
     resolved_default_profile: str | None
+
+
+@dataclass(frozen=True)
+class TokenInitBinding:
+    """Token-mode initialize binding contract.
+
+    Binds a capability token validation result to the connection's profile.
+    Shell must reject initialization if `token_result.verdict` is DENY.
+
+    Examples:
+        >>> from tela.core.models import EnforcementResult, EnforcementVerdict
+        >>> result = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+        >>> binding = TokenInitBinding(token_result=result, profile_name="dev")
+        >>> binding.profile_name
+        'dev'
+        >>> binding.token_result.verdict
+        <EnforcementVerdict.ALLOW: 'allow'>
+    """
+
+    token_result: EnforcementResult
+    profile_name: str
