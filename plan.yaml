@@ -23065,3 +23065,69 @@ phases:
     depends_on:
     - tw.gate.fix-final-blockers
     agent: integration-verifier
+  - id: tw.gate.final-regate
+    name: Re-gate final verification after blocker retest
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (`gate-reviewer`), replace the failed
+      `tw.gate.final` verdict by reviewing the remediation path for the final blocker
+      family.
+
+
+      Gate review scope: `phase-check` protecting tw.gate phase completion and any
+      downstream completion logic.
+
+
+      Review criteria:
+
+      1. `tw.gate.fix-final-blockers` addressed ALL three blocker classes in one batch
+
+      2. `tw.gate.retest-final-blockers` provides specific command/output evidence
+      for the blocker family
+
+      3. No unresolved blocker remains from the failed `tw.gate.final` verdict
+
+      4. The phase is ready to complete only through this re-gate path
+
+
+      Independence: gate-reviewer remains independent from phase implementation agents.'
+    verification: '- phase-check protecting tw.gate phase completion
+
+      - Final verdict replacement runs only after `tw.gate.retest-final-blockers`
+
+      - Blocker family from failed `tw.gate.final` is either closed with evidence
+      or explicitly re-opened with new findings
+
+      - No downstream completion should treat the original failed verdict as sufficient
+      without this re-gate'
+    evidence_template: '## Re-Gate Report
+
+
+      **Reviewer**: gate-reviewer
+
+      **Superseded failed verdict**: tw.gate.final
+
+      **Replacement verdict step**: tw.gate.final-regate
+
+
+      | Reviewed step | Status | Evidence quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | tw.gate.fix-final-blockers | ✅/⚠️/❌ | excellent/adequate/insufficient | <notes>
+      |
+
+      | tw.gate.retest-final-blockers | ✅/⚠️/❌ | excellent/adequate/insufficient |
+      <notes> |
+
+
+      ### Gate decision
+
+      OPEN | BLOCKED
+
+
+      ### Blocking issues
+
+      <none or list>'
+    depends_on:
+    - tw.gate.retest-final-blockers
+    agent: gate-reviewer
