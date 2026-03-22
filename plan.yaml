@@ -22022,3 +22022,8 @@ phases:
   status: pending
   depends_on:
   - gw.deep_review
+- id: tw.test
+  name: Token Wire Tests
+  status: locked
+  depends_on:
+  - tw.contract
