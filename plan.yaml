@@ -19605,7 +19605,7 @@ phases:
       - retest closed test-only blocker by validating corrected field assertions'
   - id: gw.bridge.fix-query-commands-remote-state
     name: Fix query commands to discover remote server state
-    status: pending
+    status: claimed
     description: 'Fix ALL query-command runtime drift found by gw.bridge gate.
 
 
@@ -19740,6 +19740,8 @@ phases:
     - gw.bridge.retest-lockfile-actual-port
     - gw.bridge.tela-connect-liveness-probe
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T09:03:45.933008+00:00'
   - id: gw.bridge.retest-query-commands-remote-state
     name: Mode D retest of remote query command behavior
     status: pending
