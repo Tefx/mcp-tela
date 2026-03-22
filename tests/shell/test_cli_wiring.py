@@ -32,7 +32,7 @@ def test_watch_config_changes_routes_reload_to_gateway_callback(
         return Result(value=None)
 
     monkeypatch.setattr(
-        "tela.commands.serve_cmd.gateway_reload_config_from_disk",
+        "tela.shell.gateway.gateway_reload_config_from_disk",
         _fake_gateway_reload_config_from_disk,
     )
     monkeypatch.setattr("tela.commands.serve_cmd.CONFIG_WATCH_POLL_SECONDS", 0.01)
