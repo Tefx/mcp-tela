@@ -22027,3 +22027,8 @@ phases:
   status: locked
   depends_on:
   - tw.contract
+- id: tw.impl
+  name: Token Wire Implementation
+  status: locked
+  depends_on:
+  - tw.test
