@@ -22605,7 +22605,7 @@ phases:
       \ gap before downstream gate reopening."
 - id: tw.gate
   name: Final Verification
-  status: in_progress
+  status: done
   depends_on:
   - tw.impl
   steps:
@@ -23596,7 +23596,7 @@ phases:
       - liveness tests updated: VERIFIED (tests pass)'
   - id: tw.gate.final-regate2
     name: Replacement re-gate after invar regression retest
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (`gate-reviewer`), replace the blocked
       `tw.gate.final-regate` path by reviewing the remediation for the invar regression
       blocker family.
@@ -23673,3 +23673,53 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T20:18:06.766435+00:00'
+    done_at: '2026-03-22T20:23:29.834907+00:00'
+    evidence: '## Gate Review Report
+
+
+      Reviewer: gate-reviewer
+
+      Phase: tw.gate
+
+      Replacement focus
+
+      - Superseded blocked step: tw.gate.final-regate
+
+      - Fix step reviewed: tw.gate.fix-final-regate-invar
+
+      - Retest reviewed: tw.gate.retest-final-regate-invar
+
+
+      Decision basis
+
+      - Exact invar full-plan command evidence present: yes (`invar guard --all` passed
+      with errors=0)
+
+      - Targeted mypy evidence present: yes (`mypy src/tela/core/contracts.py` success)
+
+      - Targeted pytest evidence present: yes (targeted serve/liveness suites passed)
+
+      - Residual blocker remains: no
+
+
+      Independent Mode D liveness corroboration (blind-tester)
+
+      - CLI surfaces (serve/connect/status/profiles/connections/audit): PASS
+
+      - Serve liveness + lockfile + health/status endpoints: PASS
+
+      - Connect auto-discovery and connection state tracking: PASS
+
+      - Query commands and auth behavior: PASS
+
+      - No regressions detected in serve/connect/status runnable paths
+
+
+      Gate decision
+
+      - OPEN
+
+      - Blocker family from failed `tw.gate.final-regate` is closed with replacement
+      evidence path.
+
+      - tw.gate phase is ready to complete.'
