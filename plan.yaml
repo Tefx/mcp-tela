@@ -21032,7 +21032,7 @@ phases:
     claimed_at: '2026-03-22T10:32:00.559106+00:00'
   - id: gw.deep_review.black-box-spec-verification
     name: Black-box spec verification
-    status: claimed
+    status: done
     description: 'Using ONLY the spec and CLI --help (no implementation source):
 
 
@@ -21065,6 +21065,48 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T10:32:06.407481+00:00'
+    done_at: '2026-03-22T10:40:43.885701+00:00'
+    evidence: 'Artifact:
+
+      - Task: ses_2eaee0326ffeLaP0qHjZT3Yt2w (blind-tester)
+
+      - Mode: black-box validation only
+
+
+      Verification:
+
+      - Run: uv run python -m tela --help -> subcommands are serve, connect, status,
+      profiles, connections, audit; no start
+
+      - Run: uv run python -m tela serve --config /tmp/tela-test-config.yaml --port
+      0 --idle-timeout 0 --token test-token-12345 -> server starts; lockfile created
+
+      - Run: lockfile JSON inspection -> fields are pid, host, port, token, started_at,
+      config_path, version (7 fields)
+
+      - Run: curl GET /health without auth -> 200 with {status:"ok", pid:N}
+
+      - Run: curl GET /status without auth -> 401
+
+      - Run: connect/disconnect API flow -> connect returns connected payload, status
+      reflects active connection, disconnect succeeds
+
+      - Run: uv run python -m tela status --json -> valid JSON output
+
+      - Run: lockfile token check with --token override -> lockfile token equals provided
+      token
+
+      - Run: uv run python -m tela start -> invalid choice error (command removed)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md (CLI surface, lockfile contract, auth behavior)
+
+
+      Notes:
+
+      - Verification performed without consulting implementation source files.'
   - id: gw.deep_review.final-deep-review-gate
     name: Final deep review gate
     status: pending
