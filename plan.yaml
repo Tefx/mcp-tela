@@ -18121,7 +18121,7 @@ phases:
       - repo-wide invar-all errors are pre-existing and unrelated'
 - id: gw.http.impl
   name: HTTP Endpoints Implementation
-  status: in_progress
+  status: done
   depends_on:
   - gw.http.contract
   steps:
@@ -18264,7 +18264,7 @@ phases:
       bearer); no additional edits required for this step'
   - id: gw.http.impl.gate-http-implementation
     name: 'Gate: HTTP implementation'
-    status: claimed
+    status: done
     description: 'Gate review: Verify HTTP implementation matches INTERFACES.md 7.2
       after mounted-surface remediation.
 
@@ -18325,6 +18325,53 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T07:03:34.544765+00:00'
+    done_at: '2026-03-22T07:07:33.620095+00:00'
+    evidence: 'Verdict: PASS
+
+      Wiring audit:
+
+      - mounted /health,/status,/connect,/disconnect routes present and exercised
+
+      - CLI launch path uses valid FastMCP run APIs (no deprecated/nonexistent calls)
+
+      - protected endpoints enforce bearer; /health remains unauthenticated
+
+      Escape hatch audit:
+
+      - annotations_found: yes; reviewed and justified in shell auth/runtime boundaries
+
+      Findings:
+
+      - suggestion: doc command/flag drift notes (serve/connect and --token docs)
+      for later doc-sync
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_gateway.py tests/shell/test_http_routes.py
+      tests/shell/test_http_auth.py -v -> passing
+
+      - Run: real mounted surface checks (/health 200 no-auth, protected 401 without
+      bearer, 200 with valid bearer) -> pass
+
+      - Run: rg "run_streamable_http_async|run_sse_async" src/ -> no matches
+
+      Gate checks:
+
+      - all gate blocker conditions cleared after remediation
+
+      Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2 §7.4
+
+      Gaps/Notes:
+
+      - blind mode-D reported only non-blocking documentation suggestions'
   - id: gw.http.impl.fix-http-liveness-blockers
     name: Fix HTTP liveness blockers
     status: done
@@ -18627,7 +18674,7 @@ phases:
       script'
 - id: gw.serve
   name: tela serve Command
-  status: locked
+  status: pending
   depends_on:
   - gw.http.impl
   steps:
