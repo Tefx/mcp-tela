@@ -19595,6 +19595,143 @@ phases:
       Gaps/Notes:
 
       - retest closed test-only blocker by validating corrected field assertions'
+  - id: gw.bridge.fix-query-commands-remote-state
+    name: Fix query commands to discover remote server state
+    status: pending
+    description: 'Fix ALL query-command runtime drift found by gw.bridge gate.
+
+
+      Issue: `tela status` (and sibling query commands `tela connections` / `tela
+      audit`) currently read in-process state instead of following the authoritative
+      remote query path required by `docs/INTERFACES.md`.
+
+
+      Spec refs:
+
+      - `docs/INTERFACES.md` -> `2. CLI Surface`: query commands discover the running
+      server via `~/.tela/gateway.lock` and query over HTTP
+
+      - `docs/INTERFACES.md` -> `7.2 HTTP Endpoints`: `GET /status` is the runtime
+      status endpoint
+
+      - `docs/INTERFACES.md` -> `7.3 Lockfile Contract`: query path must use lockfile
+      host/port/token with stale-PID handling
+
+      - `docs/INTERFACES.md` -> `3.4 Audit`: audit output must reflect the running
+      `tela serve` instance, not local process state
+
+
+      Touch paths:
+
+      - `src/tela/commands/status_cmd.py`
+
+      - `src/tela/commands/connections_cmd.py`
+
+      - `src/tela/commands/audit_cmd.py`
+
+      - shared query/discovery helpers under `src/tela/commands/` or `src/tela/shell/`
+
+      - related tests under `tests/shell/` and `tests/repro/`
+
+
+      Root Cause vs Symptom:
+
+      - Root cause: CLI query commands are resolving state from local process memory
+      instead of the runtime contract boundary exposed by the running HTTP gateway
+      discovered through the lockfile.
+
+      - Symptom: `tela status` / `tela connections` / `tela audit` can disagree with
+      a live `tela serve` instance and violate INTERFACES.md query-command semantics.
+
+      - Why this fix is not surface-level: it must align all query commands to one
+      authoritative discovery + HTTP path, not patch only `status` output.
+
+
+      Required work:
+
+      - Implement lockfile discovery for query commands using `~/.tela/gateway.lock`
+      as the runtime source of truth.
+
+      - Route `status`, `connections`, and `audit` through the remote HTTP query path
+      when a server is running.
+
+      - Preserve stale-lock handling and explicit error behavior when the lockfile
+      is absent or the PID is stale.
+
+      - Ensure shared helper extraction prevents sibling drift between the three commands.
+
+      - Keep `--json` outputs aligned with the remote server responses and spec-defined
+      behavior.
+
+
+      Failure-mode checklist:
+
+      - relative vs absolute lockfile/config path behavior
+
+      - missing lockfile fallback behavior
+
+      - stale PID / dead server behavior
+
+      - bearer token propagation from lockfile to HTTP query path
+
+      - command parity so `status`, `connections`, and `audit` do not split semantics
+      again
+
+
+      State semantics:
+
+      - Last-writer-wins: the currently running `tela serve` instance published in
+      the lockfile is authoritative.
+
+      - Must preserve exactly: remote runtime status, connection count/list, and audit
+      entries from the live server instance.
+
+      - Backward-compatible legacy behavior: clear user-facing error when no running
+      server can be discovered.
+
+
+      Out-of-scope guardrail:
+
+      - Do not redesign the HTTP API surface or query-command CLI flags here; fix
+      the existing commands to honor the documented runtime contract.
+
+
+      Gate Preview (what the gate WILL reject)
+
+      1. Any query command still reading in-process state instead of lockfile + HTTP
+
+      2. Fixing `status` without fixing sibling `connections` / `audit` behavior
+
+      3. Missing stale-lock or missing-server error-path coverage
+
+      4. JSON outputs that diverge from remote server responses
+
+
+      KNOWN RISKS:
+
+      - Runtime/lockfile drift has already caused ephemeral-port discovery regressions
+      in this phase; verify the live lockfile host/port/token path, not just helper-level
+      unit tests.
+
+      - Query-command behavior is a cross-cutting CLI/runtime surface; sibling commands
+      must be searched and aligned together.
+
+      '
+    verification: '- Main path: focused tests prove `tela status`, `tela connections`,
+      and `tela audit` use lockfile discovery and HTTP queries against a live server
+
+      - Failure path: targeted regressions cover missing lockfile and stale-PID/dead-server
+      handling
+
+      - Proof: no remaining local in-process query path is used when a remote gateway
+      lockfile is present
+
+      - Evidence includes exact tests/commands updated and sibling-search confirmation
+      for all three query commands'
+    depends_on:
+    - gw.bridge.retest-lockfile-actual-port
+    - gw.bridge.tela-connect-liveness-probe
+    agent: python-senior
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
