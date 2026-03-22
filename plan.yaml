@@ -21167,3 +21167,90 @@ phases:
     depends_on:
     - gw.deep_review.full-wiring-audit
     agent: python-executor
+  - id: gw.deep_review.retest-bridge-orphan-exports
+    name: Re-run focused wiring audit for bridge exports
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), re-run the wiring
+      audit checks for the bridge path after orphan-export remediation.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Focus only on the failed audit family:
+
+      - no orphan exports remain in `src/tela/shell/bridge.py`
+
+      - no dead code regressions were introduced in the bridge path or adjacent re-export
+      surfaces
+
+      - `invar guard` is clean for the affected area
+
+
+      Required checks:
+
+      - verify `StdioHttpBridge` and `BridgeConfig` are either consumed by production
+      code, removed from public exports, or explicitly justified with a valid escape
+      hatch
+
+      - verify no replacement dead exports were introduced while fixing the bridge
+      path
+
+      - capture the exact command/output used for the focused guard and wiring scan
+
+
+      Independence Level: L1
+
+      '
+    verification: '- Main path: focused wiring audit confirms no orphan exports remain
+      in `src/tela/shell/bridge.py`
+
+      - Regression path: search confirms no new dead code regressions in the bridge
+      path or adjacent re-export surfaces
+
+      - Guard path: `invar guard` is clean for the affected area and the evidence
+      includes exact command/output'
+    evidence_template: '## Focused Bridge Wiring Retest
+
+
+      **Tester**: integration-verifier
+
+      **Scope**: `src/tela/shell/bridge.py` orphan exports and nearby bridge re-export
+      surfaces
+
+
+      **Commands executed**:
+
+      ```bash
+
+      <exact search and guard commands>
+
+      ```
+
+
+      **Actual output**:
+
+      ```text
+
+      <paste stdout/stderr>
+
+      ```
+
+
+      **Checks**:
+
+      - [ ] no orphan exports for `StdioHttpBridge`
+
+      - [ ] no orphan exports for `BridgeConfig`
+
+      - [ ] no dead code regressions in bridge path
+
+      - [ ] affected-area `invar guard` clean
+
+
+      **Verdict**: PASS | ISSUES_FOUND
+
+      '
+    depends_on:
+    - gw.deep_review.fix-bridge-orphan-exports
+    agent: integration-verifier
