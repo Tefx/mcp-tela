@@ -19473,7 +19473,7 @@ phases:
       discovery without override'
   - id: gw.bridge.fix-liveness-payload
     name: Fix liveness probe status payload fixture
-    status: pending
+    status: claimed
     description: 'Fix the test-only liveness repro blocker in `tests/repro/test_connect_runtime_liveness.py`
       and any directly related probe fixtures.
 
@@ -19517,6 +19517,8 @@ phases:
     - gw.bridge.implement-tela-connect-command
     - gw.bridge.implement-stdio-http-bridge
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T08:44:45.720718+00:00'
   - id: gw.bridge.retest-liveness-payload
     name: Retest liveness probe after payload fixture fix
     status: pending
