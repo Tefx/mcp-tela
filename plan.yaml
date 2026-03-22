@@ -20707,7 +20707,7 @@ phases:
       - PASS'
   - id: gw.spec_conformance.gate-spec-conformance
     name: 'Gate: spec conformance'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify spec conformance audit is thorough.
 
 
@@ -20727,6 +20727,8 @@ phases:
     depends_on:
     - gw.spec_conformance.spec-conformance-audit
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T10:15:19.988330+00:00'
 - id: gw.doc_sync
   name: Documentation Sync
   status: locked
