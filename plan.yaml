@@ -18493,7 +18493,7 @@ phases:
       guard passed'
   - id: gw.http.impl.retest-http-liveness-mounted-surface
     name: Retest mounted HTTP surface and auth behavior
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the mounted
       HTTP runtime surface from a fresh perspective after the liveness blocker fix.
 
@@ -18577,6 +18577,8 @@ phases:
     depends_on:
     - gw.http.impl.fix-http-liveness-blockers
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T06:59:58.274739+00:00'
 - id: gw.serve
   name: tela serve Command
   status: locked
