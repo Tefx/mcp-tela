@@ -21051,6 +21051,8 @@ phases:
     - gw.deep_review.full-wiring-audit
     - gw.deep_review.architecture-and-concurrency-review
     - gw.deep_review.black-box-spec-verification
+    - gw.deep_review.fix-bridge-orphan-exports
+    - gw.deep_review.retest-bridge-orphan-exports
     agent: gate-reviewer
   - id: gw.deep_review.fix-bridge-orphan-exports
     name: Fix bridge orphan exports and dead-export finding
