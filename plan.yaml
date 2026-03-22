@@ -19787,7 +19787,7 @@ phases:
       query source'
   - id: gw.bridge.retest-query-commands-remote-state
     name: Mode D retest of remote query command behavior
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`blind-tester`), validate that CLI query
       commands reflect the remote running server state rather than local in-process
       state.
@@ -19872,6 +19872,26 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T09:11:57.134783+00:00'
+    done_at: '2026-03-22T09:13:50.127266+00:00'
+    evidence: 'Mode: D
+
+      Verdict: PASS
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_query_liveness.py -v -> 3 passed
+
+      - Run: uv run pytest tests/shell/test_query_commands_remote_state.py tests/repro/test_query_commands_remote_state.py
+      -v -> 5 passed
+
+      Findings:
+
+      - suggestions only: remote-state query contract now verified for status/connections/audit;
+      missing/stale lockfile errors clear
+
+      Gaps/Notes:
+
+      - no blockers; sibling parity through shared query helper confirmed'
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
