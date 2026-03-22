@@ -20922,7 +20922,7 @@ phases:
   steps:
   - id: gw.deep_review.full-wiring-audit
     name: Full wiring audit
-    status: claimed
+    status: done
     description: 'Complete system wiring audit for all gateway refactor code.
 
 
@@ -20955,6 +20955,48 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T10:22:52.255093+00:00'
+    done_at: '2026-03-22T10:31:01.022033+00:00'
+    evidence: 'Artifact:
+
+      - Task: ses_2eaee0326ffeLaP0qHjZT3Yt2w (integration-verifier)
+
+      - Planner remediation task: ses_2eae834caffekD0FpjbTuBDe4E
+
+
+      Verification:
+
+      - Run: uv run invar guard -> PASSED (0 errors, 0 warnings)
+
+      - Run: uv run pytest tests/shell tests/integration -v -> 298 passed
+
+      - Run: grep -n "subparsers.add_parser" src/tela/cli.py -> serve/connect/status/profiles/connections/audit
+      registered; no start
+
+      - Run: grep -rn "from tela.shell.bridge\|import.*bridge" src/ --include="*.py"
+      -> no production imports for bridge exports
+
+      - Run: grep -rn "@invar:allow dead_export" src/tela/commands/start.py -> present
+
+
+      Findings:
+
+      - Bridge exports in `src/tela/shell/bridge.py` (`StdioHttpBridge`, `BridgeConfig`)
+      are orphaned from production callers and lacked explicit dead_export justification
+      at audit time.
+
+      - Because step criterion required no orphans/no dead code, remediation was required.
+
+
+      Batched remediation created:
+
+      - gw.deep_review.fix-bridge-orphan-exports
+
+      - gw.deep_review.retest-bridge-orphan-exports
+
+
+      Spec link:
+
+      - Deep review wiring-audit acceptance criteria in plan step `gw.deep_review.full-wiring-audit`'
   - id: gw.deep_review.architecture-and-concurrency-review
     name: Architecture and concurrency review
     status: pending
