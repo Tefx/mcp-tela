@@ -22941,7 +22941,7 @@ phases:
       \ Remaining warnings are architectural suggestions and do not block gate progression."
   - id: tw.gate.fix-final-blockers
     name: Fix final gate blocker family
-    status: pending
+    status: claimed
     description: "Fix ALL blockers found by failed final gate `tw.gate.final`.\n\n\
       ## Blockers to Fix (ALL of these, not just the first)\n1. Update liveness coverage\
       \ so tests and repros no longer reference the removed `tela start` CLI surface\
@@ -22989,6 +22989,8 @@ phases:
     depends_on:
     - tw.gate.final
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T19:55:27.305956+00:00'
   - id: tw.gate.retest-final-blockers
     name: Retest final gate blocker family
     status: pending
