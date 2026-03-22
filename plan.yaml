@@ -21141,6 +21141,8 @@ phases:
     - gw.deep_review.black-box-spec-verification
     - gw.deep_review.fix-bridge-orphan-exports
     - gw.deep_review.retest-bridge-orphan-exports
+    - gw.deep_review.fix-runtime-shutdown-lock-token
+    - gw.deep_review.retest-runtime-shutdown-lock-token
     agent: gate-reviewer
   - id: gw.deep_review.fix-bridge-orphan-exports
     name: Fix bridge orphan exports and dead-export finding
