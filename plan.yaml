@@ -19256,7 +19256,7 @@ phases:
       - CLI connect orchestration deliberately handled in separate step'
   - id: gw.bridge.tela-connect-liveness-probe
     name: tela connect liveness probe
-    status: pending
+    status: claimed
     description: 'Black-box liveness verification: start tela serve, then tela connect,
       verify end-to-end.
 
@@ -19293,6 +19293,8 @@ phases:
     depends_on:
     - gw.bridge.retest-lockfile-actual-port
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-22T08:26:08.590304+00:00'
   - id: gw.bridge.gate-tela-connect
     name: 'Gate: tela connect'
     status: pending
