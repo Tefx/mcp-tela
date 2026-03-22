@@ -22100,3 +22100,11 @@ phases:
   status: locked
   depends_on:
   - tw.impl
+  steps:
+  - id: tw.gate.spec-conformance
+    name: Spec conformance verification
+    status: pending
+    description: Verify implementation matches INTERFACES.md 3.3 (token mode binds
+      connection to profile) and DESIGN.md (two independent auth layers)
+    evidence_template: Spec section quotes + implementation mapping
+    agent: doc-reviewer
