@@ -21785,7 +21785,7 @@ phases:
   - id: gw.deep_review.retest-runtime-shutdown-lock-token
     name: Re-test runtime shutdown wiring, shared connection locking, and bearer token
       containment
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (software-architect), validate from a
       fresh perspective that all three architecture/concurrency findings are closed.
 
@@ -21909,3 +21909,65 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-22T11:07:16.169401+00:00'
+    done_at: '2026-03-22T11:09:53.310446+00:00'
+    evidence: '## Retest Report
+
+
+      Tester: software-architect (independent)
+
+      Scope: idle-shutdown wiring, shared connection locking, bearer-token containment
+
+
+      Commands executed:
+
+      - rg -n "idle[-_ ]shutdown|IdleShutdown|shutdown manager|idle timeout" src tests
+
+      - rg -n "runtime\.connections|connections\b" src --glob ''*.py''
+
+      - rg -n "TELA_BEARER_TOKEN|bearer token|Authorization|lockfile" src tests
+
+      - uv run invar guard
+
+      - uv run pytest tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      -q -s
+
+      - uv run pytest tests/shell/test_serve_cmd.py::test_idle_shutdown_sets_stop_event_when_connections_stay_idle
+      -q -s
+
+
+      Outputs (key):
+
+      - idle-shutdown hooks present in serve/gateway/upstream runtime paths
+
+      - no process-global token export assignment/pop path found
+
+      - invar guard passed
+
+      - idle-shutdown focused test passed
+
+      - repro liveness test reported a separate type-mismatch issue (connections list
+      vs int comparison)
+
+
+      Finding-by-finding verdict:
+
+      - Idle-shutdown integrated into production runtime path: PASS
+
+      - runtime.connections shared synchronization discipline: PASS (within migrated
+      scope)
+
+      - TELA_BEARER_TOKEN global leakage removed: PASS
+
+
+      Additional issue discovered:
+
+      - tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      fails due `connections` list compared to int (`>= 1`).
+
+      - Marked as fresh issue outside original three-blocker family.
+
+
+      Verdict:
+
+      - PASS for targeted retest scope with ISSUES_FOUND note for adjacent repro expectation
+      mismatch.'
