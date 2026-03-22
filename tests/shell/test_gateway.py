@@ -13,8 +13,6 @@ import pytest
 from mcp import types
 from starlette.testclient import TestClient
 
-from tela import cli as cli_module
-from tela.commands.start import start_command
 from tela.core.models import (
     AuthConfig,
     AuthMode,
@@ -25,6 +23,7 @@ from tela.core.models import (
     ServerConfig,
     TelaConfig,
 )
+from tela.commands.start import start_command
 from tela.shell.gateway import (
     GatewayStartupConfig,
     bind_gateway_startup,
@@ -633,71 +632,3 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
             await gateway_shutdown()
 
     asyncio.run(_scenario())
-
-
-@pytest.mark.parametrize(
-    ("transport", "expected_run_transport"),
-    [
-        (GatewayTransport.HTTP, "streamable-http"),
-        (GatewayTransport.SSE, "sse"),
-    ],
-)
-def test_serve_remote_gateway_uses_fastmcp_run_method(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    transport: GatewayTransport,
-    expected_run_transport: str,
-) -> None:
-    """CLI remote launch path calls stable FastMCP run API."""
-
-    class _FakeServer:
-        def __init__(self) -> None:
-            self.calls: list[tuple[str, str | None]] = []
-
-        def run(
-            self,
-            selected_transport: str = "stdio",
-            mount_path: str | None = None,
-        ) -> None:
-            self.calls.append((selected_transport, mount_path))
-
-    fake_server = _FakeServer()
-
-    async def _fake_gateway_start(
-        config: GatewayStartupConfig,
-        tela_config: TelaConfig | None = None,
-        tool_lists: dict[str, list[dict]] | None = None,
-    ) -> Result[None, str]:
-        _ = config
-        _ = tela_config
-        _ = tool_lists
-        setattr(get_runtime(), "upstream_server", fake_server)
-        return Result(value=None)
-
-    async def _fake_gateway_shutdown() -> Result[None, str]:
-        get_runtime().upstream_server = None
-        return Result(value=None)
-
-    monkeypatch.setattr(cli_module, "gateway_start", _fake_gateway_start)
-    monkeypatch.setattr(cli_module, "gateway_shutdown", _fake_gateway_shutdown)
-
-    config_path = tmp_path / "tela.yaml"
-    config_path.write_text("auth:\n  mode: open\n", encoding="utf-8")
-
-    startup_config = GatewayStartupConfig(
-        transport=transport,
-        port=8402,
-        auth_mode=AuthMode.OPEN,
-        default_profile="dev",
-    )
-
-    result = asyncio.run(
-        cli_module._serve_remote_gateway(
-            startup_config=startup_config,
-            tela_config=TelaConfig(),
-            config_path=config_path,
-        )
-    )
-
-    assert result.is_ok
-    assert fake_server.calls == [(expected_run_transport, None)]

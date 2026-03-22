@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tela.cli import _watch_config_changes
+from tela.commands.serve_cmd import _watch_config_changes
 from tela.shell.config_loader import Result
 
 
@@ -32,10 +32,10 @@ def test_watch_config_changes_routes_reload_to_gateway_callback(
         return Result(value=None)
 
     monkeypatch.setattr(
-        "tela.cli.gateway_reload_config_from_disk",
+        "tela.commands.serve_cmd.gateway_reload_config_from_disk",
         _fake_gateway_reload_config_from_disk,
     )
-    monkeypatch.setattr("tela.cli.CONFIG_WATCH_POLL_SECONDS", 0.01)
+    monkeypatch.setattr("tela.commands.serve_cmd.CONFIG_WATCH_POLL_SECONDS", 0.01)
 
     async def _scenario() -> None:
         stop_event = asyncio.Event()

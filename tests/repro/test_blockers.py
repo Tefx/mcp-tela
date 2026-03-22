@@ -17,7 +17,7 @@ from tela.core.models import (
 
 
 class TestB1WireCliSubcommands:
-    """B1: All 5 CLI subcommands must be registered and callable."""
+    """B1: All 6 CLI subcommands must be registered and callable."""
 
     def test_all_subcommands_registered(self) -> None:
         from tela.cli import main
@@ -25,12 +25,19 @@ class TestB1WireCliSubcommands:
         # main with no args returns 1 and prints help (not crash)
         assert main([]) == 1
 
-    def test_start_subcommand_exists(self) -> None:
+    def test_serve_subcommand_exists(self) -> None:
         from tela.cli import main
 
         # --help exits with SystemExit(0)
         with pytest.raises(SystemExit) as exc_info:
-            main(["start", "--help"])
+            main(["serve", "--help"])
+        assert exc_info.value.code == 0
+
+    def test_connect_subcommand_exists(self) -> None:
+        from tela.cli import main
+
+        with pytest.raises(SystemExit) as exc_info:
+            main(["connect", "--help"])
         assert exc_info.value.code == 0
 
     def test_status_subcommand_exists(self) -> None:

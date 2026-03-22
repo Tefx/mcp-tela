@@ -1,7 +1,15 @@
 """Start command surface for open-mode runtime binding.
 
-Implements CLI-to-runtime binding for default-profile resolution using the
-shared config authority helper. Gateway startup is wired via tela.cli.
+.. deprecated::
+    The ``tela start`` CLI command has been replaced by ``tela connect`` and
+    ``tela serve`` per INTERFACES.md §2.
+
+    This module is retained for internal testing of ``bind_gateway_startup``
+    integration but should not be used in production code paths.
+
+    Production code should use:
+    - ``tela serve`` for HTTP gateway (via ``serve_cmd.serve_command``)
+    - ``tela connect`` for stdio bridge (via ``connect_cmd.connect_command``)
 """
 
 from __future__ import annotations
