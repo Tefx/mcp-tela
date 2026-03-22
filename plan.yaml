@@ -21466,3 +21466,195 @@ phases:
       Verdict:
 
       - PASS'
+  - id: gw.deep_review.fix-runtime-shutdown-lock-token
+    name: Fix production runtime wiring, shared connection locking, and bearer token
+      containment
+    status: pending
+    description: 'Fix ALL blockers found by the architecture/concurrency deep review.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+
+      symbolic_testing: false
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: runtime lifecycle ownership is split across gateway runtime, connection
+      state, and auth propagation paths, so shutdown behavior, connection mutation
+      discipline, and bearer-token storage are not enforced from one production source
+      of truth.
+
+      - Symptom: idle-shutdown manager exists but never governs live runtime paths;
+      `runtime.connections` is read and mutated across modules without one shared
+      lock discipline; bearer tokens escape into process-global `TELA_BEARER_TOKEN`
+      instead of staying lockfile/server-memory scoped.
+
+      - Why this fix is not surface-level: it must align runtime entrypoint wiring,
+      shared mutable state ownership, and token propagation semantics across the real
+      serve/connect code paths rather than patching one caller.
+
+
+      ### Finding 1: Idle-shutdown manager logic not integrated into production runtime
+      paths
+
+      Locations: production runtime entrypoints and lifecycle wiring under gateway
+      runtime/serve/connect paths.
+
+      Remediation: wire the existing idle-shutdown manager through the actual production
+      startup path, define the runtime owner for idle lifecycle state, and ensure
+      shutdown decisions flow through the launched runtime rather than test-only or
+      orphan logic.
+
+      Grep hint: rg -n "idle[-_ ]shutdown|IdleShutdown|shutdown manager|idle timeout"
+      src tests
+
+      IMPORTANT: Search for sibling startup and reload paths beyond the first runtime
+      entrypoint you touch.
+
+
+      ### Finding 2: `runtime.connections` mutated/read across modules without shared
+      lock discipline
+
+      Locations: modules that import, mutate, iterate, or expose `runtime.connections`
+      or adjacent runtime connection registries.
+
+      Remediation: establish one authoritative synchronization boundary for connection-state
+      reads/writes, migrate all cross-module access to that boundary, and remove unsynchronized
+      sibling access patterns.
+
+      Grep hint: rg -n "runtime\.connections|connections\b" src --glob ''*.py''
+
+      IMPORTANT: Search for sibling readers/writers, not only the locations named
+      in the architecture review.
+
+
+      ### Finding 3: Bearer token leaks to global process environment (`TELA_BEARER_TOKEN`)
+
+      Locations: auth propagation, spawned runtime/server setup, lockfile handling,
+      and any env-building helpers.
+
+      Remediation: remove the process-global bearer-token export path, preserve the
+      intended lockfile/server-memory-only contract, and document the exact runtime
+      boundary that is still allowed to access the token.
+
+      Grep hint: rg -n "TELA_BEARER_TOKEN|bearer token|Authorization|lockfile" src
+      tests
+
+      IMPORTANT: Search for sibling environment propagation helpers and spawned-process
+      setup paths.
+
+
+      ## Completion Criteria
+
+      - ALL three findings fixed, not just the first
+
+      - Production runtime path uses the idle-shutdown manager end-to-end
+
+      - No unsynchronized sibling access pattern remains for shared connection state
+
+      - No process-global bearer-token export remains where lockfile/server-memory-only
+      scope is required
+
+      - Sibling search completed for each blocker family
+
+
+      ## Out-of-scope guardrail
+
+      - Do not widen runtime scope beyond gateway serve/connect production paths unless
+      required to remove the same blocker family.
+
+      - Do not redesign unrelated auth flows; only remove the global-environment leakage
+      and preserve the intended runtime contract.'
+    verification: '- Main path: production runtime verification shows the idle-shutdown
+      manager is wired through the real serve/connect startup path
+
+      - Failure path: focused regression evidence covers unsynchronized `runtime.connections`
+      access and bearer-token environment leakage prevention
+
+      - Proof: grep-based sibling search confirms no remaining `TELA_BEARER_TOKEN`
+      export path and no stray unsynchronized connection-state access pattern in migration
+      scope'
+    evidence_template: '## Batched Fix Evidence
+
+
+      **Changed runtime path(s)**:
+
+      ```
+
+      <paste gateway serve/connect entrypoints and lifecycle wiring touched>
+
+      ```
+
+
+      **Finding 1 - idle shutdown integration**:
+
+      - authoritative runtime owner: <module/symbol>
+
+      - production entrypoint path: <entrypoint -> runtime -> shutdown manager>
+
+      - sibling search command:
+
+      ```bash
+
+      rg -n "idle[-_ ]shutdown|IdleShutdown|shutdown manager|idle timeout" src tests
+
+      ```
+
+      - sibling search result summary: <what remained / what was migrated>
+
+
+      **Finding 2 - shared lock discipline for runtime.connections**:
+
+      - shared synchronization boundary: <module/symbol/lock>
+
+      - migrated readers/writers: <list>
+
+      - sibling search command:
+
+      ```bash
+
+      rg -n "runtime\.connections|connections\b" src --glob ''*.py''
+
+      ```
+
+      - remaining unsynchronized patterns:
+
+      ```text
+
+      <none found or list>
+
+      ```
+
+
+      **Finding 3 - bearer token containment**:
+
+      - allowed token boundary after fix: <lockfile/server-memory path>
+
+      - removed env propagation path(s): <list>
+
+      - sibling search command:
+
+      ```bash
+
+      rg -n "TELA_BEARER_TOKEN|bearer token|Authorization|lockfile" src tests
+
+      ```
+
+      - remaining global env export patterns:
+
+      ```text
+
+      <none found or list>
+
+      ```
+
+
+      **Root cause closure**:
+
+      - why the changes close the lifecycle/state/auth leakage family rather than
+      a single symptom'
+    depends_on:
+    - gw.deep_review.architecture-and-concurrency-review
+    agent: python-senior
