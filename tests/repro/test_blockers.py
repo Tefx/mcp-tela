@@ -68,27 +68,38 @@ class TestB1WireCliSubcommands:
             main(["audit", "--help"])
         assert exc_info.value.code == 0
 
-    def test_status_command_callable(self) -> None:
-        """tela status returns Result-wrapped exit code without crash."""
+    def test_status_command_requires_running_server(self) -> None:
+        """tela status returns NO_RUNNING_SERVER error without lockfile."""
         from tela.commands.status_cmd import status_command
 
+        # Per INTERFACES.md §2, query commands require lockfile + HTTP.
+        # Without a running server (no lockfile), must return clear error.
         result = status_command(json_output=False)
-        assert result.is_ok
-        assert result.value == 0
+        assert result.is_err
+        assert result.error is not None
+        assert "NO_RUNNING_SERVER" in result.error
 
-    def test_connections_command_callable(self) -> None:
+    def test_connections_command_requires_running_server(self) -> None:
+        """tela connections returns NO_RUNNING_SERVER error without lockfile."""
         from tela.commands.connections_cmd import connections_command
 
+        # Per INTERFACES.md §2, query commands require lockfile + HTTP.
+        # Without a running server (no lockfile), must return clear error.
         result = connections_command(json_output=False)
-        assert result.is_ok
-        assert result.value == 0
+        assert result.is_err
+        assert result.error is not None
+        assert "NO_RUNNING_SERVER" in result.error
 
-    def test_audit_command_callable(self) -> None:
+    def test_audit_command_requires_running_server(self) -> None:
+        """tela audit returns NO_RUNNING_SERVER error without lockfile."""
         from tela.commands.audit_cmd import audit_command
 
+        # Per INTERFACES.md §2, query commands require lockfile + HTTP.
+        # Without a running server (no lockfile), must return clear error.
         result = audit_command(json_output=False)
-        assert result.is_ok
-        assert result.value == 0
+        assert result.is_err
+        assert result.error is not None
+        assert "NO_RUNNING_SERVER" in result.error
 
 
 # --- B2: Wire AuditConfig into audit writer ---
