@@ -20627,7 +20627,7 @@ phases:
   steps:
   - id: gw.spec_conformance.spec-conformance-audit
     name: Spec conformance audit
-    status: claimed
+    status: done
     description: "Spec conformance verification: compare implemented behavior against\
       \ INTERFACES.md and DESIGN.md.\n\nThis is NOT 'do tests pass' -- it is 'does\
       \ the implementation match what the spec says.'\n\nREQUIRED CHECKS:\n1. CLI\
@@ -20660,6 +20660,51 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-22T10:13:05.100869+00:00'
+    done_at: '2026-03-22T10:14:58.880528+00:00'
+    evidence: 'Artifact:
+
+      - Task: ses_2eaf6e43cffe7tNwwiEqEBG7eN (doc-reviewer)
+
+      - Outcome: PASS with zero non-conformances across all 9 required checks
+
+
+      Verification:
+
+      - Audited spec/code conformance for CLI args (INTERFACES.md §2) with file:line
+      citations in src/tela/cli.py
+
+      - Audited all HTTP endpoints/auth requirements (INTERFACES.md §7.2) in src/tela/shell/http_routes.py
+
+      - Audited 7 lockfile fields and JSON output (INTERFACES.md §7.3) in src/tela/core/models.py
+      and src/tela/shell/lockfile.py
+
+      - Audited bearer token generation/validation/stderr/storage (INTERFACES.md §7.4)
+      in lockfile.py/http_auth.py/serve_cmd.py/connect_cmd.py
+
+      - Audited tela.* prefix reservation (INTERFACES.md §7.1) in src/tela/core/conflict.py
+
+      - Audited idle shutdown behavioral fork (DESIGN.md) in src/tela/commands/serve_cmd.py
+
+      - Audited auth-layer independence and token overrides (INTERFACES.md §7.4)
+
+      - Audited --server skip-auto-discover behavior in src/tela/commands/connect_cmd.py
+
+
+      Spec link:
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+
+      Non-conformances found:
+
+      - 0
+
+
+      Verdict:
+
+      - PASS'
   - id: gw.spec_conformance.gate-spec-conformance
     name: 'Gate: spec conformance'
     status: pending
