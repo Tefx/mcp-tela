@@ -20397,7 +20397,7 @@ phases:
       - test-only remediation; no product-code changes'
   - id: gw.teardown.retest-cli-teardown-query-command-integration
     name: Retest CLI teardown integration after query-command repro fix
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), rerun the teardown
       integration coverage after the repro-test fix for query-command remote behavior.
 
@@ -20426,6 +20426,8 @@ phases:
     depends_on:
     - gw.teardown.fix-query-command-repro-tests-for-remote-server
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T09:58:24.389183+00:00'
 - id: gw.spec_conformance
   name: Spec Conformance Verification
   status: locked
