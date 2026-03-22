@@ -22394,6 +22394,91 @@ phases:
     depends_on:
     - tw.impl.wire-validate-token
     agent: python-executor
+  - id: tw.impl.retest-handle-initialize-token-mode
+    name: Retest dedicated token-mode handle_initialize integration coverage
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate the token-mode
+      handle_initialize integration path from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: dedicated token-mode initialize flow reaches wired validate_token
+      behavior
+
+      - Edge cases: token-mode coverage is not only incidental to another initialize
+      test
+
+      - Error scenarios: missing or miswired token validation remains detectable by
+      focused integration coverage
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1'
+    verification: '- Run focused integration coverage for the dedicated token-mode
+      handle_initialize test
+
+      - Verify the test fails without the fix and passes with the fix, or otherwise
+      provide equivalent evidence that the specific gap is now covered
+
+      - Report any remaining token-mode initialize coverage gaps before tw.impl.gate
+      can reopen'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier
+
+      **Scope**: token-mode handle_initialize integration coverage
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```
+
+      <actual focused test command>
+
+      ```
+
+      - Output summary: <key results>
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | blocker/should_fix/suggestion/tech_debt | <issue or none> | <location> | <steps>
+      |
+
+
+      ### Coverage Assessment
+
+      - Dedicated token-mode path verified: ✅/❌
+
+      - Indirect-only coverage ruled out: ✅/❌
+
+      - NOT tested: <areas not covered and why>
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - tw.impl.fix-handle-initialize-token-mode
+    agent: integration-verifier
 - id: tw.gate
   name: Final Verification
   status: locked
