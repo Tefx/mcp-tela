@@ -18973,13 +18973,13 @@ phases:
       - no blocking issues'
 - id: gw.conflict
   name: tela. Prefix Conflict Rejection
-  status: pending
+  status: in_progress
   depends_on:
   - gw.serve
   steps:
   - id: gw.conflict.enforce-tela-prefix-reservation
     name: Enforce tela. prefix reservation
-    status: pending
+    status: claimed
     description: "Add tela. prefix reservation enforcement to conflict detection.\n\
       \nSpec refs: INTERFACES.md 7.1\n\nFile: src/tela/core/conflict.py\n\nINTERFACES.md\
       \ 7.1: 'The tela. prefix is reserved. Downstream tools with this prefix are\
@@ -19010,6 +19010,8 @@ phases:
     - docs/INTERFACES.md
     - src/tela/core/conflict.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T07:50:39.511354+00:00'
   - id: gw.conflict.gate-tela-prefix-enforcement
     name: 'Gate: tela. prefix enforcement'
     status: pending
