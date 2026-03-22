@@ -23266,3 +23266,97 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T20:04:04.767432+00:00'
+  - id: tw.gate.fix-final-regate-invar
+    name: Fix final re-gate invar regression blocker family
+    status: pending
+    description: "Fix ALL blockers found after failed `tw.gate.final-regate`, not\
+      \ just the first symptom.\n\nVerification scope: `phase-check` protecting the\
+      \ replacement re-gate path and tw.gate phase completion.\n\nsymbolic_testing:\
+      \ true\nprior_loop:\n  - tw.gate.fix-final-blockers\n  - tw.gate.retest-final-blockers\n\
+      remaining_blocker: `src/tela/core/contracts.py` aliases `@deal_pre` / `@deal_post`\
+      \ satisfy mypy but cause `invar guard --all` missing_contract findings for `_meta_pre`,\
+      \ `_meta_post`, `pre`, and `post`.\nwhy_new_loop: prior retest omitted the repo-required\
+      \ `invar guard --all` command family, so the blocker family intersecting the\
+      \ phase gate remains unclosed.\nwhy_previous_fix_failed: the earlier remediation\
+      \ optimized for targeted mypy/pytest coverage and did not preserve invar-visible\
+      \ contract semantics for the decorator exports.\n\n## Root Cause vs Symptom\n\
+      - Root cause: alias-based decorator re-export changed the contract-discovery\
+      \ surface in `src/tela/core/contracts.py`, so invar no longer sees valid contracts\
+      \ on `_meta_pre`, `_meta_post`, `pre`, and `post`.\n- Symptom: `invar guard\
+      \ --all` reports missing_contract errors even though targeted mypy passes.\n\
+      - Why this fix is not surface-level: remediation must restore a contract-discoverable\
+      \ decorator shape compatible with both mypy and invar, not merely suppress one\
+      \ checker.\n\n### Blocker family\nLocations: `src/tela/core/contracts.py`\n\
+      Remediation: repair the decorator export path so `_meta_pre`, `_meta_post`,\
+      \ `pre`, and `post` satisfy both type-checking and invar contract detection;\
+      \ update any tightly-coupled contract tests/doctests in the same blocker family\
+      \ if needed.\nGrep hint: `rg -n \"deal_(pre|post)|_meta_(pre|post)|\\bpre\\\
+      b|\\bpost\\b\" src/tela/core/contracts.py tests`\nIMPORTANT: search for sibling\
+      \ alias/re-export patterns beyond the named symbols before claiming done.\n\n\
+      ## Completion Criteria\n- ALL blocker-family symbols are fixed together: `_meta_pre`,\
+      \ `_meta_post`, `pre`, `post`\n- Sibling search completed for alias/re-export\
+      \ patterns in the contracts surface\n- Exact invar command family is preserved\
+      \ for retest: `invar guard --all`\n- No new contract-discovery regressions are\
+      \ introduced while fixing mypy compatibility\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\
+      Each deliverable MUST contain substantive logic that processes its inputs and\
+      \ produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,\
+      \ `_Stub*`, `_Placeholder*`) do not satisfy this requirement."
+    verification: '- Use the exact required command family in follow-up retest: `invar
+      guard --all`
+
+      - Grep hint reviewed for sibling alias/re-export patterns
+
+      - Root cause evidence explains why the new shape closes both mypy and invar
+      blocker surfaces
+
+      - Any targeted contract tests/doctests updated as needed for the repaired export
+      path'
+    evidence_template: '## Blocker Remediation Evidence
+
+
+      **Files changed**:
+
+      ```
+
+      <src/tela/core/contracts.py and any tightly-coupled tests>
+
+      ```
+
+
+      **Sibling search command**:
+
+      ```
+
+      rg -n "deal_(pre|post)|_meta_(pre|post)|\bpre\b|\bpost\b" src/tela/core/contracts.py
+      tests
+
+      ```
+
+
+      **Root cause vs symptom**:
+
+      - Root cause: <why invar missed the contracts>
+
+      - Symptom: <reported missing_contract findings>
+
+      - Why previous fix failed: <required>
+
+      - Why this fix closes the family: <required>
+
+
+      **Out-of-scope guardrail**:
+
+      - Do not widen public contract API beyond the existing decorator exports unless
+      the current blocker proves it necessary.
+
+
+      **Command lock**:
+
+      - Follow-up retest MUST run exactly `invar guard --all` in addition to targeted
+      mypy/pytest.
+
+      '
+    depends_on:
+    - tw.gate.final-regate
+    agent: python-senior
