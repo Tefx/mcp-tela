@@ -22269,7 +22269,7 @@ phases:
       - Shell/runtime wiring is intentionally deferred to tw.impl and tw.gate steps.'
 - id: tw.impl
   name: Token Wire Implementation
-  status: in_progress
+  status: done
   depends_on:
   - tw.test
   steps:
@@ -22504,7 +22504,7 @@ phases:
       - None reported; no remaining sibling gap identified by worker.'
   - id: tw.impl.retest-handle-initialize-token-mode
     name: Retest dedicated token-mode handle_initialize integration coverage
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the token-mode
       handle_initialize integration path from a fresh perspective.
 
@@ -22589,9 +22589,23 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T19:26:54.070868+00:00'
+    done_at: '2026-03-22T19:29:13.877987+00:00'
+    evidence: "## Verification Report\n\nTester: integration-verifier\nScope: token-mode\
+      \ `handle_initialize` integration coverage\nIndependence Level: L1\n\nTest execution\n\
+      - Command:\n  - `uv run pytest tests/integration/test_token_mode_initialize.py\
+      \ -v`\n- Output summary:\n  - 12 passed in 4.16s\n\nIssues found\n- none\n\n\
+      Coverage assessment\n- Dedicated token-mode path verified: yes\n  - tests explicitly\
+      \ exercise `AuthMode.TOKEN`\n  - real `handle_initialize` integration path executed\n\
+      \  - token validation wiring and profile binding verified\n- Indirect-only coverage\
+      \ ruled out: yes\n  - dedicated integration file for token mode present\n  -\
+      \ open-mode tests remain in separate files\n  - no mock/patch usage reported\
+      \ for these checks\n- Not tested: none of the critical token-mode initialize\
+      \ coverage areas\n\nVerdict\n- PASS (no blocker/should-fix findings)\n\nNotes\n\
+      - Confirms remediation step closes the previously reported integration-coverage\
+      \ gap before downstream gate reopening."
 - id: tw.gate
   name: Final Verification
-  status: locked
+  status: pending
   depends_on:
   - tw.impl
   steps:
