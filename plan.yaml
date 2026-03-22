@@ -22366,7 +22366,7 @@ phases:
       \ should-fix batched remediation now tracked in plan."
   - id: tw.impl.fix-handle-initialize-token-mode
     name: Fix dedicated token-mode handle_initialize integration coverage
-    status: claimed
+    status: done
     description: 'Fix ALL blockers found by gate review.
 
 
@@ -22430,6 +22430,78 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T19:21:26.827284+00:00'
+    done_at: '2026-03-22T19:26:34.181005+00:00'
+    evidence: '## Batched Fix Evidence
+
+
+      Issue addressed
+
+      - Missing dedicated token-mode `handle_initialize` integration coverage.
+
+
+      Files added/updated
+
+      - tests/integration/test_token_mode_initialize.py (new file)
+
+
+      Exact test names
+
+      - test_handle_initialize_token_mode_valid_token
+
+      - test_handle_initialize_token_mode_binds_profile_from_token
+
+      - test_handle_initialize_token_mode_dual_key_rotation
+
+      - test_handle_initialize_token_mode_missing_token_fields
+
+      - test_handle_initialize_token_mode_missing_signature
+
+      - test_handle_initialize_token_mode_invalid_signature
+
+      - test_handle_initialize_token_mode_expired_token
+
+      - test_handle_initialize_token_mode_no_secrets_configured
+
+      - test_handle_initialize_token_mode_ignores_profile_hints_in_metadata
+
+      - test_handle_initialize_token_mode_preserves_optional_token_fields
+
+      - test_handle_initialize_token_mode_registers_connection
+
+      - test_handle_initialize_token_mode_connection_id_format
+
+
+      Sibling search command/output (reported)
+
+      - `grep -rn "handle_initialize" tests/ --include="*.py"`
+
+      - `grep -rn "resolve_token_init_binding" tests/ --include="*.py"`
+
+      - `grep -rn "validate_token" tests/ --include="*.py"`
+
+      - Output indicates previously core/open-mode coverage existed and dedicated
+      integration file now added.
+
+
+      Why this closes the gap
+
+      - Adds dedicated integration coverage proving token-mode initialize path wires
+      through token extraction, validation, and profile binding rather than relying
+      on indirect/shared assertions.
+
+
+      Verification
+
+      - `uv run pytest tests/integration/test_token_mode_initialize.py -v`: 12 passed
+
+      - `uv run pytest tests/integration/ -v`: 63 passed
+
+      - `uv run invar guard --changed`: passed (static + doctest)
+
+
+      Gaps/Notes
+
+      - None reported; no remaining sibling gap identified by worker.'
   - id: tw.impl.retest-handle-initialize-token-mode
     name: Retest dedicated token-mode handle_initialize integration coverage
     status: pending
