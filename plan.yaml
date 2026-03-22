@@ -20621,7 +20621,7 @@ phases:
       - Retest step performed validation-only; no source edits required.'
 - id: gw.spec_conformance
   name: Spec Conformance Verification
-  status: in_progress
+  status: done
   depends_on:
   - gw.teardown
   steps:
@@ -20707,7 +20707,7 @@ phases:
       - PASS'
   - id: gw.spec_conformance.gate-spec-conformance
     name: 'Gate: spec conformance'
-    status: claimed
+    status: done
     description: 'Gate review: Verify spec conformance audit is thorough.
 
 
@@ -20729,9 +20729,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T10:15:19.988330+00:00'
+    done_at: '2026-03-22T10:17:16.127788+00:00'
+    evidence: 'Artifact:
+
+      - Task: ses_2eaf6e43cffe7tNwwiEqEBG7eN (gate-reviewer)
+
+
+      Verification:
+
+      - Independent gate review rechecked all 9 mandatory conformance checks and confirmed
+      each against implementation file:line mappings
+
+      - Verified CLI surface, HTTP endpoints/auth, lockfile schema, bearer token lifecycle,
+      tela.* prefix reservation, idle shutdown fork, auth-layer independence, token
+      override precedence, and --server skip-discover behavior
+
+      - Gate evidence completeness included wiring/escape-hatch sections; no blocking
+      omissions reported
+
+
+      Spec link:
+
+      - docs/INTERFACES.md §§2, 7.1-7.4
+
+      - docs/DESIGN.md
+
+
+      Non-conformances:
+
+      - 0
+
+
+      Verdict:
+
+      - PASS'
 - id: gw.doc_sync
   name: Documentation Sync
-  status: locked
+  status: pending
   depends_on:
   - gw.spec_conformance
   steps:
