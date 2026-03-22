@@ -22185,12 +22185,14 @@ phases:
       - No blocking gaps reported; gate review step follows for coverage adequacy.'
   - id: tw.test.gate
     name: 'Gate review: token wire tests'
-    status: pending
+    status: claimed
     description: 'Gate review: test coverage adequate for token-mode initialize path'
     evidence_template: Gate review checklist completed
     depends_on:
     - tw.test.token-mode-init
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T19:00:51.063589+00:00'
 - id: tw.impl
   name: Token Wire Implementation
   status: locked
