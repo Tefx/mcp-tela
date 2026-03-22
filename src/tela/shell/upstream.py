@@ -14,6 +14,7 @@ from typing import Mapping
 
 from tela.core.models import (
     AuthMode,
+    CapabilityToken,
     ConnectionContext,
     DefaultProfileResolutionStatus,
     EnforcementVerdict,
@@ -21,6 +22,7 @@ from tela.core.models import (
     Posture,
     TelaError,
 )
+from tela.core.token import resolve_token_init_binding
 from tela.shell.config_loader import Result
 from tela.shell.downstream import (
     call_tool,
@@ -173,7 +175,47 @@ async def handle_initialize(
         profile_name = binding_result.value.resolved_default_profile
         assert profile_name is not None
     else:
-        profile_name = runtime.config.resolved_default_profile or "default"
+        # Token mode: validate capability token and bind to token's profile.
+        required_fields = (
+            "token_id",
+            "profile_name",
+            "issued_at",
+            "expires_at",
+            "signature",
+        )
+        missing = [f for f in required_fields if f not in client_info]
+        if missing:
+            return Result(
+                error=f"INITIALIZE_REJECTED: token mode requires client_info fields: {', '.join(missing)}"
+            )
+
+        try:
+            token = CapabilityToken(
+                token_id=str(client_info["token_id"]),
+                profile_name=str(client_info["profile_name"]),
+                issued_at=str(client_info["issued_at"]),
+                expires_at=str(client_info["expires_at"]),
+                signature=str(client_info["signature"]),
+                persona_ref=client_info.get("persona_ref"),
+                instance_id=client_info.get("instance_id"),
+                max_depth=client_info.get("max_depth"),
+            )
+        except Exception as e:
+            return Result(error=f"INITIALIZE_REJECTED: invalid token fields: {e}")
+
+        secrets = runtime.secrets
+        if not secrets:
+            return Result(
+                error="INITIALIZE_REJECTED: token mode requires secrets configured"
+            )
+
+        binding = resolve_token_init_binding(token, secrets, now_iso)
+        if binding.token_result.verdict == EnforcementVerdict.DENY:
+            error_msg = binding.token_result.error_message or "Token validation failed"
+            error_code = binding.token_result.error_code or "TOKEN_INVALID"
+            return Result(error=f"INITIALIZE_REJECTED: {error_code}: {error_msg}")
+
+        profile_name = binding.profile_name
 
     ctx = ConnectionContext(
         connection_id=connection_id,
