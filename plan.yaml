@@ -18424,6 +18424,92 @@ phases:
     - gw.http.impl.implement-http-route-handlers
     - gw.http.impl.http-endpoint-tests
     agent: python-senior
+  - id: gw.http.impl.retest-http-liveness-mounted-surface
+    name: Retest mounted HTTP surface and auth behavior
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate the mounted
+      HTTP runtime surface from a fresh perspective after the liveness blocker fix.
+
+
+      step_type: verification
+
+      agent_source: default
+
+      tags: ["integration"]
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: the real served surface exposes /health, /status, /connect, and
+      /disconnect at the documented path
+
+      - Edge cases: /health succeeds without bearer auth while protected endpoints
+      require bearer on the mounted surface
+
+      - Error scenarios: protected endpoints reject missing/invalid bearer credentials
+      with the expected auth behavior
+
+      - Runtime wiring: CLI/startup path uses valid FastMCP API calls and successfully
+      launches the HTTP surface
+
+
+      Independence Level: L2
+
+
+      ## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <paste exact command or targeted test invoking the served HTTP runtime>
+
+      ```
+
+
+      **Actual output** (paste, not "tests pass"):
+
+      ```
+
+      <paste stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: tela serve CLI/runtime startup -> FastMCP HTTP entrypoint
+      -> mounted auth boundary -> endpoint handlers
+
+
+      ## REALISM CHECK
+
+      Mock-heavy unit tests alone are insufficient. Provide at least one real-path
+      proof against the mounted surface.'
+    verification: '- Real-path liveness proof shows the HTTP entrypoint starts and
+      serves /health, /status, /connect, and /disconnect from the mounted surface
+
+      - Auth proof shows /health succeeds without bearer and protected endpoints reject
+      unauthenticated access while accepting valid bearer auth
+
+      - Launch proof shows the CLI/runtime path uses valid FastMCP APIs and stays
+      up long enough to exercise requests
+
+      - Evidence includes exact commands and pasted output, not a summary'
+    evidence_template: "## Verification Report\n\n**Tester**: integration-verifier\
+      \ (independent of implementation)\n**Scope**: mounted HTTP surface and auth\
+      \ boundary\n**Independence Level**: L2\n\n### Test Execution\n- Commands executed:\n\
+      \  ```\n  <actual commands>\n  ```\n- Output summary:\n  ```\n  <actual output>\n\
+      \  ```\n\n### Mounted Endpoint Results\n- /health: <status/result>\n- /status:\
+      \ <status/result>\n- /connect: <status/result>\n- /disconnect: <status/result>\n\
+      \n### Auth Boundary Results\n- /health without bearer: <result>\n- Protected\
+      \ endpoint without bearer: <result>\n- Protected endpoint with bearer: <result>\n\
+      \n### Verdict\n- [ ] PASS\n- [ ] ISSUES_FOUND\n- [ ] INCOMPLETE"
+    depends_on:
+    - gw.http.impl.fix-http-liveness-blockers
+    agent: integration-verifier
 - id: gw.serve
   name: tela serve Command
   status: locked
