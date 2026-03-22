@@ -19256,7 +19256,7 @@ phases:
       - CLI connect orchestration deliberately handled in separate step'
   - id: gw.bridge.tela-connect-liveness-probe
     name: tela connect liveness probe
-    status: claimed
+    status: done
     description: 'Black-box liveness verification: start tela serve, then tela connect,
       verify end-to-end.
 
@@ -19295,6 +19295,27 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T08:26:08.590304+00:00'
+    done_at: '2026-03-22T08:27:52.881381+00:00'
+    evidence: 'Mode: D
+
+      Verdict: PASS
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_connect_liveness_e2e.py -v --tb=short
+      -> 4 passed
+
+      - Run: uv run pytest tests/shell/test_serve_cmd.py tests/shell/test_connect_cmd.py
+      -q -> 12 passed
+
+      Findings:
+
+      - suggestion: end-to-end liveness verified for serve->connect discovery, MCP
+      initialize, and disconnect decrement
+
+      Gaps/Notes:
+
+      - ephemeral repro test script removed after probe'
   - id: gw.bridge.gate-tela-connect
     name: 'Gate: tela connect'
     status: pending
