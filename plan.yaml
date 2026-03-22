@@ -22086,6 +22086,15 @@ phases:
     depends_on:
     - tw.impl.gateway-secrets
     agent: python-executor
+  - id: tw.impl.gate
+    name: 'Gate review: token wire implementation'
+    status: pending
+    description: 'Gate review: implementation is correct, backward compatible, no
+      stub remnants'
+    evidence_template: Gate review checklist completed
+    depends_on:
+    - tw.impl.wire-validate-token
+    agent: gate-reviewer
 - id: tw.gate
   name: Final Verification
   status: locked
