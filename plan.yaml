@@ -18674,7 +18674,7 @@ phases:
       script'
 - id: gw.serve
   name: tela serve Command
-  status: in_progress
+  status: done
   depends_on:
   - gw.http.impl
   steps:
@@ -18894,7 +18894,7 @@ phases:
       SIGTERM graceful shutdown, lockfile cleanup'
   - id: gw.serve.gate-tela-serve
     name: 'Gate: tela serve'
-    status: claimed
+    status: done
     description: "Gate review: Verify tela serve phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale: Runtime surface (server), token lifecycle\
       \ (security), idle shutdown (state management).\n\ncross_cutting_focus:\n  -\
@@ -18922,9 +18922,58 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T07:46:51.647282+00:00'
+    done_at: '2026-03-22T07:50:21.815593+00:00'
+    evidence: 'Verdict: PASS
+
+      Wiring audit:
+
+      - token stderr output present
+
+      - override precedence (--token > env > generated) verified
+
+      - idle-timeout=0 disables shutdown path
+
+      - atomic lockfile write+cleanup verified
+
+      - liveness probe passed
+
+      Escape hatch audit:
+
+      - annotations present but acceptable, no concentrated abuse in touched scope
+
+      Findings:
+
+      - non-blocking suggestion: test filename reference drift
+
+      - non-blocking tech_debt: CancelledError traceback noise during shutdown
+
+      Verification:
+
+      - Run: pytest serve/lockfile/idle/liveness suites -> passing
+
+      - Run: Mode D reconfirm for `tela serve` startup, /health, token+lockfile, SIGTERM
+      cleanup -> pass
+
+      Gate checks:
+
+      - all blocking criteria passed
+
+      Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Spec link:
+
+      - docs/INTERFACES.md §2 §7.2 §7.3 §7.4
+
+      Gaps/Notes:
+
+      - no blocking issues'
 - id: gw.conflict
   name: tela. Prefix Conflict Rejection
-  status: locked
+  status: pending
   depends_on:
   - gw.serve
   steps:
