@@ -22321,7 +22321,7 @@ phases:
       \ verification target; no change requested in this step scope."
   - id: tw.impl.gate
     name: 'Gate review: token wire implementation'
-    status: claimed
+    status: done
     description: 'Gate review: implementation is correct, backward compatible, no
       stub remnants, and dedicated token-mode handle_initialize integration coverage
       is independently verified before downstream progression'
@@ -22338,6 +22338,32 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T19:10:48.892037+00:00'
+    done_at: '2026-03-22T19:21:06.371368+00:00'
+    evidence: "Gate review checklist completed for token wire implementation.\n\n\
+      Automated checks\n- invar guard: PASS (0 errors, 0 warnings)\n- doctests: PASS\n\
+      - stub/remnant scans (`pass`, `NotImplementedError`): PASS in modified production\
+      \ files\n\nSpec/architecture review\n- Token mode initialize now validates CapabilityToken\
+      \ via core binding path and binds profile from token: PASS\n- Open-mode initialize\
+      \ path remains unchanged: PASS\n- Runtime secrets wiring through gateway startup/shutdown:\
+      \ PASS\n\nWiring audit (W1-W8 equivalent)\n- W1 core function import and usage\
+      \ in shell initialize path: PASS\n- W2 core model import and construction path:\
+      \ PASS\n- W3 secrets population from config into runtime state: PASS\n- W4 secrets\
+      \ consumption in initialize token branch: PASS\n- W5 shutdown cleanup of runtime\
+      \ secrets: PASS\n- W6 initialize caller continuity (existing call sites still\
+      \ valid): PASS\n- W7 token-module call reachability from shell path: PASS\n\
+      - W8 dead/orphan additions check: PASS\n\nEscape hatch audit\n- No new `@invar:allow`\
+      \ added by this step\n- Existing unrelated pre-existing allowance in gateway\
+      \ accessor remains unchanged\n\nRunnable-surface liveness evidence\n- Independent\
+      \ blind-tester Mode D probe executed:\n  - tests/repro/test_token_mode_init.py:\
+      \ 17 passed\n  - tests/shell/test_upstream.py: 36 passed\n  - tests/core/test_token.py:\
+      \ 16 passed\n- Evidence classification: real runtime/liveness plus real unit\
+      \ execution (not fixture-only)\n\nIssue disposition\n- SHOULD_FIX identified:\
+      \ add dedicated token-mode `handle_initialize` integration test in `tests/integration/`\n\
+      - Mandatory remediation ownership created via planner before completion:\n \
+      \ - tw.impl.fix-handle-initialize-token-mode\n  - tw.impl.retest-handle-initialize-token-mode\n\
+      \  - tw.impl.gate dependency updated to include retest path\n\nVerdict\n- PASS\
+      \ for implementation correctness/backward compatibility/no stub remnants, with\
+      \ should-fix batched remediation now tracked in plan."
   - id: tw.impl.fix-handle-initialize-token-mode
     name: Fix dedicated token-mode handle_initialize integration coverage
     status: pending
