@@ -19298,17 +19298,21 @@ phases:
     status: pending
     description: "Gate review: Verify tela connect phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale: Runtime surface (client bridge), auto-start\
-      \ race condition, two independent auth layers.\n\ncross_cutting_focus:\n  -\
-      \ Auto-start race condition handling (retry logic)\n  - Bearer token vs auth.mode\
-      \ independence\n  - --token/TELA_BEARER_TOKEN/--server override modes\n  - Clean\
-      \ disconnect lifecycle\n\nBlock if:\n- Auto-start race not handled\n- --token\
-      \ override missing\n- --server skip-discovery missing\n- Bridge does not forward\
-      \ MCP messages end-to-end\n- Liveness probe failed"
+      \ race condition, two independent auth layers, and ephemeral-port lockfile discovery\
+      \ regression.\n\ncross_cutting_focus:\n  - Auto-start race condition handling\
+      \ (retry logic)\n  - Bearer token vs auth.mode independence\n  - --token/TELA_BEARER_TOKEN/--server\
+      \ override modes\n  - Clean disconnect lifecycle\n  - Ephemeral bind publishes\
+      \ actual lockfile port for discovery\n\nBlock if:\n- Auto-start race not handled\n\
+      - --token override missing\n- --server skip-discovery missing\n- Bridge does\
+      \ not forward MCP messages end-to-end\n- Ephemeral-port lockfile retest failed\n\
+      - Liveness probe failed"
     verification: '- All override modes work
 
       - Auto-start race handled
 
       - Bridge end-to-end verified
+
+      - Ephemeral-port lockfile retest passed
 
       - Liveness probe passed
 
@@ -19316,8 +19320,8 @@ phases:
 
       - invar guard clean'
     depends_on:
-    - gw.bridge.implement-tela-connect-command
-    - gw.bridge.implement-stdio-http-bridge
+    - gw.bridge.fix-lockfile-actual-port
+    - gw.bridge.retest-lockfile-actual-port
     - gw.bridge.tela-connect-liveness-probe
     agent: gate-reviewer
   - id: gw.bridge.fix-lockfile-actual-port
