@@ -23430,7 +23430,7 @@ phases:
       - Commit: 3d3d066'
   - id: tw.gate.retest-final-regate-invar
     name: Retest final re-gate invar regression blocker family
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
       remediation for the failed `tw.gate.final-regate` blocker family from a fresh
       perspective.
@@ -23488,6 +23488,112 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T20:13:30.716931+00:00'
+    done_at: '2026-03-22T20:16:03.969907+00:00'
+    evidence: '## Verification Report: tw.gate.retest-final-regate-invar
+
+
+      **Date**: 2026-03-23T04:13
+
+      **Verifier**: integration-verifier
+
+      **Scope**: invar guard --all, mypy src/tela/core/contracts.py, targeted pytest
+
+
+      ### Results
+
+
+      | Check | Result | Evidence |
+
+      |-------|--------|----------|
+
+      | `invar guard --all` | PASS | status: passed, errors: 0, warnings: 39, infos:
+      10 |
+
+      | `mypy contracts.py` | PASS | Success: no issues found in 1 source file |
+
+      | Targeted pytest | PASS | 9 passed in 13.79s |
+
+
+      ### Evidence Levels
+
+
+      | Level | Status |
+
+      |-------|--------|
+
+      | L1 (Contracts) | PASS |
+
+      | L2 (Real Wiring) | PASS |
+
+
+      ### Raw Outputs
+
+
+      **1. invar guard --all:**
+
+      ```
+
+      status: passed
+
+      static: passed (errors: 0)
+
+      doctest: passed
+
+      crosshair: skipped (no core files)
+
+      property_tests: skipped (no core files)
+
+      ```
+
+
+      **2. mypy src/tela/core/contracts.py:**
+
+      ```
+
+      Success: no issues found in 1 source file
+
+      ```
+
+
+      **3. pytest tests/shell/test_serve_cmd.py tests/repro/test_liveness.py:**
+
+      ```
+
+      tests/shell/test_serve_cmd.py::test_serve_subcommand_exists PASSED
+
+      tests/shell/test_serve_cmd.py::test_token_override_priority_cli_over_env_over_generated
+      PASSED
+
+      tests/shell/test_serve_cmd.py::test_serve_lockfile_written_then_deleted PASSED
+
+      tests/shell/test_serve_cmd.py::test_serve_port_zero_writes_actual_bound_port_to_lockfile
+      PASSED
+
+      tests/shell/test_serve_cmd.py::test_idle_shutdown_sets_stop_event_when_connections_stay_idle
+      PASSED
+
+      tests/repro/test_liveness.py::test_stdio_ready_banner_not_on_stdout PASSED
+
+      tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize PASSED
+
+      tests/repro/test_liveness.py::test_http_mode_stays_alive PASSED
+
+      tests/repro/test_liveness.py::test_status_reports_meaningful_state PASSED
+
+      9 passed in 13.79s
+
+      ```
+
+
+      ### Findings
+
+      All blockers from tw.gate.fix-final-regate-invar have been verified:
+
+      - contracts.py mypy regression: FIXED (mypy passes)
+
+      - serve_cmd.py Result mock regression: VERIFIED (tests pass)
+
+      - liveness tests updated: VERIFIED (tests pass)'
   - id: tw.gate.final-regate2
     name: Replacement re-gate after invar regression retest
     status: pending
