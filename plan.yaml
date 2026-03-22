@@ -21152,7 +21152,7 @@ phases:
       - Verification performed without consulting implementation source files.'
   - id: gw.deep_review.final-deep-review-gate
     name: Final deep review gate
-    status: pending
+    status: claimed
     description: 'Final gate review for the entire gateway refactor.
 
 
@@ -21187,6 +21187,8 @@ phases:
     - gw.deep_review.fix-runtime-shutdown-lock-token
     - gw.deep_review.retest-runtime-shutdown-lock-token
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T11:10:21.746567+00:00'
   - id: gw.deep_review.fix-bridge-orphan-exports
     name: Fix bridge orphan exports and dead-export finding
     status: done
