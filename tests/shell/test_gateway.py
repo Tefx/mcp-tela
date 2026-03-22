@@ -579,8 +579,7 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Mounted HTTP surface serves liveness endpoints with bearer boundary."""
-
-    monkeypatch.setenv("TELA_BEARER_TOKEN", "mounted-token")
+    _ = monkeypatch
 
     async def _scenario() -> None:
         config = GatewayStartupConfig(
@@ -589,7 +588,11 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
             auth_mode=AuthMode.OPEN,
             default_profile="dev",
         )
-        start_result = await gateway_start(config, tela_config=TelaConfig())
+        start_result = await gateway_start(
+            config,
+            tela_config=TelaConfig(),
+            expected_bearer_token="mounted-token",
+        )
         assert start_result.is_ok
 
         try:

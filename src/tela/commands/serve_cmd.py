@@ -27,6 +27,7 @@ from tela.shell.gateway import (
     gateway_start,
     get_runtime,
 )
+from tela.shell.idle_shutdown import init_idle_manager, shutdown_idle_manager
 from tela.shell.lockfile import delete_lockfile, generate_bearer_token, write_lockfile
 
 
@@ -139,26 +140,25 @@ async def _run_serve_gateway(
     bearer_token: str,
 ) -> Result[None, str]:
     """Run HTTP gateway lifecycle with lockfile and background watchers."""
+    stop_event = asyncio.Event()
 
-    old_token = os.environ.get("TELA_BEARER_TOKEN")
-    os.environ["TELA_BEARER_TOKEN"] = bearer_token
-
-    startup_result = await gateway_start(startup_config, tela_config=tela_config)
+    startup_result = await gateway_start(
+        startup_config,
+        tela_config=tela_config,
+        expected_bearer_token=bearer_token,
+    )
     if startup_result.is_err:
-        _restore_bearer_token_env(old_token)
         return Result(error=startup_result.error)
 
     started_at_result = _utc_now_iso()
     if started_at_result.is_err:
         await gateway_shutdown()
-        _restore_bearer_token_env(old_token)
         return Result(error=started_at_result.error)
     assert started_at_result.value is not None
 
     version_result = _package_version()
     if version_result.is_err:
         await gateway_shutdown()
-        _restore_bearer_token_env(old_token)
         return Result(error=version_result.error)
     assert version_result.value is not None
 
@@ -166,7 +166,6 @@ async def _run_serve_gateway(
     if runtime.upstream_server is None:
         await gateway_shutdown()
         delete_lockfile()
-        _restore_bearer_token_env(old_token)
         return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
 
     http_server_result = await _launch_streamable_http_server(
@@ -176,7 +175,6 @@ async def _run_serve_gateway(
     )
     if http_server_result.is_err:
         await gateway_shutdown()
-        _restore_bearer_token_env(old_token)
         return Result(error=http_server_result.error)
     assert http_server_result.value is not None
     http_server = http_server_result.value
@@ -195,10 +193,8 @@ async def _run_serve_gateway(
     if lockfile_result.is_err:
         await _stop_http_server(http_server)
         await gateway_shutdown()
-        _restore_bearer_token_env(old_token)
         return Result(error=lockfile_result.error)
 
-    stop_event = asyncio.Event()
     _install_signal_handlers(stop_event)
     watcher_task = asyncio.create_task(
         _watch_config_changes(
@@ -208,10 +204,7 @@ async def _run_serve_gateway(
         )
     )
     idle_task = asyncio.create_task(
-        _idle_shutdown_watch(
-            idle_timeout_seconds=idle_timeout,
-            stop_event=stop_event,
-        )
+        _idle_shutdown_watch(idle_timeout_seconds=idle_timeout, stop_event=stop_event)
     )
     stop_task = asyncio.create_task(stop_event.wait())
 
@@ -241,7 +234,6 @@ async def _run_serve_gateway(
         await gateway_shutdown()
         delete_lockfile()
         _remove_signal_handlers()
-        _restore_bearer_token_env(old_token)
 
     if error is not None:
         return Result(error=error)
@@ -377,15 +369,6 @@ def _remove_signal_handlers() -> None:
             continue
 
 
-def _restore_bearer_token_env(previous_token: str | None) -> None:
-    """Restore ``TELA_BEARER_TOKEN`` environment variable after command exit."""
-
-    if previous_token is None:
-        os.environ.pop("TELA_BEARER_TOKEN", None)
-        return
-    os.environ["TELA_BEARER_TOKEN"] = previous_token
-
-
 # @shell_complexity: watcher handles mtime polling and error-tolerant reload dispatch.
 async def _watch_config_changes(
     *,
@@ -443,21 +426,46 @@ async def _idle_shutdown_watch(
     stop_event: asyncio.Event,
     poll_interval_seconds: float = 1.0,
 ) -> None:
-    """Trigger shutdown when no active bridge connections for the idle timeout."""
+    """Initialize idle manager and hold it for process lifetime."""
 
-    if idle_timeout_seconds == 0:
+    _ = poll_interval_seconds
+
+    async def _on_idle_expiry() -> None:
+        print("tela: idle timeout reached, shutting down", file=sys.stderr)
+        stop_event.set()
+
+    init_result = await init_idle_manager(
+        timeout_seconds=float(idle_timeout_seconds),
+        shutdown_callback=_on_idle_expiry,
+    )
+    if init_result.is_err:
+        print(
+            f"warning: idle shutdown init failed: {init_result.error}", file=sys.stderr
+        )
         return
 
-    idle_started_at = time.monotonic()
-    while not stop_event.is_set():
-        runtime = get_runtime()
-        if runtime.connections:
-            idle_started_at = time.monotonic()
-        elif time.monotonic() - idle_started_at >= float(idle_timeout_seconds):
-            print("tela: idle timeout reached, shutting down", file=sys.stderr)
-            stop_event.set()
-            return
-        await asyncio.sleep(poll_interval_seconds)
+    assert init_result.value is not None
+    if idle_timeout_seconds > 0:
+        prime_increment_result = await init_result.value.increment()
+        if prime_increment_result.is_err:
+            print(
+                "warning: idle shutdown prime increment failed: "
+                f"{prime_increment_result.error}",
+                file=sys.stderr,
+            )
+        else:
+            prime_decrement_result = await init_result.value.decrement()
+            if prime_decrement_result.is_err:
+                print(
+                    "warning: idle shutdown prime decrement failed: "
+                    f"{prime_decrement_result.error}",
+                    file=sys.stderr,
+                )
+
+    try:
+        await stop_event.wait()
+    finally:
+        _ = await shutdown_idle_manager()
 
 
 async def _await_task(task: asyncio.Task[object]) -> None:

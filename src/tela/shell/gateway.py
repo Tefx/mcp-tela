@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -65,6 +65,7 @@ class GatewayRuntime:
     total_tool_calls: int = 0
     running: bool = False
     upstream_server: FastMCP | None = None
+    expected_bearer_token: str | None = None
 
 
 def _extract_bearer_token(request: Request) -> Result[str, str]:
@@ -118,7 +119,8 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
             return _as_error_response(token_result.error)
         assert token_result.value is not None
 
-        expected_token = os.environ.get("TELA_BEARER_TOKEN", "")
+        with _runtime_lock:
+            expected_token = _runtime.expected_bearer_token or ""
         status_result = handle_status(token_result.value, expected_token)
         if status_result.is_err:
             assert status_result.error is not None
@@ -142,11 +144,17 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
                 content={"error": "INVALID_REQUEST: invalid connect payload"},
             )
 
-        expected_token = os.environ.get("TELA_BEARER_TOKEN", "")
+        with _runtime_lock:
+            expected_token = _runtime.expected_bearer_token or ""
         connect_result = handle_connect(token_result.value, expected_token, payload)
         if connect_result.is_err:
             assert connect_result.error is not None
             return _as_error_response(connect_result.error)
+        from tela.shell.idle_shutdown import get_idle_manager
+
+        idle_manager = get_idle_manager()
+        if idle_manager is not None:
+            _ = await idle_manager.increment()
         assert connect_result.value is not None
         return JSONResponse(content=dict(connect_result.value))
 
@@ -166,13 +174,19 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
                 content={"error": "INVALID_REQUEST: invalid disconnect payload"},
             )
 
-        expected_token = os.environ.get("TELA_BEARER_TOKEN", "")
+        with _runtime_lock:
+            expected_token = _runtime.expected_bearer_token or ""
         disconnect_result = handle_disconnect(
             token_result.value, expected_token, payload
         )
         if disconnect_result.is_err:
             assert disconnect_result.error is not None
             return _as_error_response(disconnect_result.error)
+        from tela.shell.idle_shutdown import get_idle_manager
+
+        idle_manager = get_idle_manager()
+        if idle_manager is not None:
+            _ = await idle_manager.decrement()
         assert disconnect_result.value is not None
         return JSONResponse(content=dict(disconnect_result.value))
 
@@ -249,9 +263,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     )
 
     async def _ensure_connection() -> ConnectionContext:
-        runtime = get_runtime()
-        if runtime.connections:
-            return runtime.connections[0]
+        with _runtime_lock:
+            if _runtime.connections:
+                return _runtime.connections[0]
 
         init_result = await handle_initialize({})
         if init_result.is_err:
@@ -314,8 +328,9 @@ def _wire_reload_notifications() -> None:
     from tela.shell.upstream import notify_tools_changed
 
     async def _notify_all_connections(tools_digest: str) -> None:
-        runtime = get_runtime()
-        for connection in list(runtime.connections):
+        with _runtime_lock:
+            connections = list(_runtime.connections)
+        for connection in connections:
             await notify_tools_changed(connection, tools_digest)
 
     _set_reload_notify_callback(_notify_all_connections)
@@ -361,7 +376,7 @@ async def gateway_reload_config_from_disk(
 
 # Module-level runtime state
 _runtime = GatewayRuntime()
-_runtime_lock = asyncio.Lock()
+_runtime_lock = threading.RLock()
 
 
 # @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
@@ -441,6 +456,7 @@ async def gateway_start(
     config: GatewayStartupConfig,
     tela_config: TelaConfig | None = None,
     tool_lists: dict[str, list[dict]] | None = None,
+    expected_bearer_token: str | None = None,
 ) -> Result[None, str]:
     """Start the gateway: load config, connect downstreams, start MCP server.
 
@@ -494,13 +510,14 @@ async def gateway_start(
     _wire_reload_notifications()
 
     # Store runtime state
-    async with _runtime_lock:
+    with _runtime_lock:
         _runtime.total_tool_calls = 0
         _runtime.config = effective_config
         _runtime.startup_config = config
         _runtime.start_time = time.monotonic()
         _runtime.running = True
         _runtime.upstream_server = upstream_server
+        _runtime.expected_bearer_token = expected_bearer_token
 
     return Result(value=None)
 
@@ -523,7 +540,7 @@ async def gateway_shutdown() -> Result[None, str]:
     if audit_close_result.is_err:
         return audit_close_result
     _set_reload_notify_callback(None)
-    async with _runtime_lock:
+    with _runtime_lock:
         _runtime.config = None
         _runtime.startup_config = None
         _runtime.upstream_server = None
@@ -531,6 +548,7 @@ async def gateway_shutdown() -> Result[None, str]:
         _runtime.start_time = None
         _runtime.total_tool_calls = 0
         _runtime.connections.clear()
+        _runtime.expected_bearer_token = None
     return disconnect_result
 
 
@@ -546,7 +564,7 @@ async def gateway_status() -> Result[GatewayStatus, str]:
         GatewayStatus with current runtime metrics.
     """
 
-    async with _runtime_lock:
+    with _runtime_lock:
         all_tools_result = get_all_tools()
         if all_tools_result.is_err:
             return Result(error=all_tools_result.error)
@@ -579,5 +597,5 @@ async def gateway_connections() -> Result[list[ConnectionContext], str]:
         List of active ConnectionContext.
     """
 
-    async with _runtime_lock:
+    with _runtime_lock:
         return Result(value=list(_runtime.connections))

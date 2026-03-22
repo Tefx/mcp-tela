@@ -20,7 +20,7 @@ from tela.core.models import (
 from tela.core.contracts import post, pre
 from tela.shell.config_loader import Result
 from tela.shell.audit import get_audit_entries
-from tela.shell.gateway import get_runtime
+from tela.shell.gateway import _runtime_lock, get_runtime
 from tela.shell.http_auth import validate_bearer_token
 
 
@@ -101,15 +101,18 @@ def handle_status(
         return Result(error=f"AUDIT_QUERY_ERROR: {audit_entries_result.error}")
     assert audit_entries_result.value is not None
 
+    with _runtime_lock:
+        connections = list(runtime.connections)
+
     return Result(
         value=StatusResponse(
             uptime_seconds=uptime,
             server_count=len(connected_servers),
             connected_servers=connected_servers,
-            active_connections=len(runtime.connections),
+            active_connections=len(connections),
             profile_count=profile_count,
             total_tool_calls=runtime.total_tool_calls,
-            connections=list(runtime.connections),
+            connections=connections,
             audit_entries=audit_entries_result.value,
         )
     )
@@ -167,7 +170,8 @@ def handle_connect(
         connected_at=datetime.now(timezone.utc).isoformat(),
     )
 
-    runtime.connections.append(connection_context)
+    with _runtime_lock:
+        runtime.connections.append(connection_context)
 
     return Result(
         value={
@@ -230,13 +234,13 @@ def handle_disconnect(
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     target_id = payload.connection_id
-    original_count = len(runtime.connections)
-
-    runtime.connections[:] = [
-        conn for conn in runtime.connections if conn.connection_id != target_id
-    ]
-
-    if len(runtime.connections) == original_count:
+    with _runtime_lock:
+        original_count = len(runtime.connections)
+        runtime.connections[:] = [
+            conn for conn in runtime.connections if conn.connection_id != target_id
+        ]
+        removed = len(runtime.connections) != original_count
+    if not removed:
         return Result(error=f"CONNECTION_NOT_FOUND: connection '{target_id}' not found")
 
     return Result(

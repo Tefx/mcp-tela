@@ -27,7 +27,8 @@ from tela.shell.downstream import (
     get_all_tools,
     get_registry,
 )
-from tela.shell.gateway import get_runtime
+from tela.shell.gateway import _runtime_lock, get_runtime
+from tela.shell.idle_shutdown import get_idle_manager
 from tela.shell.upstream_utils import (
     enforce_tool_call,
     filter_tools_for_profile,
@@ -180,8 +181,14 @@ async def handle_initialize(
         connected_at=now_iso,
     )
 
-    # Register connection in runtime
-    runtime.connections.append(ctx)
+    # Register connection in runtime.
+    with _runtime_lock:
+        runtime.connections.append(ctx)
+    idle_manager = get_idle_manager()
+    if idle_manager is not None:
+        increment_result = await idle_manager.increment()
+        if increment_result.is_err:
+            return Result(error=increment_result.error)
     return Result(value=ctx)
 
 
@@ -335,7 +342,8 @@ async def handle_tools_call(
             )
         )
 
-    runtime.total_tool_calls += 1
+    with _runtime_lock:
+        runtime.total_tool_calls += 1
 
     return await call_tool(tool.server_name, tool_name, stripped_args)
 
