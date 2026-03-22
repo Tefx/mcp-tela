@@ -22049,13 +22049,15 @@ phases:
       \nGaps/Notes\n- No additional gaps reported."
   - id: tw.contract.gate
     name: 'Gate review: token wire contract'
-    status: pending
+    status: claimed
     description: 'Gate review: contract definitions are consistent with INTERFACES.md
       3.3 and DESIGN.md auth layers'
     evidence_template: Gate review checklist completed
     depends_on:
     - tw.contract.define-token-init
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T18:52:14.362752+00:00'
 - id: tw.test
   name: Token Wire Tests
   status: locked
