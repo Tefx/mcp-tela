@@ -22605,17 +22605,19 @@ phases:
       \ gap before downstream gate reopening."
 - id: tw.gate
   name: Final Verification
-  status: pending
+  status: in_progress
   depends_on:
   - tw.impl
   steps:
   - id: tw.gate.spec-conformance
     name: Spec conformance verification
-    status: pending
+    status: claimed
     description: Verify implementation matches INTERFACES.md 3.3 (token mode binds
       connection to profile) and DESIGN.md (two independent auth layers)
     evidence_template: Spec section quotes + implementation mapping
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-22T19:29:32.453848+00:00'
   - id: tw.gate.invar-guard
     name: Run invar guard --all
     status: pending
