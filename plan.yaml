@@ -22025,7 +22025,7 @@ phases:
   steps:
   - id: tw.contract.define-token-init
     name: Define token-mode initialize contract
-    status: claimed
+    status: done
     description: 'Define contract for token-mode initialize: handle_initialize accepts
       CapabilityToken, validates via core.token.validate_token, binds connection to
       token''s profile_name'
@@ -22033,6 +22033,20 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T18:47:45.225567+00:00'
+    done_at: '2026-03-22T18:51:53.586088+00:00'
+    evidence: "Contract signature defined for token-mode initialize.\n\nFiles Modified\n\
+      - src/tela/core/models.py: Added TokenInitBinding dataclass\n- src/tela/core/token.py:\
+      \ Added resolve_token_init_binding function\n\ninvar sig output (token.py)\n\
+      - name: resolve_token_init_binding\n- signature: (token: CapabilityToken, secrets:\
+      \ list[str], now_iso: str) -> TokenInitBinding\n- contracts:\n  - @pre validates\
+      \ CapabilityToken/token_id/profile_name/signature plus non-empty secrets and\
+      \ now_iso\n  - @post ensures result is TokenInitBinding\n\ninvar sig output\
+      \ (models.py)\n- TokenInitBinding is a frozen dataclass with fields:\n  - token_result:\
+      \ EnforcementResult\n  - profile_name: str\n\nVerification\n- invar guard: PASSED\
+      \ (0 errors, 6 warnings pre-existing)\n- pytest tests/core/test_token.py tests/core/test_models.py:\
+      \ 45 passed\n- Doctests in docstring examples execute correctly\n\nCommit hash(es)\n\
+      - 29384be feat(token): add TokenInitBinding contract for token-mode initialize\n\
+      \nGaps/Notes\n- No additional gaps reported."
   - id: tw.contract.gate
     name: 'Gate review: token wire contract'
     status: pending
