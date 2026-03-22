@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,10 +17,15 @@ from typing import Awaitable, Callable
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
+from pydantic import ValidationError
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 
 from tela.core.models import (
     AuthMode,
+    ConnectRequest,
     ConnectionContext,
+    DisconnectRequest,
     GatewayStatus,
     GatewayTransport,
     RuntimeBindingContract,
@@ -60,10 +66,123 @@ class GatewayRuntime:
     upstream_server: FastMCP | None = None
 
 
+def _extract_bearer_token(request: Request) -> Result[str, str]:
+    """Extract bearer token from Authorization header."""
+
+    authorization_header = request.headers.get("authorization")
+    if authorization_header is None or not authorization_header.startswith("Bearer "):
+        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+
+    request_token = authorization_header[len("Bearer ") :].strip()
+    if request_token == "":
+        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+
+    return Result(value=request_token)
+
+
+# @shell_complexity: mounted HTTP adapters enforce auth and payload contracts per endpoint.
+def _register_http_routes(upstream_server: FastMCP) -> None:
+    """Register mounted HTTP liveness and lifecycle routes on FastMCP app."""
+
+    from tela.shell.http_routes import (
+        handle_connect,
+        handle_disconnect,
+        handle_health,
+        handle_status,
+    )
+
+    def _as_error_response(error: str) -> JSONResponse:
+        status_code = 400
+        if error.startswith("AUTH_INVALID_TOKEN"):
+            status_code = 401
+        elif error.startswith("CONNECTION_NOT_FOUND"):
+            status_code = 404
+        elif error.startswith("GATEWAY_NOT_STARTED"):
+            status_code = 503
+        return JSONResponse(status_code=status_code, content={"error": error})
+
+    @upstream_server.custom_route("/health", methods=["GET"])
+    async def _health_route(_request: Request) -> Response:
+        health_result = handle_health()
+        if health_result.is_err:
+            return JSONResponse(status_code=500, content={"error": health_result.error})
+        assert health_result.value is not None
+        return JSONResponse(content=health_result.value.model_dump())
+
+    @upstream_server.custom_route("/status", methods=["GET"])
+    async def _status_route(request: Request) -> Response:
+        token_result = _extract_bearer_token(request)
+        if token_result.is_err:
+            assert token_result.error is not None
+            return _as_error_response(token_result.error)
+        assert token_result.value is not None
+
+        expected_token = os.environ.get("TELA_BEARER_TOKEN", "")
+        status_result = handle_status(token_result.value, expected_token)
+        if status_result.is_err:
+            assert status_result.error is not None
+            return _as_error_response(status_result.error)
+        assert status_result.value is not None
+        return JSONResponse(content=status_result.value.model_dump())
+
+    @upstream_server.custom_route("/connect", methods=["POST"])
+    async def _connect_route(request: Request) -> Response:
+        token_result = _extract_bearer_token(request)
+        if token_result.is_err:
+            assert token_result.error is not None
+            return _as_error_response(token_result.error)
+        assert token_result.value is not None
+
+        try:
+            payload = ConnectRequest.model_validate(await request.json())
+        except (ValidationError, ValueError):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "INVALID_REQUEST: invalid connect payload"},
+            )
+
+        expected_token = os.environ.get("TELA_BEARER_TOKEN", "")
+        connect_result = handle_connect(token_result.value, expected_token, payload)
+        if connect_result.is_err:
+            assert connect_result.error is not None
+            return _as_error_response(connect_result.error)
+        assert connect_result.value is not None
+        return JSONResponse(content=dict(connect_result.value))
+
+    @upstream_server.custom_route("/disconnect", methods=["POST"])
+    async def _disconnect_route(request: Request) -> Response:
+        token_result = _extract_bearer_token(request)
+        if token_result.is_err:
+            assert token_result.error is not None
+            return _as_error_response(token_result.error)
+        assert token_result.value is not None
+
+        try:
+            payload = DisconnectRequest.model_validate(await request.json())
+        except (ValidationError, ValueError):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "INVALID_REQUEST: invalid disconnect payload"},
+            )
+
+        expected_token = os.environ.get("TELA_BEARER_TOKEN", "")
+        disconnect_result = handle_disconnect(
+            token_result.value, expected_token, payload
+        )
+        if disconnect_result.is_err:
+            assert disconnect_result.error is not None
+            return _as_error_response(disconnect_result.error)
+        assert disconnect_result.value is not None
+        return JSONResponse(content=dict(disconnect_result.value))
+
+
 def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str]:
     """Create FastMCP server instance from gateway transport config."""
 
-    if config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP) and config.port is not None:
+    if (
+        config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
+        and config.port is not None
+    ):
         return Result(value=FastMCP("tela-gateway", port=config.port))
 
     return Result(value=FastMCP("tela-gateway"))
@@ -361,6 +480,7 @@ async def gateway_start(
     assert upstream_server_result.value is not None
     upstream_server = upstream_server_result.value
     _wire_upstream_handlers(upstream_server)
+    _register_http_routes(upstream_server)
     _register_profiles_resource(upstream_server)
     _register_registry_tools(upstream_server)
     _wire_reload_notifications()
@@ -411,7 +531,7 @@ async def gateway_status() -> Result[GatewayStatus, str]:
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(gateway_status()).server_count
+        >>> asyncio.run(gateway_status()).value.server_count
         0
 
     Returns:
@@ -444,7 +564,7 @@ async def gateway_connections() -> Result[list[ConnectionContext], str]:
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(gateway_connections())
+        >>> asyncio.run(gateway_connections()).value
         []
 
     Returns:

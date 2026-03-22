@@ -343,9 +343,9 @@ async def _serve_remote_gateway(
     gateway_exit = 0
     try:
         if transport_value == "http":
-            await runtime.upstream_server.run_streamable_http_async()
+            await asyncio.to_thread(runtime.upstream_server.run, "streamable-http")
         else:
-            await runtime.upstream_server.run_sse_async()
+            await asyncio.to_thread(runtime.upstream_server.run, "sse")
     except Exception as exc:
         gateway_exit = 1
         return Result(error=f"{transport_value.upper()}_RUN_FAILED: {exc}")
