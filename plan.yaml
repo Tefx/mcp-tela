@@ -20367,6 +20367,37 @@ phases:
     - gw.teardown.update-query-commands-for-http-discovery
     - gw.teardown.end-to-end-cli-integration-test
     agent: python-executor
+  - id: gw.teardown.retest-cli-teardown-query-command-integration
+    name: Retest CLI teardown integration after query-command repro fix
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), rerun the teardown
+      integration coverage after the repro-test fix for query-command remote behavior.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: teardown integration behavior still works for the CLI refactor
+
+      - Error scenario: query commands without a running server now produce the expected
+      `NO_RUNNING_SERVER` behavior
+
+      - Remote path: any mocked remote-success coverage remains explicit and correct
+
+
+      Document findings with exact commands and outputs. A test that discovers issues
+      is a SUCCESS.'
+    verification: '- Rerun teardown integration tests after the fix
+
+      - Confirm the stale query-command repro expectations are gone
+
+      - Capture whether `NO_RUNNING_SERVER` and any mocked remote-success path behave
+      as expected'
+    depends_on:
+    - gw.teardown.fix-query-command-repro-tests-for-remote-server
+    agent: integration-verifier
 - id: gw.spec_conformance
   name: Spec Conformance Verification
   status: locked
