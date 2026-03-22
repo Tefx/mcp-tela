@@ -22330,6 +22330,70 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T19:10:48.892037+00:00'
+  - id: tw.impl.fix-handle-initialize-token-mode
+    name: Fix dedicated token-mode handle_initialize integration coverage
+    status: pending
+    description: 'Fix ALL blockers found by gate review.
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+
+      ### S1: Missing dedicated token-mode handle_initialize integration test in tests/integration/
+
+      Locations: tests/integration/
+
+      Remediation: Add a dedicated integration test that exercises token-mode handle_initialize
+      through the real integration path and proves validate_token wiring is covered
+      independently of other initialize flows.
+
+      Grep hint: rg -n "handle_initialize|token-mode|validate_token" tests/integration
+
+      IMPORTANT: Search for sibling initialize coverage so token-mode remains isolated
+      and does not rely on shared or indirect assertions.
+
+
+      ## Completion Criteria:
+
+      - Dedicated token-mode handle_initialize integration test exists under tests/integration/
+
+      - Test exercises the real token-mode initialize path and asserts wired validate_token
+      behavior
+
+      - Sibling search completed for nearby initialize integration coverage to avoid
+      indirect-only proof
+
+      - This fix addresses the gate''s SHOULD_FIX finding before downstream verification
+      proceeds'
+    verification: '- Dedicated token-mode handle_initialize integration test added
+      in tests/integration/
+
+      - Focused regression coverage proves validate_token wiring for token mode specifically
+
+      - Sibling search evidence shows no remaining gap for this token-mode initialize
+      path'
+    evidence_template: '## Batched Fix Evidence
+
+
+      **Issue addressed**: Missing dedicated token-mode handle_initialize integration
+      test
+
+      **Files added/updated**: <list>
+
+      **Exact test name(s)**: <list>
+
+      **Sibling search command/output**:
+
+      ```
+
+      <rg output>
+
+      ```
+
+      **Why this closes the gap**: <one paragraph>'
+    depends_on:
+    - tw.impl.wire-validate-token
+    agent: python-executor
 - id: tw.gate
   name: Final Verification
   status: locked
