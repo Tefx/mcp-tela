@@ -20077,7 +20077,7 @@ phases:
       - start.py retained as deprecated/internal test compatibility surface'
   - id: gw.teardown.update-query-commands-for-http-discovery
     name: Update query commands for HTTP discovery
-    status: pending
+    status: claimed
     description: 'Update status, connections, and audit commands to discover running
       server via lockfile and query over HTTP.
 
@@ -20131,6 +20131,8 @@ phases:
     depends_on:
     - gw.teardown.wire-connect-serve-into-cli-remove-start
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T09:42:31.595898+00:00'
   - id: gw.teardown.wiring-audit-cli-teardown
     name: 'Wiring audit: CLI teardown'
     status: pending
