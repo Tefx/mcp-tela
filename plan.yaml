@@ -20765,7 +20765,7 @@ phases:
       - PASS'
 - id: gw.doc_sync
   name: Documentation Sync
-  status: in_progress
+  status: done
   depends_on:
   - gw.spec_conformance
   steps:
@@ -20858,7 +20858,7 @@ phases:
       - idle shutdown behavior documented'
   - id: gw.doc_sync.gate-doc-sync
     name: 'Gate: doc sync'
-    status: claimed
+    status: done
     description: 'Gate review: Documentation completeness.
 
 
@@ -20880,9 +20880,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T10:20:54.242581+00:00'
+    done_at: '2026-03-22T10:22:30.414247+00:00'
+    evidence: 'Artifact:
+
+      - Reviewed docs sync commit: 2e1003c
+
+      - Gate task: ses_2eaf2d61cffe7fkl1w9B38pG5H
+
+
+      Verification:
+
+      - Run: grep -rn "tela start" --include="*.md" . -> 0 matches
+
+      - Run: grep -rn "gateway.lock\|lockfile" docs/ README.md -> documented
+
+      - Run: grep -rn "TELA_BEARER_TOKEN\|bearer token" docs/ README.md -> documented
+
+      - Run: grep -rn "discover\|auto-start" docs/ README.md -> documented
+
+      - Run: grep -rn "idle" docs/ README.md -> documented
+
+      - Run: grep -rn "--server\|skip" docs/ README.md -> skip-discover mode documented
+
+
+      Spec link:
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+
+      Verdict:
+
+      - PASS (no stale start references; required connect/serve, lockfile, token lifecycle,
+      idle shutdown, and override behavior documentation present)'
 - id: gw.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
-  status: locked
+  status: pending
   depends_on:
   - gw.doc_sync
   steps:
