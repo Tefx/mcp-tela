@@ -18979,7 +18979,7 @@ phases:
   steps:
   - id: gw.conflict.enforce-tela-prefix-reservation
     name: Enforce tela. prefix reservation
-    status: claimed
+    status: done
     description: "Add tela. prefix reservation enforcement to conflict detection.\n\
       \nSpec refs: INTERFACES.md 7.1\n\nFile: src/tela/core/conflict.py\n\nINTERFACES.md\
       \ 7.1: 'The tela. prefix is reserved. Downstream tools with this prefix are\
@@ -19012,6 +19012,29 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T07:50:39.511354+00:00'
+    done_at: '2026-03-22T07:54:55.741137+00:00'
+    evidence: 'Commit hash(es): 02aa656
+
+      Files changed:
+
+      - src/tela/core/conflict.py
+
+      Verification:
+
+      - Run: uv run invar guard src/tela/core/conflict.py -> passed
+
+      - Run: uv run pytest tests/core/test_conflict.py -v -> 5 passed
+
+      - Run: uv run python -m doctest src/tela/core/conflict.py -v -> 13 passed
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.1
+
+      Gaps/Notes:
+
+      - downstream/reload callsites remain backward compatible with optional conflict
+      type field'
   - id: gw.conflict.gate-tela-prefix-enforcement
     name: 'Gate: tela. prefix enforcement'
     status: pending
