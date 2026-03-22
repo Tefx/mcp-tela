@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 
-from tela.core.models import EnforcementVerdict
+from tela.core.models import EnforcementVerdict, TokenInitBinding
 from tela.core.token import (
     compute_signature,
     create_token,
     is_expired,
+    resolve_token_init_binding,
     validate_token,
 )
 
@@ -69,3 +70,64 @@ def test_create_token_profile() -> None:
     tok = create_token("production", "secret")
     assert tok.profile_name == "production"
     assert tok.token_id == "tok_auto"
+
+
+# --- resolve_token_init_binding tests ---
+
+
+def test_resolve_token_init_binding_valid_token_binds_to_profile() -> None:
+    """Valid token must bind the connection to the token's profile_name."""
+    tok = create_token("dev", "secret1")
+    binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
+    assert binding.token_result.verdict == EnforcementVerdict.ALLOW
+    assert binding.profile_name == "dev"
+
+
+def test_resolve_token_init_binding_expired_token_rejected() -> None:
+    """Expired token must result in DENY verdict in the binding."""
+    tok = create_token("dev", "secret1", expires_at="2026-01-01T00:00:00Z")
+    binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
+    assert binding.token_result.verdict == EnforcementVerdict.DENY
+    assert binding.token_result.error_code == "TOKEN_EXPIRED"
+    # Profile name is still preserved in the binding (for error context)
+    assert binding.profile_name == "dev"
+
+
+def test_resolve_token_init_binding_invalid_signature_rejected() -> None:
+    """Token with invalid signature must result in DENY verdict."""
+    tok = create_token("dev", "secret1")
+    binding = resolve_token_init_binding(tok, ["wrong_secret"], "2026-06-01T00:00:00Z")
+    assert binding.token_result.verdict == EnforcementVerdict.DENY
+    assert binding.token_result.error_code == "TOKEN_INVALID"
+    # Profile name is preserved in binding for error context even on DENY
+    assert binding.profile_name == "dev"
+
+
+def test_resolve_token_init_binding_preserves_profile_name() -> None:
+    """Profile name from token is always carried in the binding."""
+    tok = create_token("production", "secret1")
+    binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
+    assert binding.profile_name == "production"
+    assert isinstance(binding, TokenInitBinding)
+
+
+def test_resolve_token_init_binding_dual_key_rotation() -> None:
+    """Valid token with rotated secrets must succeed."""
+    tok = create_token("staging", "old_secret")
+    binding = resolve_token_init_binding(
+        tok, ["new_secret", "old_secret"], "2026-06-01T00:00:00Z"
+    )
+    assert binding.token_result.verdict == EnforcementVerdict.ALLOW
+    assert binding.profile_name == "staging"
+
+
+def test_resolve_token_init_binding_returns_binding_type() -> None:
+    """Result must be a TokenInitBinding dataclass with correct fields."""
+    from tela.core.models import EnforcementResult
+
+    tok = create_token("dev", "secret1")
+    binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
+    # Verify it's a TokenInitBinding
+    assert isinstance(binding, TokenInitBinding)
+    assert isinstance(binding.token_result, EnforcementResult)
+    assert isinstance(binding.profile_name, str)
