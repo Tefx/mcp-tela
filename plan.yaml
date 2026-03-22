@@ -19318,7 +19318,7 @@ phases:
       - ephemeral repro test script removed after probe'
   - id: gw.bridge.gate-tela-connect
     name: 'Gate: tela connect'
-    status: pending
+    status: claimed
     description: "Gate review: Verify tela connect phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale: Runtime surface (client bridge), auto-start\
       \ race condition, two independent auth layers, and ephemeral-port lockfile discovery\
@@ -19347,6 +19347,8 @@ phases:
     - gw.bridge.retest-lockfile-actual-port
     - gw.bridge.tela-connect-liveness-probe
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T08:28:12.674210+00:00'
   - id: gw.bridge.fix-lockfile-actual-port
     name: Fix lockfile ephemeral-port discovery
     status: done
