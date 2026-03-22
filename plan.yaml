@@ -23418,3 +23418,80 @@ phases:
     depends_on:
     - tw.gate.fix-final-regate-invar
     agent: integration-verifier
+  - id: tw.gate.final-regate2
+    name: Replacement re-gate after invar regression retest
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (`gate-reviewer`), replace the blocked
+      `tw.gate.final-regate` path by reviewing the remediation for the invar regression
+      blocker family.
+
+
+      Gate review scope: `phase-check` protecting tw.gate phase completion and any
+      downstream completion logic.
+
+
+      Review criteria:
+
+      1. `tw.gate.fix-final-regate-invar` addressed the full blocker family rooted
+      in `src/tela/core/contracts.py`
+
+      2. `tw.gate.retest-final-regate-invar` ran the exact `invar guard --all` command
+      plus targeted mypy/pytest checks with specific output evidence
+
+      3. Prior coverage gap from the omitted invar full-plan command is explicitly
+      closed
+
+      4. No unresolved blocker remains from the failed `tw.gate.final-regate` verdict
+
+      5. The phase is ready to complete only through this replacement re-gate path
+
+
+      Independence: gate-reviewer remains independent from phase implementation agents.'
+    verification: '- phase-check protecting tw.gate phase completion
+
+      - Final verdict replacement runs only after `tw.gate.retest-final-regate-invar`
+
+      - Exact `invar guard --all` evidence is present alongside targeted mypy/pytest
+      outputs
+
+      - Blocker family from failed `tw.gate.final-regate` is either closed with evidence
+      or explicitly re-opened with new findings
+
+      - No downstream completion should treat the original failed verdict as sufficient
+      without this replacement re-gate'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer
+
+      **Phase**: tw.gate
+
+
+      ### Replacement Re-Gate Focus
+
+      - Original blocked step: `tw.gate.final-regate`
+
+      - Fix step reviewed: `tw.gate.fix-final-regate-invar`
+
+      - Retest evidence reviewed: `tw.gate.retest-final-regate-invar`
+
+
+      ### Decision Basis
+
+      - Exact invar full-plan command evidence present: yes/no
+
+      - Targeted mypy evidence present: yes/no
+
+      - Targeted pytest evidence present: yes/no
+
+      - Residual blocker remains: yes/no
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      '
+    depends_on:
+    - tw.gate.retest-final-regate-invar
+    agent: gate-reviewer
