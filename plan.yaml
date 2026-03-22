@@ -21326,7 +21326,7 @@ phases:
       - Commit: e47e1a56b40e060e13d17751b7c4ed0cf36d780b'
   - id: gw.deep_review.retest-bridge-orphan-exports
     name: Re-run focused wiring audit for bridge exports
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), re-run the wiring
       audit checks for the bridge path after orphan-export remediation.
 
@@ -21413,3 +21413,56 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T10:41:20.302728+00:00'
+    done_at: '2026-03-22T10:43:18.249026+00:00'
+    evidence: '## Focused Bridge Wiring Retest
+
+
+      Tester: integration-verifier
+
+      Scope: src/tela/shell/bridge.py orphan exports and nearby bridge re-export surfaces
+
+
+      Commands executed:
+
+      - ls -la src/tela/shell/bridge.py
+
+      - ls -la tests/shell/test_bridge.py
+
+      - rg "StdioHttpBridge|BridgeConfig" src/ tests/ --type py
+
+      - rg "from tela\.shell\.bridge|import.*bridge" src/ tests/ --type py
+
+      - rg "__all__" src/tela/shell/ --type py -A 5
+
+      - rg "@invar:allow dead_export" src/tela/ --type py
+
+      - uv run invar guard
+
+      - uv run pytest tests/shell/ -q --tb=short
+
+
+      Actual output (key):
+
+      - bridge.py and test_bridge.py not found (removed)
+
+      - no matches for StdioHttpBridge/BridgeConfig or bridge imports
+
+      - invar guard passed with 0 errors/0 warnings
+
+      - shell tests passed (244)
+
+
+      Checks:
+
+      - no orphan exports for StdioHttpBridge: PASS
+
+      - no orphan exports for BridgeConfig: PASS
+
+      - no bridge dead-code regressions introduced: PASS
+
+      - affected-area invar guard clean: PASS
+
+
+      Verdict:
+
+      - PASS'
