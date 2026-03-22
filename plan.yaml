@@ -18680,7 +18680,7 @@ phases:
   steps:
   - id: gw.serve.implement-tela-serve-command
     name: Implement tela serve command
-    status: pending
+    status: claimed
     description: "Implement the tela serve CLI command: HTTP gateway server entry\
       \ point.\n\nSpec refs: INTERFACES.md 2 (CLI surface), 7.3 (lockfile), 7.4 (bearer\
       \ token)\n\nFile: src/tela/commands/serve_cmd.py (new)\n\nCLI args per INTERFACES.md\
@@ -18719,6 +18719,8 @@ phases:
     - src/tela/shell/http_routes.py
     - src/tela/shell/gateway.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T07:08:35.030576+00:00'
   - id: gw.serve.implement-idle-shutdown-manager
     name: Implement idle shutdown manager
     status: claimed
