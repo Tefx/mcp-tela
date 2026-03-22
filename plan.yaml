@@ -19190,7 +19190,7 @@ phases:
       - full repo sweep not run; scoped verification per step'
   - id: gw.bridge.implement-stdio-http-bridge
     name: Implement stdio-HTTP bridge
-    status: claimed
+    status: done
     description: 'Implement the stdio <-> HTTP MCP session bridge used by tela connect.
 
 
@@ -19232,6 +19232,28 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T07:57:55.403672+00:00'
+    done_at: '2026-03-22T08:07:39.699805+00:00'
+    evidence: 'Commit hash(es): 88bcf98e8eb5d111cf65192337239e3a9ad953f3
+
+      Files changed:
+
+      - src/tela/shell/bridge.py
+
+      - tests/shell/test_bridge.py
+
+      Verification:
+
+      - Run: uv run pytest -v tests/shell/test_bridge.py -> 3 passed
+
+      - Run: invar guard changed-files -> passed
+
+      Spec link:
+
+      - docs/DESIGN.md
+
+      Gaps/Notes:
+
+      - CLI connect orchestration deliberately handled in separate step'
   - id: gw.bridge.tela-connect-liveness-probe
     name: tela connect liveness probe
     status: pending
