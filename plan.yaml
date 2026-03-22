@@ -18723,7 +18723,7 @@ phases:
     claimed_at: '2026-03-22T07:08:35.030576+00:00'
   - id: gw.serve.implement-idle-shutdown-manager
     name: Implement idle shutdown manager
-    status: claimed
+    status: done
     description: 'Implement connection tracking and idle shutdown logic.
 
 
@@ -18777,6 +18777,32 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T07:08:30.637727+00:00'
+    done_at: '2026-03-22T07:20:07.567897+00:00'
+    evidence: 'Commit hash(es): 45239b9f8e8af059ebdf4570546e56d6c64b61c7
+
+      Files changed:
+
+      - src/tela/shell/idle_shutdown.py
+
+      - tests/shell/test_idle_shutdown.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_idle_shutdown.py -v -> 23 passed
+
+      - Run: uv run pytest tests/shell/ -v -> 230 passed
+
+      - Run: uv run invar guard src/tela/shell/idle_shutdown.py -> passed with expected
+      warnings
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2
+
+      Gaps/Notes:
+
+      - dead_export warnings expected until subsequent wiring step integrates manager
+      APIs'
   - id: gw.serve.tela-serve-liveness-probe
     name: tela serve liveness probe
     status: pending
