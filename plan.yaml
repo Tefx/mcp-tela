@@ -22504,7 +22504,7 @@ phases:
       - None reported; no remaining sibling gap identified by worker.'
   - id: tw.impl.retest-handle-initialize-token-mode
     name: Retest dedicated token-mode handle_initialize integration coverage
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the token-mode
       handle_initialize integration path from a fresh perspective.
 
@@ -22587,6 +22587,8 @@ phases:
     depends_on:
     - tw.impl.fix-handle-initialize-token-mode
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T19:26:54.070868+00:00'
 - id: tw.gate
   name: Final Verification
   status: locked
