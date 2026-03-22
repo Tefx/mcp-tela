@@ -18835,7 +18835,7 @@ phases:
       APIs'
   - id: gw.serve.tela-serve-liveness-probe
     name: tela serve liveness probe
-    status: pending
+    status: claimed
     description: 'Black-box liveness verification: actually start tela serve and verify
       it runs.
 
@@ -18873,6 +18873,8 @@ phases:
     - gw.serve.implement-tela-serve-command
     - gw.serve.implement-idle-shutdown-manager
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-22T07:21:40.415153+00:00'
   - id: gw.serve.gate-tela-serve
     name: 'Gate: tela serve'
     status: pending
