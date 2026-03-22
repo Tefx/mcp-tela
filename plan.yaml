@@ -22125,18 +22125,20 @@ phases:
       by plan design.'
 - id: tw.test
   name: Token Wire Tests
-  status: pending
+  status: in_progress
   depends_on:
   - tw.contract
   steps:
   - id: tw.test.token-mode-init
     name: Write token-mode initialize tests
-    status: pending
+    status: claimed
     description: 'Write tests for token-mode initialize: valid token binds to profile,
       expired token rejected, invalid signature rejected, open mode unchanged'
     evidence_template: Test file path, test names, pytest output (expected failures
       OK at this stage)
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T18:56:14.142799+00:00'
   - id: tw.test.gate
     name: 'Gate review: token wire tests'
     status: pending
