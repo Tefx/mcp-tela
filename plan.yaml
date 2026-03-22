@@ -21102,7 +21102,7 @@ phases:
     agent: gate-reviewer
   - id: gw.deep_review.fix-bridge-orphan-exports
     name: Fix bridge orphan exports and dead-export finding
-    status: pending
+    status: claimed
     description: 'Fix the deep-review wiring audit blocker for orphan exports in `src/tela/shell/bridge.py`.
 
 
@@ -21215,6 +21215,8 @@ phases:
     depends_on:
     - gw.deep_review.full-wiring-audit
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T10:32:11.888127+00:00'
   - id: gw.deep_review.retest-bridge-orphan-exports
     name: Re-run focused wiring audit for bridge exports
     status: pending
