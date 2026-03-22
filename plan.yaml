@@ -18325,7 +18325,7 @@ phases:
     agent: gate-reviewer
   - id: gw.http.impl.fix-http-liveness-blockers
     name: Fix HTTP liveness blockers
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by the gw.http.impl HTTP liveness audit on
       the mounted runtime surface.
 
@@ -18451,6 +18451,8 @@ phases:
     - gw.http.impl.implement-http-route-handlers
     - gw.http.impl.http-endpoint-tests
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T06:48:21.989185+00:00'
   - id: gw.http.impl.retest-http-liveness-mounted-surface
     name: Retest mounted HTTP surface and auth behavior
     status: pending
