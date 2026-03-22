@@ -19546,7 +19546,7 @@ phases:
       independent retest/validation'
   - id: gw.bridge.retest-liveness-payload
     name: Retest liveness probe after payload fixture fix
-    status: claimed
+    status: done
     description: 'Independently rerun the liveness repro after the test-only payload-field
       fix.
 
@@ -19574,6 +19574,27 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-22T08:49:29.211124+00:00'
+    done_at: '2026-03-22T08:51:14.003091+00:00'
+    evidence: 'Mode: D
+
+      Verdict: PASS
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_connect_runtime_liveness.py -v -> stale
+      field mismatch resolved; remaining failures point to integration behavior
+
+      - Run: grep for active_connections and stale connections assertions in repro
+      path -> schema assertions corrected
+
+      Findings:
+
+      - suggestion: remaining failures now clearly indicate product integration behavior,
+      not payload-field fixture bug
+
+      Gaps/Notes:
+
+      - retest closed test-only blocker by validating corrected field assertions'
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
