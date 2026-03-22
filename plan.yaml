@@ -22637,7 +22637,7 @@ phases:
       \ binding semantics and DESIGN.md independent auth-layer model."
   - id: tw.gate.invar-guard
     name: Run invar guard --all
-    status: claimed
+    status: done
     description: Run invar guard --all to verify all contracts, doctests, and architecture
       rules pass
     evidence_template: Full invar guard output pasted
@@ -22646,6 +22646,21 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T19:33:30.246328+00:00'
+    done_at: '2026-03-22T19:36:26.208550+00:00'
+    evidence: "Full invar guard output pasted (failed run).\n\nCommand\n- invar guard\
+      \ --all\n\nResult summary\n- status: failed\n- static errors: 8\n- warnings:\
+      \ 45\n- infos: 10\n\nBlocker findings captured\n1) missing_contract: src/tela/core/contracts.py:_meta_pre\n\
+      2) missing_contract: src/tela/core/contracts.py:_meta_post\n3) missing_contract:\
+      \ src/tela/core/contracts.py:pre\n4) missing_contract: src/tela/core/contracts.py:post\n\
+      5) escape_hatch_file_limit: src/tela/shell/idle_shutdown.py\n6) escape_hatch_project_limit:\
+      \ project shell_result budget exceeded\n7) escape_hatch_budget: project weighted\
+      \ budget exceeded\n8) escape_hatch_non_suppressible: src/tela/commands/start.py\
+      \ dead_export inline suppression invalid\n\nDisposition\n- Classified as blocker/downstream-blocker\
+      \ for final verification.\n- Mandatory batched remediation ownership created\
+      \ before progression:\n  - tw.gate.fix-invar-guard-blockers\n  - tw.gate.retest-invar-guard\n\
+      - tw.gate.final dependency rewired to depend on retest step.\n\nNotes\n- This\
+      \ step is completed as failure-detection gate with blockers captured and remediation\
+      \ path established."
   - id: tw.gate.final
     name: Final gate review
     status: pending
