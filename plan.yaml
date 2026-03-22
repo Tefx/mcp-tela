@@ -19276,7 +19276,13 @@ phases:
       6. Connection count on server decrements
 
 
-      This is a Mode D liveness probe for the connect runtime surface.'
+      This is a Mode D liveness probe for the connect runtime surface.
+
+
+      Dependency note:
+
+      - Do not run until gw.bridge.retest-lockfile-actual-port closes the ephemeral-port
+      lockfile blocker.'
     verification: '- End-to-end: serve -> connect -> initialize -> tools/list -> disconnect
 
       - Lockfile discovery works
@@ -19285,8 +19291,7 @@ phases:
 
       - Clean disconnect on exit'
     depends_on:
-    - gw.bridge.implement-tela-connect-command
-    - gw.bridge.implement-stdio-http-bridge
+    - gw.bridge.retest-lockfile-actual-port
     agent: blind-tester
   - id: gw.bridge.gate-tela-connect
     name: 'Gate: tela connect'
