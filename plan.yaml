@@ -20308,7 +20308,7 @@ phases:
     agent: gate-reviewer
   - id: gw.teardown.fix-query-command-repro-tests-for-remote-server
     name: Fix stale query-command repro tests for remote server behavior
-    status: claimed
+    status: done
     description: 'Fix ALL stale teardown repro tests in `tests/repro/test_blockers.py`
       that still assume query commands succeed without a running server after the
       query-command move to lockfile + HTTP.
@@ -20371,6 +20371,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T09:56:05.357459+00:00'
+    done_at: '2026-03-22T09:57:52.133620+00:00'
+    evidence: 'Commit hash(es): f2a59d3
+
+      Files changed:
+
+      - tests/repro/test_blockers.py
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_blockers.py tests/shell/test_query_commands_remote_state.py
+      -v -> 22 passed
+
+      Sibling search:
+
+      - Run: search query-command callability assertions in tests/repro/test_blockers.py
+      -> stale success assumptions removed in B1 class
+
+      Spec link:
+
+      - docs/INTERFACES.md §2
+
+      Gaps/Notes:
+
+      - test-only remediation; no product-code changes'
   - id: gw.teardown.retest-cli-teardown-query-command-integration
     name: Retest CLI teardown integration after query-command repro fix
     status: pending
