@@ -20160,7 +20160,7 @@ phases:
       helper'
   - id: gw.teardown.wiring-audit-cli-teardown
     name: 'Wiring audit: CLI teardown'
-    status: pending
+    status: claimed
     description: 'Wiring completeness audit after CLI refactor.
 
 
@@ -20190,6 +20190,8 @@ phases:
     - gw.teardown.wire-connect-serve-into-cli-remove-start
     - gw.teardown.update-query-commands-for-http-discovery
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T09:44:41.725362+00:00'
   - id: gw.teardown.end-to-end-cli-integration-test
     name: End-to-end CLI integration test
     status: pending
