@@ -22294,7 +22294,7 @@ phases:
       \nGaps/Notes\n- No out-of-scope issues reported."
   - id: tw.impl.wire-validate-token
     name: Wire validate_token into handle_initialize
-    status: pending
+    status: claimed
     description: Wire core.token.validate_token into handle_initialize for token auth
       mode. Extract CapabilityToken from client_info, validate signature+expiry, bind
       to token's profile_name. Open mode path unchanged
@@ -22302,6 +22302,8 @@ phases:
     depends_on:
     - tw.impl.gateway-secrets
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T19:06:46.763992+00:00'
   - id: tw.impl.gate
     name: 'Gate review: token wire implementation'
     status: pending
