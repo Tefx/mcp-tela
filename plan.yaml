@@ -22321,13 +22321,15 @@ phases:
       \ verification target; no change requested in this step scope."
   - id: tw.impl.gate
     name: 'Gate review: token wire implementation'
-    status: pending
+    status: claimed
     description: 'Gate review: implementation is correct, backward compatible, no
       stub remnants'
     evidence_template: Gate review checklist completed
     depends_on:
     - tw.impl.wire-validate-token
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T19:10:48.892037+00:00'
 - id: tw.gate
   name: Final Verification
   status: locked
