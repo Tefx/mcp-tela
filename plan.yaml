@@ -21144,7 +21144,7 @@ phases:
     agent: gate-reviewer
   - id: gw.deep_review.fix-bridge-orphan-exports
     name: Fix bridge orphan exports and dead-export finding
-    status: claimed
+    status: done
     description: 'Fix the deep-review wiring audit blocker for orphan exports in `src/tela/shell/bridge.py`.
 
 
@@ -21259,6 +21259,71 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T10:32:11.888127+00:00'
+    done_at: '2026-03-22T10:40:54.626965+00:00'
+    evidence: '## Bridge Orphan Export Fix Evidence
+
+
+      Files changed:
+
+      - src/tela/shell/bridge.py (deleted)
+
+      - tests/shell/test_bridge.py (deleted)
+
+
+      Resolution chosen:
+
+      - removed or narrowed unused exports
+
+
+      Import/export search evidence:
+
+      - Run: rg "StdioHttpBridge|BridgeConfig" src/tela --type py -> no matches
+
+      - Run: rg "from tela\.shell\.bridge import|import .*bridge" src/tela --type
+      py -> no matches
+
+      - Run: rg "from tela\.shell\.bridge import|import .*bridge" tests/ --type py
+      -> no matches
+
+
+      Sibling search evidence:
+
+      - Before fix: only tests imported `StdioHttpBridge`/`BridgeConfig`; no production
+      imports
+
+      - After fix: no remaining references in src/ or tests/
+
+
+      Why this closes the blocker family:
+
+      - Root cause was orphan public bridge exports after refactor with no production
+      callers.
+
+      - Rather than adding synthetic callers or non-justified escape hatches, unused
+      bridge surface and its tests were removed.
+
+      - Dead-export finding is eliminated at source.
+
+
+      Remaining dead-export allowances:
+
+      - src/tela/commands/start.py:start_command (explicitly justified with @invar:allow
+      dead_export)
+
+
+      Verification:
+
+      - Run: uv run invar guard -> passed (0 errors, 0 warnings)
+
+      - Run: uv run pytest tests/shell/ -q -> 244 passed
+
+      - Run: rg "StdioHttpBridge|BridgeConfig|bridge\.py" src/ tests/ --type py ->
+      no remaining references
+
+
+      Artifact:
+
+      - Commit: e47e1a56b40e060e13d17751b7c4ed0cf36d780b'
   - id: gw.deep_review.retest-bridge-orphan-exports
     name: Re-run focused wiring audit for bridge exports
     status: pending
