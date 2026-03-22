@@ -23360,3 +23360,61 @@ phases:
     depends_on:
     - tw.gate.final-regate
     agent: python-senior
+  - id: tw.gate.retest-final-regate-invar
+    name: Retest final re-gate invar regression blocker family
+    status: pending
+    description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
+      remediation for the failed `tw.gate.final-regate` blocker family from a fresh
+      perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Verification scope: `phase-check` protecting `tw.gate.final-regate2` and tw.gate
+      phase completion.
+
+
+      Test for:
+
+      - Happy path: exact `invar guard --all` now passes for the contracts surface
+      after the remediation
+
+      - Edge cases: targeted mypy on `src/tela/core/contracts.py` still passes after
+      restoring invar-visible contract semantics
+
+      - Error scenarios: targeted pytest coverage around the contracts regression
+      surface and any coupled regression path still passes after the fix
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1.
+
+
+      If this step verifies symbolic testing, require a fresh/cold environment and
+      the exact project command family.'
+    verification: '- phase-check protecting `tw.gate.final-regate2`
+
+      - Run exact `invar guard --all` in a fresh/cold environment
+
+      - Run targeted `mypy` against `src/tela/core/contracts.py`
+
+      - Run targeted `pytest` checks covering the contracts regression surface
+
+      - Evidence must include actual commands and outputs, plus whether any residual
+      sibling issue remains'
+    evidence_template: "## Verification Report\n\n**Tester**: integration-verifier\
+      \ (independent of implementation)\n**Scope**: tw.gate final-regate invar blocker\
+      \ family\n**Independence Level**: L1\n**Environment**: fresh/cold\n\n### Test\
+      \ Execution\n- Commands executed:\n  ```\n  invar guard --all\n  mypy src/tela/core/contracts.py\n\
+      \  pytest <targeted-contract-regression-tests>\n  ```\n- Output summary: <paste\
+      \ key lines, not 'tests pass'>\n\n### Issues Found\n| Severity | Description\
+      \ | Location | Reproduction |\n|----------|-------------|----------|--------------|\n\
+      | blocker | <issue if found> | <file:line> | <steps> |\n\n### Coverage Assessment\n\
+      - Exact invar command run: yes/no\n- Targeted mypy run: yes/no\n- Targeted pytest\
+      \ run: yes/no\n- Residual sibling issues: <none or list>\n\n### Verdict\n- PASS\
+      \ | ISSUES_FOUND | INCOMPLETE\n"
+    depends_on:
+    - tw.gate.fix-final-regate-invar
+    agent: integration-verifier
