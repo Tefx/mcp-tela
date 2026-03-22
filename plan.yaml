@@ -21785,7 +21785,7 @@ phases:
   - id: gw.deep_review.retest-runtime-shutdown-lock-token
     name: Re-test runtime shutdown wiring, shared connection locking, and bearer token
       containment
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (software-architect), validate from a
       fresh perspective that all three architecture/concurrency findings are closed.
 
@@ -21907,3 +21907,5 @@ phases:
     depends_on:
     - gw.deep_review.fix-runtime-shutdown-lock-token
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-22T11:07:16.169401+00:00'
