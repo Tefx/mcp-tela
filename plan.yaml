@@ -22131,7 +22131,7 @@ phases:
   steps:
   - id: tw.test.token-mode-init
     name: Write token-mode initialize tests
-    status: claimed
+    status: done
     description: 'Write tests for token-mode initialize: valid token binds to profile,
       expired token rejected, invalid signature rejected, open mode unchanged'
     evidence_template: Test file path, test names, pytest output (expected failures
@@ -22139,6 +22139,50 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T18:56:14.142799+00:00'
+    done_at: '2026-03-22T19:00:39.392598+00:00'
+    evidence: 'Test file path
+
+      - tests/core/test_token.py
+
+
+      Test names
+
+      - test_resolve_token_init_binding_valid_token_binds_to_profile
+
+      - test_resolve_token_init_binding_expired_token_rejected
+
+      - test_resolve_token_init_binding_invalid_signature_rejected
+
+      - test_resolve_token_init_binding_preserves_profile_name
+
+      - test_resolve_token_init_binding_dual_key_rotation
+
+      - test_resolve_token_init_binding_returns_binding_type
+
+
+      Verification
+
+      - pytest tests/core/test_token.py -k resolve_token_init_binding: all listed
+      tests passed
+
+      - pytest summary reported 16 passed in 0.45s
+
+      - invar guard status: passed (static errors 0, warnings 0)
+
+
+      Commit hash(es)
+
+      - 643ecbc test(token): add resolve_token_init_binding tests for token-mode initialize
+
+
+      Files changed
+
+      - tests/core/test_token.py
+
+
+      Gaps/Notes
+
+      - No blocking gaps reported; gate review step follows for coverage adequacy.'
   - id: tw.test.gate
     name: 'Gate review: token wire tests'
     status: pending
