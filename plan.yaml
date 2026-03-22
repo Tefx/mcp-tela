@@ -22045,6 +22045,15 @@ phases:
   status: locked
   depends_on:
   - tw.contract
+  steps:
+  - id: tw.test.token-mode-init
+    name: Write token-mode initialize tests
+    status: pending
+    description: 'Write tests for token-mode initialize: valid token binds to profile,
+      expired token rejected, invalid signature rejected, open mode unchanged'
+    evidence_template: Test file path, test names, pytest output (expected failures
+      OK at this stage)
+    agent: python-executor
 - id: tw.impl
   name: Token Wire Implementation
   status: locked
