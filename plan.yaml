@@ -19471,6 +19471,52 @@ phases:
 
       - independent retest confirms non-zero lockfile port and successful connect
       discovery without override'
+  - id: gw.bridge.fix-liveness-payload
+    name: Fix liveness probe status payload fixture
+    status: pending
+    description: 'Fix the test-only liveness repro blocker in `tests/repro/test_connect_runtime_liveness.py`
+      and any directly related probe fixtures.
+
+
+      Issue:
+
+      - The repro test asserts a `connections` field while the runtime status payload
+      exposes `active_connections`.
+
+      - This causes the liveness probe to fail even though the implementation behavior
+      is correct.
+
+
+      Required outcomes:
+
+      - Update the repro test and related fixtures/helpers to assert the runtime status
+      payload contract consistently
+
+      - Align all liveness probe expectations on `active_connections` where this runtime
+      path reports connection counts
+
+      - Search sibling probe assertions/helpers on the same liveness path so no stale
+      `connections` expectation remains in the bridge repro coverage
+
+
+      Out-of-scope:
+
+      - Product code changes to bridge/runtime behavior
+
+      - Status payload schema redesign
+
+      - Non-liveness test cleanup outside the affected bridge repro path'
+    verification: '- Focused repro tests covering the status payload field naming
+      pass
+
+      - Sibling search shows no stale `connections` assertion remains in the affected
+      liveness repro path
+
+      - Proof the fix is test-only and does not require runtime behavior changes'
+    depends_on:
+    - gw.bridge.implement-tela-connect-command
+    - gw.bridge.implement-stdio-http-bridge
+    agent: python-executor
 - id: gw.teardown
   name: Replace tela start with connect/serve
   status: locked
