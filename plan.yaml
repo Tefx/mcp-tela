@@ -20469,7 +20469,7 @@ phases:
       - no-server and mocked remote-success query-command paths verified'
   - id: gw.teardown.fix-gate-cli-teardown-blockers
     name: Fix gate-cli teardown blockers
-    status: claimed
+    status: done
     description: 'Batched remediation for the failed `gw.teardown.gate-cli-teardown`
       review. Fix BOTH blockers in one pass, not just the first.
 
@@ -20512,6 +20512,41 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T10:09:18.399816+00:00'
+    done_at: '2026-03-22T10:11:15.985805+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 026fc79
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_cli_wiring.py -> 1 passed
+
+      - Run: uv run pytest tests/repro/test_blockers.py -> 18 passed
+
+      - Run: grep -rn "tela.commands.serve_cmd.gateway_reload" tests/ src/ -> no results
+
+      - Run: grep -rn "@invar:allow dead_export" src/tela/commands/start.py -> found
+      at line 23
+
+
+      Spec link:
+
+      - docs/INTERFACES.md §2 (CLI surface)
+
+      - INVAR.md (dead_export escape hatch syntax)
+
+
+      Files changed:
+
+      - tests/shell/test_cli_wiring.py (monkeypatch target updated)
+
+      - src/tela/commands/start.py (added @invar:allow dead_export on start_command)
+
+
+      Gaps/Notes:
+
+      - Scope intentionally limited to two gate blockers and their targeted regressions.'
   - id: gw.teardown.retest-gate-cli-teardown-blockers-and-prerequisites
     name: Retest gate-cli teardown blockers and prerequisites
     status: pending
