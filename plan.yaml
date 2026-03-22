@@ -22076,6 +22076,16 @@ phases:
       in gateway_start
     evidence_template: Code diff, invar guard output
     agent: python-executor
+  - id: tw.impl.wire-validate-token
+    name: Wire validate_token into handle_initialize
+    status: pending
+    description: Wire core.token.validate_token into handle_initialize for token auth
+      mode. Extract CapabilityToken from client_info, validate signature+expiry, bind
+      to token's profile_name. Open mode path unchanged
+    evidence_template: Code diff, pytest output (all tests pass), invar guard output
+    depends_on:
+    - tw.impl.gateway-secrets
+    agent: python-executor
 - id: tw.gate
   name: Final Verification
   status: locked
