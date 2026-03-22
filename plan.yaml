@@ -22125,7 +22125,7 @@ phases:
       by plan design.'
 - id: tw.test
   name: Token Wire Tests
-  status: in_progress
+  status: done
   depends_on:
   - tw.contract
   steps:
@@ -22185,7 +22185,7 @@ phases:
       - No blocking gaps reported; gate review step follows for coverage adequacy.'
   - id: tw.test.gate
     name: 'Gate review: token wire tests'
-    status: claimed
+    status: done
     description: 'Gate review: test coverage adequate for token-mode initialize path'
     evidence_template: Gate review checklist completed
     depends_on:
@@ -22193,9 +22193,83 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T19:00:51.063589+00:00'
+    done_at: '2026-03-22T19:04:19.750235+00:00'
+    evidence: 'Gate review checklist completed for token wire tests.
+
+
+      Automated verification
+
+      - Test suite: 16 passed in 0.35s
+
+      - ruff lint: passed
+
+      - mypy: success, no issues found
+
+      - invar guard: passed (0 errors, warnings pre-existing)
+
+
+      Wiring audit (W1-W8 or equivalent)
+
+      - W1 runtime caller/export linkage: contract-test stage acceptable; shell integration
+      pending downstream impl phase
+
+      - W2 CLI registration: not applicable for this step
+
+      - W3 config-field consumption: not applicable for this step
+
+      - W4 placeholder/stub check: passed (no NotImplementedError/pass placeholders
+      in scope)
+
+      - W5 write-only/unused schema fields: not applicable for this core test scope
+
+      - W6 contract strength (@pre/@post/doctest): passed
+
+      - W7 spec-fixture conformance: passed (CapabilityToken schema and token flow
+      aligned)
+
+      - W8 runtime target authenticity: unit-level verification using real core functions;
+      integration wiring intentionally out of scope
+
+
+      Escape hatch audit
+
+      - No @invar:allow annotations in test scope files
+
+
+      Integration evidence classification
+
+      - Evidence type: UNIT tests exercising REAL production core functions
+
+      - No Mock/MagicMock used; tests call create_token/validate_token/resolve_token_init_binding
+      directly
+
+      - Not an integration smoke/liveness step; that remains for downstream runtime
+      gate
+
+
+      Spec coverage mapping
+
+      - Valid token binds profile: covered by test_resolve_token_init_binding_valid_token_binds_to_profile
+
+      - Expired token rejected: covered by test_resolve_token_init_binding_expired_token_rejected
+
+      - Invalid signature rejected: covered by test_resolve_token_init_binding_invalid_signature_rejected
+
+      - Open mode unchanged: confirmed via no changes in open-mode test surfaces for
+      this step
+
+
+      Verdict
+
+      - PASS, no blocker/should-fix issues for tw.test phase gate.
+
+
+      Gaps/Notes
+
+      - Shell/runtime wiring is intentionally deferred to tw.impl and tw.gate steps.'
 - id: tw.impl
   name: Token Wire Implementation
-  status: locked
+  status: pending
   depends_on:
   - tw.test
   steps:
