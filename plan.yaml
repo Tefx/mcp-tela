@@ -22017,3 +22017,8 @@ phases:
 
       - PASS for targeted retest scope with ISSUES_FOUND note for adjacent repro expectation
       mismatch.'
+- id: tw.contract
+  name: Token Wire Contract
+  status: pending
+  depends_on:
+  - gw.deep_review
