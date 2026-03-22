@@ -22294,7 +22294,7 @@ phases:
       \nGaps/Notes\n- No out-of-scope issues reported."
   - id: tw.impl.wire-validate-token
     name: Wire validate_token into handle_initialize
-    status: claimed
+    status: done
     description: Wire core.token.validate_token into handle_initialize for token auth
       mode. Extract CapabilityToken from client_info, validate signature+expiry, bind
       to token's profile_name. Open mode path unchanged
@@ -22304,6 +22304,21 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T19:06:46.763992+00:00'
+    done_at: '2026-03-22T19:10:32.721813+00:00'
+    evidence: "Code diff\n- src/tela/shell/upstream.py\n  - Imported `CapabilityToken`\
+      \ and `resolve_token_init_binding`\n  - Updated `handle_initialize` token-mode\
+      \ branch to:\n    - require token fields in `client_info`\n    - construct `CapabilityToken`\n\
+      \    - require configured `runtime.secrets`\n    - call `resolve_token_init_binding(token,\
+      \ secrets, now_iso)`\n    - reject initialize on DENY verdict with structured\
+      \ error\n    - bind profile from `binding.profile_name`\n  - Open-mode path\
+      \ remains unchanged\n\nVerification\n- pytest (relevant suites):\n  - tests/shell/test_upstream.py:\
+      \ 36 passed\n  - tests/core/test_token.py: 16 passed\n  - tests/repro/test_high.py:\
+      \ 8 passed\n  - tests/shell/test_gateway.py: 26 passed\n  - tests/core/test_config.py:\
+      \ 19 passed\n  - total reported: 105 passed\n- invar guard: passed (0 errors,\
+      \ 0 warnings)\n\nCommit hash(es)\n- worker branch committed implementation before\
+      \ handoff\n\nFiles changed\n- src/tela/shell/upstream.py\n\nGaps/Notes\n- Worker\
+      \ reported 5 pre-existing failures in liveness repro suites outside this step's\
+      \ verification target; no change requested in this step scope."
   - id: tw.impl.gate
     name: 'Gate review: token wire implementation'
     status: pending
