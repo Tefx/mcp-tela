@@ -23200,7 +23200,7 @@ phases:
       - PASS'
   - id: tw.gate.final-regate
     name: Re-gate final verification after blocker retest
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (`gate-reviewer`), replace the failed
       `tw.gate.final` verdict by reviewing the remediation path for the final blocker
       family.
@@ -23266,6 +23266,19 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T20:04:04.767432+00:00'
+    done_at: '2026-03-22T20:08:51.696399+00:00'
+    evidence: "Re-gate attempt executed and identified blocker regression.\n\nFinding\n\
+      - invar regression introduced by contracts decorator aliasing in `src/tela/core/contracts.py`.\n\
+      - `invar guard --all` now reports 4 `missing_contract` errors for `_meta_pre`,\
+      \ `_meta_post`, `pre`, `post`.\n\nRoot cause\n- Mypy `no-redef` remediation\
+      \ used `@deal_pre`/`@deal_post` aliases not recognized by invar's expected decorator\
+      \ naming path.\n- Prior retest step did not include `invar guard --all`, so\
+      \ this regression escaped earlier blocker-family retest.\n\nDisposition\n- Classified\
+      \ as blocker/downstream-blocker.\n- Planner-created remediation path:\n  - tw.gate.fix-final-regate-invar\n\
+      \  - tw.gate.retest-final-regate-invar (must include exact `invar guard --all`)\n\
+      \  - tw.gate.final-regate2 (replacement verdict)\n\nNote\n- This step is recorded\
+      \ as failed re-gate detection with explicit remediation chain for replacement\
+      \ verdict."
   - id: tw.gate.fix-final-regate-invar
     name: Fix final re-gate invar regression blocker family
     status: pending
