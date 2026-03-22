@@ -22926,3 +22926,53 @@ phases:
       }\n```\n\n### Conclusion\nAll prior blockers from tw.gate.fix-invar-guard-blockers\
       \ have been successfully resolved. The invar guard now passes with zero errors.\
       \ Remaining warnings are architectural suggestions and do not block gate progression."
+  - id: tw.gate.fix-final-blockers
+    name: Fix final gate blocker family
+    status: pending
+    description: "Fix ALL blockers found by failed final gate `tw.gate.final`.\n\n\
+      ## Blockers to Fix (ALL of these, not just the first)\n1. Update liveness coverage\
+      \ so tests and repros no longer reference the removed `tela start` CLI surface\
+      \ in `tests/repro/test_liveness.py`; align the runnable-path evidence with the\
+      \ current `serve`/`connect` runtime contract.\n   - Grep hint: `tela start|test_liveness|liveness`\n\
+      2. Resolve mypy `no-redef` failures for `pre`/`post` in `src/tela/core/contracts.py`\
+      \ without weakening the contract surface or changing the documented decorator\
+      \ semantics.\n   - Grep hint: `\\bpre\\b|\\bpost\\b|no-redef|contracts.py`\n\
+      3. Correct shell serve-command tests so mocks return the production `Result`\
+      \ shape rather than bare `str`, especially in `tests/shell/test_serve_cmd.py`.\n\
+      \   - Grep hint: `test_serve_cmd|Result\\[|MagicMock|return_value`\n\n## Root\
+      \ Cause vs Symptom\n- Root cause: verification artifacts and type-level test\
+      \ doubles drifted from the post-gateway runtime contract and current core typing\
+      \ rules.\n- Symptom: final gate cannot reopen because the blocker family spans\
+      \ CLI liveness evidence, core contract typing, and shell command test realism.\n\
+      - Why this fix is not surface-level: the step must repair all sibling occurrences\
+      \ in the blocker family, not just the first failing assertion or error line.\n\
+      \n## Completion Criteria\n- ALL three blocker classes are fixed in one batch\n\
+      - Sibling search completed for each blocker family\n- Updated tests and typing\
+      \ expectations match the current public runtime contract\n- No remaining references\
+      \ to the removed `tela start` command remain in affected verification paths"
+    verification: '- L1/local-check protecting the tw.gate re-open path
+
+      - Grep/evidence shows no stale `tela start` references remain in the affected
+      liveness blocker family
+
+      - Mypy blocker family for `src/tela/core/contracts.py` is resolved without changing
+      decorator semantics
+
+      - Serve command test doubles use `Result`-shaped returns on the high-risk failure
+      path
+
+      - Evidence includes sibling-search output for each blocker family'
+    evidence_template: "## Final Gate Blocker Fix Report\n\n**Prior loop**: tw.gate.final\n\
+      **Remaining blocker**: final gate blocker family spanning liveness CLI drift,\
+      \ contract mypy redefinitions, and serve-command Result mock realism\n**Why\
+      \ new loop**: failed final gate had no executable remediation path\n\n### Blocker\
+      \ coverage\n- `tela start` stale references fixed:\n  ```\n  <grep output or\
+      \ updated test references>\n  ```\n- `pre`/`post` mypy no-redef resolved:\n\
+      \  ```\n  <type-check evidence or code reference summary>\n  ```\n- `Result`\
+      \ mock realism repaired:\n  ```\n  <test diff/evidence summary>\n  ```\n\n###\
+      \ Sibling search evidence\n```\n<paste grep outputs for all three blocker families>\n\
+      ```\n\n### Root cause evidence\n<explain why these changes close the blocker\
+      \ family rather than just the first symptom>"
+    depends_on:
+    - tw.gate.final
+    agent: python-senior
