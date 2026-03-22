@@ -18894,7 +18894,7 @@ phases:
       SIGTERM graceful shutdown, lockfile cleanup'
   - id: gw.serve.gate-tela-serve
     name: 'Gate: tela serve'
-    status: pending
+    status: claimed
     description: "Gate review: Verify tela serve phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale: Runtime surface (server), token lifecycle\
       \ (security), idle shutdown (state management).\n\ncross_cutting_focus:\n  -\
@@ -18920,6 +18920,8 @@ phases:
     - gw.serve.implement-idle-shutdown-manager
     - gw.serve.tela-serve-liveness-probe
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-22T07:46:51.647282+00:00'
 - id: gw.conflict
   name: tela. Prefix Conflict Rejection
   status: locked
