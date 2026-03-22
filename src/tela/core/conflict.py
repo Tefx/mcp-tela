@@ -7,6 +7,7 @@ same name. Does NOT decide what to do about conflicts (caller decides).
 from __future__ import annotations
 
 from collections import defaultdict
+from enum import Enum
 
 from tela.core.contracts import pre, post
 from pydantic import BaseModel
@@ -14,6 +15,11 @@ from pydantic import BaseModel
 from tela.core.models import ResolvedTool
 
 
+class ConflictType(str, Enum):
+    """Type of tool conflict."""
+
+    NAME_COLLISION = "name_collision"
+    PREFIX_VIOLATION = "prefix_violation"
 
 
 class ToolConflict(BaseModel):
@@ -21,6 +27,19 @@ class ToolConflict(BaseModel):
 
     tool_name: str
     servers: list[str]
+    conflict_type: ConflictType = ConflictType.NAME_COLLISION
+
+
+RESERVED_PREFIX = "tela."
+"""Prefix reserved for tela introspection tools."""
+
+INTROSPECTION_TOOLS = (
+    "tela.status",
+    "tela.connections",
+    "tela.audit",
+    "tela.profiles",
+)
+"""Reserved introspection tools exposed by tela itself (INTERFACES.md §7.1)."""
 
 
 @pre(lambda all_tools: isinstance(all_tools, dict))
@@ -33,6 +52,10 @@ def detect_conflicts(
     Input: dict mapping server_name -> list of ResolvedTools.
     Returns list of ToolConflict (tool_name, server_names involved).
 
+    Detects two conflict types:
+    1. NAME_COLLISION: multiple servers expose the same tool name
+    2. PREFIX_VIOLATION: downstream tool uses reserved "tela." prefix
+
     Examples:
         >>> from tela.core.models import ResolvedTool
         >>> tools = {
@@ -44,10 +67,24 @@ def detect_conflicts(
         1
         >>> conflicts[0].tool_name
         'read_file'
+        >>> conflicts[0].conflict_type
+        <ConflictType.NAME_COLLISION: 'name_collision'>
         >>> sorted(conflicts[0].servers)
         ['fs1', 'fs2']
         >>> detect_conflicts({"a": [ResolvedTool(name="t1", server_name="a", family="a")]})
         []
+        >>> # tela.* prefix from single server is rejected as PREFIX_VIOLATION
+        >>> conflicts = detect_conflicts({
+        ...     "srv": [ResolvedTool(name="tela.custom", server_name="srv", family="srv")],
+        ... })
+        >>> len(conflicts)
+        1
+        >>> conflicts[0].tool_name
+        'tela.custom'
+        >>> conflicts[0].conflict_type
+        <ConflictType.PREFIX_VIOLATION: 'prefix_violation'>
+        >>> conflicts[0].servers
+        ['srv']
 
     Args:
         all_tools: Server name to resolved tool list mapping.
@@ -62,9 +99,29 @@ def detect_conflicts(
         for tool in tools:
             tool_owners[tool.name].append(server_name)
 
-    conflicts = []
+    conflicts: list[ToolConflict] = []
+
+    # Check for prefix violations first (single server can cause this)
     for tool_name, servers in sorted(tool_owners.items()):
-        if len(servers) > 1:
-            conflicts.append(ToolConflict(tool_name=tool_name, servers=servers))
+        if tool_name.startswith(RESERVED_PREFIX):
+            conflicts.append(
+                ToolConflict(
+                    tool_name=tool_name,
+                    servers=servers,
+                    conflict_type=ConflictType.PREFIX_VIOLATION,
+                )
+            )
+
+    # Check for name collisions (multiple servers with same name)
+    for tool_name, servers in sorted(tool_owners.items()):
+        if len(servers) > 1 and not tool_name.startswith(RESERVED_PREFIX):
+            # PREFIX_VIOLATION already handled above; don't double-report
+            conflicts.append(
+                ToolConflict(
+                    tool_name=tool_name,
+                    servers=servers,
+                    conflict_type=ConflictType.NAME_COLLISION,
+                )
+            )
 
     return conflicts
