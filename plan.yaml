@@ -22269,18 +22269,20 @@ phases:
       - Shell/runtime wiring is intentionally deferred to tw.impl and tw.gate steps.'
 - id: tw.impl
   name: Token Wire Implementation
-  status: pending
+  status: in_progress
   depends_on:
   - tw.test
   steps:
   - id: tw.impl.gateway-secrets
     name: Pass auth secrets through gateway startup
-    status: pending
+    status: claimed
     description: Pass auth secrets from config through gateway startup into GatewayRuntime
       state. Add secrets field to GatewayRuntime, populate from TelaConfig.auth.secrets
       in gateway_start
     evidence_template: Code diff, invar guard output
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-22T19:04:38.106532+00:00'
   - id: tw.impl.wire-validate-token
     name: Wire validate_token into handle_initialize
     status: pending
