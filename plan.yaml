@@ -23057,7 +23057,7 @@ phases:
       - Commit: 89b3f02'
   - id: tw.gate.retest-final-blockers
     name: Retest final gate blocker family
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (`integration-verifier`), validate the
       blocker family remediated after failed final gate `tw.gate.final` from a fresh
       perspective.
@@ -23144,6 +23144,8 @@ phases:
     depends_on:
     - tw.gate.fix-final-blockers
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-22T20:01:52.746706+00:00'
   - id: tw.gate.final-regate
     name: Re-gate final verification after blocker retest
     status: pending
