@@ -22067,6 +22067,15 @@ phases:
   status: locked
   depends_on:
   - tw.test
+  steps:
+  - id: tw.impl.gateway-secrets
+    name: Pass auth secrets through gateway startup
+    status: pending
+    description: Pass auth secrets from config through gateway startup into GatewayRuntime
+      state. Add secrets field to GatewayRuntime, populate from TelaConfig.auth.secrets
+      in gateway_start
+    evidence_template: Code diff, invar guard output
+    agent: python-executor
 - id: tw.gate
   name: Final Verification
   status: locked
