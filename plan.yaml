@@ -18264,7 +18264,7 @@ phases:
       bearer); no additional edits required for this step'
   - id: gw.http.impl.gate-http-implementation
     name: 'Gate: HTTP implementation'
-    status: claimed
+    status: pending
     description: 'Gate review: Verify HTTP implementation matches INTERFACES.md 7.2.
 
 
@@ -18296,8 +18296,6 @@ phases:
     - gw.http.impl.implement-http-route-handlers
     - gw.http.impl.http-endpoint-tests
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-22T06:42:21.208488+00:00'
 - id: gw.serve
   name: tela serve Command
   status: locked
