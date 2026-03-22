@@ -22022,6 +22022,15 @@ phases:
   status: pending
   depends_on:
   - gw.deep_review
+  steps:
+  - id: tw.contract.define-token-init
+    name: Define token-mode initialize contract
+    status: pending
+    description: 'Define contract for token-mode initialize: handle_initialize accepts
+      CapabilityToken, validates via core.token.validate_token, binds connection to
+      token''s profile_name'
+    evidence_template: Contract signature defined, invar sig output pasted
+    agent: python-executor
 - id: tw.test
   name: Token Wire Tests
   status: locked
