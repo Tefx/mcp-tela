@@ -23281,7 +23281,7 @@ phases:
       \ verdict."
   - id: tw.gate.fix-final-regate-invar
     name: Fix final re-gate invar regression blocker family
-    status: pending
+    status: claimed
     description: "Fix ALL blockers found after failed `tw.gate.final-regate`, not\
       \ just the first symptom.\n\nVerification scope: `phase-check` protecting the\
       \ replacement re-gate path and tw.gate phase completion.\n\nsymbolic_testing:\
@@ -23373,6 +23373,8 @@ phases:
     depends_on:
     - tw.gate.final-regate
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-22T20:09:11.060562+00:00'
   - id: tw.gate.retest-final-regate-invar
     name: Retest final re-gate invar regression blocker family
     status: pending
