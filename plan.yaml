@@ -20160,7 +20160,7 @@ phases:
       helper'
   - id: gw.teardown.wiring-audit-cli-teardown
     name: 'Wiring audit: CLI teardown'
-    status: claimed
+    status: done
     description: 'Wiring completeness audit after CLI refactor.
 
 
@@ -20192,6 +20192,43 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-22T09:44:41.725362+00:00'
+    done_at: '2026-03-22T09:48:13.644540+00:00'
+    evidence: 'Commit hash(es): none
+
+      Files changed:
+
+      - none
+
+      Verification:
+
+      - CLI help exposes serve/connect and no start subcommand
+
+      - query commands route through lockfile+HTTP shared helper
+
+      - no stale start-flow dead code paths in CLI dispatcher
+
+      Wiring audit:
+
+      - W1 connect registered
+
+      - W2 serve registered
+
+      - W3 start removed from CLI
+
+      - W4 query commands use remote_state discovery
+
+      - W5 no orphan imports from removed start flow
+
+      - W6 no dead _handle_start/_run_stdio_gateway/_serve_remote_gateway paths
+
+      Findings:
+
+      - should_fix: test monkeypatch path mismatch in one wiring test (non-blocking
+      to runtime behavior)
+
+      Gaps/Notes:
+
+      - start.py retained only as deprecated/testing compatibility module'
   - id: gw.teardown.end-to-end-cli-integration-test
     name: End-to-end CLI integration test
     status: pending
