@@ -19326,7 +19326,7 @@ phases:
     agent: gate-reviewer
   - id: gw.bridge.fix-lockfile-actual-port
     name: Fix lockfile ephemeral-port discovery
-    status: claimed
+    status: done
     description: 'Fix lockfile publication for ephemeral binding in the tela serve/tela
       connect bridge path.
 
@@ -19367,6 +19367,36 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-22T08:16:09.920875+00:00'
+    done_at: '2026-03-22T08:22:43.453093+00:00'
+    evidence: 'Commit hash(es): 271d9640d208c667068fff4e306ee5c7ee91ea9d
+
+      Files changed:
+
+      - src/tela/commands/serve_cmd.py
+
+      - tests/shell/test_serve_cmd.py
+
+      - tests/shell/test_connect_cmd.py
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_serve_cmd.py tests/shell/test_connect_cmd.py
+      -q -> 12 passed
+
+      - Run: invar guard changed=true -> passed
+
+      Sibling search:
+
+      - Run: search write_lockfile callsites under src -> only serve command caller
+      and lockfile definition found
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.3
+
+      Gaps/Notes:
+
+      - fix limited to bound-port publication and aligned discovery regressions'
   - id: gw.bridge.retest-lockfile-actual-port
     name: Retest connect liveness after lockfile port fix
     status: pending
