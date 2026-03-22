@@ -22663,7 +22663,7 @@ phases:
       \ path established."
   - id: tw.gate.final
     name: Final gate review
-    status: claimed
+    status: done
     description: 'Final gate review: all phases complete, no regressions, token auth
       wired end-to-end. Downstream progression is blocked until `tw.gate.retest-invar-guard`
       verifies the batched invar remediation path.'
@@ -22679,6 +22679,19 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-22T19:49:48.860465+00:00'
+    done_at: '2026-03-22T19:55:04.709872+00:00'
+    evidence: "Final gate review executed and reported blocker findings.\n\nFailed-check\
+      \ summary\n- invar guard --all: pass (0 errors)\n- mypy: fail (name redefinition\
+      \ in contracts module)\n- ruff: fail (unused import)\n- pytest: fail (tests\
+      \ referencing non-existent CLI command and mock type mismatch)\n\nBlockers captured\n\
+      1) Tests reference non-existent `tela start` in `tests/repro/test_liveness.py`\n\
+      2) mypy no-redef for `pre`/`post` in `src/tela/core/contracts.py`\n3) `tests/shell/test_serve_cmd.py`\
+      \ mock returns `str` while `serve_cmd` expects `Result`\n\nDisposition\n- Classified\
+      \ as blocker family requiring batched remediation before final acceptance.\n\
+      - Planner-created remediation ownership path:\n  - tw.gate.fix-final-blockers\n\
+      \  - tw.gate.retest-final-blockers\n  - tw.gate.final-regate\n\nNotes\n- This\
+      \ step is recorded as failed-gate detection with explicit remediation plan;\
+      \ replacement final verdict occurs at `tw.gate.final-regate`."
   - id: tw.gate.fix-invar-guard-blockers
     name: Fix invar guard blocker family
     status: done
