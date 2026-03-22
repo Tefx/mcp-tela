@@ -19473,7 +19473,7 @@ phases:
       discovery without override'
   - id: gw.bridge.fix-liveness-payload
     name: Fix liveness probe status payload fixture
-    status: claimed
+    status: done
     description: 'Fix the test-only liveness repro blocker in `tests/repro/test_connect_runtime_liveness.py`
       and any directly related probe fixtures.
 
@@ -19519,6 +19519,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-22T08:44:45.720718+00:00'
+    done_at: '2026-03-22T08:48:33.659689+00:00'
+    evidence: 'Commit hash(es): 58e2b42
+
+      Files changed:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      Verification:
+
+      - Run: uv run pytest tests/repro/test_connect_runtime_liveness.py -v -> stale
+      field mismatch fixed; remaining failures indicate deeper integration issues
+
+      Sibling search:
+
+      - Run: grep for ''connections'' key assertions in tests/repro -> none remaining
+      in affected repro path
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2
+
+      Gaps/Notes:
+
+      - test-only schema mismatch fixed; underlying integration behavior still requires
+      independent retest/validation'
   - id: gw.bridge.retest-liveness-payload
     name: Retest liveness probe after payload fixture fix
     status: pending
