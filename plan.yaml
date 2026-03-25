@@ -24999,7 +24999,7 @@ phases:
       from rem.blockers.retest-framed-stdio-liveness'
   - id: rem.blockers.retest-stdio-mcp-initialize-loop2
     name: Retest framed stdio/connect MCP initialize loop 2 remediation
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -25076,6 +25076,8 @@ phases:
     depends_on:
     - rem.blockers.fix-stdio-mcp-initialize-loop2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-25T17:35:47.323005+00:00'
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
