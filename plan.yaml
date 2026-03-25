@@ -24994,6 +24994,62 @@ phases:
   status: locked
   depends_on:
   - rem.hygiene
+  steps:
+  - id: rem.suggestions.add-invalid-bearer-negative-regression
+    name: Add invalid bearer format negative regression
+    status: pending
+    description: 'step_type: test
+
+      agent_source: default
+
+      spec_refs:
+
+      - sec.mcp_auth bearer auth enforcement behavior
+
+      - suggestion: add invalid bearer format negative test
+
+
+      touch_paths:
+
+      - tests covering MCP bearer auth middleware and serve/connect auth surfaces
+
+      - any existing auth negative-case fixtures
+
+
+      harness_refs:
+
+      - bearer auth verification tests
+
+      - sec.mcp_auth middleware/runtime harness
+
+
+      authoritative_interface: NONE PINNED
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one test fixture MUST use the exact documented bearer/header shape
+      from the authoritative auth spec, with an explicitly invalid bearer format variant.
+
+
+      Verification scope: local-check protecting rem.suggestions verification and
+      rem.final_verify targeted regression pack.'
+    verification: '- Add a negative test for invalid bearer formatting
+
+      - Cite the auth spec/behavior source used for the malformed input
+
+      - Demonstrate that the rejection path is asserted explicitly, not inferred from
+      generic failure'
+    evidence_template: '## Invalid Bearer Regression
+
+      - fixture source section:
+
+      - malformed bearer cases added:
+
+      - exact test names:
+
+      '
+    agent: python-executor
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
