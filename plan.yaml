@@ -25307,3 +25307,83 @@ phases:
 
       '
     agent: integration-verifier
+  - id: rem.final_verify.targeted-regressions
+    name: Run targeted remediation regression suite
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - blocker, should-fix, and suggestion remediation scope from conditional-pass
+      review
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - auth negative tests
+
+      - lockfile schema validation tests
+
+      - any focused suites added or updated by remediation work
+
+
+      harness_refs:
+
+      - runtime liveness repro harness
+
+      - auth middleware regression harness
+
+      - lockfile schema regression harness
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, validate the full remediation slice with focused regressions.
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      Independence Level: L2
+
+      Verification scope: full-plan-check protecting rem.final_verify.gate.
+
+      '
+    verification: '- Run targeted regressions covering count semantics, bridge timeout,
+      invalid bearer format, and lockfile schema validation
+
+      - Capture exact commands and actual outputs
+
+      - Report blocker/should_fix findings explicitly'
+    evidence_template: '## Targeted Regression Report
+
+      **Commands executed**:
+
+      ```
+
+      <paste exact targeted regression commands>
+
+      ```
+
+      **Coverage**:
+
+      - count semantics
+
+      - initialize/tools_list timeout
+
+      - invalid bearer negative path
+
+      - lockfile schema invalid path
+
+      **Issues found**:
+
+      - blocker | should_fix | suggestion | tech_debt
+
+      '
+    depends_on:
+    - rem.final_verify.freeze-release-candidate
+    agent: integration-verifier
