@@ -100,6 +100,45 @@ def main() -> int:
             print(f"lockfile_token={lock['token']}")
             print(f"probe_base_url=http://{lock['host']}:{lock['port']}")
             print(f"probe_authorization=Bearer {lock['token']}")
+            pid_ps = subprocess.run(
+                [
+                    "ps",
+                    "-p",
+                    str(lock["pid"]),
+                    "-o",
+                    "pid=,ppid=,stat=,command=",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            print(f"pid_ps_returncode={pid_ps.returncode}")
+            print("pid_ps_stdout_begin")
+            print(pid_ps.stdout, end="")
+            print("pid_ps_stdout_end")
+            print("pid_ps_stderr_begin")
+            print(pid_ps.stderr, end="")
+            print("pid_ps_stderr_end")
+            listen_lsof = subprocess.run(
+                [
+                    "lsof",
+                    "-a",
+                    "-p",
+                    str(lock["pid"]),
+                    "-iTCP",
+                    "-sTCP:LISTEN",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            print(f"lsof_returncode={listen_lsof.returncode}")
+            print("lsof_stdout_begin")
+            print(listen_lsof.stdout, end="")
+            print("lsof_stdout_end")
+            print("lsof_stderr_begin")
+            print(listen_lsof.stderr, end="")
+            print("lsof_stderr_end")
 
             status_request = urllib_request.Request(
                 f"http://{lock['host']}:{lock['port']}/status",
