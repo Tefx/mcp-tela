@@ -23933,3 +23933,8 @@ phases:
 
       Pre-existing (out of scope): 2 tests in test_connect_runtime_liveness.py fail
       on main'
+- id: rem.blockers
+  name: Post-Gate Blocker Remediation
+  status: pending
+  depends_on:
+  - sec.mcp_auth
