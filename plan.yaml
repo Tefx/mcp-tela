@@ -24426,7 +24426,7 @@ phases:
       - Updated dependencies so downstream black-box and gate depend on batched retest'
   - id: rem.blockers.blackbox-runtime-liveness
     name: Black-box runtime liveness probe after blocker remediation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -24512,6 +24512,22 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-25T17:41:49.557820+00:00'
+    done_at: '2026-03-25T17:45:36.233341+00:00'
+    evidence: "## Black-Box Liveness Evidence\n**Entry point**: `tela connect --config\
+      \ <path>`\n\n**Launch command**:\n```text\npython -m tela connect --config /var/folders/.../tela.yaml\n\
+      ```\n\n**Operation exercised**: initialize -> tools_list\n\n**Observed output**:\n\
+      ```text\nProcess started with PID=84155\nProcess poll after 2s: None\nReceived\
+      \ initialize response:\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\"\
+      : {\n    \"protocolVersion\": \"2024-11-05\",\n    \"capabilities\": {...},\n\
+      \    \"serverInfo\": {\"name\": \"tela-gateway\", \"version\": \"1.26.0\"}\n\
+      \  }\n}\nReceived tools/list response:\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\"\
+      : 2,\n  \"result\": {\"tools\": []}\n}\nFinal process poll before terminate:\
+      \ None\n```\n\n**Verdict**: PASS\n\n**Checks satisfied**:\n- entrypoint identified\
+      \ and launched under cold conditions\n- surface stayed alive through initialize\
+      \ and tools/list\n- end-to-end runnable behavior verified with actual MCP responses\n\
+      - no early exit observed\n\n**Commit**:\n- 34ee445717221bf3c1902ace14ebcd816c8e8903\n\
+      \n**Spec link**:\n- docs/USAGE.md (`tela connect`)\n- docs/INTERFACES.md §7\
+      \ MCP Surface"
   - id: rem.blockers.gate
     name: Gate blocker remediation phase
     status: pending
