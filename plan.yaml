@@ -23753,7 +23753,8 @@ phases:
     description: In src/tela/commands/serve_cmd.py _launch_streamable_http_server,
       wrap app = upstream_server.streamable_http_app() with BearerAuthMiddleware.
       Pass a get_expected_token callable that reads _runtime.expected_bearer_token
-      under _runtime_lock from gateway.py.
+      under _runtime_lock from gateway.py. Test must use the middleware-wrapped app
+      (not raw streamable_http_app()) to verify auth enforcement at the /mcp endpoint.
     verification: 'Integration test: POST /mcp without bearer token returns 401. POST
       /mcp with valid token succeeds. tela connect still works end-to-end.'
     evidence_template: 'Paste: (1) integration test output (2) invar guard output'
