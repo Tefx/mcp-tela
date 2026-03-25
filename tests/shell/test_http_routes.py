@@ -165,26 +165,6 @@ class TestHandleDisconnect:
             runtime.running = False
 
 
-class TestHandleMcp:
-    """Tests for handle_mcp endpoint."""
-
-    def test_handle_mcp_rejects_invalid_token(self) -> None:
-        result = http_routes.handle_mcp("wrong-token", "expected-token", {})
-        assert result.is_err
-        assert "AUTH_INVALID_TOKEN" in result.error
-
-    def test_handle_mcp_rejects_when_gateway_not_started(self) -> None:
-        result = http_routes.handle_mcp("valid", "valid", {})
-        assert result.is_err
-
-    def test_handle_mcp_validates_token_before_gateway_check(self) -> None:
-        """Auth should be validated first, before gateway state check."""
-        # Note: The implementation checks auth before gateway state
-        result = http_routes.handle_mcp("wrong", "different", {})
-        assert result.is_err
-        assert "AUTH_INVALID_TOKEN" in result.error
-
-
 class TestBearerTokenUsage:
     """Tests to verify hmac.compare_digest is used via validate_bearer_token."""
 
@@ -203,9 +183,9 @@ class TestBearerTokenUsage:
                 ):
                     validate_calls.append(node)
 
-        # There should be calls in handle_status, handle_connect, handle_disconnect, handle_mcp
+        # There should be calls in handle_status, handle_connect, handle_disconnect
         # handle_health has no auth requirement
-        assert len(validate_calls) >= 4
+        assert len(validate_calls) >= 3
 
     def test_validate_bearer_token_uses_hmac_compare_digest(self) -> None:
         """Verify the underlying auth uses constant-time comparison."""
@@ -225,7 +205,7 @@ class TestBearerTokenUsage:
 
 
 class TestAllEndpointsImplemented:
-    """Verify all 5 endpoints are implemented."""
+    """Verify all 4 endpoints are implemented."""
 
     def test_handle_health_exists(self) -> None:
         assert hasattr(http_routes, "handle_health")
@@ -243,17 +223,12 @@ class TestAllEndpointsImplemented:
         assert hasattr(http_routes, "handle_disconnect")
         assert callable(http_routes.handle_disconnect)
 
-    def test_handle_mcp_exists(self) -> None:
-        assert hasattr(http_routes, "handle_mcp")
-        assert callable(http_routes.handle_mcp)
-
     def test_route_handlers_tuple_contains_all(self) -> None:
-        """Verify _ROUTE_HANDLERS tuple contains all 5 handlers."""
+        """Verify _ROUTE_HANDLERS tuple contains all 4 handlers."""
         assert hasattr(http_routes, "_ROUTE_HANDLERS")
         handlers = http_routes._ROUTE_HANDLERS
-        assert len(handlers) == 5
+        assert len(handlers) == 4
         assert http_routes.handle_health in handlers
         assert http_routes.handle_status in handlers
         assert http_routes.handle_connect in handlers
         assert http_routes.handle_disconnect in handlers
-        assert http_routes.handle_mcp in handlers

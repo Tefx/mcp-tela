@@ -15,7 +15,6 @@ from tela.core.models import (
     DisconnectRequest,
     HealthResponse,
     StatusResponse,
-    TelaError,
 )
 from tela.core.contracts import post, pre
 from tela.shell.config_loader import Result
@@ -254,75 +253,9 @@ def handle_disconnect(
     )
 
 
-@pre(
-    lambda request_token, expected_token, payload: (
-        isinstance(payload, Mapping)
-        and isinstance(request_token, str)
-        and isinstance(expected_token, str)
-    )
-)
-@post(lambda result: result.is_ok or result.is_err)
-def handle_mcp(
-    request_token: str,
-    expected_token: str,
-    payload: Mapping[str, object],
-) -> Result[Mapping[str, object], str | TelaError]:
-    """HTTP handler for `POST /mcp`.
-
-    Endpoint: POST /mcp
-    Auth: Bearer token required.
-
-    The caller is required to provide credentials that must validate with
-    ``validate_bearer_token`` from ``tela.shell.http_auth``.
-
-    Forwards requests to the FastMCP StreamableHTTP handler.
-
-    Returns:
-        Result with MCP response on success, or TelaError on failure.
-
-    Examples:
-        >>> runtime = get_runtime()
-        >>> runtime.config = None  # Gateway not started
-        >>> result = handle_mcp("valid-token", "valid-token", {})
-        >>> result.is_err
-        True
-    """
-
-    auth_result = validate_bearer_token(request_token, expected_token)
-    if auth_result.is_err:
-        return Result(error=auth_result.error)
-
-    runtime = get_runtime()
-    if runtime.config is None or not runtime.running:
-        return Result(
-            error=TelaError(
-                code="GATEWAY_NOT_STARTED",
-                message="Gateway has not been started",
-            )
-        )
-
-    upstream_server = runtime.upstream_server
-    if upstream_server is None:
-        return Result(
-            error=TelaError(
-                code="MCP_HANDLER_NOT_AVAILABLE",
-                message="MCP handler is not available",
-            )
-        )
-
-    _ = payload
-    return Result(
-        error=TelaError(
-            code="MCP_HANDLER_NOT_IMPLEMENTED",
-            message="MCP StreamableHTTP forwarding not yet implemented",
-        )
-    )
-
-
 _ROUTE_HANDLERS = (
     handle_health,
     handle_status,
     handle_connect,
     handle_disconnect,
-    handle_mcp,
 )
