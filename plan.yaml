@@ -24254,7 +24254,7 @@ phases:
       \ stdio framing and session tracking in bridge"
   - id: rem.blockers.verify-targeted-regressions
     name: Run targeted regression pack for blocker fixes
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -24344,6 +24344,86 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-25T16:44:22.956466+00:00'
+    done_at: '2026-03-25T16:49:58.842603+00:00'
+    evidence: '## Verification Report
+
+      **Tester**: integration-verifier
+
+      **Independence Level**: L2
+
+      **Commands executed**:
+
+      ```bash
+
+      python -m pytest -vv -s tests/repro/test_connection_count_semantics.py tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+      tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count
+      tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+
+      # zsh: command not found: python
+
+
+      python3 -m pytest -vv -s tests/repro/test_connection_count_semantics.py tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+      tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count
+      tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+
+      # No module named pytest
+
+
+      uv run pytest -vv -s tests/repro/test_connection_count_semantics.py tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+      tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count
+      tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+
+      # collected 9 items; 8 passed, 1 failed
+
+
+      uv run python -c ''<framed initialize repro>''
+
+      # stdout_bytes=b''''; stderr_bytes=b''error: MCP_FORWARD_FAILED: http 400\n''
+
+
+      uv run python -c ''<newline initialize/tools/list repro>''
+
+      # initialize response line returned; tools/list response line returned
+
+      ```
+
+
+      **Issues Found**:
+
+      - should_fix: `tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize`
+      fails (EOF while reading MCP response headers); framed MCP initialize path shows
+      `MCP_FORWARD_FAILED: http 400`
+
+      - suggestion: clarify stdio bridge contract expectations (newline-only vs framed
+      compatibility)
+
+      - tech_debt: local bootstrap requires `uv run` for reproducible test execution
+
+
+      **Coverage**:
+
+      - count semantics: PASS (targeted tests passed)
+
+      - initialize/tools_list timeout path: newline path PASS; framed path FAIL with
+      should-fix issue
+
+      - cold-start repro: PASS (connect lockfile discovery and active connection increment/decrement
+      validated)
+
+
+      **Verdict**: ISSUES_FOUND
+
+
+      **Anti-rework remediation created before completion**:
+
+      - Added batched fix step: `rem.blockers.fix-framed-stdio-mcp-liveness`
+
+      - Added batched retest step: `rem.blockers.retest-framed-stdio-liveness`
+
+      - Updated dependencies so downstream black-box and gate depend on batched retest'
   - id: rem.blockers.blackbox-runtime-liveness
     name: Black-box runtime liveness probe after blocker remediation
     status: pending
