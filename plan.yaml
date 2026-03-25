@@ -23723,3 +23723,8 @@ phases:
       evidence path.
 
       - tw.gate phase is ready to complete.'
+- id: sec.mcp_auth
+  name: MCP Endpoint Bearer Auth Enforcement
+  status: pending
+  depends_on:
+  - tw.gate
