@@ -24468,6 +24468,94 @@ phases:
 
       '
     agent: integration-verifier
+  - id: rem.bridge_flake.investigate-persistent-timeout-family
+    name: Investigate persistent bridge timeout blocker family
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      symbolic_testing: false
+
+      spec_refs:
+
+      - blocker 2 from conditional-pass review
+
+      - runtime liveness initialize/tools_list bridge contract
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - src/**/bridge*.py
+
+      - src/**/runtime*.py
+
+      - src/**/connect*.py
+
+      - async readiness / lifecycle helpers in gateway runtime path
+
+
+      harness_refs:
+
+      - cold-start liveness repro harness
+
+      - initialize/tools_list startup path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      Investigation-style contingency step for repeated blocker family.
+
+      Execute if blocker remediation evidence still shows residual timeout or flakiness
+      risk; otherwise the worker must produce explicit non-trigger evidence instead
+      of silent skip.
+
+
+      Required outputs:
+
+      - blocker_fingerprint: initialize/tools_list bridge timeout family
+
+      - root_cause_hypothesis: best current diagnosis
+
+      - why_previous_fix_failed: why blocker-phase fix did not fully eliminate flakiness
+      risk
+
+      - environment_consistency_check: hot/cold runtime, cache, reused process, and
+      command-family consistency notes
+
+      - next_fix_constraint: precise instruction for any additional stabilization
+      patch
+
+
+      Verification scope: phase-check protecting rem.bridge_flake.gate and rem.final_verify.'
+    verification: '- Evidence includes all five required outputs
+
+      - If no flake reproduces, evidence must explain why contingency was not triggered
+      under cold conditions
+
+      - If flake reproduces, evidence must identify the highest-probability root cause
+      family and required next-fix constraint'
+    evidence_template: '## Bridge Timeout Investigation
+
+      - blocker_fingerprint:
+
+      - root_cause_hypothesis:
+
+      - why_previous_fix_failed:
+
+      - environment_consistency_check:
+
+      - next_fix_constraint:
+
+      - non-trigger evidence or reproduction output:
+
+      '
+    depends_on:
+    - rem.bridge_flake.freeze-runtime-snapshot
+    agent: python-senior
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: locked
