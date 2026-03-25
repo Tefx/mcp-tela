@@ -25050,6 +25050,65 @@ phases:
 
       '
     agent: python-executor
+  - id: rem.suggestions.add-lockfile-schema-regression
+    name: Add lockfile schema validation regression path
+    status: pending
+    description: 'step_type: test
+
+      agent_source: default
+
+      spec_refs:
+
+      - suggestion: add lockfile schema validation regression path
+
+      - relevant config/lockfile schema documentation and prior validation behavior
+
+
+      touch_paths:
+
+      - tests covering lockfile parsing/validation
+
+      - lockfile schema validation modules
+
+
+      harness_refs:
+
+      - lockfile parsing regression harness
+
+      - config/schema validation test fixtures
+
+
+      authoritative_interface: NONE PINNED
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one fixture MUST use the minimal documented lockfile/schema shape from
+      the authoritative spec, without convenience-only fields.
+
+
+      Verification scope: local-check protecting rem.suggestions verification and
+      rem.final_verify targeted regression pack.'
+    verification: '- Add regression coverage for schema-invalid lockfile input and
+      expected validation outcome
+
+      - Cite the source spec for valid/invalid shape assumptions
+
+      - Include at least one minimal fixture with no convenience-only fields'
+    evidence_template: '## Lockfile Schema Regression
+
+      - spec section cited:
+
+      - minimal fixture used:
+
+      - invalid schema cases added:
+
+      - exact test names:
+
+      '
+    depends_on:
+    - rem.suggestions.add-invalid-bearer-negative-regression
+    agent: python-executor
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
