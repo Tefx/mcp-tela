@@ -294,6 +294,8 @@ def test_end_to_end_real_stdio_server_enumerate_and_call() -> None:
     assert startup_result.value is not None
 
     async def _run() -> None:
+        assert startup_result.value is not None
+        assert loaded_config_result.value is not None
         start_result = await gateway_start(
             startup_result.value,
             tela_config=loaded_config_result.value,
@@ -307,6 +309,7 @@ def test_end_to_end_real_stdio_server_enumerate_and_call() -> None:
 
             tools_result = await handle_tools_list(initialize_result.value)
             assert tools_result.is_ok
+            assert tools_result.value is not None
             tool_names = sorted(tool["name"] for tool in tools_result.value)
             assert "echo" in tool_names
             assert "ping" in tool_names

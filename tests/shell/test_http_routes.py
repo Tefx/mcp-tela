@@ -43,13 +43,15 @@ class TestHandleStatus:
     def test_handle_status_rejects_invalid_token(self) -> None:
         result = http_routes.handle_status("wrong-token", "expected-token")
         assert result.is_err
+        assert result.error is not None
         assert "AUTH_INVALID_TOKEN" in result.error
 
     def test_handle_status_accepts_valid_token_when_gateway_not_started(self) -> None:
         """Valid token but gateway not started should return error."""
-        runtime = get_runtime()
+        _runtime = get_runtime()
         result = http_routes.handle_status("valid", "valid")
         assert result.is_err
+        assert result.error is not None
         assert "GATEWAY_NOT_STARTED" in result.error
 
     def test_handle_status_returns_status_when_gateway_started(self) -> None:
@@ -81,12 +83,14 @@ class TestHandleConnect:
         req = ConnectRequest(connection_id="test-conn")
         result = http_routes.handle_connect("wrong-token", "expected-token", req)
         assert result.is_err
+        assert result.error is not None
         assert "AUTH_INVALID_TOKEN" in result.error
 
     def test_handle_connect_rejects_when_gateway_not_started(self) -> None:
         req = ConnectRequest(connection_id="test-conn")
         result = http_routes.handle_connect("valid", "valid", req)
         assert result.is_err
+        assert result.error is not None
         assert "GATEWAY_NOT_STARTED" in result.error
 
     def test_handle_connect_registers_connection(self) -> None:
@@ -116,12 +120,14 @@ class TestHandleDisconnect:
         req = DisconnectRequest(connection_id="test-conn")
         result = http_routes.handle_disconnect("wrong-token", "expected-token", req)
         assert result.is_err
+        assert result.error is not None
         assert "AUTH_INVALID_TOKEN" in result.error
 
     def test_handle_disconnect_rejects_when_gateway_not_started(self) -> None:
         req = DisconnectRequest(connection_id="test-conn")
         result = http_routes.handle_disconnect("valid", "valid", req)
         assert result.is_err
+        assert result.error is not None
         assert "GATEWAY_NOT_STARTED" in result.error
 
     def test_handle_disconnect_removes_connection(self) -> None:
@@ -159,6 +165,7 @@ class TestHandleDisconnect:
             req = DisconnectRequest(connection_id="nonexistent")
             result = http_routes.handle_disconnect("valid", "valid", req)
             assert result.is_err
+            assert result.error is not None
             assert "CONNECTION_NOT_FOUND" in result.error
         finally:
             runtime.config = None

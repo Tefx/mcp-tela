@@ -171,7 +171,7 @@ def test_middleware_passes_health_without_token() -> None:
     """GET /health must pass through without any token."""
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
-    _run(mw(_make_scope("/health", "GET"), None, send))
+    _run(mw(_make_scope("/health", "GET"), None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 200
 
 
@@ -179,7 +179,7 @@ def test_middleware_requires_token_for_health_post() -> None:
     """POST /health is NOT exempt -- only GET /health is."""
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
-    _run(mw(_make_scope("/health", "POST"), None, send))
+    _run(mw(_make_scope("/health", "POST"), None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
 
 
@@ -190,7 +190,7 @@ def test_middleware_rejects_mcp_without_token() -> None:
     """Unauthenticated request to /mcp must get 401 + JSON error body."""
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
-    _run(mw(_make_scope("/mcp", "POST"), None, send))
+    _run(mw(_make_scope("/mcp", "POST"), None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
     body = send.json_body
     assert "error" in body
@@ -201,7 +201,7 @@ def test_middleware_rejects_wrong_token() -> None:
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
     scope = _make_scope("/mcp", "POST", headers=_bearer_header("wrong"))
-    _run(mw(scope, None, send))
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
     assert send.json_body["error"].startswith("AUTH_INVALID_TOKEN")
 
@@ -211,7 +211,7 @@ def test_middleware_rejects_when_expected_token_is_none() -> None:
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: None)
     send = _ResponseCollector()
     scope = _make_scope("/mcp", "POST", headers=_bearer_header("anything"))
-    _run(mw(scope, None, send))
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
 
 
@@ -220,7 +220,7 @@ def test_middleware_rejects_empty_bearer_value() -> None:
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
     scope = _make_scope("/mcp", "POST", headers=[(b"authorization", b"Bearer ")])
-    _run(mw(scope, None, send))
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
 
 
@@ -231,7 +231,7 @@ def test_middleware_rejects_non_bearer_scheme() -> None:
     scope = _make_scope(
         "/mcp", "POST", headers=[(b"authorization", b"Basic c2VjcmV0")]
     )
-    _run(mw(scope, None, send))
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
 
 
@@ -243,7 +243,7 @@ def test_middleware_passes_authenticated_request() -> None:
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
     scope = _make_scope("/mcp", "POST", headers=_bearer_header("secret"))
-    _run(mw(scope, None, send))
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 200
 
 
@@ -257,7 +257,7 @@ def test_middleware_passes_non_http_scope() -> None:
 
     mw = BearerAuthMiddleware(_ws_app, get_expected_token=lambda: "secret")
     ws_scope: dict[str, Any] = {"type": "websocket", "path": "/ws"}
-    _run(mw(ws_scope, None, None))
+    _run(mw(ws_scope, None, None))  # type: ignore[arg-type]  # test fake: receive/send not used
     assert called
 
 
@@ -268,7 +268,7 @@ def test_middleware_401_response_is_valid_json() -> None:
     """401 response body must be valid JSON with 'error' key."""
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
-    _run(mw(_make_scope("/status", "GET"), None, send))
+    _run(mw(_make_scope("/status", "GET"), None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
     body = send.json_body
     assert isinstance(body, dict)

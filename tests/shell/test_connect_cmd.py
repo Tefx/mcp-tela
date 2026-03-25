@@ -472,7 +472,7 @@ def test_forward_stdio_http_preserves_newline_framing_for_tools_flow(
     assert result.is_ok
     output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
     assert "Content-Length:" not in output
-    lines = [l for l in output.split("\n") if l.strip()]
+    lines = [line for line in output.split("\n") if line.strip()]
     assert len(lines) == 2
     assert '"id": 1' in lines[0]
     assert '"id": 2' in lines[1]
@@ -488,9 +488,9 @@ def test_write_framed_message_returns_error_on_broken_pipe() -> None:
         def flush(self) -> None:
             raise BrokenPipeError("upstream disconnected")
 
-    stream = _BrokenStream()  # type: ignore[arg-type]
+    stream = _BrokenStream()
     result = connect_cmd._write_framed_message(
-        stream, b'{"jsonrpc":"2.0"}', framed=False
+        stream, b'{"jsonrpc":"2.0"}', framed=False  # type: ignore[arg-type]  # test fake: not a real BinaryIO
     )
 
     assert result.is_err
@@ -509,9 +509,9 @@ def test_write_framed_message_returns_error_on_os_error() -> None:
         def flush(self) -> None:
             pass
 
-    stream = _ErrorStream()  # type: ignore[arg-type]
+    stream = _ErrorStream()
     result = connect_cmd._write_framed_message(
-        stream, b'{"jsonrpc":"2.0"}', framed=True
+        stream, b'{"jsonrpc":"2.0"}', framed=True  # type: ignore[arg-type]  # test fake: not a real BinaryIO
     )
 
     assert result.is_err

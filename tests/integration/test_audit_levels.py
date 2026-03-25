@@ -239,6 +239,7 @@ def test_upstream_strips_meta_before_downstream_forwarding() -> None:
     args = {"path": "/tmp", "_meta": {"trace_id": "tr-1"}}
     result = strip_meta(args)
     assert result.is_ok
+    assert result.value is not None
     stripped, held_meta = result.value
     assert "_meta" not in stripped
     assert held_meta is not None

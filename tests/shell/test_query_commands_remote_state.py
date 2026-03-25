@@ -46,7 +46,7 @@ def _status_server(payload: dict[str, object], token: str) -> Iterator[tuple[str
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        host, port = server.server_address
+        host, port = server.server_address  # type: ignore[misc]  # HTTPServer.server_address is (str, int)
         assert isinstance(host, str)
         assert isinstance(port, int)
         yield (host, port)

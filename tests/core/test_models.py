@@ -47,7 +47,7 @@ class TestProfileConfig:
         assert p.tools == {}
 
     def test_tools_with_posture(self) -> None:
-        p = ProfileConfig(name="dev", tools={"read_file": Posture.READ_ONLY})
+        p = ProfileConfig(name="dev", tools={"read_file": Posture.READ_ONLY})  # type: ignore[call-arg]  # validation_alias accepts tools
         assert p.tools["read_file"] == Posture.READ_ONLY
 
     def test_capabilities_with_posture(self) -> None:
@@ -57,7 +57,7 @@ class TestProfileConfig:
     def test_matching_tools_and_capabilities_are_accepted(self) -> None:
         p = ProfileConfig(
             name="dev",
-            tools={"read_file": Posture.READ_ONLY},
+            tools={"read_file": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
             capabilities={"read_file": Posture.READ_ONLY},
         )
         assert p.capabilities["read_file"] == Posture.READ_ONLY
@@ -68,7 +68,7 @@ class TestProfileConfig:
         ) as exc_info:
             ProfileConfig(
                 name="dev",
-                tools={"read_file": Posture.READ_ONLY},
+                tools={"read_file": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
                 capabilities={"read_file": Posture.READ_WRITE},
             )
 
@@ -168,7 +168,7 @@ class TestServerConfig:
 
     def test_server_env_requires_string_values(self) -> None:
         with pytest.raises(ValidationError):
-            ServerConfig(name="fs", command="node", env={"PORT": 8080})
+            ServerConfig(name="fs", command="node", env={"PORT": 8080})  # type: ignore[dict-item]  # deliberate invalid type
 
 
 # --- AuditConfig behavioral tests ---

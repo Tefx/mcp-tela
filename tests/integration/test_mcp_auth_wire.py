@@ -106,7 +106,7 @@ def test_post_mcp_without_bearer_token_returns_401() -> None:
     app = _build_wrapped_app()
     send = _ResponseCollector()
     scope = _make_scope("/mcp", method="POST")
-    _run(app(scope, None, send))
+    _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
     body = send.json_body
     assert "error" in body
@@ -171,5 +171,5 @@ def test_post_mcp_with_wrong_token_returns_401() -> None:
         method="POST",
         headers=_bearer_header("wrong-token"),
     )
-    _run(app(scope, None, send))
+    _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401

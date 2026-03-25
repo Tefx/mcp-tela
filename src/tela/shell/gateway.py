@@ -7,7 +7,6 @@ Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import threading
 import time

@@ -32,7 +32,7 @@ class TestDualFieldAcceptance:
 
     def test_tools_kwarg_sets_capabilities(self) -> None:
         """ProfileConfig(tools={...}) should set capabilities field."""
-        p = ProfileConfig(name="dev", tools={"filesystem": Posture.READ_WRITE})
+        p = ProfileConfig(name="dev", tools={"filesystem": Posture.READ_WRITE})  # type: ignore[call-arg]  # validation_alias accepts tools
         # After migration, tools is an alias for capabilities
         assert p.capabilities["filesystem"] == Posture.READ_WRITE
 
@@ -45,7 +45,7 @@ class TestDualFieldAcceptance:
         """When both provided with same values, should be accepted."""
         p = ProfileConfig(
             name="dev",
-            tools={"filesystem": Posture.READ_ONLY},
+            tools={"filesystem": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
             capabilities={"filesystem": Posture.READ_ONLY},
         )
         assert p.capabilities["filesystem"] == Posture.READ_ONLY
@@ -55,7 +55,7 @@ class TestDualFieldAcceptance:
         with pytest.raises(ValidationError) as exc_info:
             ProfileConfig(
                 name="dev",
-                tools={"filesystem": Posture.READ_ONLY},
+                tools={"filesystem": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
                 capabilities={"filesystem": Posture.READ_WRITE},
             )
         # The root error should be a ValueError about mismatch
@@ -83,7 +83,7 @@ class TestCanonicalOutput:
 
     def test_model_dump_with_tools_input_still_outputs_capabilities(self) -> None:
         """Profile created with tools= must output capabilities in model_dump()."""
-        p = ProfileConfig(name="dev", tools={"filesystem": Posture.READ_ONLY})
+        p = ProfileConfig(name="dev", tools={"filesystem": Posture.READ_ONLY})  # type: ignore[call-arg]  # validation_alias accepts tools
         data = p.model_dump()
         assert "capabilities" in data
         assert data["capabilities"]["filesystem"] == "read_only"

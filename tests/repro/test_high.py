@@ -129,7 +129,7 @@ class TestH4TokenValidation:
         }
         sig = compute_signature(fields, "my_secret")
 
-        token = CapabilityToken(**fields, signature=sig)
+        token = CapabilityToken(**fields, signature=sig)  # type: ignore[arg-type]  # dict expansion for Pydantic model
         result = validate_token(token, ["my_secret"], "2026-06-15T12:00:00Z")
         assert result.verdict == EnforcementVerdict.ALLOW
 
@@ -157,6 +157,6 @@ class TestH4TokenValidation:
         }
         sig = compute_signature(fields, "my_secret")
 
-        token = CapabilityToken(**fields, signature=sig)
+        token = CapabilityToken(**fields, signature=sig)  # type: ignore[arg-type]  # dict expansion for Pydantic model
         result = validate_token(token, ["my_secret"], "2027-06-15T12:00:00Z")
         assert result.verdict == EnforcementVerdict.DENY

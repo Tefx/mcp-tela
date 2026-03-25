@@ -19,7 +19,6 @@ from tela.core.models import (
     AuthConfig,
     AuthMode,
     ConnectionContext,
-    EnforcementVerdict,
     ProfileConfig,
     TelaConfig,
 )

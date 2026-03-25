@@ -34,7 +34,6 @@ from tela.shell.gateway import (
     gateway_status,
     get_runtime,
 )
-from tela.shell.config_loader import Result
 
 
 # --- GatewayStartupConfig model tests ---
@@ -284,6 +283,7 @@ def test_gateway_start_with_servers_and_tools() -> None:
     assert result.is_ok
 
     status = asyncio.run(gateway_status())
+    assert status.value is not None
     assert status.value.server_count == 1
     assert "fs" in status.value.connected_servers
 
@@ -350,6 +350,7 @@ def test_gateway_status_after_start() -> None:
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
 
     status = asyncio.run(gateway_status())
+    assert status.value is not None
     assert status.value.server_count == 1
     assert status.value.profile_count == 1
     assert status.value.active_connections == 0
@@ -422,7 +423,7 @@ def test_fastmcp_tools_list_returns_filtered_tools() -> None:
             handler = server._mcp_server.request_handlers[types.ListToolsRequest]
             response = await handler(types.ListToolsRequest())
 
-            names = sorted(tool.name for tool in response.root.tools)
+            names = sorted(tool.name for tool in response.root.tools)  # type: ignore[union-attr]  # response is ListToolsResult at runtime
             assert names == ["read_file"]
         finally:
             await gateway_shutdown()
@@ -482,9 +483,9 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
                 )
             )
 
-            assert response.root.isError is False
-            assert response.root.structuredContent is not None
-            assert response.root.structuredContent["structuredContent"] == {
+            assert response.root.isError is False  # type: ignore[union-attr]  # response is CallToolResult at runtime
+            assert response.root.structuredContent is not None  # type: ignore[union-attr]  # response is CallToolResult at runtime
+            assert response.root.structuredContent["structuredContent"] == {  # type: ignore[union-attr]  # response is CallToolResult at runtime
                 "result": "hello"
             }
         finally:
@@ -523,7 +524,7 @@ def test_fastmcp_profiles_resource_registered() -> None:
         assert any(resource.name == "tela.profiles" for resource in resources)
 
         contents = asyncio.run(server.read_resource("tela://profiles"))
-        payload = json.loads(contents[0].content)
+        payload = json.loads(contents[0].content)  # type: ignore[index]  # contents is indexable at runtime
         assert payload[0]["profile_name"] == "dev"
     finally:
         asyncio.run(gateway_shutdown())
@@ -567,8 +568,8 @@ def test_fastmcp_tools_call_denies_unadmitted_family() -> None:
                 )
             )
 
-            assert response.root.isError is True
-            assert "AUTHZ_DENY" in response.root.content[0].text
+            assert response.root.isError is True  # type: ignore[union-attr]  # response is CallToolResult at runtime
+            assert "AUTHZ_DENY" in response.root.content[0].text  # type: ignore[union-attr]  # response is CallToolResult at runtime
         finally:
             await gateway_shutdown()
 

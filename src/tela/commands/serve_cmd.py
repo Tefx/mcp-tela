@@ -258,9 +258,9 @@ async def _launch_streamable_http_server(
 
     from tela.shell.http_auth import BearerAuthMiddleware
 
-    app = upstream_server.streamable_http_app()
+    raw_app = upstream_server.streamable_http_app()
     app = BearerAuthMiddleware(
-        app, get_expected_token=lambda: get_expected_bearer_token().value
+        raw_app, get_expected_token=lambda: get_expected_bearer_token().value
     )
     log_level = str(
         getattr(getattr(upstream_server, "settings", None), "log_level", "info")

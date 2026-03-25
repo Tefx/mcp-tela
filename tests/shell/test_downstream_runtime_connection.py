@@ -35,6 +35,7 @@ def test_connect_all_enumerates_real_stdio_server() -> None:
 
     tools = downstream.get_all_tools()
     assert tools.is_ok
+    assert tools.value is not None
     assert "local_stdio" in tools.value
     assert len(tools.value["local_stdio"]) >= 1
     assert downstream.get_tool_server("ping").value == "local_stdio"
@@ -83,7 +84,7 @@ def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
         del server_name
         del server_config
         del message_handler
-        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=fake_stack))
+        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=fake_stack))  # type: ignore[arg-type]  # test fakes
 
     monkeypatch.setattr(
         downstream,
@@ -139,7 +140,7 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
         assert server_name == "remote"
         assert server_config.url == "http://localhost:8765/sse"
         del message_handler
-        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))
+        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))  # type: ignore[arg-type]  # test fakes
 
     monkeypatch.setattr(downstream, "_open_client_for_server", _fake_open_client_for_sse)
 
@@ -251,7 +252,7 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
         del server_name
         del server_config
         del message_handler
-        return Result(value=downstream._ClientHandle(session=fake_session, stack=FakeStack()))
+        return Result(value=downstream._ClientHandle(session=fake_session, stack=FakeStack()))  # type: ignore[arg-type]  # test fakes
 
     monkeypatch.setattr(
         downstream,
@@ -322,8 +323,8 @@ def test_message_handler_routes_tools_changed_notification(monkeypatch: Any) -> 
 
     server_config = ServerConfig(name="mocked", command="unused")
     downstream._clients["mocked"] = downstream._ClientHandle(
-        session=FakeSession(),
-        stack=FakeStack(),
+        session=FakeSession(),  # type: ignore[arg-type]  # test fakes
+        stack=FakeStack(),  # type: ignore[arg-type]  # test fakes
     )
     handler = downstream._build_downstream_message_handler("mocked", server_config)
 
@@ -375,7 +376,7 @@ def test_message_handler_routes_reconnect_exception(monkeypatch: Any) -> None:
         del server_name
         del server_config
         del message_handler
-        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))
+        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))  # type: ignore[arg-type]  # test fakes
 
     async def _fake_on_server_reconnect(
         server_name: str,

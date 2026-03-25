@@ -165,6 +165,7 @@ def test_tools_digest_from_registry() -> None:
     }))
 
     all_tools = get_all_tools()
+    assert all_tools.value is not None
     # Compute a simple digest from tool names
     tool_names = sorted(t.name for ts in all_tools.value.values() for t in ts)
     digest = ":".join(tool_names)

@@ -68,7 +68,7 @@ def test_serve_lockfile_written_then_deleted(
         _ = args
         _ = kwargs
         runtime = get_runtime()
-        runtime.upstream_server = object()
+        runtime.upstream_server = object()  # type: ignore[assignment]  # test fake: not a real FastMCP
         runtime.running = True
         return Result(value=None)
 
@@ -176,7 +176,7 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
         _ = args
         _ = kwargs
         runtime = get_runtime()
-        runtime.upstream_server = object()
+        runtime.upstream_server = object()  # type: ignore[assignment]  # test fake: not a real FastMCP
         runtime.running = True
         return Result(value=None)
 

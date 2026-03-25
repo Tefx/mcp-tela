@@ -205,7 +205,9 @@ def test_connect_all_registers_tools() -> None:
     assert get_tool_server("git_status").value == "git"
     assert get_tool_server("nonexistent").value is None
 
-    all_tools = get_all_tools().value
+    all_tools_result = get_all_tools()
+    assert all_tools_result.value is not None
+    all_tools = all_tools_result.value
     assert len(all_tools["fs"]) == 2
     assert len(all_tools["git"]) == 1
 
@@ -258,10 +260,12 @@ def test_connect_all_resolves_posture_from_overrides() -> None:
     assert result.is_ok
 
     registry = get_registry()
-    assert registry.get_tool("dangerous") is not None
-    assert registry.get_tool("dangerous").posture == Posture.DESTRUCTIVE
-    assert registry.get_tool("unclassified") is not None
-    assert registry.get_tool("unclassified").posture is None
+    dangerous = registry.get_tool("dangerous")
+    assert dangerous is not None
+    assert dangerous.posture == Posture.DESTRUCTIVE
+    unclassified = registry.get_tool("unclassified")
+    assert unclassified is not None
+    assert unclassified.posture is None
 
 
 def test_connect_all_resolves_posture_from_annotations() -> None:
@@ -285,8 +289,12 @@ def test_connect_all_resolves_posture_from_annotations() -> None:
     assert result.is_ok
 
     registry = get_registry()
-    assert registry.get_tool("reader").posture == Posture.READ_ONLY
-    assert registry.get_tool("destroyer").posture == Posture.DESTRUCTIVE
+    reader = registry.get_tool("reader")
+    assert reader is not None
+    assert reader.posture == Posture.READ_ONLY
+    destroyer = registry.get_tool("destroyer")
+    assert destroyer is not None
+    assert destroyer.posture == Posture.DESTRUCTIVE
 
 
 def test_connect_all_fails_on_tool_conflict() -> None:
@@ -846,13 +854,15 @@ def test_disconnect_all_clears_all_servers() -> None:
     }
     asyncio.run(connect_all(servers, tool_lists=tool_lists))
 
-    all_tools = get_all_tools().value
-    assert len(all_tools) == 3
+    all_tools_r = get_all_tools()
+    assert all_tools_r.value is not None
+    assert len(all_tools_r.value) == 3
 
     asyncio.run(disconnect_all())
 
-    all_tools = get_all_tools().value
-    assert len(all_tools) == 0
+    all_tools_r2 = get_all_tools()
+    assert all_tools_r2.value is not None
+    assert len(all_tools_r2.value) == 0
 
 
 def test_connect_all_then_disconnect_all_is_clean_state() -> None:
