@@ -326,7 +326,13 @@ def _forward_stdio_http(
     stdin_buffer: BinaryIO,
     stdout_buffer: BinaryIO,
 ) -> Result[None, str]:
-    """Forward MCP stdio frames to HTTP and stream responses back."""
+    """Forward MCP stdio frames to HTTP and stream responses back.
+
+    Maintains the Streamable HTTP ``mcp-session-id`` across requests so that
+    all messages after ``initialize`` are routed to the same server session.
+    """
+
+    session_id: str | None = None
 
     while not should_stop():
         message_result = _read_framed_message(stdin_buffer)
@@ -341,11 +347,15 @@ def _forward_stdio_http(
             mcp_url=mcp_url,
             bearer_token=bearer_token,
             payload=message,
+            session_id=session_id,
         )
         if http_result.is_err:
             return Result(error=http_result.error)
         assert http_result.value is not None
-        content_type, response_body = http_result.value
+        content_type, response_body, response_session_id = http_result.value
+
+        if response_session_id is not None:
+            session_id = response_session_id
 
         response_messages_result = _extract_response_messages(
             content_type=content_type,
@@ -360,41 +370,32 @@ def _forward_stdio_http(
     return Result(value=None)
 
 
-# @shell_complexity: parser handles header scanning and content-length extraction.
 def _read_framed_message(stream: BinaryIO) -> Result[bytes | None, str]:
-    """Read one stdio-framed MCP message payload from stream."""
+    """Read one newline-delimited MCP JSON-RPC message from stream.
 
-    content_length: int | None = None
+    MCP stdio transport uses newline-delimited JSON: each message is a single
+    JSON object terminated by ``\\n``.  Empty lines between messages are
+    silently skipped.
+    """
+
     while True:
         line = stream.readline()
         if line == b"":
             return Result(value=None)
         stripped = line.strip()
         if stripped == b"":
-            break
-        key, sep, value = stripped.partition(b":")
-        if sep == b"" or key.lower() != b"content-length":
             continue
-        try:
-            content_length = int(value.strip())
-        except ValueError:
-            return Result(error="INVALID_FRAME: non-integer Content-Length")
-
-    if content_length is None or content_length < 0:
-        return Result(error="INVALID_FRAME: missing Content-Length")
-
-    payload = stream.read(content_length)
-    if len(payload) != content_length:
-        return Result(error="INVALID_FRAME: truncated payload")
-    return Result(value=payload)
+        return Result(value=stripped)
 
 
 def _write_framed_message(stream: BinaryIO, payload: bytes) -> None:
-    """Write one stdio-framed MCP message payload."""
+    """Write one newline-delimited MCP JSON-RPC message to stream.
 
-    header = f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii")
-    stream.write(header)
-    stream.write(payload)
+    MCP stdio transport uses newline-delimited JSON: each message is a single
+    JSON object terminated by ``\\n``.
+    """
+
+    stream.write(payload.rstrip(b"\r\n") + b"\n")
     stream.flush()
 
 
@@ -403,23 +404,33 @@ def _post_mcp_message(
     mcp_url: str,
     bearer_token: str,
     payload: bytes,
-) -> Result[tuple[str, bytes], str]:
-    """POST payload to MCP streamable HTTP endpoint."""
+    session_id: str | None = None,
+) -> Result[tuple[str, bytes, str | None], str]:
+    """POST payload to MCP Streamable HTTP endpoint.
+
+    Returns ``(content_type, body, session_id)`` where *session_id* is the
+    ``mcp-session-id`` returned by the server (may be ``None``).
+    """
+
+    headers: dict[str, str] = {
+        "Authorization": f"Bearer {bearer_token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+    }
+    if session_id is not None:
+        headers["mcp-session-id"] = session_id
 
     request = urllib_request.Request(
         mcp_url,
         data=payload,
         method="POST",
-        headers={
-            "Authorization": f"Bearer {bearer_token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json, text/event-stream",
-        },
+        headers=headers,
     )
     try:
         with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
             content_type = response.headers.get("Content-Type", "")
-            return Result(value=(content_type, response.read()))
+            resp_session_id = response.headers.get("mcp-session-id")
+            return Result(value=(content_type, response.read(), resp_session_id))
     except urllib_error.HTTPError as exc:
         return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
     except urllib_error.URLError as exc:
