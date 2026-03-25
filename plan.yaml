@@ -25378,7 +25378,7 @@ phases:
   - id: rem.blockers.lock-bridge-flake-contingency
     name: Lock bridge flake contingency handoff criteria before rem.blockers gate
       re-open
-    status: pending
+    status: claimed
     description: 'step_type: planning
 
       verification_scope: phase-check
@@ -25449,6 +25449,8 @@ phases:
     depends_on:
     - rem.blockers.harden-evidence-backfill
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-25T18:03:11.739569+00:00'
   - id: rem.blockers.gate-retest
     name: Retest rem.blockers gate readiness after evidence, hygiene, and bridge contingency
       remediation
