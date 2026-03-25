@@ -24685,6 +24685,78 @@ phases:
   status: locked
   depends_on:
   - rem.blockers
+  steps:
+  - id: rem.hygiene.triage-actionable-invar-warnings
+    name: Triage and reduce actionable invar warnings
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - conditional-pass should-fix: triage/reduce 39 invar warnings where actionable
+
+      - AGENTS.md Invar rules for Core/Shell boundaries and contracts
+
+
+      touch_paths:
+
+      - src/**/core/**
+
+      - src/**/shell/**
+
+      - any files implicated by remaining invar warnings
+
+
+      harness_refs:
+
+      - invar guard warning set
+
+      - contracts/doctest coverage for affected modules
+
+
+      authoritative_interface: NONE PINNED
+
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+
+      Scope:
+
+      - Triage the current warning inventory and reduce all warnings that are actionable
+      within this repo scope.
+
+      - Classify any retained warnings with disposition evidence: why not fixed now,
+      why non-intersecting with final gate, and what exact rationale remains.
+
+      - Root-cause-first remediation only; do not churn suppressions without justification.
+
+
+      Known risks:
+
+      - broad invar cleanup can hide cross-module debt; retained warnings require
+      explicit non-intersection evidence.
+
+
+      Verification scope: phase-check protecting rem.hygiene verification and rem.final_verify.full-invar-guard.'
+    verification: '- Warning inventory before/after is reported
+
+      - Each remaining warning has actionable/non-actionable disposition with rationale
+
+      - Contract/docstring/doctest fixes are tied to specific warning families'
+    evidence_template: '## Invar Warning Triage
+
+      - warning count before:
+
+      - warning count after:
+
+      - fixed warning families:
+
+      - remaining warning families with rationale and non-intersection evidence:
+
+      '
+    agent: python-senior
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
