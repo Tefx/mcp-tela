@@ -25168,6 +25168,64 @@ phases:
     depends_on:
     - rem.suggestions.add-lockfile-schema-regression
     agent: doc-reviewer
+  - id: rem.suggestions.verify-suggestion-pack
+    name: Verify suggestion uptake pack
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - suggestion follow-ups from conditional-pass review
+
+
+      touch_paths:
+
+      - changed auth, lockfile test, and StatusResponse documentation surfaces
+
+
+      harness_refs:
+
+      - auth negative test suite
+
+      - lockfile schema regression suite
+
+      - status response docs/spec review surface
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER/REVIEWER, validate suggestion uptake from a fresh perspective.
+
+      YOUR GOAL IS TO FIND GAPS.
+
+
+      Independence Level: L1
+
+      Verification scope: phase-check protecting rem.suggestions.gate and rem.final_verify.'
+    verification: '- Review that both regression additions exist and are spec-derived
+
+      - Review that StatusResponse documentation reflects repaired semantics
+
+      - Report any remaining ambiguity or mismatch'
+    evidence_template: '## Suggestion Verification Report
+
+      - invalid bearer regression present:
+
+      - lockfile schema regression present:
+
+      - StatusResponse docs aligned:
+
+      - issues found:
+
+      - verdict: PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - rem.suggestions.document-statusresponse-field-guarantees
+    agent: integration-verifier
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
