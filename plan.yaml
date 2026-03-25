@@ -25226,6 +25226,37 @@ phases:
     depends_on:
     - rem.suggestions.document-statusresponse-field-guarantees
     agent: integration-verifier
+  - id: rem.suggestions.gate
+    name: Gate suggestion uptake phase
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: default
+
+      review_depth: STANDARD
+
+      Gate review: verify suggestion work is complete and aligned with repaired runtime/auth/status
+      semantics before final verification.
+
+      '
+    verification: '- Both suggested regression additions are present and reviewable
+
+      - StatusResponse documentation guarantees are explicit
+
+      - No new ambiguity is introduced ahead of rem.final_verify'
+    evidence_template: '## Gate Review Report
+
+      - suggestion completion:
+
+      - remaining ambiguity:
+
+      '
+    depends_on:
+    - rem.suggestions.add-invalid-bearer-negative-regression
+    - rem.suggestions.add-lockfile-schema-regression
+    - rem.suggestions.document-statusresponse-field-guarantees
+    - rem.suggestions.verify-suggestion-pack
+    agent: gate-reviewer
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
