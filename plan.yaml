@@ -24254,7 +24254,7 @@ phases:
       \ stdio framing and session tracking in bridge"
   - id: rem.blockers.verify-targeted-regressions
     name: Run targeted regression pack for blocker fixes
-    status: claimed
+    status: pending
     description: 'step_type: verification
 
       agent_source: default
@@ -24342,8 +24342,6 @@ phases:
     depends_on:
     - rem.blockers.fix-bridge-timeout-runtime-path
     agent: integration-verifier
-    claimed_by: integration-verifier
-    claimed_at: '2026-03-25T16:41:57.027540+00:00'
   - id: rem.blockers.blackbox-runtime-liveness
     name: Black-box runtime liveness probe after blocker remediation
     status: pending
