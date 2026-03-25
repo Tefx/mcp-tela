@@ -23935,13 +23935,13 @@ phases:
       on main'
 - id: rem.blockers
   name: Post-Gate Blocker Remediation
-  status: pending
+  status: in_progress
   depends_on:
   - sec.mcp_auth
   steps:
   - id: rem.blockers.fix-connection-count-semantics
     name: Repair all numeric connection-count semantics
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -24053,6 +24053,8 @@ phases:
 
       '
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-25T15:58:25.302694+00:00'
   - id: rem.blockers.fix-bridge-timeout-runtime-path
     name: Fix bridge timeout in initialize/tools_list liveness flow
     status: pending
