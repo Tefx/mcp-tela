@@ -37,30 +37,14 @@ def wait_for_lockfile(lockfile: Path, timeout: float = 10.0) -> str:
     raise RuntimeError(f"lockfile did not appear within {timeout} seconds: {lockfile}")
 
 
-def read_framed_response(stream) -> tuple[str, bytes]:
-    header_bytes = b""
-    while b"\r\n\r\n" not in header_bytes:
-        ready, _, _ = select.select([stream], [], [], 10.0)
-        if not ready:
-            raise RuntimeError("timed out waiting for framed response headers")
-        chunk = stream.read(1)
-        if not chunk:
-            raise RuntimeError("EOF while reading framed response headers")
-        header_bytes += chunk
-    header_text = header_bytes.decode("ascii", errors="replace")
-    content_length = None
-    for line in header_text.split("\r\n"):
-        if line.lower().startswith("content-length:"):
-            content_length = int(line.split(":", 1)[1].strip())
-            break
-    if content_length is None:
-        raise RuntimeError(f"missing Content-Length header: {header_text!r}")
-    body = stream.read(content_length)
-    if len(body) != content_length:
-        raise RuntimeError(
-            f"short framed body: expected {content_length} bytes got {len(body)}"
-        )
-    return header_text, body
+def read_json_line(stream) -> str:
+    ready, _, _ = select.select([stream], [], [], 10.0)
+    if not ready:
+        raise RuntimeError("timed out waiting for JSON line response")
+    line = stream.readline()
+    if not line:
+        raise RuntimeError("EOF while reading JSON line response")
+    return line.decode("utf-8", errors="replace")
 
 
 def main() -> int:
@@ -186,18 +170,13 @@ def main() -> int:
                     "clientInfo": {"name": "probe", "version": "0.1"},
                 },
             }
-            init_bytes = json.dumps(initialize_request).encode("utf-8")
-            connect_proc.stdin.write(
-                f"Content-Length: {len(init_bytes)}\r\n\r\n".encode("ascii") + init_bytes
-            )
+            init_line = json.dumps(initialize_request) + "\n"
+            connect_proc.stdin.write(init_line.encode("utf-8"))
             connect_proc.stdin.flush()
-            init_header, init_body = read_framed_response(connect_proc.stdout)
-            print("initialize_response_header_begin")
-            print(init_header, end="")
-            print("initialize_response_header_end")
-            print("initialize_response_body_begin")
-            print(init_body.decode("utf-8", errors="replace"))
-            print("initialize_response_body_end")
+            initialize_response = read_json_line(connect_proc.stdout)
+            print("initialize_response_line_begin")
+            print(initialize_response, end="")
+            print("initialize_response_line_end")
 
             tools_request = {
                 "jsonrpc": "2.0",
@@ -205,19 +184,13 @@ def main() -> int:
                 "method": "tools/list",
                 "params": {},
             }
-            tools_bytes = json.dumps(tools_request).encode("utf-8")
-            connect_proc.stdin.write(
-                f"Content-Length: {len(tools_bytes)}\r\n\r\n".encode("ascii")
-                + tools_bytes
-            )
+            tools_line = json.dumps(tools_request) + "\n"
+            connect_proc.stdin.write(tools_line.encode("utf-8"))
             connect_proc.stdin.flush()
-            tools_header, tools_body = read_framed_response(connect_proc.stdout)
-            print("tools_list_response_header_begin")
-            print(tools_header, end="")
-            print("tools_list_response_header_end")
-            print("tools_list_response_body_begin")
-            print(tools_body.decode("utf-8", errors="replace"))
-            print("tools_list_response_body_end")
+            tools_response = read_json_line(connect_proc.stdout)
+            print("tools_list_response_line_begin")
+            print(tools_response, end="")
+            print("tools_list_response_line_end")
 
             stderr_snapshot = ""
             ready_stderr, _, _ = select.select([connect_proc.stderr], [], [], 0.2)

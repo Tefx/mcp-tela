@@ -1,0 +1,33 @@
+Using CPython 3.12.12
+Creating virtual environment at: .venv
+   Building mcp-tela @ file:///Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts
+      Built mcp-tela @ file:///Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts
+Installed 108 packages in 327ms
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.0.2, pluggy-1.6.0 -- /Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts
+configfile: pyproject.toml
+plugins: anyio-4.12.1, returns-0.26.0, hypothesis-6.151.9
+collecting ... collected 9 items
+
+tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_gateway_status_active_connections_is_int PASSED
+tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_status_response_connections_is_list PASSED
+tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_json_payload_has_both_fields_with_distinct_types PASSED
+tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_empty_connections_payload_divergence PASSED
+tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_numeric_comparison_on_connections_list_is_wrong PASSED
+tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile   PASS: connect discovered gateway via lockfile (host=127.0.0.1, port=61377)
+        gateway reports 1 active connection(s)
+PASSED
+tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list   PASS: initialize returned capabilities
+  PASS: tools/list returned 0 tool(s)
+PASSED
+tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count   PASS: active_connections incremented 0 -> 1
+  PASS: active_connections decremented 1 -> 0
+PASSED
+tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize PASSED
+
+============================== 9 passed in 14.62s ==============================
+
+EXIT_CODE=0
