@@ -24530,7 +24530,7 @@ phases:
       \ MCP Surface"
   - id: rem.blockers.gate
     name: Gate blocker remediation phase
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: default
@@ -24585,6 +24585,8 @@ phases:
     - rem.blockers.retest-stdio-mcp-initialize-loop2
     - rem.blockers.blackbox-runtime-liveness
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-25T17:46:02.629108+00:00'
   - id: rem.blockers.fix-framed-stdio-mcp-liveness
     name: Batched fix for framed-stdio MCP initialize liveness
     status: done
