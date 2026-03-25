@@ -339,9 +339,10 @@ def _forward_stdio_http(
         if message_result.is_err:
             return Result(error=message_result.error)
         assert message_result.value is not None or message_result.error is None
-        message = message_result.value
-        if message is None:
+        framed_message = message_result.value
+        if framed_message is None:
             return Result(value=None)
+        message = framed_message.payload
 
         http_result = _post_mcp_message(
             mcp_url=mcp_url,
@@ -365,17 +366,28 @@ def _forward_stdio_http(
             return Result(error=response_messages_result.error)
         assert response_messages_result.value is not None
         for response_message in response_messages_result.value:
-            _write_framed_message(stdout_buffer, response_message)
+            _write_framed_message(
+                stdout_buffer,
+                response_message,
+                framed=framed_message.is_content_length_framed,
+            )
 
     return Result(value=None)
 
 
-def _read_framed_message(stream: BinaryIO) -> Result[bytes | None, str]:
-    """Read one newline-delimited MCP JSON-RPC message from stream.
+@dataclass(frozen=True)
+class _BridgeMessage:
+    """One stdio request payload and transport framing metadata."""
 
-    MCP stdio transport uses newline-delimited JSON: each message is a single
-    JSON object terminated by ``\\n``.  Empty lines between messages are
-    silently skipped.
+    payload: bytes
+    is_content_length_framed: bool
+
+
+# @shell_complexity: dual-framing detection requires header parsing branches.
+def _read_framed_message(stream: BinaryIO) -> Result[_BridgeMessage | None, str]:
+    """Read one MCP JSON-RPC message from stdio transport.
+
+    Supports both Content-Length framed payloads and newline-delimited JSON.
     """
 
     while True:
@@ -385,17 +397,44 @@ def _read_framed_message(stream: BinaryIO) -> Result[bytes | None, str]:
         stripped = line.strip()
         if stripped == b"":
             continue
-        return Result(value=stripped)
+        if line.lower().startswith(b"content-length:"):
+            length_token = line.split(b":", 1)[1].strip()
+            try:
+                content_length = int(length_token)
+            except ValueError:
+                return Result(error="MCP_FORWARD_FAILED: invalid Content-Length header")
+
+            while True:
+                header_line = stream.readline()
+                if header_line == b"":
+                    return Result(
+                        error="MCP_FORWARD_FAILED: EOF while reading MCP headers"
+                    )
+                if header_line in {b"\r\n", b"\n"}:
+                    break
+
+            payload = stream.read(content_length)
+            if len(payload) != content_length:
+                return Result(
+                    error="MCP_FORWARD_FAILED: EOF while reading MCP frame body"
+                )
+            return Result(
+                value=_BridgeMessage(payload=payload, is_content_length_framed=True)
+            )
+
+        return Result(
+            value=_BridgeMessage(payload=stripped, is_content_length_framed=False)
+        )
 
 
-def _write_framed_message(stream: BinaryIO, payload: bytes) -> None:
-    """Write one newline-delimited MCP JSON-RPC message to stream.
+def _write_framed_message(stream: BinaryIO, payload: bytes, *, framed: bool) -> None:
+    """Write one MCP JSON-RPC message to stdio transport."""
 
-    MCP stdio transport uses newline-delimited JSON: each message is a single
-    JSON object terminated by ``\\n``.
-    """
-
-    stream.write(payload.rstrip(b"\r\n") + b"\n")
+    if framed:
+        header = f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii")
+        stream.write(header + payload)
+    else:
+        stream.write(payload.rstrip(b"\r\n") + b"\n")
     stream.flush()
 
 

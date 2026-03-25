@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import io
+import json
 
 import pytest
 
@@ -231,3 +233,246 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         "http://127.0.0.1:8123/connect",
         "http://127.0.0.1:8123/disconnect",
     ]
+
+
+def test_read_framed_message_accepts_content_length_frames() -> None:
+    """Bridge parser must read Content-Length framed JSON requests."""
+
+    payload = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    framed_input = io.BytesIO(
+        f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii") + payload
+    )
+
+    result = connect_cmd._read_framed_message(framed_input)
+
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.payload == payload
+    assert result.value.is_content_length_framed is True
+
+
+def test_read_framed_message_accepts_newline_json() -> None:
+    """Bridge parser must keep newline JSON compatibility."""
+
+    payload = b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+    newline_input = io.BytesIO(payload + b"\n")
+
+    result = connect_cmd._read_framed_message(newline_input)
+
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.payload == payload
+    assert result.value.is_content_length_framed is False
+
+
+def test_read_framed_message_eof_returns_none() -> None:
+    """Empty stream must return None (clean EOF), not an error."""
+
+    result = connect_cmd._read_framed_message(io.BytesIO(b""))
+
+    assert result.is_ok
+    assert result.value is None
+
+
+def test_read_framed_message_eof_during_headers_returns_error() -> None:
+    """EOF between Content-Length header and blank-line separator is an error."""
+
+    broken_input = io.BytesIO(b"Content-Length: 42\r\n")
+
+    result = connect_cmd._read_framed_message(broken_input)
+
+    assert result.is_err
+    assert result.error is not None
+    assert "EOF while reading MCP headers" in result.error
+
+
+def test_read_framed_message_eof_during_body_returns_error() -> None:
+    """EOF mid-body (short read) must be reported as an error."""
+
+    broken_input = io.BytesIO(b"Content-Length: 100\r\n\r\nshort")
+
+    result = connect_cmd._read_framed_message(broken_input)
+
+    assert result.is_err
+    assert result.error is not None
+    assert "EOF while reading MCP frame body" in result.error
+
+
+def test_read_framed_message_invalid_content_length_returns_error() -> None:
+    """Non-numeric Content-Length must be reported as an error."""
+
+    broken_input = io.BytesIO(b"Content-Length: abc\r\n\r\n")
+
+    result = connect_cmd._read_framed_message(broken_input)
+
+    assert result.is_err
+    assert result.error is not None
+    assert "invalid Content-Length header" in result.error
+
+
+def test_read_framed_message_extra_headers_before_blank_line() -> None:
+    """Extra headers between Content-Length and blank line must be skipped."""
+
+    payload = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    framed_input = io.BytesIO(
+        f"Content-Length: {len(payload)}\r\n".encode("ascii")
+        + b"Content-Type: application/json\r\n"
+        + b"\r\n"
+        + payload
+    )
+
+    result = connect_cmd._read_framed_message(framed_input)
+
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.payload == payload
+    assert result.value.is_content_length_framed is True
+
+
+def test_write_framed_message_round_trip_newline() -> None:
+    """Newline-delimited write/read must round-trip cleanly."""
+
+    payload = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
+    buf = io.BytesIO()
+    connect_cmd._write_framed_message(buf, payload, framed=False)
+    buf.seek(0)
+    result = connect_cmd._read_framed_message(buf)
+
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.payload == payload
+    assert result.value.is_content_length_framed is False
+
+
+def test_write_framed_message_round_trip_content_length() -> None:
+    """Content-Length write/read must round-trip cleanly."""
+
+    payload = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    buf = io.BytesIO()
+    connect_cmd._write_framed_message(buf, payload, framed=True)
+    buf.seek(0)
+    result = connect_cmd._read_framed_message(buf)
+
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.payload == payload
+    assert result.value.is_content_length_framed is True
+
+
+def test_forward_stdio_http_preserves_content_length_framing_for_tools_flow(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Framed initialize/tools/list requests must receive framed responses."""
+
+    init_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    tools_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+    stdin_bytes = (
+        f"Content-Length: {len(init_request)}\r\n\r\n".encode("ascii")
+        + init_request
+        + f"Content-Length: {len(tools_request)}\r\n\r\n".encode("ascii")
+        + tools_request
+    )
+    stdin_buffer = io.BytesIO(stdin_bytes)
+    stdout_buffer = io.BytesIO()
+
+    responses = [
+        (
+            "application/json",
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode("utf-8"),
+            "s-1",
+        ),
+        (
+            "application/json",
+            json.dumps({"jsonrpc": "2.0", "id": 2, "result": {"tools": []}}).encode(
+                "utf-8"
+            ),
+            "s-1",
+        ),
+    ]
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = mcp_url
+        _ = bearer_token
+        _ = payload
+        _ = session_id
+        return Result(value=responses.pop(0))
+
+    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=stdout_buffer,
+    )
+
+    assert result.is_ok
+    output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
+    assert output.count("Content-Length:") == 2
+    assert '"id": 1' in output
+    assert '"id": 2' in output
+
+
+def test_forward_stdio_http_preserves_newline_framing_for_tools_flow(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Newline-delimited initialize/tools/list must receive newline responses."""
+
+    init_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    tools_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+    stdin_bytes = init_request + b"\n" + tools_request + b"\n"
+    stdin_buffer = io.BytesIO(stdin_bytes)
+    stdout_buffer = io.BytesIO()
+
+    responses = [
+        (
+            "application/json",
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode("utf-8"),
+            "s-1",
+        ),
+        (
+            "application/json",
+            json.dumps({"jsonrpc": "2.0", "id": 2, "result": {"tools": []}}).encode(
+                "utf-8"
+            ),
+            "s-1",
+        ),
+    ]
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = mcp_url
+        _ = bearer_token
+        _ = payload
+        _ = session_id
+        return Result(value=responses.pop(0))
+
+    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=stdout_buffer,
+    )
+
+    assert result.is_ok
+    output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
+    assert "Content-Length:" not in output
+    lines = [l for l in output.split("\n") if l.strip()]
+    assert len(lines) == 2
+    assert '"id": 1' in lines[0]
+    assert '"id": 2' in lines[1]
