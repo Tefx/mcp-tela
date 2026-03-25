@@ -25264,6 +25264,80 @@ phases:
     depends_on:
     - rem.blockers.harden-evidence-backfill
     agent: python-senior
+  - id: rem.blockers.lock-bridge-flake-contingency
+    name: Lock bridge flake contingency handoff criteria before rem.blockers gate
+      re-open
+    status: pending
+    description: 'step_type: planning
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      Explicitly lock in the contingency handoff criteria for shared ~/.tela/gateway.lock
+      flakiness before gate re-open.
+
+
+      This step MUST treat rem.bridge_flake as a blocking follow-up condition whenever
+      residual evidence leaves shared ~/.tela/gateway.lock interference unresolved
+      or still plausible.
+
+
+      Required outputs:
+
+      - the concrete criteria for declaring the flake resolved for rem.blockers gate
+      purposes
+
+      - the concrete criteria that require rem.bridge_flake to remain blocking follow-up
+
+      - the exact command/output evidence expected to distinguish resolved vs unresolved
+      state
+
+      - explicit downstream handoff note naming rem.bridge_flake as blocking if contingency
+      criteria are not met'
+    verification: '- Criteria explicitly state when rem.bridge_flake is blocking follow-up
+
+      - Evidence contract requires pasted command output, not summaries
+
+      - Shared ~/.tela/gateway.lock contingency is described in gate-decision terms,
+      not optional notes
+
+      - Handoff language is precise enough for the gate reviewer to apply directly'
+    evidence_template: '## Bridge Flake Contingency Criteria
+
+
+      **Resolved criteria**:
+
+      - <criteria>
+
+
+      **Blocking follow-up criteria (rem.bridge_flake)**:
+
+      - <criteria>
+
+
+      **Exact command(s) / probes required**:
+
+      ```
+
+      <paste commands>
+
+      ```
+
+
+      **Expected distinguishing output**:
+
+      ```
+
+      <paste concrete output examples or required captured output>
+
+      ```
+
+      '
+    depends_on:
+    - rem.blockers.harden-evidence-backfill
+    agent: software-architect
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
