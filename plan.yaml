@@ -25765,7 +25765,7 @@ phases:
       \  - docs/INTERFACES.md §7.3 Lockfile Contract\nerror: \"\""
   - id: rem.blockers.gate-retest-full-evidence
     name: Strict gate-retest using full raw evidence and lockfile identity proof
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -25813,6 +25813,8 @@ phases:
     - rem.blockers.gate-retest
     - rem.blockers.capture-full-evidence-artifacts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-25T18:33:50.973018+00:00'
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
