@@ -24282,6 +24282,92 @@ phases:
     depends_on:
     - rem.blockers.fix-bridge-timeout-runtime-path
     agent: integration-verifier
+  - id: rem.blockers.blackbox-runtime-liveness
+    name: Black-box runtime liveness probe after blocker remediation
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - runtime/deployability-bearing connect surface
+
+      - conditional-pass review blocker on liveness bridge timeout
+
+
+      touch_paths:
+
+      - runtime entrypoint for connect flow
+
+      - liveness repro harness
+
+
+      harness_refs:
+
+      - connect runtime entrypoint
+
+      - initialize/tools_list black-box probe path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, perform a black-box liveness probe.
+
+      This phase covers a runnable surface and requires runnable evidence, not handler-only
+      evidence.
+
+
+      Independence Level: L3
+
+      Verification scope: phase-check protecting rem.blockers.gate and rem.final_verify.runtime-liveness-blackbox.
+
+
+      Required proof:
+
+      - identified entrypoint / startup path
+
+      - exact launch/invocation command
+
+      - proof the surface starts
+
+      - proof initialize/tools_list reaches the real entrypoint end-to-end'
+    verification: '- Entry point starts under cold conditions
+
+      - Surface stays alive long enough to accept initialize and tools_list
+
+      - At least one documented runtime operation completes end-to-end
+
+      - Actual output included; summaries alone are insufficient'
+    evidence_template: '## Black-Box Liveness Evidence
+
+      **Entry point**: <exact connect/runtime entrypoint>
+
+      **Launch command**:
+
+      ```
+
+      <exact command>
+
+      ```
+
+      **Operation exercised**: initialize -> tools_list
+
+      **Observed output**:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      **Verdict**: PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - rem.blockers.verify-targeted-regressions
+    agent: blind-tester
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
