@@ -25338,6 +25338,90 @@ phases:
     depends_on:
     - rem.blockers.harden-evidence-backfill
     agent: software-architect
+  - id: rem.blockers.gate-retest
+    name: Retest rem.blockers gate readiness after evidence, hygiene, and bridge contingency
+      remediation
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      Independent gate-retest for rem.blockers after the minimal anti-rework remediation
+      chain.
+
+
+      Confirm that:
+
+      - evidence hardening/backfill replaced summary-only evidence with pasted command
+      output
+
+      - mypy and ruff blocker failures are cleared with pasted command output
+
+      - bridge contingency criteria are explicit and enforce that rem.bridge_flake
+      is a blocking follow-up condition whenever shared ~/.tela/gateway.lock flakiness
+      remains unresolved or plausible
+
+
+      This step must not rely on summaries. It must cite the exact commands and paste
+      the actual output used to justify gate re-open.'
+    verification: '- Pasted command output evidence is present for evidence-hardening,
+      mypy, and ruff verification paths
+
+      - The retest report explicitly states whether rem.bridge_flake remains blocking
+      follow-up
+
+      - If shared ~/.tela/gateway.lock flakiness is unresolved or plausible, the retest
+      marks rem.bridge_flake blocking rather than allowing gate passage by note
+
+      - Gate-readiness conclusion is supported by concrete pasted output, not summary-only
+      prose'
+    evidence_template: '## rem.blockers Gate Retest Report
+
+
+      **Commands reviewed/executed**:
+
+      ```
+
+      <paste exact commands>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste actual stdout/stderr or runner output>
+
+      ```
+
+
+      **Evidence hardening status**:
+
+      - <status by cited step>
+
+
+      **Static hygiene status**:
+
+      - mypy: <pass/fail>
+
+      - ruff: <pass/fail>
+
+
+      **Bridge contingency decision**:
+
+      - rem.bridge_flake blocking follow-up: <yes/no>
+
+      - rationale with pasted output references
+
+      '
+    depends_on:
+    - rem.blockers.cleanup-static-hygiene
+    - rem.blockers.lock-bridge-flake-contingency
+    agent: gate-reviewer
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
