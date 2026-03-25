@@ -24053,6 +24053,145 @@ phases:
 
       '
     agent: python-senior
+  - id: rem.blockers.fix-bridge-timeout-runtime-path
+    name: Fix bridge timeout in initialize/tools_list liveness flow
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - tests/repro/test_connect_runtime_liveness.py initialize/tools_list liveness
+      flow
+
+      - gateway connect runtime liveness behavior from gw.deep_review and tw.gate
+      follow-up findings
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - src/**/connect*.py
+
+      - src/**/bridge*.py
+
+      - src/**/runtime*.py
+
+      - src/**/mcp*.py
+
+      - src/**/gateway*.py
+
+
+      harness_refs:
+
+      - connect runtime liveness repro harness
+
+      - initialize/tools_list bridge startup and teardown path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      tags: [integration]
+
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+
+      Scope:
+
+      - Remove the timeout/failure mode in the bridge initialize/tools_list liveness
+      path.
+
+      - Verify startup ordering, readiness signaling, shutdown behavior, and any async
+      coordination that can leave the bridge unavailable.
+
+      - Search sibling timeout surfaces in the same bridge/runtime path rather than
+      fixing only the first reproducer.
+
+
+      Failure-mode checklist:
+
+      - startup race between bridge launch and initialize call
+
+      - readiness signaling missing or stale
+
+      - tools_list path blocked behind incomplete initialize state
+
+      - shutdown/cleanup leaving reused runtime state behind
+
+      - partial startup causing black-box liveness failure
+
+
+      State semantics:
+
+      - last-writer-wins rules for runtime readiness must be explicit
+
+      - startup readiness must be preserved exactly across initialize then tools_list
+      flow
+
+      - legacy timing behavior is not authoritative if it violates runtime liveness
+      contract
+
+
+      Gate Preview:
+
+      1. Runtime liveness black-box probe will reject timing-dependent flake fixes
+      without readiness proof
+
+      2. Final verification will rerun the initialize/tools_list path under cold conditions
+
+      3. Sibling bridge timeout paths must be searched, not assumed absent
+
+
+      Verification scope: phase-check protecting rem.blockers gate, rem.bridge_flake
+      contingency, and rem.final_verify full-plan-check.'
+    verification: '- Main path: targeted runtime liveness repro passes through initialize
+      then tools_list without timeout
+
+      - Failure path: regression proves startup/readiness ordering is resilient under
+      cold runtime start
+
+      - Integration evidence includes exact command/test and actual output for source->bridge->tools_list
+      path
+
+      - Sibling timeout search completed across bridge/runtime lifecycle code'
+    evidence_template: '## Integration Evidence
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <paste exact targeted liveness repro command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: connect runtime start -> initialize -> tools_list -> liveness/status
+      assertion
+
+
+      **Sibling timeout search**:
+
+      - files searched
+
+      - any additional timeout/readiness sites fixed or ruled out
+
+      '
+    depends_on:
+    - rem.blockers.fix-connection-count-semantics
+    agent: python-senior
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
