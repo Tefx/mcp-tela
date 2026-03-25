@@ -25193,6 +25193,77 @@ phases:
     - rem.blockers.blackbox-runtime-liveness
     - rem.blockers.retest-stdio-mcp-initialize-loop2
     agent: integration-verifier
+  - id: rem.blockers.cleanup-static-hygiene
+    name: Resolve mypy and ruff blocker failures for rem.blockers follow-up gate
+    status: pending
+    description: 'step_type: implementation
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      Runtime/static hygiene cleanup for the automated gate blockers.
+
+
+      Close the current blocker-class mypy and ruff failures affecting downstream
+      acceptance for rem.blockers, and capture exact command output evidence for the
+      repaired command family.
+
+
+      Requirements:
+
+      - fix all currently blocking mypy findings relevant to the rem.blockers follow-up
+      gate
+
+      - fix all currently blocking ruff findings relevant to the rem.blockers follow-up
+      gate
+
+      - paste the exact mypy and ruff commands used for verification
+
+      - paste actual command output after cleanup, not summary text
+
+      - document any remaining issue that would force rem.bridge_flake or another
+      blocker-class follow-up before gate'
+    verification: '- Exact mypy and ruff verification commands are recorded
+
+      - Pasted command output shows blocker-class mypy and ruff failures cleared for
+      the intended gate scope
+
+      - Evidence is concrete command output, not summary-only prose
+
+      - Any remaining blocker is named explicitly rather than deferred silently'
+    evidence_template: '## Static Hygiene Cleanup Evidence
+
+
+      **Commands executed**:
+
+      ```
+
+      <mypy command>
+
+      <ruff command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste mypy/ruff output>
+
+      ```
+
+
+      **Residual blockers**:
+
+      - <none|list>
+
+      '
+    depends_on:
+    - rem.blockers.harden-evidence-backfill
+    agent: python-senior
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
