@@ -24457,14 +24457,18 @@ phases:
       '
     verification: '- All blocker-remediation steps completed
 
-      - Evidence covers both count semantics and initialize/tools_list timeout family
+      - Evidence covers count semantics, newline initialize/tools_list, and framed
+      stdio initialize compatibility/liveness
 
       - Runnable-surface evidence present
 
+      - Actual command output is attached for targeted retest and black-box probe
+      steps
+
       - No unresolved blocker remains before downstream hygiene/suggestion phases
 
-      - If any timeout flakiness remains plausible, rem.bridge_flake must be treated
-      as blocking follow-up, not optional note'
+      - If any timeout or framed-path flakiness remains plausible, rem.bridge_flake
+      must be treated as blocking follow-up, not optional note'
     evidence_template: '## Gate Review Report
 
       - Step-by-step assessment
@@ -24480,6 +24484,7 @@ phases:
     - rem.blockers.fix-connection-count-semantics
     - rem.blockers.fix-bridge-timeout-runtime-path
     - rem.blockers.verify-targeted-regressions
+    - rem.blockers.retest-framed-stdio-liveness
     - rem.blockers.blackbox-runtime-liveness
     agent: gate-reviewer
   - id: rem.blockers.fix-framed-stdio-mcp-liveness
