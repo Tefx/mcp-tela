@@ -37,6 +37,24 @@ LOCKFILE_START_RACE_RETRIES = 3
 HTTP_TIMEOUT_SECONDS = 10.0
 
 
+def _emit_bridge_diagnostic(message: str, connection_id: str) -> None:
+    """Write a diagnostic message to stderr for bridge troubleshooting.
+
+    Diagnostic output goes to stderr because stdout is the MCP transport.
+    Failures to write diagnostics are silently ignored — diagnostics must
+    never interrupt the bridge lifecycle.
+
+    Args:
+        message: Human-readable diagnostic detail.
+        connection_id: Bridge connection identifier for correlation.
+    """
+    try:
+        sys.stderr.write(f"tela connect [{connection_id}]: {message}\n")
+        sys.stderr.flush()
+    except OSError:
+        pass
+
+
 @dataclass(frozen=True)
 class ConnectEndpoint:
     """Resolved server endpoint for bridge transport."""
@@ -267,7 +285,16 @@ def _autostart_serve(
 
 
 def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]:
-    """Run connect/register/forward/disconnect lifecycle."""
+    """Run connect/register/forward/disconnect lifecycle.
+
+    Args:
+        host: Gateway host address.
+        port: Gateway port number.
+        bearer_token: Bearer token for authentication.
+
+    Returns:
+        Result with None on success or error string on failure.
+    """
 
     base_url = f"http://{host}:{port}"
     connection_id = f"bridge_{uuid.uuid4().hex}"
@@ -290,6 +317,9 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
     if connect_result.is_err:
         signal.signal(signal.SIGINT, previous_int)
         signal.signal(signal.SIGTERM, previous_term)
+        _emit_bridge_diagnostic(
+            f"registration failed: {connect_result.error}", connection_id
+        )
         return Result(error=connect_result.error)
 
     bridge_error: str | None = None
@@ -303,12 +333,19 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
         )
         if forward_result.is_err:
             bridge_error = forward_result.error
+            _emit_bridge_diagnostic(
+                f"forwarding stopped: {bridge_error}", connection_id
+            )
     finally:
-        _ = _post_json(
+        disconnect_result = _post_json(
             url=f"{base_url}/disconnect",
             bearer_token=bearer_token,
             payload={"connection_id": connection_id},
         )
+        if disconnect_result.is_err:
+            _emit_bridge_diagnostic(
+                f"disconnect failed: {disconnect_result.error}", connection_id
+            )
         signal.signal(signal.SIGINT, previous_int)
         signal.signal(signal.SIGTERM, previous_term)
 
@@ -366,11 +403,13 @@ def _forward_stdio_http(
             return Result(error=response_messages_result.error)
         assert response_messages_result.value is not None
         for response_message in response_messages_result.value:
-            _write_framed_message(
+            write_result = _write_framed_message(
                 stdout_buffer,
                 response_message,
                 framed=framed_message.is_content_length_framed,
             )
+            if write_result.is_err:
+                return Result(error=write_result.error)
 
     return Result(value=None)
 
@@ -427,15 +466,31 @@ def _read_framed_message(stream: BinaryIO) -> Result[_BridgeMessage | None, str]
         )
 
 
-def _write_framed_message(stream: BinaryIO, payload: bytes, *, framed: bool) -> None:
-    """Write one MCP JSON-RPC message to stdio transport."""
+def _write_framed_message(
+    stream: BinaryIO, payload: bytes, *, framed: bool
+) -> Result[None, str]:
+    """Write one MCP JSON-RPC message to stdio transport.
 
-    if framed:
-        header = f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii")
-        stream.write(header + payload)
-    else:
-        stream.write(payload.rstrip(b"\r\n") + b"\n")
-    stream.flush()
+    Args:
+        stream: Output stream (typically stdout).
+        payload: JSON-RPC message bytes.
+        framed: If True, wrap with Content-Length header; else newline-delimited.
+
+    Returns:
+        Result with None on success; error string on BrokenPipe/write failure.
+    """
+    try:
+        if framed:
+            header = f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii")
+            stream.write(header + payload)
+        else:
+            stream.write(payload.rstrip(b"\r\n") + b"\n")
+        stream.flush()
+    except BrokenPipeError:
+        return Result(error="BRIDGE_WRITE_FAILED: upstream client disconnected (BrokenPipe)")
+    except OSError as exc:
+        return Result(error=f"BRIDGE_WRITE_FAILED: {exc}")
+    return Result(value=None)
 
 
 def _post_mcp_message(

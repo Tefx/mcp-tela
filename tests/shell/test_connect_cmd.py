@@ -476,3 +476,101 @@ def test_forward_stdio_http_preserves_newline_framing_for_tools_flow(
     assert len(lines) == 2
     assert '"id": 1' in lines[0]
     assert '"id": 2' in lines[1]
+
+
+def test_write_framed_message_returns_error_on_broken_pipe() -> None:
+    """BrokenPipe during write must return Result error, not raise."""
+
+    class _BrokenStream:
+        def write(self, data: bytes) -> int:
+            raise BrokenPipeError("upstream disconnected")
+
+        def flush(self) -> None:
+            raise BrokenPipeError("upstream disconnected")
+
+    stream = _BrokenStream()  # type: ignore[arg-type]
+    result = connect_cmd._write_framed_message(
+        stream, b'{"jsonrpc":"2.0"}', framed=False
+    )
+
+    assert result.is_err
+    assert result.error is not None
+    assert "BRIDGE_WRITE_FAILED" in result.error
+    assert "BrokenPipe" in result.error
+
+
+def test_write_framed_message_returns_error_on_os_error() -> None:
+    """Generic OSError during write must return Result error."""
+
+    class _ErrorStream:
+        def write(self, data: bytes) -> int:
+            raise OSError("disk full")
+
+        def flush(self) -> None:
+            pass
+
+    stream = _ErrorStream()  # type: ignore[arg-type]
+    result = connect_cmd._write_framed_message(
+        stream, b'{"jsonrpc":"2.0"}', framed=True
+    )
+
+    assert result.is_err
+    assert result.error is not None
+    assert "BRIDGE_WRITE_FAILED" in result.error
+
+
+def test_emit_bridge_diagnostic_writes_to_stderr(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Diagnostic output must go to stderr with connection_id."""
+
+    connect_cmd._emit_bridge_diagnostic("test message", "bridge_abc123")
+    captured = capsys.readouterr()
+    assert "tela connect [bridge_abc123]: test message" in captured.err
+    assert captured.out == ""
+
+
+def test_forward_stdio_http_returns_error_on_write_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Forwarding loop must propagate write errors as Result."""
+
+    init_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    stdin_buffer = io.BytesIO(init_request + b"\n")
+
+    class _BrokenWriter:
+        def write(self, data: bytes) -> int:
+            raise BrokenPipeError("client gone")
+
+        def flush(self) -> None:
+            raise BrokenPipeError("client gone")
+
+    response = (
+        "application/json",
+        json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode("utf-8"),
+        "s-1",
+    )
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = mcp_url, bearer_token, payload, session_id
+        return Result(value=response)
+
+    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=_BrokenWriter(),  # type: ignore[arg-type]
+    )
+
+    assert result.is_err
+    assert result.error is not None
+    assert "BRIDGE_WRITE_FAILED" in result.error
