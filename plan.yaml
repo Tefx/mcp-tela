@@ -23731,7 +23731,7 @@ phases:
   steps:
   - id: sec.mcp_auth.middleware
     name: Implement BearerAuthMiddleware
-    status: claimed
+    status: done
     description: 'Add ASGI middleware class to src/tela/shell/http_auth.py. Must exempt
       GET /health, reject all other unauthenticated requests with 401 + JSON error
       body {"error": "AUTH_INVALID_TOKEN: ..."} matching existing format in gateway.py
@@ -23749,6 +23749,39 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-25T10:59:08.032012+00:00'
+    done_at: '2026-03-25T13:32:55.474759+00:00'
+    evidence: '16 tests passed (0.11s):
+
+      - test_middleware_passes_health_without_token PASSED
+
+      - test_middleware_requires_token_for_health_post PASSED
+
+      - test_middleware_rejects_mcp_without_token PASSED (401, body={"error":"AUTH_INVALID_TOKEN:
+      ..."})
+
+      - test_middleware_rejects_wrong_token PASSED
+
+      - test_middleware_rejects_when_expected_token_is_none PASSED
+
+      - test_middleware_rejects_empty_bearer_value PASSED
+
+      - test_middleware_rejects_non_bearer_scheme PASSED
+
+      - test_middleware_passes_authenticated_request PASSED (200)
+
+      - test_middleware_passes_non_http_scope PASSED
+
+      - test_middleware_401_response_is_valid_json PASSED
+
+      + 6 existing validate_bearer_token tests
+
+
+      invar guard: passed (static: 0 errors, doctest: passed)
+
+      Files: src/tela/shell/http_auth.py (added BearerAuthMiddleware), tests/shell/test_http_auth.py
+      (added 10 middleware tests)
+
+      Commit: ab53f5d'
   - id: sec.mcp_auth.wire
     name: Wire middleware into serve_cmd
     status: pending
