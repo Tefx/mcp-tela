@@ -23941,7 +23941,7 @@ phases:
   steps:
   - id: rem.blockers.fix-connection-count-semantics
     name: Repair all numeric connection-count semantics
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -24055,6 +24055,33 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-25T15:58:25.302694+00:00'
+    done_at: '2026-03-25T16:03:48.778989+00:00'
+    evidence: "## Connection Count Semantics Repair\n- Exact files changed:\n  - tests/repro/test_connect_runtime_liveness.py\n\
+      \  - tests/repro/test_connection_count_semantics.py\n- Search evidence for numeric\
+      \ `connections` usage across affected runtime/test paths:\n  - `\\.get\\(\"\
+      connections\"` search across repo: only `src/tela/commands/remote_state.py:97`\
+      \ remains (`payload.get(\"connections\", [])`), retained as structural list\
+      \ extraction.\n  - `\\.get\\(\"connections\"` search across tests: 0 matches\
+      \ remain after fixes.\n  - `connections.*[><=].*\\d` search: only `main([\"\
+      connections\"]) == 0` in query command test (exit-code assertion, not runtime\
+      \ count semantics).\n  - Source semantics observed by worker: `connections`\
+      \ remains list-typed collection usage; `active_connections` remains int count\
+      \ usage.\n- List of each site fixed vs intentionally retained with rationale:\n\
+      \  - Fixed in test_connect_runtime_liveness.py at former numeric count assertion\
+      \ sites around lines 243, 488, 510, 538: switched `.get(\"connections\", 0)`\
+      \ to `.get(\"active_connections\", 0)`.\n  - Retained structural usages in src/tela/commands/remote_state.py\
+      \ and list-oriented `runtime.connections` operations in source/tests.\n- Targeted\
+      \ regression names and output:\n  - tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_gateway_status_active_connections_is_int\
+      \ PASSED\n  - tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_status_response_connections_is_list\
+      \ PASSED\n  - tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_json_payload_has_both_fields_with_distinct_types\
+      \ PASSED\n  - tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_empty_connections_payload_divergence\
+      \ PASSED\n  - tests/repro/test_connection_count_semantics.py::TestStatusPayloadCountSemantics::test_numeric_comparison_on_connections_list_is_wrong\
+      \ PASSED\n  - Worker-reported full suite summary: 29 passed, 0 failed, 0 skipped.\n\
+      - Explicit note confirming the reported ~line 510 family was addressed:\n  -\
+      \ Reported ~line 510 usage and sibling numeric misuse assertions were all updated\
+      \ to use `active_connections` and assertion messaging updated accordingly.\n\
+      - Branch commit from isolated worktree:\n  - 38dc6c9 fix(tests): use active_connections\
+      \ (int) instead of connections (list) for numeric assertions"
   - id: rem.blockers.fix-bridge-timeout-runtime-path
     name: Fix bridge timeout in initialize/tools_list liveness flow
     status: pending
