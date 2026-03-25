@@ -24084,7 +24084,7 @@ phases:
       \ (int) instead of connections (list) for numeric assertions"
   - id: rem.blockers.fix-bridge-timeout-runtime-path
     name: Fix bridge timeout in initialize/tools_list liveness flow
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -24221,6 +24221,8 @@ phases:
     depends_on:
     - rem.blockers.fix-connection-count-semantics
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-25T16:08:42.229402+00:00'
   - id: rem.blockers.verify-targeted-regressions
     name: Run targeted regression pack for blocker fixes
     status: pending
