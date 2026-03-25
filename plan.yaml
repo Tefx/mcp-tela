@@ -25441,7 +25441,7 @@ phases:
   - id: rem.blockers.lock-bridge-flake-contingency
     name: Lock bridge flake contingency handoff criteria before rem.blockers gate
       re-open
-    status: claimed
+    status: done
     description: 'step_type: planning
 
       verification_scope: phase-check
@@ -25514,6 +25514,38 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-25T18:03:11.739569+00:00'
+    done_at: '2026-03-25T18:16:42.228011+00:00'
+    evidence: "## Bridge Flake Contingency Criteria\n\n**Resolved criteria (non-blocking\
+      \ for rem.blockers gate only if all met with pasted outputs)**:\n- fresh `tela\
+      \ serve --port 0` run publishes live `~/.tela/gateway.lock` with non-zero `port`,\
+      \ valid `token`, live `pid`\n- lockfile-discovery path passes and prints discovered\
+      \ host/port from current run\n- initialize + tools/list black-box path passes\
+      \ with valid JSON-RPC responses\n- no output contains `LOCKFILE_STALE`, `LOCKFILE_WAIT_TIMEOUT`,\
+      \ `DISCOVERY_FAILED`, `NO_RUNNING_SERVER`, `endpoint unreachable`, or bridge\
+      \ non-response strings\n- evidence is raw pasted command output, not narrative\
+      \ summaries\n\n**Blocking follow-up criteria (rem.bridge_flake MUST remain blocking\
+      \ if any true)**:\n- any verification output shows stale/timeout/unreachable\
+      \ lockfile signals\n- initialize/tools_list times out, hangs, or emits no valid\
+      \ JSON-RPC payload\n- success requires retries/cleanup without proving gateway\
+      \ identity for current run\n- lockfile identity is ambiguous in evidence\n-\
+      \ evidence is summary-only\n\n**Exact command(s) / probes required**:\n```bash\n\
+      uv run pytest -vv -s \\\n  tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile\
+      \ \\\n  tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list\n\
+      \npython3 - <<'PY'\nimport json, os, pathlib\np = pathlib.Path.home() / '.tela'\
+      \ / 'gateway.lock'\nprint(f'lockfile_exists={p.exists()}')\nif p.exists():\n\
+      \    data = json.loads(p.read_text())\n    print('lockfile_json=', json.dumps(data,\
+      \ sort_keys=True))\n    try:\n        os.kill(int(data['pid']), 0)\n       \
+      \ print('pid_live=True')\n    except OSError as exc:\n        print(f'pid_live=False\
+      \ error={exc}')\nPY\n```\n\n**Expected distinguishing output**:\n- Resolved:\
+      \ both targeted tests pass; lockfile JSON and live PID proof present; no stale/timeout/unreachable\
+      \ markers\n- Unresolved/blocking examples include emitted `LOCKFILE_STALE`,\
+      \ `LOCKFILE_WAIT_TIMEOUT`, `NO_RUNNING_SERVER`, bridge initialize non-response,\
+      \ or failed lockfile-discovery test\n\n**Gate-decision handoff language**:\n\
+      - If resolved criteria all satisfied: non-blocking for rem.blockers gate close\n\
+      - Else: `Blocking: rem.blockers gate remains closed and rem.bridge_flake is\
+      \ mandatory prerequisite`\n\n**Spec basis**:\n- README lockfile discovery contract\n\
+      - docs/INTERFACES.md lockfile contract section\n- lockfile error surfaces in\
+      \ runtime/commands (`lockfile.py`, `remote_state.py`, `connect_cmd.py`)"
   - id: rem.blockers.gate-retest
     name: Retest rem.blockers gate readiness after evidence, hygiene, and bridge contingency
       remediation
