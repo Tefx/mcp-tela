@@ -25618,3 +25618,61 @@ phases:
     depends_on:
     - rem.final_verify.full-invar-guard
     agent: blind-tester
+  - id: rem.final_verify.gate
+    name: Gate final remediation verification
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - final release-quality check after blocker, hygiene, suggestion, and contingency
+      work
+
+      - phase contains targeted regressions, broad suite, full invar guard, and black-box
+      runtime verification
+
+
+      Gate review: decide whether the remediation plan is fully closed.
+
+      This gate must reject incomplete evidence, residual bridge flakiness, or unresolved
+      blocker-class invar/runtime defects.
+
+      '
+    verification: '- Freeze evidence present and uncontested
+
+      - Targeted regressions passed or findings are dispositioned
+
+      - Affected-suite broad pass reviewed
+
+      - `uvx invar-tools guard --all` evidence reviewed
+
+      - Final runtime liveness black-box evidence reviewed
+
+      - No unresolved blocker remains from blockers, hygiene, suggestions, or contingency
+      phases'
+    evidence_template: '## Final Gate Review Report
+
+      - targeted regressions:
+
+      - affected-suite broad pass:
+
+      - invar guard:
+
+      - runtime black-box:
+
+      - unresolved blocker check:
+
+      - final decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - rem.final_verify.freeze-release-candidate
+    - rem.final_verify.targeted-regressions
+    - rem.final_verify.affected-suite-broad-pass
+    - rem.final_verify.full-invar-guard
+    - rem.final_verify.runtime-liveness-blackbox
+    agent: gate-reviewer
