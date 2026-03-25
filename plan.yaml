@@ -25704,7 +25704,7 @@ phases:
       - rem.blockers.gate updated to depend on rem.blockers.gate-retest-full-evidence'
   - id: rem.blockers.capture-full-evidence-artifacts
     name: Capture full raw evidence artifacts for hardening scope
-    status: pending
+    status: claimed
     description: "step_type: verification\nverification_scope: phase-check\nagent_source:\
       \ default\n\nProduce FULL non-redacted evidence artifacts for the rem.blockers\
       \ hardening scope.\n\nThis step exists because prior hardening evidence remained\
@@ -25738,6 +25738,8 @@ phases:
     - rem.blockers.harden-evidence-backfill
     - rem.blockers.lock-bridge-flake-contingency
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-25T18:23:14.359042+00:00'
   - id: rem.blockers.gate-retest-full-evidence
     name: Strict gate-retest using full raw evidence and lockfile identity proof
     status: pending
