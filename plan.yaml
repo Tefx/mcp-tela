@@ -24892,6 +24892,67 @@ phases:
     depends_on:
     - rem.hygiene.validate-shell-result-allow-rationales
     agent: python-executor
+  - id: rem.hygiene.verify-hygiene-pack
+    name: Verify invar and runtime hygiene pack
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - hygiene should-fix items from conditional-pass review
+
+
+      touch_paths:
+
+      - files changed for warning reduction, shell_result allowances, and test-structure
+      maintenance
+
+
+      harness_refs:
+
+      - targeted invar warning family checks
+
+      - runtime liveness test module layout and affected targeted tests
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, validate hygiene changes from a fresh perspective.
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      Independence Level: L1
+
+      Verification scope: phase-check protecting rem.hygiene.gate and rem.final_verify.
+
+      '
+    verification: '- Review before/after warning inventory and shell_result allowance
+      audit
+
+      - Run focused checks sufficient to prove changed test structure still exercises
+      the same repro seam
+
+      - Report unresolved warning families or unsupported allow rationales'
+    evidence_template: '## Hygiene Verification Report
+
+      - warning inventory review:
+
+      - shell_result allowance review:
+
+      - test-structure review:
+
+      - issues found:
+
+      - verdict: PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - rem.hygiene.evaluate-runtime-liveness-test-structure
+    agent: integration-verifier
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
