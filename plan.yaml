@@ -24426,7 +24426,7 @@ phases:
       - Updated dependencies so downstream black-box and gate depend on batched retest'
   - id: rem.blockers.blackbox-runtime-liveness
     name: Black-box runtime liveness probe after blocker remediation
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -24510,6 +24510,8 @@ phases:
     depends_on:
     - rem.blockers.retest-stdio-mcp-initialize-loop2
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-25T17:41:49.557820+00:00'
   - id: rem.blockers.gate
     name: Gate blocker remediation phase
     status: pending
