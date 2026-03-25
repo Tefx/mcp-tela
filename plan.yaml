@@ -24368,6 +24368,58 @@ phases:
     depends_on:
     - rem.blockers.verify-targeted-regressions
     agent: blind-tester
+  - id: rem.blockers.gate
+    name: Gate blocker remediation phase
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - phase closes blocker-class runtime and count-semantics defects
+
+      - includes integration and black-box runnable-surface verification
+
+      - downstream phases rely on this gate as blocker barrier
+
+
+      Gate review: verify blocker remediation quality before hygiene, contingency,
+      or suggestion work proceeds.
+
+      Verification scope: gate protecting rem.bridge_flake, rem.hygiene, rem.suggestions,
+      and rem.final_verify.
+
+      '
+    verification: '- All blocker-remediation steps completed
+
+      - Evidence covers both count semantics and initialize/tools_list timeout family
+
+      - Runnable-surface evidence present
+
+      - No unresolved blocker remains before downstream hygiene/suggestion phases
+
+      - If any timeout flakiness remains plausible, rem.bridge_flake must be treated
+      as blocking follow-up, not optional note'
+    evidence_template: '## Gate Review Report
+
+      - Step-by-step assessment
+
+      - Blockers closed vs remaining
+
+      - Evidence quality judgment
+
+      - Required downstream contingency notes if flakiness is not fully eliminated
+
+      '
+    depends_on:
+    - rem.blockers.fix-connection-count-semantics
+    - rem.blockers.fix-bridge-timeout-runtime-path
+    - rem.blockers.verify-targeted-regressions
+    - rem.blockers.blackbox-runtime-liveness
+    agent: gate-reviewer
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
