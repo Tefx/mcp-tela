@@ -25387,3 +25387,74 @@ phases:
     depends_on:
     - rem.final_verify.freeze-release-candidate
     agent: integration-verifier
+  - id: rem.final_verify.affected-suite-broad-pass
+    name: Run affected-suite broad pass
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - final verification requirement for broad affected-suite pass
+
+
+      touch_paths:
+
+      - all impacted auth, bridge/runtime, status, config/lockfile, and docs-adjacent
+      test surfaces
+
+
+      harness_refs:
+
+      - affected test suite selection for touched modules
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, run the affected-suite broad pass across the remediation
+      footprint.
+
+      YOUR GOAL IS TO FIND CROSS-SEAM FAILURES that focused regressions miss.
+
+
+      Independence Level: L1
+
+      Verification scope: full-plan-check protecting rem.final_verify.gate.
+
+      '
+    verification: '- Execute the broad affected suite for touched runtime/auth/config
+      surfaces
+
+      - Record exact suite selection and command(s)
+
+      - Report any cross-seam failures surfaced beyond targeted regressions'
+    evidence_template: '## Affected-Suite Broad Pass
+
+      **Suite selection rationale**:
+
+      - touched modules:
+
+      - included suites:
+
+      **Commands executed**:
+
+      ```
+
+      <paste commands>
+
+      ```
+
+      **Result summary**:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      '
+    depends_on:
+    - rem.final_verify.targeted-regressions
+    agent: integration-verifier
