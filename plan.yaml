@@ -24569,7 +24569,7 @@ phases:
     agent: gate-reviewer
   - id: rem.blockers.fix-framed-stdio-mcp-liveness
     name: Batched fix for framed-stdio MCP initialize liveness
-    status: claimed
+    status: pending
     description: 'step_type: implementation
 
       agent_source: default
@@ -24658,8 +24658,6 @@ phases:
     depends_on:
     - rem.blockers.verify-targeted-regressions
     agent: python-senior
-    claimed_by: python-senior
-    claimed_at: '2026-03-25T17:08:17.082696+00:00'
   - id: rem.blockers.retest-framed-stdio-liveness
     name: Retest targeted framed-stdio MCP liveness regressions
     status: pending
