@@ -1,0 +1,40 @@
+lockfile_path=/Users/tefx/.tela/gateway.lock
+lockfile_raw_begin
+{"pid":24174,"host":"127.0.0.1","port":62046,"token":"5Shoq8BZLJAPaq9vTEiHIaipzSmJ4m-IoURCROWonk0","started_at":"2026-03-25T18:31:34Z","config_path":"/private/var/folders/rs/6_0h1ssn5439q1yfqy4pykg00000gn/T/tmp3u59m91u/tela.yaml","version":"0.1.0"}
+lockfile_raw_end
+lockfile_pid=24174
+lockfile_host=127.0.0.1
+lockfile_port=62046
+lockfile_token=5Shoq8BZLJAPaq9vTEiHIaipzSmJ4m-IoURCROWonk0
+probe_base_url=http://127.0.0.1:62046
+probe_authorization=Bearer 5Shoq8BZLJAPaq9vTEiHIaipzSmJ4m-IoURCROWonk0
+pid_ps_returncode=0
+pid_ps_stdout_begin
+24174 24173 S    /Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts/.venv/bin/python3 -m tela serve --config /var/folders/rs/6_0h1ssn5439q1yfqy4pykg00000gn/T/tmp3u59m91u/tela.yaml --port 0 --default-profile dev
+pid_ps_stdout_end
+pid_ps_stderr_begin
+pid_ps_stderr_end
+lsof_returncode=0
+lsof_stdout_begin
+COMMAND     PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+python3.1 24174 tefx    6u  IPv4 0x578e1a5398c65991      0t0  TCP localhost:62046 (LISTEN)
+lsof_stdout_end
+lsof_stderr_begin
+lsof_stderr_end
+status_http_code=200
+status_body_begin
+{"uptime_seconds":0.2158646250027232,"server_count":0,"connected_servers":[],"active_connections":0,"profile_count":1,"total_tool_calls":0,"connections":[],"audit_entries":[]}
+status_body_end
+connect_poll_t_plus_2=None
+initialize_response_line_begin
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"experimental":{},"prompts":{"listChanged":false},"resources":{"subscribe":false,"listChanged":false},"tools":{"listChanged":false}},"serverInfo":{"name":"tela-gateway","version":"1.26.0"}}}
+initialize_response_line_end
+tools_list_response_line_begin
+{"jsonrpc":"2.0","id":2,"result":{"tools":[]}}
+tools_list_response_line_end
+connect_stderr_snapshot_begin
+
+connect_stderr_snapshot_end
+connect_poll_before_term=None
+
+EXIT_CODE=0
