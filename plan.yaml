@@ -25263,3 +25263,47 @@ phases:
   depends_on:
   - rem.bridge_flake
   - rem.suggestions
+  steps:
+  - id: rem.final_verify.freeze-release-candidate
+    name: Freeze remediation release candidate for final verification
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: full-plan-check protecting all final verification outputs.
+
+
+      Freeze step required before L2/L3/gate evidence collection.
+
+      Must record:
+
+      - git rev-parse HEAD
+
+      - git status clean
+
+      - environment declaration
+
+      - explicit statement that no code changes are allowed until rem.final_verify.gate
+      completes
+
+      '
+    verification: '- HEAD recorded
+
+      - clean worktree declaration recorded
+
+      - environment declaration recorded
+
+      - no-change attestation recorded'
+    evidence_template: '## Freeze Evidence
+
+      - HEAD:
+
+      - git status:
+
+      - environment declaration:
+
+      - no-change attestation:
+
+      '
+    agent: integration-verifier
