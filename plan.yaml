@@ -23938,3 +23938,8 @@ phases:
   status: pending
   depends_on:
   - sec.mcp_auth
+- id: rem.bridge_flake
+  name: Bridge Timeout Contingency
+  status: locked
+  depends_on:
+  - rem.blockers
