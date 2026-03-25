@@ -25533,3 +25533,88 @@ phases:
     depends_on:
     - rem.final_verify.affected-suite-broad-pass
     agent: integration-verifier
+  - id: rem.final_verify.runtime-liveness-blackbox
+    name: Run final runtime liveness black-box probe
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - final verification requirement for runtime liveness black-box probe
+
+      - runtime/deployability-bearing connect surface contract
+
+
+      touch_paths:
+
+      - connect runtime entrypoint
+
+      - liveness/status probe path
+
+
+      harness_refs:
+
+      - runtime entrypoint
+
+      - initialize/tools_list end-to-end black-box path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, verify the runnable surface black-box after the full
+      remediation pack.
+
+      YOUR GOAL IS TO FIND OPERATIONAL FAILURES.
+
+
+      Independence Level: L3
+
+      Verification scope: full-plan-check protecting rem.final_verify.gate.
+
+
+      Required proof:
+
+      - entrypoint / startup path identified
+
+      - exact launch command
+
+      - initialize then tools_list reaches the real runtime path
+
+      - actual output pasted
+
+      '
+    verification: '- Entry point starts and stays alive for at least one initialize/tools_list
+      cycle
+
+      - Real runtime path is exercised end-to-end
+
+      - Actual output included; summaries alone are insufficient'
+    evidence_template: '## Final Runtime Liveness Evidence
+
+      **Entry point**:
+
+      **Launch command**:
+
+      ```
+
+      <exact command>
+
+      ```
+
+      **Operation**: initialize -> tools_list
+
+      **Observed output**:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      '
+    depends_on:
+    - rem.final_verify.full-invar-guard
+    agent: blind-tester
