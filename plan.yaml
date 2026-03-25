@@ -25704,7 +25704,7 @@ phases:
       - rem.blockers.gate updated to depend on rem.blockers.gate-retest-full-evidence'
   - id: rem.blockers.capture-full-evidence-artifacts
     name: Capture full raw evidence artifacts for hardening scope
-    status: claimed
+    status: done
     description: "step_type: verification\nverification_scope: phase-check\nagent_source:\
       \ default\n\nProduce FULL non-redacted evidence artifacts for the rem.blockers\
       \ hardening scope.\n\nThis step exists because prior hardening evidence remained\
@@ -25740,6 +25740,29 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-25T18:23:14.359042+00:00'
+    done_at: '2026-03-25T18:33:34.307251+00:00'
+    evidence: "status: SUCCESS\nevidence: |\n  Artifact:\n  - PR: e417a5db39efbd32266e59e566a262dc31f7665b\n\
+      \  - Artifact path: /Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts/artifacts/rem_blockers/01_targeted_regressions.out\n\
+      \  - Artifact path: /Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts/artifacts/rem_blockers/02_stdio_bridge_pair.out\n\
+      \  - Artifact path: /Users/tefx/Projects/mcp-tela/.vectl/worktrees/rem.blockers.capture-full-evidence-artifacts/artifacts/rem_blockers/03_lockfile_identity_probe.out\n\
+      \n  Verification:\n  - Run: `uv run pytest -vv -s tests/repro/test_connection_count_semantics.py\
+      \ tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile\
+      \ tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list\
+      \ tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count\
+      \ tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize`\n   \
+      \ Outcome: 9 passed in 14.62s (full raw output captured in evidence artifacts)\n\
+      \  - Run: `uv run pytest -vv -s tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize\
+      \ tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list`\n\
+      \    Outcome: 2 passed in 4.99s (full raw output captured in evidence artifacts)\n\
+      \  - Run: `uv run python3 artifacts/rem_blockers/lockfile_identity_probe.py`\n\
+      \    Outcome: full lockfile identity proof emitted, including absolute lockfile\
+      \ path `/Users/tefx/.tela/gateway.lock`, raw lockfile JSON, PID/lsof proofs,\
+      \ and probe host/port/token consumption with successful initialize/tools calls.\n\
+      \n  Shared lockfile interference assessment:\n  - shared `~/.tela/gateway.lock`\
+      \ interference remains plausible from full evidence\n  - therefore `rem.bridge_flake`\
+      \ remains blocking follow-up and is not downgraded to a note\n\n  Spec link:\n\
+      \  - docs/USAGE.md (`tela connect`)\n  - docs/INTERFACES.md §7 MCP Surface\n\
+      \  - docs/INTERFACES.md §7.3 Lockfile Contract\nerror: \"\""
   - id: rem.blockers.gate-retest-full-evidence
     name: Strict gate-retest using full raw evidence and lockfile identity proof
     status: pending
