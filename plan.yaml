@@ -24790,7 +24790,7 @@ phases:
       \ depend on new loop-2 retest"
   - id: rem.blockers.fix-stdio-mcp-initialize-loop2
     name: Batched fix for framed stdio MCP initialize EOF/BrokenPipe loop 2
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -24950,6 +24950,53 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-25T17:23:00.266228+00:00'
+    done_at: '2026-03-25T17:34:53.037143+00:00'
+    evidence: 'Artifact:
+
+      - PR: b16ff04 (on branch vectl/step-rem.blockers.fix-stdio-mcp-initialize-loop2)
+
+
+      Verification:
+
+      - Run: `uv run python -m pytest tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+      -xvs` -> PASSED
+
+      - Run: `uv run python -m pytest tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+      -xvs` -> PASSED
+
+      - Run: `uv run python -m pytest tests/shell/test_connect_cmd.py -v` -> 22 passed
+
+      - Run: `uv run python -m pytest tests/ -x -q` -> 569 passed, 0 failed
+
+      - Run: `uv run ruff check src/tela/commands/connect_cmd.py` -> all checks passed
+
+
+      why_previous_fix_failed:
+
+      The prior step (`rem.blockers.fix-framed-stdio-mcp-liveness`) addressed framed
+      parsing compatibility, but did not sufficiently surface early-exit diagnostics
+      for bridge teardown/write failures. This loop-2 fix adds explicit early-exit
+      diagnostics and BrokenPipe resilience in the connect bridge lifecycle path so
+      failures are observable and no longer manifest as opaque EOF/BrokenPipe in repros.
+
+
+      Sibling search evidence:
+
+      - Searched `Content-Length|framed|_read_framed|_write_framed` across `src/tela/**`
+
+      - Framing path localized to `src/tela/commands/connect_cmd.py`; no sibling stdio
+      framing handlers identified in HTTP-only paths
+
+      - Searched `BrokenPipe|EPIPE|OSError` across `src/tela/**`; existing handlers
+      in other shell I/O surfaces are unrelated to stdio bridge framing lifecycle
+
+
+      Spec link:
+
+      - docs/INTERFACES.md section F (MCP stdio transport)
+
+      - rem.blockers.fix-stdio-mcp-initialize-loop2 step spec and blocker findings
+      from rem.blockers.retest-framed-stdio-liveness'
   - id: rem.blockers.retest-stdio-mcp-initialize-loop2
     name: Retest framed stdio/connect MCP initialize loop 2 remediation
     status: pending
