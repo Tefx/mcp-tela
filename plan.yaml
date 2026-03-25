@@ -25632,6 +25632,42 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-25T18:17:05.753889+00:00'
+  - id: rem.blockers.capture-full-evidence-artifacts
+    name: Capture full raw evidence artifacts for hardening scope
+    status: pending
+    description: "step_type: verification\nverification_scope: phase-check\nagent_source:\
+      \ default\n\nProduce FULL non-redacted evidence artifacts for the rem.blockers\
+      \ hardening scope.\n\nThis step exists because prior hardening evidence remained\
+      \ excerpted/redacted/placeholder-level and therefore did not close the evidence-quality\
+      \ blocker.\n\nRequired evidence contract:\n- paste the EXACT commands executed\n\
+      - paste FULL raw stdout/stderr or test-runner output for each command\n- NO\
+      \ excerpts\n- NO ellipses\n- NO placeholders\n- NO redactions\n- if output is\
+      \ large, attach the full artifact path and paste the complete captured output\
+      \ in the step evidence body\n\nRequired artifact set:\n1. full rerun output\
+      \ for the hardening-scope targeted verification commands cited by rem.blockers.harden-evidence-backfill\n\
+      2. explicit lockfile identity proof for ~/.tela/gateway.lock showing:\n   -\
+      \ absolute lockfile path\n   - raw lockfile JSON/body as emitted on disk\n \
+      \  - live PID proof for the lockfile owner\n   - the exact host/port/token identity\
+      \ fields used by the probe\n   - proof that the probe consumed that same lockfile\
+      \ identity\n3. explicit statement whether shared ~/.tela/gateway.lock interference\
+      \ remains plausible after reviewing the full raw evidence\n\nBlocking rule to\
+      \ preserve:\n- If lockfile interference still remains plausible from the full\
+      \ evidence, rem.bridge_flake remains blocking follow-up. Do not downgrade it\
+      \ to a note.\n"
+    verification: '- Evidence includes exact commands and FULL raw outputs for every
+      hardening-scope command cited
+
+      - Evidence includes explicit lockfile identity proof: absolute path, raw contents,
+      live PID check, and proof the probe used that same identity
+
+      - Evidence contains no excerpts, ellipses, placeholders, or summary-only substitutions
+
+      - Evidence states plainly whether shared ~/.tela/gateway.lock interference remains
+      plausible and keeps rem.bridge_flake blocking if plausibility remains'
+    depends_on:
+    - rem.blockers.harden-evidence-backfill
+    - rem.blockers.lock-bridge-flake-contingency
+    agent: integration-verifier
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
