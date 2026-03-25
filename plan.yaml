@@ -23732,13 +23732,18 @@ phases:
   - id: sec.mcp_auth.middleware
     name: Implement BearerAuthMiddleware
     status: pending
-    description: Add ASGI middleware class to src/tela/shell/http_auth.py. Must exempt
+    description: 'Add ASGI middleware class to src/tela/shell/http_auth.py. Must exempt
       GET /health, reject all other unauthenticated requests with 401 + JSON error
-      body matching existing format. Use raw ASGI protocol (not BaseHTTPMiddleware)
-      for streaming compatibility. Token comparison via hmac.compare_digest. Accept
-      get_expected_token callable for runtime token access.
-    verification: 'Unit tests pass: middleware rejects /mcp without token (401), passes
-      /health without token, passes authenticated requests through. invar guard clean.'
+      body {"error": "AUTH_INVALID_TOKEN: ..."} matching existing format in gateway.py
+      _as_error_response. Use raw ASGI protocol (not BaseHTTPMiddleware) for streaming
+      compatibility. Token comparison delegates to existing validate_bearer_token
+      (hmac.compare_digest). Accept get_expected_token callable for runtime token
+      access. If get_expected_token returns None, reject with 401 (defensive against
+      startup race). Bearer token is always required regardless of auth.mode (INTERFACES.md
+      §7.4).'
+    verification: 'Unit tests pass: middleware rejects /mcp without token (401, response
+      body is {"error": "..."} JSON), passes /health without token, passes authenticated
+      requests through. invar guard clean.'
     evidence_template: 'Paste: (1) test output for middleware tests (2) invar guard
       output'
     agent: python-executor
