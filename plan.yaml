@@ -24482,6 +24482,97 @@ phases:
     - rem.blockers.verify-targeted-regressions
     - rem.blockers.blackbox-runtime-liveness
     agent: gate-reviewer
+  - id: rem.blockers.fix-framed-stdio-mcp-liveness
+    name: Batched fix for framed-stdio MCP initialize liveness
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - blocker findings from rem.blockers.verify-targeted-regressions
+
+      - MCP initialize/tools_list liveness expectations in tests/repro/test_liveness.py
+
+
+      touch_paths:
+
+      - tests/repro/test_liveness.py
+
+      - stdio framed MCP runtime/bridge path
+
+      - initialize forwarding compatibility path
+
+
+      harness_refs:
+
+      - repro liveness harness
+
+      - framed stdio MCP initialize path
+
+      - newline initialize/tools_list regression path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      Fix ALL blocker-family compatibility gaps for the framed-stdio MCP initialize
+      liveness path.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: framed MCP initialize forwarding is diverging from the passing
+      newline path and returning MCP_FORWARD_FAILED/http 400 before liveness can stabilize.
+
+      - Symptom: tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+      fails with EOF after MCP_FORWARD_FAILED: http 400.
+
+      - Why this fix is not surface-level: reconcile framed-stdio initialize compatibility
+      at the real forwarding/liveness seam and verify sibling framed-path handling,
+      not only the single failing assertion.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      ### B1: framed-stdio initialize compatibility/liveness failure
+
+      Locations: tests/repro/test_liveness.py and the framed stdio MCP forwarding/runtime
+      path
+
+      Remediation: align framed initialize handling with the documented/passing newline
+      initialize+tools_list path so the process stays alive and initialize completes
+      instead of returning http 400.
+
+      Grep hint: search for MCP_FORWARD_FAILED handling and framed stdio initialize
+      forwarding branches.
+
+      IMPORTANT: Search for sibling framed initialize/tool-list handling beyond the
+      first failing location.
+
+      '
+    verification: '- Main path: rerun targeted framed/newline liveness regressions
+      locally before handoff
+
+      - Failure path: capture command output showing the framed initialize path no
+      longer returns EOF or MCP_FORWARD_FAILED: http 400
+
+      - Evidence must include the exact command(s) run and pasted stdout/stderr or
+      test runner output
+
+      - Sibling search evidence must name the framed-path locations reviewed'
+    depends_on:
+    - rem.blockers.verify-targeted-regressions
+    agent: python-senior
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
