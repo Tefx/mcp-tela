@@ -23938,6 +23938,121 @@ phases:
   status: pending
   depends_on:
   - sec.mcp_auth
+  steps:
+  - id: rem.blockers.fix-connection-count-semantics
+    name: Repair all numeric connection-count semantics
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - tests/repro/test_connect_runtime_liveness.py (runtime liveness assertions)
+
+      - DESIGN.md / gateway connect runtime liveness expectations
+
+      - tw.gate final verification findings on wrong `connections` numeric use
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - src/**/connect*.py
+
+      - src/**/runtime*.py
+
+      - src/**/status*.py
+
+      - src/**/bridge*.py
+
+      - any file still using `connections` as a numeric count, including the reported
+      location around line ~510
+
+
+      harness_refs:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - gateway connect initialize/tools_list runtime bridge harness
+
+
+      authoritative_interface: NONE PINNED
+
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+
+      Scope:
+
+      - Replace incorrect uses of `connections` as a numeric count with the correct
+      active-count field/derivation.
+
+      - Fix the reported reproduction assertion to use `active_connections`.
+
+      - Search for and fix sibling numeric misuse sites, not just the known assertion
+      and not just the reported line.
+
+      - Preserve any non-numeric `connections` collection semantics where the field
+      is intentionally structural.
+
+
+      Failure-mode checklist:
+
+      - count field mismatch between runtime status payloads and tests
+
+      - stale aliasing where `connections` shadows `active_connections`
+
+      - backward-compatibility behavior where status output still exposes both collection
+      and count views
+
+      - false-positive replacements that break collection semantics
+
+
+      State semantics:
+
+      - `active_connections` is the numeric truth for liveness/count assertions
+
+      - collection-valued `connections` must remain structural, not silently coerced
+      into numeric meaning
+
+      - backward-compatible behavior must be explicit where both names surface
+
+
+      Known risks:
+
+      - runtime liveness regressions have already required remediation; search all
+      sibling count assertions before claiming done
+
+
+      Verification scope: local-check protecting rem.blockers targeted regression
+      and final full-plan verification.'
+    verification: '- Add/update focused regressions for count semantics, including
+      the known repro and sibling numeric-use sites
+
+      - Provide search evidence that all remaining wrong numeric `connections` usages
+      were triaged as fixed or intentionally retained structural uses
+
+      - Main path: initialize/tools_list liveness assertions pass using `active_connections`
+
+      - Failure path: regression covers a payload where collection-valued `connections`
+      and numeric `active_connections` diverge'
+    evidence_template: '## Connection Count Semantics Repair
+
+      - Exact files changed
+
+      - Search evidence for numeric `connections` usage across affected runtime/test
+      paths
+
+      - List of each site fixed vs intentionally retained with rationale
+
+      - Targeted regression names and output
+
+      - Explicit note confirming the reported ~line 510 family was addressed
+
+      '
+    agent: python-senior
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
