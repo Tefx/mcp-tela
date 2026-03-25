@@ -24,7 +24,7 @@ tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [
 tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
-tela audit   [--json] [--since T] [--limit N]
+tela audit   [--json] [--since ISO-8601] [--limit N]
 ```
 
 `tela connect` is the client entry point (stdio bridge with auto-discover/auto-start).
@@ -213,7 +213,8 @@ Stale detection via PID liveness check.
 Every `tela serve` instance auto-generates a bearer token on startup using
 `secrets.token_urlsafe(32)`. The token is:
 
-- printed to stderr for operator visibility
+- printed to stderr when started manually (not visible when auto-started by
+  `tela connect`, since stderr is redirected)
 - stored in the lockfile `token` field
 - required on all HTTP endpoints except `GET /health`
 - validated via constant-time comparison (`hmac.compare_digest`)

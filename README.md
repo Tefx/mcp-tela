@@ -161,7 +161,7 @@ tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [
 tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
-tela audit   [--json] [--since T] [--limit N]
+tela audit   [--json] [--since ISO-8601] [--limit N]
 ```
 
 ## Core FAQ
@@ -182,18 +182,21 @@ Yes. That's the default behavior. Each `tela connect` bridges to the same shared
 
 ### How does auto-shutdown work?
 
-When the last `tela connect` client disconnects, the auto-started server waits
-5 minutes (configurable via `--idle-timeout`) then shuts down. Manually started
-servers (`tela serve`) never auto-shutdown.
+When all clients disconnect, the server waits 5 minutes (configurable via
+`--idle-timeout`) then shuts down. This applies to both auto-started and
+manually started servers. Use `--idle-timeout 0` to keep a server running
+indefinitely.
 
 ### How is the gateway protected?
 
-Every `tela serve` instance auto-generates a bearer token, prints it to stderr,
-and stores it in the lockfile (`~/.tela/gateway.lock`). All HTTP endpoints
-require this token. `tela connect` reads it automatically from the lockfile.
-Remote clients pass it via `--token` or `TELA_BEARER_TOKEN`. Use `--token` on
-`tela serve` to set a fixed token for automation/CI. This is independent of
-config `auth.mode` (which controls MCP-level profile binding).
+Every `tela serve` instance auto-generates a bearer token and stores it in the
+lockfile (`~/.tela/gateway.lock`). When started manually, the token is also
+printed to stderr. When auto-started by `tela connect`, stderr is not visible —
+the token is only available in the lockfile. All HTTP endpoints require this
+token. `tela connect` reads it automatically from the lockfile. Remote clients
+pass it via `--token` or `TELA_BEARER_TOKEN`. Use `--token` on `tela serve` to
+set a fixed token for automation/CI. This is independent of config `auth.mode`
+(which controls MCP-level profile binding).
 
 ### What about LAN deployment?
 

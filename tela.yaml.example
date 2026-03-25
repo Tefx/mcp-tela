@@ -458,8 +458,7 @@ audit:
 #   tela connections [--json]
 #
 # Query audit log:
-#   tela audit --since "1h" --limit 50
-#   tela audit --since "2026-01-01T00:00:00Z"
+#   tela audit --since "2026-01-01T00:00:00Z" --limit 50
 #
 # =============================================================================
 # EXAMPLE CONFIGURATIONS

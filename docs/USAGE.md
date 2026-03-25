@@ -182,7 +182,9 @@ auth:
 Use token mode for shared or production deployments.
 
 Note: The gateway also auto-generates a per-instance bearer token on every
-startup. It is printed to stderr and stored in the lockfile. This protects
+startup and stores it in the lockfile. When `tela serve` is started manually,
+the token is also printed to stderr. When auto-started by `tela connect`, stderr
+is not visible — the token is only available in the lockfile. This protects
 HTTP endpoints and is independent of config `auth.mode`. Use `--token` on
 `tela serve` to set a fixed token, or set `TELA_BEARER_TOKEN`.
 
@@ -261,11 +263,14 @@ Direct HTTP client configuration:
 
 ### Auto-shutdown
 
-When `tela connect` auto-starts a server, it shuts down after 5 minutes of
-idle time (no connected bridges). Configurable via `--idle-timeout`. Set to `0`
-to disable.
+The server shuts down after 5 minutes of idle time (no connected bridges) by
+default. This applies to both auto-started and manually started servers.
+Configurable via `--idle-timeout`. Set to `0` to keep the server running
+indefinitely:
 
-Manually started servers (`tela serve`) never auto-shutdown.
+```bash
+tela serve --config tela.yaml --port 8080 --idle-timeout 0
+```
 
 ## Client connection patterns
 
@@ -397,7 +402,8 @@ tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--
 - `--idle-timeout`: seconds before auto-shutdown on idle (default: `300`, `0` to disable)
 - `--token`: fixed bearer token override (default: auto-generated; or set `TELA_BEARER_TOKEN`)
 
-The bearer token is always printed to stderr on startup for easy copy-paste.
+When started manually, the bearer token is printed to stderr for easy copy-paste.
+When auto-started by `tela connect`, the token is only stored in the lockfile.
 
 ### Query commands
 
@@ -405,7 +411,7 @@ The bearer token is always printed to stderr on startup for easy copy-paste.
 tela status [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
-tela audit [--json] [--since T] [--limit N]
+tela audit [--json] [--since ISO-8601] [--limit N]
 ```
 
 Query commands discover the running server via `~/.tela/gateway.lock`.

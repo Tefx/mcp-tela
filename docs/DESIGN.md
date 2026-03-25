@@ -61,9 +61,9 @@ When a `tela serve` process is auto-started by `tela connect`, it monitors activ
 connections. After the last connection closes, an idle timer starts (default 300s).
 If no new connections arrive before the timeout, the server shuts down.
 
-- Configurable via `--idle-timeout`
-- Set to `0` to disable auto-shutdown (servers started via `tela serve` default to this)
-- Manually-started servers (`tela serve`) never auto-shutdown regardless of timeout
+- Configurable via `--idle-timeout` (default: 300 seconds)
+- Applies to both auto-started and manually started servers
+- Set to `0` to keep a server running indefinitely
 
 ### Token override modes
 
