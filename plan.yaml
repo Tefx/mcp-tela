@@ -23850,7 +23850,7 @@ phases:
       Commit: 098e0bc'
   - id: sec.mcp_auth.verify
     name: Independent security verification
-    status: pending
+    status: claimed
     description: 'Independently verify: /mcp rejects unauthenticated requests (401).
       /health remains open. tela connect bridge works (sends bearer token to /mcp).
       All existing tests pass.'
@@ -23861,6 +23861,8 @@ phases:
     depends_on:
     - sec.mcp_auth.cleanup
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-25T15:11:49.497987+00:00'
   - id: sec.mcp_auth.gate
     name: Gate review
     status: pending
