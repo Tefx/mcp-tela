@@ -24192,6 +24192,96 @@ phases:
     depends_on:
     - rem.blockers.fix-connection-count-semantics
     agent: python-senior
+  - id: rem.blockers.verify-targeted-regressions
+    name: Run targeted regression pack for blocker fixes
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - blocker findings from conditional-pass review
+
+      - runtime liveness repro expectations in tests/repro/test_connect_runtime_liveness.py
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - affected runtime bridge test modules
+
+
+      harness_refs:
+
+      - repro runtime liveness harness
+
+      - targeted bridge initialize/tools_list regression suite
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, validate the blocker fixes from a fresh perspective.
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting rem.blockers.gate and downstream
+      hygiene/final verification.
+
+
+      Test for:
+
+      - Happy path: initialize/tools_list liveness passes with correct count semantics
+
+      - Edge cases: active vs structural connection fields diverge cleanly
+
+      - Error scenarios: bridge startup timing no longer causes timeout on cold run'
+    verification: '- Execute focused repro/runtime regressions for the connection-count
+      and bridge-timeout family
+
+      - Capture actual command output
+
+      - Report blocker/should_fix findings, if any
+
+      - Verification success includes finding issues if present; missing evidence
+      is incomplete'
+    evidence_template: '## Verification Report
+
+      **Tester**: integration-verifier
+
+      **Independence Level**: L2
+
+      **Commands executed**:
+
+      ```
+
+      <paste targeted regression commands>
+
+      ```
+
+      **Issues Found**:
+
+      - blocker | should_fix | suggestion | tech_debt
+
+      **Coverage**:
+
+      - count semantics
+
+      - initialize/tools_list timeout path
+
+      - cold-start repro
+
+      **Verdict**: PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - rem.blockers.fix-bridge-timeout-runtime-path
+    agent: integration-verifier
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
