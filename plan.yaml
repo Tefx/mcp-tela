@@ -24585,6 +24585,7 @@ phases:
     - rem.blockers.retest-stdio-mcp-initialize-loop2
     - rem.blockers.blackbox-runtime-liveness
     - rem.blockers.gate-retest
+    - rem.blockers.gate-retest-full-evidence
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-25T17:46:02.629108+00:00'
