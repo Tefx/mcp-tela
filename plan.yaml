@@ -25550,7 +25550,7 @@ phases:
   - id: rem.blockers.gate-retest
     name: Retest rem.blockers gate readiness after evidence, hygiene, and bridge contingency
       remediation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -25633,6 +25633,75 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-25T18:17:05.753889+00:00'
+    done_at: '2026-03-25T18:22:19.310887+00:00'
+    evidence: '## rem.blockers Gate Retest Report
+
+
+      **Commands reviewed/executed**:
+
+      ```bash
+
+      uv run mypy .
+
+      uv run ruff check .
+
+      ```
+
+
+      **Actual output**:
+
+      ```text
+
+      $ uv run mypy .
+
+      Success: no issues found in 82 source files
+
+
+      $ uv run ruff check .
+
+      All checks passed!
+
+      ```
+
+
+      **Evidence hardening status**:
+
+      - FAIL for strict gate-readiness: hardening evidence still contains excerpted/redacted
+      placeholders instead of full raw outputs
+
+      - black-box command body in stored evidence remained placeholder-style and output
+      snippets used ellipses, insufficient for strict gate criteria
+
+
+      **Static hygiene status**:
+
+      - mypy: pass
+
+      - ruff: pass
+
+
+      **Bridge contingency decision**:
+
+      - rem.bridge_flake blocking follow-up: yes
+
+      - rationale: current contingency criteria and residual-risk statement still
+      mark shared `~/.tela/gateway.lock` interference as plausible; by policy this
+      remains blocking until disproven with full concrete artifacts
+
+
+      Gate-retest verdict:
+
+      - FAIL (not gate-ready yet due non-concrete evidence artifacts + blocking contingency
+      status)
+
+
+      Remediation ownership created before completion:
+
+      - rem.blockers.capture-full-evidence-artifacts
+
+      - rem.blockers.gate-retest-full-evidence
+
+      - rem.blockers.gate updated to depend on rem.blockers.gate-retest-full-evidence'
   - id: rem.blockers.capture-full-evidence-artifacts
     name: Capture full raw evidence artifacts for hardening scope
     status: pending
