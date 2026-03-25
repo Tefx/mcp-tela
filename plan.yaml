@@ -24757,6 +24757,70 @@ phases:
 
       '
     agent: python-senior
+  - id: rem.hygiene.validate-shell-result-allow-rationales
+    name: Validate and document @invar:allow shell_result rationales
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - conditional-pass should-fix on @invar:allow shell_result rationales
+
+      - AGENTS.md shell/result boundary guidance
+
+
+      touch_paths:
+
+      - files containing `@invar:allow shell_result`
+
+      - nearby shell boundary documentation/comments
+
+
+      harness_refs:
+
+      - invar allow annotations
+
+      - shell/result review findings
+
+
+      authoritative_interface: NONE PINNED
+
+
+      Scope:
+
+      - Audit every `@invar:allow shell_result` occurrence.
+
+      - Validate that each escape hatch matches the shell-layer rule and is still
+      necessary.
+
+      - Document or tighten rationale inline where justified.
+
+      - Remove or revise stale/unsupported allowances discovered during the audit.
+
+
+      Verification scope: local-check protecting rem.hygiene verification and rem.final_verify.full-invar-guard.'
+    verification: '- Every shell_result allow is inventoried
+
+      - Each occurrence is categorized as valid, revised, or removed
+
+      - Rationale text cites the actual shell-boundary reason rather than generic
+      convenience language'
+    evidence_template: '## shell_result Allow Audit
+
+      - occurrences found:
+
+      - valid as-is:
+
+      - revised with stronger rationale:
+
+      - removed as stale:
+
+      '
+    depends_on:
+    - rem.hygiene.triage-actionable-invar-warnings
+    agent: python-executor
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
