@@ -24636,6 +24636,50 @@ phases:
     depends_on:
     - rem.bridge_flake.investigate-persistent-timeout-family
     agent: integration-verifier
+  - id: rem.bridge_flake.gate
+    name: Gate bridge timeout contingency phase
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - contingency evidence must be strong enough to retire residual flakiness risk
+      before final verification
+
+      - cold-start and soak evidence can expose issues hidden by targeted regressions
+
+
+      Gate review: determine whether residual bridge timeout flakiness is retired,
+      bounded, or still blocking.
+
+      '
+    verification: '- Freeze evidence present
+
+      - Investigation produced either non-trigger proof or root-cause-quality diagnosis
+
+      - Cold-start/soak verification is sufficient to judge persistent flakiness risk
+
+      - Any remaining timeout flakiness is explicitly called blocker for rem.final_verify'
+    evidence_template: '## Gate Review Report
+
+      - Did contingency trigger?
+
+      - If no, why is non-trigger evidence convincing?
+
+      - If yes, was residual flakiness eliminated or still blocking?
+
+      - Final contingency verdict: PASS | BLOCKED | INCOMPLETE
+
+      '
+    depends_on:
+    - rem.bridge_flake.freeze-runtime-snapshot
+    - rem.bridge_flake.investigate-persistent-timeout-family
+    - rem.bridge_flake.cold-repro-and-soak
+    agent: gate-reviewer
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: locked
