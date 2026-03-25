@@ -23755,3 +23755,15 @@ phases:
     depends_on:
     - sec.mcp_auth.middleware
     agent: python-executor
+  - id: sec.mcp_auth.cleanup
+    name: Remove dead handle_mcp code
+    status: pending
+    description: 'Remove handle_mcp() function from src/tela/shell/http_routes.py
+      and remove it from _ROUTE_HANDLERS tuple. This is dead code: never registered
+      in gateway.py, returns NOT_IMPLEMENTED.'
+    verification: invar guard clean. No references to handle_mcp remain outside tests.
+    evidence_template: 'Paste: (1) grep for handle_mcp showing no remaining refs (2)
+      invar guard output'
+    depends_on:
+    - sec.mcp_auth.wire
+    agent: python-executor
