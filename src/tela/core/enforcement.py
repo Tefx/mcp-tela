@@ -51,7 +51,7 @@ def posture_le(a: Posture, b: Posture) -> bool:
     return _POSTURE_ORDER[a] <= _POSTURE_ORDER[b]
 
 
-@pre(lambda family, profile: isinstance(family, str) and len(family) > 0)
+@pre(lambda family, profile: isinstance(family, str) and len(family) > 0 and isinstance(profile, ProfileConfig))
 @post(lambda result: isinstance(result, EnforcementResult))
 def check_family_admission(
     family: str,
@@ -86,7 +86,7 @@ def check_family_admission(
     )
 
 
-@pre(lambda tool_name, family, profile: isinstance(tool_name, str))
+@pre(lambda tool_name, family, profile: isinstance(tool_name, str) and len(tool_name) > 0 and isinstance(family, str) and len(family) > 0 and isinstance(profile, ProfileConfig))
 @post(lambda result: result is None or isinstance(result, EnforcementResult))
 def check_tool_override(
     tool_name: str,
@@ -136,8 +136,10 @@ def check_tool_override(
 
 
 @pre(
-    lambda tool_posture, family_ceiling, default_posture: isinstance(
-        family_ceiling, Posture
+    lambda tool_posture, family_ceiling, default_posture: (
+        (tool_posture is None or isinstance(tool_posture, Posture))
+        and isinstance(family_ceiling, Posture)
+        and isinstance(default_posture, Posture)
     )
 )
 @post(lambda result: isinstance(result, EnforcementResult))
@@ -191,7 +193,12 @@ def check_posture(
 
 @pre(
     lambda tool_name, tool, profile, token_result, default_posture: (
-        token_result.verdict == EnforcementVerdict.ALLOW
+        isinstance(tool_name, str)
+        and len(tool_name) > 0
+        and isinstance(tool, ResolvedTool)
+        and isinstance(profile, ProfileConfig)
+        and token_result.verdict == EnforcementVerdict.ALLOW
+        and isinstance(default_posture, Posture)
     )
 )
 @post(lambda result: isinstance(result, EnforcementResult))

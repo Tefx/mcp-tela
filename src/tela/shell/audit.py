@@ -169,6 +169,7 @@ async def audit_init(config: "AuditConfig") -> Result[None, str]:
     return Result(value=None)
 
 
+# @shell_orchestration: mutates module-level audit deque under async lock for runtime config.
 async def _audit_set_max_entries(max_entries: int) -> None:
     """Set maximum in-memory audit entries (FIFO eviction).
 

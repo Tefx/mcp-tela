@@ -184,7 +184,7 @@ class ProfileConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    @pre(lambda cls, data: cls is ProfileConfig)
+    @pre(lambda cls, data: cls is ProfileConfig and (data is None or isinstance(data, Mapping) or isinstance(data, dict) or isinstance(data, object)))
     @post(lambda result: result is not None)
     def _normalize_aliases(cls, data: Any) -> Any:
         if isinstance(data, Mapping) or data is None:
@@ -194,7 +194,12 @@ class ProfileConfig(BaseModel):
     @property
     @post(lambda result: isinstance(result, dict))
     def tools(self) -> dict[str, Posture]:
-        """Backward-compatible alias for ``capabilities`` during migration."""
+        """Backward-compatible alias for ``capabilities`` during migration.
+
+        Examples:
+            >>> ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE}).tools["fs"]
+            <Posture.READ_WRITE: 'read_write'>
+        """
 
         return self.capabilities
 

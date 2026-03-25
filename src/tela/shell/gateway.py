@@ -82,6 +82,7 @@ def _extract_bearer_token(request: Request) -> Result[str, str]:
     return Result(value=request_token)
 
 
+# @shell_orchestration: wires HTTP endpoint handlers onto FastMCP Starlette app.
 # @shell_complexity: mounted HTTP adapters enforce auth and payload contracts per endpoint.
 def _register_http_routes(upstream_server: FastMCP) -> None:
     """Register mounted HTTP liveness and lifecycle routes on FastMCP app."""
@@ -209,6 +210,7 @@ def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str
     return Result(value=FastMCP("tela-gateway"))
 
 
+# @shell_orchestration: builds forwarding closure that delegates to downstream I/O sessions.
 def _make_registry_tool_handler(server_name: str, tool_name: str):
     """Build per-tool FastMCP handler that forwards to downstream server."""
 
@@ -233,6 +235,7 @@ def _make_registry_tool_handler(server_name: str, tool_name: str):
     return _forward_tool
 
 
+# @shell_orchestration: registers FastMCP resource endpoint for profile introspection.
 def _register_profiles_resource(upstream_server: FastMCP) -> None:
     """Register tela.profiles resource on the upstream FastMCP server."""
 
@@ -252,6 +255,7 @@ def _register_profiles_resource(upstream_server: FastMCP) -> None:
         return json.dumps(result.value)
 
 
+# @shell_orchestration: wires initialize/list/call handler adapters onto FastMCP boundary.
 # @shell_complexity: wiring composes initialize/list/call adapters for FastMCP boundary.
 def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     """Wire upstream handlers into FastMCP request handling."""
@@ -303,6 +307,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         return result.value
 
 
+# @shell_orchestration: iterates registry and registers each tool handler on FastMCP.
 def _register_registry_tools(upstream_server: FastMCP) -> None:
     """Register all resolved registry tools as FastMCP tools."""
 
@@ -322,6 +327,7 @@ def _register_registry_tools(upstream_server: FastMCP) -> None:
             )
 
 
+# @shell_orchestration: bridges reload digest into upstream connection broadcaster via callback wiring.
 def _wire_reload_notifications() -> None:
     """Bridge reload digest callback into upstream notification broadcaster."""
 
@@ -336,6 +342,7 @@ def _wire_reload_notifications() -> None:
     _set_reload_notify_callback(_notify_all_connections)
 
 
+# @shell_orchestration: lazy-import callback setter avoids module cycles in reload wiring.
 def _set_reload_notify_callback(
     callback: Callable[[str], Awaitable[None]] | None,
 ) -> None:

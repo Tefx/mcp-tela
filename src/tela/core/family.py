@@ -14,7 +14,7 @@ from tela.core.classification import classify_tool
 
 
 
-@pre(lambda tool_name, server_config: isinstance(tool_name, str) and len(tool_name) > 0)
+@pre(lambda tool_name, server_config: isinstance(tool_name, str) and len(tool_name) > 0 and isinstance(server_config, ServerConfig))
 @post(lambda result: isinstance(result, str) and len(result) > 0)
 def resolve_family(
     tool_name: str,
@@ -56,7 +56,7 @@ def resolve_family(
     return server_config.name
 
 
-@pre(lambda server_name, server_config, tool_list: isinstance(server_name, str) and isinstance(tool_list, list))
+@pre(lambda server_name, server_config, tool_list: isinstance(server_name, str) and len(server_name) > 0 and isinstance(server_config, ServerConfig) and isinstance(tool_list, list))
 @post(lambda result: isinstance(result, list))
 def resolve_tools(
     server_name: str,

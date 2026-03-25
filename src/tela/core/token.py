@@ -79,7 +79,11 @@ def is_expired(expires_at: str, now_iso: str) -> bool:
 
 @pre(
     lambda token, secrets, now_iso: (
-        isinstance(secrets, list) and len(secrets) > 0 and isinstance(now_iso, str)
+        isinstance(token, CapabilityToken)
+        and isinstance(secrets, list)
+        and len(secrets) > 0
+        and isinstance(now_iso, str)
+        and len(now_iso) > 0
     )
 )
 @post(lambda result: isinstance(result, EnforcementResult))
@@ -197,6 +201,12 @@ def resolve_token_init_binding(
         and len(profile) > 0
         and isinstance(secret, str)
         and len(secret) > 0
+        and isinstance(token_id, str)
+        and len(token_id) > 0
+        and isinstance(expires_at, str)
+        and len(expires_at) > 0
+        and isinstance(issued_at, str)
+        and len(issued_at) > 0
     )
 )
 @post(lambda result: isinstance(result, CapabilityToken))

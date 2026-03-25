@@ -82,6 +82,7 @@ async def _open_client_for_server(
     )
 
 
+# @shell_orchestration: swaps client handle under lock and closes prior session via aclose().
 async def _swap_client_handle(server_name: str, new_handle: _ClientHandle) -> None:
     """Replace one client handle and close any prior handle best-effort."""
 
@@ -193,6 +194,7 @@ async def _handle_reconnect(
         )
 
 
+# @shell_orchestration: builds closure that dispatches reconnect and tool-list-changed I/O.
 def _build_downstream_message_handler(
     server_name: str,
     server_config: ServerConfig,
@@ -217,6 +219,7 @@ def _build_downstream_message_handler(
     return _message_handler
 
 
+# @shell_orchestration: iterates client handles and closes each session via aclose().
 async def _close_all_clients_locked() -> None:
     """Close all connected downstream sessions/processes best-effort."""
 
