@@ -24564,7 +24564,7 @@ phases:
     - rem.blockers.fix-connection-count-semantics
     - rem.blockers.fix-bridge-timeout-runtime-path
     - rem.blockers.verify-targeted-regressions
-    - rem.blockers.retest-framed-stdio-liveness
+    - rem.blockers.retest-stdio-mcp-initialize-loop2
     - rem.blockers.blackbox-runtime-liveness
     agent: gate-reviewer
   - id: rem.blockers.fix-framed-stdio-mcp-liveness
