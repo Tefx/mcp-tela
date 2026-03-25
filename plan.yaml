@@ -25136,7 +25136,7 @@ phases:
       \ §7.3 Lockfile Contract"
   - id: rem.blockers.harden-evidence-backfill
     name: Backfill concrete command-output evidence for blocker remediation steps
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -25212,6 +25212,8 @@ phases:
     - rem.blockers.blackbox-runtime-liveness
     - rem.blockers.retest-stdio-mcp-initialize-loop2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-25T17:58:09.968831+00:00'
   - id: rem.blockers.cleanup-static-hygiene
     name: Resolve mypy and ruff blocker failures for rem.blockers follow-up gate
     status: pending
