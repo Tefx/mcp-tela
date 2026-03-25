@@ -24569,7 +24569,7 @@ phases:
     agent: gate-reviewer
   - id: rem.blockers.fix-framed-stdio-mcp-liveness
     name: Batched fix for framed-stdio MCP initialize liveness
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -24660,6 +24660,49 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-25T17:10:50.113888+00:00'
+    done_at: '2026-03-25T17:17:20.503096+00:00'
+    evidence: 'Artifact:
+
+      - PR: 9ae8e53 (fix(connect): support Content-Length framed stdio MCP transport)
+
+
+      Verification:
+
+      - Run: `uv run python -m pytest tests/repro/test_liveness.py -v` -> 4 passed
+      in 10.55s
+
+      - Run: `uv run python -m pytest tests/shell/test_connect_cmd.py -v` -> 18 passed
+      in 0.25s
+
+      - Run: `invar_guard(changed=true)` -> passed (0 errors, 0 warnings)
+
+
+      Sibling framed-path search evidence (content-length/framed across **/*.py):
+
+      - `src/tela/commands/connect_cmd.py`: `_read_framed_message`, `_write_framed_message`,
+      `_BridgeMessage` updated/aligned to support both Content-Length framed and newline
+      paths
+
+      - `tests/shell/test_connect_cmd.py`: added framed-path tests including EOF variants,
+      round-trips, and initialize+tools_list flow
+
+      - `tests/repro/test_liveness.py`: end-to-end framed initialize liveness verified
+      passing
+
+      - `tests/shell/test_query_commands_remote_state.py`: Content-Length usage present
+      but unrelated (HTTP test server)
+
+      - `src/tela/shell/http_auth.py`: Content-Length usage present but unrelated
+      (ASGI 401 response)
+
+      - No additional framed stdio compatibility paths requiring remediation identified
+
+
+      Spec link:
+
+      - blocker findings from rem.blockers.verify-targeted-regressions
+
+      - MCP initialize/tools_list liveness expectations in tests/repro/test_liveness.py'
   - id: rem.blockers.retest-framed-stdio-liveness
     name: Retest targeted framed-stdio MCP liveness regressions
     status: pending
