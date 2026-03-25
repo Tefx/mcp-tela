@@ -24428,7 +24428,7 @@ phases:
 
       '
     depends_on:
-    - rem.blockers.verify-targeted-regressions
+    - rem.blockers.retest-framed-stdio-liveness
     agent: blind-tester
   - id: rem.blockers.gate
     name: Gate blocker remediation phase
