@@ -24790,7 +24790,7 @@ phases:
       \ depend on new loop-2 retest"
   - id: rem.blockers.fix-stdio-mcp-initialize-loop2
     name: Batched fix for framed stdio MCP initialize EOF/BrokenPipe loop 2
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -24948,6 +24948,8 @@ phases:
     depends_on:
     - rem.blockers.retest-framed-stdio-liveness
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-25T17:23:00.266228+00:00'
   - id: rem.blockers.retest-stdio-mcp-initialize-loop2
     name: Retest framed stdio/connect MCP initialize loop 2 remediation
     status: pending
