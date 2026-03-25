@@ -25109,6 +25109,65 @@ phases:
     depends_on:
     - rem.suggestions.add-invalid-bearer-negative-regression
     agent: python-executor
+  - id: rem.suggestions.document-statusresponse-field-guarantees
+    name: Document StatusResponse field guarantees
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - suggestion: document StatusResponse field guarantees
+
+      - status/runtime response documentation or interface notes
+
+
+      touch_paths:
+
+      - docs describing StatusResponse
+
+      - any interface/spec documents that enumerate runtime status fields
+
+
+      harness_refs:
+
+      - status response docs/spec surface
+
+
+      authoritative_interface: NONE PINNED
+
+
+      Scope:
+
+      - Document field-level guarantees for StatusResponse, especially count-vs-collection
+      semantics relevant to this remediation.
+
+      - Ensure the documentation states which fields are authoritative, derived, optional,
+      or structural.
+
+      - Align wording with the repaired active_connections/connections semantics.
+
+
+      Verification scope: local-check protecting rem.suggestions verification and
+      rem.final_verify.gate.'
+    verification: '- Documentation names the guaranteed fields and semantics explicitly
+
+      - Count-vs-collection distinction is documented where relevant
+
+      - Any ambiguity with runtime liveness/status payloads is removed'
+    evidence_template: '## StatusResponse Documentation Update
+
+      - docs updated:
+
+      - guaranteed fields listed:
+
+      - semantics clarified:
+
+      '
+    depends_on:
+    - rem.suggestions.add-lockfile-schema-regression
+    agent: doc-reviewer
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
