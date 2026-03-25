@@ -24999,7 +24999,7 @@ phases:
       from rem.blockers.retest-framed-stdio-liveness'
   - id: rem.blockers.retest-stdio-mcp-initialize-loop2
     name: Retest framed stdio/connect MCP initialize loop 2 remediation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -25078,6 +25078,23 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-25T17:35:47.323005+00:00'
+    done_at: '2026-03-25T17:41:32.178747+00:00'
+    evidence: "Artifact:\n- PR: b273b59d3243eb42f8f45b51f99f9de8dad1f958\n\nVerification:\n\
+      - Run: `uv run pytest -vv -s tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize\
+      \ tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list`\n\
+      \  - result: collected 2 items, both PASSED\n  - includes initialize returned\
+      \ capabilities and tools/list returned 0 tools in connect runtime harness\n\n\
+      - Run: `uv run python3 -c '<framed initialize probe>'`\n  - evidence: `stdout_ready=True`,\
+      \ `connect_poll_before_term=None` before termination\n  - received valid framed\
+      \ response:\n    - `Content-Length: 271`\n    - JSON-RPC initialize result with\
+      \ protocolVersion/capabilities/serverInfo\n  - connect stderr empty during passing\
+      \ run\n\n- Run: `uv --version` -> `uv 0.11.1`\n\nEarly-exit diagnostic requirement:\n\
+      - Explicit proof of no early exit in passing run provided (`connect_poll_before_term=None`,\
+      \ valid MCP response payload captured)\n\nFindings:\n- should_fix: global `~/.tela/gateway.lock`\
+      \ can cause parallel-run interference\n- tech_debt: better per-test lockfile\
+      \ override/isolation would harden reproducibility\n\nSpec link:\n- docs/USAGE.md\
+      \ (`tela connect`)\n- docs/INTERFACES.md §7 MCP Surface\n- docs/INTERFACES.md\
+      \ §7.3 Lockfile Contract"
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
