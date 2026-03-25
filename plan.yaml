@@ -24953,6 +24953,42 @@ phases:
     depends_on:
     - rem.hygiene.evaluate-runtime-liveness-test-structure
     agent: integration-verifier
+  - id: rem.hygiene.gate
+    name: Gate invar and runtime hygiene phase
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: default
+
+      review_depth: STANDARD
+
+      Gate review: verify hygiene work is complete and that retained warning debt
+      has explicit non-intersection rationale before suggestion or final verification
+      work proceeds.
+
+      '
+    verification: '- Actionable warning reduction evidence reviewed
+
+      - shell_result allowance rationales validated
+
+      - runtime liveness test structure decision is justified
+
+      - No hidden blocker debt is being deferred without non-intersection evidence'
+    evidence_template: '## Gate Review Report
+
+      - hygiene completion:
+
+      - retained debt assessment:
+
+      - blocker/should_fix findings:
+
+      '
+    depends_on:
+    - rem.hygiene.triage-actionable-invar-warnings
+    - rem.hygiene.validate-shell-result-allow-rationales
+    - rem.hygiene.evaluate-runtime-liveness-test-structure
+    - rem.hygiene.verify-hygiene-pack
+    agent: gate-reviewer
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
