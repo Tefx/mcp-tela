@@ -24705,7 +24705,7 @@ phases:
       - MCP initialize/tools_list liveness expectations in tests/repro/test_liveness.py'
   - id: rem.blockers.retest-framed-stdio-liveness
     name: Retest targeted framed-stdio MCP liveness regressions
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -24769,6 +24769,8 @@ phases:
     depends_on:
     - rem.blockers.fix-framed-stdio-mcp-liveness
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-25T17:18:00.801875+00:00'
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
