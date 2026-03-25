@@ -24556,6 +24556,86 @@ phases:
     depends_on:
     - rem.bridge_flake.freeze-runtime-snapshot
     agent: python-senior
+  - id: rem.bridge_flake.cold-repro-and-soak
+    name: Cold-start reproduction and soak verification for bridge timeout
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - runtime liveness contract for initialize/tools_list path
+
+      - contingency requirement for persistent bridge timeout flakiness
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - runtime connect entrypoint and bridge lifecycle harness
+
+
+      harness_refs:
+
+      - cold-start bridge runtime harness
+
+      - repeated initialize/tools_list probe path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, run cold-start and repeated liveness verification
+      to expose persistent flakiness.
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting rem.bridge_flake.gate and rem.final_verify
+      full-plan-check.
+
+
+      Required coverage:
+
+      - fresh process start
+
+      - repeated initialize/tools_list loop or soak pass sufficient to expose residual
+      timeout risk
+
+      - cleanup between runs so reused runtime state does not mask failures'
+    verification: '- Exact command family and repetition/soak shape recorded
+
+      - Cold-start runs either prove stability or surface residual timeout behavior
+
+      - Output includes per-run results, not only aggregate summary'
+    evidence_template: '## Contingency Verification Report
+
+      **Commands executed**:
+
+      ```
+
+      <paste cold-start and soak commands>
+
+      ```
+
+      **Per-run results**:
+
+      - run 1:
+
+      - run 2:
+
+      - run N:
+
+      **Residual flake verdict**: NONE_OBSERVED | REPRODUCED | INCOMPLETE
+
+      '
+    depends_on:
+    - rem.bridge_flake.investigate-persistent-timeout-family
+    agent: integration-verifier
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: locked
