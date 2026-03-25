@@ -25115,6 +25115,84 @@ phases:
       \ override/isolation would harden reproducibility\n\nSpec link:\n- docs/USAGE.md\
       \ (`tela connect`)\n- docs/INTERFACES.md §7 MCP Surface\n- docs/INTERFACES.md\
       \ §7.3 Lockfile Contract"
+  - id: rem.blockers.harden-evidence-backfill
+    name: Backfill concrete command-output evidence for blocker remediation steps
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      Evidence hardening/backfill for cited completed rem.blockers steps.
+
+
+      Backfill concrete pasted command-output evidence for the blocker-remediation
+      steps whose current evidence is summary-only, with emphasis on the targeted
+      regression and runnable-surface checks already completed in this phase.
+
+
+      Requirements:
+
+      - cite each completed rem.blockers step being hardened
+
+      - paste the exact commands re-run or evidence artifacts re-collected
+
+      - paste actual stdout/stderr or test-runner output, not summaries
+
+      - explicitly identify any gaps that still require follow-up before gate
+
+      - if any runtime flakiness still suggests shared ~/.tela/gateway.lock interference,
+      note that rem.bridge_flake remains a blocking follow-up condition rather than
+      optional debt'
+    verification: '- Pasted command output evidence is attached for each cited completed
+      step
+
+      - Evidence names the exact command/test and includes real stdout/stderr or runner
+      output
+
+      - No summary-only evidence remains for the cited blocker-remediation steps
+
+      - Any possible ~/.tela/gateway.lock bridge interference is called out explicitly
+      as blocking follow-up via rem.bridge_flake'
+    evidence_template: '## Evidence Hardening Report
+
+
+      **Cited completed steps**:
+
+      - <step id>
+
+
+      **Exact command(s) re-run or evidence source**:
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr or test runner output>
+
+      ```
+
+
+      **Residual risk**:
+
+      - <state whether shared ~/.tela/gateway.lock still suggests rem.bridge_flake
+      blocking follow-up>
+
+      '
+    depends_on:
+    - rem.blockers.verify-targeted-regressions
+    - rem.blockers.blackbox-runtime-liveness
+    - rem.blockers.retest-stdio-mcp-initialize-loop2
+    agent: integration-verifier
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
