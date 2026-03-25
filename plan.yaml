@@ -23821,7 +23821,7 @@ phases:
       Commit: 1d8387a'
   - id: sec.mcp_auth.cleanup
     name: Remove dead handle_mcp code
-    status: claimed
+    status: done
     description: 'Remove handle_mcp() function from src/tela/shell/http_routes.py
       and remove it from _ROUTE_HANDLERS tuple. This is dead code: never registered
       in gateway.py, returns NOT_IMPLEMENTED.'
@@ -23833,6 +23833,21 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-25T15:08:30.801043+00:00'
+    done_at: '2026-03-25T15:11:36.001863+00:00'
+    evidence: 'grep handle_mcp --include=''*.py'' -rn src/: 0 results (no remaining
+      refs)
+
+      invar guard: passed (0 errors)
+
+      pytest tests/shell/test_http_routes.py: 20 passed
+
+
+      Removed: handle_mcp() function, TelaError import (unused after removal), _ROUTE_HANDLERS
+      updated
+
+      Updated tests: removed TestHandleMcp class, adjusted endpoint count assertions
+
+      Commit: 098e0bc'
   - id: sec.mcp_auth.verify
     name: Independent security verification
     status: pending
