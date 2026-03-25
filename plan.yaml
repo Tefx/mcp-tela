@@ -23767,3 +23767,16 @@ phases:
     depends_on:
     - sec.mcp_auth.wire
     agent: python-executor
+  - id: sec.mcp_auth.verify
+    name: Independent security verification
+    status: pending
+    description: 'Independently verify: /mcp rejects unauthenticated requests (401).
+      /health remains open. tela connect bridge works (sends bearer token to /mcp).
+      All existing tests pass.'
+    verification: All tests pass. Scripted verification that unauthenticated POST
+      /mcp returns 401 and authenticated POST /mcp succeeds.
+    evidence_template: 'Paste: (1) full test suite output (2) test showing /mcp 401
+      without token (3) test showing /mcp success with token'
+    depends_on:
+    - sec.mcp_auth.cleanup
+    agent: integration-verifier
