@@ -24573,6 +24573,72 @@ phases:
     depends_on:
     - rem.blockers.verify-targeted-regressions
     agent: python-senior
+  - id: rem.blockers.retest-framed-stdio-liveness
+    name: Retest targeted framed-stdio MCP liveness regressions
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - blocker findings from rem.blockers.verify-targeted-regressions
+
+      - MCP initialize/tools_list liveness expectations in tests/repro/test_liveness.py
+
+
+      touch_paths:
+
+      - tests/repro/test_liveness.py
+
+      - targeted liveness regression harness
+
+
+      harness_refs:
+
+      - repro liveness harness
+
+      - framed stdio MCP initialize path
+
+      - newline initialize/tools_list path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, rerun the targeted liveness regressions after the
+      batched fix.
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting rem.blockers.blackbox-runtime-liveness
+      and rem.blockers.gate.
+
+
+      Required coverage:
+
+      - previously failing framed initialize path
+
+      - previously passing newline initialize/tools_list path
+
+      - any focused sibling targeted regression needed to prove framed compatibility
+      did not regress newline behavior
+
+      '
+    verification: '- Execute the exact targeted regression command(s), including tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+
+      - Include actual command output evidence for both framed and newline paths
+
+      - Report blocker/should_fix findings if any; ISSUES_FOUND is a successful verification
+      outcome when evidenced
+
+      - Missing pasted output is incomplete evidence'
+    depends_on:
+    - rem.blockers.fix-framed-stdio-mcp-liveness
+    agent: integration-verifier
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
