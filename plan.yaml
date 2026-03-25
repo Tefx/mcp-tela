@@ -23900,7 +23900,7 @@ phases:
       fail on main branch'
   - id: sec.mcp_auth.gate
     name: Gate review
-    status: pending
+    status: claimed
     description: 'Gate review: auth enforcement matches INTERFACES.md §7.2 and §7.4.
       No dead code remains. No regressions.'
     verification: Gate reviewer confirms spec compliance and no regressions.
@@ -23908,3 +23908,5 @@ phases:
     depends_on:
     - sec.mcp_auth.verify
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-25T15:15:41.209698+00:00'
