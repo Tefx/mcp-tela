@@ -24508,7 +24508,7 @@ phases:
 
       '
     depends_on:
-    - rem.blockers.retest-framed-stdio-liveness
+    - rem.blockers.retest-stdio-mcp-initialize-loop2
     agent: blind-tester
   - id: rem.blockers.gate
     name: Gate blocker remediation phase
