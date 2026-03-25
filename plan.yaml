@@ -24084,7 +24084,7 @@ phases:
       \ (int) instead of connections (list) for numeric assertions"
   - id: rem.blockers.fix-bridge-timeout-runtime-path
     name: Fix bridge timeout in initialize/tools_list liveness flow
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -24223,6 +24223,35 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-25T16:08:42.229402+00:00'
+    done_at: '2026-03-25T16:41:32.226937+00:00'
+    evidence: "## Integration Evidence\n**Command or test exercising the full path**:\n\
+      ```bash\ncd .vectl/worktrees/rem.blockers.fix-bridge-timeout-runtime-path &&\
+      \ uv run python tests/repro/test_connect_runtime_liveness.py\n```\n\n**Actual\
+      \ output**:\n```text\nMode D: tela connect runtime surface verification\n============================================================\n\
+      \ntest_serve_ephemeral_bind_publishes_lockfile:\n  PASS: serve bound to port\
+      \ 56492 and wrote valid lockfile\n\ntest_connect_discovers_via_lockfile:\n \
+      \ PASS: connect discovered gateway via lockfile (host=127.0.0.1, port=56497)\n\
+      \        gateway reports 1 active connection(s)\n\ntest_bridge_handles_mcp_initialize_and_tools_list:\n\
+      \  PASS: initialize returned capabilities\n  PASS: tools/list returned 0 tool(s)\n\
+      \ntest_disconnect_decrements_connection_count:\n  PASS: active_connections incremented\
+      \ 0 -> 1\n  PASS: active_connections decremented 1 -> 0\n\n============================================================\n\
+      Results: 4 passed, 0 failed out of 4\n```\n\n**Path exercised**: connect runtime\
+      \ start -> initialize -> tools_list -> liveness/status assertion\n\n**Cold-start\
+      \ resilience regression**:\n```bash\nuv run python -m pytest tests/ -v --ignore=tests/repro\n\
+      ```\n```text\n493 passed, 3 warnings in 6.02s\n```\n\n**Sibling timeout search**:\n\
+      - files searched: `src/tela/**` matching timeout/readiness related surfaces\
+      \ (`timeout|TIMEOUT|time.sleep|asyncio.sleep|select.select|wait_for`)\n- surfaces\
+      \ triaged:\n  - `connect_cmd.py`: lockfile wait + HTTP timeouts (retained)\n\
+      \  - `serve_cmd.py`: bind/shutdown timeouts (retained)\n  - `remote_state.py`:\
+      \ query timeout (retained)\n  - `idle_shutdown.py`: idle timeout (retained;\
+      \ not bridge runtime failure path)\n- no additional bridge/runtime timeout surfaces\
+      \ required fixes\n\n**Root cause + fix summary**:\n- bridge `_forward_stdio_http`\
+      \ previously used LSP Content-Length framing while MCP stdio path required newline-delimited\
+      \ JSON framing, causing dropped messages\n- bridge failed to propagate `mcp-session-id`,\
+      \ causing initialize/tools_list session mismatch\n- fixed by switching stdio\
+      \ bridge framing to newline-delimited JSON and adding session tracking/propagation\
+      \ in forwarding path\n\n**Commit**:\n- `65c6662` fix(connect): use MCP-compliant\
+      \ stdio framing and session tracking in bridge"
   - id: rem.blockers.verify-targeted-regressions
     name: Run targeted regression pack for blocker fixes
     status: pending
