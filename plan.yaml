@@ -24931,6 +24931,85 @@ phases:
     depends_on:
     - rem.blockers.retest-framed-stdio-liveness
     agent: python-senior
+  - id: rem.blockers.retest-stdio-mcp-initialize-loop2
+    name: Retest framed stdio/connect MCP initialize loop 2 remediation
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - blocker findings from rem.blockers.retest-framed-stdio-liveness
+
+      - MCP initialize/tools_list liveness expectations in tests/repro/test_liveness.py
+
+      - MCP initialize/tools_list bridge liveness expectations in tests/repro/test_connect_runtime_liveness.py
+
+
+      touch_paths:
+
+      - tests/repro/test_liveness.py
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - targeted liveness regression harness
+
+
+      harness_refs:
+
+      - repro liveness harness
+
+      - connect runtime liveness harness
+
+      - framed stdio MCP initialize path
+
+      - initialize/tools_list bridge path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, rerun the shared failure family after the loop-2 batched
+      fix.
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting rem.blockers.blackbox-runtime-liveness
+      and rem.blockers.gate.
+
+
+      Required coverage:
+
+      - tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+
+      - tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+
+      - verification that improved early-exit diagnostics appear when the runtime
+      exits unexpectedly, or explicit proof that no early exit occurred in the passing
+      run'
+    verification: '- Execute the exact targeted regression commands for BOTH failing
+      tests and paste actual command output
+
+      - Include pasted output showing whether MCP response headers are produced successfully
+      for stdio initialize
+
+      - Include pasted output showing whether initialize and tools_list complete without
+      BrokenPipe in the connect runtime path
+
+      - Include pasted output or log snippet for the improved early-exit diagnostics
+      requirement
+
+      - Report blocker/should_fix findings if any; ISSUES_FOUND is a successful verification
+      outcome when evidenced
+
+      - Missing pasted output is incomplete evidence'
+    depends_on:
+    - rem.blockers.fix-stdio-mcp-initialize-loop2
+    agent: integration-verifier
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
