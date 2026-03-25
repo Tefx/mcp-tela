@@ -25304,7 +25304,7 @@ phases:
       contingency closure criteria are satisfied'
   - id: rem.blockers.cleanup-static-hygiene
     name: Resolve mypy and ruff blocker failures for rem.blockers follow-up gate
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       verification_scope: phase-check
@@ -25375,6 +25375,69 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-25T18:03:03.391536+00:00'
+    done_at: '2026-03-25T18:16:22.144654+00:00'
+    evidence: '## Static Hygiene Cleanup Evidence
+
+
+      **Commands executed**:
+
+      ```bash
+
+      uv run mypy .
+
+      uv run ruff check .
+
+      uv run pytest tests/core/ tests/shell/test_http_auth.py tests/shell/test_http_routes.py
+      tests/shell/test_gateway.py tests/shell/test_connect_cmd.py tests/shell/test_serve_cmd.py
+      tests/shell/test_downstream.py tests/shell/test_downstream_runtime_connection.py
+      tests/core/test_capability_only_profiles.py tests/core/test_models.py -x -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```text
+
+      $ uv run ruff check .
+
+      All checks passed!
+
+
+      $ uv run mypy .
+
+      Success: no issues found in 82 source files
+
+
+      $ uv run pytest ... -x -q
+
+      323 passed, 3 warnings in 3.87s
+
+      ```
+
+
+      **Implemented cleanup scope**:
+
+      - fixed unused imports / ambiguous-name lint failures (gateway.py, token_mode_initialize,
+      connect runtime liveness tests, gateway/http_routes tests)
+
+      - resolved serve_cmd typing conflict around wrapped app assignment
+
+      - added targeted typing guards/assertions and narrow type-ignores in test surfaces
+      causing gate-blocking mypy failures
+
+      - fixed connect framed writer test arg-type expectations and downstream tool-map
+      None narrowing in tests
+
+
+      **Residual blockers**:
+
+      - none
+
+
+      **Branch artifact**:
+
+      - commit `f4fdae5` on `vectl/step-rem.blockers.cleanup-static-hygiene`'
   - id: rem.blockers.lock-bridge-flake-contingency
     name: Lock bridge flake contingency handoff criteria before rem.blockers gate
       re-open
