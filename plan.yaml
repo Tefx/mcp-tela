@@ -25549,7 +25549,7 @@ phases:
   - id: rem.blockers.gate-retest
     name: Retest rem.blockers gate readiness after evidence, hygiene, and bridge contingency
       remediation
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -25630,6 +25630,8 @@ phases:
     - rem.blockers.cleanup-static-hygiene
     - rem.blockers.lock-bridge-flake-contingency
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-25T18:17:05.753889+00:00'
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
