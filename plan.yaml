@@ -24821,6 +24821,77 @@ phases:
     depends_on:
     - rem.hygiene.triage-actionable-invar-warnings
     agent: python-executor
+  - id: rem.hygiene.evaluate-runtime-liveness-test-structure
+    name: Evaluate and refactor oversized runtime liveness test structure if warranted
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - conditional-pass should-fix: split oversized runtime liveness test file if
+      appropriate
+
+      - test maintainability expectations for runtime repro suites
+
+
+      touch_paths:
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - adjacent test package structure for runtime/connect repros
+
+
+      harness_refs:
+
+      - runtime liveness repro harness
+
+      - any shared fixtures imported by the oversized test file
+
+
+      authoritative_interface: NONE PINNED
+
+
+      Scope:
+
+      - Evaluate whether the runtime liveness test file is oversized or mixed-responsibility
+      enough to warrant a split.
+
+      - If warranted, perform a maintainable split by seam while preserving shared
+      fixture clarity and avoiding harness duplication.
+
+      - If not warranted, document why the current structure remains the safest choice.
+
+
+      Out-of-scope guardrail:
+
+      - Do not change runtime behavior merely to make the test split easier.
+
+
+      Verification scope: local-check protecting rem.hygiene verification and downstream
+      targeted regressions.'
+    verification: '- Decision recorded: split performed or explicitly rejected with
+      rationale
+
+      - If split occurs, fixture ownership and test coverage mapping are documented
+
+      - If split does not occur, maintainability rationale addresses file size, responsibility
+      boundaries, and harness churn risk'
+    evidence_template: '## Runtime Liveness Test Structure Review
+
+      - current file responsibility map:
+
+      - split decision: YES | NO
+
+      - rationale:
+
+      - resulting file/module layout (if split):
+
+      '
+    depends_on:
+    - rem.hygiene.validate-shell-result-allow-rationales
+    agent: python-executor
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
