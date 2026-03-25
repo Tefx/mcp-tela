@@ -25458,3 +25458,78 @@ phases:
     depends_on:
     - rem.final_verify.targeted-regressions
     agent: integration-verifier
+  - id: rem.final_verify.full-invar-guard
+    name: Run full invar guard over complete plan scope
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - final verification requirement for full invar guard
+
+      - AGENTS.md Invar verification guidance
+
+
+      touch_paths:
+
+      - repo-wide Python/Core/Shell surfaces implicated by remediation
+
+
+      harness_refs:
+
+      - full invar guard command family
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, run the full repository invariant gate.
+
+      YOUR GOAL IS TO FIND BLOCKERS.
+
+
+      Independence Level: L1
+
+      Verification scope: full-plan-check protecting rem.final_verify.gate.
+
+
+      Command family lock:
+
+      - MUST use exactly `uvx invar-tools guard --all`
+
+      - fresh/cold environment required
+
+      '
+    verification: '- Execute exactly `uvx invar-tools guard --all`
+
+      - Capture full output and remaining warning inventory
+
+      - Distinguish blocker failures from retained non-blocking warnings with rationale'
+    evidence_template: '## Full Invar Guard Report
+
+      **Command executed**:
+
+      ```
+
+      uvx invar-tools guard --all
+
+      ```
+
+      **Actual output**:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      **Remaining warnings/non-blockers**:
+
+      - list with rationale
+
+      '
+    depends_on:
+    - rem.final_verify.affected-suite-broad-pass
+    agent: integration-verifier
