@@ -24530,7 +24530,7 @@ phases:
       \ MCP Surface"
   - id: rem.blockers.gate
     name: Gate blocker remediation phase
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: default
@@ -24588,6 +24588,24 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-25T17:46:02.629108+00:00'
+    done_at: '2026-03-25T17:57:41.733945+00:00'
+    evidence: "## Gate Review Report\n- Step-by-step assessment: runtime liveness\
+      \ fixes are functionally credible via targeted and black-box reruns; however\
+      \ gate acceptance criteria not satisfied.\n- Blockers closed vs remaining:\n\
+      \  - Closed functionally: count semantics defect and framed/newline MCP initialize\
+      \ liveness defect.\n  - Remaining blockers:\n    1) evidence-quality blocker\
+      \ (summary-only evidence in multiple completed steps; missing pasted command\
+      \ outputs)\n    2) automated gate blocker (mypy + ruff failing in gate review\
+      \ run)\n    3) contingency blocker (shared `~/.tela/gateway.lock` flakiness\
+      \ risk unresolved; rem.bridge_flake must be blocking follow-up)\n- Evidence\
+      \ quality judgment: insufficient for gate close due to missing pasted output\
+      \ in cited steps.\n- Required downstream contingency notes: treat rem.bridge_flake\
+      \ as blocking, not optional.\n\nGate reviewer error fingerprint:\n- \"Gate rejected:\
+      \ summary-only evidence in multiple blocker-remediation steps, mypy+ruff failures,\
+      \ and unresolved shared lockfile flake risk.\"\n\nAnti-rework remediation ownership\
+      \ created before completing gate step:\n- rem.blockers.harden-evidence-backfill\n\
+      - rem.blockers.cleanup-static-hygiene\n- rem.blockers.lock-bridge-flake-contingency\n\
+      - rem.blockers.gate-retest\n- rem.blockers.gate updated to depend on rem.blockers.gate-retest"
   - id: rem.blockers.fix-framed-stdio-mcp-liveness
     name: Batched fix for framed-stdio MCP initialize liveness
     status: done
