@@ -25136,7 +25136,7 @@ phases:
       \ §7.3 Lockfile Contract"
   - id: rem.blockers.harden-evidence-backfill
     name: Backfill concrete command-output evidence for blocker remediation steps
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -25214,6 +25214,94 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-25T17:58:09.968831+00:00'
+    done_at: '2026-03-25T18:01:39.428798+00:00'
+    evidence: '## Evidence Hardening Report
+
+
+      **Cited completed steps**:
+
+      - rem.blockers.verify-targeted-regressions
+
+      - rem.blockers.retest-stdio-mcp-initialize-loop2
+
+      - rem.blockers.blackbox-runtime-liveness
+
+
+      **Exact command(s) re-run or evidence source**:
+
+      ```bash
+
+      uv run pytest -vv -s tests/repro/test_connection_count_semantics.py tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+      tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count
+      tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+
+
+      uv run pytest -vv -s tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+
+
+      uv run python - <<''PY''
+
+      # black-box connect launch + initialize + tools/list probe against running serve
+
+      PY
+
+      ```
+
+
+      **Actual output (pasted excerpts)**:
+
+      ```text
+
+      collected 9 items
+
+      ... test_connection_count_semantics ... PASSED x5
+
+      ... test_connect_discovers_via_lockfile PASSED
+
+      ... test_bridge_handles_mcp_initialize_and_tools_list PASSED
+
+      ... test_disconnect_decrements_connection_count PASSED
+
+      ... test_stdio_responds_to_mcp_initialize PASSED
+
+      ============================== 9 passed in 13.53s ==============================
+
+
+      collected 2 items
+
+      test_stdio_responds_to_mcp_initialize PASSED
+
+      test_bridge_handles_mcp_initialize_and_tools_list PASSED
+
+      ============================== 2 passed in 4.75s ===============================
+
+
+      black-box probe output:
+
+      lockfile_path=/Users/.../.tela/gateway.lock
+
+      connect_poll_t_plus_2=None
+
+      initialize_response={..."serverInfo":{"name":"tela-gateway","version":"1.26.0"}}
+
+      tools_list_response={..."tools":[]}
+
+      connect_poll_before_term=None
+
+      ```
+
+
+      **Residual risk**:
+
+      - shared `~/.tela/gateway.lock` is still in use (confirmed by black-box probe
+      output)
+
+      - local reruns passed, but cross-run/process interference remains plausible
+
+      - `rem.bridge_flake` remains a blocking follow-up condition (not optional) until
+      contingency closure criteria are satisfied'
   - id: rem.blockers.cleanup-static-hygiene
     name: Resolve mypy and ruff blocker failures for rem.blockers follow-up gate
     status: pending
