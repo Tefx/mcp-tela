@@ -25668,6 +25668,56 @@ phases:
     - rem.blockers.harden-evidence-backfill
     - rem.blockers.lock-bridge-flake-contingency
     agent: integration-verifier
+  - id: rem.blockers.gate-retest-full-evidence
+    name: Strict gate-retest using full raw evidence and lockfile identity proof
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      Independent strict gate-retest for rem.blockers using the newly captured FULL
+      raw evidence artifacts.
+
+
+      This step must consume the full-evidence artifact set directly and decide gate-readiness
+      strictly.
+
+
+      Decision rules:
+
+      - gate-readiness may be affirmed only if the evidence package contains exact
+      commands plus FULL raw outputs with no excerpts, ellipses, placeholders, redactions,
+      or summary-only substitutions
+
+      - the lockfile identity proof must be concrete enough to show which ~/.tela/gateway.lock
+      instance was used by the probe and that the owning PID was live at verification
+      time
+
+      - if shared ~/.tela/gateway.lock interference still remains plausible from the
+      evidence, rem.bridge_flake remains blocking follow-up and this retest must say
+      so explicitly
+
+      - absence of concrete lockfile identity proof or any residual summary-only evidence
+      means gate-readiness is NOT established
+
+      '
+    verification: '- Retest report cites the exact full-evidence artifact set it reviewed
+
+      - Retest report rejects any evidence package containing excerpts, ellipses,
+      placeholders, redactions, or summary-only prose in place of raw output
+
+      - Retest report makes an explicit gate-readiness decision and an explicit rem.bridge_flake
+      blocking/non-blocking decision
+
+      - If lockfile interference remains plausible, the report keeps rem.bridge_flake
+      blocking follow-up and does not treat the gate as ready on that point'
+    depends_on:
+    - rem.blockers.gate-retest
+    - rem.blockers.capture-full-evidence-artifacts
+    agent: gate-reviewer
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
