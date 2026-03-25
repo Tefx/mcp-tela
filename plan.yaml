@@ -23784,7 +23784,7 @@ phases:
       Commit: ab53f5d'
   - id: sec.mcp_auth.wire
     name: Wire middleware into serve_cmd
-    status: claimed
+    status: done
     description: In src/tela/commands/serve_cmd.py _launch_streamable_http_server,
       wrap app = upstream_server.streamable_http_app() with BearerAuthMiddleware.
       Pass a get_expected_token callable that reads _runtime.expected_bearer_token
@@ -23798,6 +23798,27 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-25T13:33:04.144158+00:00'
+    done_at: '2026-03-25T15:08:19.475021+00:00'
+    evidence: 'Integration tests (4 new, all pass):
+
+      - test_post_mcp_without_bearer_token_returns_401 PASSED
+
+      - test_post_mcp_with_valid_bearer_token_not_401 PASSED
+
+      - test_get_health_without_token_returns_200 PASSED
+
+      - test_post_mcp_with_wrong_token_returns_401 PASSED
+
+      All 51 tests passed (4 new + 47 existing).
+
+
+      invar guard: passed (0 errors, doctests passed)
+
+
+      Files: serve_cmd.py (wrap app with BearerAuthMiddleware), gateway.py (add get_expected_bearer_token),
+      tests/integration/test_mcp_auth_wire.py (4 tests)
+
+      Commit: 1d8387a'
   - id: sec.mcp_auth.cleanup
     name: Remove dead handle_mcp code
     status: pending
