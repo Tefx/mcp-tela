@@ -240,17 +240,17 @@ def test_connect_discovers_via_lockfile():
             )
 
             status_data = json.loads(status_result.stdout)
-            connections = status_data.get("connections", 0)
+            active_connections = status_data.get("active_connections", 0)
 
-            assert connections >= 1, (
+            assert active_connections >= 1, (
                 f"Mode D: connect did not register with gateway. "
-                f"connections={connections}, expected >= 1"
+                f"active_connections={active_connections}, expected >= 1"
             )
 
             print(
                 f"  PASS: connect discovered gateway via lockfile (host={host}, port={port})"
             )
-            print(f"        gateway reports {connections} active connection(s)")
+            print(f"        gateway reports {active_connections} active connection(s)")
 
             # Clean disconnect
             connect_proc.stdin.close()
@@ -485,7 +485,7 @@ def test_disconnect_decrements_connection_count():
             )
 
             status_data_before = json.loads(status_before.stdout)
-            connections_before = status_data_before.get("connections", 0)
+            connections_before = status_data_before.get("active_connections", 0)
 
             # Start connect
             connect_proc = subprocess.Popen(
@@ -507,15 +507,15 @@ def test_disconnect_decrements_connection_count():
             )
 
             status_data_during = json.loads(status_during.stdout)
-            connections_during = status_data_during.get("connections", 0)
+            connections_during = status_data_during.get("active_connections", 0)
 
             assert connections_during > connections_before, (
-                f"Mode D: connect did not increment connections. "
+                f"Mode D: connect did not increment active_connections. "
                 f"before={connections_before}, during={connections_during}"
             )
 
             print(
-                f"  PASS: connections incremented {connections_before} -> {connections_during}"
+                f"  PASS: active_connections incremented {connections_before} -> {connections_during}"
             )
 
             # Disconnect
@@ -535,15 +535,15 @@ def test_disconnect_decrements_connection_count():
             )
 
             status_data_after = json.loads(status_after.stdout)
-            connections_after = status_data_after.get("connections", 0)
+            connections_after = status_data_after.get("active_connections", 0)
 
             assert connections_after < connections_during, (
-                f"Mode D: disconnect did not decrement connections. "
+                f"Mode D: disconnect did not decrement active_connections. "
                 f"during={connections_during}, after={connections_after}"
             )
 
             print(
-                f"  PASS: connections decremented {connections_during} -> {connections_after}"
+                f"  PASS: active_connections decremented {connections_during} -> {connections_after}"
             )
 
         finally:
