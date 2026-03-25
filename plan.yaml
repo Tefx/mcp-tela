@@ -24705,7 +24705,7 @@ phases:
       - MCP initialize/tools_list liveness expectations in tests/repro/test_liveness.py'
   - id: rem.blockers.retest-framed-stdio-liveness
     name: Retest targeted framed-stdio MCP liveness regressions
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -24771,6 +24771,23 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-25T17:18:00.801875+00:00'
+    done_at: '2026-03-25T17:22:12.871249+00:00'
+    evidence: "Artifact:\n- PR: 3eab7d5133d4e2fef14e2d6332db62890c741222\n\nVerification:\n\
+      - Run: `uv run pytest -v tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize`\
+      \ -> FAIL\n  - AssertionError: EOF while reading MCP response headers (`tests/repro/test_liveness.py:165`)\n\
+      - Run: `uv run pytest -v tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list`\
+      \ -> FAIL\n  - BrokenPipeError: [Errno 32] Broken pipe on initialize write/flush\
+      \ and stdin close\n\nFindings classification:\n- blocker: framed stdio initialize\
+      \ path still dies before full MCP response (EOF)\n- blocker: newline initialize/tools_list\
+      \ bridge path still crashes subprocess (BrokenPipe)\n- should_fix: improve connect\
+      \ early-exit stderr/stdout diagnostics to expose transport crash site\n- suggestion:\
+      \ add direct black-box transport lifetime probe combining framed + newline initialize\
+      \ sequence\n- tech_debt: liveness tests detect symptoms but provide weak root-cause\
+      \ diagnostics\n\nSpec link:\n- docs/INTERFACES.md section F\n- docs/USAGE.md\n\
+      \nRemediation ownership created before completion (batched loop-2):\n- fix step:\
+      \ `rem.blockers.fix-stdio-mcp-initialize-loop2`\n- retest step: `rem.blockers.retest-stdio-mcp-initialize-loop2`\n\
+      - downstream rewired so `rem.blockers.blackbox-runtime-liveness` and `rem.blockers.gate`\
+      \ depend on new loop-2 retest"
   - id: rem.blockers.fix-stdio-mcp-initialize-loop2
     name: Batched fix for framed stdio MCP initialize EOF/BrokenPipe loop 2
     status: pending
