@@ -23935,7 +23935,7 @@ phases:
       on main'
 - id: rem.blockers
   name: Post-Gate Blocker Remediation
-  status: in_progress
+  status: done
   depends_on:
   - sec.mcp_auth
   steps:
@@ -25765,7 +25765,7 @@ phases:
       \  - docs/INTERFACES.md §7.3 Lockfile Contract\nerror: \"\""
   - id: rem.blockers.gate-retest-full-evidence
     name: Strict gate-retest using full raw evidence and lockfile identity proof
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -25815,9 +25815,23 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-25T18:33:50.973018+00:00'
+    done_at: '2026-03-25T18:37:59.640199+00:00'
+    evidence: "status: SUCCESS\nevidence: |\n  Artifact:\n  - PR: 6314dd7bbe5f7c940d4a07ab9852f931f972ed51\n\
+      \  - Reviewed full-evidence artifact set:\n    - artifacts/rem_blockers/01_targeted_regressions.out\n\
+      \    - artifacts/rem_blockers/02_stdio_bridge_pair.out\n    - artifacts/rem_blockers/03_lockfile_identity_probe.out\n\
+      \    - artifacts/rem_blockers/lockfile_identity_probe.py\n    - artifacts/rem_blockers/gate_retest_full_evidence_report.md\n\
+      \n  Verification:\n  - Reviewed all listed artifacts directly; assessed strict\
+      \ contract compliance.\n  - Found output-only files without exact command provenance\
+      \ and literal ellipses in pytest output files.\n  - Lockfile probe shows live\
+      \ PID and lockfile values but does not bind lockfile identity to spawned serve\
+      \ process PID.\n\n  Findings:\n  - Gate-readiness: NOT ESTABLISHED / REJECTED.\n\
+      \  - rem.bridge_flake: BLOCKING follow-up remains required.\n  - Rationale:\
+      \ shared ~/.tela/gateway.lock interference remains plausible under current evidence\
+      \ binding strength.\n\n  Spec link:\n  - rem.blockers.gate-retest-full-evidence\
+      \ decision rules in plan step\nerror: \"\""
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
-  status: locked
+  status: pending
   depends_on:
   - rem.blockers
   steps:
@@ -26077,7 +26091,7 @@ phases:
     agent: gate-reviewer
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
-  status: locked
+  status: pending
   depends_on:
   - rem.blockers
   steps:
