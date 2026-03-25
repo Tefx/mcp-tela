@@ -24425,6 +24425,49 @@ phases:
   status: locked
   depends_on:
   - rem.blockers
+  steps:
+  - id: rem.bridge_flake.freeze-runtime-snapshot
+    name: Freeze remediation snapshot for bridge flake contingency
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: local-check protecting rem.bridge_flake contingency evidence
+      integrity.
+
+
+      Freeze step required before L2/L3 contingency verification.
+
+      Capture:
+
+      - git rev-parse HEAD
+
+      - git status clean declaration at verification handoff time
+
+      - environment declaration for cold runtime reproduction
+
+      - statement that no code changes occur between freeze and subsequent contingency
+      verification
+
+      '
+    verification: '- Snapshot hash captured
+
+      - Clean-state declaration recorded
+
+      - Cold-environment assumptions documented'
+    evidence_template: '## Freeze Evidence
+
+      - HEAD:
+
+      - git status:
+
+      - environment declaration:
+
+      - no-change attestation:
+
+      '
+    agent: integration-verifier
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: locked
