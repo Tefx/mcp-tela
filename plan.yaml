@@ -24771,6 +24771,166 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-25T17:18:00.801875+00:00'
+  - id: rem.blockers.fix-stdio-mcp-initialize-loop2
+    name: Batched fix for framed stdio MCP initialize EOF/BrokenPipe loop 2
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      symbolic_testing: false
+
+      prior_loop:
+
+      - rem.blockers.fix-framed-stdio-mcp-liveness
+
+      - rem.blockers.retest-framed-stdio-liveness
+
+      remaining_blocker: framed stdio/connect runtime MCP initialize still fails with
+      EOF/BrokenPipe before response headers are read
+
+      why_new_loop: prior fix did not stabilize the actual runtime handshake path
+      exercised by both targeted repro suites
+
+
+      spec_refs:
+
+      - blocker findings from rem.blockers.retest-framed-stdio-liveness
+
+      - MCP initialize/tools_list runtime liveness expectations in tests/repro/test_liveness.py
+
+      - MCP initialize/tools_list bridge liveness expectations in tests/repro/test_connect_runtime_liveness.py
+
+
+      touch_paths:
+
+      - tests/repro/test_liveness.py
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - stdio MCP runtime entrypoint / bridge initialization path
+
+      - framed stdio transport lifecycle path
+
+
+      harness_refs:
+
+      - repro liveness harness
+
+      - connect runtime liveness harness
+
+      - framed stdio MCP initialize header path
+
+      - tools_list follow-on handshake path
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an IMPLEMENTATION worker, fix the shared failure family behind BOTH blocker
+      tests:
+
+      - tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize (EOF while
+      reading MCP response headers)
+
+      - tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list
+      (BrokenPipeError on initialize write)
+
+
+      Fix ALL of these, not just the first.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: determine and repair the runtime/bridge handshake path that exits
+      or closes stdio before MCP initialize can complete
+
+      - Symptom: EOF while reading response headers in one repro and BrokenPipeError
+      while writing initialize in the other
+
+      - Why previous fix failed: REQUIRED evidence section; explain exactly why rem.blockers.fix-framed-stdio-mcp-liveness
+      did not keep the process/bridge alive through initialize and tools_list
+
+      - Why this fix is not surface-level: show the repaired lifecycle/transport seam,
+      not only a timeout increase or test-only workaround
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      ### B1: Framed stdio initialize exits before MCP response headers are available
+
+      Locations: tests/repro/test_liveness.py::test_stdio_responds_to_mcp_initialize,
+      runtime framed stdio initialize path
+
+      Remediation: repair the real process lifecycle / handshake framing so initialize
+      returns valid MCP response headers under the repro harness
+
+      Grep hint: rg -n "test_stdio_responds_to_mcp_initialize|initialize|framed|stdio"
+      tests/repro src
+
+      IMPORTANT: search sibling startup/transport teardown paths beyond the first
+      failing location
+
+
+      ### B2: Connect runtime bridge closes pipe before initialize write/tools_list
+      follow-through
+
+      Locations: tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list,
+      connect runtime bridge initialize path
+
+      Remediation: repair the shared runtime/bridge liveness path so the bridge remains
+      writable through initialize and tools_list
+
+      Grep hint: rg -n "test_bridge_handles_mcp_initialize_and_tools_list|BrokenPipe|initialize|tools_list|bridge"
+      tests/repro src
+
+      IMPORTANT: search sibling bridge teardown/error-exit paths beyond the first
+      failing location
+
+
+      ### should_fix: early-exit diagnostics
+
+      Locations: same runtime/bridge startup path
+
+      Remediation: improve diagnostics so early process exit / bridge teardown emits
+      actionable evidence for future repro failures
+
+      Grep hint: rg -n "exit|teardown|stderr|diagnostic|BrokenPipe|EOF" src tests/repro
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Evidence requirements
+
+      Provide pasted command output, not summaries.
+
+      Include a dedicated `why_previous_fix_failed` section in the evidence.
+
+      Show sibling-search evidence for both blocker patterns.
+
+      '
+    verification: '- Run the exact targeted repro commands for BOTH failing tests
+      and paste full command output
+
+      - Evidence MUST include a `why_previous_fix_failed` section tied to rem.blockers.fix-framed-stdio-mcp-liveness
+
+      - Evidence MUST show the repaired runtime/bridge path, not only timeout inflation
+      or test-only masking
+
+      - Evidence MUST include sibling-search output for framed stdio initialize and
+      bridge early-exit/teardown paths
+
+      - Evidence MUST include improved early-exit diagnostic output example or captured
+      log/output snippet'
+    depends_on:
+    - rem.blockers.retest-framed-stdio-liveness
+    agent: python-senior
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
   status: locked
