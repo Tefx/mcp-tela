@@ -386,6 +386,16 @@ def get_runtime() -> GatewayRuntime:
     return _runtime
 
 
+def get_expected_bearer_token() -> Result[str | None, str]:
+    """Return the current expected bearer token under runtime lock.
+
+    Thread-safe accessor intended as the ``get_expected_token`` callable
+    for ``BearerAuthMiddleware`` (via ``.value`` unwrap).
+    """
+    with _runtime_lock:
+        return Result(value=_runtime.expected_bearer_token)
+
+
 def bind_gateway_startup(
     runtime: RuntimeBindingContract,
     config: TelaConfig | None = None,
