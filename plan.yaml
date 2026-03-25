@@ -23725,13 +23725,13 @@ phases:
       - tw.gate phase is ready to complete.'
 - id: sec.mcp_auth
   name: MCP Endpoint Bearer Auth Enforcement
-  status: pending
+  status: in_progress
   depends_on:
   - tw.gate
   steps:
   - id: sec.mcp_auth.middleware
     name: Implement BearerAuthMiddleware
-    status: pending
+    status: claimed
     description: 'Add ASGI middleware class to src/tela/shell/http_auth.py. Must exempt
       GET /health, reject all other unauthenticated requests with 401 + JSON error
       body {"error": "AUTH_INVALID_TOKEN: ..."} matching existing format in gateway.py
@@ -23747,6 +23747,8 @@ phases:
     evidence_template: 'Paste: (1) test output for middleware tests (2) invar guard
       output'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-25T10:59:08.032012+00:00'
   - id: sec.mcp_auth.wire
     name: Wire middleware into serve_cmd
     status: pending
