@@ -30164,3 +30164,58 @@ phases:
 
       - Existing tests pass'
     agent: python-senior
+  - id: notifications.test
+    name: Tests for notification forwarding
+    status: pending
+    description: 'Write tests for upstream notification forwarding.
+
+
+      step_type: test
+
+
+      ## Test Cases Required
+
+
+      ### 1. Session capture
+
+      - After _list_tools handler runs, session is stored in runtime state
+
+      - Multiple _list_tools calls from different sessions -> all captured
+
+
+      ### 2. notify_tools_changed sends notification
+
+      - Mock or stub ServerSession with send_tool_list_changed method
+
+      - Call notify_tools_changed -> session.send_tool_list_changed() called
+
+
+      ### 3. Stale session handling
+
+      - Session that raises exception on send -> removed from session list, no crash
+
+      - Mixed live and dead sessions -> live ones notified, dead ones cleaned up
+
+
+      ### 4. End-to-end flow
+
+      - Downstream tool change -> _wire_reload_notifications callback -> notify_tools_changed
+      on all sessions
+
+
+      ### 5. No sessions
+
+      - notify_tools_changed with no active sessions -> no-op, no error
+
+
+      ## Completion Criteria
+
+      - Tests cover session capture, notification sending, stale session handling
+
+      - Tests should fail initially (testing not-yet-implemented behavior)'
+    verification: '- Tests exist and cover all 5 categories
+
+      - Existing tests still pass'
+    depends_on:
+    - notifications.contract
+    agent: python-executor
