@@ -28116,7 +28116,7 @@ phases:
     agent: gate-reviewer
   - id: rem.final_verify.fix-full-invar-complexity-debt
     name: Batched remediation for full invar complexity/debt posture
-    status: claimed
+    status: pending
     description: 'step_type: implementation
 
       agent_source: default
@@ -28226,8 +28226,6 @@ phases:
     depends_on:
     - rem.final_verify.full-invar-guard
     agent: python-senior
-    claimed_by: python-senior
-    claimed_at: '2026-03-26T06:22:25.136280+00:00'
   - id: rem.final_verify.retest-full-invar-complexity-debt
     name: Retest full invar guard after batched complexity remediation
     status: pending
