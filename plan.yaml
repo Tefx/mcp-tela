@@ -27562,7 +27562,7 @@ phases:
       \ retest step before closure"
   - id: rem.suggestions.resolve-lockfile-extra-field-contract-ambiguity
     name: Resolve lockfile extra-field contract ambiguity
-    status: claimed
+    status: done
     description: Align lockfile extra-field semantics across implementation text,
       docs contract, and lockfile tests by making acceptance/rejection behavior explicit
       and ensuring test naming/assertions match the chosen contract.
@@ -27584,6 +27584,34 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T05:57:04.245595+00:00'
+    done_at: '2026-03-26T05:59:59.201210+00:00'
+    evidence: 'Artifact:
+
+      - Commit: df7ed4f
+
+
+      Verification:
+
+      - `uv run pytest tests/shell/test_lockfile.py -v` -> pass
+
+      - focused/full regression checks reported pass
+
+
+      Contract alignment applied:
+
+      - implementation text in `src/tela/shell/lockfile.py` now explicitly states
+      extra fields are accepted/ignored
+
+      - lockfile regression test renamed/assertions aligned to accepted-extra-field
+      semantics
+
+      - `docs/INTERFACES.md` now explicitly documents extra-field handling for lockfile
+      contract
+
+
+      Spec link:
+
+      - `docs/INTERFACES.md` §7.3 lockfile contract'
   - id: rem.suggestions.retest-lockfile-extra-field-contract-alignment
     name: Retest lockfile extra-field contract alignment
     status: pending
