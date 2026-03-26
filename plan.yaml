@@ -28105,8 +28105,14 @@ phases:
 
       - Final runtime liveness black-box evidence reviewed
 
+      - New blocker-family retest reviewed from exact commands: `pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry
+      -q` and `pytest tests/repro/test_liveness.py -q`
+
+      - Artifact consistency check confirms regenerated `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+      matches fresh outputs
+
       - No unresolved blocker remains from blockers, hygiene, suggestions, or contingency
-      phases'
+      phases; blocker intersection disposition must be explicit'
     evidence_template: '## Final Gate Review Report
 
       - targeted regressions:
@@ -28129,6 +28135,7 @@ phases:
     - rem.final_verify.retest-full-invar-complexity-debt
     - rem.final_verify.runtime-liveness-blackbox
     - rem.final_verify.retest-b1-liveness-evidence
+    - rem.final_verify.retest-b1-after-batched-fix
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T06:39:42.485456+00:00'
