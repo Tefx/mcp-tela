@@ -31316,7 +31316,7 @@ phases:
       \ link:\n- instructions.impl"
   - id: instructions.verify
     name: 'Integration verification: instructions merge'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, verify the instructions merge improvements.
 
 
@@ -31400,6 +31400,46 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T22:03:36.014915+00:00'
+    done_at: '2026-03-26T22:06:17.984913+00:00'
+    evidence: '## Integration Evidence
+
+
+      Merge output sample:
+
+      - verified markdown H2 section formatting with server sections and tool context
+
+      - verified passthrough, override, and mixed-server output shapes
+
+
+      Config mode verification:
+
+      | Mode | Input | Expected | Actual | Status |
+
+      |---|---|---|---|---|
+
+      | Passthrough | `instructions: null` | downstream text forwarded | forwarded
+      | PASS |
+
+      | Suppress | `instructions: false` | server excluded | excluded | PASS |
+
+      | Override | `instructions: "..."` | override text used | override used | PASS
+      |
+
+
+      Edge cases:
+
+      - all suppressed -> None (PASS)
+
+      - none available -> None (PASS)
+
+      - override without downstream -> included (PASS)
+
+
+      Verdict:
+
+      - PASS
+
+      - no issues found'
   - id: instructions.gate
     name: 'Gate: Instructions Merge'
     status: pending
