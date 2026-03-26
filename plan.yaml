@@ -29924,3 +29924,91 @@ phases:
     depends_on:
     - instructions.contract
     agent: python-executor
+  - id: instructions.impl
+    name: Implement instructions merge and config docs
+    status: pending
+    description: "Implement structured instructions merge and update config example.\n\
+      \nstep_type: implementation\n\n## File 1: src/tela/shell/gateway.py — _merge_downstream_instructions()\n\
+      \nCurrent implementation (lines 201-214):\n```python\ndef _merge_downstream_instructions()\
+      \ -> str | None:\n    server_instructions = get_server_instructions()\n    if\
+      \ not server_instructions:\n        return None\n    parts = []\n    for server_name,\
+      \ instructions in server_instructions.items():\n        parts.append(f\"[{server_name}]\\\
+      n{instructions}\")\n    return \"\\n\\n\".join(parts)\n```\n\nNew implementation\
+      \ requirements:\n1. Access the startup config to get per-server `instructions`\
+      \ setting\n2. Access the tool registry to get tool names per server\n3. For\
+      \ each server with instructions:\n   - If `server_config.instructions is False`\
+      \ -> skip\n   - If `server_config.instructions` is a string -> use that text\n\
+      \   - If `server_config.instructions is None` (default) -> use downstream instructions\n\
+      4. Format as Markdown with H2 headers:\n   ```\n   ## telegram (tools: send_message,\
+      \ send_photo)\n   \n   <instructions text>\n   \n   ## github (tools: create_issue,\
+      \ list_repos)\n   \n   <instructions text>\n   ```\n5. Return None if no servers\
+      \ contribute instructions\n\nTo access config and registry, use:\n- `get_runtime().startup_config.servers`\
+      \ for ServerConfig per server\n- `get_all_tools()` from `tela.shell.downstream`\
+      \ for tool names per server\n\nNote: `_merge_downstream_instructions` is called\
+      \ during `_create_upstream_server` (line 220), which is called from `gateway_start`.\
+      \ At that point, runtime config is being set up. The function may need to accept\
+      \ the config as a parameter, or access it from the partially-initialized runtime.\
+      \ Check the call site carefully.\n\n## File 2: tela.yaml.example\n\nAdd documentation\
+      \ for the `instructions` field in the servers section. Add it after the `default_posture`\
+      \ field in the fs server example:\n\n```yaml\n    # OPTIONAL: Instructions behavior\n\
+      \    # null/omitted = passthrough (forward downstream server's instructions)\n\
+      \    # false = suppress (exclude from merged instructions)\n    # \"string\"\
+      \ = override (use this text instead)\n    # instructions: null\n```\n\nAdd a\
+      \ complete example showing all three modes.\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step.\n- _merge_downstream_instructions\
+      \ produces Markdown with H2 headers\n- Per-server instructions config (None/False/str)\
+      \ respected\n- Tool names bound to each section header\n- tela.yaml.example\
+      \ updated with instructions documentation\n- All tests pass including new instructions\
+      \ tests\n- uv run invar guard passes"
+    verification: '- All tests pass including instructions merge tests
+
+      - uv run invar guard passes
+
+      - tela.yaml.example has instructions documentation'
+    evidence_template: '## Instructions Merge Implementation Evidence
+
+
+      **_merge_downstream_instructions output example**:
+
+      ```
+
+      <sample merged output showing H2 headers and tool names>
+
+      ```
+
+
+      **Config modes verified**:
+
+      - [ ] passthrough (None)
+
+      - [ ] suppress (False)
+
+      - [ ] override (str)
+
+
+      **tela.yaml.example updated**:
+
+      - [ ] instructions field documented
+
+      - [ ] examples for all three modes
+
+
+      **Test results**:
+
+      ```
+
+      <pytest output>
+
+      ```
+
+
+      **Invar guard**:
+
+      ```
+
+      <invar guard output>
+
+      ```'
+    depends_on:
+    - instructions.test
+    agent: python-executor
