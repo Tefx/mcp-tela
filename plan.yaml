@@ -27299,7 +27299,7 @@ phases:
       \ asserted via HTTP 401 + AUTH_INVALID_TOKEN"
   - id: rem.suggestions.add-lockfile-schema-regression
     name: Add lockfile schema validation regression path
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       agent_source: default
@@ -27356,6 +27356,8 @@ phases:
     depends_on:
     - rem.suggestions.add-invalid-bearer-negative-regression
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T05:37:30.449656+00:00'
   - id: rem.suggestions.document-statusresponse-field-guarantees
     name: Document StatusResponse field guarantees
     status: pending
