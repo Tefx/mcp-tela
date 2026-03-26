@@ -32268,7 +32268,7 @@ phases:
       - PASS'
   - id: notifications.gate_fix_batch2
     name: notifications.gate_fix_batch2
-    status: pending
+    status: claimed
     description: 'Fix second notifications gate blocker batch.
 
 
@@ -32364,6 +32364,8 @@ phases:
     depends_on:
     - notifications.gate_retest
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T23:18:45.646939+00:00'
   - id: notifications.gate_retest2
     name: notifications.gate_retest2
     status: pending
