@@ -26099,7 +26099,7 @@ phases:
   steps:
   - id: rem.hygiene.triage-actionable-invar-warnings
     name: Triage and reduce actionable invar warnings
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -26170,6 +26170,30 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-25T18:38:58.625920+00:00'
+    done_at: '2026-03-26T04:11:26.498065+00:00'
+    evidence: "status: SUCCESS\nevidence: |\n  ## Invar Warning Triage\n  - warning\
+      \ count before: 5 errors, 41 warnings, 12 infos (58 total findings)\n  - warning\
+      \ count after: 5 errors, 14 warnings, 9 infos (28 total findings)\n  - net reduction:\
+      \ 27 warnings eliminated, 3 infos eliminated\n\n  ## Fixed warning families:\n\
+      \  - partial_contract: reduced 10 -> 0 by strengthening @pre checks across core\
+      \ token/models/classification/enforcement/family modules\n  - shell_pure_logic:\
+      \ reduced 16 -> 0 by adding explicit # @shell_orchestration boundary rationale\
+      \ annotations in shell and command orchestration functions\n  - missing_doctest:\
+      \ reduced 1 -> 0 by adding doctest coverage for ProfileConfig.tools\n\n  ##\
+      \ Remaining families (with rationale):\n  - dead_export (4): public API functions\
+      \ exercised indirectly by tests/integration; non-suppressible via @invar:allow;\
+      \ architectural caller-chain change needed\n  - function_size (4): one artifact\
+      \ script + borderline production functions requiring extraction refactor\n \
+      \ - file_size_warning (3): advisory threshold warnings requiring file split\
+      \ refactors\n  - review_suggested (1): security-review advisory in core/token\n\
+      \  - escape_hatch_project_limit + budget (2): project-level accounting warnings\n\
+      \  - errors unchanged (5): 4 shell_result in artifact script + 1 shell_complexity_debt\
+      \ aggregate\n\n  ## Verification:\n  - `uvx invar-tools guard --all` full scan:\
+      \ 5 errors / 14 warnings / 9 infos\n  - changed-file guard: passed (0 errors;\
+      \ warnings/info only)\n  - `uv run python -m pytest tests/core/ -x -q`: 176\
+      \ passed\n\n  ## Non-intersection evidence:\n  - Remaining warnings are advisory/architectural/debt-class\
+      \ and do not introduce new contract or runtime regressions for this phase gate.\n\
+      error: \"\""
   - id: rem.hygiene.validate-shell-result-allow-rationales
     name: Validate and document @invar:allow shell_result rationales
     status: pending
