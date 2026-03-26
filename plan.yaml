@@ -27443,7 +27443,7 @@ phases:
       \ model surface"
   - id: rem.suggestions.verify-suggestion-pack
     name: Verify suggestion uptake pack
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -27499,6 +27499,8 @@ phases:
     depends_on:
     - rem.suggestions.document-statusresponse-field-guarantees
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T05:45:34.188922+00:00'
   - id: rem.suggestions.gate
     name: Gate suggestion uptake phase
     status: pending
