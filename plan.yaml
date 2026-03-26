@@ -26213,7 +26213,7 @@ phases:
       path.'
   - id: rem.bridge_flake.fix-gate-blockers-loop2
     name: Batched fix for rem.bridge_flake gate blockers and evidence hardening
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -26388,6 +26388,8 @@ phases:
     - rem.bridge_flake.investigate-persistent-timeout-family
     - rem.bridge_flake.cold-repro-and-soak
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T04:47:31.751009+00:00'
   - id: rem.bridge_flake.retest-gate-blockers-loop2
     name: Retest bridge flake blocker remediation and evidence package
     status: pending
