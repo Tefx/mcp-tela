@@ -28839,7 +28839,7 @@ phases:
       '
   - id: rem.final_verify.fix-b1-retry-classification-and-evidence
     name: Batched remediation for B1 retry classification and contradictory evidence
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       verification_scope: phase-check
@@ -29008,6 +29008,109 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T08:20:02.987811+00:00'
+    done_at: '2026-03-26T08:24:05.359306+00:00'
+    evidence: '## Batched Fix Evidence
+
+
+      **Blocker suite command**:
+
+      ```bash
+
+      pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry -q
+
+      ```
+
+      ```output
+
+      ........                                                                 [100%]
+
+      8 passed in 0.47s
+
+      ```
+
+
+      **Liveness command**:
+
+      ```bash
+
+      pytest tests/repro/test_liveness.py -q
+
+      ```
+
+      ```output
+
+      ....                                                                     [100%]
+
+      4 passed in 10.47s
+
+      ```
+
+
+      **Classifier sibling search**:
+
+      ```bash
+
+      rg -n "_is_transient_url_error|TransientRetry|transient" src/tela/commands/connect_cmd.py
+      tests/repro/test_gate_blocker_regressions.py
+
+      ```
+
+      Found 2 call sites in connect_cmd.py (line 609 in `_post_mcp_message`, line
+      690 in `_post_json`) — both use the same `_is_transient_url_error` function,
+      so the type-based fix covers all retry paths.
+
+
+      **Root cause**: `_is_transient_url_error` classified solely by `reason.errno`,
+      but `ConnectionRefusedError("msg")` etc. have `errno=None` when constructed
+      with only a message string. Fix: added `isinstance` check against `(ConnectionRefusedError,
+      ConnectionResetError, ConnectionAbortedError, BrokenPipeError, TimeoutError)`
+      as primary path, errno check retained as fallback for generic `OSError`.
+
+
+      **Why previous fix failed**: Prior remediation did not address that the exception
+      types carry `errno=None` — it only maintained the errno-based check which structurally
+      cannot match these exceptions.
+
+
+      **Artifact consistency check**:
+
+      - Regenerated `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+      - Removed stale "B1 RETIRED" and "8/0/0" claims from prior artifact
+
+      - New artifact cites exact fresh outputs: B1 8/0/0 (now genuinely true), B2
+      4/0/0, B3 3/0/0, liveness 4/0/0
+
+      - All numbers match pasted command output above
+
+
+      **Invar guard**: PASSED (verification_level: STANDARD, doctest passed, no core
+      files for crosshair)
+
+
+      **Blocker intersection**: `blocking-now closed` — B1 transient retry classifier
+      mismatch is fixed; all 8 tests pass; evidence artifact is consistent with fresh
+      results.
+
+
+      **Files modified**:
+
+      - `src/tela/commands/connect_cmd.py` — type-based transient classification in
+      `_is_transient_url_error`
+
+      - `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md` — regenerated
+      from fresh outputs
+
+
+      **NOT done**:
+
+      - Pyright warnings about unused variables (`_attempt`, `_signum`, `_frame`)
+      in connect_cmd.py are pre-existing and outside scope
+
+      - No changes to tests (tests were correct; the implementation was wrong)
+
+
+      Commit: `1bfa645`'
   - id: rem.final_verify.retest-b1-after-batched-fix
     name: Independent retest for B1 blocker suite, liveness, and artifact consistency
       after batched fix
