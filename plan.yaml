@@ -26012,7 +26012,7 @@ phases:
       - Investigation-only step; no source changes performed.'
   - id: rem.bridge_flake.cold-repro-and-soak
     name: Cold-start reproduction and soak verification for bridge timeout
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -26090,6 +26090,8 @@ phases:
     depends_on:
     - rem.bridge_flake.investigate-persistent-timeout-family
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T04:32:05.702516+00:00'
   - id: rem.bridge_flake.gate
     name: Gate bridge timeout contingency phase
     status: pending
