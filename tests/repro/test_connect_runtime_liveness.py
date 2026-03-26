@@ -8,6 +8,12 @@ Per docs/INTERFACES.md and docs/USAGE.md:
 
 This is a black-box test: we interact ONLY via documented CLI surface
 and observable behavior. No source code inspection.
+
+Lifecycle failure modes distinguished by these tests:
+  - STARTUP_FAILURE: process could not be spawned or crashed immediately
+  - PREMATURE_EXIT:  process started but exited before liveness check
+  - LOCKFILE_ABSENT: serve started but never wrote lockfile within timeout
+  - STEADY_STATE:    process alive and lockfile present — pass
 """
 
 from __future__ import annotations
@@ -19,6 +25,10 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.runtime_liveness
 
 
 def _write_test_config(tmp_dir: str) -> str:
@@ -129,9 +139,21 @@ def test_serve_ephemeral_bind_publishes_lockfile():
             # Wait for lockfile to appear
             lockfile_data = _wait_for_lockfile(timeout=10.0)
 
-            assert lockfile_data is not None, (
-                "Mode D: tela serve did not create lockfile within 10 seconds"
-            )
+            # Distinguish LOCKFILE_ABSENT vs PREMATURE_EXIT
+            if lockfile_data is None:
+                poll_result = proc.poll()
+                if poll_result is not None:
+                    failure_mode = (
+                        f"PREMATURE_EXIT(rc={poll_result})"
+                        if poll_result != 0
+                        else "PREMATURE_EXIT(rc=0)"
+                    )
+                else:
+                    failure_mode = "LOCKFILE_ABSENT (process alive but no lockfile)"
+                assert False, (
+                    f"Mode D [{failure_mode}]: tela serve did not create lockfile "
+                    "within 10 seconds"
+                )
 
             # Verify lockfile structure per docs/INTERFACES.md section 7.3
             assert "pid" in lockfile_data, f"Lockfile missing 'pid': {lockfile_data}"
@@ -147,7 +169,7 @@ def test_serve_ephemeral_bind_publishes_lockfile():
             assert port > 0, f"Port must be non-zero (got {port})"
             assert port < 65536, f"Port must be valid (got {port})"
 
-            # Verify process is alive
+            # Verify process is alive (STEADY_STATE check)
             try:
                 os.kill(lockfile_data["pid"], 0)
                 alive = True
@@ -155,7 +177,8 @@ def test_serve_ephemeral_bind_publishes_lockfile():
                 alive = False
 
             assert alive, (
-                f"Mode D: Lockfile references dead process pid={lockfile_data['pid']}"
+                f"Mode D [PREMATURE_EXIT]: Lockfile references dead process "
+                f"pid={lockfile_data['pid']}. Process wrote lockfile then exited."
             )
 
             print(f"  PASS: serve bound to port {port} and wrote valid lockfile")
@@ -220,10 +243,20 @@ def test_connect_discovers_via_lockfile():
 
             # Verify connect process is alive (not crashed)
             poll_result = connect_proc.poll()
-            assert poll_result is None, (
-                f"Mode D: connect exited immediately with code {poll_result}. "
-                f"Expected auto-discovery via lockfile."
-            )
+            if poll_result is not None:
+                stderr_data = (
+                    connect_proc.stderr.read().decode("utf-8", errors="replace")
+                    if connect_proc.stderr
+                    else ""
+                )
+                failure_mode = (
+                    "PREMATURE_EXIT" if poll_result == 0 else f"STARTUP_FAILURE(rc={poll_result})"
+                )
+                assert False, (
+                    f"Mode D [{failure_mode}]: connect exited with code {poll_result}. "
+                    f"Expected STEADY_STATE via lockfile auto-discovery. "
+                    f"stderr={stderr_data!r}"
+                )
 
             # Check status to verify connection registered
             status_result = subprocess.run(

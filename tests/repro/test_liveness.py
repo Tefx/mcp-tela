@@ -11,6 +11,11 @@ Actual (observed via black-box probing):
   - SSE mode: process prints "ready" and exits immediately (exit 0)
   - "tela: ready" banner is written to stdout, corrupting the MCP stdio transport
   - CLI subcommands work but report zero state (status shows 0 servers, 0 profiles)
+
+Lifecycle failure modes distinguished by these tests:
+  - STARTUP_FAILURE: process could not be spawned (binary missing, bad args)
+  - PREMATURE_EXIT: process started but exited before the liveness window elapsed
+  - STEADY_STATE:   process stayed alive for the required liveness window
 """
 
 from __future__ import annotations
@@ -21,6 +26,10 @@ import subprocess
 import sys
 import tempfile
 import time
+
+import pytest
+
+pytestmark = pytest.mark.runtime_liveness
 
 
 def _write_minimal_config(tmp_dir: str) -> str:
@@ -195,6 +204,11 @@ def test_http_mode_stays_alive():
 
     Per README.md: 'tela serve --config tela.yaml --port 8080' starts a
     long-lived gateway process and exposes it over HTTP.
+
+    Failure modes:
+      - STARTUP_FAILURE: Popen raises (binary missing, bad env).
+      - PREMATURE_EXIT: process exits before liveness window (3 s).
+      - STEADY_STATE:   process survives liveness window — pass.
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
         config_path = _write_minimal_config(tmp_dir)
@@ -217,23 +231,32 @@ def test_http_mode_stays_alive():
             stderr=subprocess.PIPE,
         )
 
-        # HTTP gateway should stay alive for at least 3 seconds
-        time.sleep(3)
+        try:
+            # HTTP gateway should stay alive for at least 3 seconds
+            time.sleep(3)
 
-        poll_result = proc.poll()
+            poll_result = proc.poll()
 
-        if poll_result is not None:
-            stdout_data = proc.stdout.read().decode("utf-8", errors="replace")
-            stderr_data = proc.stderr.read().decode("utf-8", errors="replace")
+            if poll_result is not None:
+                stdout_data = proc.stdout.read().decode("utf-8", errors="replace")
+                stderr_data = proc.stderr.read().decode("utf-8", errors="replace")
 
-            assert False, (
-                f"Liveness: HTTP gateway exited immediately with code {poll_result}. "
-                "Expected a long-lived process on an ephemeral port. "
-                f"stdout={stdout_data!r}, stderr={stderr_data!r}"
-            )
-        else:
+                # Distinguish premature exit from startup failure
+                failure_mode = (
+                    "PREMATURE_EXIT" if poll_result == 0 else f"STARTUP_FAILURE(rc={poll_result})"
+                )
+                assert False, (
+                    f"Liveness [{failure_mode}]: HTTP gateway exited with code {poll_result}. "
+                    "Expected STEADY_STATE (long-lived process on ephemeral port). "
+                    f"stdout={stdout_data!r}, stderr={stderr_data!r}"
+                )
+        finally:
             proc.terminate()
-            proc.wait(timeout=5)
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
 
 
 def test_status_reports_meaningful_state():

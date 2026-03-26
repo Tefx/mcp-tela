@@ -44,6 +44,12 @@ exclude_paths = [
     ".invar/examples",
     ".claude/worktrees",
     ".vectl/worktrees",
+    "artifacts",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "runtime_liveness: black-box tests requiring live tela serve/connect processes and shared lockfile",
 ]
 
 [dependency-groups]

@@ -516,8 +516,8 @@ def _write_framed_message(
     return Result(value=None)
 
 
-def _is_transient_url_error(exc: urllib_error.URLError) -> bool:
-    """Return True when the URLError is a transient connection failure.
+def _is_transient_url_error(exc: urllib_error.URLError) -> Result[bool, str]:
+    """Classify whether a URLError is a transient connection failure.
 
     Transient failures (connection refused, reset, broken pipe) can occur when
     the gateway HTTP server is still starting up or temporarily unreachable.
@@ -527,7 +527,8 @@ def _is_transient_url_error(exc: urllib_error.URLError) -> bool:
         exc: The URLError to classify.
 
     Returns:
-        True if the underlying error is a transient connection failure.
+        Result with True if the underlying error is a transient connection
+        failure, False otherwise.
     """
     reason = exc.reason
     if isinstance(reason, OSError):
@@ -541,12 +542,12 @@ def _is_transient_url_error(exc: urllib_error.URLError) -> bool:
             errno.ETIMEDOUT,
         }
         if reason.errno in transient_errnos:
-            return True
+            return Result(value=True)
         if isinstance(reason, (ConnectionRefusedError, ConnectionResetError, BrokenPipeError)):
-            return True
+            return Result(value=True)
     if isinstance(reason, (ConnectionRefusedError, ConnectionResetError, BrokenPipeError)):
-        return True
-    return False
+        return Result(value=True)
+    return Result(value=False)
 
 
 def _post_mcp_message(
@@ -591,7 +592,7 @@ def _post_mcp_message(
             return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
         except urllib_error.URLError as exc:
             last_error = f"MCP_FORWARD_FAILED: {exc.reason}"
-            if not _is_transient_url_error(exc) or attempt == HTTP_TRANSIENT_RETRIES:
+            if not _is_transient_url_error(exc).value or attempt == HTTP_TRANSIENT_RETRIES:
                 return Result(error=last_error)
             time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
 
@@ -671,7 +672,7 @@ def _post_json(
             return Result(error=f"HTTP_{exc.code}: {url}")
         except urllib_error.URLError as exc:
             last_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
-            if not _is_transient_url_error(exc) or attempt == HTTP_TRANSIENT_RETRIES:
+            if not _is_transient_url_error(exc).value or attempt == HTTP_TRANSIENT_RETRIES:
                 return Result(error=last_error)
             time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
 

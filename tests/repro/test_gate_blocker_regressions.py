@@ -39,24 +39,28 @@ class TestB1TransientRetry:
         """ConnectionRefusedError must be classified as transient."""
         inner = ConnectionRefusedError("Connection refused")
         exc = urllib_error.URLError(inner)
-        assert _is_transient_url_error(exc) is True
+        result = _is_transient_url_error(exc)
+        assert result.is_ok and result.value is True
 
     def test_is_transient_url_error_connection_reset(self) -> None:
         """ConnectionResetError must be classified as transient."""
         inner = ConnectionResetError("Connection reset")
         exc = urllib_error.URLError(inner)
-        assert _is_transient_url_error(exc) is True
+        result = _is_transient_url_error(exc)
+        assert result.is_ok and result.value is True
 
     def test_is_transient_url_error_broken_pipe(self) -> None:
         """BrokenPipeError must be classified as transient."""
         inner = BrokenPipeError("Broken pipe")
         exc = urllib_error.URLError(inner)
-        assert _is_transient_url_error(exc) is True
+        result = _is_transient_url_error(exc)
+        assert result.is_ok and result.value is True
 
     def test_is_transient_url_error_non_transient(self) -> None:
         """Non-connection errors must NOT be classified as transient."""
         exc = urllib_error.URLError("unknown host")
-        assert _is_transient_url_error(exc) is False
+        result = _is_transient_url_error(exc)
+        assert result.is_ok and result.value is False
 
     def test_post_mcp_message_retries_on_transient_error(self) -> None:
         """_post_mcp_message must retry on transient URLError, then succeed."""
@@ -188,15 +192,14 @@ class TestB2LockfilePidBinding:
         assert isinstance(spawned_pid, int)
         assert spawned_pid > 0
 
-        # Verify the PID is a real process (may already be exiting, so allow both)
+        # Probe that the PID was real at spawn time.  The process may already
+        # be exiting so we tolerate both "still running" and "already gone".
         try:
             os.kill(spawned_pid, 0)
-            alive = True
         except ProcessLookupError:
-            alive = False
+            pass  # process exited between spawn and probe — acceptable
         except PermissionError:
-            alive = True  # Process exists but different user
-        # Process may have already exited, that's OK - we just verify PID was captured
+            pass  # process exists under different user — acceptable
 
     def test_wait_for_live_lockfile_rejects_mismatched_pid(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
