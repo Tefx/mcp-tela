@@ -31958,7 +31958,7 @@ phases:
       - no blocking issues'
   - id: notifications.gate
     name: 'Gate: Upstream Notification Forwarding'
-    status: claimed
+    status: pending
     description: "Gate review: Verify notifications phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale:\n  - Async session management with concurrency\
       \ concerns\n  - Module-level mutable state (sessions list)\n  - Stale session\
@@ -31978,8 +31978,6 @@ phases:
     depends_on:
     - notifications.gate_retest
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-26T23:11:52.500476+00:00'
   - id: notifications.gate_fix_batch
     name: notifications.gate_fix_batch
     status: done
