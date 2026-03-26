@@ -30126,3 +30126,8 @@ phases:
     depends_on:
     - instructions.verify
     agent: gate-reviewer
+- id: notifications
+  name: Upstream Notification Forwarding
+  status: locked
+  depends_on:
+  - instructions
