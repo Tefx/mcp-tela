@@ -31582,7 +31582,7 @@ phases:
       Implementation intentionally deferred to notifications.impl step.'
   - id: notifications.test
     name: Tests for notification forwarding
-    status: pending
+    status: claimed
     description: 'Write tests for upstream notification forwarding.
 
 
@@ -31635,6 +31635,8 @@ phases:
     depends_on:
     - notifications.contract
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T22:21:14.939833+00:00'
   - id: notifications.impl
     name: Implement session capture and real notify_tools_changed
     status: pending
