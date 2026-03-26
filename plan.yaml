@@ -29320,6 +29320,19 @@ phases:
       ## File 1: src/tela/shell/gateway.py
 
 
+      ### DELETE `_make_registry_tool_handler()` function (lines 239-258)
+
+      Verified dead: its ONLY call site is inside `_register_registry_tools()` (line
+      346). Once `_register_registry_tools` is deleted, `_make_registry_tool_handler`
+      is orphaned dead code. Delete it.
+
+
+      Grep hint to confirm: `grep -n ''_make_registry_tool_handler'' src/tela/shell/gateway.py`
+
+      Expected: only the function definition (line 239) and the call inside `_register_registry_tools`
+      (line 346). No other callers.
+
+
       ### DELETE `_register_registry_tools()` function (lines 335-352)
 
       Verified dead: `add_tool()` registrations are completely invisible when low-level
@@ -29330,16 +29343,6 @@ phases:
       ### DELETE the call in `gateway_start` (line 551)
 
       Remove the line: `_register_registry_tools(upstream_server)`
-
-
-      ### Check `_make_registry_tool_handler` for orphan status
-
-      If `_make_registry_tool_handler` is only called by `_register_registry_tools`,
-      remove it too.
-
-
-      Grep hint: `grep -n ''_make_registry_tool_handler\|_register_registry_tools''
-      src/tela/shell/gateway.py`
 
 
       ## File 2: src/tela/shell/downstream.py
@@ -29375,29 +29378,27 @@ phases:
       It is live code. MUST be preserved.
 
 
-      ## Summary of deletions (5 items total)
+      ## Summary of deletions (6 items total)
 
-      1. `_register_registry_tools()` function in gateway.py (lines 335-352)
+      1. `_make_registry_tool_handler()` function in gateway.py (lines 239-258) —
+      orphaned when item 2 is deleted
 
-      2. `_register_registry_tools(upstream_server)` call in gateway.py (line 551)
+      2. `_register_registry_tools()` function in gateway.py (lines 335-352)
 
-      3. `_open_stdio_client()` wrapper in downstream.py (lines 39-50)
+      3. `_register_registry_tools(upstream_server)` call in gateway.py (line 551)
 
-      4. `_open_sse_client()` wrapper in downstream.py (lines 52-62)
+      4. `_open_stdio_client()` wrapper in downstream.py (lines 39-50)
 
-      5. Two aliased imports in downstream.py (`_transport_open_stdio_client`, `_transport_open_sse_client`)
+      5. `_open_sse_client()` wrapper in downstream.py (lines 52-62)
 
-
-      Plus `_make_registry_tool_handler` if orphaned after item 1.
+      6. Two aliased imports in downstream.py (`_transport_open_stdio_client`, `_transport_open_sse_client`)
 
 
       ## Completion Criteria (stub exclusion)
 
-      - All 5 items above are deleted
+      - All 6 items above are deleted
 
       - `_validate_transport_mode` is PRESERVED (it is live code)
-
-      - `_make_registry_tool_handler` removed if orphaned, preserved if still referenced
 
       - All existing tests pass: `uv run python -m pytest`
 
@@ -29406,12 +29407,9 @@ phases:
 
       - uv run invar guard passes
 
-      - grep confirms all 5 removed symbols are gone from their respective files
+      - grep confirms all 6 removed symbols are gone from their respective files
 
-      - grep confirms _validate_transport_mode is still present and called at downstream.py:283
-
-      - grep confirms _make_registry_tool_handler disposition (removed if orphaned,
-      preserved if referenced)'
+      - grep confirms _validate_transport_mode is still present and called at downstream.py:283'
     evidence_template: '## Dead Code Removal Evidence
 
 
