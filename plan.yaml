@@ -25890,7 +25890,7 @@ phases:
       \ contingency verification."
   - id: rem.bridge_flake.investigate-persistent-timeout-family
     name: Investigate persistent bridge timeout blocker family
-    status: claimed
+    status: pending
     description: 'step_type: implementation
 
       agent_source: default
@@ -25976,8 +25976,6 @@ phases:
     depends_on:
     - rem.bridge_flake.freeze-runtime-snapshot
     agent: python-senior
-    claimed_by: python-senior
-    claimed_at: '2026-03-26T04:20:46.917745+00:00'
   - id: rem.bridge_flake.cold-repro-and-soak
     name: Cold-start reproduction and soak verification for bridge timeout
     status: pending
