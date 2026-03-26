@@ -29573,7 +29573,7 @@ phases:
     agent: gate-reviewer
   - id: cleanup.fix_batch
     name: Batched remediation for cleanup.impl blockers
-    status: pending
+    status: claimed
     description: 'Fix ALL blocker findings from the failed cleanup.impl verification
       family.
 
@@ -29669,6 +29669,8 @@ phases:
     depends_on:
     - cleanup.impl
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T16:53:51.141174+00:00'
   - id: cleanup.retest_full
     name: Retest cleanup phase with full pytest and invar guard
     status: pending
