@@ -27653,14 +27653,14 @@ phases:
       contract text + aligned test naming/assertions'
 - id: rem.final_verify
   name: Final Remediation Verification
-  status: pending
+  status: in_progress
   depends_on:
   - rem.bridge_flake
   - rem.suggestions
   steps:
   - id: rem.final_verify.freeze-release-candidate
     name: Freeze remediation release candidate for final verification
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -27701,6 +27701,8 @@ phases:
 
       '
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T06:03:39.753094+00:00'
   - id: rem.final_verify.targeted-regressions
     name: Run targeted remediation regression suite
     status: pending
