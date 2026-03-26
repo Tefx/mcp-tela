@@ -30780,7 +30780,7 @@ phases:
   - id: tool_meta.gate_retest2
     name: 'Second independent retest: downstream gateway metadata regression and tool_meta
       gate intersection'
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the second
       batched remediation for tool_meta from a fresh perspective.
 
@@ -30832,6 +30832,8 @@ phases:
     depends_on:
     - tool_meta.gate_fix_batch2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T21:19:10.730560+00:00'
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
