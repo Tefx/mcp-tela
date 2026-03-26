@@ -27299,7 +27299,7 @@ phases:
       \ asserted via HTTP 401 + AUTH_INVALID_TOKEN"
   - id: rem.suggestions.add-lockfile-schema-regression
     name: Add lockfile schema validation regression path
-    status: claimed
+    status: done
     description: 'step_type: test
 
       agent_source: default
@@ -27358,6 +27358,18 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T05:37:30.449656+00:00'
+    done_at: '2026-03-26T05:41:06.742332+00:00'
+    evidence: "## Lockfile Schema Regression\n- spec section cited:\n  - `docs/INTERFACES.md`\
+      \ §7.3 Lockfile Contract\n- minimal fixture used:\n  - exact 7-field minimal\
+      \ lockfile shape (pid, host, port, token, started_at, config_path, version)\
+      \ in positive-case test\n- invalid schema cases added:\n  - malformed JSON\n\
+      \  - missing required field(s)\n  - wrong types for pid/port\n  - null required\
+      \ value\n  - extra-field behavior regression coverage\n- exact test names:\n\
+      \  - test_read_lockfile_rejects_malformed_json\n  - test_read_lockfile_rejects_missing_required_field_pid\n\
+      \  - test_read_lockfile_rejects_missing_required_field_token\n  - test_read_lockfile_rejects_wrong_type_for_pid\n\
+      \  - test_read_lockfile_rejects_wrong_type_for_port\n  - test_read_lockfile_rejects_null_field_value\n\
+      \  - test_read_lockfile_rejects_extra_fields_not_in_schema\n  - test_read_lockfile_validates_minimal_schema\n\
+      - verification:\n  - lockfile test suite passed (14 passed)"
   - id: rem.suggestions.document-statusresponse-field-guarantees
     name: Document StatusResponse field guarantees
     status: pending
