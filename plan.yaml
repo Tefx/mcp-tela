@@ -26351,6 +26351,94 @@ phases:
     - rem.bridge_flake.investigate-persistent-timeout-family
     - rem.bridge_flake.cold-repro-and-soak
     agent: python-senior
+  - id: rem.bridge_flake.retest-gate-blockers-loop2
+    name: Retest bridge flake blocker remediation and evidence package
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      review_depth: HIGH
+
+      review_depth_rationale:
+
+      - this retest must independently prove the batched blocker fix closed the timeout
+      family, process-identity lock risk, tee masking risk, and evidence provenance
+      gap before gate re-open
+
+
+      Independent retest after rem.bridge_flake.fix-gate-blockers-loop2.
+
+
+      Scope:
+
+      - re-run the cold-start initialize/tools_list reproduction path and any focused
+      sibling regressions needed to prove the BrokenPipe/timeout family is retired
+
+      - verify lockfile identity is bound to the actual spawned serve process and
+      rejects mismatched or stale ownership cases
+
+      - verify the soak/evidence script fails hard on injected inner-command failure
+      and cannot report false green through tee/pipeline behavior
+
+      - verify the regenerated evidence package contains exact commands, raw outputs,
+      no ellipsis, and clear artifact lineage sufficient for gate review
+
+
+      Retest must be independent and skeptical: do not rely only on implementation
+      claims; use fresh command output and artifact inspection.'
+    verification: '- Fresh reproduction attempt for initialize/tools_list no longer
+      triggers BrokenPipe/timeout on the remediated path
+
+      - Negative check confirms lockfile/process identity rejects mismatched ownership
+      and positive check confirms correct spawned serve process ownership
+
+      - Soak/evidence pipeline returns failing status when an inner command is forced
+      to fail
+
+      - Evidence package inspected for strict provenance, exact command lineage, and
+      no ellipsis
+
+      - Output is sufficient to unblock rem.bridge_flake.gate without reusing stale
+      artifacts'
+    evidence_template: '## Retest Evidence
+
+
+      **Fresh commands**:
+
+      ```\n<paste exact commands>\n```
+
+
+      **Initialize/tools_list result**:
+
+      ```\n<paste raw output>\n```
+
+
+      **Lockfile/process identity proof**:
+
+      ```\n<paste raw output>\n```
+
+
+      **Soak pipeline failure-propagation proof**:
+
+      ```\n<paste raw output>\n```
+
+
+      **Evidence package inspection**:
+
+      - <artifact path>
+
+      - <lineage proof>
+
+
+      **Independent verdict**:
+
+      - PASS/FAIL with blockers if any
+
+      '
+    depends_on:
+    - rem.bridge_flake.fix-gate-blockers-loop2
+    agent: integration-verifier
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: in_progress
