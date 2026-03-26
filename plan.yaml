@@ -27223,13 +27223,13 @@ phases:
       downstream gates'
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
-  status: pending
+  status: in_progress
   depends_on:
   - rem.hygiene
   steps:
   - id: rem.suggestions.add-invalid-bearer-negative-regression
     name: Add invalid bearer format negative regression
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       agent_source: default
@@ -27282,6 +27282,8 @@ phases:
 
       '
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T05:32:34.866374+00:00'
   - id: rem.suggestions.add-lockfile-schema-regression
     name: Add lockfile schema validation regression path
     status: pending
