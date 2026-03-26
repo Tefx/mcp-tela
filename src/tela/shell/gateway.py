@@ -630,10 +630,12 @@ async def gateway_shutdown() -> Result[None, str]:
         return audit_close_result
     _set_reload_notify_callback(None)
 
-    # Clear captured upstream sessions to prevent stale notification attempts.
-    from tela.shell.upstream import _session_registry, _session_registry_lock
-    with _session_registry_lock:
-        _session_registry.clear()
+    # Release captured upstream sessions consistent with per-connection disconnect path.
+    from tela.shell.upstream import release_session
+    with _runtime_lock:
+        connection_ids = [c.connection_id for c in _runtime.connections]
+    for cid in connection_ids:
+        release_session(cid)
     with _runtime_lock:
         _runtime.config = None
         _runtime.startup_config = None

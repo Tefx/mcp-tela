@@ -21,6 +21,7 @@ from tela.shell.config_loader import Result
 from tela.shell.audit import get_audit_entries
 from tela.shell.gateway import _runtime_lock, get_runtime
 from tela.shell.http_auth import validate_bearer_token
+from tela.shell.upstream import release_session
 
 
 @pre(lambda: True)
@@ -244,6 +245,11 @@ def handle_disconnect(
         removed = len(runtime.connections) != original_count
     if not removed:
         return Result(error=f"CONNECTION_NOT_FOUND: connection '{target_id}' not found")
+
+    # Release captured upstream session to prevent stale session leaks.
+    # Must happen AFTER removing from runtime.connections so that any
+    # concurrent notification broadcast sees a consistent state.
+    release_session(target_id)
 
     return Result(
         value={
