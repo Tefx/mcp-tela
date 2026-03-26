@@ -30872,6 +30872,42 @@ phases:
 
       - Mypy seam at repro line classified non-blocking for tool_meta acceptance with
       explicit intersection analysis'
+  - id: tool_meta.gate_fix_batch3
+    name: 'Third batched remediation: remove unused pytest import in list-tools metadata
+      test'
+    status: pending
+    description: "Fix the latest tool_meta gate blocker without widening scope.\n\n\
+      step_type: implementation\nprior_loop:\n  - tool_meta.gate_fix_batch2\n  - tool_meta.gate_retest2\n\
+      remaining_blocker: F401 unused import `pytest` at tests/shell/test_list_tools_metadata.py:11\
+      \ blocks the latest tool_meta gate.\nwhy_new_loop: this is a newly surfaced\
+      \ lint blocker after the accepted second remediation loop; a narrow follow-up\
+      \ is sufficient.\nwhy_previous_fix_failed: prior loops restored metadata behavior\
+      \ but did not clear this targeted test-file lint issue.\n\nFiles / seams to\
+      \ inspect:\n- tests/shell/test_list_tools_metadata.py\n\n## Blockers to Fix\
+      \ (ALL of these, not just the first)\n### B1: unused pytest import in metadata\
+      \ test\nLocations: tests/shell/test_list_tools_metadata.py:11\nRemediation:\
+      \ remove the unused `pytest` import and keep the existing metadata-test coverage/constraints\
+      \ intact.\nGrep hint: rg \"^import pytest$|from pytest import|pytest\" tests/shell/test_list_tools_metadata.py\n\
+      IMPORTANT: do not loosen assertions or alter accepted tool_meta metadata expectations;\
+      \ this loop is lint-only.\n\n## Completion Criteria (stub exclusion)\nThis is\
+      \ an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach deliverable\
+      \ MUST contain substantive logic that processes its inputs and produces outputs\
+      \ that vary based on those inputs. Private stub classes (`_Runtime*`, `_Stub*`,\
+      \ `_Placeholder*`) do not satisfy this requirement.\n\n## Gate Preview (what\
+      \ the gate WILL reject)\n1. Any change outside the targeted unused-import cleanup\
+      \ unless required by the blocker\n2. Any weakening of metadata assertions or\
+      \ accepted tool_meta constraints\n3. Evidence that omits the targeted ruff check\
+      \ for the affected file"
+    verification: '- Run targeted Ruff on tests/shell/test_list_tools_metadata.py
+      and show F401 is gone
+
+      - Preserve previously accepted tool_meta metadata constraints; no assertion
+      or behavior broadening
+
+      - Evidence includes exact command and output for the targeted lint check'
+    depends_on:
+    - tool_meta.gate_retest2
+    agent: python-executor
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
