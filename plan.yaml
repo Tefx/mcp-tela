@@ -27122,7 +27122,7 @@ phases:
       - `rem.hygiene.gate` blocker family B1-B4, S1'
   - id: rem.hygiene.retest-gate-blockers
     name: Retest hygiene gate blockers
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -27196,6 +27196,8 @@ phases:
     depends_on:
     - rem.hygiene.fix-gate-blockers
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T05:27:32.561324+00:00'
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
