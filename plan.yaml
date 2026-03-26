@@ -30500,7 +30500,7 @@ phases:
 
       - No issues unresolved'
     depends_on:
-    - tool_meta.gate_retest2
+    - tool_meta.gate_retest3
     agent: gate-reviewer
   - id: tool_meta.gate_fix_batch
     name: 'Batched remediation: preserve metadata in _list_tools'
