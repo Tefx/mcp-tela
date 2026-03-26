@@ -31514,7 +31514,7 @@ phases:
   steps:
   - id: notifications.contract
     name: 'Contract: Session capture and notification interface'
-    status: claimed
+    status: done
     description: "Define the interface for capturing upstream sessions and sending\
       \ notifications.\n\nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures for session capture\n  - signatures for real notify_tools_changed\n\
@@ -31546,6 +31546,40 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T22:11:57.813638+00:00'
+    done_at: '2026-03-26T22:20:53.164438+00:00'
+    evidence: 'Artifact:
+
+      - commit: `e403c91`
+
+
+      Verification:
+
+      - `uv run python -m pytest tests/` -> passed
+
+      - `uv run invar guard` -> no errors (warnings expected for contract-only dead
+      exports before impl wiring)
+
+      - Doctests for session-capture/notify interfaces pass
+
+
+      Spec link:
+
+      - notifications.contract
+
+
+      Contract deliverables:
+
+      - Added session-capture interface/protocol for upstream sessions
+
+      - Added `capture_session`, `release_session`, `get_captured_session` contracts
+
+      - Updated `notify_tools_changed` interface to real Result-return contract (no-op
+      path + send path + graceful error handling)
+
+      - Added contract-focused tests in `tests/shell/test_upstream.py`
+
+
+      Implementation intentionally deferred to notifications.impl step.'
   - id: notifications.test
     name: Tests for notification forwarding
     status: pending
