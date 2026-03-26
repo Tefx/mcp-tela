@@ -100,6 +100,7 @@ class ServerConfig(BaseModel):
     family: str | None = None
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
     default_posture: Posture = Posture.NONE
+    instructions: bool | str | None = None
 
 
 # --- Profile Configuration ---
