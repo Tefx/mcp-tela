@@ -27549,6 +27549,47 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T05:48:37.916033+00:00'
+  - id: rem.suggestions.resolve-lockfile-extra-field-contract-ambiguity
+    name: Resolve lockfile extra-field contract ambiguity
+    status: pending
+    description: Align lockfile extra-field semantics across implementation text,
+      docs contract, and lockfile tests by making acceptance/rejection behavior explicit
+      and ensuring test naming/assertions match the chosen contract.
+    verification: '- src/tela/shell/lockfile.py no longer states LockfileData must
+      be satisfied "exactly" if extras are accepted, or explicitly rejects extras
+      if strict schema is chosen
+
+      - tests/shell/test_lockfile.py naming and assertions agree on the intended extra-field
+      behavior
+
+      - docs/INTERFACES.md explicitly states whether lockfile extra fields are accepted
+      or rejected and matches implementation/tests'
+    refs:
+    - src/tela/shell/lockfile.py
+    - tests/shell/test_lockfile.py
+    - docs/INTERFACES.md
+    depends_on:
+    - rem.suggestions.verify-suggestion-pack
+    agent: python-executor
+  - id: rem.suggestions.retest-lockfile-extra-field-contract-alignment
+    name: Retest lockfile extra-field contract alignment
+    status: pending
+    description: Re-run focused verification for lockfile extra-field semantics after
+      the batched contract/docs/test remediation and confirm the blocker family is
+      fully resolved.
+    verification: '- Focused lockfile tests covering extra-field behavior pass
+
+      - Reviewed implementation/docs/tests agree on the same extra-field contract
+
+      - Any prior rejection-vs-permissive ambiguity called out by rem.suggestions.gate
+      is no longer present'
+    refs:
+    - src/tela/shell/lockfile.py
+    - tests/shell/test_lockfile.py
+    - docs/INTERFACES.md
+    depends_on:
+    - rem.suggestions.resolve-lockfile-extra-field-contract-ambiguity
+    agent: integration-verifier
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
