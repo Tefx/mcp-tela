@@ -26441,7 +26441,7 @@ phases:
       HTTP transient paths, and did not enforce pipefail in soak evidence pipeline.'
   - id: rem.bridge_flake.retest-gate-blockers-loop2
     name: Retest bridge flake blocker remediation and evidence package
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -26527,6 +26527,8 @@ phases:
     depends_on:
     - rem.bridge_flake.fix-gate-blockers-loop2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T04:56:31.740642+00:00'
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: in_progress
