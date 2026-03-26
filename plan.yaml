@@ -32610,7 +32610,7 @@ phases:
       \ camelCase in JSON/INTERFACES.md)"
   - id: post.doc_sync.gate
     name: 'Gate: Documentation Sync'
-    status: claimed
+    status: pending
     description: 'Gate review: Verify documentation sync completeness.
 
 
@@ -32630,8 +32630,6 @@ phases:
     depends_on:
     - post.doc_sync.update
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-26T23:52:59.395884+00:00'
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
