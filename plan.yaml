@@ -27805,7 +27805,7 @@ phases:
       \ in targeted slice"
   - id: rem.final_verify.affected-suite-broad-pass
     name: Run affected-suite broad pass
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -27876,6 +27876,14 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T06:11:13.400710+00:00'
+    done_at: '2026-03-26T06:16:16.390883+00:00'
+    evidence: "## Affected-Suite Broad Pass\n- Suite selection covered impacted core/shell/integration/repro\
+      \ surfaces across auth, bridge/runtime, lockfile, and status paths.\n- Broad\
+      \ run summary: 597 passed, 3 failed, 3 warnings.\n- Reported cross-seam findings:\n\
+      \  - three repro/liveness timeouts classified as tech_debt flakiness (no new\
+      \ functional seam break identified in targeted remediation surfaces).\n- Core\
+      \ remediation surfaces remained green in broad pass (auth negative cases, bridge\
+      \ runtime paths, lockfile schema tests)."
   - id: rem.final_verify.full-invar-guard
     name: Run full invar guard over complete plan scope
     status: pending
