@@ -28610,7 +28610,7 @@ phases:
       \ 21 passed, 0 failed"
   - id: rem.final_verify.retest-b1-liveness-evidence
     name: Independent retest for blocker regressions, liveness, and evidence consistency
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -28757,6 +28757,86 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T08:19:22.181500+00:00'
+    done_at: '2026-03-26T08:19:34.136855+00:00'
+    evidence: '## Verification Report
+
+
+      **Tester**: integration-verifier (independent of implementation)
+
+      **Scope**: blocker B1 regression closure + contention-sensitive liveness + evidence
+      consistency
+
+      **Independence Level**: L2
+
+      **Environment**: fresh/cold run only
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```
+
+      cd .vectl/worktrees/rem.final_verify.retest-b1-liveness-evidence && uv run pytest
+      tests/repro/test_gate_blocker_regressions.py -v
+
+      cd .vectl/worktrees/rem.final_verify.retest-b1-liveness-evidence && uv run pytest
+      tests/repro/test_liveness.py -v
+
+      ```
+
+      - Output summary:
+
+      ```
+
+      TestB1TransientRetry: 6 failed
+
+      B2/B3 suites: passed
+
+      tests/repro/test_liveness.py: 4 passed
+
+      ```
+
+
+      ### Evidence Consistency Audit
+
+      - Regenerated artifact path: `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+      - Match between artifact claims and actual outputs: NO
+
+      - Contradiction markers:
+
+      ```
+
+      Artifact claims B1 RETIRED and 8/0/0; fresh run produced 6 failed in TestB1TransientRetry
+
+      ```
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | blocker | B1 transient retry classification still fails (6 tests) | `src/tela/commands/connect_cmd.py`
+      | `uv run pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry
+      -v` |
+
+      | blocker | Evidence artifact contradicts fresh outputs | `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+      | Compare artifact claims vs fresh run |
+
+
+      ### Disposition
+
+      Verification successfully detected blocker-class residuals. Batched remediation
+      path was created:
+
+      - `rem.final_verify.fix-b1-retry-classification-and-evidence`
+
+      - `rem.final_verify.retest-b1-after-batched-fix`
+
+      '
   - id: rem.final_verify.fix-b1-retry-classification-and-evidence
     name: Batched remediation for B1 retry classification and contradictory evidence
     status: pending
