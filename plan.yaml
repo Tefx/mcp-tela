@@ -29651,6 +29651,52 @@ phases:
     depends_on:
     - cleanup.impl
     agent: python-senior
+  - id: cleanup.retest_full
+    name: Retest cleanup phase with full pytest and invar guard
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the full
+      acceptance commands for the cleanup.impl remediation from a fresh/cold environment.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Verification scope: full-plan-check protecting cleanup.gate and all downstream
+      phases.
+
+
+      Commands to run:
+
+      - `uv run python -m pytest`
+
+      - `uv run invar guard`
+
+
+      Check specifically:
+
+      - all previously failing pytest cases now pass within the full suite
+
+      - shell Result-return errors for `_merge_downstream_instructions` and `get_server_instructions`
+      are gone
+
+      - no new regressions were introduced by the batched remediation
+
+
+      Independence Level: L1
+
+      If issues are found, that is a successful verification outcome and should drive
+      a new remediation loop.'
+    verification: '- Full command 1 passes: `uv run python -m pytest`
+
+      - Full command 2 passes: `uv run invar guard`
+
+      - Evidence explicitly reports status of the 4 previously failing tests and the
+      2 prior invar errors within the full rerun
+
+      - Environment is fresh/cold for the retest handoff'
+    depends_on:
+    - cleanup.fix_batch
+    agent: integration-verifier
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
