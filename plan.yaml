@@ -28839,7 +28839,7 @@ phases:
       '
   - id: rem.final_verify.fix-b1-retry-classification-and-evidence
     name: Batched remediation for B1 retry classification and contradictory evidence
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       verification_scope: phase-check
@@ -29006,6 +29006,8 @@ phases:
     depends_on:
     - rem.final_verify.retest-b1-liveness-evidence
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T08:20:02.987811+00:00'
   - id: rem.final_verify.retest-b1-after-batched-fix
     name: Independent retest for B1 blocker suite, liveness, and artifact consistency
       after batched fix
