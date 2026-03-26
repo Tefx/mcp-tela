@@ -31034,7 +31034,7 @@ phases:
       - Assertions for title/outputSchema/annotations preserved; no weakening detected'
 - id: instructions
   name: Instructions Merge Improvements
-  status: in_progress
+  status: done
   depends_on:
   - tool_meta
   steps:
@@ -31442,7 +31442,7 @@ phases:
       - no issues found'
   - id: instructions.gate
     name: 'Gate: Instructions Merge'
-    status: claimed
+    status: done
     description: 'Gate review: Verify instructions phase completion.
 
 
@@ -31472,9 +31472,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T22:06:37.242106+00:00'
+    done_at: '2026-03-26T22:10:48.671380+00:00'
+    evidence: 'Artifact:
+
+      - Gate audit over instructions phase implementation and verification commits
+
+
+      Verification:
+
+      - Type contract check passed (`ServerConfig.instructions: bool | str | None`)
+
+      - Merge semantic checks passed for None/False/str behaviors
+
+      - Markdown/H2 + tool-binding format validated
+
+      - `tela.yaml.example` documentation for instructions field verified
+
+      - Mode + edge-case coverage in merge tests confirmed
+
+      - Startup/liveness regression suites and mypy/invar checks passed without blocking
+      issues
+
+
+      Spec link:
+
+      - instructions.gate criteria
+
+
+      Gate verdict:
+
+      - decision: PASS
+
+      - rationale: all six gate criteria satisfied with test/runtime evidence
+
+      - required follow-ups: none'
 - id: notifications
   name: Upstream Notification Forwarding
-  status: locked
+  status: pending
   depends_on:
   - instructions
   steps:
