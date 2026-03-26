@@ -26130,7 +26130,7 @@ phases:
       - No timeout/connection failures observed across 15 cold-start iterations total.'
   - id: rem.bridge_flake.gate
     name: Gate bridge timeout contingency phase
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: default
@@ -26172,6 +26172,8 @@ phases:
     - rem.bridge_flake.investigate-persistent-timeout-family
     - rem.bridge_flake.cold-repro-and-soak
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-26T04:37:48.599338+00:00'
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: in_progress
