@@ -29835,7 +29835,7 @@ phases:
       family)'
   - id: cleanup.gate_fix_batch
     name: Batched remediation for cleanup gate findings
-    status: claimed
+    status: done
     description: 'Fix ALL cleanup gate blockers and disposition the over-broad warning
       concern.
 
@@ -29949,6 +29949,52 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T17:23:18.276030+00:00'
+    done_at: '2026-03-26T17:27:09.741932+00:00'
+    evidence: '## Cleanup Gate Fix Batch Evidence
+
+
+      Commands run:
+
+      - `rg ''call_tool'' src/tela/shell/gateway.py`
+
+      - `uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py`
+
+      - `uv run invar guard --all`
+
+
+      Orphan import removal proof:
+
+      - Updated `src/tela/shell/gateway.py` import block (removed unused `call_tool`
+      import around lines 35-40)
+
+      - Post-fix references to `call_tool` are legitimate decorator/function usages,
+      not unused imports
+
+
+      Targeted lint result:
+
+      - `uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py`
+      -> All checks passed
+
+
+      Invar warning disposition pass (gate-intersection reasoning):
+
+      - Warnings intersecting cleanup gate: none
+
+      - Blocking-now warnings: none
+
+      - Non-blocking warnings: all 13 warnings classified non-blocking for cleanup
+      gate because they are structural size/quality advisories and do not invalidate
+      cleanup acceptance criteria or orphan-import remediation
+
+      - Rationale: cleanup.gate_fix_batch scope is orphan import correctness on cleanup-touched
+      files; warning set does not indicate cleanup-induced regressions or unresolved
+      cleanup blockers
+
+
+      Sibling sanity:
+
+      - No sibling orphan-import regression identified in cleanup-touched files'
   - id: cleanup.gate_retest
     name: Retest cleanup gate after batched remediation
     status: pending
