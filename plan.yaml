@@ -30161,7 +30161,7 @@ phases:
   steps:
   - id: tool_meta.contract
     name: 'Contract: Add metadata fields to ResolvedTool'
-    status: claimed
+    status: done
     description: "Add three new optional fields to ResolvedTool in src/tela/core/models.py:\n\
       \n```python\nannotations: dict | None = None\ntitle: str | None = None\noutput_schema:\
       \ dict | None = None\n```\n\nstep_type: contract\ncontract_purity: ENFORCED\n\
@@ -30184,6 +30184,15 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T17:39:47.802128+00:00'
+    done_at: '2026-03-26T17:43:41.832448+00:00'
+    evidence: "Artifact:\n- commit: `362fe02c54e030d7060befe1f945d7c01d452a10`\n\n\
+      Verification:\n- `uv run python -m pytest` -> 600 passed, 3 warnings\n- `uv\
+      \ run invar guard` -> passed (pre-existing file-size warning only)\n- signature\
+      \ check confirms new fields on `ResolvedTool`: `annotations`, `title`, `output_schema`\n\
+      \nSpec link:\n- tool_meta.contract\n- Added optional fields on `ResolvedTool`\
+      \ exactly as specified:\n  - `annotations: dict | None = None`\n  - `title:\
+      \ str | None = None`\n  - `output_schema: dict | None = None`\n- snake_case\
+      \ `output_schema` preserved for shell wire mapping translation"
   - id: tool_meta.test
     name: Tests for tool metadata round-trip
     status: pending
