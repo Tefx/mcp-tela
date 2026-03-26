@@ -29461,7 +29461,7 @@ phases:
     name: Verify dead code removal
     status: pending
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the dead
-      code removal.
+      code removal after the batched full-suite retest.
 
 
       YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
@@ -29469,23 +29469,26 @@ phases:
 
       Test for:
 
-      - All 600 tests still pass
+      - full-suite retest evidence is complete and credible
 
-      - No regressions in tool listing (tools still appear via catch-all handler)
+      - no regressions in tool listing (tools still appear via catch-all handler)
 
-      - No regressions in tool calling
+      - no regressions in tool calling
 
       - _validate_transport_mode still works for transport validation
 
-      - No orphaned imports or references to removed functions
+      - no orphaned imports or references to removed functions
 
 
       Independence Level: L1'
-    verification: '- All tests pass
+    verification: '- Full retest evidence from `uv run python -m pytest` and `uv run
+      invar guard` is present and reviewed
 
       - grep confirms no stale references to removed functions
 
-      - No import errors'
+      - No import errors
+
+      - Dead-code cleanup intent remains satisfied after remediation'
     evidence_template: '## Verification Report
 
 
@@ -29525,7 +29528,7 @@ phases:
 
       - [ ] ISSUES_FOUND'
     depends_on:
-    - cleanup.impl
+    - cleanup.retest_full
     agent: integration-verifier
   - id: cleanup.gate
     name: 'Gate: Dead Code Removal'
