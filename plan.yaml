@@ -32630,6 +32630,78 @@ phases:
     depends_on:
     - post.doc_sync.update
     agent: gate-reviewer
+  - id: post.doc_sync.fix_batch
+    name: Fix doc-sync gate blockers
+    status: pending
+    description: 'Fix ALL documentation blockers found by the post.doc_sync gate.
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+
+      ### B1: stale transport default claim
+
+      Locations: DESIGN / INTERFACES / USAGE docs
+
+      Remediation: update all affected documentation so transport-default behavior
+      matches the implementation: when transport is omitted, the default is HTTP,
+      not SSE.
+
+      Grep hint: search for transport-default claims and any text stating or implying
+      SSE is the default when transport is omitted.
+
+      IMPORTANT: search sibling docs beyond the initially reported location.
+
+
+      ### B2: invalid migration examples
+
+      Locations: docs/MIGRATION-003-capability-only-profiles.md
+
+      Remediation: update all migration examples so required overrides nesting is
+      present and examples match the implemented structure.
+
+      Grep hint: search the migration doc for capability-only profile examples missing
+      the required overrides nesting.
+
+      IMPORTANT: search sibling examples beyond the initially reported location.
+
+
+      ## Required document updates
+
+      - DESIGN docs: correct transport default language
+
+      - INTERFACES docs: correct transport default language and any affected examples
+
+      - USAGE docs: correct transport default language and user-facing examples
+
+      - MIGRATION docs: correct capability-only profile examples to include required
+      overrides nesting
+
+
+      ## Completion Criteria
+
+      - ALL listed doc blockers are fixed
+
+      - DESIGN / INTERFACES / USAGE / MIGRATION docs are updated where applicable
+
+      - No stale SSE-default claim remains in targeted docs
+
+      - No migration example remains with missing required overrides nesting'
+    verification: '- Confirm DESIGN / INTERFACES / USAGE docs state that omitted transport
+      defaults to HTTP
+
+      - Confirm docs/MIGRATION-003-capability-only-profiles.md examples include required
+      overrides nesting
+
+      - Provide file/section evidence for each updated document family'
+    evidence_template: "## Doc Fix Report\n- Updated files and sections:\n  - <file>#<section>\n\
+      - Transport default corrections applied:\n  - <locations now stating HTTP default>\n\
+      - Migration example corrections applied:\n  - <locations now showing required\
+      \ overrides nesting>\n- Sibling search evidence:\n  - <searched files/sections\
+      \ and outcome>\n- Remaining stale claims: none"
+    depends_on:
+    - post.doc_sync.update
+    agent: doc-reviewer
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
