@@ -29820,3 +29820,8 @@ phases:
     depends_on:
     - tool_meta.verify
     agent: gate-reviewer
+- id: instructions
+  name: Instructions Merge Improvements
+  status: locked
+  depends_on:
+  - tool_meta
