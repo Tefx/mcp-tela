@@ -24,6 +24,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -596,7 +597,7 @@ def test_disconnect_decrements_connection_count():
 if __name__ == "__main__":
     import traceback
 
-    tests = [
+    tests: list[Callable[..., None]] = [
         test_serve_ephemeral_bind_publishes_lockfile,
         test_connect_discovers_via_lockfile,
         test_bridge_handles_mcp_initialize_and_tools_list,

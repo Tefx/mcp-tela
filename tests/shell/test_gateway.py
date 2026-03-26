@@ -485,7 +485,7 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
 
             assert response.root.isError is False  # type: ignore[union-attr]  # response is CallToolResult at runtime
             assert response.root.structuredContent is not None  # type: ignore[union-attr]  # response is CallToolResult at runtime
-            assert response.root.structuredContent["structuredContent"] == {  # type: ignore[union-attr]  # response is CallToolResult at runtime
+            assert response.root.structuredContent == {  # type: ignore[union-attr]  # response is CallToolResult at runtime
                 "result": "hello"
             }
         finally:

@@ -313,7 +313,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         ]
 
     @upstream_server._mcp_server.call_tool(validate_input=False)
-    async def _call_tool(tool_name: str, arguments: dict[str, object]) -> dict:
+    async def _call_tool(
+        tool_name: str, arguments: dict[str, object]
+    ) -> mcp_types.CallToolResult:
         connection = await _ensure_connection()
         result = await handle_tools_call(connection, tool_name, dict(arguments))
         if result.is_err:
@@ -321,7 +323,12 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             raise RuntimeError(f"{result.error.code}: {result.error.message}")
 
         assert result.value is not None
-        return result.value
+        # Return CallToolResult so the MCP handler bypasses output
+        # normalization and outputSchema re-validation.  The gateway
+        # proxies downstream results as-is; a raw dict would be
+        # misinterpreted as structured content and fail validation
+        # against the downstream tool's outputSchema.
+        return mcp_types.CallToolResult.model_validate(result.value)
 
 
 # @shell_orchestration: bridges reload digest into upstream connection broadcaster via callback wiring.
