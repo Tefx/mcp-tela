@@ -30613,7 +30613,7 @@ phases:
       \ shaping)"
   - id: tool_meta.gate_retest
     name: 'Retest: tool metadata preservation through _list_tools'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the batched
       remediation for tool metadata preservation from a fresh perspective.
 
@@ -30655,6 +30655,17 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T20:58:39.132649+00:00'
+    done_at: '2026-03-26T21:05:40.391595+00:00'
+    evidence: "Artifact:\n- Verified against merged remediation commit `f7d1ade`\n\
+      \nVerification:\n- Targeted real-path metadata tests passed:\n  - gateway _list_tools\
+      \ metadata-preservation tests\n  - upstream metadata forwarding tests\n  - list_tools\
+      \ metadata tests\n- Edge-case probes validated:\n  - None annotations -> None\n\
+      \  - empty annotations dict -> ToolAnnotations(all None)\n  - partial annotations\
+      \ dict -> correctly populated ToolAnnotations\n- Findings from retest:\n  -\
+      \ no final-stage metadata loss for `annotations`, `title`, `outputSchema`\n\n\
+      Spec link:\n- tool_meta.gate_retest\n\nConclusion:\n- Final-stage forwarding\
+      \ through `_list_tools` is preserved across present/absent/partial metadata\
+      \ scenarios."
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
