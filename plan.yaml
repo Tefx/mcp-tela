@@ -32523,7 +32523,7 @@ phases:
   steps:
   - id: post.doc_sync.update
     name: Update documentation to match implementation
-    status: claimed
+    status: pending
     description: 'Sync all project documentation with the implemented changes.
 
 
@@ -32579,8 +32579,6 @@ phases:
 
       - Instructions and metadata documented'
     agent: doc-reviewer
-    claimed_by: doc-reviewer
-    claimed_at: '2026-03-26T23:40:11.869731+00:00'
   - id: post.doc_sync.gate
     name: 'Gate: Documentation Sync'
     status: pending
