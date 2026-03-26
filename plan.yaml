@@ -27660,7 +27660,7 @@ phases:
   steps:
   - id: rem.final_verify.freeze-release-candidate
     name: Freeze remediation release candidate for final verification
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -27703,6 +27703,17 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T06:03:39.753094+00:00'
+    done_at: '2026-03-26T06:05:05.956926+00:00'
+    evidence: '## Freeze Evidence
+
+      - HEAD: dba7346ee752f33cac105f747efefa8b9185f35a
+
+      - git status: clean (no uncommitted or untracked changes)
+
+      - environment declaration: macOS arm64, Python 3.14.3, uv 0.11.1
+
+      - no-change attestation: release-candidate freeze declared; no code changes
+      allowed until `rem.final_verify.gate` completes'
   - id: rem.final_verify.targeted-regressions
     name: Run targeted remediation regression suite
     status: pending
