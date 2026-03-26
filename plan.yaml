@@ -31958,7 +31958,7 @@ phases:
       - no blocking issues'
   - id: notifications.gate
     name: 'Gate: Upstream Notification Forwarding'
-    status: claimed
+    status: pending
     description: "Gate review: Verify notifications phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale:\n  - Async session management with concurrency\
       \ concerns\n  - Module-level mutable state (sessions list)\n  - Stale session\
@@ -31978,8 +31978,6 @@ phases:
     depends_on:
     - notifications.verify
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-26T22:50:22.319659+00:00'
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
