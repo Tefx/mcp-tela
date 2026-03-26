@@ -30155,7 +30155,7 @@ phases:
       Verdict: PASS'
 - id: tool_meta
   name: Tool Metadata Restoration
-  status: in_progress
+  status: done
   depends_on:
   - cleanup
   steps:
@@ -30472,7 +30472,7 @@ phases:
       \nIssues Found:\n- none\n\nVerdict:\n- PASS"
   - id: tool_meta.gate
     name: 'Gate: Tool Metadata Restoration'
-    status: claimed
+    status: done
     description: 'Gate review: Verify tool_meta phase completion.
 
 
@@ -30504,6 +30504,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T21:38:10.843027+00:00'
+    done_at: '2026-03-26T21:41:22.572309+00:00'
+    evidence: 'Artifact:
+
+      - Gate audit over tool_meta contract/test/implementation/remediation commits
+      through latest phase state
+
+
+      Verification:
+
+      - Targeted suites passed (upstream/gateway/list-tools metadata tests)
+
+      - Runtime probe confirmed end-to-end metadata preservation raw-tool -> ResolvedTool
+      -> handle_tools_list -> _list_tools -> mcp_types.Tool
+
+      - Invar guard has no blocking errors for acceptance
+
+
+      Spec link:
+
+      - tool_meta.gate criteria
+
+
+      Gate verdict:
+
+      - decision: PASS
+
+      - rationale: all seven gate criteria satisfied; no unresolved tool_meta blockers
+
+      - required follow-ups: none'
   - id: tool_meta.gate_fix_batch
     name: 'Batched remediation: preserve metadata in _list_tools'
     status: done
@@ -31005,7 +31034,7 @@ phases:
       - Assertions for title/outputSchema/annotations preserved; no weakening detected'
 - id: instructions
   name: Instructions Merge Improvements
-  status: locked
+  status: pending
   depends_on:
   - tool_meta
   steps:
