@@ -121,3 +121,271 @@ def test_delete_lockfile_succeeds_when_missing(
 
     assert result.is_ok
     assert not path.exists()
+
+
+# -- Schema Validation Regression (INTERFACES.md §7.3 Lockfile Contract) ---
+
+
+def test_read_lockfile_rejects_malformed_json(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile with invalid JSON must be rejected with LOCKFILE_PARSE_ERROR.
+
+    Ref: INTERFACES.md §7.3 - lockfile must be valid JSON matching LockfileData.
+    Minimal fixture: any malformed content (e.g., truncated JSON).
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Malformed JSON - truncated object
+    path.write_text('{"pid": 12345, "host": "127.0.0.1"', encoding="utf-8")
+
+    result = lockfile.read_lockfile()
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_PARSE_ERROR" in result.error
+
+
+def test_read_lockfile_rejects_missing_required_field_pid(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile missing required 'pid' field must be rejected with LOCKFILE_PARSE_ERROR.
+
+    Ref: INTERFACES.md §7.3 - All fields (pid, host, port, token, started_at, config_path, version) required.
+    Minimal fixture: valid JSON with all fields except 'pid'.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Missing 'pid' field
+    path.write_text(
+        json.dumps(
+            {
+                "host": "127.0.0.1",
+                "port": 49152,
+                "token": "bearer-token-here",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/path/to/tela.yaml",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = lockfile.read_lockfile()
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_PARSE_ERROR" in result.error
+
+
+def test_read_lockfile_rejects_missing_required_field_token(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile missing required 'token' field must be rejected with LOCKFILE_PARSE_ERROR.
+
+    Ref: INTERFACES.md §7.3 - All fields (pid, host, port, token, started_at, config_path, version) required.
+    Minimal fixture: valid JSON with all fields except 'token'.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Missing 'token' field
+    path.write_text(
+        json.dumps(
+            {
+                "pid": 12345,
+                "host": "127.0.0.1",
+                "port": 49152,
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/path/to/tela.yaml",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = lockfile.read_lockfile()
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_PARSE_ERROR" in result.error
+
+
+def test_read_lockfile_rejects_wrong_type_for_pid(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile with wrong type for 'pid' field must be rejected with LOCKFILE_PARSE_ERROR.
+
+    Ref: INTERFACES.md §7.3 - 'pid' must be integer (process id).
+    Minimal fixture: valid JSON with 'pid' as string instead of int.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # 'pid' as string instead of int
+    path.write_text(
+        json.dumps(
+            {
+                "pid": "not-a-number",
+                "host": "127.0.0.1",
+                "port": 49152,
+                "token": "bearer-token-here",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/path/to/tela.yaml",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = lockfile.read_lockfile()
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_PARSE_ERROR" in result.error
+
+
+def test_read_lockfile_rejects_wrong_type_for_port(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile with non-coercible 'port' field must be rejected with LOCKFILE_PARSE_ERROR.
+
+    Ref: INTERFACES.md §7.3 - 'port' must be integer.
+    Minimal fixture: valid JSON with 'port' as non-numeric string (coercion failure).
+    Note: Pydantic coerces numeric strings like "49152" to int, so use non-numeric.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # 'port' as non-numeric string (triggers pydantic int parsing error)
+    path.write_text(
+        json.dumps(
+            {
+                "pid": 12345,
+                "host": "127.0.0.1",
+                "port": "not-a-port",
+                "token": "bearer-token-here",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/path/to/tela.yaml",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = lockfile.read_lockfile()
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_PARSE_ERROR" in result.error
+
+
+def test_read_lockfile_rejects_extra_fields_not_in_schema(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile with valid schema but extra fields should parse successfully (pydantic is permissive).
+
+    Ref: INTERFACES.md §7.3 - LockfileData has 7 required fields.
+    Note: Pydantic by default allows extra fields; this documents expected behavior.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Valid schema plus extra field (pydantic accepts this by default)
+    path.write_text(
+        json.dumps(
+            {
+                "pid": 12345,
+                "host": "127.0.0.1",
+                "port": 49152,
+                "token": "bearer-token-here",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/path/to/tela.yaml",
+                "version": "0.1.0",
+                "extra_field": "should-be-ignored",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    # Patch is_stale to return False so the live process check doesn't interfere
+    monkeypatch.setattr(lockfile, "is_stale", lambda _data: False)
+
+    result = lockfile.read_lockfile()
+    # Should succeed - pydantic ignores extra fields by default
+    assert result.is_ok
+    assert result.value is not None
+    # Extra field should not appear in model
+    assert not hasattr(result.value, "extra_field")
+
+
+def test_read_lockfile_rejects_null_field_value(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile with null required field must be rejected with LOCKFILE_PARSE_ERROR.
+
+    Ref: INTERFACES.md §7.3 - All fields are required (non-nullable).
+    Minimal fixture: valid JSON with one field set to null.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # 'host' as null instead of string
+    path.write_text(
+        json.dumps(
+            {
+                "pid": 12345,
+                "host": None,
+                "port": 49152,
+                "token": "bearer-token-here",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/path/to/tela.yaml",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = lockfile.read_lockfile()
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_PARSE_ERROR" in result.error
+
+
+def test_read_lockfile_validates_minimal_schema(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Lockfile with minimal valid schema per INTERFACES.md §7.3 must parse successfully.
+
+    Ref: INTERFACES.md §7.3 - Minimal fixture has all 7 required fields with valid values.
+    This test uses the minimal documented shape without convenience-only fields.
+    """
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Minimal valid lockfile per spec - exactly the documented shape
+    path.write_text(
+        json.dumps(
+            {
+                "pid": 12345,
+                "host": "127.0.0.1",
+                "port": 49152,
+                "token": "tela_tok_a1b2c3d4e5f6g7h8",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": "/home/user/.tela/tela.yaml",
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    # Patch is_stale to return False so the live process check doesn't interfere
+    monkeypatch.setattr(lockfile, "is_stale", lambda _data: False)
+
+    result = lockfile.read_lockfile()
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.pid == 12345
+    assert result.value.host == "127.0.0.1"
+    assert result.value.port == 49152
+    assert result.value.token == "tela_tok_a1b2c3d4e5f6g7h8"
+    assert result.value.started_at == "2026-03-22T10:00:00Z"
+    assert result.value.config_path == "/home/user/.tela/tela.yaml"
+    assert result.value.version == "0.1.0"
