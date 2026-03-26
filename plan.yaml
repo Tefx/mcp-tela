@@ -29553,6 +29553,104 @@ phases:
     depends_on:
     - cleanup.verify
     agent: gate-reviewer
+  - id: cleanup.fix_batch
+    name: Batched remediation for cleanup.impl blockers
+    status: pending
+    description: 'Fix ALL blocker findings from the failed cleanup.impl verification
+      family.
+
+
+      symbolic_testing: true
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: cleanup.impl acceptance is blocked by a mixed verification family
+      spanning runtime wiring regressions and shell contract drift on Result-return
+      surfaces.
+
+      - Symptom: 4 failing pytest cases plus 2 invar guard shell Result-return errors.
+
+      - Why this fix is not surface-level: remediation must close the full blocker
+      family and preserve full-suite acceptance, not relabel failures as pre-existing.
+
+      - Command lock: use `uv run python -m pytest` and `uv run invar guard` for remediation
+      verification and handoff notes.
+
+      - Fresh/cold retest required after fixes.
+
+
+      ### Pytest blockers
+
+      1. `tests/repro/test_blockers.py::TestB1WireCliSubcommands::status_command_requires_running_server`
+
+      2. `tests/repro/test_blockers.py::TestB1WireCliSubcommands::connections_command_requires_running_server`
+
+      3. `tests/repro/test_blockers.py::TestB1WireCliSubcommands::audit_command_requires_running_server`
+
+      4. `tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile`
+
+
+      Required remediation:
+
+      - restore passing behavior for CLI subcommand runtime wiring and lockfile-based
+      connect discovery without reintroducing deleted dead code
+
+      - search for sibling regressions in the same runtime/entrypoint paths beyond
+      the listed tests
+
+      - preserve dead-code cleanup intent while repairing any runtime contract that
+      cleanup.impl exposed
+
+
+      ### Invar blockers
+
+      1. `_merge_downstream_instructions` must return `Result[T, E]`
+
+      2. `get_server_instructions` must return `Result[T, E]`
+
+
+      Required remediation:
+
+      - restore shell-layer Result-return semantics in the affected instruction surfaces
+
+      - search sibling shell functions in the same file clusters for matching Result
+      drift so the family is closed, not patched locally
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Completion Criteria
+
+      - all 4 listed pytest blockers are fixed
+
+      - both listed invar Result-return blockers are fixed
+
+      - sibling search completed for the affected runtime/CLI and shell Result-return
+      surfaces
+
+      - fix evidence explains root cause vs symptom and why cleanup dead-code removal
+      remains valid after remediation'
+    verification: '- Main path: targeted regressions for the 4 named tests pass before
+      full retest handoff
+
+      - Failure path: evidence covers lockfile discovery and CLI requires-running-server
+      behavior, plus shell Result-return semantics for the 2 named functions
+
+      - Proof: sibling search notes show no remaining same-family regressions in the
+      touched runtime/CLI and instruction surfaces
+
+      - Root cause evidence explains why the blocker family is closed, not just the
+      observed symptoms'
+    depends_on:
+    - cleanup.impl
+    agent: python-senior
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
