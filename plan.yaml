@@ -32364,6 +32364,57 @@ phases:
     depends_on:
     - notifications.gate_retest
     agent: python-senior
+  - id: notifications.gate_retest2
+    name: notifications.gate_retest2
+    status: pending
+    description: 'Independent retest of second notifications gate remediation.
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate that multi-session
+      upstream capture binding and lint cleanup are correct from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: two distinct upstream sessions map to distinct connection ids
+
+      - Edge cases: disconnect cleanup remains isolated so one session cleanup does
+      not corrupt peer capture state
+
+      - Error scenarios: notification forwarding and disconnect leak regressions still
+      pass after the binding change
+
+      - Lint/compliance: rerun lint for the previously blocked files
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1
+
+
+      Required reruns:
+
+      - two-session distinct-connection regression
+
+      - disconnect leak probes
+
+      - notification forwarding tests
+
+      - lint for targeted files'
+    verification: '- Verify two distinct upstream sessions map to distinct connection
+      ids
+
+      - Rerun disconnect leak probes and notification forwarding tests
+
+      - Rerun lint for `src/tela/shell/upstream.py` and `tests/shell/test_notification_forwarding.py`
+
+      - Evidence includes whether any session still overwrites a peer capture binding'
+    depends_on:
+    - notifications.gate_fix_batch2
+    agent: integration-verifier
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
