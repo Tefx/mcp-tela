@@ -30502,6 +30502,100 @@ phases:
     depends_on:
     - tool_meta.verify
     agent: gate-reviewer
+  - id: tool_meta.gate_fix_batch
+    name: 'Batched remediation: preserve metadata in _list_tools'
+    status: pending
+    description: 'Fix ALL gate blockers for tool metadata preservation.
+
+
+      step_type: implementation
+
+
+      Files:
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_list_tools_metadata.py
+
+      - related targeted metadata tests exercising the real _list_tools path
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+
+      ## Root Cause vs Symptom:
+
+      - Root cause: the final shell-stage construction of mcp_types.Tool in _list_tools
+      drops metadata fields instead of forwarding the resolved values.
+
+      - Symptom: annotations, title, and outputSchema are present upstream but omitted
+      from the final Tool object.
+
+      - Why this fix is not surface-level: it must close end-to-end data loss at the
+      final stage and prove the real _list_tools path preserves metadata.
+
+
+      ### B1: _list_tools omits metadata forwarding
+
+      Locations: src/tela/shell/gateway.py
+
+      Remediation: update _list_tools so mcp_types.Tool receives annotations, title,
+      and outputSchema from the resolved tool payload without renaming or dropping
+      fields.
+
+      Grep hint: rg "_list_tools|mcp_types\.Tool|outputSchema|annotations|title" src/tela/shell/gateway.py
+      tests
+
+      IMPORTANT: Search for sibling metadata forwarding gaps beyond the reported constructor
+      site.
+
+
+      ### B2: tests do not sufficiently exercise the real _list_tools path
+
+      Locations: tests/shell/test_list_tools_metadata.py and related targeted metadata
+      tests
+
+      Remediation: add or adjust targeted tests so the actual _list_tools path is
+      exercised end-to-end, including full metadata forwarding and explicit metadata-preservation
+      assertions.
+
+      Grep hint: rg "list_tools|outputSchema|annotations|title|metadata" tests/shell
+      tests/core
+
+      IMPORTANT: Search for sibling tests that only assert intermediate pipeline stages
+      without validating final Tool construction.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Metadata preserved in resolve_tools or handle_tools_list but still dropped
+      in _list_tools
+
+      2. Tests that only inspect intermediate dicts instead of the final mcp_types.Tool
+      path
+
+      3. Missing coverage for present/absent/partial metadata preservation through
+      the real final stage'
+    verification: '- Main path: targeted metadata tests cover the actual _list_tools
+      path end-to-end
+
+      - Failure path: regression probe demonstrates metadata would be lost without
+      the forwarding change and is now preserved for annotations/title/outputSchema
+
+      - Proof: no remaining final-stage metadata drop in _list_tools where migration
+      scope requires forwarding'
+    depends_on:
+    - tool_meta.verify
+    agent: python-executor
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
