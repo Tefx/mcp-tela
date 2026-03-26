@@ -29702,3 +29702,89 @@ phases:
     depends_on:
     - tool_meta.test
     agent: python-executor
+  - id: tool_meta.verify
+    name: 'Integration verification: tool metadata round-trip'
+    status: pending
+    description: 'As an INDEPENDENT TESTER, verify the full tool metadata round-trip.
+
+
+      tags: ["integration"]
+
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      ## Required Evidence
+
+
+      ### Pipeline proof: resolve_tools -> handle_tools_list -> _list_tools
+
+      Create or run a test that:
+
+      1. Provides a raw tool dict with annotations, title, and outputSchema
+
+      2. Calls resolve_tools
+
+      3. Verifies ResolvedTool has all fields
+
+      4. Calls handle_tools_list with a registry containing that tool
+
+      5. Verifies output dict contains all metadata fields
+
+      6. Verifies mcp_types.Tool would receive all fields
+
+
+      ### Edge cases
+
+      - Tool with no metadata fields (None defaults)
+
+      - Tool with only annotations (partial)
+
+      - Tool with empty dict annotations vs None annotations
+
+
+      Independence Level: L1'
+    verification: '- Pipeline proof shows metadata flows end-to-end
+
+      - Edge cases verified
+
+      - No data loss in round-trip'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact command or test name>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: resolve_tools -> handle_tools_list -> _list_tools
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND'
+    depends_on:
+    - tool_meta.impl
+    agent: integration-verifier
