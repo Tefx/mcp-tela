@@ -30780,7 +30780,7 @@ phases:
   - id: tool_meta.gate_retest2
     name: 'Second independent retest: downstream gateway metadata regression and tool_meta
       gate intersection'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the second
       batched remediation for tool_meta from a fresh perspective.
 
@@ -30834,6 +30834,44 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T21:19:10.730560+00:00'
+    done_at: '2026-03-26T21:23:08.848436+00:00'
+    evidence: 'Artifact:
+
+      - Retest executed against post-fix state (tool_meta second remediation)
+
+
+      Verification:
+
+      - `uv run python -m pytest tests/shell/test_gateway.py::test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream
+      -v` -> passed
+
+      - `uv run python -m pytest tests/shell/test_gateway.py -k "meta" -v` -> metadata-preservation
+      gateway tests passed
+
+      - `uv run python -m pytest tests/repro/test_connect_runtime_liveness.py -v`
+      -> passed
+
+      - `uv run mypy tests/repro/test_connect_runtime_liveness.py` -> clean
+
+      - `uv run python -m pytest tests/ -q` -> full suite passed
+
+      - `uv run invar guard` -> passed
+
+
+      Spec link:
+
+      - tool_meta.gate_retest2
+
+
+      Findings:
+
+      - Prior MCP validation failure (`''result'' is a required property`) no longer
+      reproducible
+
+      - Metadata survives real downstream path and final gateway stage
+
+      - Mypy seam at repro line classified non-blocking for tool_meta acceptance with
+      explicit intersection analysis'
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
