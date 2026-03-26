@@ -226,55 +226,38 @@ def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str
         Result with merged Markdown string, or None if nothing to merge.
     """
 
-    # Get downstream instructions from connected servers
     instructions_result = get_server_instructions()
     if instructions_result.is_err:
         return Result(error=instructions_result.error)
     assert instructions_result.value is not None
     downstream_instructions = instructions_result.value
 
-    # Get tool names from registry
     tools_result = get_all_tools()
     if tools_result.is_err:
         return Result(error=tools_result.error)
     assert tools_result.value is not None
     tools_by_server = tools_result.value
 
-    # Build merged instructions
     parts: list[str] = []
-
     for server_name, server_config in config.servers.items():
-        # Determine final instructions for this server
         final_instructions: str | None = None
-
-        # Apply instruction modes
         if server_config.instructions is False:
-            # Suppress mode - skip this server entirely
             continue
         elif isinstance(server_config.instructions, str):
-            # Override mode - use the override text
             final_instructions = server_config.instructions
         else:
-            # Passthrough mode (None) - use downstream if available
             final_instructions = downstream_instructions.get(server_name)
-
-        # Skip if no instructions to contribute
         if not final_instructions:
             continue
 
-        # Build section with H2 header
         section = f"## {server_name}\n\n{final_instructions}"
-
-        # Add tools list if available
         server_tools = tools_by_server.get(server_name, [])
         if server_tools:
             tool_names = [tool.name for tool in server_tools]
             tools_list = "\n".join(f"- {name}" for name in sorted(tool_names))
             section += f"\n\nAvailable tools:\n{tools_list}"
-
         parts.append(section)
 
-    # Return None if no servers contribute
     if not parts:
         return Result(value=None)
 
@@ -341,7 +324,10 @@ def _register_profiles_resource(upstream_server: FastMCP) -> None:
 def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     """Wire upstream handlers into FastMCP request handling."""
 
+    from mcp.server.lowlevel.server import request_ctx
+
     from tela.shell.upstream import (
+        capture_session,
         handle_initialize,
         handle_tools_call,
         handle_tools_list,
@@ -370,6 +356,13 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     @upstream_server._mcp_server.list_tools()
     async def _list_tools() -> list[mcp_types.Tool]:
         connection = await _ensure_connection()
+
+        # Capture upstream MCP session for notification delivery.
+        try:
+            capture_session(connection.connection_id, request_ctx.get().session)
+        except LookupError:
+            pass  # No request context (e.g. stdio without session capture)
+
         tools_result = await handle_tools_list(connection)
         if tools_result.is_err:
             raise RuntimeError(tools_result.error or "TOOLS_LIST_REJECTED")
@@ -636,6 +629,11 @@ async def gateway_shutdown() -> Result[None, str]:
     if audit_close_result.is_err:
         return audit_close_result
     _set_reload_notify_callback(None)
+
+    # Clear captured upstream sessions to prevent stale notification attempts.
+    from tela.shell.upstream import _session_registry, _session_registry_lock
+    with _session_registry_lock:
+        _session_registry.clear()
     with _runtime_lock:
         _runtime.config = None
         _runtime.startup_config = None

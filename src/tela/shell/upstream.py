@@ -613,10 +613,11 @@ async def notify_tools_changed(
         await session.send_tool_list_changed()
     except Exception:
         logger.warning(
-            "Failed to send tools/list_changed to %s (digest=%s)",
+            "Failed to send tools/list_changed to %s (digest=%s), removing stale session",
             connection.connection_id,
             tools_digest,
             exc_info=True,
         )
+        release_session(connection.connection_id)
         return Result(error=f"NOTIFICATION_SEND_FAILED: {connection.connection_id}")
     return Result(value=None)
