@@ -27443,7 +27443,7 @@ phases:
       \ model surface"
   - id: rem.suggestions.verify-suggestion-pack
     name: Verify suggestion uptake pack
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -27501,6 +27501,21 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T05:45:34.188922+00:00'
+    done_at: '2026-03-26T05:48:08.304695+00:00'
+    evidence: '## Suggestion Verification Report
+
+      - invalid bearer regression present: YES (unit + integration negative cases,
+      spec-derived, explicit 401/AUTH_INVALID_TOKEN assertions)
+
+      - lockfile schema regression present: YES (schema-invalid paths + minimal valid
+      fixture from INTERFACES §7.3)
+
+      - StatusResponse docs aligned: YES (`docs/INTERFACES.md` now explicitly documents
+      count-vs-collection semantics and field guarantees)
+
+      - issues found: NONE
+
+      - verdict: PASS'
   - id: rem.suggestions.gate
     name: Gate suggestion uptake phase
     status: pending
