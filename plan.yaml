@@ -30660,3 +30660,32 @@ phases:
     depends_on:
     - post.deep_review.spec_conformance
     agent: blind-tester
+  - id: post.deep_review.gate
+    name: Final deep review gate
+    status: pending
+    description: 'Final gate: Consolidate all deep review findings and make go/no-go
+      decision.
+
+
+      review_depth: THOROUGH
+
+
+      This is the final quality gate for the entire plan. Block if:
+
+      - Any wiring audit orphans found
+
+      - Spec-code drift detected
+
+      - Concurrency safety gaps in session management
+
+      - Black-box tests found observable regressions'
+    verification: '- All deep review steps passed or issues resolved
+
+      - No blocking findings remain
+
+      - Plan complete'
+    depends_on:
+    - post.deep_review.spec_conformance
+    - post.deep_review.architecture
+    - post.deep_review.black_box
+    agent: gate-reviewer
