@@ -28044,7 +28044,7 @@ phases:
 
       '
     depends_on:
-    - rem.final_verify.full-invar-guard
+    - rem.final_verify.retest-full-invar-complexity-debt
     agent: blind-tester
   - id: rem.final_verify.gate
     name: Gate final remediation verification
