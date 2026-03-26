@@ -109,6 +109,7 @@ def write_lockfile(data: LockfileData) -> Result[None, str]:
         )
     )
 )
+# @shell_complexity: lockfile I/O branches on file-read, JSON-parse, and stale-PID detection.
 def read_lockfile() -> Result[LockfileData, str]:
     """Read and parse ``~/.tela/gateway.lock``.
 

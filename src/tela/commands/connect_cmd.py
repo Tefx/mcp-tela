@@ -234,6 +234,7 @@ def _discover_or_autostart(
     )
 
 
+# @shell_complexity: polling loop branches on deadline, stale state, and PID identity filter.
 def _wait_for_live_lockfile(
     timeout_seconds: float,
     expected_pid: int | None = None,
@@ -307,6 +308,7 @@ def _autostart_serve(
     return Result(value=proc.pid)
 
 
+# @shell_complexity: bridge lifecycle coordinates signal handling, connect, forward, and disconnect.
 def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]:
     """Run connect/register/forward/disconnect lifecycle.
 
@@ -541,15 +543,11 @@ def _is_transient_url_error(exc: urllib_error.URLError) -> Result[bool, str]:
             errno.EPIPE,
             errno.ETIMEDOUT,
         }
-        if reason.errno in transient_errnos:
-            return Result(value=True)
-        if isinstance(reason, (ConnectionRefusedError, ConnectionResetError, BrokenPipeError)):
-            return Result(value=True)
-    if isinstance(reason, (ConnectionRefusedError, ConnectionResetError, BrokenPipeError)):
-        return Result(value=True)
+        return Result(value=reason.errno in transient_errnos)
     return Result(value=False)
 
 
+# @shell_complexity: HTTP POST with transient retry and SSE/JSON content-type dispatch.
 def _post_mcp_message(
     *,
     mcp_url: str,
@@ -642,6 +640,7 @@ def _parse_sse_payloads(raw_body: bytes) -> Result[list[bytes], str]:
     return Result(value=payloads)
 
 
+# @shell_complexity: HTTP POST with transient retry and backoff on connection errors.
 def _post_json(
     *, url: str, bearer_token: str, payload: dict[str, str]
 ) -> Result[None, str]:

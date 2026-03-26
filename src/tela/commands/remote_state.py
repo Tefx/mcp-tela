@@ -54,6 +54,7 @@ def query_remote_state() -> Result[RemoteGatewayState, str]:
     return _parse_remote_state(payload_result.value)
 
 
+# @shell_complexity: HTTP request branches on transport errors, HTTP errors, and JSON-parse.
 def _fetch_status_payload(lockfile: LockfileData) -> Result[dict[str, object], str]:
     """Fetch ``GET /status`` payload from lockfile endpoint."""
 

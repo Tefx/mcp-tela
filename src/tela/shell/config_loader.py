@@ -24,6 +24,7 @@ from tela.core.models import TelaConfig
 from tela.shell.result import Result  # noqa: F401
 
 
+# @shell_complexity: config I/O requires file-read, YAML-parse, and validation error branches.
 def load_config(
     path: Path | None = None, default_profile: str | None = None
 ) -> Result[TelaConfig, str]:
