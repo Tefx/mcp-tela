@@ -26563,7 +26563,7 @@ phases:
       - PASS (loop2 blocker family unblocked for rem.bridge_flake.gate)'
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
-  status: in_progress
+  status: done
   depends_on:
   - rem.blockers
   steps:
@@ -27122,7 +27122,7 @@ phases:
       - `rem.hygiene.gate` blocker family B1-B4, S1'
   - id: rem.hygiene.retest-gate-blockers
     name: Retest hygiene gate blockers
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -27198,9 +27198,32 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T05:27:32.561324+00:00'
+    done_at: '2026-03-26T05:31:42.246960+00:00'
+    evidence: 'Artifact:
+
+      - Retest task: ses_2d762d4a4ffeodDKeCUHxTlJzb
+
+
+      Verification:
+
+      - Re-ran lint and repro/runtime suites from fresh context
+
+      - Re-ran authoritative invar full-scan command family
+
+      - Produced per-finding verdicts for B1, B2, B3, B4, S1
+
+      - Confirmed retained RD1/RD2 with explicit non-intersection rationale + ownership
+
+
+      Outcome:
+
+      - B1/B2/B3/B4/S1: PASS in independent retest
+
+      - RD1/RD2: retained structural debt, explicitly documented as non-intersecting
+      downstream gates'
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
-  status: locked
+  status: pending
   depends_on:
   - rem.hygiene
   steps:
