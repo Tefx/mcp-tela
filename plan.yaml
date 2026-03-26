@@ -30195,7 +30195,7 @@ phases:
       \ `output_schema` preserved for shell wire mapping translation"
   - id: tool_meta.test
     name: Tests for tool metadata round-trip
-    status: pending
+    status: claimed
     description: 'Write tests verifying the full metadata round-trip path.
 
 
@@ -30249,6 +30249,8 @@ phases:
     depends_on:
     - tool_meta.contract
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T17:44:19.796654+00:00'
   - id: tool_meta.impl
     name: Implement tool metadata forwarding through pipeline
     status: pending
