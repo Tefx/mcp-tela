@@ -31092,7 +31092,7 @@ phases:
       compliant.'
   - id: instructions.test
     name: Tests for instructions merge logic
-    status: pending
+    status: claimed
     description: 'Write tests for the enhanced _merge_downstream_instructions function.
 
 
@@ -31163,6 +31163,8 @@ phases:
     depends_on:
     - instructions.contract
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T21:45:15.001665+00:00'
   - id: instructions.impl
     name: Implement instructions merge and config docs
     status: pending
