@@ -30433,3 +30433,62 @@ phases:
   status: locked
   depends_on:
   - notifications
+  steps:
+  - id: post.doc_sync.update
+    name: Update documentation to match implementation
+    status: pending
+    description: 'Sync all project documentation with the implemented changes.
+
+
+      ## Required Updates
+
+
+      ### docs/DESIGN.md
+
+      - Document ResolvedTool''s new fields (annotations, title, output_schema)
+
+      - Document ServerConfig.instructions field and its three modes
+
+      - Document session capture and notification forwarding mechanism
+
+      - Remove any references to _register_registry_tools if mentioned
+
+
+      ### docs/INTERFACES.md
+
+      - Document tool metadata fields in the tools/list response
+
+      - Document instructions configuration options
+
+      - Document notification forwarding behavior
+
+
+      ### README.md
+
+      - Update feature list if tool metadata and instructions are mentioned
+
+      - Ensure CLI examples are still accurate
+
+
+      ### docs/USAGE.md
+
+      - Add instructions configuration examples
+
+      - Document tool metadata passthrough behavior
+
+
+      ## Completion Criteria
+
+      - All docs reflect current implementation
+
+      - No stale references to removed dead code
+
+      - Instructions config documented with examples
+
+      - Tool metadata fields documented'
+    verification: '- Docs match implementation
+
+      - No stale references
+
+      - Instructions and metadata documented'
+    agent: doc-reviewer
