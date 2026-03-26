@@ -27518,7 +27518,7 @@ phases:
       - verdict: PASS'
   - id: rem.suggestions.gate
     name: Gate suggestion uptake phase
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: default
@@ -27547,6 +27547,8 @@ phases:
     - rem.suggestions.document-statusresponse-field-guarantees
     - rem.suggestions.verify-suggestion-pack
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-26T05:48:37.916033+00:00'
 - id: rem.final_verify
   name: Final Remediation Verification
   status: locked
