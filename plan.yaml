@@ -29474,7 +29474,7 @@ phases:
       \ owned by new steps."
   - id: cleanup.verify
     name: Verify dead code removal
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the dead
       code removal after the batched full-suite retest.
 
@@ -29547,6 +29547,21 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T17:09:08.058064+00:00'
+    done_at: '2026-03-26T17:15:50.958949+00:00'
+    evidence: "## Verification Report\n\n**Tester**: integration-verifier (independent)\n\
+      **Independence Level**: L1\n\n### Test Execution\n- `uv run python -m pytest`\
+      \ -> 600 passed, 3 warnings\n- `uv run invar guard` -> passed (0 errors, 0 warnings)\n\
+      \n### Orphan Check\n- Removed wrappers/functions have no stale references in\
+      \ target files:\n  - `_make_registry_tool_handler` removed, no remaining refs\n\
+      \  - `_register_registry_tools` removed, no remaining refs\n  - downstream wrappers\
+      \ `_open_stdio_client` / `_open_sse_client` removed from `downstream.py`\n-\
+      \ Live implementations remain in `downstream_clients.py` where expected\n- Return-type\
+      \ remediation verified:\n  - `get_server_instructions()` returns `Result[dict[str,\
+      \ str], str]`\n  - `_merge_downstream_instructions()` returns `Result[str |\
+      \ None, str]`\n\n### Import / Regression Integrity\n- No import errors across\
+      \ `tela.shell`, `tela.core`, `tela.commands`\n- Transport validation checks\
+      \ passed\n- Tool listing/calling checks passed\n- No regressions detected\n\n\
+      ### Verdict\n- PASS"
   - id: cleanup.gate
     name: 'Gate: Dead Code Removal'
     status: pending
