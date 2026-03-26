@@ -31980,7 +31980,7 @@ phases:
     agent: gate-reviewer
   - id: notifications.gate_fix_batch
     name: notifications.gate_fix_batch
-    status: pending
+    status: claimed
     description: 'Fix ALL notifications gate blockers in one batched remediation step.
 
 
@@ -32060,6 +32060,8 @@ phases:
     depends_on:
     - notifications.verify
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T23:01:56.778450+00:00'
   - id: notifications.gate_retest
     name: notifications.gate_retest
     status: pending
