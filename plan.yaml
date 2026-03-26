@@ -29306,13 +29306,13 @@ phases:
       Commit: `76959fd`'
 - id: cleanup
   name: Dead Code Removal
-  status: pending
+  status: in_progress
   depends_on:
   - rem.final_verify
   steps:
   - id: cleanup.impl
     name: 'Remove dead code: _register_registry_tools and unused downstream wrappers'
-    status: pending
+    status: claimed
     description: 'Remove verified dead code from two files. All items below confirmed
       dead via grep + FastMCP testing.
 
@@ -29455,6 +29455,8 @@ phases:
 
       ```'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T16:46:46.854284+00:00'
   - id: cleanup.verify
     name: Verify dead code removal
     status: pending
