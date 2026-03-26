@@ -29835,7 +29835,7 @@ phases:
       family)'
   - id: cleanup.gate_fix_batch
     name: Batched remediation for cleanup gate findings
-    status: pending
+    status: claimed
     description: 'Fix ALL cleanup gate blockers and disposition the over-broad warning
       concern.
 
@@ -29947,6 +29947,8 @@ phases:
     depends_on:
     - cleanup.verify
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T17:23:18.276030+00:00'
   - id: cleanup.gate_retest
     name: Retest cleanup gate after batched remediation
     status: pending
