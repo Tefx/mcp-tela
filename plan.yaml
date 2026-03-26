@@ -30504,7 +30504,7 @@ phases:
     agent: gate-reviewer
   - id: tool_meta.gate_fix_batch
     name: 'Batched remediation: preserve metadata in _list_tools'
-    status: claimed
+    status: done
     description: 'Fix ALL gate blockers for tool metadata preservation.
 
 
@@ -30598,6 +30598,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T20:52:12.133898+00:00'
+    done_at: '2026-03-26T20:58:22.692306+00:00'
+    evidence: "Artifact:\n- commit: `c4ed7b1`\n\nVerification:\n- Targeted real-path\
+      \ metadata tests passed:\n  - `uv run pytest tests/shell/test_gateway.py::test_list_tools_preserves_all_metadata_fields\
+      \ tests/shell/test_gateway.py::test_list_tools_preserves_partial_metadata tests/shell/test_gateway.py::test_list_tools_handles_absent_metadata\
+      \ tests/shell/test_gateway.py::test_list_tools_preserves_only_title tests/shell/test_gateway.py::test_list_tools_preserves_only_output_schema\
+      \ tests/shell/test_gateway.py::test_list_tools_preserves_only_annotations tests/shell/test_list_tools_metadata.py\
+      \ -v`\n- Full pytest run recorded one unrelated pre-existing failure outside\
+      \ metadata-forwarding scope\n- `uv run invar guard` passed (pre-existing warnings\
+      \ only)\n\nSpec link:\n- tool_meta.gate_fix_batch\n\nNotes:\n- Closed final-stage\
+      \ data loss by forwarding `annotations`, `title`, and `outputSchema` in `_list_tools`\
+      \ when constructing `mcp_types.Tool`\n- Added/updated gateway-path tests that\
+      \ exercise real final-stage metadata preservation (not only intermediate dict\
+      \ shaping)"
   - id: tool_meta.gate_retest
     name: 'Retest: tool metadata preservation through _list_tools'
     status: pending
