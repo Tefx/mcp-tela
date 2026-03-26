@@ -27886,7 +27886,7 @@ phases:
       \ runtime paths, lockfile schema tests)."
   - id: rem.final_verify.full-invar-guard
     name: Run full invar guard over complete plan scope
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -27959,6 +27959,8 @@ phases:
     depends_on:
     - rem.final_verify.affected-suite-broad-pass
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T06:17:05.071477+00:00'
   - id: rem.final_verify.runtime-liveness-blackbox
     name: Run final runtime liveness black-box probe
     status: pending
