@@ -31034,13 +31034,13 @@ phases:
       - Assertions for title/outputSchema/annotations preserved; no weakening detected'
 - id: instructions
   name: Instructions Merge Improvements
-  status: pending
+  status: in_progress
   depends_on:
   - tool_meta
   steps:
   - id: instructions.contract
     name: 'Contract: Add instructions field to ServerConfig'
-    status: pending
+    status: claimed
     description: "Add `instructions` field to ServerConfig in src/tela/core/models.py.\n\
       \nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - field\
       \ definition on ServerConfig\n\nType: `bool | str | None`, default `None`\n\n\
@@ -31063,6 +31063,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T21:42:05.822707+00:00'
   - id: instructions.test
     name: Tests for instructions merge logic
     status: pending
