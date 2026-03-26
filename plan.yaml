@@ -32268,7 +32268,7 @@ phases:
       - PASS'
   - id: notifications.gate_fix_batch2
     name: notifications.gate_fix_batch2
-    status: claimed
+    status: done
     description: 'Fix second notifications gate blocker batch.
 
 
@@ -32366,6 +32366,41 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T23:18:45.646939+00:00'
+    done_at: '2026-03-26T23:32:15.853279+00:00'
+    evidence: 'Artifact:
+
+      - commits: `2e11a80`, `2c70fec`
+
+
+      Verification:
+
+      - full pytest: 670 passed
+
+      - targeted notification/upstream/disconnect suites: passed
+
+      - targeted lint for previously blocked files: passed
+
+      - invar guard: passed (no blocking errors)
+
+
+      Spec link:
+
+      - notifications.gate_fix_batch2
+
+
+      Fixes delivered:
+
+      - `_ensure_connection` now session-aware; no unconditional `connections[0]`
+      aliasing
+
+      - Added reverse lookup helpers to bind session -> connection id correctly
+
+      - `capture_session` semantics tightened (first binding preserved, same-session
+      idempotent, conflicting session rejected)
+
+      - disconnect cleanup semantics preserved and regressions kept green
+
+      - removed targeted F401 lint blockers'
   - id: notifications.gate_retest2
     name: notifications.gate_retest2
     status: pending
