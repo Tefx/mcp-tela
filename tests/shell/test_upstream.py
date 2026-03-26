@@ -700,10 +700,10 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
     )
     get_runtime().connections.clear()
 
-    import tela.shell.downstream
+    import tela.shell.upstream
 
-    original_get_all_tools = tela.shell.downstream.get_all_tools
-    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
 
     try:
         result = asyncio.run(handle_initialize({"client": "test"}))
@@ -719,7 +719,7 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
         assert tool_dict["name"] == "read_file"
         assert tool_dict["title"] == "File Reader"
     finally:
-        tela.shell.downstream.get_all_tools = original_get_all_tools
+        tela.shell.upstream.get_all_tools = original_get_all_tools
 
 
 def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
@@ -765,10 +765,10 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
     )
     get_runtime().connections.clear()
 
-    import tela.shell.downstream
+    import tela.shell.upstream
 
-    original_get_all_tools = tela.shell.downstream.get_all_tools
-    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
 
     try:
         result = asyncio.run(handle_initialize({"client": "test"}))
@@ -782,7 +782,7 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
         tool_dict = tools_result.value[0]
         assert tool_dict["outputSchema"] == {"type": "string"}
     finally:
-        tela.shell.downstream.get_all_tools = original_get_all_tools
+        tela.shell.upstream.get_all_tools = original_get_all_tools
 
 
 def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
@@ -828,10 +828,10 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
     )
     get_runtime().connections.clear()
 
-    import tela.shell.downstream
+    import tela.shell.upstream
 
-    original_get_all_tools = tela.shell.downstream.get_all_tools
-    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
 
     try:
         result = asyncio.run(handle_initialize({"client": "test"}))
@@ -845,7 +845,7 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
         tool_dict = tools_result.value[0]
         assert tool_dict["annotations"] == {"readOnlyHint": True}
     finally:
-        tela.shell.downstream.get_all_tools = original_get_all_tools
+        tela.shell.upstream.get_all_tools = original_get_all_tools
 
 
 def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
@@ -891,10 +891,10 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
     )
     get_runtime().connections.clear()
 
-    import tela.shell.downstream
+    import tela.shell.upstream
 
-    original_get_all_tools = tela.shell.downstream.get_all_tools
-    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
 
     try:
         result = asyncio.run(handle_initialize({"client": "test"}))
@@ -912,4 +912,4 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
         assert tool_dict.get("outputSchema") is None
         assert tool_dict.get("annotations") is None
     finally:
-        tela.shell.downstream.get_all_tools = original_get_all_tools
+        tela.shell.upstream.get_all_tools = original_get_all_tools

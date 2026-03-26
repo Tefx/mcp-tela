@@ -292,6 +292,13 @@ async def handle_tools_list(
                 "name": t.name,
                 "inputSchema": t.schema_ or {},
                 "description": t.description,
+                **({"annotations": t.annotations} if t.annotations is not None else {}),
+                **({"title": t.title} if t.title is not None else {}),
+                **(
+                    {"outputSchema": t.output_schema}
+                    if t.output_schema is not None
+                    else {}
+                ),
             }
             for t in permitted
         ]

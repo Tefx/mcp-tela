@@ -62,10 +62,10 @@ def test_list_tools_output_dict_includes_all_metadata_fields() -> None:
     )
     get_runtime().connections.clear()
 
-    import tela.shell.downstream
+    import tela.shell.upstream
 
-    original_get_all_tools = tela.shell.downstream.get_all_tools
-    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
 
     try:
         result = asyncio.run(handle_initialize({"client": "test"}))
@@ -86,7 +86,7 @@ def test_list_tools_output_dict_includes_all_metadata_fields() -> None:
         assert tool_dict["outputSchema"] == {"type": "string"}
         assert tool_dict["annotations"] == {"readOnlyHint": True}
     finally:
-        tela.shell.downstream.get_all_tools = original_get_all_tools
+        tela.shell.upstream.get_all_tools = original_get_all_tools
 
 
 def test_mcp_types_tool_accepts_metadata_fields() -> None:
