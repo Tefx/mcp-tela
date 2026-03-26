@@ -30472,7 +30472,7 @@ phases:
       \nIssues Found:\n- none\n\nVerdict:\n- PASS"
   - id: tool_meta.gate
     name: 'Gate: Tool Metadata Restoration'
-    status: claimed
+    status: pending
     description: 'Gate review: Verify tool_meta phase completion.
 
 
@@ -30502,8 +30502,6 @@ phases:
     depends_on:
     - tool_meta.gate_retest2
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-26T21:23:30.077990+00:00'
   - id: tool_meta.gate_fix_batch
     name: 'Batched remediation: preserve metadata in _list_tools'
     status: done
