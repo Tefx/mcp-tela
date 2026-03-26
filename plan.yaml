@@ -30012,3 +30012,87 @@ phases:
     depends_on:
     - instructions.test
     agent: python-executor
+  - id: instructions.verify
+    name: 'Integration verification: instructions merge'
+    status: pending
+    description: 'As an INDEPENDENT TESTER, verify the instructions merge improvements.
+
+
+      tags: ["integration"]
+
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      ## Required Evidence
+
+
+      ### Merge output format
+
+      Verify the merged instructions output:
+
+      - Uses H2 Markdown headers
+
+      - Includes tool names in header: `## server_name (tools: tool1, tool2)`
+
+      - Each server section separated by blank lines
+
+
+      ### Config mode behavior
+
+      - Passthrough: downstream instructions forwarded
+
+      - Suppress: False config excludes server
+
+      - Override: string config replaces downstream text
+
+
+      ### Edge cases
+
+      - Server with no downstream instructions and no override -> omitted
+
+      - All servers suppressed -> None returned
+
+      - Server with override but no tools registered -> header has empty tools list
+
+
+      Independence Level: L1'
+    verification: '- Merge format matches spec
+
+      - All config modes work correctly
+
+      - Edge cases handled'
+    evidence_template: '## Integration Evidence
+
+
+      **Merge output sample**:
+
+      ```
+
+      <actual merged instructions output>
+
+      ```
+
+
+      **Config mode verification**:
+
+      | Mode | Input | Expected | Actual | Status |
+
+      |------|-------|----------|--------|--------|
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND'
+    depends_on:
+    - instructions.impl
+    agent: integration-verifier
