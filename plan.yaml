@@ -28255,7 +28255,7 @@ phases:
       guidance'
   - id: rem.final_verify.retest-full-invar-complexity-debt
     name: Retest full invar guard after batched complexity remediation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -28315,3 +28315,22 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T06:32:05.245607+00:00'
+    done_at: '2026-03-26T06:34:28.781455+00:00'
+    evidence: 'Artifact:
+
+      - Retest task: ses_2d7273c12ffevvO08GbUbP9HXg
+
+
+      Verification:
+
+      - exact command family rerun: `uvx invar-tools guard --all`
+
+      - outcome: PASS (0 blocker errors)
+
+      - remaining warnings/infos inventoried and classified as non-blocking advisory
+      debt
+
+
+      Spec link:
+
+      - `rem.final_verify.full-invar-guard` + complexity-debt remediation retest requirement'
