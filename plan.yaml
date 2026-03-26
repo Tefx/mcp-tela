@@ -26986,6 +26986,94 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T04:56:35.854051+00:00'
+  - id: rem.hygiene.fix-gate-blockers
+    name: Fix gate blockers for hygiene phase
+    status: pending
+    description: "step_type: implementation\nagent_source: default\npriority: HIGH\n\
+      symbolic_testing: true\nprior_loop:\n  - rem.hygiene.verify-hygiene-pack\n \
+      \ - rem.hygiene.gate\nremaining_blocker: Resolve all blocker and should-fix\
+      \ findings from rem.hygiene.gate so downstream remediation and final verification\
+      \ are not poisoned by hygiene debt.\nwhy_new_loop: The failed gate reported\
+      \ a mixed blocker family spanning lint, runtime liveness repro stability, full-scan\
+      \ invar violations, orphan-export/debt disposition, and shell_result rationale\
+      \ centralization. Editing prior completed steps would hide the new acceptance\
+      \ boundary; a single batched remediation step is required.\n\nFix ALL findings\
+      \ from rem.hygiene.gate. This is a batched remediation step for blocker-class\
+      \ debt plus the recorded should-fix item. ALL listed items must be addressed\
+      \ together, not one-at-a-time.\n\n## Root Cause vs Symptom\n- Root cause: hygiene\
+      \ verification exposed unresolved repo-level drift across lint cleanliness,\
+      \ runtime liveness reproducibility, shell/core classification boundaries, artifact-script\
+      \ policy, and disposition ownership for retained debt.\n- Symptom: rem.hygiene.gate\
+      \ remained blocked by F841 noise, unstable liveness repro tests, invar full-scan\
+      \ errors, and missing explicit non-intersection / wiring rationale.\n- Why this\
+      \ fix is not surface-level: the work must close blocker families at source and\
+      \ document non-intersection where work is intentionally deferred; it is not\
+      \ sufficient to silence a single failing assertion or add a narrow allow.\n\
+      - Command lock: use the project full-scan command family required by the repo\
+      \ for authoritative hygiene verification; do not substitute alternate command\
+      \ families.\n- Fresh-environment requirement: runtime/liveness and full-scan\
+      \ repro evidence must be gathered from a fresh/cold environment in the follow-up\
+      \ retest.\n\n## Blockers to Fix (ALL of these, not just the first)\n\n### B1:\
+      \ Ruff F841 in tests/repro/test_gate_blocker_regressions.py\nLocations: tests/repro/test_gate_blocker_regressions.py\n\
+      Remediation: remove or use the unused `alive` binding without weakening the\
+      \ regression intent.\nGrep hint: rg -n \"\\balive\\b\" tests/repro/test_gate_blocker_regressions.py\n\
+      IMPORTANT: search sibling repro tests for similar dead locals before claiming\
+      \ done.\n\n### B2: Runtime repro instability / liveness failures\nLocations:\
+      \ tests/repro/test_liveness.py, tests/repro/test_connect_runtime_liveness.py\n\
+      Remediation: stabilize runtime/liveness repro paths, make the expected lifecycle\
+      \ contract explicit, and ensure failure-path assertions distinguish startup\
+      \ failure, premature exit, and successful steady-state liveness.\nGrep hint:\
+      \ rg -n \"liveness|alive|premature|timeout|steady\" tests/repro/test_liveness.py\
+      \ tests/repro/test_connect_runtime_liveness.py\nIMPORTANT: search sibling runtime\
+      \ repro and connect-runtime tests beyond the named files.\n\n### B3: Invar full-scan\
+      \ errors including src/tela/commands/connect_cmd.py shell_result classification\
+      \ and artifact script violations\nLocations: src/tela/commands/connect_cmd.py,\
+      \ artifact scripts implicated by the gate findings\nRemediation: correct shell/core\
+      \ classification and allow rationale placement so command behavior conforms\
+      \ to repo architecture rules; fix artifact-script violations instead of masking\
+      \ them.\nGrep hint: rg -n \"shell_result|@invar:allow|artifact|subprocess|Path\\\
+      (|open\\(\" src tests scripts\nIMPORTANT: search for sibling classification\
+      \ or artifact-policy violations beyond the cited file.\n\n### B4: Retained blocker\
+      \ debt / missing explicit non-intersection rationale and orphan-export wiring\
+      \ concerns\nLocations: evidence/disposition paths produced by hygiene verification;\
+      \ export/wiring surfaces implicated by the gate findings\nRemediation: either\
+      \ remediate the blocker-class debt now or record explicit non-intersection rationale\
+      \ naming why the issue is not authorized here, why it does not intersect remaining\
+      \ gates, and which future step would own it if that changes; close orphan-export\
+      \ wiring concerns with concrete ownership.\nGrep hint: rg -n \"non-intersection|orphan\
+      \ export|dead export|wiring|retained debt|tech debt\" .\nIMPORTANT: provenance\
+      \ is not disposition; pre-existing debt still needs blocker handling if it intersects\
+      \ downstream gates.\n\n### S1: shell_result budget near limit and rationale\
+      \ centralization\nLocations: shell_result allowances and rationale comments\
+      \ in affected shell surfaces\nRemediation: centralize rationale where practical\
+      \ and reduce budget pressure without weakening architectural enforcement.\n\
+      Grep hint: rg -n \"shell_result|budget|@invar:allow\" src tests\nIMPORTANT:\
+      \ this is should-fix, but must be included in the batch per gate findings.\n\
+      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\nEach deliverable must contain substantive logic,\
+      \ cleanup, or disposition evidence that varies with the actual affected paths\
+      \ and findings.\n\n## Completion Criteria\n- ALL blockers and the should-fix\
+      \ item addressed\n- Sibling search completed for each blocker family\n- Root-cause\
+      \ evidence explains why the changes close the blocker family, not only the observed\
+      \ symptom\n- Any deferred issue includes explicit non-intersection rationale\
+      \ and ownership path\n- No new orphan-export or shell_result rationale drift\
+      \ remains in the touched hygiene scope"
+    verification: '- Use the exact project-required full-scan command family for authoritative
+      verification; do not substitute alternate command families
+
+      - Provide grep/sibling-search evidence for each blocker family above
+
+      - Show the main-path fix evidence and the highest-risk failure-path evidence
+      for runtime liveness / disposition handling
+
+      - Explain root cause vs symptom for the invar and shell_result classification
+      repairs
+
+      - Confirm any retained issue has explicit non-intersection rationale and downstream
+      ownership or else is remediated now'
+    depends_on:
+    - rem.hygiene.gate
+    agent: python-senior
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
