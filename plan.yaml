@@ -29304,3 +29304,8 @@ phases:
       Supporting evidence file committed: `evidence/independent_retest_B1.md`
 
       Commit: `76959fd`'
+- id: cleanup
+  name: Dead Code Removal
+  status: pending
+  depends_on:
+  - rem.final_verify
