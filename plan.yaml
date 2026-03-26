@@ -30492,3 +30492,25 @@ phases:
 
       - Instructions and metadata documented'
     agent: doc-reviewer
+  - id: post.doc_sync.gate
+    name: 'Gate: Documentation Sync'
+    status: pending
+    description: 'Gate review: Verify documentation sync completeness.
+
+
+      review_depth: QUICK
+
+
+      Review criteria:
+
+      1. All new features documented
+
+      2. No stale references to removed code
+
+      3. Examples accurate'
+    verification: '- Docs complete and accurate
+
+      - No stale references'
+    depends_on:
+    - post.doc_sync.update
+    agent: gate-reviewer
