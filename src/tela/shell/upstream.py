@@ -3,14 +3,21 @@
 Implements the upstream-facing MCP protocol handler interfaces. Open-mode
 initialize binding is preserved from prior implementation. tools/list filtering
 uses the enforcement chain. tools/call strips _meta and runs enforcement.
+
+Session capture and notification contracts:
+- ``SessionCapture`` defines the interface for capturing upstream MCP sessions.
+- ``notify_tools_changed`` uses captured sessions to send real notifications.
+- Sessions are captured during handler registration in gateway wiring (not here).
 """
 
 from __future__ import annotations
 
+import logging
+import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Mapping
+from typing import Any, Mapping, Protocol, runtime_checkable
 
 from tela.core.models import (
     AuthMode,
@@ -36,6 +43,124 @@ from tela.shell.upstream_utils import (
     filter_tools_for_profile,
     strip_meta,
 )
+
+logger = logging.getLogger(__name__)
+
+
+# --- Session Capture Protocol ---
+
+
+@runtime_checkable
+class UpstreamSession(Protocol):
+    """Protocol for upstream MCP session objects that support tool-list notifications.
+
+    This protocol abstracts the ``ServerSession.send_tool_list_changed()`` method
+    so that ``notify_tools_changed`` can send real MCP notifications without
+    depending directly on the ``mcp`` package's concrete session type.
+
+    Implementors:
+        - ``mcp.server.session.ServerSession`` (production; satisfies this protocol)
+        - Test doubles for unit testing notification delivery
+
+    Gateway wiring captures the concrete session during handler registration
+    and stores it via ``capture_session``.
+    """
+
+    async def send_tool_list_changed(self) -> None:
+        """Send ``notifications/tools/list_changed`` to the upstream client."""
+        ...
+
+
+# Module-level session registry: connection_id -> UpstreamSession
+_session_registry: dict[str, UpstreamSession] = {}
+_session_registry_lock = threading.Lock()
+
+
+def capture_session(connection_id: str, session: UpstreamSession) -> Result[None, str]:
+    """Register an upstream MCP session for a connection.
+
+    Called by gateway handler wiring when a session is available from the
+    FastMCP context. The captured session enables ``notify_tools_changed``
+    to send real ``notifications/tools/list_changed`` messages.
+
+    Thread-safe: acquires ``_session_registry_lock``.
+
+    Examples:
+        >>> from tela.shell.upstream import capture_session, release_session
+        >>> class FakeSession:
+        ...     async def send_tool_list_changed(self) -> None: ...
+        >>> r = capture_session("conn_abc", FakeSession())
+        >>> r.is_ok
+        True
+        >>> _ = release_session("conn_abc")
+
+    Args:
+        connection_id: The connection identifier from ``ConnectionContext``.
+        session: The upstream MCP session implementing ``UpstreamSession``.
+
+    Returns:
+        Result[None, str] on success, or error if connection_id is empty.
+    """
+    if not connection_id:
+        return Result(error="SESSION_CAPTURE_FAILED: connection_id must not be empty")
+    with _session_registry_lock:
+        _session_registry[connection_id] = session
+    return Result(value=None)
+
+
+def release_session(connection_id: str) -> Result[None, str]:
+    """Remove a captured session for a disconnected connection.
+
+    Called during connection teardown to prevent session leaks.
+    Silently succeeds if the connection_id is not in the registry
+    (idempotent cleanup).
+
+    Thread-safe: acquires ``_session_registry_lock``.
+
+    Examples:
+        >>> from tela.shell.upstream import release_session
+        >>> r = release_session("nonexistent")
+        >>> r.is_ok
+        True
+
+    Args:
+        connection_id: The connection identifier to release.
+
+    Returns:
+        Result[None, str] always succeeds.
+    """
+    with _session_registry_lock:
+        _session_registry.pop(connection_id, None)
+    return Result(value=None)
+
+
+def get_captured_session(connection_id: str) -> Result[UpstreamSession, str]:
+    """Look up a captured session by connection ID.
+
+    Returns the session if found, or an error string if no session
+    is registered for the given connection.
+
+    Thread-safe: acquires ``_session_registry_lock``.
+
+    Examples:
+        >>> from tela.shell.upstream import get_captured_session
+        >>> r = get_captured_session("nonexistent")
+        >>> r.is_err
+        True
+        >>> "not found" in r.error
+        True
+
+    Args:
+        connection_id: The connection identifier to look up.
+
+    Returns:
+        Result[UpstreamSession, str] with the session or error.
+    """
+    with _session_registry_lock:
+        session = _session_registry.get(connection_id)
+    if session is None:
+        return Result(error=f"SESSION_NOT_FOUND: session for '{connection_id}' not found")
+    return Result(value=session)
 
 
 @dataclass(frozen=True)
@@ -443,21 +568,55 @@ def handle_profiles_list() -> Result[list[dict], str]:
 async def notify_tools_changed(
     connection: ConnectionContext,
     tools_digest: str,
-) -> None:
+) -> Result[None, str]:
     """Send notifications/tools/list_changed to an upstream client.
 
-    No-op until actual MCP transport is wired.
+    Looks up the captured ``UpstreamSession`` for the connection and calls
+    ``send_tool_list_changed()``. If no session is captured (e.g. the
+    connection was established before session capture was wired), the
+    notification is skipped with a debug log — this is not an error since
+    stdio transports may not have capturable sessions.
+
+    The ``tools_digest`` parameter is retained for audit/logging purposes
+    but is not sent over the wire (MCP ``tools/list_changed`` is a
+    parameter-less notification).
 
     Examples:
         >>> import asyncio
-        >>> asyncio.run(notify_tools_changed(
+        >>> from tela.core.models import ConnectionContext
+        >>> r = asyncio.run(notify_tools_changed(
         ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
         ...     "digest123",
         ... ))
+        >>> r.is_ok
+        True
 
     Args:
         connection: Target upstream connection.
-        tools_digest: Digest of the updated tool list.
+        tools_digest: Digest of the updated tool list (for audit/logging).
+
+    Returns:
+        Result[None, str] on success, or error string on send failure.
     """
-    if connection.connection_id and tools_digest:
-        return
+    session_result = get_captured_session(connection.connection_id)
+    if session_result.is_err:
+        logger.debug(
+            "No captured session for %s (digest=%s), skipping notification",
+            connection.connection_id,
+            tools_digest,
+        )
+        return Result(value=None)
+
+    assert session_result.value is not None
+    session = session_result.value
+    try:
+        await session.send_tool_list_changed()
+    except Exception:
+        logger.warning(
+            "Failed to send tools/list_changed to %s (digest=%s)",
+            connection.connection_id,
+            tools_digest,
+            exc_info=True,
+        )
+        return Result(error=f"NOTIFICATION_SEND_FAILED: {connection.connection_id}")
+    return Result(value=None)

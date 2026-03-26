@@ -340,8 +340,8 @@ def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
     ]
 
 
-def test_notify_tools_changed_is_noop() -> None:
-    """notify_tools_changed is a no-op until MCP transport is wired."""
+def test_notify_tools_changed_skips_without_session() -> None:
+    """notify_tools_changed returns Ok when no session is captured (graceful skip)."""
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import notify_tools_changed
@@ -349,8 +349,146 @@ def test_notify_tools_changed_is_noop() -> None:
     conn = ConnectionContext(
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
-    # Should not raise
-    asyncio.run(notify_tools_changed(conn, "digest"))
+    result = asyncio.run(notify_tools_changed(conn, "digest"))
+    assert result.is_ok
+
+
+def test_notify_tools_changed_sends_via_captured_session() -> None:
+    """notify_tools_changed calls send_tool_list_changed on a captured session."""
+    import asyncio
+    from tela.core.models import ConnectionContext
+    from tela.shell.upstream import capture_session, notify_tools_changed, release_session
+
+    sent: list[bool] = []
+
+    class StubSession:
+        async def send_tool_list_changed(self) -> None:
+            sent.append(True)
+
+    conn = ConnectionContext(
+        connection_id="c_with_session", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+    )
+    capture_session("c_with_session", StubSession())
+    try:
+        result = asyncio.run(notify_tools_changed(conn, "digest_abc"))
+        assert result.is_ok
+        assert sent == [True]
+    finally:
+        release_session("c_with_session")
+
+
+def test_notify_tools_changed_handles_session_send_failure() -> None:
+    """notify_tools_changed returns error when session.send_tool_list_changed raises."""
+    import asyncio
+    from tela.core.models import ConnectionContext
+    from tela.shell.upstream import capture_session, notify_tools_changed, release_session
+
+    class FailingSession:
+        async def send_tool_list_changed(self) -> None:
+            raise RuntimeError("transport closed")
+
+    conn = ConnectionContext(
+        connection_id="c_fail", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+    )
+    capture_session("c_fail", FailingSession())
+    try:
+        result = asyncio.run(notify_tools_changed(conn, "digest_xyz"))
+        assert result.is_err
+        assert "NOTIFICATION_SEND_FAILED" in (result.error or "")
+    finally:
+        release_session("c_fail")
+
+
+# --- Session capture interface tests ---
+
+
+def test_capture_session_and_retrieve() -> None:
+    """capture_session stores a session retrievable via get_captured_session."""
+    from tela.shell.upstream import capture_session, get_captured_session, release_session
+
+    class FakeSession:
+        async def send_tool_list_changed(self) -> None: ...
+
+    session = FakeSession()
+    result = capture_session("conn_1", session)
+    assert result.is_ok
+
+    retrieved = get_captured_session("conn_1")
+    assert retrieved.is_ok
+    assert retrieved.value is session
+
+    release_session("conn_1")
+
+
+def test_capture_session_rejects_empty_id() -> None:
+    """capture_session rejects empty connection_id."""
+    from tela.shell.upstream import capture_session
+
+    class FakeSession:
+        async def send_tool_list_changed(self) -> None: ...
+
+    result = capture_session("", FakeSession())
+    assert result.is_err
+    assert "empty" in (result.error or "")
+
+
+def test_release_session_idempotent() -> None:
+    """release_session succeeds even for unknown connection_id."""
+    from tela.shell.upstream import release_session
+
+    result = release_session("never_existed")
+    assert result.is_ok
+
+
+def test_get_captured_session_missing() -> None:
+    """get_captured_session returns error for unknown connection_id."""
+    from tela.shell.upstream import get_captured_session
+
+    result = get_captured_session("unknown_conn")
+    assert result.is_err
+    assert "not found" in (result.error or "")
+
+
+def test_release_session_cleans_up() -> None:
+    """After release_session, get_captured_session returns error."""
+    from tela.shell.upstream import capture_session, get_captured_session, release_session
+
+    class FakeSession:
+        async def send_tool_list_changed(self) -> None: ...
+
+    capture_session("conn_cleanup", FakeSession())
+    release_session("conn_cleanup")
+    result = get_captured_session("conn_cleanup")
+    assert result.is_err
+
+
+def test_upstream_session_protocol_conformance() -> None:
+    """mcp.server.session.ServerSession satisfies UpstreamSession protocol."""
+    from tela.shell.upstream import UpstreamSession
+    from mcp.server.session import ServerSession
+
+    assert issubclass(ServerSession, UpstreamSession)
+
+
+def test_capture_session_overwrites() -> None:
+    """Capturing a second session for the same connection_id replaces the first."""
+    from tela.shell.upstream import capture_session, get_captured_session, release_session
+
+    class SessionA:
+        async def send_tool_list_changed(self) -> None: ...
+
+    class SessionB:
+        async def send_tool_list_changed(self) -> None: ...
+
+    a, b = SessionA(), SessionB()
+    capture_session("conn_overwrite", a)
+    capture_session("conn_overwrite", b)
+
+    retrieved = get_captured_session("conn_overwrite")
+    assert retrieved.is_ok
+    assert retrieved.value is b
+
+    release_session("conn_overwrite")
 
 
 # --- ConnectionContext model tests for upstream ---
