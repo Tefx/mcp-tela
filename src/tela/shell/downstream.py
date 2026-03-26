@@ -232,7 +232,7 @@ async def _close_all_clients_locked() -> None:
             continue
 
 
-# @invar:allow shell_result: returns registry object, simple accessor not failable I/O.
+# @invar:allow shell_result: returns registry object directly, not a failable I/O boundary.
 def get_registry() -> DownstreamRegistry:
     """Return the module-level downstream registry."""
     return _registry
