@@ -29825,3 +29825,29 @@ phases:
   status: locked
   depends_on:
   - tool_meta
+  steps:
+  - id: instructions.contract
+    name: 'Contract: Add instructions field to ServerConfig'
+    status: pending
+    description: "Add `instructions` field to ServerConfig in src/tela/core/models.py.\n\
+      \nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - field\
+      \ definition on ServerConfig\n\nType: `bool | str | None`, default `None`\n\n\
+      Semantics:\n- `None` = passthrough (forward downstream server's instructions\
+      \ as-is)\n- `False` = suppress (do not include this server's instructions in\
+      \ merged output)\n- `str` = override (use this text instead of downstream server's\
+      \ instructions)\n\nThis is a Core model change. The field is type-only with\
+      \ no business logic.\n\nExisting ServerConfig fields (models.py lines 88-103):\n\
+      ```python\nclass ServerConfig(BaseModel):\n    name: str\n    command: str |\
+      \ None = None\n    args: list[str] = Field(default_factory=list)\n    url: str\
+      \ | None = None\n    transport: Literal[\"http\", \"sse\"] | None = None\n \
+      \   env: dict[str, str] = Field(default_factory=dict)\n    family: str | None\
+      \ = None\n    tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)\n\
+      \    default_posture: Posture = Posture.NONE\n```\n\n## Completion Criteria\n\
+      - `instructions: bool | str | None = None` field added to ServerConfig\n- All\
+      \ existing tests pass\n- uv run invar guard passes"
+    verification: '- Field visible via invar sig src/tela/core/models.py
+
+      - All existing tests pass
+
+      - uv run invar guard passes'
+    agent: python-executor
