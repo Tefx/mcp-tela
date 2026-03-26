@@ -26194,7 +26194,7 @@ phases:
       error: \"\""
   - id: rem.hygiene.validate-shell-result-allow-rationales
     name: Validate and document @invar:allow shell_result rationales
-    status: claimed
+    status: pending
     description: 'step_type: implementation
 
       agent_source: default
@@ -26256,8 +26256,6 @@ phases:
     depends_on:
     - rem.hygiene.triage-actionable-invar-warnings
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-26T04:11:45.328634+00:00'
   - id: rem.hygiene.evaluate-runtime-liveness-test-structure
     name: Evaluate and refactor oversized runtime liveness test structure if warranted
     status: pending
