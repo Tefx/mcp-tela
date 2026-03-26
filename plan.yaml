@@ -29312,7 +29312,7 @@ phases:
   steps:
   - id: cleanup.impl
     name: 'Remove dead code: _register_registry_tools and unused downstream wrappers'
-    status: claimed
+    status: done
     description: 'Remove verified dead code from two files. All items below confirmed
       dead via grep + FastMCP testing.
 
@@ -29457,6 +29457,21 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T16:46:46.854284+00:00'
+    done_at: '2026-03-26T16:53:09.078247+00:00'
+    evidence: "## Dead Code Removal Evidence\n\nFunctions removed:\n- `_register_registry_tools`\
+      \ removed from `src/tela/shell/gateway.py`\n- `_make_registry_tool_handler`\
+      \ removed from `src/tela/shell/gateway.py`\n- `_register_registry_tools(upstream_server)`\
+      \ call removed from `gateway_start`\n- `_open_stdio_client` wrapper removed\
+      \ from `src/tela/shell/downstream.py`\n- `_open_sse_client` wrapper removed\
+      \ from `src/tela/shell/downstream.py`\n- Aliased imports `_transport_open_stdio_client`\
+      \ and `_transport_open_sse_client` removed from `downstream.py`\n\nPreserved:\n\
+      - `_validate_transport_mode` remains present and called in `connect_all`\n\n\
+      Verification run by worker:\n- `uv run python -m pytest`: 596 passed, 4 failed\n\
+      - `uv run invar guard`: failed with 2 static errors\n\nDisposition:\n- Blockers\
+      \ batched into new remediation path in cleanup phase:\n  - `cleanup.fix_batch`\n\
+      \  - `cleanup.retest_full`\n- `cleanup.verify` rewired downstream of retest\
+      \ path. Original implementation work completed; blocker remediation now explicitly\
+      \ owned by new steps."
   - id: cleanup.verify
     name: Verify dead code removal
     status: pending
