@@ -30373,7 +30373,7 @@ phases:
       \ -> _list_tools pipeline)"
   - id: tool_meta.verify
     name: 'Integration verification: tool metadata round-trip'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, verify the full tool metadata round-trip.
 
 
@@ -30459,6 +30459,17 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T20:41:47.784002+00:00'
+    done_at: '2026-03-26T20:46:28.505931+00:00'
+    evidence: "## Integration Evidence\n\nCommand / tests exercising full path:\n\
+      - `uv run python -m pytest` targeted metadata pipeline tests in:\n  - `tests/core/test_family.py`\
+      \ (resolve_tools extraction)\n  - `tests/shell/test_upstream.py` (handle_tools_list\
+      \ forwarding)\n  - `tests/shell/test_list_tools_metadata.py` (_list_tools /\
+      \ mcp_types.Tool metadata behavior)\n\nActual output:\n- 11/11 targeted metadata\
+      \ integration tests passed\n\nPath exercised:\n- `resolve_tools -> handle_tools_list\
+      \ -> _list_tools`\n\nEdge cases verified:\n- no metadata\n- partial metadata\
+      \ (annotations-only)\n- empty annotations dict vs None\n- full metadata set\n\
+      \nData-loss check:\n- No loss observed across round-trip for annotations/title/outputSchema\n\
+      \nIssues Found:\n- none\n\nVerdict:\n- PASS"
   - id: tool_meta.gate
     name: 'Gate: Tool Metadata Restoration'
     status: pending
