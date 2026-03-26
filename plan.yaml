@@ -29564,7 +29564,7 @@ phases:
       ### Verdict\n- PASS"
   - id: cleanup.gate
     name: 'Gate: Dead Code Removal'
-    status: claimed
+    status: pending
     description: 'Gate review: Verify cleanup phase completion.
 
 
@@ -29588,8 +29588,6 @@ phases:
     depends_on:
     - cleanup.verify
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-26T17:16:12.822277+00:00'
   - id: cleanup.fix_batch
     name: Batched remediation for cleanup.impl blockers
     status: done
