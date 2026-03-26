@@ -26213,7 +26213,7 @@ phases:
       path.'
   - id: rem.bridge_flake.fix-gate-blockers-loop2
     name: Batched fix for rem.bridge_flake gate blockers and evidence hardening
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -26390,6 +26390,55 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T04:47:31.751009+00:00'
+    done_at: '2026-03-26T04:55:46.938713+00:00'
+    evidence: '## Batched Fix Evidence
+
+
+      Root cause closed:
+
+      - initialize/tools_list timeout family hardened with transient HTTP error classification
+      and retry/backoff on bridge HTTP paths.
+
+      - lockfile ownership bound to spawned serve process identity (PID-aware autostart/discovery
+      checks).
+
+      - soak pipeline failure propagation hardened so inner pytest failures cannot
+      be masked by tee pipeline behavior.
+
+
+      Commands and verification (reported by worker):
+
+      - targeted regressions for gate blockers: pass
+
+      - connect_cmd/lockfile test sets: pass
+
+      - full suite: pass
+
+
+      Commits (worker-reported):
+
+      - 0ab6305
+
+      - 4a432a5
+
+      - 150504a
+
+
+      Artifacts/paths:
+
+      - `src/tela/commands/connect_cmd.py`
+
+      - `tests/repro/soak_cold_start.sh`
+
+      - `tests/repro/test_gate_blocker_regressions.py`
+
+      - updated `tests/shell/test_connect_cmd.py`
+
+
+      Why previous fix failed:
+
+      - previous loop did not process-bind lockfile ownership, did not retry key bridge
+      HTTP transient paths, and did not enforce pipefail in soak evidence pipeline.'
   - id: rem.bridge_flake.retest-gate-blockers-loop2
     name: Retest bridge flake blocker remediation and evidence package
     status: pending
