@@ -28610,7 +28610,7 @@ phases:
       \ 21 passed, 0 failed"
   - id: rem.final_verify.retest-b1-liveness-evidence
     name: Independent retest for blocker regressions, liveness, and evidence consistency
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -28755,6 +28755,8 @@ phases:
     depends_on:
     - rem.final_verify.fix-b1-liveness-evidence
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T08:19:22.181500+00:00'
   - id: rem.final_verify.fix-b1-retry-classification-and-evidence
     name: Batched remediation for B1 retry classification and contradictory evidence
     status: pending
