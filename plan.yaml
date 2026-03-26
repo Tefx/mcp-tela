@@ -30519,3 +30519,69 @@ phases:
   status: locked
   depends_on:
   - post.doc_sync
+  steps:
+  - id: post.deep_review.wiring
+    name: Full wiring audit
+    status: pending
+    description: 'Complete system wiring audit. Verify:
+
+      - Every public export has a runtime caller
+
+      - Every CLI command is registered
+
+      - Every config field is consumed (especially new ServerConfig.instructions)
+
+      - No NotImplementedError stubs remain in non-test code
+
+      - No write-only fields (fields set but never read)
+
+      - New ResolvedTool fields (annotations, title, output_schema) are consumed by
+      handle_tools_list and _list_tools
+
+      - notify_tools_changed is no longer a no-op stub
+
+      - Removed dead code (_register_registry_tools, _open_stdio_client, _open_sse_client)
+      has no orphaned references'
+    verification: '- All exports consumed
+
+      - All config fields consumed
+
+      - No stubs remain
+
+      - No orphaned references'
+    evidence_template: '## Wiring Audit Report
+
+      **Orphan exports** (exported but never imported outside own package):
+
+      ```
+
+      <grep output or "none found">
+
+      ```
+
+      **Unconsumed config fields**:
+
+      ```
+
+      <grep output or "none found">
+
+      ```
+
+      **Remaining stubs/no-ops**:
+
+      ```
+
+      <grep output or "none found">
+
+      ```
+
+      **Orphaned dead code references**:
+
+      ```
+
+      <grep output or "none found">
+
+      ```
+
+      **Verdict**: PASS | ISSUES_FOUND'
+    agent: integration-verifier
