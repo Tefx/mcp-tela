@@ -29537,3 +29537,27 @@ phases:
   status: locked
   depends_on:
   - cleanup
+  steps:
+  - id: tool_meta.contract
+    name: 'Contract: Add metadata fields to ResolvedTool'
+    status: pending
+    description: "Add three new optional fields to ResolvedTool in src/tela/core/models.py:\n\
+      \n```python\nannotations: dict | None = None\ntitle: str | None = None\noutput_schema:\
+      \ dict | None = None\n```\n\nstep_type: contract\ncontract_purity: ENFORCED\n\
+      contract_outputs:\n  - field definitions on ResolvedTool\n\nThis is a Core model\
+      \ change. The fields are type-only additions to an existing Pydantic BaseModel.\
+      \ No business logic, no I/O.\n\nExisting fields for reference (models.py line\
+      \ 259-267):\n```python\nclass ResolvedTool(BaseModel):\n    name: str\n    server_name:\
+      \ str\n    family: str\n    posture: Posture | None = None\n    schema_: dict\
+      \ = Field(default_factory=dict)\n    description: str = \"\"\n```\n\nNote: `output_schema`\
+      \ uses snake_case in the model (Python convention) but maps to `outputSchema`\
+      \ in the MCP wire format. The Shell layer handles the naming translation.\n\n\
+      ## Completion Criteria\n- Three new fields added to ResolvedTool\n- All existing\
+      \ tests pass (no breaking change -- fields are optional with defaults)\n- uv\
+      \ run invar guard passes"
+    verification: '- Fields visible via invar sig src/tela/core/models.py
+
+      - All existing tests pass
+
+      - uv run invar guard passes'
+    agent: python-executor
