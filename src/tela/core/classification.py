@@ -13,7 +13,7 @@ from tela.core.models import Posture, ServerConfig
 
 
 
-@pre(lambda tool_name, server_config, mcp_annotations=None: isinstance(tool_name, str) and len(tool_name) > 0)
+@pre(lambda tool_name, server_config, mcp_annotations=None: isinstance(tool_name, str) and len(tool_name) > 0 and isinstance(server_config, ServerConfig) and (mcp_annotations is None or isinstance(mcp_annotations, dict)))
 @post(lambda result: result is None or isinstance(result, Posture))
 def classify_tool(
     tool_name: str,

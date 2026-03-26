@@ -185,6 +185,7 @@ _manager: IdleShutdownManager | None = None
 
 
 # @invar:allow shell_result: accessor returns manager instance directly, not a failable I/O boundary.
+# @shell_orchestration: module-level singleton accessor for idle shutdown runtime state.
 def get_idle_manager() -> IdleShutdownManager | None:
     """Return the module-level idle shutdown manager, or None if not initialized.
 

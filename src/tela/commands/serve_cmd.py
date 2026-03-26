@@ -347,6 +347,7 @@ def _extract_bound_port(server: object) -> Result[int | None, str]:
     return Result(value=None)
 
 
+# @shell_orchestration: cancels and awaits asyncio server task with timeout for graceful shutdown.
 async def _stop_http_server(server: _HttpServerHandle) -> None:
     """Request graceful HTTP server stop and await task completion."""
 
@@ -367,6 +368,7 @@ async def _stop_http_server(server: _HttpServerHandle) -> None:
             return
 
 
+# @shell_orchestration: registers OS signal handlers on the asyncio event loop.
 def _install_signal_handlers(stop_event: asyncio.Event) -> None:
     """Install SIGINT/SIGTERM handlers that trigger clean shutdown."""
 
@@ -378,6 +380,7 @@ def _install_signal_handlers(stop_event: asyncio.Event) -> None:
             continue
 
 
+# @shell_orchestration: removes OS signal handlers from the asyncio event loop.
 def _remove_signal_handlers() -> None:
     """Remove process signal handlers installed by this module."""
 
@@ -488,6 +491,7 @@ async def _idle_shutdown_watch(
         _ = await shutdown_idle_manager()
 
 
+# @shell_orchestration: cancels and awaits asyncio background task during shutdown sequence.
 async def _await_task(task: asyncio.Task[object]) -> None:
     """Await or cancel background task during shutdown."""
 
