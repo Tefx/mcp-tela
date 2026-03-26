@@ -26918,7 +26918,7 @@ phases:
       - verdict: PASS'
   - id: rem.hygiene.gate
     name: Gate invar and runtime hygiene phase
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: default
@@ -26952,6 +26952,8 @@ phases:
     - rem.hygiene.evaluate-runtime-liveness-test-structure
     - rem.hygiene.verify-hygiene-pack
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-26T04:56:35.854051+00:00'
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
