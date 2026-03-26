@@ -33,6 +33,7 @@ _registry_lock = asyncio.Lock()
 
 
 _clients: dict[str, _ClientHandle] = {}
+_server_instructions: dict[str, str] = {}
 
 
 async def _open_stdio_client(
@@ -274,6 +275,7 @@ async def connect_all(
     async with _registry_lock:
         await _close_all_clients_locked()
         _registry.clear()
+        _server_instructions.clear()
 
         all_resolved: dict[str, list[ResolvedTool]] = {}
 
@@ -302,6 +304,8 @@ async def connect_all(
                 assert open_result.value is not None
                 client_handle = open_result.value
                 _clients[server_name] = client_handle
+                if client_handle.instructions:
+                    _server_instructions[server_name] = client_handle.instructions
                 tools_result = await _enumerate_tools(client_handle.session)
                 if tools_result.is_err:
                     await _close_all_clients_locked()
@@ -423,6 +427,23 @@ async def call_tool(
         )
 
     return Result(value=payload)
+
+
+def get_server_instructions() -> dict[str, str]:
+    """Return collected server instructions from downstream MCP servers.
+
+    Each key is the server name, each value is the instructions string
+    returned by the server during MCP initialize.
+
+    Examples:
+        >>> get_server_instructions()
+        {}
+
+    Returns:
+        Server name to instructions mapping (only servers that provided instructions).
+    """
+
+    return dict(_server_instructions)
 
 
 def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:

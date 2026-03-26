@@ -87,15 +87,15 @@ class ServerConfig(BaseModel):
 
     Transport selection:
     - ``command`` set → stdio
-    - ``url`` set + ``transport == "http"`` → Streamable HTTP (MCP 2025-03-26+)
-    - ``url`` set (default) → SSE (legacy, backward-compatible)
+    - ``url`` set (default) → Streamable HTTP (MCP 2025-03-26+)
+    - ``url`` set + ``transport == "sse"`` → SSE (legacy)
     """
 
     name: str
     command: str | None = None
     args: list[str] = Field(default_factory=list)
     url: str | None = None
-    transport: Literal["http"] | None = None
+    transport: Literal["http", "sse"] | None = None
     env: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
@@ -264,6 +264,7 @@ class ResolvedTool(BaseModel):
     family: str
     posture: Posture | None = None
     schema_: dict = Field(default_factory=dict)
+    description: str = ""
 
 
 class ConnectionContext(BaseModel):

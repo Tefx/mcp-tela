@@ -20,8 +20,8 @@
 #
 # Key rules:
 #   - Use EITHER 'command' (stdio) OR 'url' (remote), NOT both
-#   - When using 'url', transport defaults to SSE (legacy)
-#   - Set 'transport: http' alongside 'url' for Streamable HTTP (MCP 2025-03-26+)
+#   - When using 'url', transport defaults to Streamable HTTP (MCP 2025-03-26+)
+#   - Set 'transport: sse' alongside 'url' for legacy SSE servers
 #   - The YAML key is the server name (e.g., 'fs', 'github')
 #   - 'family' is optional and overrides auto-detection
 #   - 'default_posture' sets the baseline for all tools from this server
@@ -67,13 +67,13 @@ servers:
         posture: "destructive"
 
   # ===========================================================================
-  # Example: Remote SSE-based MCP server (legacy)
+  # Example: Remote Streamable HTTP server (default)
   # ===========================================================================
   github:
-    # REQUIRED: SSE endpoint URL (HTTP/HTTPS)
+    # REQUIRED: URL endpoint (HTTP/HTTPS)
     # Use 'url' for remote transport, 'command' for stdio transport
-    # SSE is the default when 'transport' is omitted (backward-compatible)
-    url: "http://localhost:3001/sse"
+    # Streamable HTTP is the default when 'transport' is omitted
+    url: "http://localhost:3001/mcp"
 
     # OPTIONAL: Tool family
     family: "git"
@@ -82,11 +82,11 @@ servers:
     default_posture: "none"
 
   # ===========================================================================
-  # Example: Remote Streamable HTTP server (MCP 2025-03-26+, recommended)
+  # Example: Remote SSE-based MCP server (legacy)
   # ===========================================================================
-  # github_http:
-  #   url: "http://localhost:3001/mcp"
-  #   transport: http          # Streamable HTTP (modern MCP transport)
+  # github_sse:
+  #   url: "http://localhost:3001/sse"
+  #   transport: sse           # SSE (legacy MCP transport)
   #   family: "git"
   #   default_posture: "none"
 

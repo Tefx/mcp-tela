@@ -100,6 +100,7 @@ def resolve_tools(
         annotations = raw_tool.get("annotations")
         posture = classify_tool(name, server_config, annotations)
         schema = raw_tool.get("inputSchema", {})
+        description = raw_tool.get("description", "")
 
         resolved.append(
             ResolvedTool(
@@ -108,6 +109,7 @@ def resolve_tools(
                 family=family,
                 posture=posture,
                 schema_=schema,
+                description=description,
             )
         )
 

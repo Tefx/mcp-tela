@@ -25,6 +25,7 @@ class _ClientHandle:
 
     session: ClientSession
     stack: AsyncExitStack
+    instructions: str | None = None
 
 
 def _validate_transport_mode(
@@ -74,8 +75,14 @@ async def _open_stdio_client(
                 message_handler=message_handler,
             )
         )
-        await session.initialize()
-        return Result(value=_ClientHandle(session=session, stack=stack))
+        init_result = await session.initialize()
+        return Result(
+            value=_ClientHandle(
+                session=session,
+                stack=stack,
+                instructions=init_result.instructions,
+            )
+        )
     except Exception as exc:
         await stack.aclose()
         return Result(
@@ -109,8 +116,14 @@ async def _open_sse_client(
                 message_handler=message_handler,
             )
         )
-        await session.initialize()
-        return Result(value=_ClientHandle(session=session, stack=stack))
+        init_result = await session.initialize()
+        return Result(
+            value=_ClientHandle(
+                session=session,
+                stack=stack,
+                instructions=init_result.instructions,
+            )
+        )
     except Exception as exc:
         await stack.aclose()
         return Result(
@@ -146,8 +159,14 @@ async def _open_streamable_http_client(
                 message_handler=message_handler,
             )
         )
-        await session.initialize()
-        return Result(value=_ClientHandle(session=session, stack=stack))
+        init_result = await session.initialize()
+        return Result(
+            value=_ClientHandle(
+                session=session,
+                stack=stack,
+                instructions=init_result.instructions,
+            )
+        )
     except Exception as exc:
         await stack.aclose()
         return Result(
@@ -167,8 +186,8 @@ async def _open_client_for_server(
 
     Transport dispatch:
     - ``command`` set → stdio
-    - ``url`` set + ``transport == "http"`` → Streamable HTTP
-    - ``url`` set (default) → SSE (legacy)
+    - ``url`` set (default) → Streamable HTTP
+    - ``url`` set + ``transport == "sse"`` → SSE (legacy)
     """
 
     validation = _validate_transport_mode(server_name, server_config)
@@ -181,13 +200,13 @@ async def _open_client_for_server(
             server_config,
             message_handler=message_handler,
         )
-    if server_config.transport == "http":
-        return await _open_streamable_http_client(
+    if server_config.transport == "sse":
+        return await _open_sse_client(
             server_name,
             server_config,
             message_handler=message_handler,
         )
-    return await _open_sse_client(
+    return await _open_streamable_http_client(
         server_name,
         server_config,
         message_handler=message_handler,

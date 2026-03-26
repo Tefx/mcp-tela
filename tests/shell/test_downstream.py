@@ -61,6 +61,7 @@ def sse_server_config() -> ServerConfig:
     return ServerConfig(
         name="remote_service",
         url="http://localhost:8080/sse",
+        transport="sse",
     )
 
 
@@ -85,10 +86,11 @@ def http_server_config() -> ServerConfig:
 
 @pytest.fixture
 def minimal_sse_config() -> ServerConfig:
-    """Minimal SSE config with url only."""
+    """Minimal SSE config with url and explicit transport."""
     return ServerConfig(
         name="minimal_sse",
         url="http://host:9999/mcp",
+        transport="sse",
     )
 
 
@@ -476,7 +478,7 @@ def test_http_config_has_url_and_transport(http_server_config: ServerConfig) -> 
 
 
 def test_server_config_rejects_invalid_transport() -> None:
-    """ServerConfig.transport only accepts 'http' or None."""
+    """ServerConfig.transport only accepts 'http', 'sse', or None."""
     import pytest
     from pydantic import ValidationError
 
@@ -484,7 +486,7 @@ def test_server_config_rejects_invalid_transport() -> None:
         ServerConfig(name="bad", url="http://localhost/mcp", transport="ftp")  # type: ignore[arg-type]
 
     with pytest.raises(ValidationError):
-        ServerConfig(name="bad", url="http://localhost/mcp", transport="sse")  # type: ignore[arg-type]
+        ServerConfig(name="bad", url="http://localhost/mcp", transport="websocket")  # type: ignore[arg-type]
 
     # Valid values
     ok_none = ServerConfig(name="ok", url="http://localhost/mcp")
@@ -492,6 +494,9 @@ def test_server_config_rejects_invalid_transport() -> None:
 
     ok_http = ServerConfig(name="ok", url="http://localhost/mcp", transport="http")
     assert ok_http.transport == "http"
+
+    ok_sse = ServerConfig(name="ok", url="http://localhost/sse", transport="sse")
+    assert ok_sse.transport == "sse"
 
 
 def test_minimal_sse_config_url_only(

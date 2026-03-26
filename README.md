@@ -11,7 +11,7 @@ policy enforcement, and audit logging.
 - Supports open mode or token-based authentication
 - Emits structured audit logs at `L1`, `L2`, or `L3`
 - Auto-discovers and auto-starts a shared gateway (`tela connect`)
-- Supports Streamable HTTP and legacy SSE transports
+- Supports Streamable HTTP (default) and legacy SSE transports
 - Ships with a built-in profile catalog for common access patterns
 
 ## Quick start

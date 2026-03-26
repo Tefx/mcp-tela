@@ -287,7 +287,14 @@ async def handle_tools_list(
     assert permitted_result.value is not None
     permitted = permitted_result.value
     return Result(
-        value=[{"name": t.name, "inputSchema": t.schema_ or {}} for t in permitted]
+        value=[
+            {
+                "name": t.name,
+                "inputSchema": t.schema_ or {},
+                "description": t.description,
+            }
+            for t in permitted
+        ]
     )
 
 

@@ -32,7 +32,13 @@ from tela.core.models import (
 )
 from tela.shell.config_loader import Result, load_config
 from tela.shell.audit import audit_close, audit_init
-from tela.shell.downstream import call_tool, connect_all, disconnect_all, get_all_tools
+from tela.shell.downstream import (
+    call_tool,
+    connect_all,
+    disconnect_all,
+    get_all_tools,
+    get_server_instructions,
+)
 
 
 @dataclass(frozen=True)
@@ -192,8 +198,26 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         return JSONResponse(content=dict(disconnect_result.value))
 
 
+def _merge_downstream_instructions() -> str | None:
+    """Merge instructions from all downstream servers into a single string.
+
+    Each server's instructions are prefixed with the server name for clarity.
+    Returns None if no downstream server provided instructions.
+    """
+
+    server_instructions = get_server_instructions()
+    if not server_instructions:
+        return None
+    parts = []
+    for server_name, instructions in server_instructions.items():
+        parts.append(f"[{server_name}]\n{instructions}")
+    return "\n\n".join(parts)
+
+
 def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str]:
     """Create FastMCP server instance from gateway transport config."""
+
+    merged_instructions = _merge_downstream_instructions()
 
     if (
         config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
@@ -202,12 +226,13 @@ def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str
         return Result(
             value=FastMCP(
                 "tela-gateway",
+                instructions=merged_instructions,
                 host=config.host,
                 port=config.port,
             )
         )
 
-    return Result(value=FastMCP("tela-gateway"))
+    return Result(value=FastMCP("tela-gateway", instructions=merged_instructions))
 
 
 # @shell_orchestration: builds forwarding closure that delegates to downstream I/O sessions.
@@ -290,7 +315,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             mcp_types.Tool(
                 name=tool["name"],
                 inputSchema=dict(tool.get("inputSchema") or {}),
-                description="Upstream filtered tool.",
+                description=tool.get("description", ""),
             )
             for tool in filtered_tools
         ]
@@ -320,7 +345,7 @@ def _register_registry_tools(upstream_server: FastMCP) -> None:
             upstream_server.add_tool(
                 _make_registry_tool_handler(server_name, resolved_tool.name),
                 name=resolved_tool.name,
-                description=(
+                description=resolved_tool.description or (
                     f"Forwarded downstream tool '{resolved_tool.name}' "
                     f"from server '{server_name}'."
                 ),
