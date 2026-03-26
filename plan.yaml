@@ -26174,6 +26174,183 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T04:37:48.599338+00:00'
+  - id: rem.bridge_flake.fix-gate-blockers-loop2
+    name: Batched fix for rem.bridge_flake gate blockers and evidence hardening
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      tags:
+
+      - integration
+
+      prior_loop:
+
+      - rem.blockers.fix-framed-stdio-mcp-liveness
+
+      - rem.blockers.retest-framed-stdio-liveness
+
+      - rem.blockers.fix-stdio-mcp-initialize-loop2
+
+      - rem.blockers.retest-stdio-mcp-initialize-loop2
+
+      remaining_blocker: bridge initialize/tools_list timeout family, lockfile PID/process
+      identity contamination risk, soak pipeline failure masking, and strict evidence
+      lineage gaps still block rem.bridge_flake.gate
+
+      why_new_loop: rem.bridge_flake.gate found residual blocker-class runtime and
+      evidence gaps after prior blocker remediation; a single batched systemic fix
+      is required before gate re-open
+
+      why_previous_fix_failed: prior timeout-family remediation reduced incidence
+      but did not bind lockfile ownership to the spawned serve process, did not guarantee
+      failure propagation through the soak tee pipeline, and did not retire BrokenPipe
+      on initialize/tools_list under cold/soak execution
+
+
+      Fix ALL findings from rem.bridge_flake.gate in one batched remediation pass.
+      ALL of these, not just the first.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: bridge runtime lifecycle proof is still fragmented across initialize/tools_list
+      timeout handling, serve-process lock ownership, and soak-script failure propagation,
+      so the branch can still report green evidence while residual process-boundary
+      faults remain.
+
+      - Symptom: BrokenPipeError still reproduces on initialize/tools_list, lockfile
+      identity can point at the wrong process, and the tee-based soak command can
+      hide failures.
+
+      - Why this fix is not surface-level: it must align runtime process identity,
+      failure propagation, and evidence provenance across the whole bridge flake branch
+      rather than patching one call site.
+
+
+      ## Blockers to Fix
+
+      ### B1: bridge timeout family still reproduces on initialize/tools_list
+
+      Remediation: eliminate the remaining BrokenPipe/timeout path on initialize/tools_list
+      for the spawned bridge flow, including sibling lifecycle and reconnect paths
+      that share the same bridge startup/teardown seam.
+
+      Grep hint: rg -n "BrokenPipeError|initialize|tools_list|timeout" src tests scripts
+
+      IMPORTANT: search sibling runtime and reconnect paths beyond the failing trace.
+
+
+      ### B2: lockfile PID identity is not bound to the spawned serve process
+
+      Remediation: bind lockfile ownership and validation to the actual spawned serve
+      process identity used by bridge execution; prevent shared global lockfile contamination
+      across concurrent or stale runs.
+
+      Grep hint: rg -n "lockfile|pid|serve process|spawn|bridge" src tests scripts
+
+      IMPORTANT: prove ownership is process-bound, not merely path-bound.
+
+
+      ### B3: soak script can mask failures because tee pipeline does not propagate
+      them reliably
+
+      Remediation: harden the soak/evidence script so non-zero failures propagate
+      through the pipeline deterministically, with no false-green success caused by
+      tee or shell pipeline behavior.
+
+      Grep hint: rg -n "tee|pipefail|soak|evidence" scripts tests
+
+      IMPORTANT: search sibling helper scripts and wrappers that emit soak evidence.
+
+
+      ### S1: evidence package must be regenerated with strict provenance and exact
+      command lineage
+
+      Remediation: regenerate the evidence package with raw outputs, no ellipsis,
+      exact commands, and clear lineage from command -> artifact -> conclusion.
+
+      Grep hint: rg -n "\.\.\.|evidence package|command lineage|provenance" scripts
+      docs artifacts tests
+
+      IMPORTANT: no summary-only or redacted lineage for the claimed fix path.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive runtime or script logic that processes
+      real inputs and produces outputs that vary based on those inputs.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any remaining BrokenPipe/timeout reproduction on initialize/tools_list or
+      sibling bridge lifecycle paths
+
+      2. Lockfile proof that does not bind to the actual spawned serve process
+
+      3. Soak evidence whose shell pipeline can still return success when an inner
+      command fails
+
+      4. Evidence artifacts with ellipsis, missing raw output, or ambiguous command
+      lineage'
+    verification: '- Protects downstream gate: rem.bridge_flake.gate and therefore
+      rem.final_verify
+
+      - Main path: targeted bridge timeout, lockfile-identity, and soak-script regressions
+      are updated for the repaired runtime path
+
+      - Failure path: focused regression proves initialize/tools_list BrokenPipe no
+      longer reproduces, lock ownership rejects mismatched/stale process identity,
+      and soak pipeline returns non-zero on inner command failure
+
+      - Evidence package regenerated with exact commands, raw outputs, and strict
+      provenance/no ellipsis
+
+      - Root-cause evidence explains why this closes the blocker family, not only
+      one symptom'
+    evidence_template: '## Batched Fix Evidence
+
+
+      **Root cause closed**:
+
+      - <explain initialize/tools_list timeout family closure>
+
+      - <explain process-bound lockfile identity closure>
+
+      - <explain tee/pipeline failure propagation closure>
+
+
+      **Commands and artifacts**:
+
+      ```\n<paste exact commands>\n```
+
+
+      **Sibling search evidence**:
+
+      ```\n<paste rg output or explain zero matches>\n```
+
+
+      **Raw outputs / artifact paths**:
+
+      - <artifact path>
+
+      - <artifact path>
+
+
+      **Why previous fix failed**:
+
+      - <required>
+
+      '
+    depends_on:
+    - rem.bridge_flake.freeze-runtime-snapshot
+    - rem.bridge_flake.investigate-persistent-timeout-family
+    - rem.bridge_flake.cold-repro-and-soak
+    agent: python-senior
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: in_progress
