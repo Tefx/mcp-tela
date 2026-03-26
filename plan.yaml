@@ -29662,13 +29662,17 @@ phases:
       description\", \"\"))\n```\n\nAdd fields:\n```python\nmcp_types.Tool(\n    name=tool[\"\
       name\"],\n    inputSchema=dict(tool.get(\"inputSchema\") or {}),\n    description=tool.get(\"\
       description\", \"\"),\n    annotations=tool.get(\"annotations\"),\n    title=tool.get(\"\
-      title\"),\n    outputSchema=tool.get(\"outputSchema\"),\n)\n```\n\nVerify mcp_types.Tool\
-      \ accepts these kwargs (it should per MCP spec).\n\n## Completion Criteria (stub\
-      \ exclusion)\nThis is an IMPLEMENTATION step. Each file change must produce\
-      \ functional forwarding logic.\n- resolve_tools populates all three fields on\
-      \ ResolvedTool\n- handle_tools_list includes them in output dicts\n- _list_tools\
-      \ passes them to mcp_types.Tool\n- All tests pass including new metadata tests\n\
-      - uv run invar guard passes"
+      title\"),\n    outputSchema=tool.get(\"outputSchema\"),\n)\n```\n\n### PRE-VERIFIED:\
+      \ mcp_types.Tool accepts these kwargs\n\nThis has been confirmed against the\
+      \ installed MCP SDK. No need to re-verify:\n- `Tool.title: str | None` — supported\n\
+      - `Tool.annotations: mcp.types.ToolAnnotations | None` — supported\n- `Tool.outputSchema:\
+      \ dict[str, Any] | None` — supported\n- `FastMCP.add_tool` also accepts `title`\
+      \ and `annotations`\n\nThese are standard MCP spec fields. Just use them directly.\n\
+      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Each\
+      \ file change must produce functional forwarding logic.\n- resolve_tools populates\
+      \ all three fields on ResolvedTool\n- handle_tools_list includes them in output\
+      \ dicts\n- _list_tools passes them to mcp_types.Tool\n- All tests pass including\
+      \ new metadata tests\n- uv run invar guard passes"
     verification: '- All tests pass including new metadata round-trip tests
 
       - uv run invar guard passes
