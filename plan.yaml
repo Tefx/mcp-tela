@@ -29561,3 +29561,59 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+  - id: tool_meta.test
+    name: Tests for tool metadata round-trip
+    status: pending
+    description: 'Write tests verifying the full metadata round-trip path.
+
+
+      step_type: test
+
+
+      ## Test Cases Required
+
+
+      ### 1. resolve_tools extracts metadata fields
+
+      File: tests/core/test_family.py (or new test file)
+
+
+      Test that resolve_tools correctly extracts annotations, title, and outputSchema
+      from raw tool dicts:
+
+      - Raw tool with all three fields set -> ResolvedTool has them
+
+      - Raw tool with none of these fields -> ResolvedTool has None/None/None defaults
+
+      - Raw tool with partial fields (e.g., only annotations) -> only that field populated
+
+
+      ### 2. handle_tools_list includes metadata in output
+
+      File: tests/shell/test_upstream.py
+
+
+      Test that handle_tools_list output dicts include annotations, title, outputSchema
+      when present on ResolvedTool, and omit them (or include as None) when absent.
+
+
+      ### 3. _list_tools constructs mcp_types.Tool with metadata
+
+      This may need a unit test or integration test verifying that mcp_types.Tool
+      is constructed with the additional fields.
+
+
+      ## Completion Criteria
+
+      - Tests written and passing
+
+      - Tests cover present/absent/partial metadata scenarios
+
+      - No implementation logic in test helpers beyond minimal fixtures'
+    verification: '- New tests exist and currently FAIL (testing not-yet-implemented
+      behavior)
+
+      - Existing tests still pass'
+    depends_on:
+    - tool_meta.contract
+    agent: python-executor
