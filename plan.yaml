@@ -31980,7 +31980,7 @@ phases:
     agent: gate-reviewer
   - id: notifications.gate_fix_batch
     name: notifications.gate_fix_batch
-    status: claimed
+    status: done
     description: 'Fix ALL notifications gate blockers in one batched remediation step.
 
 
@@ -32062,6 +32062,102 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T23:01:56.778450+00:00'
+    done_at: '2026-03-26T23:08:33.432381+00:00'
+    evidence: '## Notifications Gate Fix Batch Evidence
+
+
+      ### Root Cause
+
+      `handle_disconnect` in `http_routes.py` removed connections from `runtime.connections`
+      but never called `release_session()`, causing captured upstream sessions to
+      leak in `_session_registry` across connect/disconnect cycles. `gateway_shutdown`
+      also accessed `_session_registry` directly instead of using per-connection `release_session`.
+
+
+      ### Disconnect Cleanup Update
+
+      - **http_routes.py**: Added `from tela.shell.upstream import release_session`
+      and wired `release_session(target_id)` call after successful connection removal
+      in `handle_disconnect`
+
+      - **gateway.py**: Refactored `gateway_shutdown` to iterate `_runtime.connections`
+      and call `release_session(cid)` per-connection instead of directly clearing
+      `_session_registry` — consistent release semantics across all disconnect paths
+
+
+      ### Sibling Path Search
+
+      Searched all disconnect/cleanup paths via `grep -r ''release_session|disconnect|remove_connection|session_registry''`:
+
+      1. `handle_disconnect` (http_routes.py) — **FIXED: now calls release_session**
+
+      2. `_disconnect_route` (gateway.py) — delegates to handle_disconnect, inherits
+      fix
+
+      3. `gateway_shutdown` (gateway.py) — **FIXED: uses per-connection release_session**
+
+      4. `notify_tools_changed` (upstream.py) — already calls release_session on send
+      failure (correct)
+
+      All disconnect paths now have consistent release semantics.
+
+
+      ### Bounding Strategy
+
+      Session registry stays bounded because every disconnect path (HTTP disconnect,
+      gateway shutdown) now releases sessions. Regression test proves 20 connect/disconnect
+      cycles leave registry at size 0.
+
+
+      ### Regression Tests Added (7 tests)
+
+      File: `tests/repro/test_disconnect_cleanup.py`
+
+      1. `test_handle_disconnect_releases_captured_session` — session released after
+      disconnect
+
+      2. `test_handle_disconnect_without_captured_session_succeeds` — idempotent when
+      no session
+
+      3. `test_session_registry_bounded_across_connect_disconnect_cycles` — 20 cycles,
+      registry stays bounded
+
+      4. `test_concurrent_connections_bounded_after_disconnect` — 10 concurrent connections,
+      all released
+
+      5. `test_notification_skips_disconnected_session` — notify after disconnect
+      is graceful no-op
+
+      6. `test_notification_reaches_live_sessions_after_peer_disconnect` — peer disconnect
+      doesn''t affect live sessions
+
+      7. `test_gateway_shutdown_releases_all_sessions` — shutdown releases all 5 sessions
+
+
+      ### Verification Results
+
+      ```
+
+      invar guard: PASSED (0 errors, 5 warnings all pre-existing, doctests passed)
+
+      pytest: 79 passed, 0 failed (7 new + 72 existing related tests)
+
+      ```
+
+
+      ### Files Modified
+
+      - `src/tela/shell/http_routes.py` — added release_session import + call in handle_disconnect
+
+      - `src/tela/shell/gateway.py` — refactored gateway_shutdown session cleanup
+
+      - `tests/repro/test_disconnect_cleanup.py` — 7 new regression tests
+
+
+      ### Commit
+
+      fff71dd fix(shell): wire release_session into disconnect path to prevent session
+      leaks'
   - id: notifications.gate_retest
     name: notifications.gate_retest
     status: pending
