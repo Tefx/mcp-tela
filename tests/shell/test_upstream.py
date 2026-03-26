@@ -16,6 +16,7 @@ from tela.core.models import (
     InitializeProfileBinding,
 )
 from tela.shell.upstream import InitializeContext, resolve_initialize_profile_binding
+from tela.shell.downstream_registry import DownstreamRegistry
 
 
 # --- Existing contract tests (updated for implementation) ---
@@ -651,3 +652,264 @@ def test_enforce_tool_call_denies() -> None:
     result = enforce_tool_call("exec", tool, profile, Posture.NONE)
     assert result.is_ok and result.value is not None
     assert result.value.verdict.value == "deny"
+
+
+# --- handle_tools_list metadata round-trip tests ---
+
+
+def test_handle_tools_list_includes_title_in_output_dict() -> None:
+    """handle_tools_list includes title field in output dict."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import handle_tools_list, handle_initialize
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "fs",
+        [
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="Read a file",
+                title="File Reader",
+            )
+        ],
+    )
+
+    get_runtime().config = TelaConfig(
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+        profiles={
+            "dev": ProfileConfig(
+                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+            )
+        },
+    )
+    get_runtime().connections.clear()
+
+    import tela.shell.downstream
+
+    original_get_all_tools = tela.shell.downstream.get_all_tools
+    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+
+    try:
+        result = asyncio.run(handle_initialize({"client": "test"}))
+        assert result.is_ok
+        conn = result.value
+        assert conn is not None
+
+        tools_result = asyncio.run(handle_tools_list(conn))
+        assert tools_result.is_ok
+        assert tools_result.value is not None
+        assert len(tools_result.value) == 1
+        tool_dict = tools_result.value[0]
+        assert tool_dict["name"] == "read_file"
+        assert tool_dict["title"] == "File Reader"
+    finally:
+        tela.shell.downstream.get_all_tools = original_get_all_tools
+
+
+def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
+    """handle_tools_list includes outputSchema field in output dict."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import handle_tools_list, handle_initialize
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "fs",
+        [
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="Read a file",
+                output_schema={"type": "string"},
+            )
+        ],
+    )
+
+    get_runtime().config = TelaConfig(
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+        profiles={
+            "dev": ProfileConfig(
+                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+            )
+        },
+    )
+    get_runtime().connections.clear()
+
+    import tela.shell.downstream
+
+    original_get_all_tools = tela.shell.downstream.get_all_tools
+    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+
+    try:
+        result = asyncio.run(handle_initialize({"client": "test"}))
+        assert result.is_ok
+        conn = result.value
+        assert conn is not None
+
+        tools_result = asyncio.run(handle_tools_list(conn))
+        assert tools_result.is_ok
+        assert tools_result.value is not None
+        tool_dict = tools_result.value[0]
+        assert tool_dict["outputSchema"] == {"type": "string"}
+    finally:
+        tela.shell.downstream.get_all_tools = original_get_all_tools
+
+
+def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
+    """handle_tools_list includes annotations field in output dict."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import handle_tools_list, handle_initialize
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "fs",
+        [
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="Read a file",
+                annotations={"readOnlyHint": True},
+            )
+        ],
+    )
+
+    get_runtime().config = TelaConfig(
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+        profiles={
+            "dev": ProfileConfig(
+                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+            )
+        },
+    )
+    get_runtime().connections.clear()
+
+    import tela.shell.downstream
+
+    original_get_all_tools = tela.shell.downstream.get_all_tools
+    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+
+    try:
+        result = asyncio.run(handle_initialize({"client": "test"}))
+        assert result.is_ok
+        conn = result.value
+        assert conn is not None
+
+        tools_result = asyncio.run(handle_tools_list(conn))
+        assert tools_result.is_ok
+        assert tools_result.value is not None
+        tool_dict = tools_result.value[0]
+        assert tool_dict["annotations"] == {"readOnlyHint": True}
+    finally:
+        tela.shell.downstream.get_all_tools = original_get_all_tools
+
+
+def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
+    """handle_tools_list omits None metadata fields from output dict."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import get_runtime
+    from tela.shell.upstream import handle_tools_list, handle_initialize
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "fs",
+        [
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="Read a file",
+                # title, output_schema, annotations are None
+            )
+        ],
+    )
+
+    get_runtime().config = TelaConfig(
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+        profiles={
+            "dev": ProfileConfig(
+                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+            )
+        },
+    )
+    get_runtime().connections.clear()
+
+    import tela.shell.downstream
+
+    original_get_all_tools = tela.shell.downstream.get_all_tools
+    tela.shell.downstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+
+    try:
+        result = asyncio.run(handle_initialize({"client": "test"}))
+        assert result.is_ok
+        conn = result.value
+        assert conn is not None
+
+        tools_result = asyncio.run(handle_tools_list(conn))
+        assert tools_result.is_ok
+        assert tools_result.value is not None
+        tool_dict = tools_result.value[0]
+        assert tool_dict["name"] == "read_file"
+        # Metadata fields are None and should not be in dict
+        assert tool_dict.get("title") is None
+        assert tool_dict.get("outputSchema") is None
+        assert tool_dict.get("annotations") is None
+    finally:
+        tela.shell.downstream.get_all_tools = original_get_all_tools
