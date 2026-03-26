@@ -31668,7 +31668,7 @@ phases:
       - edge cases and thread-safety checks'
   - id: notifications.impl
     name: Implement session capture and real notify_tools_changed
-    status: pending
+    status: claimed
     description: "Implement real upstream notification forwarding.\n\nstep_type: implementation\n\
       \n## File 1: src/tela/shell/gateway.py — Session capture\n\nIn the `_list_tools`\
       \ handler (inside `_wire_upstream_handlers`), capture the upstream session:\n\
@@ -31756,6 +31756,8 @@ phases:
     depends_on:
     - notifications.test
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T22:38:06.159171+00:00'
   - id: notifications.verify
     name: 'Integration verification: notification forwarding'
     status: pending
