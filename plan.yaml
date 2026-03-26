@@ -30875,7 +30875,7 @@ phases:
   - id: tool_meta.gate_fix_batch3
     name: 'Third batched remediation: remove unused pytest import in list-tools metadata
       test'
-    status: claimed
+    status: done
     description: "Fix the latest tool_meta gate blocker without widening scope.\n\n\
       step_type: implementation\nprior_loop:\n  - tool_meta.gate_fix_batch2\n  - tool_meta.gate_retest2\n\
       remaining_blocker: F401 unused import `pytest` at tests/shell/test_list_tools_metadata.py:11\
@@ -30910,6 +30910,28 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T21:29:40.118267+00:00'
+    done_at: '2026-03-26T21:35:59.634684+00:00'
+    evidence: 'Artifact:
+
+      - commit: `e69f76a`
+
+
+      Verification:
+
+      - `uv run ruff check tests/shell/test_list_tools_metadata.py` -> All checks
+      passed
+
+
+      Spec link:
+
+      - tool_meta.gate_fix_batch3
+
+
+      Notes:
+
+      - Removed only the unused `pytest` import from `tests/shell/test_list_tools_metadata.py`
+
+      - No metadata assertions or tool_meta behavior constraints changed'
   - id: tool_meta.gate_retest3
     name: 'Third independent retest: targeted Ruff and metadata tests after lint remediation'
     status: pending
