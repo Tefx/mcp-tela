@@ -30155,13 +30155,13 @@ phases:
       Verdict: PASS'
 - id: tool_meta
   name: Tool Metadata Restoration
-  status: pending
+  status: in_progress
   depends_on:
   - cleanup
   steps:
   - id: tool_meta.contract
     name: 'Contract: Add metadata fields to ResolvedTool'
-    status: pending
+    status: claimed
     description: "Add three new optional fields to ResolvedTool in src/tela/core/models.py:\n\
       \n```python\nannotations: dict | None = None\ntitle: str | None = None\noutput_schema:\
       \ dict | None = None\n```\n\nstep_type: contract\ncontract_purity: ENFORCED\n\
@@ -30182,6 +30182,8 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T17:39:47.802128+00:00'
   - id: tool_meta.test
     name: Tests for tool metadata round-trip
     status: pending
