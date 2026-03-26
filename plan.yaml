@@ -28917,3 +28917,102 @@ phases:
     depends_on:
     - rem.final_verify.retest-b1-liveness-evidence
     agent: python-senior
+  - id: rem.final_verify.retest-b1-after-batched-fix
+    name: Independent retest for B1 blocker suite, liveness, and artifact consistency
+      after batched fix
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      protected_gates:
+
+      - rem.final_verify.gate
+
+      agent_source: default
+
+      symbolic_testing: true
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate the repaired blocker
+      family from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: `tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry`
+      runs clean on a fresh/cold environment
+
+      - Edge cases: the runtime liveness path still succeeds under the same retry-sensitive
+      conditions
+
+      - Error scenarios: regenerated evidence artifact text does not contradict the
+      fresh blocker-suite or liveness outputs
+
+      - Disposition integrity: any residual blocker intersection is explicitly reported
+      as blocking-now or assigned to an owned future blocker path
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      A test that finds nothing must justify the coverage achieved.
+
+
+      Independence Level: L2
+
+      Fresh/cold environment required. Re-run only from fresh commands and reject
+      stale evidence reuse.'
+    verification: '- phase-check protecting `rem.final_verify.gate`
+
+      - Exact blocker suite command executed: `pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry
+      -q`
+
+      - Exact liveness command executed: `pytest tests/repro/test_liveness.py -q`
+
+      - Artifact consistency check compares regenerated `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+      against the pasted fresh command outputs
+
+      - Evidence explicitly states blocker intersection disposition; if any blocker
+      remains, gate closure is blocked and the remaining owner must be named'
+    evidence_template: '## Independent Retest Report
+
+
+      **Tester**: integration-verifier
+
+      **Independence Level**: L2
+
+
+      ### Commands executed
+
+      ```bash
+
+      pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry -q
+
+      pytest tests/repro/test_liveness.py -q
+
+      ```
+
+
+      ### Artifact consistency check
+
+      - Regenerated artifact reviewed: `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+      - Fresh outputs pasted verbatim
+
+      - Contradictions noted as blocker findings if artifact text diverges from fresh
+      output
+
+
+      ### Disposition
+
+      - blocker intersection disposition: `blocking-now closed` | `blocking-now open`
+
+      - if open, identify the exact remaining blocker and owned next step
+
+      '
+    depends_on:
+    - rem.final_verify.fix-b1-retry-classification-and-evidence
+    agent: integration-verifier
