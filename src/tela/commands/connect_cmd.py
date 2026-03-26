@@ -35,6 +35,8 @@ LOCKFILE_WAIT_TIMEOUT_SECONDS = 5.0
 LOCKFILE_WAIT_POLL_SECONDS = 0.1
 LOCKFILE_START_RACE_RETRIES = 3
 HTTP_TIMEOUT_SECONDS = 10.0
+HTTP_TRANSIENT_RETRIES = 3
+HTTP_TRANSIENT_BACKOFF_SECONDS = 0.5
 
 
 def _emit_bridge_diagnostic(message: str, connection_id: str) -> None:
@@ -213,15 +215,17 @@ def _discover_or_autostart(
             config_path=config_path,
             default_profile=default_profile,
         )
+        if start_result.is_err:
+            continue
+
+        spawned_pid = start_result.value
         wait_result = _wait_for_live_lockfile(
-            timeout_seconds=LOCKFILE_WAIT_TIMEOUT_SECONDS
+            timeout_seconds=LOCKFILE_WAIT_TIMEOUT_SECONDS,
+            expected_pid=spawned_pid,
         )
         if wait_result.is_ok:
             assert wait_result.value is not None
             return Result(value=wait_result.value)
-
-        if start_result.is_err:
-            continue
 
     return Result(
         error=(
@@ -230,14 +234,28 @@ def _discover_or_autostart(
     )
 
 
-def _wait_for_live_lockfile(timeout_seconds: float) -> Result[LockfileData, str]:
-    """Wait for a non-stale lockfile to become available."""
+def _wait_for_live_lockfile(
+    timeout_seconds: float,
+    expected_pid: int | None = None,
+) -> Result[LockfileData, str]:
+    """Wait for a non-stale lockfile to become available.
+
+    Args:
+        timeout_seconds: Maximum time to wait for lockfile.
+        expected_pid: If set, only accept a lockfile whose ``pid`` matches this
+            value. This prevents cross-contamination from concurrent or stale
+            serve processes by binding lockfile identity to the specific process
+            that was spawned.
+    """
 
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         lockfile_result = read_lockfile()
         if lockfile_result.is_ok:
             assert lockfile_result.value is not None
+            if expected_pid is not None and lockfile_result.value.pid != expected_pid:
+                time.sleep(LOCKFILE_WAIT_POLL_SECONDS)
+                continue
             return Result(value=lockfile_result.value)
 
         if lockfile_result.error is not None and lockfile_result.error.startswith(
@@ -254,8 +272,13 @@ def _autostart_serve(
     *,
     config_path: str,
     default_profile: str | None,
-) -> Result[None, str]:
-    """Auto-start ``tela serve`` as detached subprocess."""
+) -> Result[int, str]:
+    """Auto-start ``tela serve`` as detached subprocess.
+
+    Returns:
+        Result with the spawned process PID on success, enabling callers to
+        validate that the lockfile belongs to the exact process that was started.
+    """
 
     command: list[str] = [
         sys.executable,
@@ -271,7 +294,7 @@ def _autostart_serve(
         command.extend(["--default-profile", default_profile])
 
     try:
-        subprocess.Popen(
+        proc = subprocess.Popen(
             command,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -281,7 +304,7 @@ def _autostart_serve(
     except OSError as exc:
         return Result(error=f"AUTOSTART_FAILED: {exc}")
 
-    return Result(value=None)
+    return Result(value=proc.pid)
 
 
 def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]:
@@ -493,6 +516,39 @@ def _write_framed_message(
     return Result(value=None)
 
 
+def _is_transient_url_error(exc: urllib_error.URLError) -> bool:
+    """Return True when the URLError is a transient connection failure.
+
+    Transient failures (connection refused, reset, broken pipe) can occur when
+    the gateway HTTP server is still starting up or temporarily unreachable.
+    Non-transient failures (DNS, SSL, etc.) should not be retried.
+
+    Args:
+        exc: The URLError to classify.
+
+    Returns:
+        True if the underlying error is a transient connection failure.
+    """
+    reason = exc.reason
+    if isinstance(reason, OSError):
+        import errno
+
+        transient_errnos = {
+            errno.ECONNREFUSED,
+            errno.ECONNRESET,
+            errno.ECONNABORTED,
+            errno.EPIPE,
+            errno.ETIMEDOUT,
+        }
+        if reason.errno in transient_errnos:
+            return True
+        if isinstance(reason, (ConnectionRefusedError, ConnectionResetError, BrokenPipeError)):
+            return True
+    if isinstance(reason, (ConnectionRefusedError, ConnectionResetError, BrokenPipeError)):
+        return True
+    return False
+
+
 def _post_mcp_message(
     *,
     mcp_url: str,
@@ -500,7 +556,11 @@ def _post_mcp_message(
     payload: bytes,
     session_id: str | None = None,
 ) -> Result[tuple[str, bytes, str | None], str]:
-    """POST payload to MCP Streamable HTTP endpoint.
+    """POST payload to MCP Streamable HTTP endpoint with transient retry.
+
+    Retries up to ``HTTP_TRANSIENT_RETRIES`` times on transient connection
+    errors (connection refused, reset, broken pipe) that occur when the
+    gateway is still starting up. Non-transient errors are returned immediately.
 
     Returns ``(content_type, body, session_id)`` where *session_id* is the
     ``mcp-session-id`` returned by the server (may be ``None``).
@@ -514,21 +574,28 @@ def _post_mcp_message(
     if session_id is not None:
         headers["mcp-session-id"] = session_id
 
-    request = urllib_request.Request(
-        mcp_url,
-        data=payload,
-        method="POST",
-        headers=headers,
-    )
-    try:
-        with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
-            content_type = response.headers.get("Content-Type", "")
-            resp_session_id = response.headers.get("mcp-session-id")
-            return Result(value=(content_type, response.read(), resp_session_id))
-    except urllib_error.HTTPError as exc:
-        return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
-    except urllib_error.URLError as exc:
-        return Result(error=f"MCP_FORWARD_FAILED: {exc.reason}")
+    last_error: str = ""
+    for attempt in range(HTTP_TRANSIENT_RETRIES + 1):
+        request = urllib_request.Request(
+            mcp_url,
+            data=payload,
+            method="POST",
+            headers=headers,
+        )
+        try:
+            with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
+                content_type = response.headers.get("Content-Type", "")
+                resp_session_id = response.headers.get("mcp-session-id")
+                return Result(value=(content_type, response.read(), resp_session_id))
+        except urllib_error.HTTPError as exc:
+            return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
+        except urllib_error.URLError as exc:
+            last_error = f"MCP_FORWARD_FAILED: {exc.reason}"
+            if not _is_transient_url_error(exc) or attempt == HTTP_TRANSIENT_RETRIES:
+                return Result(error=last_error)
+            time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+
+    return Result(error=last_error)
 
 
 # @shell_orchestration: response mapping stays in shell because it is transport framing glue.
@@ -577,23 +644,35 @@ def _parse_sse_payloads(raw_body: bytes) -> Result[list[bytes], str]:
 def _post_json(
     *, url: str, bearer_token: str, payload: dict[str, str]
 ) -> Result[None, str]:
-    """POST JSON to a lifecycle endpoint with bearer auth."""
+    """POST JSON to a lifecycle endpoint with bearer auth and transient retry.
+
+    Retries transient connection errors (connection refused, reset, broken pipe)
+    that can occur when the gateway process is still binding or shutting down.
+    """
 
     body = json.dumps(payload).encode("utf-8")
-    request = urllib_request.Request(
-        url,
-        data=body,
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {bearer_token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        },
-    )
-    try:
-        with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS):
-            return Result(value=None)
-    except urllib_error.HTTPError as exc:
-        return Result(error=f"HTTP_{exc.code}: {url}")
-    except urllib_error.URLError as exc:
-        return Result(error=f"HTTP_CONNECT_ERROR: {exc.reason}")
+    last_error: str = ""
+
+    for attempt in range(HTTP_TRANSIENT_RETRIES + 1):
+        request = urllib_request.Request(
+            url,
+            data=body,
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {bearer_token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        try:
+            with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS):
+                return Result(value=None)
+        except urllib_error.HTTPError as exc:
+            return Result(error=f"HTTP_{exc.code}: {url}")
+        except urllib_error.URLError as exc:
+            last_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
+            if not _is_transient_url_error(exc) or attempt == HTTP_TRANSIENT_RETRIES:
+                return Result(error=last_error)
+            time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+
+    return Result(error=last_error)

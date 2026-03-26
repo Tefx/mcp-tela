@@ -2,7 +2,7 @@
 # Soak test: repeated cold-start verification for persistent flakiness
 # This script runs runtime liveness tests multiple times with cleanup between runs
 
-set -e
+set -eo pipefail
 
 NUM_RUNS="${NUM_RUNS:-5}"
 WORKTREE_ROOT="$(pwd)"

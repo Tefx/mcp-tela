@@ -92,10 +92,17 @@ def test_connect_server_path_uses_env_token(
 def test_discovery_autostart_handles_race_lockfile_appearance(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Discovery must recover when auto-start races another connector."""
+    """Discovery must recover when auto-start races another connector.
+
+    Flow: read_lockfile fails -> wait(0.3) fails -> autostart succeeds
+    (returns spawned PID) -> wait(5.0, expected_pid=spawned_pid) succeeds.
+    The expected_pid parameter binds lockfile identity to the spawned process.
+    """
+
+    spawned_pid = 42000
 
     lockfile = LockfileData(
-        pid=1234,
+        pid=spawned_pid,
         host="127.0.0.1",
         port=9000,
         token="lock-token",
@@ -110,7 +117,7 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
         lambda: Result(error="LOCKFILE_READ_ERROR: lockfile does not exist"),
     )
 
-    waits: list[float] = []
+    waits: list[tuple[float, int | None]] = []
     wait_outcomes = [
         Result[LockfileData, str](error="LOCKFILE_WAIT_TIMEOUT: timed out"),
         Result[LockfileData, str](value=lockfile),
@@ -118,8 +125,9 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
 
     def _fake_wait_for_live_lockfile(
         timeout_seconds: float,
+        expected_pid: int | None = None,
     ) -> Result[LockfileData, str]:
-        waits.append(timeout_seconds)
+        waits.append((timeout_seconds, expected_pid))
         return wait_outcomes.pop(0)
 
     autostarts = 0
@@ -128,12 +136,12 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
         *,
         config_path: str,
         default_profile: str | None,
-    ) -> Result[None, str]:
+    ) -> Result[int, str]:
         nonlocal autostarts
         _ = config_path
         _ = default_profile
         autostarts += 1
-        return Result(error="AUTOSTART_FAILED: address in use")
+        return Result(value=spawned_pid)
 
     monkeypatch.setattr(
         connect_cmd,
@@ -149,7 +157,12 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
     assert result.is_ok
     assert result.value == lockfile
     assert autostarts == 1
-    assert waits == [0.3, connect_cmd.LOCKFILE_WAIT_TIMEOUT_SECONDS]
+    # First wait: quick race check with no PID filter
+    # Second wait: after autostart, bound to spawned PID
+    assert waits == [
+        (0.3, None),
+        (connect_cmd.LOCKFILE_WAIT_TIMEOUT_SECONDS, spawned_pid),
+    ]
 
 
 def test_connect_discovery_uses_published_lockfile_port(
