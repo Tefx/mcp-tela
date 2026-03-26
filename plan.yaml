@@ -28366,7 +28366,7 @@ phases:
   - id: rem.final_verify.fix-b1-liveness-evidence
     name: Batched remediation for blocker regressions, liveness risk, and contradictory
       evidence
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -28589,6 +28589,8 @@ phases:
     - rem.final_verify.affected-suite-broad-pass
     - rem.final_verify.runtime-liveness-blackbox
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T06:51:48.073699+00:00'
   - id: rem.final_verify.retest-b1-liveness-evidence
     name: Independent retest for blocker regressions, liveness, and evidence consistency
     status: pending
