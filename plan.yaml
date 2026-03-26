@@ -30613,7 +30613,7 @@ phases:
       \ shaping)"
   - id: tool_meta.gate_retest
     name: 'Retest: tool metadata preservation through _list_tools'
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the batched
       remediation for tool metadata preservation from a fresh perspective.
 
@@ -30653,6 +30653,8 @@ phases:
     depends_on:
     - tool_meta.gate_fix_batch
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T20:58:39.132649+00:00'
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
