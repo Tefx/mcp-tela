@@ -65,6 +65,26 @@ servers:
         posture: "read_write"
       delete_file:
         posture: "destructive"
+    
+    # OPTIONAL: Instructions control for downstream server
+    # Controls how this server's instructions appear in the merged output.
+    # Values:
+    #   - null/omitted: Passthrough mode - include downstream instructions as-is
+    #   - false:        Suppress mode - exclude this server's instructions entirely
+    #   - "string":     Override mode - use the provided string instead of downstream
+    #
+    # Example: Passthrough (default when omitted)
+    #   # instructions: null  # Same as omitting - uses downstream instructions
+    #
+    # Example: Suppress (hide this server's instructions)
+    #   instructions: false
+    #
+    # Example: Override (custom instructions)
+    #   instructions: |
+    #     This is a sandboxed filesystem with limited write access.
+    #     Available tools: read_file, list_directory, write_file (restricted)
+    #
+    # Default: null (passthrough)
 
   # ===========================================================================
   # Example: Remote Streamable HTTP server (default)
@@ -81,6 +101,10 @@ servers:
     # DEFAULT: No explicit posture (inherit from profile)
     default_posture: "none"
 
+    # OPTIONAL: Suppress instructions from this remote server
+    # Remote servers may return lengthy instructions; suppress to keep output clean
+    # instructions: false
+
   # ===========================================================================
   # Example: Remote SSE-based MCP server (legacy)
   # ===========================================================================
@@ -91,7 +115,7 @@ servers:
   #   default_posture: "none"
 
   # ===========================================================================
-  # Example: Execution server (code/execution environments)
+  # Example: Execution server with override instructions (code/execution)
   # ===========================================================================
   # NOTE: Built-in profiles use 'execution' family. If you define a custom
   # family (e.g., 'shell'), it won't be covered by built-in profiles.
@@ -101,6 +125,15 @@ servers:
     family: "execution"
     # Execution tools are powerful - default to no access
     default_posture: "none"
+    
+    # Override downstream instructions with custom guidance
+    instructions: |
+      Secure code execution environment with sandboxed filesystem access.
+      Use caution with shell commands - they run in an isolated container.
+      
+      Available tools:
+      - run_code: Execute Python/JavaScript code
+      - run_shell: Run shell commands in sandbox
     
     # Server-level tool_overrides map directly by tool name.
     # Each tool can override family and/or posture.

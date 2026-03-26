@@ -197,44 +197,119 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         return JSONResponse(content=dict(disconnect_result.value))
 
 
-def _merge_downstream_instructions() -> Result[str | None, str]:
-    """Merge instructions from all downstream servers into a single string.
+def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str]:
+    """Merge instructions from all downstream servers into a single Markdown string.
 
-    Each server's instructions are prefixed with the server name for clarity.
-    Returns Result with None if no downstream server provided instructions.
+    Semantics per server ``instructions`` field:
+    - ``None`` (default): Passthrough downstream instructions if available.
+    - ``False``: Suppress this server's instructions entirely.
+    - ``str``: Override with the provided string, ignoring downstream.
+
+    Output format is Markdown with H2 headers for each contributing server:
+    ```
+    ## ServerName
+
+    <instructions or override>
+
+    Available tools:
+    - tool_1
+    - tool_2
+    ```
+
+    Returns Result with None if no servers contribute instructions after
+    applying suppression/override rules.
+
+    Args:
+        config: TelaConfig with server configurations.
+
+    Returns:
+        Result with merged Markdown string, or None if nothing to merge.
     """
 
+    # Get downstream instructions from connected servers
     instructions_result = get_server_instructions()
     if instructions_result.is_err:
         return Result(error=instructions_result.error)
     assert instructions_result.value is not None
-    server_instructions = instructions_result.value
-    if not server_instructions:
+    downstream_instructions = instructions_result.value
+
+    # Get tool names from registry
+    tools_result = get_all_tools()
+    if tools_result.is_err:
+        return Result(error=tools_result.error)
+    assert tools_result.value is not None
+    tools_by_server = tools_result.value
+
+    # Build merged instructions
+    parts: list[str] = []
+
+    for server_name, server_config in config.servers.items():
+        # Determine final instructions for this server
+        final_instructions: str | None = None
+
+        # Apply instruction modes
+        if server_config.instructions is False:
+            # Suppress mode - skip this server entirely
+            continue
+        elif isinstance(server_config.instructions, str):
+            # Override mode - use the override text
+            final_instructions = server_config.instructions
+        else:
+            # Passthrough mode (None) - use downstream if available
+            final_instructions = downstream_instructions.get(server_name)
+
+        # Skip if no instructions to contribute
+        if not final_instructions:
+            continue
+
+        # Build section with H2 header
+        section = f"## {server_name}\n\n{final_instructions}"
+
+        # Add tools list if available
+        server_tools = tools_by_server.get(server_name, [])
+        if server_tools:
+            tool_names = [tool.name for tool in server_tools]
+            tools_list = "\n".join(f"- {name}" for name in sorted(tool_names))
+            section += f"\n\nAvailable tools:\n{tools_list}"
+
+        parts.append(section)
+
+    # Return None if no servers contribute
+    if not parts:
         return Result(value=None)
-    parts = []
-    for server_name, instructions in server_instructions.items():
-        parts.append(f"[{server_name}]\n{instructions}")
+
     return Result(value="\n\n".join(parts))
 
 
-def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str]:
-    """Create FastMCP server instance from gateway transport config."""
+def _create_upstream_server(
+    startup_config: GatewayStartupConfig,
+    tela_config: TelaConfig,
+) -> Result[FastMCP, str]:
+    """Create FastMCP server instance from gateway transport config.
 
-    merge_result = _merge_downstream_instructions()
+    Args:
+        startup_config: Gateway startup config (transport, port, etc.).
+        tela_config: Full tela config with servers and profiles.
+
+    Returns:
+        Result with FastMCP server instance.
+    """
+
+    merge_result = _merge_downstream_instructions(tela_config)
     if merge_result.is_err:
         return Result(error=merge_result.error)
     merged_instructions = merge_result.value
 
     if (
-        config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
-        and config.port is not None
+        startup_config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
+        and startup_config.port is not None
     ):
         return Result(
             value=FastMCP(
                 "tela-gateway",
                 instructions=merged_instructions,
-                host=config.host,
-                port=config.port,
+                host=startup_config.host,
+                port=startup_config.port,
             )
         )
 
@@ -519,7 +594,7 @@ async def gateway_start(
     if audit_result.is_err:
         return Result(error=audit_result.error)
 
-    upstream_server_result = _create_upstream_server(config)
+    upstream_server_result = _create_upstream_server(config, effective_config)
     if upstream_server_result.is_err:
         return Result(error=upstream_server_result.error)
     assert upstream_server_result.value is not None
