@@ -30472,7 +30472,7 @@ phases:
       \nIssues Found:\n- none\n\nVerdict:\n- PASS"
   - id: tool_meta.gate
     name: 'Gate: Tool Metadata Restoration'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify tool_meta phase completion.
 
 
@@ -30502,6 +30502,8 @@ phases:
     depends_on:
     - tool_meta.verify
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-26T20:46:45.975053+00:00'
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
