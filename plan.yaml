@@ -25837,7 +25837,7 @@ phases:
   steps:
   - id: rem.bridge_flake.freeze-runtime-snapshot
     name: Freeze remediation snapshot for bridge flake contingency
-    status: claimed
+    status: pending
     description: 'step_type: verification
 
       agent_source: default
@@ -25877,8 +25877,6 @@ phases:
 
       '
     agent: integration-verifier
-    claimed_by: integration-verifier
-    claimed_at: '2026-03-25T18:38:17.899281+00:00'
   - id: rem.bridge_flake.investigate-persistent-timeout-family
     name: Investigate persistent bridge timeout blocker family
     status: pending
