@@ -27562,7 +27562,7 @@ phases:
       \ retest step before closure"
   - id: rem.suggestions.resolve-lockfile-extra-field-contract-ambiguity
     name: Resolve lockfile extra-field contract ambiguity
-    status: pending
+    status: claimed
     description: Align lockfile extra-field semantics across implementation text,
       docs contract, and lockfile tests by making acceptance/rejection behavior explicit
       and ensuring test naming/assertions match the chosen contract.
@@ -27582,6 +27582,8 @@ phases:
     depends_on:
     - rem.suggestions.verify-suggestion-pack
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T05:57:04.245595+00:00'
   - id: rem.suggestions.retest-lockfile-extra-field-contract-alignment
     name: Retest lockfile extra-field contract alignment
     status: pending
