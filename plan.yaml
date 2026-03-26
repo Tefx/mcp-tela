@@ -26205,7 +26205,7 @@ phases:
       error: \"\""
   - id: rem.hygiene.validate-shell-result-allow-rationales
     name: Validate and document @invar:allow shell_result rationales
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -26269,6 +26269,58 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T04:15:28.704965+00:00'
+    done_at: '2026-03-26T04:20:22.652508+00:00'
+    evidence: '## shell_result Allow Audit
+
+      - occurrences found: 4 (src/tela/shell/idle_shutdown.py, src/tela/shell/downstream.py,
+      src/tela/shell/gateway.py, src/tela/cli.py)
+
+      - valid as-is: 3
+
+      - revised with stronger rationale: 1 (`src/tela/shell/downstream.py::get_registry`)
+
+      - removed as stale: 0
+
+
+      ## Commit hash(es)
+
+      - 38cfec7
+
+
+      ## Files changed
+
+      - src/tela/shell/downstream.py
+
+
+      ## Verification
+
+      - `invar guard --changed`: PASSED (0 errors, 0 warnings)
+
+      - `invar refs src/tela/shell/idle_shutdown.py::get_idle_manager`: 13 references
+
+      - `invar refs src/tela/shell/downstream.py::get_registry`: 19 references
+
+      - `invar refs src/tela/shell/gateway.py::get_runtime`: 70 references
+
+      - `uv run python -c "from tela.shell.downstream import get_registry"`: PASSED
+
+      - `grep -rn ''@invar:allow shell_result'' src/ --include=''*.py''`: 4 occurrences
+
+
+      ## Spec link/reference
+
+      - AGENTS.md shell layer rule (`Shell returns Result[T,E], handles I/O`)
+
+      - INVAR.md escape hatch policy (`@invar:allow shell_result: <reason>`)
+
+
+      ## Gaps/Notes
+
+      - Full-scan invar wrapper instability noted by worker; changed-only checks for
+      this step passed.
+
+      - No additional `shell_result` allowances discovered beyond the inventoried
+      four.'
   - id: rem.hygiene.evaluate-runtime-liveness-test-structure
     name: Evaluate and refactor oversized runtime liveness test structure if warranted
     status: pending
