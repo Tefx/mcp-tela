@@ -30669,7 +30669,7 @@ phases:
   - id: tool_meta.gate_fix_batch2
     name: 'Second batched remediation: restore gateway call_tool outputSchema validity
       and disposition reported mypy drift'
-    status: pending
+    status: claimed
     description: "Fix ALL newly surfaced blockers from the repeated tool_meta gate\
       \ cycle.\n\nstep_type: implementation\nprior_loop:\n  - tool_meta.gate_fix_batch\n\
       \  - tool_meta.gate_retest\nremaining_blocker: gateway call_tool metadata forwarding\
@@ -30736,6 +30736,8 @@ phases:
     depends_on:
     - tool_meta.gate_retest
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T21:12:43.669960+00:00'
   - id: tool_meta.gate_retest2
     name: 'Second independent retest: downstream gateway metadata regression and tool_meta
       gate intersection'
