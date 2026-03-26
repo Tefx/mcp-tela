@@ -31508,7 +31508,7 @@ phases:
       - required follow-ups: none'
 - id: notifications
   name: Upstream Notification Forwarding
-  status: in_progress
+  status: done
   depends_on:
   - instructions
   steps:
@@ -31958,7 +31958,7 @@ phases:
       - no blocking issues'
   - id: notifications.gate
     name: 'Gate: Upstream Notification Forwarding'
-    status: claimed
+    status: done
     description: "Gate review: Verify notifications phase completion.\n\nreview_depth:\
       \ THOROUGH\nreview_depth_rationale:\n  - Async session management with concurrency\
       \ concerns\n  - Module-level mutable state (sessions list)\n  - Stale session\
@@ -31980,6 +31980,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T23:35:06.308157+00:00'
+    done_at: '2026-03-26T23:38:26.683760+00:00'
+    evidence: 'Artifact:
+
+      - Gate audit across notifications contract/test/impl/remediation artifacts
+
+
+      Verification:
+
+      - targeted notification + disconnect suites passed (129 tests)
+
+      - invar full guard passed with no blocking errors
+
+      - code-path inspection validated capture/send/cleanup lifecycle and lock usage
+
+
+      Spec link:
+
+      - notifications.gate criteria
+
+
+      Gate verdict:
+
+      - decision: PASS
+
+      - rationale: all seven criteria satisfied after remediation (correct capture
+      binding, real notify sends, leak-free cleanup, shutdown release, concurrency/deadlock
+      safety, bounded growth)
+
+      - required follow-ups: none'
   - id: notifications.gate_fix_batch
     name: notifications.gate_fix_batch
     status: done
@@ -32488,7 +32517,7 @@ phases:
       - notifications.gate_retest2'
 - id: post.doc_sync
   name: Documentation Sync
-  status: locked
+  status: pending
   depends_on:
   - notifications
   steps:
