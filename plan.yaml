@@ -32523,7 +32523,7 @@ phases:
   steps:
   - id: post.doc_sync.update
     name: Update documentation to match implementation
-    status: claimed
+    status: done
     description: 'Sync all project documentation with the implemented changes.
 
 
@@ -32581,6 +32581,33 @@ phases:
     agent: doc-reviewer
     claimed_by: python-executor
     claimed_at: '2026-03-26T23:44:43.645325+00:00'
+    done_at: '2026-03-26T23:51:57.126555+00:00'
+    evidence: "Artifact:\n- Commit: 4b0699b92f098662aa535e3d042eb8e6ec616f0c\n- Files\
+      \ updated: README.md, docs/DESIGN.md, docs/INTERFACES.md, docs/USAGE.md\n\n\
+      Verified content:\n1. docs/DESIGN.md:\n   - ResolvedTool fields: Core fields\
+      \ (name, server_name, family, posture, schema_, description) + Metadata passthrough\
+      \ fields (annotations, title, output_schema) documented in lines 186-205\n \
+      \  - ServerConfig.instructions modes: None/False/str documented in lines 232-236\
+      \ with behavior table\n   - Session capture + notification forwarding: documented\
+      \ in lines 207-224 including fallback behavior\n   - Invariants updated: line\
+      \ 259 confirms tool metadata preserved from downstream through upstream\n\n\
+      2. docs/INTERFACES.md:\n   - Tool metadata fields in tools/list response: documented\
+      \ in lines 192-205 (annotations, title, outputSchema)\n   - Instructions config\
+      \ options: documented in lines 359-367 with behavior table and merged output\
+      \ format\n   - Notification forwarding behavior: documented in lines 339-354\
+      \ including fallback behavior\n\n3. README.md:\n   - Tool metadata passthrough:\
+      \ documented in Features section (line 158) - `annotations`, `title`, and `outputSchema`\n\
+      \   - Instructions merging: documented in Features section (line 159)\n   -\
+      \ Notification forwarding: documented in Features section (line 160)\n\n4. docs/USAGE.md:\n\
+      \   - Instructions configuration examples: lines 104-136 with YAML examples\
+      \ and behavior table\n   - Tool metadata passthrough: lines 467-477 with field\
+      \ descriptions\n   - Notification forwarding: lines 479-486\n\nVerification:\n\
+      - Stale refs check: grep for `_register_registry_tools`, `registry_tools` -\
+      \ no matches found in docs\n- Markdown sanity: All files have valid heading\
+      \ structure\n- Key features documented: Tool metadata, instructions config,\
+      \ notification forwarding - all present\n- ResolvedTool field naming matches\
+      \ implementation: `annotations`, `title`, `output_schema` (snake_case in Python,\
+      \ camelCase in JSON/INTERFACES.md)"
   - id: post.doc_sync.gate
     name: 'Gate: Documentation Sync'
     status: pending
