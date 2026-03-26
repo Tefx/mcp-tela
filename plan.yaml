@@ -32160,7 +32160,7 @@ phases:
       leaks'
   - id: notifications.gate_retest
     name: notifications.gate_retest
-    status: pending
+    status: claimed
     description: 'Independent retest of notifications gate remediation.
 
 
@@ -32229,6 +32229,8 @@ phases:
     depends_on:
     - notifications.gate_fix_batch
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T23:09:35.883768+00:00'
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
