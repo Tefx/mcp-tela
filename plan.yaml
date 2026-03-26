@@ -31976,7 +31976,7 @@ phases:
 
       - No unresolved issues'
     depends_on:
-    - notifications.gate_retest
+    - notifications.gate_retest2
     agent: gate-reviewer
   - id: notifications.gate_fix_batch
     name: notifications.gate_fix_batch
