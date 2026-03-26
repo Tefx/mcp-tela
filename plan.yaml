@@ -30373,7 +30373,7 @@ phases:
       \ -> _list_tools pipeline)"
   - id: tool_meta.verify
     name: 'Integration verification: tool metadata round-trip'
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, verify the full tool metadata round-trip.
 
 
@@ -30457,6 +30457,8 @@ phases:
     depends_on:
     - tool_meta.impl
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T20:41:47.784002+00:00'
   - id: tool_meta.gate
     name: 'Gate: Tool Metadata Restoration'
     status: pending
