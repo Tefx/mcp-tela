@@ -32266,6 +32266,104 @@ phases:
       Verdict:
 
       - PASS'
+  - id: notifications.gate_fix_batch2
+    name: notifications.gate_fix_batch2
+    status: pending
+    description: 'Fix second notifications gate blocker batch.
+
+
+      Fix ALL blockers found by the second notifications gate remediation round.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      1. Multi-session capture binding incorrect: gateway `_ensure_connection` reuses
+      the first connection id, causing later sessions to overwrite the first capture
+      binding.
+
+      2. Lint blockers: F401 unused imports in `src/tela/shell/upstream.py` (`Any`)
+      and `tests/shell/test_notification_forwarding.py` (`Posture`).
+
+
+      symbolic_testing: false
+
+      prior_loop:
+
+      - notifications.gate_fix_batch
+
+      - notifications.gate_retest
+
+      remaining_blocker: multi-session capture binding still aliases later upstream
+      sessions onto the first connection id; lint remains blocking.
+
+      why_new_loop: the first remediation closed disconnect cleanup leaks, but independent
+      retest exposed a separate connection-binding correctness bug plus residual lint
+      blockers.
+
+      why_previous_fix_failed: the prior loop repaired disconnect release semantics
+      only; it did not validate distinct capture ownership across multiple concurrent
+      upstream sessions.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: connection binding in `_ensure_connection` does not preserve per-session
+      capture ownership when multiple upstream sessions are established.
+
+      - Symptom: later sessions overwrite the first capture binding instead of mapping
+      to distinct connection ids.
+
+      - Why this fix is not surface-level: remediation must correct ownership semantics
+      for multi-session capture, preserve disconnect cleanup guarantees, and clear
+      repo blockers from lint.
+
+
+      ## Required remediation
+
+      - Correct `_ensure_connection` so two distinct upstream sessions map to distinct
+      connection ids and do not overwrite each other''s capture bindings.
+
+      - Preserve existing disconnect cleanup guarantees: releasing one connection
+      must not leak or corrupt peer session bindings.
+
+      - Clear the F401 blockers in `src/tela/shell/upstream.py` and `tests/shell/test_notification_forwarding.py`.
+
+      - Search for sibling connection-binding or capture-registration paths so the
+      fix is not limited to one observed code path.
+
+
+      ## Completion Criteria
+
+      - ALL listed blockers are fixed.
+
+      - Distinct upstream sessions retain distinct capture-to-connection bindings.
+
+      - Disconnect cleanup remains correct after the binding fix.
+
+      - Lint is clean for the identified files.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.'
+    verification: '- Main path: targeted regression proves two distinct upstream sessions
+      map to distinct connection ids without overwriting prior capture bindings
+
+      - Failure path: disconnect leak and notification forwarding regressions still
+      pass after the binding fix
+
+      - Lint: rerun lint for `src/tela/shell/upstream.py` and `tests/shell/test_notification_forwarding.py`
+      with no F401 findings
+
+      - Proof: sibling search confirms no remaining capture-binding path reuses the
+      wrong connection id'
+    depends_on:
+    - notifications.gate_retest
+    agent: python-senior
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
