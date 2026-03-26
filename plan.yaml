@@ -27973,7 +27973,7 @@ phases:
       \ blackbox/gate"
   - id: rem.final_verify.runtime-liveness-blackbox
     name: Run final runtime liveness black-box probe
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -28056,6 +28056,8 @@ phases:
     depends_on:
     - rem.final_verify.retest-full-invar-complexity-debt
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-26T06:34:49.630006+00:00'
   - id: rem.final_verify.gate
     name: Gate final remediation verification
     status: pending
