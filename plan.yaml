@@ -29436,3 +29436,73 @@ phases:
 
       ```'
     agent: python-executor
+  - id: cleanup.verify
+    name: Verify dead code removal
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate the dead
+      code removal.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - All 600 tests still pass
+
+      - No regressions in tool listing (tools still appear via catch-all handler)
+
+      - No regressions in tool calling
+
+      - _validate_transport_mode still works for transport validation
+
+      - No orphaned imports or references to removed functions
+
+
+      Independence Level: L1'
+    verification: '- All tests pass
+
+      - grep confirms no stale references to removed functions
+
+      - No import errors'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier (independent)
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      ```
+
+      <pytest output>
+
+      ```
+
+
+      ### Orphan Check
+
+      ```
+
+      <grep for removed symbol names across entire src/>
+
+      ```
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND'
+    depends_on:
+    - cleanup.impl
+    agent: integration-verifier
