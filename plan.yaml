@@ -26155,6 +26155,10 @@ phases:
 
       - Cold-start/soak verification is sufficient to judge persistent flakiness risk
 
+      - New retest evidence proves the batched blocker fix retired initialize/tools_list
+      BrokenPipe, process-bound lock ownership risk, tee/pipeline masking risk, and
+      evidence provenance gaps
+
       - Any remaining timeout flakiness is explicitly called blocker for rem.final_verify'
     evidence_template: '## Gate Review Report
 
@@ -26171,6 +26175,7 @@ phases:
     - rem.bridge_flake.freeze-runtime-snapshot
     - rem.bridge_flake.investigate-persistent-timeout-family
     - rem.bridge_flake.cold-repro-and-soak
+    - rem.bridge_flake.retest-gate-blockers-loop2
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T04:37:48.599338+00:00'
