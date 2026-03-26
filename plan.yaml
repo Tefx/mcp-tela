@@ -29997,7 +29997,7 @@ phases:
       - No sibling orphan-import regression identified in cleanup-touched files'
   - id: cleanup.gate_retest
     name: Retest cleanup gate after batched remediation
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, rerun the cleanup phase regression commands
       after `cleanup.gate_fix_batch`.
 
@@ -30077,6 +30077,46 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T17:27:41.178305+00:00'
+    done_at: '2026-03-26T17:29:53.177243+00:00'
+    evidence: '## Cleanup Gate Retest Report
+
+
+      **Tester**: integration-verifier
+
+
+      Commands executed:
+
+      - `uv run python -m pytest`
+
+      - `uv run invar guard`
+
+      - `uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py`
+
+
+      Actual outputs:
+
+      - Pytest: **600 passed**, 3 warnings
+
+      - Invar guard: **passed**, static errors=0 warnings=0 infos=0
+
+      - Ruff: **All checks passed**
+
+
+      Cleanup gate blocker status:
+
+      - orphaned import fixed: yes (`call_tool` no longer imported; remaining occurrences
+      are runtime decorator/function usages)
+
+      - pytest status: pass
+
+      - invar guard status: pass
+
+      - ruff status: pass
+
+      - remaining cleanup-intersecting blockers: none
+
+
+      Verdict: PASS'
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
