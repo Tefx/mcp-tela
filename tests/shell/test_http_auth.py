@@ -228,11 +228,76 @@ def test_middleware_rejects_non_bearer_scheme() -> None:
     """Authorization: Basic ... must be rejected."""
     mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
     send = _ResponseCollector()
-    scope = _make_scope(
-        "/mcp", "POST", headers=[(b"authorization", b"Basic c2VjcmV0")]
-    )
+    scope = _make_scope("/mcp", "POST", headers=[(b"authorization", b"Basic c2VjcmV0")])
     _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
+
+
+# -- Invalid Bearer Format (RFC 7235 / RFC 6750 Negative Cases) ---------------
+
+
+def test_middleware_rejects_lowercase_bearer_scheme() -> None:
+    """Authorization: bearer <token> (lowercase) must be rejected.
+
+    Ref: RFC 7235 Section 2.1 defines auth-scheme as case-insensitive.
+    Ref: RFC 6750 Section 2.1 specifies "Bearer" (titlecase).
+    The current implementation uses case-sensitive prefix matching ("Bearer "),
+    which rejects lowercase variants. This test documents the rejection
+    behavior as a regression guard.
+    """
+    mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
+    send = _ResponseCollector()
+    scope = _make_scope("/mcp", "POST", headers=[(b"authorization", b"bearer secret")])
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    assert send.json_body["error"].startswith("AUTH_INVALID_TOKEN")
+
+
+def test_middleware_rejects_uppercase_bearer_scheme() -> None:
+    """Authorization: BEARER <token> (uppercase) must be rejected.
+
+    Ref: RFC 7235 Section 2.1 defines auth-scheme as case-insensitive.
+    Ref: RFC 6750 Section 2.1 specifies "Bearer" (titlecase).
+    The current implementation uses case-sensitive prefix matching ("Bearer "),
+    which rejects uppercase variants. This test documents the rejection
+    behavior as a regression guard.
+    """
+    mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
+    send = _ResponseCollector()
+    scope = _make_scope("/mcp", "POST", headers=[(b"authorization", b"BEARER secret")])
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    assert send.json_body["error"].startswith("AUTH_INVALID_TOKEN")
+
+
+def test_middleware_rejects_bearer_without_space() -> None:
+    """Authorization: BearerX <token> (no space after scheme) must be rejected.
+
+    Ref: RFC 6750 Section 2.1 requires exactly one space between scheme and token.
+    Malformed headers like "BearerX" or "Bearersecret" must be rejected.
+    """
+    mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
+    send = _ResponseCollector()
+    # No space between "Bearer" and token - invalid per RFC 6750
+    scope = _make_scope("/mcp", "POST", headers=[(b"authorization", b"Bearersecret")])
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    assert send.json_body["error"].startswith("AUTH_INVALID_TOKEN")
+
+
+def test_middleware_rejects_bearer_with_tab_separator() -> None:
+    """Authorization: Bearer\\t<token> (tab instead of space) must be rejected.
+
+    Ref: RFC 6750 Section 2.1 specifies exactly one space between scheme and token.
+    A tab character between "Bearer" and the token is an invalid format.
+    """
+    mw = BearerAuthMiddleware(_passthrough_app, get_expected_token=lambda: "secret")
+    send = _ResponseCollector()
+    # Tab between "Bearer" and token - invalid format
+    scope = _make_scope("/mcp", "POST", headers=[(b"authorization", b"Bearer\tsecret")])
+    _run(mw(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    assert send.json_body["error"].startswith("AUTH_INVALID_TOKEN")
 
 
 # -- Pass-through cases -----------------------------------------------------

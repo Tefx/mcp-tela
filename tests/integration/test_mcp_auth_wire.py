@@ -173,3 +173,92 @@ def test_post_mcp_with_wrong_token_returns_401() -> None:
     )
     _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
     assert send.status == 401
+
+
+# -- Invalid Bearer Format (RFC 7235 / RFC 6750 Negative Cases) ---------------
+
+
+def test_post_mcp_with_lowercase_bearer_returns_401() -> None:
+    """POST /mcp with lowercase 'bearer' scheme must be rejected with 401.
+
+    Ref: RFC 7235 Section 2.1 defines auth-scheme as case-insensitive.
+    Ref: RFC 6750 Section 2.1 specifies "Bearer" (titlecase).
+    The current implementation uses case-sensitive prefix matching ("Bearer ").
+    This test documents the rejection behavior at the wired integration level.
+    """
+    app = _build_wrapped_app()
+    send = _ResponseCollector()
+    scope = _make_scope(
+        "/mcp",
+        method="POST",
+        headers=[(b"authorization", b"bearer test-secret-token-42")],
+    )
+    _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    body = send.json_body
+    assert "error" in body
+    assert body["error"].startswith("AUTH_INVALID_TOKEN")
+
+
+def test_post_mcp_with_uppercase_bearer_returns_401() -> None:
+    """POST /mcp with uppercase 'BEARER' scheme must be rejected with 401.
+
+    Ref: RFC 7235 Section 2.1 defines auth-scheme as case-insensitive.
+    Ref: RFC 6750 Section 2.1 specifies "Bearer" (titlecase).
+    The current implementation uses case-sensitive prefix matching ("Bearer ").
+    This test documents the rejection behavior at the wired integration level.
+    """
+    app = _build_wrapped_app()
+    send = _ResponseCollector()
+    scope = _make_scope(
+        "/mcp",
+        method="POST",
+        headers=[(b"authorization", b"BEARER test-secret-token-42")],
+    )
+    _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    body = send.json_body
+    assert "error" in body
+    assert body["error"].startswith("AUTH_INVALID_TOKEN")
+
+
+def test_post_mcp_with_bearer_no_space_returns_401() -> None:
+    """POST /mcp with 'Bearersecret' (no space) must be rejected with 401.
+
+    Ref: RFC 6750 Section 2.1 requires exactly one space between scheme and token.
+    Malformed headers without the required space separator must be rejected.
+    """
+    app = _build_wrapped_app()
+    send = _ResponseCollector()
+    # No space between "Bearer" and token - invalid per RFC 6750
+    scope = _make_scope(
+        "/mcp",
+        method="POST",
+        headers=[(b"authorization", b"BearerXtest-secret-token-42")],
+    )
+    _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    body = send.json_body
+    assert "error" in body
+    assert body["error"].startswith("AUTH_INVALID_TOKEN")
+
+
+def test_post_mcp_with_bearer_tab_separator_returns_401() -> None:
+    """POST /mcp with tab between Bearer and token must be rejected with 401.
+
+    Ref: RFC 6750 Section 2.1 requires exactly one space: `Bearer <token>`.
+    A tab character between scheme and token is an invalid format.
+    """
+    app = _build_wrapped_app()
+    send = _ResponseCollector()
+    # Tab between "Bearer" and token - invalid format
+    scope = _make_scope(
+        "/mcp",
+        method="POST",
+        headers=[(b"authorization", b"Bearer\ttest-secret-token-42")],
+    )
+    _run(app(scope, None, send))  # type: ignore[arg-type]  # test fake: receive not used
+    assert send.status == 401
+    body = send.json_body
+    assert "error" in body
+    assert body["error"].startswith("AUTH_INVALID_TOKEN")
