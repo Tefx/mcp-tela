@@ -31199,7 +31199,7 @@ phases:
       - edge cases (all suppressed, no instructions, override without downstream)'
   - id: instructions.impl
     name: Implement instructions merge and config docs
-    status: claimed
+    status: done
     description: "Implement structured instructions merge and update config example.\n\
       \nstep_type: implementation\n\n## File 1: src/tela/shell/gateway.py — _merge_downstream_instructions()\n\
       \nCurrent implementation (lines 201-214):\n```python\ndef _merge_downstream_instructions()\
@@ -31297,6 +31297,23 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T21:50:39.272764+00:00'
+    done_at: '2026-03-26T22:03:07.014887+00:00'
+    evidence: "## Instructions Merge Implementation Evidence\n\nFiles changed:\n-\
+      \ `src/tela/shell/gateway.py` (merge logic and call-chain updates)\n- `tests/shell/test_merge_instructions.py`\
+      \ (expanded coverage)\n- `tela.yaml.example` (instructions field documentation/examples)\n\
+      \n_merge_downstream_instructions output:\n- now config-driven via `TelaConfig`\n\
+      - supports per-server modes:\n  - `None` passthrough\n  - `False` suppress\n\
+      \  - `str` override\n- emits markdown sections with H2 headers and tool context\n\
+      \nConfig modes verified:\n- passthrough (None): yes\n- suppress (False): yes\n\
+      - override (str): yes\n\nCall-chain timing fix:\n- `_merge_downstream_instructions(config:\
+      \ TelaConfig)` accepts config explicitly\n- `_create_upstream_server(..., tela_config)`\
+      \ passes config into merge helper\n- `gateway_start` passes `effective_config`\
+      \ into upstream creation path\n\ntela.yaml.example updated:\n- instructions\
+      \ field documented\n- examples for all three modes included\n\nTest results:\n\
+      - `uv run python -m pytest tests/shell/test_merge_instructions.py -v` -> passed\n\
+      - `uv run python -m pytest tests/` -> 631 passed\n\nInvar guard:\n- `uv run\
+      \ invar guard` -> passed (no blocking errors; warnings pre-existing)\n\nSpec\
+      \ link:\n- instructions.impl"
   - id: instructions.verify
     name: 'Integration verification: instructions merge'
     status: pending
