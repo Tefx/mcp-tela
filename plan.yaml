@@ -30642,3 +30642,21 @@ phases:
     depends_on:
     - post.deep_review.wiring
     agent: gate-reviewer
+  - id: post.deep_review.black_box
+    name: Black-box verification
+    status: pending
+    description: 'Using ONLY the spec and public API (no implementation source):
+
+      - Verify tool metadata fields appear in tools/list response
+
+      - Verify instructions config modes work as documented
+
+      - Verify notification forwarding triggers on tool change
+
+      - Verify removed dead code does not affect observable behavior'
+    verification: '- All documented behavior works from external perspective
+
+      - No observable regressions'
+    depends_on:
+    - post.deep_review.spec_conformance
+    agent: blind-tester
