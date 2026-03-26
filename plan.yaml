@@ -28366,7 +28366,7 @@ phases:
   - id: rem.final_verify.fix-b1-liveness-evidence
     name: Batched remediation for blocker regressions, liveness risk, and contradictory
       evidence
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -28591,6 +28591,16 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T06:51:48.073699+00:00'
+    done_at: '2026-03-26T06:58:26.820732+00:00'
+    evidence: "## Batched Remediation Evidence\n- Blocker family: B1 retry/liveness/evidence\
+      \ consistency\n- Root cause addressed: transient classification no longer depends\
+      \ solely on errno; type-authoritative handling added for connection-refused/reset/broken-pipe\
+      \ cases\n- Why previous fix failed: stale/contradictory evidence accepted without\
+      \ fresh blocker-suite proof\n- Code/test/evidence updates:\n  - `src/tela/commands/connect_cmd.py`\n\
+      \  - `tests/repro/test_gate_blocker_regressions.py` (new contention/errno-none\
+      \ coverage)\n  - `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`\
+      \ refreshed to remove stale contradiction\n- Fresh focused verification reported:\
+      \ 21 passed, 0 failed"
   - id: rem.final_verify.retest-b1-liveness-evidence
     name: Independent retest for blocker regressions, liveness, and evidence consistency
     status: pending
