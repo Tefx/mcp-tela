@@ -30406,3 +30406,25 @@ phases:
     depends_on:
     - notifications.impl
     agent: integration-verifier
+  - id: notifications.gate
+    name: 'Gate: Upstream Notification Forwarding'
+    status: pending
+    description: "Gate review: Verify notifications phase completion.\n\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale:\n  - Async session management with concurrency\
+      \ concerns\n  - Module-level mutable state (sessions list)\n  - Stale session\
+      \ cleanup is a correctness-critical path\n\nReview criteria:\n1. Sessions captured\
+      \ correctly from upstream context\n2. notify_tools_changed sends real notifications\
+      \ (no longer no-op)\n3. Stale sessions cleaned up without crash\n4. Sessions\
+      \ cleared on shutdown\n5. Concurrency safety with _runtime_lock\n6. No deadlock\
+      \ between session capture and notification sending\n7. Bounded growth of sessions\
+      \ list"
+    verification: '- All steps completed
+
+      - Evidence shows real notification delivery
+
+      - Concurrency concerns addressed
+
+      - No unresolved issues'
+    depends_on:
+    - notifications.verify
+    agent: gate-reviewer
