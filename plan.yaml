@@ -32160,7 +32160,7 @@ phases:
       leaks'
   - id: notifications.gate_retest
     name: notifications.gate_retest
-    status: claimed
+    status: done
     description: 'Independent retest of notifications gate remediation.
 
 
@@ -32231,6 +32231,41 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T23:09:35.883768+00:00'
+    done_at: '2026-03-26T23:11:28.982269+00:00'
+    evidence: '## Notifications Gate Retest Report
+
+      Tester: integration-verifier
+
+      Scope: notifications disconnect leak remediation
+
+
+      Commands/tests rerun:
+
+      - `uv run pytest tests/repro/test_disconnect_cleanup.py tests/shell/test_notification_forwarding.py
+      -v` -> 27 passed
+
+      - invar guard check -> pass (no errors)
+
+
+      Findings:
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+      | none | stale sessions after disconnect | disconnect path | not reproducible
+      after fix |
+
+      | none | unbounded registry growth across cycles | session registry | not reproducible
+      (bounded in repeated-cycle tests) |
+
+      | none | notification forwarding after reconnect | notify path | passes in peer-disconnect/live-session
+      tests |
+
+
+      Verdict:
+
+      - PASS'
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
