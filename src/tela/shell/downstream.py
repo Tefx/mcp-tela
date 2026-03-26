@@ -401,21 +401,21 @@ async def call_tool(
     return Result(value=payload)
 
 
-def get_server_instructions() -> dict[str, str]:
+def get_server_instructions() -> Result[dict[str, str], str]:
     """Return collected server instructions from downstream MCP servers.
 
     Each key is the server name, each value is the instructions string
     returned by the server during MCP initialize.
 
     Examples:
-        >>> get_server_instructions()
+        >>> get_server_instructions().value
         {}
 
     Returns:
-        Server name to instructions mapping (only servers that provided instructions).
+        Result with server name to instructions mapping (only servers that provided instructions).
     """
 
-    return dict(_server_instructions)
+    return Result(value=dict(_server_instructions))
 
 
 def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:

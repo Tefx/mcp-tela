@@ -198,26 +198,33 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         return JSONResponse(content=dict(disconnect_result.value))
 
 
-def _merge_downstream_instructions() -> str | None:
+def _merge_downstream_instructions() -> Result[str | None, str]:
     """Merge instructions from all downstream servers into a single string.
 
     Each server's instructions are prefixed with the server name for clarity.
-    Returns None if no downstream server provided instructions.
+    Returns Result with None if no downstream server provided instructions.
     """
 
-    server_instructions = get_server_instructions()
+    instructions_result = get_server_instructions()
+    if instructions_result.is_err:
+        return Result(error=instructions_result.error)
+    assert instructions_result.value is not None
+    server_instructions = instructions_result.value
     if not server_instructions:
-        return None
+        return Result(value=None)
     parts = []
     for server_name, instructions in server_instructions.items():
         parts.append(f"[{server_name}]\n{instructions}")
-    return "\n\n".join(parts)
+    return Result(value="\n\n".join(parts))
 
 
 def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str]:
     """Create FastMCP server instance from gateway transport config."""
 
-    merged_instructions = _merge_downstream_instructions()
+    merge_result = _merge_downstream_instructions()
+    if merge_result.is_err:
+        return Result(error=merge_result.error)
+    merged_instructions = merge_result.value
 
     if (
         config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)

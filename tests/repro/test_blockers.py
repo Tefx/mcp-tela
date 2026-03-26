@@ -68,9 +68,15 @@ class TestB1WireCliSubcommands:
             main(["audit", "--help"])
         assert exc_info.value.code == 0
 
-    def test_status_command_requires_running_server(self) -> None:
+    def test_status_command_requires_running_server(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path,
+    ) -> None:
         """tela status returns NO_RUNNING_SERVER error without lockfile."""
+        import tela.shell.lockfile as lockfile_mod
         from tela.commands.status_cmd import status_command
+
+        # Isolate from any live server lockfile on the host.
+        monkeypatch.setattr(lockfile_mod, "LOCKFILE_PATH", tmp_path / "gateway.lock")
 
         # Per INTERFACES.md §2, query commands require lockfile + HTTP.
         # Without a running server (no lockfile), must return clear error.
@@ -79,9 +85,15 @@ class TestB1WireCliSubcommands:
         assert result.error is not None
         assert "NO_RUNNING_SERVER" in result.error
 
-    def test_connections_command_requires_running_server(self) -> None:
+    def test_connections_command_requires_running_server(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path,
+    ) -> None:
         """tela connections returns NO_RUNNING_SERVER error without lockfile."""
+        import tela.shell.lockfile as lockfile_mod
         from tela.commands.connections_cmd import connections_command
+
+        # Isolate from any live server lockfile on the host.
+        monkeypatch.setattr(lockfile_mod, "LOCKFILE_PATH", tmp_path / "gateway.lock")
 
         # Per INTERFACES.md §2, query commands require lockfile + HTTP.
         # Without a running server (no lockfile), must return clear error.
@@ -90,9 +102,15 @@ class TestB1WireCliSubcommands:
         assert result.error is not None
         assert "NO_RUNNING_SERVER" in result.error
 
-    def test_audit_command_requires_running_server(self) -> None:
+    def test_audit_command_requires_running_server(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path,
+    ) -> None:
         """tela audit returns NO_RUNNING_SERVER error without lockfile."""
+        import tela.shell.lockfile as lockfile_mod
         from tela.commands.audit_cmd import audit_command
+
+        # Isolate from any live server lockfile on the host.
+        monkeypatch.setattr(lockfile_mod, "LOCKFILE_PATH", tmp_path / "gateway.lock")
 
         # Per INTERFACES.md §2, query commands require lockfile + HTTP.
         # Without a running server (no lockfile), must return clear error.

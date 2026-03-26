@@ -192,19 +192,23 @@ def test_serve_ephemeral_bind_publishes_lockfile():
                 proc.wait()
 
 
-def test_connect_discovers_via_lockfile():
+def test_connect_discovers_via_lockfile(monkeypatch, tmp_path):
     """tela connect must discover gateway via lockfile without --server override.
 
     Per docs/USAGE.md:
       - 'tela connect' auto-discovers running server via ~/.tela/gateway.lock
       - No --server needed for local gateway
     """
-    _clean_lockfile()
+    # Isolate lockfile to a temp HOME so a live host server does not interfere.
+    # Both in-process helpers (Path.home()) and subprocesses inherit this HOME.
+    fake_home = str(tmp_path / "home")
+    os.makedirs(fake_home, exist_ok=True)
+    monkeypatch.setenv("HOME", fake_home)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         config_path = _write_test_config(tmp_dir)
 
-        # Start server first
+        # Start server first (inherits modified HOME via os.environ)
         serve_proc = subprocess.Popen(
             [
                 sys.executable,
@@ -222,7 +226,7 @@ def test_connect_discovers_via_lockfile():
         )
 
         try:
-            # Wait for lockfile
+            # Wait for lockfile (now under fake_home/.tela/gateway.lock)
             lockfile_data = _wait_for_lockfile(timeout=10.0)
             assert lockfile_data is not None, "Server did not write lockfile"
 
@@ -238,8 +242,8 @@ def test_connect_discovers_via_lockfile():
                 stderr=subprocess.PIPE,
             )
 
-            # Give connect a moment to establish
-            time.sleep(1.0)
+            # Give connect a moment to establish and register via POST /connect
+            time.sleep(2.0)
 
             # Verify connect process is alive (not crashed)
             poll_result = connect_proc.poll()
