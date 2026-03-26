@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import asyncio
 
-import pytest
-
 from mcp import types as mcp_types
 
 from tela.core.models import (
