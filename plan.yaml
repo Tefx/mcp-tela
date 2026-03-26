@@ -27223,7 +27223,7 @@ phases:
       downstream gates'
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
-  status: in_progress
+  status: done
   depends_on:
   - rem.hygiene
   steps:
@@ -27614,7 +27614,7 @@ phases:
       - `docs/INTERFACES.md` §7.3 lockfile contract'
   - id: rem.suggestions.retest-lockfile-extra-field-contract-alignment
     name: Retest lockfile extra-field contract alignment
-    status: claimed
+    status: done
     description: Re-run focused verification for lockfile extra-field semantics after
       the batched contract/docs/test remediation and confirm the blocker family is
       fully resolved.
@@ -27633,9 +27633,27 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T06:00:36.886757+00:00'
+    done_at: '2026-03-26T06:02:35.665298+00:00'
+    evidence: 'Artifact:
+
+      - Retest task: ses_2d747c981ffeb5FXT44JEPcE6m
+
+
+      Verification:
+
+      - `uv run pytest tests/shell/test_lockfile.py -v` -> pass (14 passed)
+
+      - focused ambiguity scan confirms no contradictory reject-vs-accept wording
+      remains in targeted implementation/docs/tests trio
+
+
+      Spec link:
+
+      - `docs/INTERFACES.md` §7.3 extra-field handling + aligned `src/tela/shell/lockfile.py`
+      contract text + aligned test naming/assertions'
 - id: rem.final_verify
   name: Final Remediation Verification
-  status: locked
+  status: pending
   depends_on:
   - rem.bridge_flake
   - rem.suggestions
