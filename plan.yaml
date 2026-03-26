@@ -30736,6 +30736,61 @@ phases:
     depends_on:
     - tool_meta.gate_retest
     agent: python-senior
+  - id: tool_meta.gate_retest2
+    name: 'Second independent retest: downstream gateway metadata regression and tool_meta
+      gate intersection'
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate the second
+      batched remediation for tool_meta from a fresh perspective.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      Protects downstream gate: tool_meta.gate
+
+      tags: ["integration"]
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: the real downstream gateway tool-call path preserves metadata
+      forwarding requirements and returns a validation-compliant MCP result envelope
+
+      - Edge cases: metadata-present and metadata-stripped scenarios still satisfy
+      outputSchema/result-shape expectations
+
+      - Error scenarios: reproduce the prior validation failure (`''result'' is a
+      required property`) and prove it is closed without regressing metadata preservation
+
+      - Gate intersection: explicitly assess whether the reported mypy issue at `tests/repro/test_connect_runtime_liveness.py:616`
+      intersects tool_meta acceptance now
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1'
+    verification: '- Rerun `tests/shell/test_gateway.py::test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream`
+
+      - Rerun targeted metadata-preservation tests covering annotations/title/outputSchema
+      through the real downstream gateway path
+
+      - Rerun full pytest if feasible; if not feasible, record why and provide the
+      widest targeted suite actually executed
+
+      - Evidence must include exact commands, observed outputs, and whether the MCP
+      output validation error is gone
+
+      - Evidence must include an explicit statement whether the reported mypy issue
+      intersects tool_meta acceptance (`blocking-now` vs `non-blocking`) and the non-intersection
+      or blocking rationale'
+    depends_on:
+    - tool_meta.gate_fix_batch2
+    agent: integration-verifier
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
