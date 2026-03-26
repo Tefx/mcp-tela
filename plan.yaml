@@ -28101,7 +28101,7 @@ phases:
     - rem.final_verify.freeze-release-candidate
     - rem.final_verify.targeted-regressions
     - rem.final_verify.affected-suite-broad-pass
-    - rem.final_verify.full-invar-guard
+    - rem.final_verify.retest-full-invar-complexity-debt
     - rem.final_verify.runtime-liveness-blackbox
     agent: gate-reviewer
   - id: rem.final_verify.fix-full-invar-complexity-debt
