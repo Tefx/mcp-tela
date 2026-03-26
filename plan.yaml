@@ -26999,7 +26999,7 @@ phases:
       \ branch."
   - id: rem.hygiene.fix-gate-blockers
     name: Fix gate blockers for hygiene phase
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\npriority: HIGH\n\
       symbolic_testing: true\nprior_loop:\n  - rem.hygiene.verify-hygiene-pack\n \
       \ - rem.hygiene.gate\nremaining_blocker: Resolve all blocker and should-fix\
@@ -27085,6 +27085,8 @@ phases:
     depends_on:
     - rem.hygiene.verify-hygiene-pack
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T05:11:29.589261+00:00'
   - id: rem.hygiene.retest-gate-blockers
     name: Retest hygiene gate blockers
     status: pending
