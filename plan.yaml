@@ -27973,7 +27973,7 @@ phases:
       \ blackbox/gate"
   - id: rem.final_verify.runtime-liveness-blackbox
     name: Run final runtime liveness black-box probe
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -28058,6 +28058,19 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-26T06:34:49.630006+00:00'
+    done_at: '2026-03-26T06:39:08.858469+00:00'
+    evidence: '## Final Runtime Liveness Evidence
+
+      - Entry point: `tela serve`
+
+      - Launch command executed (ephemeral port + token)
+
+      - initialize -> tools/list cycle completed against real runtime session
+
+      - Observed output included startup logs, lockfile content, HTTP/MCP initialize
+      response, tools/list response, port LISTEN evidence, and live process confirmation
+
+      - Verdict: ALIVE (operational end-to-end runnable surface confirmed)'
   - id: rem.final_verify.gate
     name: Gate final remediation verification
     status: pending
