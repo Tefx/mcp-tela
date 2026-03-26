@@ -26837,7 +26837,7 @@ phases:
       \ unchanged."
   - id: rem.hygiene.verify-hygiene-pack
     name: Verify invar and runtime hygiene pack
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -26898,6 +26898,22 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T04:47:40.236579+00:00'
+    done_at: '2026-03-26T04:55:52.231410+00:00'
+    evidence: '## Hygiene Verification Report
+
+      - warning inventory review: verified actionable invar-warning reduction and
+      contract/shell annotations from prior hygiene steps; reported full guard cleanliness
+      for actionable set.
+
+      - shell_result allowance review: audited all `@invar:allow shell_result` entries
+      and found rationales aligned with shell-boundary/pure-accessor policy.
+
+      - test-structure review: validated runtime liveness test structure decision
+      and confirmed repro seam coverage remains exercised.
+
+      - issues found: none blocker-class reported.
+
+      - verdict: PASS'
   - id: rem.hygiene.gate
     name: Gate invar and runtime hygiene phase
     status: pending
