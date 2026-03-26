@@ -30666,6 +30666,76 @@ phases:
       Spec link:\n- tool_meta.gate_retest\n\nConclusion:\n- Final-stage forwarding\
       \ through `_list_tools` is preserved across present/absent/partial metadata\
       \ scenarios."
+  - id: tool_meta.gate_fix_batch2
+    name: 'Second batched remediation: restore gateway call_tool outputSchema validity
+      and disposition reported mypy drift'
+    status: pending
+    description: "Fix ALL newly surfaced blockers from the repeated tool_meta gate\
+      \ cycle.\n\nstep_type: implementation\nprior_loop:\n  - tool_meta.gate_fix_batch\n\
+      \  - tool_meta.gate_retest\nremaining_blocker: gateway call_tool metadata forwarding\
+      \ now produces MCP output validation failure (`'result' is a required property`)\
+      \ on the real downstream path.\nwhy_new_loop: this blocker is a genuine new\
+      \ regression introduced by metadata forwarding changes after the first remediation\
+      \ closed final-stage metadata loss in `_list_tools`.\nwhy_previous_fix_failed:\
+      \ the prior loop proved metadata survives `_list_tools`, but it did not preserve\
+      \ the downstream `call_tool` response contract when outputSchema metadata is\
+      \ forwarded into the FastMCP gateway path.\n\nFiles / seams to inspect:\n- src/tela/shell/gateway.py\n\
+      - tests/shell/test_gateway.py\n- targeted metadata tests that exercise downstream\
+      \ tool invocation and response validation\n- reported static-analysis seam:\
+      \ tests/repro/test_connect_runtime_liveness.py:616\n\n## Blockers to Fix (ALL\
+      \ of these, not just the first)\n\n## Root Cause vs Symptom:\n- Root cause:\
+      \ metadata forwarding changed a real gateway call_tool/outputSchema seam, and\
+      \ the forwarded schema/path now conflicts with the MCP result envelope expected\
+      \ by downstream validation.\n- Symptom: `tests/shell/test_gateway.py::test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream`\
+      \ fails with MCP output validation error (`'result' is a required property`).\n\
+      - Why this fix is not surface-level: it must preserve the metadata-forwarding\
+      \ contract while restoring a valid downstream call_tool result shape; removing\
+      \ metadata forwarding or weakening validation is not acceptable.\n\n### B1:\
+      \ gateway call_tool/outputSchema validation regression\nLocations: src/tela/shell/gateway.py,\
+      \ tests/shell/test_gateway.py\nRemediation: repair the real downstream `call_tool`\
+      \ / result-envelope handling so forwarded metadata coexists with MCP output\
+      \ validation and the downstream tool path still strips meta as required.\nGrep\
+      \ hint: rg \"call_tool|outputSchema|result|strips_meta|FastMCP|metadata\" src/tela/shell/gateway.py\
+      \ tests/shell/test_gateway.py tests/shell\nIMPORTANT: search sibling call_tool/outputSchema\
+      \ paths beyond the single failing test so metadata forwarding does not break\
+      \ other downstream tool results.\n\n### B2: explicit disposition for reported\
+      \ mypy drift outside the primary seam\nLocations: tests/repro/test_connect_runtime_liveness.py:616\n\
+      Remediation: determine and record whether the reported mypy error intersects\
+      \ tool_meta acceptance.\n- If it intersects remaining tool_meta gates/checks,\
+      \ treat it as blocking-now and include the owning remediation in this step.\n\
+      - If it does not intersect tool_meta acceptance, record non-intersection evidence\
+      \ explicitly in the retest evidence and leave ownership outside this phase.\n\
+      Grep hint: rg \"test_connect_runtime_liveness|mypy|tool_meta|metadata|gateway\"\
+      \ tests/repro tests/shell src/tela\nIMPORTANT: provenance (`outside tool_meta\
+      \ seam`) is not disposition. This step must produce an explicit gate-intersection\
+      \ classification, not a note.\n\n## Completion Criteria (stub exclusion)\nThis\
+      \ is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach deliverable\
+      \ MUST contain substantive logic that processes its inputs and produces outputs\
+      \ that vary based on those inputs. Private stub classes (`_Runtime*`, `_Stub*`,\
+      \ `_Placeholder*`) do not satisfy this requirement.\n\n## Gate Preview (what\
+      \ the gate WILL reject)\n1. A patch that restores the gateway test by dropping\
+      \ metadata forwarding or bypassing outputSchema handling\n2. Evidence that covers\
+      \ `_list_tools` only but not the real downstream `call_tool` path\n3. Any claim\
+      \ that the mypy repro-line issue is out-of-scope without explicit gate-intersection\
+      \ evidence\n4. Symptom-only patches that change validation guards without explaining\
+      \ the underlying result-envelope seam"
+    verification: '- Main path: targeted gateway downstream tests prove metadata forwarding
+      still works and `call_tool` returns a validation-compliant MCP result envelope
+
+      - Failure path: focused regression covers the previously failing `test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream`
+      scenario
+
+      - Metadata preservation remains intact for annotations/title/outputSchema; no
+      rollback of prior acceptance
+
+      - Explicit mypy disposition recorded as `blocking-now` or `non-blocking` with
+      gate-intersection evidence for tool_meta acceptance
+
+      - Proof includes whether sibling downstream call_tool paths were checked for
+      the same regression'
+    depends_on:
+    - tool_meta.gate_retest
+    agent: python-senior
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
