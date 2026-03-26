@@ -29586,7 +29586,7 @@ phases:
 
       - No regressions'
     depends_on:
-    - cleanup.verify
+    - cleanup.gate_retest
     agent: gate-reviewer
   - id: cleanup.fix_batch
     name: Batched remediation for cleanup.impl blockers
