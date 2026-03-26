@@ -30908,6 +30908,47 @@ phases:
     depends_on:
     - tool_meta.gate_retest2
     agent: python-executor
+  - id: tool_meta.gate_retest3
+    name: 'Third independent retest: targeted Ruff and metadata tests after lint remediation'
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate the third
+      batched remediation for tool_meta from a fresh perspective.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      Protects downstream gate: tool_meta.gate
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: the unused-import blocker is removed and the targeted metadata
+      tests still pass
+
+      - Edge cases: metadata expectations in tests/shell/test_list_tools_metadata.py
+      remain intact after the lint-only cleanup
+
+      - Error scenarios: verify targeted Ruff no longer reports F401 on the affected
+      file
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1'
+    verification: '- Rerun targeted Ruff for tests/shell/test_list_tools_metadata.py
+
+      - Rerun metadata tests covering tests/shell/test_list_tools_metadata.py
+
+      - Evidence must include exact commands and outputs, and confirm previous accepted
+      tool_meta constraints remain intact'
+    depends_on:
+    - tool_meta.gate_fix_batch3
+    agent: integration-verifier
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
