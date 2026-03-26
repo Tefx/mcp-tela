@@ -32403,7 +32403,7 @@ phases:
       - removed targeted F401 lint blockers'
   - id: notifications.gate_retest2
     name: notifications.gate_retest2
-    status: claimed
+    status: done
     description: 'Independent retest of second notifications gate remediation.
 
 
@@ -32454,6 +32454,36 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T23:33:00.150731+00:00'
+    done_at: '2026-03-26T23:34:41.703564+00:00'
+    evidence: 'Artifact:
+
+      - retest worktree reference: `ed2c0a7`
+
+
+      Verification:
+
+      - distinct-session mapping regressions passed
+
+      - disconnect leak probes passed
+
+      - notification forwarding suite passed
+
+      - targeted lint on `src/tela/shell/upstream.py` and `tests/shell/test_notification_forwarding.py`
+      passed
+
+      - invar guard (changed scope) passed
+
+
+      Findings:
+
+      - no peer-binding overwrite remains
+
+      - session capture semantics preserve first binding and reject conflicting rebinding
+
+
+      Spec link:
+
+      - notifications.gate_retest2'
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
