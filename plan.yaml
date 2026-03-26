@@ -29506,3 +29506,29 @@ phases:
     depends_on:
     - cleanup.impl
     agent: integration-verifier
+  - id: cleanup.gate
+    name: 'Gate: Dead Code Removal'
+    status: pending
+    description: 'Gate review: Verify cleanup phase completion.
+
+
+      review_depth: QUICK
+
+
+      Review criteria:
+
+      1. All removed functions were genuinely dead
+
+      2. _validate_transport_mode was correctly preserved
+
+      3. Tests pass, invar guard clean
+
+      4. No orphaned imports'
+    verification: '- All steps completed
+
+      - Evidence quality adequate
+
+      - No regressions'
+    depends_on:
+    - cleanup.verify
+    agent: gate-reviewer
