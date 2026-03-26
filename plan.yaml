@@ -31040,7 +31040,7 @@ phases:
   steps:
   - id: instructions.contract
     name: 'Contract: Add instructions field to ServerConfig'
-    status: claimed
+    status: done
     description: "Add `instructions` field to ServerConfig in src/tela/core/models.py.\n\
       \nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - field\
       \ definition on ServerConfig\n\nType: `bool | str | None`, default `None`\n\n\
@@ -31065,6 +31065,31 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T21:42:05.822707+00:00'
+    done_at: '2026-03-26T21:44:51.081565+00:00'
+    evidence: 'Artifact:
+
+      - Verification confirms `ServerConfig.instructions` field already present in
+      `src/tela/core/models.py` as `bool | str | None = None`
+
+
+      Verification:
+
+      - inspected model definition with field present
+
+      - `uv run python -m pytest` -> passed
+
+      - `uv run invar guard` -> passed
+
+
+      Spec link:
+
+      - instructions.contract
+
+
+      Note:
+
+      - No new code delta required because contract field was already present and
+      compliant.'
   - id: instructions.test
     name: Tests for instructions merge logic
     status: pending
