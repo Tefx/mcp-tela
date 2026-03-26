@@ -153,6 +153,12 @@ The gateway exposes MCP tools for runtime introspection:
 
 These are controlled by the `tela_admin` family in profiles.
 
+## Features
+
+- **Tool metadata passthrough**: Preserves `annotations`, `title`, and `outputSchema` from downstream servers
+- **Instructions merging**: Configurable per-server instructions (`passthrough`, `suppress`, or `override`)
+- **Notification forwarding**: Forwards `notifications/tools/list_changed` from downstream to upstream clients
+
 ## CLI
 
 ```text

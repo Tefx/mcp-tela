@@ -183,6 +183,69 @@ Both layers are independent and apply simultaneously:
 3. CLI commands delegate; they do not define authorization rules.
 4. tela profiles remain capability-only.
 
+## Resolved Tool Model
+
+`ResolvedTool` is the gateway's canonical tool representation after family mapping and classification. It includes both processed fields and passthrough metadata from downstream servers.
+
+**Core fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | str | Tool name (unique across all servers) |
+| `server_name` | str | Source downstream server |
+| `family` | str | Assigned family for authorization |
+| `posture` | Posture \| None | Computed posture level |
+| `schema_` | dict | Tool input schema |
+| `description` | str | Tool description |
+
+**Metadata passthrough fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `annotations` | dict \| None | MCP tool annotations (`readOnlyHint`, `destructiveHint`, etc.) |
+| `title` | str \| None | Human-readable tool title |
+| `output_schema` | dict \| None | Tool output schema if provided |
+
+## Session Capture and Notification Forwarding
+
+The gateway implements MCP `notifications/tools/list_changed` forwarding from downstream servers to upstream clients.
+
+**Session Capture:**
+- Upstream MCP sessions are captured during handler registration in `gateway.py`
+- Stored in a thread-safe registry (`connection_id` → session)
+- Sessions are released on disconnect
+
+**Notification Flow:**
+1. Downstream server sends `notifications/tools/list_changed`
+2. Gateway triggers hot reload re-enumeration via `on_tools_changed()`
+3. On successful reload, notifications are broadcast to all captured upstream sessions
+4. Each notification is sent via `session.send_tool_list_changed()`
+
+**Fallback behavior:**
+- If no session is captured (e.g., stdio transports), notifications are skipped silently
+- Failed notifications remove stale sessions from the registry
+
+## ServerConfig Instructions Field
+
+The `instructions` field in `ServerConfig` controls how downstream server instructions are merged into the upstream server's instructions.
+
+**Three modes:**
+
+| Value | Behavior |
+|-------|----------|
+| `None` (default) | Passthrough: use downstream server's instructions if available |
+| `False` | Suppress: exclude this server's instructions entirely |
+| `str` | Override: use the provided string instead of downstream instructions |
+
+**Merged output format:**
+```markdown
+## ServerName
+
+<instructions or override>
+
+Available tools:
+- tool_1
+- tool_2
+```
+
 ## Invariants
 
 - one connection binds to one profile
@@ -193,3 +256,4 @@ Both layers are independent and apply simultaneously:
 - approval semantics do not appear in gateway profiles
 - `tela.` tool prefix is reserved for introspection tools
 - each server instance stamps audit entries with a unique `instance_id`
+- tool metadata (`annotations`, `title`, `output_schema`) is preserved from downstream through upstream

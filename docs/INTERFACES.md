@@ -189,6 +189,21 @@ as conflicts.
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint |
 
+### 7.2.2 Tool Metadata Passthrough
+
+The `tools/list` response includes metadata fields preserved from downstream servers:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `annotations` | dict \| null | MCP tool annotations including `readOnlyHint`, `destructiveHint`, `openWorldHint` |
+| `title` | string \| null | Human-readable tool title |
+| `outputSchema` | dict \| null | JSON schema for tool output if provided |
+
+These fields are passed through unmodified from the downstream server and used for:
+- Posture classification (annotations)
+- Tool display (title)
+- Client-side validation (outputSchema)
+
 ### 7.2.1 `GET /status` Response Schema
 
 The status endpoint returns a `StatusResponse` containing gateway runtime state. Response fields have the following guarantees:
@@ -319,12 +334,53 @@ Historical/migration notes:
 - `tools` is emitted only during the migration window for backward compatibility
 - `side_effect_policy` is not part of `tela.profiles` output in the target model
 
+### 7.3 Session and Notification Forwarding
+
+The gateway implements MCP `notifications/tools/list_changed` forwarding from downstream servers to upstream clients.
+
+**Session Capture:**
+- Upstream MCP sessions are captured during handler registration and stored in a thread-safe registry (`connection_id` → session)
+- Sessions are released automatically on disconnect
+
+**Notification Flow:**
+1. Downstream server sends `notifications/tools/list_changed`
+2. Gateway triggers hot reload re-enumeration
+3. On successful reload, notifications are broadcast to all captured upstream sessions
+4. Each notification is sent via `session.send_tool_list_changed()`
+
+**Fallback:**
+- If no session is captured (e.g., stdio transports), notifications are skipped silently with a debug log
+- Failed notifications remove stale sessions from the registry
+
+### 7.4 Instructions Configuration
+
+The `instructions` field in `ServerConfig` controls how downstream server instructions are merged into the upstream server's instructions:
+
+| Value | Behavior |
+|-------|----------|
+| `null` (default) | Passthrough: use downstream server's instructions if available |
+| `false` | Suppress: exclude this server's instructions entirely |
+| string | Override: use the provided string instead of downstream instructions |
+
+**Merged output format:**
+```markdown
+## ServerName
+
+<instructions or override>
+
+Available tools:
+- tool_1
+- tool_2
+```
+
 ## 8. Invariants
 
 - tela is profile-only
 - tela does not consume PersonaSpec or JobSpec directly
 - tela enforces capability ceilings, not workflow policy
 - runtime approval and temporary read-only execution remain outside the gateway
+- tool metadata fields (`annotations`, `title`, `outputSchema`) are preserved from downstream through upstream
+- notification forwarding operates on best-effort basis with graceful degradation for transports that don't support session capture
 
 ## 9. Downstream fastmcp Client Contract
 

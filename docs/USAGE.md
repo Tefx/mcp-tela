@@ -101,6 +101,39 @@ Important notes:
 - if `family` is omitted, tela uses the server name as the family by convention
 - `default_posture` sets the baseline posture for tools from that server
 - `tool_overrides` can adjust family or posture for specific tools
+- `instructions` controls how server instructions are merged (see below)
+
+#### Instructions configuration
+
+The `instructions` field in a server entry controls how that server's instructions are merged into the upstream server's instructions:
+
+```yaml
+servers:
+  fs:
+    command: "mcp-filesystem"
+    args: ["--root", "/workspace"]
+    family: "filesystem"
+    instructions: false           # Suppress this server's instructions
+
+  github:
+    url: "http://localhost:3001/mcp"
+    family: "git"
+    instructions: |               # Override with custom instructions
+      GitHub MCP server providing repository access.
+
+  websearch:
+    url: "http://localhost:3002/mcp"
+    family: "web"
+    # instructions omitted: passthrough downstream instructions
+```
+
+| Value | Behavior |
+|-------|----------|
+| `null` (default) | Use downstream server's instructions if available |
+| `false` | Exclude this server's instructions entirely |
+| string | Use the provided string instead of downstream instructions |
+
+The merged instructions appear in the upstream server's `instructions` field as Markdown with H2 headers for each server.
 
 ### `profiles`
 
@@ -430,6 +463,27 @@ The gateway exposes MCP tools for runtime queries:
 These belong to the `tela_admin` family. Add `tela_admin: "read_only"` to a
 profile's capabilities to grant access. Profiles without `tela_admin` cannot
 see these tools.
+
+## Tool metadata passthrough
+
+The `tools/list` response includes metadata fields from downstream servers:
+
+| Field | Description |
+|-------|-------------|
+| `annotations` | MCP tool annotations including `readOnlyHint`, `destructiveHint` |
+| `title` | Human-readable tool title |
+| `outputSchema` | JSON schema for tool output if provided |
+
+These fields are preserved from the downstream server and used for posture classification (annotations) and client-side display.
+
+## Notification forwarding
+
+When a downstream server sends `notifications/tools/list_changed`, the gateway:
+1. Re-enumerates the server's tools
+2. Runs conflict detection
+3. If no conflicts: notifies all connected upstream clients via MCP `notifications/tools/list_changed`
+
+This is a best-effort mechanism. Notifications may not reach clients on transports that don't support session capture (e.g., some stdio configurations).
 
 ## Environment variables
 
