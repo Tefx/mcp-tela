@@ -31815,7 +31815,7 @@ phases:
       - notifications.impl'
   - id: notifications.verify
     name: 'Integration verification: notification forwarding'
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, verify the end-to-end notification flow.
 
 
@@ -31910,6 +31910,8 @@ phases:
     depends_on:
     - notifications.impl
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T22:45:51.409340+00:00'
   - id: notifications.gate
     name: 'Gate: Upstream Notification Forwarding'
     status: pending
