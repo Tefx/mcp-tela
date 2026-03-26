@@ -31815,7 +31815,7 @@ phases:
       - notifications.impl'
   - id: notifications.verify
     name: 'Integration verification: notification forwarding'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, verify the end-to-end notification flow.
 
 
@@ -31912,6 +31912,50 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T22:45:51.409340+00:00'
+    done_at: '2026-03-26T22:49:59.909881+00:00'
+    evidence: '## Integration Evidence
+
+
+      End-to-end path test:
+
+      - downstream update -> reload callback -> notify_tools_changed -> session.send_tool_list_changed
+      path exercised and passing
+
+
+      Session lifecycle checks:
+
+      | Scenario | Expected | Actual | Status |
+
+      |---|---|---|---|
+
+      | first _list_tools capture | session stored | stored | PASS |
+
+      | repeated listings | session persists | persists | PASS |
+
+      | send failure | stale session removed | removed | PASS |
+
+      | shutdown | session registry cleared | cleared | PASS |
+
+
+      Concurrency check:
+
+      - concurrent capture/release/lookups passed without corruption
+
+      - notify during capture path observed no deadlock
+
+
+      Edge cases:
+
+      - no sessions -> graceful no-op
+
+      - all dead sessions -> cleanup without crash
+
+
+      Verdict:
+
+      - PASS
+
+      - no blocking issues'
   - id: notifications.gate
     name: 'Gate: Upstream Notification Forwarding'
     status: pending
