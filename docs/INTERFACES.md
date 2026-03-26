@@ -256,6 +256,11 @@ Location: `~/.tela/gateway.lock`
 Written atomically by `tela serve` on startup. Deleted on shutdown.
 Stale detection via PID liveness check.
 
+**Extra Field Handling**: Extra fields in the lockfile are **accepted** and
+silently ignored. Only the 7 required fields above are guaranteed to be present
+in the parsed `LockfileData`. This follows Pydantic's default `extra="ignore"`
+behavior. Clients should not rely on presence of extra fields.
+
 ### 7.4 Bearer Token
 
 Every `tela serve` instance auto-generates a bearer token on startup using

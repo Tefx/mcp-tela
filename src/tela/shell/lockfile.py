@@ -113,7 +113,10 @@ def read_lockfile() -> Result[LockfileData, str]:
     """Read and parse ``~/.tela/gateway.lock``.
 
     Additional contract checks:
-    - Parsed data must satisfy ``LockfileData`` exactly.
+    - Extra fields in the lockfile are **accepted** (per Pydantic's default
+      ``extra="ignore"`` behavior) and will not cause parse errors.
+    - Only the 7 required fields defined in ``LockfileData`` are guaranteed
+      to be present; extra fields are silently ignored.
     - Stale entries must be detected via PID liveness checks.
 
     Staleness rule:

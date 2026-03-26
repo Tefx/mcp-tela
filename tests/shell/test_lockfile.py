@@ -277,13 +277,14 @@ def test_read_lockfile_rejects_wrong_type_for_port(
     assert "LOCKFILE_PARSE_ERROR" in result.error
 
 
-def test_read_lockfile_rejects_extra_fields_not_in_schema(
+def test_read_lockfile_accepts_extra_fields_not_in_schema(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Lockfile with valid schema but extra fields should parse successfully (pydantic is permissive).
+    """Lockfile with extra fields must parse successfully; extra fields are ignored.
 
-    Ref: INTERFACES.md §7.3 - LockfileData has 7 required fields.
-    Note: Pydantic by default allows extra fields; this documents expected behavior.
+    Ref: INTERFACES.md §7.3 - LockfileData has 7 required fields. Extra fields
+    are accepted (Pydantic's default extra="ignore" behavior) and do not cause
+    parse errors. Only the 7 required fields are guaranteed present in the model.
     """
     path = tmp_path / "gateway.lock"
     monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
