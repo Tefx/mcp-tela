@@ -26130,7 +26130,7 @@ phases:
       - No timeout/connection failures observed across 15 cold-start iterations total.'
   - id: rem.bridge_flake.gate
     name: Gate bridge timeout contingency phase
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: default
@@ -26179,6 +26179,38 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T04:37:48.599338+00:00'
+    done_at: '2026-03-26T04:46:50.240322+00:00'
+    evidence: '## Gate Review Report
+
+      - Did contingency trigger? Yes
+
+      - If yes, was residual flakiness eliminated or still blocking? Still blocking
+
+      - Final contingency verdict: BLOCKED
+
+
+      ## Blocking findings (batched)
+
+      - B1: initialize/tools_list bridge flake still reproducible (BrokenPipeError
+      path)
+
+      - B2: lockfile PID identity not bound to spawned serve process in repro harness/evidence
+
+      - B3: soak harness can misreport failure as PASS due pipeline semantics
+
+
+      ## Should-fix findings
+
+      - S1: evidence package provenance/no-ellipsis rigor needs refresh
+
+
+      ## Remediation handling
+
+      - Applied batched-fix protocol: planner created one batched fix step and one
+      retest step, and updated gate dependencies to require retest before gate closure.
+
+      - Gate step completion records blocking verdict and hands off to remediation
+      path.'
   - id: rem.bridge_flake.fix-gate-blockers-loop2
     name: Batched fix for rem.bridge_flake gate blockers and evidence hardening
     status: pending
