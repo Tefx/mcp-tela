@@ -26444,7 +26444,7 @@ phases:
       \ unchanged."
   - id: rem.hygiene.verify-hygiene-pack
     name: Verify invar and runtime hygiene pack
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -26503,6 +26503,8 @@ phases:
     depends_on:
     - rem.hygiene.evaluate-runtime-liveness-test-structure
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T04:31:27.379776+00:00'
   - id: rem.hygiene.gate
     name: Gate invar and runtime hygiene phase
     status: pending
