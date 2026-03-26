@@ -28748,3 +28748,172 @@ phases:
     depends_on:
     - rem.final_verify.fix-b1-liveness-evidence
     agent: integration-verifier
+  - id: rem.final_verify.fix-b1-retry-classification-and-evidence
+    name: Batched remediation for B1 retry classification and contradictory evidence
+    status: pending
+    description: 'step_type: implementation
+
+      verification_scope: phase-check
+
+      protected_gates:
+
+      - rem.final_verify.gate
+
+      agent_source: default
+
+      symbolic_testing: true
+
+      prior_loop:
+
+      - rem.final_verify.fix-b1-liveness-evidence
+
+      - rem.final_verify.retest-b1-liveness-evidence
+
+      remaining_blocker: B1 transient retry classification still fails 6 tests and
+      the evidence artifact contradicts fresh results.
+
+      why_new_loop: Existing remediation history must be preserved; a new batched
+      fix is required because the blocker family remains open after the prior fix/retest
+      path.
+
+      why_previous_fix_failed: The prior remediation did not align `_is_transient_url_error`
+      with the exception patterns exercised by the runtime/tests, and the evidence
+      artifact reported B1 retired without matching fresh execution output.
+
+
+      Batched fix for ALL blocker findings from `rem.final_verify.retest-b1-liveness-evidence`.
+
+
+      ## Blocker intersection disposition
+
+      This blocker family is `blocking-now` because it intersects the required `rem.final_verify.gate`
+      closure path. Do not treat it as pre-existing or non-blocking. If any residual
+      issue remains, the step evidence MUST state why the current step is not authorized
+      to close it and which future owned step will block the gate.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: `src/tela/commands/connect_cmd.py::_is_transient_url_error` misclassifies
+      transient exception patterns used by both the blocker regression suite and runtime
+      retry path.
+
+      - Symptom: `tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry`
+      still has 6 failing tests, while `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+      falsely reports B1 retired and 8/0/0.
+
+      - Why this fix is not surface-level: remediate classifier semantics and regenerate
+      evidence from fresh commands only; do not patch artifact prose without fixing
+      the classification seam.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      ### B1: transient retry classifier mismatch
+
+      Locations: `src/tela/commands/connect_cmd.py`, `tests/repro/test_gate_blocker_regressions.py`
+
+      Remediation:
+
+      - Update transient classification semantics in `_is_transient_url_error` to
+      cover the concrete exception/message patterns used in the blocker suite and
+      runtime retry path.
+
+      - Verify sibling exception paths in the same command module so classification
+      logic is not narrowly patched to one failing literal.
+
+      Grep hint: `rg -n "_is_transient_url_error|TransientRetry|transient" src/tela/commands/connect_cmd.py
+      tests/repro/test_gate_blocker_regressions.py`
+
+
+      ### B2: contradictory stale evidence artifact
+
+      Locations: `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+      Remediation:
+
+      - Regenerate or replace the evidence artifact from fresh command output only.
+
+      - Remove stale contradiction markers; the artifact must match the actual blocker
+      suite and liveness results.
+
+      Grep hint: `rg -n "B1 retired|8/0/0|TransientRetry|liveness" artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Completion Criteria
+
+      - ALL blocker findings above are addressed in one batched change
+
+      - Sibling search completed for retry-classification patterns beyond the directly
+      failing assertions
+
+      - Regenerated evidence artifact content matches fresh command outputs exactly
+
+      - Root-cause evidence explains why the semantic fix closes the blocker family,
+      not only the observed symptom'
+    verification: '- phase-check protecting `rem.final_verify.gate`
+
+      - Command lock: run `pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry
+      -q`
+
+      - Liveness command must be refreshed with `pytest tests/repro/test_liveness.py
+      -q`
+
+      - Artifact consistency check must compare regenerated artifact text against
+      the fresh blocker-suite and liveness outputs; no stale "B1 retired" or `8/0/0`
+      claims unless supported by pasted command output
+
+      - Evidence must explicitly disposition blocker intersection as `blocking-now
+      closed` or state the owned remaining blocker path; silent carry-forward is forbidden'
+    evidence_template: '## Batched Fix Evidence
+
+
+      **Blocker suite command**:
+
+      ```bash
+
+      pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry -q
+
+      ```
+
+
+      **Liveness command**:
+
+      ```bash
+
+      pytest tests/repro/test_liveness.py -q
+
+      ```
+
+
+      **Classifier sibling search**:
+
+      ```bash
+
+      rg -n "_is_transient_url_error|TransientRetry|transient" src/tela/commands/connect_cmd.py
+      tests/repro/test_gate_blocker_regressions.py
+
+      ```
+
+
+      **Artifact consistency check**:
+
+      - Paste regenerated `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+      - Cite the exact fresh outputs it summarizes
+
+      - State whether blocker intersection is `blocking-now closed` or remains open
+      with owned next step
+
+      '
+    depends_on:
+    - rem.final_verify.retest-b1-liveness-evidence
+    agent: python-senior
