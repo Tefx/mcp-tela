@@ -30219,3 +30219,93 @@ phases:
     depends_on:
     - notifications.contract
     agent: python-executor
+  - id: notifications.impl
+    name: Implement session capture and real notify_tools_changed
+    status: pending
+    description: "Implement real upstream notification forwarding.\n\nstep_type: implementation\n\
+      \n## File 1: src/tela/shell/gateway.py — Session capture\n\nIn the `_list_tools`\
+      \ handler (inside `_wire_upstream_handlers`), capture the upstream session:\n\
+      \n```python\n@upstream_server._mcp_server.list_tools()\nasync def _list_tools()\
+      \ -> list[mcp_types.Tool]:\n    # Capture session for notification forwarding\n\
+      \    try:\n        ctx = upstream_server.get_context()\n        session = ctx.session\n\
+      \        with _runtime_lock:\n            if session not in _runtime.sessions:\n\
+      \                _runtime.sessions.append(session)\n    except Exception:\n\
+      \        pass  # Session capture is best-effort\n    # ... rest of existing\
+      \ handler\n```\n\nAdd `sessions` to the runtime state. Check what _runtime looks\
+      \ like and add a list field for sessions.\n\n## File 2: src/tela/shell/upstream.py\
+      \ — notify_tools_changed\n\nReplace the current no-op (lines 455-456) with real\
+      \ implementation:\n\n```python\nasync def notify_tools_changed(connection: ConnectionContext,\
+      \ tools_digest: str) -> None:\n    from tela.shell.gateway import _runtime_lock,\
+      \ get_runtime\n    runtime = get_runtime()\n    with _runtime_lock:\n      \
+      \  sessions = list(runtime.sessions)\n    \n    dead_sessions = []\n    for\
+      \ session in sessions:\n        try:\n            await session.send_tool_list_changed()\n\
+      \        except Exception:\n            dead_sessions.append(session)\n    \n\
+      \    if dead_sessions:\n        with _runtime_lock:\n            for dead in\
+      \ dead_sessions:\n                try:\n                    runtime.sessions.remove(dead)\n\
+      \                except ValueError:\n                    pass\n```\n\n## Hardened\
+      \ Acceptance (module-level mutable state)\n\nThe sessions list is module-level\
+      \ mutable state accessed from multiple coroutines:\n1. **Concurrent access**:\
+      \ Multiple _list_tools calls may try to add sessions simultaneously -> protected\
+      \ by _runtime_lock\n2. **Cleanup/reset semantics**: Sessions cleared on gateway_shutdown\n\
+      3. **Bounded growth**: Sessions list bounded by number of active upstream connections\
+      \ (typically 1-10)\n4. **Isolation**: Modifying sessions list for notification\
+      \ does not affect other runtime state\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. The no-op notify_tools_changed MUST be replaced\
+      \ with real session notification logic.\n- Sessions captured in _list_tools\
+      \ handler\n- notify_tools_changed sends real notifications\n- Stale sessions\
+      \ cleaned up on send failure\n- Sessions cleared on gateway_shutdown\n- All\
+      \ tests pass\n- uv run invar guard passes"
+    verification: '- All tests pass including notification tests
+
+      - uv run invar guard passes
+
+      - notify_tools_changed is no longer a no-op'
+    evidence_template: '## Notification Implementation Evidence
+
+
+      **Session capture**:
+
+      ```
+
+      <test or manual proof that sessions are captured>
+
+      ```
+
+
+      **notify_tools_changed sends real notifications**:
+
+      ```
+
+      <test output showing send_tool_list_changed called>
+
+      ```
+
+
+      **Stale session handling**:
+
+      ```
+
+      <test output showing dead session cleanup>
+
+      ```
+
+
+      **Test results**:
+
+      ```
+
+      <pytest output>
+
+      ```
+
+
+      **Invar guard**:
+
+      ```
+
+      <invar guard output>
+
+      ```'
+    depends_on:
+    - notifications.test
+    agent: python-senior
