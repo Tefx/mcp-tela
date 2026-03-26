@@ -27372,7 +27372,7 @@ phases:
       - verification:\n  - lockfile test suite passed (14 passed)"
   - id: rem.suggestions.document-statusresponse-field-guarantees
     name: Document StatusResponse field guarantees
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: default
@@ -27429,6 +27429,8 @@ phases:
     depends_on:
     - rem.suggestions.add-lockfile-schema-regression
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-26T05:41:39.277512+00:00'
   - id: rem.suggestions.verify-suggestion-pack
     name: Verify suggestion uptake pack
     status: pending
