@@ -29954,33 +29954,43 @@ phases:
       \ -> str | None:\n    server_instructions = get_server_instructions()\n    if\
       \ not server_instructions:\n        return None\n    parts = []\n    for server_name,\
       \ instructions in server_instructions.items():\n        parts.append(f\"[{server_name}]\\\
-      n{instructions}\")\n    return \"\\n\\n\".join(parts)\n```\n\nNew implementation\
-      \ requirements:\n1. Access the startup config to get per-server `instructions`\
-      \ setting\n2. Access the tool registry to get tool names per server\n3. For\
-      \ each server with instructions:\n   - If `server_config.instructions is False`\
-      \ -> skip\n   - If `server_config.instructions` is a string -> use that text\n\
-      \   - If `server_config.instructions is None` (default) -> use downstream instructions\n\
-      4. Format as Markdown with H2 headers:\n   ```\n   ## telegram (tools: send_message,\
-      \ send_photo)\n   \n   <instructions text>\n   \n   ## github (tools: create_issue,\
-      \ list_repos)\n   \n   <instructions text>\n   ```\n5. Return None if no servers\
-      \ contribute instructions\n\nTo access config and registry, use:\n- `get_runtime().startup_config.servers`\
-      \ for ServerConfig per server\n- `get_all_tools()` from `tela.shell.downstream`\
-      \ for tool names per server\n\nNote: `_merge_downstream_instructions` is called\
-      \ during `_create_upstream_server` (line 220), which is called from `gateway_start`.\
-      \ At that point, runtime config is being set up. The function may need to accept\
-      \ the config as a parameter, or access it from the partially-initialized runtime.\
-      \ Check the call site carefully.\n\n## File 2: tela.yaml.example\n\nAdd documentation\
-      \ for the `instructions` field in the servers section. Add it after the `default_posture`\
-      \ field in the fs server example:\n\n```yaml\n    # OPTIONAL: Instructions behavior\n\
-      \    # null/omitted = passthrough (forward downstream server's instructions)\n\
-      \    # false = suppress (exclude from merged instructions)\n    # \"string\"\
-      \ = override (use this text instead)\n    # instructions: null\n```\n\nAdd a\
-      \ complete example showing all three modes.\n\n## Completion Criteria (stub\
-      \ exclusion)\nThis is an IMPLEMENTATION step.\n- _merge_downstream_instructions\
-      \ produces Markdown with H2 headers\n- Per-server instructions config (None/False/str)\
-      \ respected\n- Tool names bound to each section header\n- tela.yaml.example\
-      \ updated with instructions documentation\n- All tests pass including new instructions\
-      \ tests\n- uv run invar guard passes"
+      n{instructions}\")\n    return \"\\n\\n\".join(parts)\n```\n\n### CRITICAL:\
+      \ Parameter-passing requirement (timing trap)\n\nIn `gateway_start()`, the call\
+      \ chain is:\n- Line 531: `effective_config` is available\n- Line 543: `_create_upstream_server(config)`\
+      \ is called, which calls `_merge_downstream_instructions()`\n- Line 557: `_runtime.config\
+      \ = effective_config` — this is AFTER the merge function runs\n\nTherefore `_merge_downstream_instructions`\
+      \ MUST NOT read from `_runtime.config` or `get_runtime().config` — it would\
+      \ be stale/None at call time.\n\n**Required signature changes:**\n1. `_merge_downstream_instructions(config:\
+      \ TelaConfig)` — accept config as a parameter\n2. `_create_upstream_server(config:\
+      \ TelaConfig)` — accept config and pass it through to `_merge_downstream_instructions`\n\
+      3. Call site in `gateway_start` — pass `effective_config` to `_create_upstream_server(effective_config)`\n\
+      \n### New implementation requirements:\n1. Accept `config: TelaConfig` as a\
+      \ parameter (see above)\n2. Access the tool registry to get tool names per server\
+      \ via `get_all_tools()` from `tela.shell.downstream`\n3. For each server with\
+      \ instructions:\n   - If `server_config.instructions is False` -> skip\n   -\
+      \ If `server_config.instructions` is a string -> use that text\n   - If `server_config.instructions\
+      \ is None` (default) -> use downstream instructions\n4. Format as Markdown with\
+      \ H2 headers:\n   ```\n   ## telegram (tools: send_message, send_photo)\n  \
+      \ \n   <instructions text>\n   \n   ## github (tools: create_issue, list_repos)\n\
+      \   \n   <instructions text>\n   ```\n5. Return None if no servers contribute\
+      \ instructions\n\n### Accessing per-server config:\n- `config.servers` is a\
+      \ `dict[str, ServerConfig]` — iterate over it\n- `server_config.instructions`\
+      \ is the per-server setting (None | False | str)\n- `get_server_instructions()`\
+      \ from `tela.shell.downstream` provides the raw downstream instructions dict\n\
+      \n## File 2: tela.yaml.example\n\nAdd documentation for the `instructions` field\
+      \ in the servers section. Add it after the `default_posture` field in the fs\
+      \ server example:\n\n```yaml\n    # OPTIONAL: Instructions behavior\n    # null/omitted\
+      \ = passthrough (forward downstream server's instructions)\n    # false = suppress\
+      \ (exclude from merged instructions)\n    # \"string\" = override (use this\
+      \ text instead)\n    # instructions: null\n```\n\nAdd a complete example showing\
+      \ all three modes.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step.\n- _merge_downstream_instructions accepts TelaConfig as a parameter\
+      \ (NOT reading from _runtime.config)\n- _create_upstream_server accepts TelaConfig\
+      \ and passes it through\n- gateway_start call site passes effective_config\n\
+      - _merge_downstream_instructions produces Markdown with H2 headers\n- Per-server\
+      \ instructions config (None/False/str) respected\n- Tool names bound to each\
+      \ section header\n- tela.yaml.example updated with instructions documentation\n\
+      - All tests pass including new instructions tests\n- uv run invar guard passes"
     verification: '- All tests pass including instructions merge tests
 
       - uv run invar guard passes
