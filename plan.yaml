@@ -25831,7 +25831,7 @@ phases:
       \ decision rules in plan step\nerror: \"\""
 - id: rem.bridge_flake
   name: Bridge Timeout Contingency
-  status: in_progress
+  status: done
   depends_on:
   - rem.blockers
   steps:
@@ -26441,7 +26441,7 @@ phases:
       HTTP transient paths, and did not enforce pipefail in soak evidence pipeline.'
   - id: rem.bridge_flake.retest-gate-blockers-loop2
     name: Retest bridge flake blocker remediation and evidence package
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -26529,6 +26529,38 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T04:56:31.740642+00:00'
+    done_at: '2026-03-26T05:08:17.994249+00:00'
+    evidence: '## Retest Evidence
+
+
+      Fresh commands executed:
+
+      - targeted cold-start initialize/tools_list runs
+
+      - PID-bound lockfile identity regression tests
+
+      - soak pipeline failure-propagation checks
+
+
+      Results:
+
+      - initialize/tools_list: repeated cold-start passes with no BrokenPipe/timeout
+      reproduction
+
+      - lockfile/process identity: mismatch rejected and matching PID accepted
+
+      - soak pipeline: forced inner failure propagates non-zero status (no false-green)
+
+
+      Evidence package inspection:
+
+      - regenerated artifacts reported with explicit command lineage and no ellipsis
+      markers
+
+
+      Independent verdict:
+
+      - PASS (loop2 blocker family unblocked for rem.bridge_flake.gate)'
 - id: rem.hygiene
   name: Invar and Runtime Hygiene
   status: in_progress
