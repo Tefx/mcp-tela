@@ -29833,6 +29833,120 @@ phases:
 
       - cleanup.retest_full (independent full retest handoff for cleanup remediation
       family)'
+  - id: cleanup.gate_fix_batch
+    name: Batched remediation for cleanup gate findings
+    status: pending
+    description: 'Fix ALL cleanup gate blockers and disposition the over-broad warning
+      concern.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+
+      ### B1: orphaned unused import in gateway shell
+
+      Locations: src/tela/shell/gateway.py:36
+
+      Remediation: remove the orphaned `call_tool` import so `ruff` F401 no longer
+      triggers.
+
+      Grep hint: `rg -n "call_tool" src/tela/shell/gateway.py src/tela/shell/downstream.py`
+
+      IMPORTANT: confirm no sibling cleanup regression remains in cleanup-touched
+      files.
+
+
+      ## Disposition pass for invar warnings (gate-intersection analysis)
+
+      - provenance: reported during cleanup gate retest context, not yet proven introduced
+      by this cleanup regression
+
+      - disposition task: classify the 13 `invar guard` warnings as blocking-now vs
+      non-blocking based on whether they intersect cleanup-touched files, cleanup
+      acceptance, or the remaining cleanup gate
+
+      - required outcome: if any warning intersects cleanup-touched files or would
+      fail the cleanup gate''s required evidence, treat it as blocker-class debt;
+      otherwise record explicit non-intersection rationale for why warnings remain
+      non-blocking for this cleanup remediation loop
+
+      - do NOT hand-wave warnings as pre-existing or out-of-scope without an explicit
+      intersection check
+
+
+      ## Targeted sanity scope
+
+      Run focused lint and sanity checks for cleanup-touched files:
+
+      - `src/tela/shell/gateway.py`
+
+      - `src/tela/shell/downstream.py`
+
+
+      ## Completion Criteria
+
+      - orphaned `call_tool` import removed
+
+      - targeted lint is clean for cleanup-touched files
+
+      - sanity checks for cleanup-touched files complete
+
+      - invar warnings receive explicit blocker/non-blocking disposition with gate-intersection
+      reasoning'
+    verification: '- `uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py`
+      passes for cleanup-touched files
+
+      - Focused sanity checks for cleanup-touched files are recorded with command/output
+      evidence
+
+      - Evidence explicitly classifies the 13 `invar guard` warnings by cleanup gate
+      intersection (blocking-now vs non-blocking)'
+    evidence_template: '## Cleanup Gate Fix Batch Evidence
+
+
+      **Commands run**:
+
+      ```
+
+      <targeted lint and sanity commands>
+
+      ```
+
+
+      **Orphan import removal proof**:
+
+      - file:line updated: <path:line>
+
+      - `call_tool` references after fix:
+
+      ```
+
+      <rg output>
+
+      ```
+
+
+      **Targeted lint result**:
+
+      ```
+
+      <paste ruff output>
+
+      ```
+
+
+      **Invar warning disposition pass**:
+
+      - warnings intersecting cleanup gate: <list or none>
+
+      - warnings classified blocking-now: <list or none>
+
+      - warnings classified non-blocking: <list with non-intersection rationale>
+
+      - why this disposition is valid for cleanup.gate: <one paragraph>'
+    depends_on:
+    - cleanup.verify
+    agent: python-executor
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
