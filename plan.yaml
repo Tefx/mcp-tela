@@ -29947,6 +29947,86 @@ phases:
     depends_on:
     - cleanup.verify
     agent: python-executor
+  - id: cleanup.gate_retest
+    name: Retest cleanup gate after batched remediation
+    status: pending
+    description: 'As an INDEPENDENT TESTER, rerun the cleanup phase regression commands
+      after `cleanup.gate_fix_batch`.
+
+
+      YOUR GOAL IS TO FIND REMAINING PROBLEMS, not to confirm it works.
+
+
+      Commands to rerun:
+
+      - `uv run python -m pytest`
+
+      - `uv run invar guard`
+
+      - `uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py`
+
+
+      Required outcomes:
+
+      - verify the orphaned import blocker is gone
+
+      - verify whether any `invar guard` warnings remain and whether they intersect
+      cleanup gate acceptance
+
+      - capture actual command output, not summaries'
+    verification: '- `uv run python -m pytest` rerun with output captured
+
+      - `uv run invar guard` rerun with warnings/failures captured and assessed against
+      cleanup gate intersection
+
+      - `uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py`
+      rerun clean
+
+      - Evidence states whether cleanup blockers remain'
+    evidence_template: '## Cleanup Gate Retest Report
+
+
+      **Tester**: integration-verifier
+
+      **Commands executed**:
+
+      ```
+
+      uv run python -m pytest
+
+      uv run invar guard
+
+      uv run ruff check src/tela/shell/gateway.py src/tela/shell/downstream.py
+
+      ```
+
+
+      **Actual outputs**:
+
+      ```
+
+      <paste command outputs>
+
+      ```
+
+
+      **Cleanup gate blocker status**:
+
+      - orphaned import fixed: yes/no
+
+      - pytest status: pass/fail
+
+      - invar guard status: <pass/warnings/fail>
+
+      - ruff status: pass/fail
+
+      - remaining cleanup-intersecting blockers: <list or none>
+
+
+      **Verdict**: PASS | ISSUES_FOUND'
+    depends_on:
+    - cleanup.gate_fix_batch
+    agent: integration-verifier
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
