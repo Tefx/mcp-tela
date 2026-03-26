@@ -28073,7 +28073,7 @@ phases:
       - Verdict: ALIVE (operational end-to-end runnable surface confirmed)'
   - id: rem.final_verify.gate
     name: Gate final remediation verification
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: default
@@ -28132,6 +28132,17 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T06:39:42.485456+00:00'
+    done_at: '2026-03-26T06:50:55.664385+00:00'
+    evidence: "## Final Gate Review Report\n- targeted regressions: FAILED on fresh\
+      \ run (blocker B1 family)\n- affected-suite broad pass: mostly green but does\
+      \ not override blocker failure\n- invar guard: passed (no blocker errors)\n\
+      - runtime black-box: runnable surface demonstrated, but contention-sensitive\
+      \ risk/evidence inconsistency remains\n- unresolved blocker check: FAILED (B1\
+      \ open + contradictory stale evidence artifact)\n- final decision: BLOCKED\n\
+      \n## Remediation handling\n- Batched-fix protocol applied:\n  - one fix step\
+      \ created for B1/liveness/evidence consistency blocker family\n  - one retest\
+      \ step created for fresh validation of B1 + liveness + evidence consistency\n\
+      \  - gate now depends on that retest step before closure"
   - id: rem.final_verify.fix-full-invar-complexity-debt
     name: Batched remediation for full invar complexity/debt posture
     status: done
