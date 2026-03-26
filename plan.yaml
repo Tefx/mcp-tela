@@ -31316,7 +31316,7 @@ phases:
       \ link:\n- instructions.impl"
   - id: instructions.verify
     name: 'Integration verification: instructions merge'
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, verify the instructions merge improvements.
 
 
@@ -31398,6 +31398,8 @@ phases:
     depends_on:
     - instructions.impl
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T22:03:36.014915+00:00'
   - id: instructions.gate
     name: 'Gate: Instructions Merge'
     status: pending
