@@ -31442,7 +31442,7 @@ phases:
       - no issues found'
   - id: instructions.gate
     name: 'Gate: Instructions Merge'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify instructions phase completion.
 
 
@@ -31470,6 +31470,8 @@ phases:
     depends_on:
     - instructions.verify
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-26T22:06:37.242106+00:00'
 - id: notifications
   name: Upstream Notification Forwarding
   status: locked
