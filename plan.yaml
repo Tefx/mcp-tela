@@ -31199,7 +31199,7 @@ phases:
       - edge cases (all suppressed, no instructions, override without downstream)'
   - id: instructions.impl
     name: Implement instructions merge and config docs
-    status: pending
+    status: claimed
     description: "Implement structured instructions merge and update config example.\n\
       \nstep_type: implementation\n\n## File 1: src/tela/shell/gateway.py — _merge_downstream_instructions()\n\
       \nCurrent implementation (lines 201-214):\n```python\ndef _merge_downstream_instructions()\
@@ -31295,6 +31295,8 @@ phases:
     depends_on:
     - instructions.test
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T21:50:39.272764+00:00'
   - id: instructions.verify
     name: 'Integration verification: instructions merge'
     status: pending
