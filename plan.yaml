@@ -30585,3 +30585,29 @@ phases:
 
       **Verdict**: PASS | ISSUES_FOUND'
     agent: integration-verifier
+  - id: post.deep_review.spec_conformance
+    name: Spec conformance audit
+    status: pending
+    description: 'Compare implemented behavior against MCP spec and project docs.
+
+
+      Focus areas:
+
+      - Tool metadata fields match MCP spec naming (outputSchema not output_schema
+      in wire format)
+
+      - Instructions merge format matches documented behavior
+
+      - ServerConfig.instructions field semantics match documented None/False/str
+      contract
+
+      - notify_tools_changed behavior matches MCP notifications/tools/list_changed
+      spec'
+    verification: '- Wire format matches MCP spec
+
+      - Implementation matches project docs
+
+      - No spec-code drift'
+    depends_on:
+    - post.deep_review.wiring
+    agent: doc-reviewer
