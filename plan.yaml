@@ -26357,7 +26357,7 @@ phases:
       four.'
   - id: rem.hygiene.evaluate-runtime-liveness-test-structure
     name: Evaluate and refactor oversized runtime liveness test structure if warranted
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -26428,6 +26428,20 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T04:25:28.932218+00:00'
+    done_at: '2026-03-26T04:30:30.184587+00:00'
+    evidence: "## Runtime Liveness Test Structure Review\n- current file responsibility\
+      \ map:\n  - `tests/repro/test_connect_runtime_liveness.py` (~596 lines) contains\
+      \ 4 cohesive Mode-D runtime-liveness/connect tests plus local lockfile helpers.\n\
+      - split decision: NO\n- rationale:\n  - file covers a single responsibility\
+      \ domain (runtime liveness/connect lockfile discovery and lifecycle), with no\
+      \ mixed unrelated concerns.\n  - helper functions are file-specific and not\
+      \ duplicated in adjacent repro modules.\n  - split would introduce artificial\
+      \ seams and fixture churn with low maintainability gain.\n  - size/test count\
+      \ profile is still manageable for current scope.\n- resulting file/module layout\
+      \ (if split): N/A (split rejected)\n\nMaintainability guard:\n- If future growth\
+      \ introduces new lockfile-focused repro suites, reconsider extracting shared\
+      \ helpers at that time.\n\nNotes:\n- Evaluation step only; runtime behavior\
+      \ unchanged."
   - id: rem.hygiene.verify-hygiene-pack
     name: Verify invar and runtime hygiene pack
     status: pending
