@@ -30263,7 +30263,7 @@ phases:
       \ forward behavior pending implementation in `tool_meta.impl`"
   - id: tool_meta.impl
     name: Implement tool metadata forwarding through pipeline
-    status: pending
+    status: claimed
     description: "Wire the three new ResolvedTool fields through the entire tool pipeline.\n\
       \nstep_type: implementation\n\n## File 1: src/tela/core/family.py — resolve_tools()\n\
       \nCurrent code (lines 96-114) already extracts `annotations` for posture classification\
@@ -30350,6 +30350,8 @@ phases:
     depends_on:
     - tool_meta.test
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T18:05:39.408962+00:00'
   - id: tool_meta.verify
     name: 'Integration verification: tool metadata round-trip'
     status: pending
