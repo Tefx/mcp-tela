@@ -30195,7 +30195,7 @@ phases:
       \ `output_schema` preserved for shell wire mapping translation"
   - id: tool_meta.test
     name: Tests for tool metadata round-trip
-    status: claimed
+    status: done
     description: 'Write tests verifying the full metadata round-trip path.
 
 
@@ -30251,6 +30251,16 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T17:44:19.796654+00:00'
+    done_at: '2026-03-26T18:05:06.481294+00:00'
+    evidence: "Artifact:\n- commit: `ccb2d99d9100ee1d2e75e400598c3746dc6f9434`\n\n\
+      Verification:\n- `uv run python -m pytest tests/core/test_family.py tests/shell/test_upstream.py\
+      \ tests/shell/test_list_tools_metadata.py` -> newly added metadata tests fail\
+      \ as expected for not-yet-wired behavior; existing baseline suite remains passing\n\
+      - `uv run invar guard` -> passed\n\nSpec link:\n- tool_meta.test\n- Added metadata\
+      \ round-trip tests covering present / absent / partial scenarios across:\n \
+      \ - `resolve_tools` extraction\n  - `handle_tools_list` output shaping\n  -\
+      \ `_list_tools` metadata propagation expectations\n- Tests intentionally encode\
+      \ forward behavior pending implementation in `tool_meta.impl`"
   - id: tool_meta.impl
     name: Implement tool metadata forwarding through pipeline
     status: pending
