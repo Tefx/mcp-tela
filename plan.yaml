@@ -29114,7 +29114,7 @@ phases:
   - id: rem.final_verify.retest-b1-after-batched-fix
     name: Independent retest for B1 blocker suite, liveness, and artifact consistency
       after batched fix
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -29210,3 +29210,5 @@ phases:
     depends_on:
     - rem.final_verify.fix-b1-retry-classification-and-evidence
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T08:24:33.084027+00:00'
