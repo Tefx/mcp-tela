@@ -29532,3 +29532,8 @@ phases:
     depends_on:
     - cleanup.verify
     agent: gate-reviewer
+- id: tool_meta
+  name: Tool Metadata Restoration
+  status: locked
+  depends_on:
+  - cleanup
