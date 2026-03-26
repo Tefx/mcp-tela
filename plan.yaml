@@ -29851,3 +29851,76 @@ phases:
 
       - uv run invar guard passes'
     agent: python-executor
+  - id: instructions.test
+    name: Tests for instructions merge logic
+    status: pending
+    description: 'Write tests for the enhanced _merge_downstream_instructions function.
+
+
+      step_type: test
+
+
+      ## Test Cases Required
+
+
+      File: tests/shell/test_gateway.py (or new test file)
+
+
+      ### 1. Passthrough mode (instructions=None, default)
+
+      - Server has downstream instructions -> instructions included in merge
+
+      - Server has no downstream instructions -> server section omitted
+
+
+      ### 2. Suppress mode (instructions=False)
+
+      - Server has downstream instructions but config says False -> instructions excluded
+      from merge
+
+
+      ### 3. Override mode (instructions="custom text")
+
+      - Server has downstream instructions but config overrides -> override text used
+      instead
+
+
+      ### 4. Mixed servers
+
+      - Server A: passthrough with instructions
+
+      - Server B: suppressed
+
+      - Server C: override text
+
+      - Merged output includes A (passthrough) and C (override), not B
+
+
+      ### 5. Markdown format
+
+      - Output uses H2 headers: `## server_name (tools: tool1, tool2)`
+
+      - Tool names bound to each section from the tool registry
+
+
+      ### 6. Edge cases
+
+      - All servers suppressed -> returns None
+
+      - No servers have instructions and none override -> returns None
+
+      - Server with override but no downstream instructions -> override still included
+
+
+      ## Completion Criteria
+
+      - Tests written covering all 6 categories
+
+      - Tests should initially fail (testing not-yet-implemented behavior changes)'
+    verification: '- Tests exist and cover passthrough/suppress/override/mixed/markdown/edge
+      cases
+
+      - Existing tests still pass'
+    depends_on:
+    - instructions.contract
+    agent: python-executor
