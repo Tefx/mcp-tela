@@ -33,7 +33,6 @@ from tela.core.models import (
 from tela.shell.config_loader import Result, load_config
 from tela.shell.audit import audit_close, audit_init
 from tela.shell.downstream import (
-    call_tool,
     connect_all,
     disconnect_all,
     get_all_tools,
