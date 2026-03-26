@@ -27716,7 +27716,7 @@ phases:
       allowed until `rem.final_verify.gate` completes'
   - id: rem.final_verify.targeted-regressions
     name: Run targeted remediation regression suite
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -27794,6 +27794,8 @@ phases:
     depends_on:
     - rem.final_verify.freeze-release-candidate
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T06:05:35.526290+00:00'
   - id: rem.final_verify.affected-suite-broad-pass
     name: Run affected-suite broad pass
     status: pending
