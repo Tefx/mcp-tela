@@ -32702,6 +32702,38 @@ phases:
     depends_on:
     - post.doc_sync.update
     agent: doc-reviewer
+  - id: post.doc_sync.retest
+    name: Retest documentation sync after fixes
+    status: pending
+    description: 'Re-run post.doc_sync validation after post.doc_sync.fix_batch completes.
+
+
+      Scope:
+
+      - Re-check the previously failed doc-sync gate findings
+
+      - Verify omitted transport is documented as defaulting to HTTP, not SSE
+
+      - Verify migration examples use the required overrides nesting
+
+      - Confirm no equivalent stale claims or malformed examples remain in the touched
+      documentation set
+
+
+      This is a focused retest step that must complete before the phase gate review
+      runs.'
+    verification: '- Independently verify each originally reported issue is resolved
+
+      - Confirm no remaining stale SSE-default claim in the reviewed doc set
+
+      - Confirm migration examples conform to required overrides nesting'
+    evidence_template: "## Retest Evidence\n- Rechecked files:\n  - <file list>\n\
+      - Issue 1 status: resolved / not resolved\n- Issue 2 status: resolved / not\
+      \ resolved\n- Residual issues:\n  - <none or list>\n- Gate recommendation: pass\
+      \ / fail"
+    depends_on:
+    - post.doc_sync.fix_batch
+    agent: gate-reviewer
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
