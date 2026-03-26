@@ -30514,3 +30514,8 @@ phases:
     depends_on:
     - post.doc_sync.update
     agent: gate-reviewer
+- id: post.deep_review
+  name: Deep Review (Independent Multi-Agent Audit)
+  status: locked
+  depends_on:
+  - post.doc_sync
