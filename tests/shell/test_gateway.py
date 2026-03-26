@@ -636,3 +636,365 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
             await gateway_shutdown()
 
     asyncio.run(_scenario())
+
+
+def test_list_tools_preserves_all_metadata_fields() -> None:
+    """_list_tools preserves title, outputSchema, and annotations from downstream."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        # Tool with all metadata fields present
+        tool_lists = {
+            "fs": [
+                {
+                    "name": "read_file",
+                    "inputSchema": {"type": "object"},
+                    "description": "Read a file",
+                    "title": "File Reader",
+                    "outputSchema": {"type": "string"},
+                    "annotations": {"readOnlyHint": True, "destructiveHint": False},
+                }
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            assert len(tools) == 1
+            tool = tools[0]
+            assert tool.name == "read_file"
+            assert tool.description == "Read a file"
+            assert tool.title == "File Reader"
+            assert tool.outputSchema == {"type": "string"}
+            assert tool.annotations is not None
+            assert tool.annotations.readOnlyHint is True
+            assert tool.annotations.destructiveHint is False
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_list_tools_preserves_partial_metadata() -> None:
+    """_list_tools preserves subset of metadata fields when partially present."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        # Tool with only title and annotations (no outputSchema)
+        tool_lists = {
+            "fs": [
+                {
+                    "name": "read_file",
+                    "inputSchema": {"type": "object"},
+                    "description": "Read a file",
+                    "title": "File Reader",
+                    "annotations": {"readOnlyHint": True},
+                }
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            assert len(tools) == 1
+            tool = tools[0]
+            assert tool.name == "read_file"
+            assert tool.title == "File Reader"
+            assert tool.outputSchema is None
+            assert tool.annotations is not None
+            assert tool.annotations.readOnlyHint is True
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_list_tools_handles_absent_metadata() -> None:
+    """_list_tools handles tools with no metadata fields gracefully."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        # Tool with no metadata fields
+        tool_lists = {
+            "fs": [
+                {
+                    "name": "read_file",
+                    "inputSchema": {"type": "object"},
+                    "description": "Read a file",
+                }
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            assert len(tools) == 1
+            tool = tools[0]
+            assert tool.name == "read_file"
+            assert tool.title is None
+            assert tool.outputSchema is None
+            assert tool.annotations is None
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_list_tools_preserves_only_title() -> None:
+    """_list_tools preserves only title when present."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [
+                {
+                    "name": "read_file",
+                    "inputSchema": {"type": "object"},
+                    "description": "Read a file",
+                    "title": "File Reader",
+                }
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            assert len(tools) == 1
+            tool = tools[0]
+            assert tool.title == "File Reader"
+            assert tool.outputSchema is None
+            assert tool.annotations is None
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_list_tools_preserves_only_output_schema() -> None:
+    """_list_tools preserves only outputSchema when present."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [
+                {
+                    "name": "read_file",
+                    "inputSchema": {"type": "object"},
+                    "description": "Read a file",
+                    "outputSchema": {"type": "string"},
+                }
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            assert len(tools) == 1
+            tool = tools[0]
+            assert tool.title is None
+            assert tool.outputSchema == {"type": "string"}
+            assert tool.annotations is None
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_list_tools_preserves_only_annotations() -> None:
+    """_list_tools preserves only annotations when present."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [
+                {
+                    "name": "read_file",
+                    "inputSchema": {"type": "object"},
+                    "description": "Read a file",
+                    "annotations": {"readOnlyHint": True, "idempotentHint": True},
+                }
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            server = get_runtime().upstream_server
+            assert server is not None
+            handler = server._mcp_server.request_handlers[types.ListToolsRequest]
+            response = await handler(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            assert len(tools) == 1
+            tool = tools[0]
+            assert tool.title is None
+            assert tool.outputSchema is None
+            assert tool.annotations is not None
+            assert tool.annotations.readOnlyHint is True
+            assert tool.annotations.idempotentHint is True
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())

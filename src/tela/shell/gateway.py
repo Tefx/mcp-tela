@@ -284,6 +284,14 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         assert init_result.value is not None
         return init_result.value
 
+    def _build_tool_annotations(
+        annotations: dict | None,
+    ) -> mcp_types.ToolAnnotations | None:
+        """Convert annotations dict to ToolAnnotations if present."""
+        if annotations is None:
+            return None
+        return mcp_types.ToolAnnotations(**annotations)
+
     @upstream_server._mcp_server.list_tools()
     async def _list_tools() -> list[mcp_types.Tool]:
         connection = await _ensure_connection()
@@ -297,6 +305,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 name=tool["name"],
                 inputSchema=dict(tool.get("inputSchema") or {}),
                 description=tool.get("description", ""),
+                title=tool.get("title"),
+                outputSchema=tool.get("outputSchema"),
+                annotations=_build_tool_annotations(tool.get("annotations")),
             )
             for tool in filtered_tools
         ]
