@@ -30309,3 +30309,100 @@ phases:
     depends_on:
     - notifications.test
     agent: python-senior
+  - id: notifications.verify
+    name: 'Integration verification: notification forwarding'
+    status: pending
+    description: 'As an INDEPENDENT TESTER, verify the end-to-end notification flow.
+
+
+      tags: ["integration"]
+
+
+      YOUR GOAL IS TO FIND PROBLEMS.
+
+
+      ## Required Evidence
+
+
+      ### End-to-end path
+
+      downstream tool change -> re-enumerate -> reload digest callback -> notify_tools_changed
+      -> session.send_tool_list_changed
+
+
+      ### Session lifecycle
+
+      - Session captured on first _list_tools call
+
+      - Session survives across multiple tool listings
+
+      - Stale session removed after failed notification send
+
+      - Sessions cleared on gateway shutdown
+
+
+      ### Concurrency safety
+
+      - Multiple concurrent _list_tools calls don''t corrupt session list
+
+      - notify_tools_changed during session capture doesn''t deadlock
+
+
+      ### Edge cases
+
+      - Notification with no active sessions -> graceful no-op
+
+      - All sessions dead -> all cleaned up, no crash
+
+
+      Independence Level: L2 (async concurrency concern)'
+    verification: '- End-to-end path verified
+
+      - Session lifecycle correct
+
+      - Concurrency safe
+
+      - Edge cases handled'
+    evidence_template: '## Integration Evidence
+
+
+      **End-to-end path test**:
+
+      ```
+
+      <test name and output>
+
+      ```
+
+
+      **Session lifecycle**:
+
+      | Scenario | Expected | Actual | Status |
+
+      |----------|----------|--------|--------|
+
+
+      **Concurrency check**:
+
+      ```
+
+      <evidence of thread/coroutine safety>
+
+      ```
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND'
+    depends_on:
+    - notifications.impl
+    agent: integration-verifier
