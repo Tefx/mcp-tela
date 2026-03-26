@@ -27072,7 +27072,7 @@ phases:
       - Confirm any retained issue has explicit non-intersection rationale and downstream
       ownership or else is remediated now'
     depends_on:
-    - rem.hygiene.gate
+    - rem.hygiene.verify-hygiene-pack
     agent: python-senior
   - id: rem.hygiene.retest-gate-blockers
     name: Retest hygiene gate blockers
