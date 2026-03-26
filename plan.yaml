@@ -30934,7 +30934,7 @@ phases:
       - No metadata assertions or tool_meta behavior constraints changed'
   - id: tool_meta.gate_retest3
     name: 'Third independent retest: targeted Ruff and metadata tests after lint remediation'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the third
       batched remediation for tool_meta from a fresh perspective.
 
@@ -30975,6 +30975,32 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T21:36:20.136756+00:00'
+    done_at: '2026-03-26T21:37:49.031031+00:00'
+    evidence: 'Artifact:
+
+      - retest worktree reference: `384cb93`
+
+
+      Verification:
+
+      - `uv run ruff check tests/shell/test_list_tools_metadata.py` -> All checks
+      passed (no F401)
+
+      - `uv run pytest tests/shell/test_list_tools_metadata.py -v` -> 3 passed
+
+
+      Spec link:
+
+      - tool_meta.gate_retest3
+
+
+      Findings:
+
+      - Lint blocker removed
+
+      - Metadata tests still pass
+
+      - Assertions for title/outputSchema/annotations preserved; no weakening detected'
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
