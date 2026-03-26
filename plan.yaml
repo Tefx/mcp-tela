@@ -26950,7 +26950,7 @@ phases:
       - verdict: PASS'
   - id: rem.hygiene.gate
     name: Gate invar and runtime hygiene phase
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: default
@@ -26987,6 +26987,16 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T04:56:35.854051+00:00'
+    done_at: '2026-03-26T05:10:50.378423+00:00'
+    evidence: "## Gate Review Report\n- hygiene completion: NEEDS REVISION\n- retained\
+      \ debt assessment: blocker-class issues intersect downstream acceptance checks\n\
+      - blocker/should_fix findings:\n  - blockers: lint failure, runtime liveness\
+      \ instability, invar full-scan failures, unresolved retained debt/wiring concerns\n\
+      \  - should_fix: shell_result debt-budget/rationale hardening\n\n## Remediation\
+      \ handling\n- Applied batched-fix protocol: planner created one batched fix\
+      \ step and one retest step under `rem.hygiene`, and gate now depends on retest.\n\
+      - Gate step completion records blocked verdict and routes ownership to remediation\
+      \ branch."
   - id: rem.hygiene.fix-gate-blockers
     name: Fix gate blockers for hygiene phase
     status: pending
