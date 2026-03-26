@@ -30934,7 +30934,7 @@ phases:
       - No metadata assertions or tool_meta behavior constraints changed'
   - id: tool_meta.gate_retest3
     name: 'Third independent retest: targeted Ruff and metadata tests after lint remediation'
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate the third
       batched remediation for tool_meta from a fresh perspective.
 
@@ -30973,6 +30973,8 @@ phases:
     depends_on:
     - tool_meta.gate_fix_batch3
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T21:36:20.136756+00:00'
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
