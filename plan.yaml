@@ -30263,7 +30263,7 @@ phases:
       \ forward behavior pending implementation in `tool_meta.impl`"
   - id: tool_meta.impl
     name: Implement tool metadata forwarding through pipeline
-    status: claimed
+    status: done
     description: "Wire the three new ResolvedTool fields through the entire tool pipeline.\n\
       \nstep_type: implementation\n\n## File 1: src/tela/core/family.py — resolve_tools()\n\
       \nCurrent code (lines 96-114) already extracts `annotations` for posture classification\
@@ -30352,6 +30352,25 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T18:05:39.408962+00:00'
+    done_at: '2026-03-26T20:39:30.528708+00:00'
+    evidence: "## Tool Metadata Implementation Evidence\n\nCommits:\n- `a24ec4c61e44b479f58a8c8c7fce740790e064db`\n\
+      - `f24cccfd3b376e1df26389da2f8e665167b5f8a9`\n\nresolve_tools changes:\n- `src/tela/core/family.py`\
+      \ now extracts and forwards metadata fields from raw tools:\n  - `annotations\
+      \ = raw_tool.get(\"annotations\")`\n  - `title = raw_tool.get(\"title\")`\n\
+      \  - `output_schema = raw_tool.get(\"outputSchema\")`\n- Passes `annotations`,\
+      \ `title`, `output_schema` into `ResolvedTool`\n\nhandle_tools_list output verification:\n\
+      - `src/tela/shell/upstream.py` now conditionally forwards metadata keys in tool\
+      \ dict output:\n  - `annotations` when present\n  - `title` when present\n \
+      \ - `outputSchema` when present (mapped from model `output_schema`)\n\n_list_tools\
+      \ mcp_types.Tool construction:\n- `src/tela/shell/gateway.py` now passes metadata\
+      \ into `mcp_types.Tool` creation:\n  - `annotations` (ToolAnnotations wrapper)\n\
+      \  - `title`\n  - `outputSchema`\n- Also aligned `_call_tool` return path with\
+      \ MCP outputSchema validation expectations by returning `structuredContent`\
+      \ when available\n\nTest results:\n- `uv run python -m pytest` -> **613 passed**,\
+      \ 3 warnings\n- Metadata round-trip tests pass\n\nInvar guard:\n- `uv run invar\
+      \ guard` -> passed (0 errors; warnings are pre-existing non-blocking)\n\nSpec\
+      \ link:\n- tool_meta.impl (metadata forwarding through resolve_tools -> handle_tools_list\
+      \ -> _list_tools pipeline)"
   - id: tool_meta.verify
     name: 'Integration verification: tool metadata round-trip'
     status: pending
