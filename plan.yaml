@@ -27653,7 +27653,7 @@ phases:
       contract text + aligned test naming/assertions'
 - id: rem.final_verify
   name: Final Remediation Verification
-  status: in_progress
+  status: done
   depends_on:
   - rem.bridge_flake
   - rem.suggestions
@@ -29114,7 +29114,7 @@ phases:
   - id: rem.final_verify.retest-b1-after-batched-fix
     name: Independent retest for B1 blocker suite, liveness, and artifact consistency
       after batched fix
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -29212,3 +29212,95 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T08:24:33.084027+00:00'
+    done_at: '2026-03-26T08:28:45.299800+00:00'
+    evidence: '## Independent Retest Report
+
+
+      **Tester**: integration-verifier
+
+      **Independence Level**: L2
+
+      **Worktree**: `.vectl/worktrees/rem.final_verify.retest-b1-after-batched-fix`
+
+
+      ### Commands Executed
+
+
+      #### 1. B1 Blocker Suite
+
+      ```bash
+
+      uv run pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry
+      -q
+
+      ```
+
+      **Result**: 8 passed in 0.65s
+
+
+      #### 2. Liveness Suite
+
+      ```bash
+
+      uv run pytest tests/repro/test_liveness.py -q
+
+      ```
+
+      **Result**: 4 passed in 10.49s
+
+
+      #### 3. Full Blocker Regression Suite (B1 + B2 + B3)
+
+      ```bash
+
+      uv run pytest tests/repro/test_gate_blocker_regressions.py -v --tb=short
+
+      ```
+
+      **Result**: 15 passed in 0.57s
+
+
+      ### Integrity Checks (P2: Fake Seam)
+
+      - TestB1TransientRetry: Uses mocks at HTTP transport seam
+
+      - test_liveness.py: no mocks, real subprocess integration tests
+
+      - No fake seams at integration boundaries
+
+
+      ### Artifact Consistency Check
+
+      - Regenerated artifact: `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+
+      - Fresh outputs match artifact claims
+
+      - No contradictions found
+
+
+      ### Disposition
+
+      - B1 transient retry classifier: CLOSED (8/8)
+
+      - B2 lockfile PID identity: PASSING (4/4)
+
+      - B3 soak pipefail: PASSING (3/3)
+
+
+      **Blocker intersection**: `blocking-now closed`
+
+
+      ### Independence Certification
+
+      - Fresh environment used
+
+      - No stale evidence reuse
+
+      - Commands executed as required
+
+      - Artifact consistency verified
+
+
+      Supporting evidence file committed: `evidence/independent_retest_B1.md`
+
+      Commit: `76959fd`'
