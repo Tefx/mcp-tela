@@ -26983,6 +26983,7 @@ phases:
     - rem.hygiene.validate-shell-result-allow-rationales
     - rem.hygiene.evaluate-runtime-liveness-test-structure
     - rem.hygiene.verify-hygiene-pack
+    - rem.hygiene.retest-gate-blockers
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T04:56:35.854051+00:00'
