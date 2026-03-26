@@ -29617,3 +29617,88 @@ phases:
     depends_on:
     - tool_meta.contract
     agent: python-executor
+  - id: tool_meta.impl
+    name: Implement tool metadata forwarding through pipeline
+    status: pending
+    description: "Wire the three new ResolvedTool fields through the entire tool pipeline.\n\
+      \nstep_type: implementation\n\n## File 1: src/tela/core/family.py — resolve_tools()\n\
+      \nCurrent code (lines 96-114) already extracts `annotations` for posture classification\
+      \ but discards it. Changes:\n- Extract `title = raw_tool.get(\"title\")` \n\
+      - Extract `output_schema = raw_tool.get(\"outputSchema\")`\n- Pass `annotations=annotations,\
+      \ title=title, output_schema=output_schema` to ResolvedTool constructor\n- Note:\
+      \ `annotations` is already extracted at line 100 as a local var -- just pass\
+      \ it through\n\nPattern to follow: existing `description = raw_tool.get(\"description\"\
+      , \"\")` at line 103.\n\n## File 2: src/tela/shell/upstream.py — handle_tools_list()\n\
+      \nCurrent output dict (lines 290-296):\n```python\n{\"name\": t.name, \"inputSchema\"\
+      : t.schema_ or {}, \"description\": t.description}\n```\n\nAdd conditional forwarding:\n\
+      ```python\ntool_dict = {\"name\": t.name, \"inputSchema\": t.schema_ or {},\
+      \ \"description\": t.description}\nif t.annotations is not None:\n    tool_dict[\"\
+      annotations\"] = t.annotations\nif t.title is not None:\n    tool_dict[\"title\"\
+      ] = t.title\nif t.output_schema is not None:\n    tool_dict[\"outputSchema\"\
+      ] = t.output_schema\n```\n\n## File 3: src/tela/shell/gateway.py — _list_tools()\n\
+      \nCurrent mcp_types.Tool construction (lines 314-320):\n```python\nmcp_types.Tool(name=tool[\"\
+      name\"], inputSchema=dict(tool.get(\"inputSchema\") or {}), description=tool.get(\"\
+      description\", \"\"))\n```\n\nAdd fields:\n```python\nmcp_types.Tool(\n    name=tool[\"\
+      name\"],\n    inputSchema=dict(tool.get(\"inputSchema\") or {}),\n    description=tool.get(\"\
+      description\", \"\"),\n    annotations=tool.get(\"annotations\"),\n    title=tool.get(\"\
+      title\"),\n    outputSchema=tool.get(\"outputSchema\"),\n)\n```\n\nVerify mcp_types.Tool\
+      \ accepts these kwargs (it should per MCP spec).\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Each file change must produce\
+      \ functional forwarding logic.\n- resolve_tools populates all three fields on\
+      \ ResolvedTool\n- handle_tools_list includes them in output dicts\n- _list_tools\
+      \ passes them to mcp_types.Tool\n- All tests pass including new metadata tests\n\
+      - uv run invar guard passes"
+    verification: '- All tests pass including new metadata round-trip tests
+
+      - uv run invar guard passes
+
+      - Manual check: resolve_tools with annotated raw tool -> fields present on ResolvedTool'
+    evidence_template: '## Tool Metadata Implementation Evidence
+
+
+      **resolve_tools changes**:
+
+      ```
+
+      <invar sig output showing new fields used>
+
+      ```
+
+
+      **handle_tools_list output verification**:
+
+      ```
+
+      <test showing metadata in output dict>
+
+      ```
+
+
+      **_list_tools mcp_types.Tool construction**:
+
+      ```
+
+      <relevant code diff or test output>
+
+      ```
+
+
+      **Test results**:
+
+      ```
+
+      <pytest output>
+
+      ```
+
+
+      **Invar guard**:
+
+      ```
+
+      <invar guard output>
+
+      ```'
+    depends_on:
+    - tool_meta.test
+    agent: python-executor
