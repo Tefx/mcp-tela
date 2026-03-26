@@ -30596,6 +30596,48 @@ phases:
     depends_on:
     - tool_meta.verify
     agent: python-executor
+  - id: tool_meta.gate_retest
+    name: 'Retest: tool metadata preservation through _list_tools'
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate the batched
+      remediation for tool metadata preservation from a fresh perspective.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      Protects downstream gate: tool_meta.gate
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: targeted metadata tests prove annotations, title, and outputSchema
+      survive the actual _list_tools path into mcp_types.Tool
+
+      - Edge cases: absent metadata, partial metadata, empty annotations dict vs None
+
+      - Error scenarios: explicit metadata-preservation probe fails if final-stage
+      forwarding regresses
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1'
+    verification: '- Rerun targeted metadata tests covering the actual _list_tools
+      path
+
+      - Run an explicit metadata-preservation probe for annotations/title/outputSchema
+      at final Tool construction
+
+      - Evidence includes exact commands and observed output, plus whether any metadata
+      field is lost in the final stage'
+    depends_on:
+    - tool_meta.gate_fix_batch
+    agent: integration-verifier
 - id: instructions
   name: Instructions Merge Improvements
   status: locked
