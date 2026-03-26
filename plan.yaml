@@ -28104,3 +28104,115 @@ phases:
     - rem.final_verify.full-invar-guard
     - rem.final_verify.runtime-liveness-blackbox
     agent: gate-reviewer
+  - id: rem.final_verify.fix-full-invar-complexity-debt
+    name: Batched remediation for full invar complexity/debt posture
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - rem.final_verify.full-invar-guard blocker inventory
+
+      - AGENTS.md Invar verification guidance
+
+
+      touch_paths:
+
+      - repo-wide Shell complexity hotspots implicated by full guard warnings
+
+      - repo-wide dead_export / function_size / file_size warning surfaces as needed
+      to close blocker-class posture
+
+
+      harness_refs:
+
+      - uvx invar-tools guard --all
+
+
+      authoritative_interface: NONE PINNED
+
+
+      symbolic_testing: true
+
+      prior_loop:
+
+      - rem.final_verify.full-invar-guard
+
+      remaining_blocker: shell_complexity_debt blocker from full-plan guard (8 unaddressed
+      complexity warnings vs limit 5), plus blocker-relevant debt posture needed so
+      the full guard opens.
+
+      why_new_loop: Full-plan verification surfaced blocker-class complexity debt
+      that must be remediated before final runtime/gate can proceed.
+
+
+      Fix ALL blocker-family issues required to reopen the full invar guard, not just
+      the first warning cluster.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: repository Shell complexity/debt posture remains above the full-guard
+      blocker threshold.
+
+      - Symptom: `uvx invar-tools guard --all` blocks on `shell_complexity_debt` and
+      reports additional debt inventory.
+
+      - Why this fix is not surface-level: reduce or disposition the blocker-class
+      warning family across all implicated shell surfaces so the exact full-plan command
+      can pass.
+
+
+      ## Blocker Family to Fix
+
+      ### shell_complexity_debt
+
+      - Required outcome: reduce unaddressed complexity warnings from 8 to within
+      the guard limit of 5 or lower, with any remaining warnings explicitly justified
+      by the code changes that preserve final gate viability.
+
+      - Inventory to search: shell complexity warnings, function_size warnings, file_size
+      warnings, dead_export warnings, and related shell complexity infos that may
+      keep the same blocker family alive.
+
+      - Search requirement: inspect siblings beyond the originally reported files
+      so no parallel warning cluster is left behind.
+
+      - Command lock: use the exact verification command family `uvx invar-tools guard
+      --all` for acceptance alignment; do not substitute another guard wrapper.
+
+      - Cold-state note: the downstream retest must run in a fresh/cold environment.
+
+
+      ## Completion Criteria
+
+      - ALL blocker-family fixes needed for full invar guard are implemented
+
+      - Sibling search completed across the reported warning families
+
+      - No blocker-class complexity/debt posture remains that would predictably fail
+      the exact full guard command
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.'
+    verification: '- Root-cause-first remediation evidence explains why the complexity/debt
+      family is now below the blocker threshold
+
+      - Sibling search evidence provided for shell_complexity_debt plus related function_size/file_size/dead_export
+      inventory
+
+      - Changes are aligned to the exact downstream command family `uvx invar-tools
+      guard --all`
+
+      - Fresh/cold retest is prepared; symptom-only patches are not acceptable'
+    depends_on:
+    - rem.final_verify.full-invar-guard
+    agent: python-senior
