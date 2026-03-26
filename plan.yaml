@@ -31582,7 +31582,7 @@ phases:
       Implementation intentionally deferred to notifications.impl step.'
   - id: notifications.test
     name: Tests for notification forwarding
-    status: claimed
+    status: done
     description: 'Write tests for upstream notification forwarding.
 
 
@@ -31637,6 +31637,35 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T22:21:14.939833+00:00'
+    done_at: '2026-03-26T22:32:41.592564+00:00'
+    evidence: 'Artifact:
+
+      - commit: `712d620ee2951a2be9a24516d9c04b6330a176ed`
+
+
+      Verification:
+
+      - `uv run pytest tests/shell/test_notification_forwarding.py -v` -> 20 passed
+
+      - `uv run pytest tests/shell/ -v --tb=short` -> shell suite passed
+
+
+      Spec link:
+
+      - notifications.test
+
+
+      Coverage delivered:
+
+      - session capture (single/multiple/overwrite)
+
+      - notify send path + no-session no-op
+
+      - stale/dead session cleanup behavior
+
+      - reload-callback end-to-end notification flow
+
+      - edge cases and thread-safety checks'
   - id: notifications.impl
     name: Implement session capture and real notify_tools_changed
     status: pending
