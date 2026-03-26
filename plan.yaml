@@ -32060,6 +32060,77 @@ phases:
     depends_on:
     - notifications.verify
     agent: python-senior
+  - id: notifications.gate_retest
+    name: notifications.gate_retest
+    status: pending
+    description: 'Independent retest of notifications gate remediation.
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate that the notifications
+      disconnect cleanup is correct from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: disconnect triggers release_session and notification forwarding
+      still works after reconnect
+
+      - Edge cases: repeated connect/disconnect cycles do not retain stale captured
+      sessions
+
+      - Error scenarios: leak probes show no unbounded session registry growth across
+      disconnect cycles
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      Independence Level: L1
+
+
+      Required reruns:
+
+      - disconnect leak probes
+
+      - notification forwarding tests'
+    verification: '- Rerun disconnect leak probes
+
+      - Rerun notification forwarding tests
+
+      - Evidence includes whether stale captured sessions remain after disconnect
+
+      - Evidence includes whether session registry cardinality stays bounded across
+      repeated connect/disconnect cycles'
+    evidence_template: '## Notifications Gate Retest Report
+
+      **Tester**: integration-verifier
+
+      **Scope**: notifications disconnect leak remediation
+
+      **Commands/tests rerun**:
+
+      - <disconnect leak probe command or test>
+
+      - <notification forwarding command or test>
+
+
+      ## Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | blocker/should_fix/suggestion/tech_debt | <fill> | <fill> | <fill> |
+
+
+      ## Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE'
+    depends_on:
+    - notifications.gate_fix_batch
+    agent: integration-verifier
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
