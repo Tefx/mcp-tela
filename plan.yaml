@@ -30504,7 +30504,7 @@ phases:
     agent: gate-reviewer
   - id: tool_meta.gate_fix_batch
     name: 'Batched remediation: preserve metadata in _list_tools'
-    status: pending
+    status: claimed
     description: 'Fix ALL gate blockers for tool metadata preservation.
 
 
@@ -30596,6 +30596,8 @@ phases:
     depends_on:
     - tool_meta.verify
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-26T20:52:12.133898+00:00'
   - id: tool_meta.gate_retest
     name: 'Retest: tool metadata preservation through _list_tools'
     status: pending
