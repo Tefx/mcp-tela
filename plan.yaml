@@ -29306,7 +29306,7 @@ phases:
       Commit: `76959fd`'
 - id: cleanup
   name: Dead Code Removal
-  status: in_progress
+  status: done
   depends_on:
   - rem.final_verify
   steps:
@@ -29564,7 +29564,7 @@ phases:
       ### Verdict\n- PASS"
   - id: cleanup.gate
     name: 'Gate: Dead Code Removal'
-    status: claimed
+    status: done
     description: 'Gate review: Verify cleanup phase completion.
 
 
@@ -29590,6 +29590,40 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T17:30:15.891813+00:00'
+    done_at: '2026-03-26T17:38:37.584998+00:00'
+    evidence: 'Artifact:
+
+      - Reviewed commits spanning cleanup remediation: `0e73059..ce9c1ff`
+
+
+      Verification:
+
+      - `uv run python -m pytest` -> 600 passed, 3 warnings
+
+      - `uv run invar guard src --all` -> passed
+
+      - `uv run ruff check src tests` -> passed
+
+      - Reference checks confirmed removed symbols absent and `_validate_transport_mode`
+      preserved/called
+
+      - Tool-listing/tool-calling path validated via live `_mcp_server.list_tools()`
+      / `_mcp_server.call_tool(...)` route and integration evidence
+
+
+      Spec link:
+
+      - `cleanup.impl` and `cleanup.gate` acceptance criteria in plan
+
+
+      Gate verdict:
+
+      - decision: PASS
+
+      - rationale: dead-code removals were genuine; preserved runtime transport validation;
+      verification suite clean; no orphaned imports/references remain
+
+      - required follow-ups: none'
   - id: cleanup.fix_batch
     name: Batched remediation for cleanup.impl blockers
     status: done
@@ -30121,7 +30155,7 @@ phases:
       Verdict: PASS'
 - id: tool_meta
   name: Tool Metadata Restoration
-  status: locked
+  status: pending
   depends_on:
   - cleanup
   steps:
