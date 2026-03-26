@@ -28351,3 +28351,229 @@ phases:
       Spec link:
 
       - `rem.final_verify.full-invar-guard` + complexity-debt remediation retest requirement'
+  - id: rem.final_verify.fix-b1-liveness-evidence
+    name: Batched remediation for blocker regressions, liveness risk, and contradictory
+      evidence
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: default
+
+      step_type: implementation
+
+
+      Fix ALL remaining blocker-class findings surfaced by `rem.final_verify.gate`
+      in one batched remediation step.
+
+
+      symbolic_testing: true
+
+      prior_loop:
+
+      - rem.bridge_flake.loop2_retest
+
+      - rem.final_verify.targeted-regressions
+
+      - rem.final_verify.runtime-liveness-blackbox
+
+      remaining_blocker: transient-retry claim regressions remain reproducible in
+      `tests/repro/test_gate_blocker_regressions.py`; contention-sensitive liveness
+      risk is still observable in `tests/repro/test_liveness.py`; remediation evidence
+      is self-contradictory and stale in `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`.
+
+      why_new_loop: the failed gate exposed one blocker family spanning implementation
+      behavior, regression coverage, and evidence integrity; splitting these would
+      hide a shared root cause and allow stale contradictory evidence to persist.
+
+      why_previous_fix_failed: prior remediation accepted stale bridge-flake retest
+      claims without proving the transient-retry path under a fresh run, and did not
+      close the contention-sensitive liveness behavior that can still intersect the
+      final gate.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: retry/liveness behavior and supporting assertions are still unstable
+      under contention, while evidence production allowed stale or contradictory claims
+      to be presented as current proof.
+
+      - Symptom: 6 fresh failures in `tests/repro/test_gate_blocker_regressions.py`,
+      residual failures in the `tests/repro/test_liveness.py` path, and a retest evidence
+      report claiming success while containing contrary markers.
+
+      - Why this fix is not surface-level: it must reconcile runtime behavior, regression
+      expectations, and evidence generation/validation together so the same blocker
+      family cannot reappear at the gate.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+
+      ### B1: transient-retry blocker regressions still fail under fresh targeted
+      execution
+
+      Locations: `tests/repro/test_gate_blocker_regressions.py`, retry/liveness implementation
+      paths exercised by that suite, and any helper/assertion files that encode transient
+      claim behavior.
+
+      Remediation: fix the underlying retry/liveness semantics and update focused
+      regressions so the blocker suite reflects the intended resolved behavior without
+      hiding contention-sensitive failures.
+
+      Grep hint: `rg -n "transient|retry|claim|ellipsis|bridge" tests/repro src`
+
+      IMPORTANT: search for sibling retry/liveness assertions beyond the listed test
+      file.
+
+
+      ### B2: contention-sensitive liveness risk remains observable
+
+      Locations: `tests/repro/test_liveness.py` and the runtime/bridge code paths
+      it exercises.
+
+      Remediation: close the highest-risk failure path, including contention timing
+      or coordination semantics, and add/adjust regression coverage proving the liveness
+      path remains correct under the reproduced contention scenario.
+
+      Grep hint: `rg -n "liveness|timeout|contention|bridge|heartbeat|poll" tests/repro
+      src`
+
+      IMPORTANT: include sibling liveness paths, not just the single failing assertion.
+
+
+      ### B3: evidence contradiction and stale claims in remediation artifacts
+
+      Locations: `artifacts/rem_bridge_flake/loop2_retest/retest_evidence_report.md`
+      and any code/scripts/templates that produce or validate remediation evidence.
+
+      Remediation: make evidence generation/refresh deterministic enough that contradictory
+      markers cannot be presented as current proof; remove stale claims and require
+      regenerated evidence to match actual run output.
+
+      Grep hint: `rg -n "ellipsis|all pass|contrary|stale|evidence_report|loop2_retest"
+      artifacts src tests`
+
+      IMPORTANT: search for sibling evidence templates or post-processing paths that
+      can preserve stale success text.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      ## Completion Criteria
+
+      - ALL blocker findings above are addressed together
+
+      - sibling search completed for each blocker family
+
+      - code, tests, and evidence production/refresh are consistent with one another
+
+      - no contradictory success claim remains in the regenerated remediation evidence
+      path
+
+      - out-of-scope guardrail: unrelated phases and unrelated blocker families are
+      not modified
+
+
+      ## Known Risks
+
+      - residual contention bugs may only reproduce under timing-sensitive execution;
+      preserve focused coverage for the reproduced liveness path
+
+      - stale evidence text can reappear if artifact refresh is decoupled from the
+      actual blocker run
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. another targeted blocker run that still leaves transient-retry failures open
+
+      2. liveness proof that covers only the happy path and not the contention-sensitive
+      path
+
+      3. regenerated evidence that summarizes success without matching actual run
+      output
+
+      4. symptom-only patches that silence assertions without explaining retry/liveness
+      semantics
+
+      '
+    verification: '- Use the exact required command family for this blocker family;
+      retest-facing evidence must lock to a fresh/cold run and not reuse stale artifacts
+
+      - Main path: focused regressions for the repaired transient-retry and liveness
+      paths pass
+
+      - Failure path: contention-sensitive regression proves the highest-risk liveness
+      scenario is covered
+
+      - Evidence path: regenerated remediation evidence matches actual command output
+      and contains no stale contradictory success text
+
+      - Proof: sibling search evidence shows no remaining equivalent blocker pattern
+      in the touched retry/liveness/evidence paths'
+    evidence_template: '## Batched Remediation Evidence
+
+
+      **Blocker family**: B1 retry/liveness/evidence consistency
+
+      **Root cause addressed**: <explain underlying semantics fixed>
+
+      **Why previous fix failed**: <required>
+
+      **Commands used for fresh verification prep**:
+
+      ```
+
+      <paste exact focused commands>
+
+      ```
+
+
+      ### Sibling Search
+
+      - Retry/liveness grep output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      - Evidence-template grep output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ### Code/Test/Evidence Changes
+
+      - Runtime/logic paths updated: <files>
+
+      - Regression files updated: <files>
+
+      - Evidence generation/refresh paths updated: <files>
+
+
+      ### Highest-Risk Failure Path
+
+      - Contention-sensitive liveness scenario addressed by: <test name or command>
+
+      - Why this closes the blocker family rather than only the observed symptom:
+      <explain>
+
+      '
+    depends_on:
+    - rem.final_verify.targeted-regressions
+    - rem.final_verify.affected-suite-broad-pass
+    - rem.final_verify.runtime-liveness-blackbox
+    agent: python-senior
