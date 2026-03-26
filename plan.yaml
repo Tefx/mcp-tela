@@ -31978,6 +31978,88 @@ phases:
     depends_on:
     - notifications.verify
     agent: gate-reviewer
+  - id: notifications.gate_fix_batch
+    name: notifications.gate_fix_batch
+    status: pending
+    description: 'Fix ALL notifications gate blockers in one batched remediation step.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      - Disconnect path removes runtime.connections but does not call release_session
+
+      - Stale captured sessions remain after disconnect
+
+      - Session registry can grow unbounded across connect/disconnect cycles
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: disconnect lifecycle cleanup is split, so connection removal does
+      not fully release notification/session ownership
+
+      - Symptom: captured sessions leak after disconnect and registry cardinality
+      grows over repeated connect/disconnect cycles
+
+      - Why this fix is not surface-level: remediation must unify disconnect cleanup
+      semantics, bound registry growth, and prove cleanup through regression coverage
+
+
+      ## Required remediation
+
+      - Wire release_session into the disconnect path so removing runtime.connections
+      also releases session ownership
+
+      - Ensure bounded session registry cardinality across repeated connect/disconnect
+      cycles
+
+      - Add regression coverage for disconnect cleanup, stale-session removal, and
+      bounded-growth behavior
+
+      - Search for sibling disconnect/cleanup paths so release semantics are not fixed
+      in only one path
+
+
+      ## Completion Criteria
+
+      - ALL listed blockers are fixed
+
+      - Disconnect cleanup releases session state and registry ownership together
+
+      - Session registry remains bounded across repeated connect/disconnect cycles
+
+      - Regression coverage exists for disconnect cleanup and notification forwarding
+      after cleanup
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.'
+    verification: '- Main path: targeted regressions cover disconnect cleanup and
+      notification forwarding after reconnect
+
+      - Failure path: repeated connect/disconnect regression proves stale sessions
+      are released and registry cardinality stays bounded
+
+      - Proof: no remaining disconnect path bypasses release_session where session
+      cleanup is required'
+    evidence_template: '## Notifications Gate Fix Batch Evidence
+
+      - Disconnect cleanup path updated to call release_session
+
+      - Session registry bounding strategy described
+
+      - Regression tests added/updated for disconnect cleanup, stale-session removal,
+      and repeated connect/disconnect cycles
+
+      - Sibling cleanup-path search evidence recorded'
+    depends_on:
+    - notifications.verify
+    agent: python-senior
 - id: post.doc_sync
   name: Documentation Sync
   status: locked
