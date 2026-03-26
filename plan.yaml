@@ -25890,7 +25890,7 @@ phases:
       \ contingency verification."
   - id: rem.bridge_flake.investigate-persistent-timeout-family
     name: Investigate persistent bridge timeout blocker family
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -25978,6 +25978,38 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T04:25:24.616277+00:00'
+    done_at: '2026-03-26T04:30:14.177839+00:00'
+    evidence: '## Bridge Timeout Investigation
+
+      - blocker_fingerprint: initialize/tools_list bridge timeout family with three
+      race windows around global lockfile `~/.tela/gateway.lock` (lockfile publication
+      wait, fixed bridge sleep, MCP select timeout).
+
+      - root_cause_hypothesis: bridge logic is functionally correct; flakiness is
+      primarily test isolation gap from shared global lockfile contention/interference,
+      with fixed 1.0s readiness sleep as secondary sensitivity.
+
+      - why_previous_fix_failed: earlier blocker fixes improved correctness but did
+      not isolate lockfile path, did not bind lockfile identity to spawned PID, and
+      did not replace fixed sleep with readiness polling.
+
+      - environment_consistency_check: hot and cold runs in isolated worktree, no
+      stale lockfile, no concurrent tela processes, consistent Python runtime; explains
+      non-reproduction under clean conditions.
+
+      - next_fix_constraint: add lockfile PID identity assertion in tests; replace
+      fixed sleep with readiness polling; consider per-test lockfile isolation via
+      configurable path (design decision).
+
+      - non-trigger evidence or reproduction output: 7 consecutive cold-start runs
+      (full-suite and targeted bridge test) passed with zero timeout reproduction;
+      evidence indicates trigger likely requires environmental contamination/load
+      not present in isolated run.
+
+
+      Notes:
+
+      - Investigation-only step; no source changes performed.'
   - id: rem.bridge_flake.cold-repro-and-soak
     name: Cold-start reproduction and soak verification for bridge timeout
     status: pending
