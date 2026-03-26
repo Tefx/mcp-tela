@@ -30131,3 +30131,36 @@ phases:
   status: locked
   depends_on:
   - instructions
+  steps:
+  - id: notifications.contract
+    name: 'Contract: Session capture and notification interface'
+    status: pending
+    description: "Define the interface for capturing upstream sessions and sending\
+      \ notifications.\n\nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures for session capture\n  - signatures for real notify_tools_changed\n\
+      \n## Design\n\n### Session Capture\nIn gateway.py, the upstream MCP handlers\
+      \ (_list_tools, _call_tool) have access to the FastMCP server's context via\
+      \ `upstream_server.get_context()`. The session object (`ServerSession`) is available\
+      \ as `context.session`.\n\nThe session needs to be captured and stored so that\
+      \ `notify_tools_changed` can later send notifications to all active upstream\
+      \ clients.\n\nOptions:\n1. Store sessions in the existing `_runtime` object\
+      \ (add a `sessions` field)\n2. Capture session in the handler and pass to a\
+      \ session registry\n\nPreferred: Add `sessions: list[ServerSession]` or similar\
+      \ to runtime state, capture in _list_tools handler.\n\n### notify_tools_changed\n\
+      Current signature (upstream.py line 436):\n```python\nasync def notify_tools_changed(connection:\
+      \ ConnectionContext, tools_digest: str) -> None:\n```\n\nThe current implementation\
+      \ is a no-op (lines 455-456):\n```python\nif connection.connection_id and tools_digest:\n\
+      \    return\n```\n\nThe new implementation needs to:\n- Access stored sessions\n\
+      - Call `session.send_tool_list_changed()` on each\n- Handle stale/dead sessions\
+      \ gracefully\n\nNote: The existing `_wire_reload_notifications` in gateway.py\
+      \ already calls `notify_tools_changed` for each connection. The plumbing exists\
+      \ -- only the implementation of `notify_tools_changed` needs to become real.\n\
+      \n## Completion Criteria\n- Interface for session capture defined (stubs OK\
+      \ for contract step)\n- Updated notify_tools_changed signature documented\n\
+      - No implementation logic yet"
+    verification: '- Interface documented
+
+      - Stubs in place
+
+      - Existing tests pass'
+    agent: python-senior
