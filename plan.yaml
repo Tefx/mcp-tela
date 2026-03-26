@@ -27074,6 +27074,82 @@ phases:
     depends_on:
     - rem.hygiene.gate
     agent: python-senior
+  - id: rem.hygiene.retest-gate-blockers
+    name: Retest hygiene gate blockers
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      Independence Level: L2
+
+      Protects downstream gates: rem.hygiene.gate, rem.suggestions.gate, rem.final_verify.gate
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate the full blocker family
+      reported by rem.hygiene.gate from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: hygiene verification pack and full-scan/lint/runtime repro checks
+      complete with stable evidence
+
+      - Edge cases: liveness tests distinguish startup failure, premature exit, timeout,
+      and steady-state success
+
+      - Error scenarios: shell_result classification, artifact-script policy, and
+      retained-debt disposition regressions are still discoverable if unfixed
+
+      - Cross-cutting: orphan-export/wiring concerns and shell_result rationale centralization
+      are not silently deferred
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      A test that finds nothing must justify the coverage achieved.
+
+
+      Fresh/cold environment is required for symbolic/full-scan and runtime liveness
+      evidence. Use the exact project command family required by the repo for authoritative
+      hygiene retest.
+
+
+      Evidence MUST include:
+
+      - actual commands executed
+
+      - actual output excerpts
+
+      - explicit verdict for each original gate finding (B1-B4, S1)
+
+      - statement whether any remaining debt is non-blocking and why it does not intersect
+      remaining gates'
+    verification: '- Re-run the authoritative hygiene verification pack from a fresh/cold
+      environment
+
+      - Re-run lint coverage for the cited repro test file and confirm the F841 family
+      is cleared or report any new sibling occurrence
+
+      - Re-run runtime liveness repro coverage for tests/repro/test_liveness.py and
+      tests/repro/test_connect_runtime_liveness.py with explicit steady-state/failure-path
+      evidence
+
+      - Re-run the project-required invar full-scan command family and verify connect_cmd
+      classification plus artifact-script issues are resolved or precisely reported
+
+      - Verify retained debt and orphan-export concerns either have remediation evidence
+      now or explicit non-intersection rationale with ownership
+
+      - Record a per-finding verdict for B1, B2, B3, B4, and S1'
+    depends_on:
+    - rem.hygiene.fix-gate-blockers
+    agent: integration-verifier
 - id: rem.suggestions
   name: Suggestion Uptake and Documentation Hardening
   status: locked
