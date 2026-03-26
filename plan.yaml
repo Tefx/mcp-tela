@@ -27805,7 +27805,7 @@ phases:
       \ in targeted slice"
   - id: rem.final_verify.affected-suite-broad-pass
     name: Run affected-suite broad pass
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -27874,6 +27874,8 @@ phases:
     depends_on:
     - rem.final_verify.targeted-regressions
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T06:11:13.400710+00:00'
   - id: rem.final_verify.full-invar-guard
     name: Run full invar guard over complete plan scope
     status: pending
