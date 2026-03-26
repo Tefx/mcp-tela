@@ -470,8 +470,8 @@ def test_upstream_session_protocol_conformance() -> None:
     assert issubclass(ServerSession, UpstreamSession)
 
 
-def test_capture_session_overwrites() -> None:
-    """Capturing a second session for the same connection_id replaces the first."""
+def test_capture_session_preserves_first_binding() -> None:
+    """Capturing a different session for same connection_id preserves first binding."""
     from tela.shell.upstream import capture_session, get_captured_session, release_session
 
     class SessionA:
@@ -482,11 +482,14 @@ def test_capture_session_overwrites() -> None:
 
     a, b = SessionA(), SessionB()
     capture_session("conn_overwrite", a)
-    capture_session("conn_overwrite", b)
+    result = capture_session("conn_overwrite", b)
+
+    assert result.is_err
+    assert "SESSION_ALREADY_BOUND" in (result.error or "")
 
     retrieved = get_captured_session("conn_overwrite")
     assert retrieved.is_ok
-    assert retrieved.value is b
+    assert retrieved.value is a  # first binding preserved
 
     release_session("conn_overwrite")
 

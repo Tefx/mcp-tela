@@ -17,7 +17,7 @@ import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Mapping, Protocol, runtime_checkable
+from typing import Mapping, Protocol, runtime_checkable
 
 from tela.core.models import (
     AuthMode,
@@ -79,17 +79,15 @@ _session_registry_lock = threading.Lock()
 def capture_session(connection_id: str, session: UpstreamSession) -> Result[None, str]:
     """Register an upstream MCP session for a connection.
 
-    Called by gateway handler wiring when a session is available from the
-    FastMCP context. The captured session enables ``notify_tools_changed``
-    to send real ``notifications/tools/list_changed`` messages.
-
+    First-binding semantics: re-capturing the *same* session is idempotent.
+    A *different* session on an already-bound connection_id returns error.
     Thread-safe: acquires ``_session_registry_lock``.
 
     Examples:
         >>> from tela.shell.upstream import capture_session, release_session
-        >>> class FakeSession:
+        >>> class S:
         ...     async def send_tool_list_changed(self) -> None: ...
-        >>> r = capture_session("conn_abc", FakeSession())
+        >>> r = capture_session("conn_abc", S())
         >>> r.is_ok
         True
         >>> _ = release_session("conn_abc")
@@ -99,11 +97,22 @@ def capture_session(connection_id: str, session: UpstreamSession) -> Result[None
         session: The upstream MCP session implementing ``UpstreamSession``.
 
     Returns:
-        Result[None, str] on success, or error if connection_id is empty.
+        Result[None, str] on success, error if empty or already bound.
     """
     if not connection_id:
         return Result(error="SESSION_CAPTURE_FAILED: connection_id must not be empty")
     with _session_registry_lock:
+        existing = _session_registry.get(connection_id)
+        if existing is not None:
+            if existing is session:
+                return Result(value=None)  # idempotent re-capture
+            logger.warning(
+                "Session already captured for %s, preserving first binding",
+                connection_id,
+            )
+            return Result(
+                error=f"SESSION_ALREADY_BOUND: connection '{connection_id}' already has a session"
+            )
         _session_registry[connection_id] = session
     return Result(value=None)
 
@@ -111,10 +120,7 @@ def capture_session(connection_id: str, session: UpstreamSession) -> Result[None
 def release_session(connection_id: str) -> Result[None, str]:
     """Remove a captured session for a disconnected connection.
 
-    Called during connection teardown to prevent session leaks.
-    Silently succeeds if the connection_id is not in the registry
-    (idempotent cleanup).
-
+    Idempotent: silently succeeds if not in registry.
     Thread-safe: acquires ``_session_registry_lock``.
 
     Examples:
@@ -161,6 +167,76 @@ def get_captured_session(connection_id: str) -> Result[UpstreamSession, str]:
     if session is None:
         return Result(error=f"SESSION_NOT_FOUND: session for '{connection_id}' not found")
     return Result(value=session)
+
+
+def get_connection_id_for_session(session: UpstreamSession) -> Result[str, str]:
+    """Reverse-lookup: find the connection_id bound to a session.
+
+    Thread-safe: acquires ``_session_registry_lock``.
+
+    Examples:
+        >>> from tela.shell.upstream import (
+        ...     capture_session, get_connection_id_for_session, release_session,
+        ... )
+        >>> class S:
+        ...     async def send_tool_list_changed(self) -> None: ...
+        >>> s = S()
+        >>> _ = capture_session("c", s)
+        >>> r = get_connection_id_for_session(s)
+        >>> r.is_ok and r.value == "c"
+        True
+        >>> _ = release_session("c")
+
+    Args:
+        session: The upstream session object to look up.
+
+    Returns:
+        Result[str, str] with connection_id, or error if not registered.
+    """
+    with _session_registry_lock:
+        for conn_id, registered in _session_registry.items():
+            if registered is session:
+                return Result(value=conn_id)
+    return Result(error="SESSION_NOT_REGISTERED: session has no binding")
+
+
+def find_connection_for_session(
+    session: UpstreamSession,
+    connections: list[ConnectionContext],
+) -> Result[ConnectionContext, str]:
+    """Find the ConnectionContext bound to a session.
+
+    Combines reverse session lookup with connection list scan.
+    Used by gateway to route distinct sessions to distinct connections.
+
+    Examples:
+        >>> from tela.shell.upstream import (
+        ...     capture_session, find_connection_for_session, release_session,
+        ... )
+        >>> class S:
+        ...     async def send_tool_list_changed(self) -> None: ...
+        >>> s = S()
+        >>> _ = capture_session("c1", s)
+        >>> conn = ConnectionContext(connection_id="c1", profile_name="p", connected_at="t")
+        >>> r = find_connection_for_session(s, [conn])
+        >>> r.is_ok and r.value is conn
+        True
+        >>> _ = release_session("c1")
+
+    Args:
+        session: The upstream session to look up.
+        connections: Live connection list.
+
+    Returns:
+        Result with matching ConnectionContext or error.
+    """
+    cid_result = get_connection_id_for_session(session)
+    if cid_result.is_err:
+        return Result(error="SESSION_NOT_REGISTERED: session has no binding")
+    for conn in connections:
+        if conn.connection_id == cid_result.value:
+            return Result(value=conn)
+    return Result(error=f"CONNECTION_NOT_FOUND: no connection for '{cid_result.value}'")
 
 
 @dataclass(frozen=True)

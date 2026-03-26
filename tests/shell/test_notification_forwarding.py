@@ -19,7 +19,6 @@ from tela.core.models import (
     AuthConfig,
     AuthMode,
     ConnectionContext,
-    Posture,
     ProfileConfig,
     ServerConfig,
     TelaConfig,
@@ -124,21 +123,71 @@ def test_multiple_sessions_captured_independently() -> None:
         release_session(conn_id)
 
 
-def test_session_capture_overwrites_previous() -> None:
-    """Capturing a new session for same connection_id replaces previous."""
+def test_session_capture_preserves_first_binding() -> None:
+    """Capturing a different session for same connection_id preserves first binding."""
     _clear_all_sessions()
 
-    old_session = StubSession()
-    new_session = StubSession()
+    first_session = StubSession()
+    second_session = StubSession()
 
-    capture_session("conn_same", old_session)
-    capture_session("conn_same", new_session)
+    result_first = capture_session("conn_same", first_session)
+    assert result_first.is_ok
+
+    result_second = capture_session("conn_same", second_session)
+    assert result_second.is_err
+    assert "SESSION_ALREADY_BOUND" in (result_second.error or "")
 
     retrieved = get_captured_session("conn_same")
     assert retrieved.is_ok
-    assert retrieved.value is new_session  # new session replaced old
+    assert retrieved.value is first_session  # first binding preserved
 
     release_session("conn_same")
+
+
+def test_session_capture_idempotent_same_session() -> None:
+    """Re-capturing the same session object for same connection_id is idempotent."""
+    _clear_all_sessions()
+
+    session = StubSession()
+    result1 = capture_session("conn_idem", session)
+    assert result1.is_ok
+
+    result2 = capture_session("conn_idem", session)
+    assert result2.is_ok  # idempotent, not an error
+
+    retrieved = get_captured_session("conn_idem")
+    assert retrieved.is_ok
+    assert retrieved.value is session
+
+    release_session("conn_idem")
+
+
+def test_distinct_sessions_get_distinct_connection_ids() -> None:
+    """Distinct upstream sessions must map to distinct connection IDs, not share one."""
+    _clear_all_sessions()
+
+    session_a = StubSession()
+    session_b = StubSession()
+
+    # Each session binds to its own connection_id
+    capture_session("conn_a", session_a)
+    capture_session("conn_b", session_b)
+
+    # Attempting to bind session_b to conn_a fails (preserves session_a)
+    result = capture_session("conn_a", session_b)
+    assert result.is_err
+
+    # Each binding is distinct and correct
+    retrieved_a = get_captured_session("conn_a")
+    assert retrieved_a.is_ok
+    assert retrieved_a.value is session_a
+
+    retrieved_b = get_captured_session("conn_b")
+    assert retrieved_b.is_ok
+    assert retrieved_b.value is session_b
+
+    release_session("conn_a")
+    release_session("conn_b")
 
 
 def test_session_not_found_after_release() -> None:
@@ -648,6 +697,87 @@ def test_get_captured_session_thread_safe() -> None:
     assert all(results)
 
     release_session("shared_conn")
+
+
+# --- Regression: distinct-session binding via _ensure_connection ---
+
+
+def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
+    """Two distinct sessions through _ensure_connection get distinct connection IDs.
+
+    Regression: previously _ensure_connection returned connections[0] for all
+    sessions, causing capture_session to overwrite the first session's binding.
+    After the fix, each distinct session triggers a new handle_initialize and
+    gets its own ConnectionContext, so capture_session binds each session to
+    a unique connection_id.
+    """
+    from tela.shell.upstream import get_connection_id_for_session
+
+    _clear_all_sessions()
+    _setup_runtime_for_notifications()
+    runtime = get_runtime()
+
+    try:
+        # Simulate two distinct upstream sessions
+        session_a = StubSession()
+        session_b = StubSession()
+
+        # First session establishes a connection and captures
+        conn_a = ConnectionContext(
+            connection_id="conn_session_a",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+        runtime.connections.append(conn_a)
+        result_a = capture_session("conn_session_a", session_a)
+        assert result_a.is_ok
+
+        # Second session gets a DIFFERENT connection
+        conn_b = ConnectionContext(
+            connection_id="conn_session_b",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:01Z",
+        )
+        runtime.connections.append(conn_b)
+        result_b = capture_session("conn_session_b", session_b)
+        assert result_b.is_ok
+
+        # Verify reverse lookup: each session maps to its own connection
+        lookup_a = get_connection_id_for_session(session_a)
+        assert lookup_a.is_ok
+        assert lookup_a.value == "conn_session_a"
+
+        lookup_b = get_connection_id_for_session(session_b)
+        assert lookup_b.is_ok
+        assert lookup_b.value == "conn_session_b"
+
+        # Key invariant: the two connection IDs are distinct
+        assert lookup_a.value != lookup_b.value
+
+        # Attempting to cross-bind session_b to conn_session_a is rejected
+        cross_bind = capture_session("conn_session_a", session_b)
+        assert cross_bind.is_err
+        assert "SESSION_ALREADY_BOUND" in (cross_bind.error or "")
+
+        # Notifications reach the correct session
+        result_notify_a = asyncio.run(
+            notify_tools_changed(conn_a, "sha256:aaa")
+        )
+        assert result_notify_a.is_ok
+        assert len(session_a.calls) == 1
+        assert len(session_b.calls) == 0  # session_b not notified
+
+        result_notify_b = asyncio.run(
+            notify_tools_changed(conn_b, "sha256:bbb")
+        )
+        assert result_notify_b.is_ok
+        assert len(session_b.calls) == 1  # now notified
+
+    finally:
+        release_session("conn_session_a")
+        release_session("conn_session_b")
+        runtime.connections.clear()
+        _teardown_runtime()
 
 
 # --- Edge cases ---

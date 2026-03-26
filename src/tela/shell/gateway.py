@@ -319,7 +319,6 @@ def _register_profiles_resource(upstream_server: FastMCP) -> None:
         return json.dumps(result.value)
 
 
-# @shell_orchestration: wires initialize/list/call handler adapters onto FastMCP boundary.
 # @shell_complexity: wiring composes initialize/list/call adapters for FastMCP boundary.
 def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     """Wire upstream handlers into FastMCP request handling."""
@@ -328,20 +327,25 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
     from tela.shell.upstream import (
         capture_session,
+        find_connection_for_session,
         handle_initialize,
         handle_tools_call,
         handle_tools_list,
     )
 
     async def _ensure_connection() -> ConnectionContext:
-        with _runtime_lock:
-            if _runtime.connections:
-                return _runtime.connections[0]
-
+        # Session-aware: return existing connection, or create new one.
+        try:
+            conn_r = find_connection_for_session(
+                request_ctx.get().session, _runtime.connections
+            )
+            if conn_r.is_ok and conn_r.value is not None:
+                return conn_r.value
+        except LookupError:
+            pass
         init_result = await handle_initialize({})
         if init_result.is_err:
             raise RuntimeError(init_result.error or "INITIALIZE_REJECTED")
-
         assert init_result.value is not None
         return init_result.value
 
@@ -391,15 +395,12 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             raise RuntimeError(f"{result.error.code}: {result.error.message}")
 
         assert result.value is not None
-        # Return CallToolResult so the MCP handler bypasses output
-        # normalization and outputSchema re-validation.  The gateway
-        # proxies downstream results as-is; a raw dict would be
-        # misinterpreted as structured content and fail validation
-        # against the downstream tool's outputSchema.
+        # Return CallToolResult to bypass output normalization/re-validation;
+        # gateway proxies downstream results as-is.
         return mcp_types.CallToolResult.model_validate(result.value)
 
 
-# @shell_orchestration: bridges reload digest into upstream connection broadcaster via callback wiring.
+
 def _wire_reload_notifications() -> None:
     """Bridge reload digest callback into upstream notification broadcaster."""
 
