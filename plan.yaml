@@ -31668,7 +31668,7 @@ phases:
       - edge cases and thread-safety checks'
   - id: notifications.impl
     name: Implement session capture and real notify_tools_changed
-    status: claimed
+    status: done
     description: "Implement real upstream notification forwarding.\n\nstep_type: implementation\n\
       \n## File 1: src/tela/shell/gateway.py — Session capture\n\nIn the `_list_tools`\
       \ handler (inside `_wire_upstream_handlers`), capture the upstream session:\n\
@@ -31758,6 +31758,61 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T22:38:06.159171+00:00'
+    done_at: '2026-03-26T22:45:15.953563+00:00'
+    evidence: '## Notification Implementation Evidence
+
+
+      Commit:
+
+      - `5f05f5b`
+
+
+      Session capture:
+
+      - `_list_tools` now captures upstream MCP session from request context and registers
+      via session-capture interface.
+
+
+      notify_tools_changed behavior:
+
+      - real `send_tool_list_changed()` path exercised (no longer no-op)
+
+      - reload callback path triggers notification dispatch to active connections
+
+
+      Stale-session handling:
+
+      - failed send triggers stale session removal via `release_session`
+
+      - gateway shutdown clears session registry
+
+
+      Concurrency safety:
+
+      - session registry operations guarded by dedicated lock
+
+      - connection snapshot under runtime lock before async notify iteration
+
+
+      Verification:
+
+      - full test suite passed (`660 passed, 0 failed`)
+
+      - notification-forwarding tests pass (capture/send/stale cleanup/e2e/concurrency/edge)
+
+      - `uv run invar guard` passed (warnings pre-existing non-blocking)
+
+
+      Files changed:
+
+      - `src/tela/shell/gateway.py`
+
+      - `src/tela/shell/upstream.py`
+
+
+      Spec link:
+
+      - notifications.impl'
   - id: notifications.verify
     name: 'Integration verification: notification forwarding'
     status: pending
