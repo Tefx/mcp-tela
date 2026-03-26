@@ -29788,3 +29788,35 @@ phases:
     depends_on:
     - tool_meta.impl
     agent: integration-verifier
+  - id: tool_meta.gate
+    name: 'Gate: Tool Metadata Restoration'
+    status: pending
+    description: 'Gate review: Verify tool_meta phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. ResolvedTool has all three new fields
+
+      2. resolve_tools extracts them from raw tool dicts
+
+      3. handle_tools_list includes them in output
+
+      4. _list_tools passes them to mcp_types.Tool
+
+      5. Tests cover present/absent/partial scenarios
+
+      6. No data loss in the pipeline
+
+      7. Wire format uses camelCase (outputSchema, inputSchema) per MCP spec'
+    verification: '- All steps completed
+
+      - Evidence shows full round-trip
+
+      - No issues unresolved'
+    depends_on:
+    - tool_meta.verify
+    agent: gate-reviewer
