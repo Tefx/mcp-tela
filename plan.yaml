@@ -29734,7 +29734,7 @@ phases:
       covered by `@invar:allow shell_result` annotations.'
   - id: cleanup.retest_full
     name: Retest cleanup phase with full pytest and invar guard
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the full
       acceptance commands for the cleanup.impl remediation from a fresh/cold environment.
 
@@ -29778,6 +29778,8 @@ phases:
     depends_on:
     - cleanup.fix_batch
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-26T17:05:21.435011+00:00'
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
