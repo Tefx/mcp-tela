@@ -29734,7 +29734,7 @@ phases:
       covered by `@invar:allow shell_result` annotations.'
   - id: cleanup.retest_full
     name: Retest cleanup phase with full pytest and invar guard
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), rerun the full
       acceptance commands for the cleanup.impl remediation from a fresh/cold environment.
 
@@ -29780,6 +29780,42 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T17:05:21.435011+00:00'
+    done_at: '2026-03-26T17:08:49.674549+00:00'
+    evidence: 'Artifact:
+
+      - Branch: `vectl/step-cleanup.retest_full`
+
+      - Commit: `8a144fd` (claim checkpoint, no code mutations in verify-only step)
+
+
+      Verification:
+
+      - `uv run python -m pytest` -> **600 passed**, 3 warnings, 0 failed
+
+      - `uv run invar guard` -> **passed** (0 errors)
+
+
+      Previously failing targets status:
+
+      - `tests/repro/test_blockers.py::TestB1WireCliSubcommands::{test_status_command_requires_running_server,test_connections_command_requires_running_server,test_audit_command_requires_running_server}`
+      now pass in full suite
+
+      - `tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile`
+      now passes
+
+      - Invar errors for `_merge_downstream_instructions` and `get_server_instructions`
+      no longer present
+
+
+      New regressions:
+
+      - None detected
+
+
+      Spec link:
+
+      - cleanup.retest_full (independent full retest handoff for cleanup remediation
+      family)'
 - id: tool_meta
   name: Tool Metadata Restoration
   status: locked
