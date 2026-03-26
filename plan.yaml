@@ -31508,13 +31508,13 @@ phases:
       - required follow-ups: none'
 - id: notifications
   name: Upstream Notification Forwarding
-  status: pending
+  status: in_progress
   depends_on:
   - instructions
   steps:
   - id: notifications.contract
     name: 'Contract: Session capture and notification interface'
-    status: pending
+    status: claimed
     description: "Define the interface for capturing upstream sessions and sending\
       \ notifications.\n\nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures for session capture\n  - signatures for real notify_tools_changed\n\
@@ -31544,6 +31544,8 @@ phases:
 
       - Existing tests pass'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-26T22:11:57.813638+00:00'
   - id: notifications.test
     name: Tests for notification forwarding
     status: pending
