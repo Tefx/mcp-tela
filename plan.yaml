@@ -28577,3 +28577,150 @@ phases:
     - rem.final_verify.affected-suite-broad-pass
     - rem.final_verify.runtime-liveness-blackbox
     agent: python-senior
+  - id: rem.final_verify.retest-b1-liveness-evidence
+    name: Independent retest for blocker regressions, liveness, and evidence consistency
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      protected_gates:
+
+      - rem.final_verify.gate
+
+      agent_source: default
+
+      symbolic_testing: true
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate the repaired blocker
+      family from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: the targeted blocker regression suite no longer exhibits the 6
+      transient-retry failures
+
+      - Edge cases: contention-sensitive runtime liveness path remains stable under
+      the reproduced risk scenario
+
+      - Error scenarios: contradictory or stale evidence claims are rejected; regenerated
+      remediation evidence matches actual results
+
+      - Evidence integrity: blocker B1 closure, runtime liveness proof, and evidence
+      report content all agree
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      A test that finds nothing must justify the coverage achieved.
+
+
+      Independence Level: L2
+
+      Fresh/cold environment required. Re-run the targeted blocker suite, the liveness
+      path, and evidence consistency checks from newly generated artifacts only.
+
+      '
+    verification: '- local-check protecting `rem.final_verify.gate`
+
+      - Fresh targeted blocker suite for `tests/repro/test_gate_blocker_regressions.py`
+      executed and evidence pasted
+
+      - Fresh runtime liveness verification for `tests/repro/test_liveness.py` executed
+      and evidence pasted
+
+      - Evidence consistency review confirms regenerated artifact text matches actual
+      outputs and contains no stale contradiction markers
+
+      - Any residual blocker intersection is enumerated explicitly; no silent carry-forward
+      allowed'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier (independent of implementation)
+
+      **Scope**: blocker B1 regression closure + contention-sensitive liveness + evidence
+      consistency
+
+      **Independence Level**: L2
+
+      **Environment**: fresh/cold run only
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```
+
+      <paste exact blocker suite command>
+
+      <paste exact liveness command>
+
+      <paste exact evidence consistency check command>
+
+      ```
+
+      - Output summary:
+
+      ```
+
+      <paste relevant output, not summary only>
+
+      ```
+
+
+      ### Evidence Consistency Audit
+
+      - Regenerated artifact path: `<path>`
+
+      - Match between artifact claims and actual outputs: YES/NO
+
+      - Contradiction markers searched:
+
+      ```
+
+      <paste grep/search output>
+
+      ```
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | blocker | <issue> | <file/path> | <steps> |
+
+      | should_fix | <issue> | <file/path> | <steps> |
+
+
+      ### Coverage Assessment
+
+      - Targeted blocker suite verified: ✅/❌
+
+      - Contention-sensitive liveness path verified: ✅/❌
+
+      - Evidence consistency verified: ✅/❌
+
+      - NOT tested: <areas and why>
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE
+
+      '
+    depends_on:
+    - rem.final_verify.fix-b1-liveness-evidence
+    agent: integration-verifier
