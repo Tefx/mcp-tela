@@ -184,7 +184,17 @@ class ProfileConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    @pre(lambda cls, data: cls is ProfileConfig and (data is None or isinstance(data, Mapping) or isinstance(data, dict) or isinstance(data, object)))
+    @pre(
+        lambda cls, data: (
+            cls is ProfileConfig
+            and (
+                data is None
+                or isinstance(data, Mapping)
+                or isinstance(data, dict)
+                or isinstance(data, object)
+            )
+        )
+    )
     @post(lambda result: result is not None)
     def _normalize_aliases(cls, data: Any) -> Any:
         if isinstance(data, Mapping) or data is None:
@@ -265,6 +275,9 @@ class ResolvedTool(BaseModel):
     posture: Posture | None = None
     schema_: dict = Field(default_factory=dict)
     description: str = ""
+    annotations: dict | None = None
+    title: str | None = None
+    output_schema: dict | None = None
 
 
 class ConnectionContext(BaseModel):
