@@ -27518,7 +27518,7 @@ phases:
       - verdict: PASS'
   - id: rem.suggestions.gate
     name: Gate suggestion uptake phase
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: default
@@ -27550,6 +27550,16 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T05:48:37.916033+00:00'
+    done_at: '2026-03-26T05:56:29.873794+00:00'
+    evidence: "## Gate Review Report\n- suggestion completion: partial (core suggestion\
+      \ steps present), but blocker remains\n- remaining ambiguity: lockfile extra-field\
+      \ semantics inconsistent across implementation wording, test naming/assertion,\
+      \ and interface docs\n\n## Blocking finding\n- Lockfile extra-field contract\
+      \ ambiguity (implementation/docs/tests not aligned to one explicit rule)\n\n\
+      ## Remediation handling\n- Batched-fix protocol applied:\n  - new batched fix\
+      \ step created to align implementation/docs/tests contract semantics\n  - new\
+      \ retest step created for independent verification\n  - gate now depends on\
+      \ retest step before closure"
   - id: rem.suggestions.resolve-lockfile-extra-field-contract-ambiguity
     name: Resolve lockfile extra-field contract ambiguity
     status: pending
