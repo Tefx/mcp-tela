@@ -28216,3 +28216,63 @@ phases:
     depends_on:
     - rem.final_verify.full-invar-guard
     agent: python-senior
+  - id: rem.final_verify.retest-full-invar-complexity-debt
+    name: Retest full invar guard after batched complexity remediation
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      spec_refs:
+
+      - rem.final_verify.full-invar-guard blocker inventory
+
+      - final verification requirement for full invar guard
+
+      - AGENTS.md Invar verification guidance
+
+
+      touch_paths:
+
+      - repo-wide Python/Core/Shell surfaces implicated by remediation
+
+
+      harness_refs:
+
+      - full invar guard command family
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, re-run the full repository invariant gate after batched
+      remediation.
+
+      YOUR GOAL IS TO FIND REMAINING BLOCKERS.
+
+
+      Independence Level: L1
+
+      Verification scope: full-plan-check protecting rem.final_verify.runtime-liveness-blackbox
+      and rem.final_verify.gate.
+
+
+      Command family lock:
+
+      - MUST use exactly `uvx invar-tools guard --all`
+
+      - fresh/cold environment required
+
+
+      If issues remain, capture the full blocker/debt inventory with explicit distinction
+      between blocker-class failures and non-blocking warnings.'
+    verification: '- Execute exactly `uvx invar-tools guard --all`
+
+      - Run in a fresh/cold environment
+
+      - Capture full output and remaining warning inventory
+
+      - Distinguish blocker failures from retained non-blocking warnings with rationale'
+    depends_on:
+    - rem.final_verify.fix-full-invar-complexity-debt
+    agent: integration-verifier
