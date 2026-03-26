@@ -27886,7 +27886,7 @@ phases:
       \ runtime paths, lockfile schema tests)."
   - id: rem.final_verify.full-invar-guard
     name: Run full invar guard over complete plan scope
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -27961,6 +27961,16 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T06:17:05.071477+00:00'
+    done_at: '2026-03-26T06:22:02.948851+00:00'
+    evidence: "## Full Invar Guard Report\n- Command executed: `uvx invar-tools guard\
+      \ --all`\n- Result: FAIL (blocker)\n- Blocker: `shell_complexity_debt` (project-level\
+      \ complexity debt above configured threshold)\n- Additional warning inventory\
+      \ captured for function_size/file_size/dead_export and shell-complexity infos\n\
+      \n## Remediation handling\n- Batched-fix protocol applied:\n  - one fix step\
+      \ created for full invar complexity-debt blocker family\n  - one retest step\
+      \ created, locked to rerun exact command family `uvx invar-tools guard --all`\n\
+      \  - downstream final-verify dependencies updated to wait on retest path before\
+      \ blackbox/gate"
   - id: rem.final_verify.runtime-liveness-blackbox
     name: Run final runtime liveness black-box probe
     status: pending
