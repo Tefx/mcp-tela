@@ -27229,7 +27229,7 @@ phases:
   steps:
   - id: rem.suggestions.add-invalid-bearer-negative-regression
     name: Add invalid bearer format negative regression
-    status: claimed
+    status: done
     description: 'step_type: test
 
       agent_source: default
@@ -27284,6 +27284,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-26T05:32:34.866374+00:00'
+    done_at: '2026-03-26T05:36:46.986502+00:00'
+    evidence: "## Invalid Bearer Regression\n- fixture source section:\n  - `tests/shell/test_http_auth.py`\n\
+      \  - `tests/integration/test_mcp_auth_wire.py`\n  - Spec refs: `docs/INTERFACES.md`\
+      \ bearer section and `docs/DESIGN.md` token override behavior\n- malformed bearer\
+      \ cases added:\n  - lowercase scheme (`bearer ...`)\n  - uppercase scheme (`BEARER\
+      \ ...`)\n  - missing required space after scheme\n  - tab separator after scheme\n\
+      - exact test names:\n  - test_middleware_rejects_lowercase_bearer_scheme\n \
+      \ - test_middleware_rejects_uppercase_bearer_scheme\n  - test_middleware_rejects_bearer_without_space\n\
+      \  - test_middleware_rejects_bearer_with_tab_separator\n  - test_post_mcp_with_lowercase_bearer_returns_401\n\
+      \  - test_post_mcp_with_uppercase_bearer_returns_401\n  - test_post_mcp_with_bearer_no_space_returns_401\n\
+      \  - test_post_mcp_with_bearer_tab_separator_returns_401\n- verification:\n\
+      \  - targeted auth suite run passed (28 passed)\n  - rejection path explicitly\
+      \ asserted via HTTP 401 + AUTH_INVALID_TOKEN"
   - id: rem.suggestions.add-lockfile-schema-regression
     name: Add lockfile schema validation regression path
     status: pending
