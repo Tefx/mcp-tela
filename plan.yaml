@@ -30611,3 +30611,34 @@ phases:
     depends_on:
     - post.deep_review.wiring
     agent: doc-reviewer
+  - id: post.deep_review.architecture
+    name: Architecture and concurrency review
+    status: pending
+    description: 'Review module boundaries, dependency direction, and concurrency
+      safety.
+
+
+      Focus areas:
+
+      - Session list (module-level mutable state) has proper concurrency protection
+      via _runtime_lock
+
+      - No cross-module state corruption paths (e.g., session capture affecting other
+      runtime state)
+
+      - Core/Shell boundary respected (new ResolvedTool fields are type-only in Core)
+
+      - Import direction correct (Shell imports Core, not reverse)
+
+      - _merge_downstream_instructions accessing runtime state has proper initialization
+      guarantees'
+    verification: '- Concurrency protection verified
+
+      - Core/Shell boundary intact
+
+      - Import direction correct
+
+      - No initialization race conditions'
+    depends_on:
+    - post.deep_review.wiring
+    agent: gate-reviewer
