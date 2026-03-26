@@ -26012,7 +26012,7 @@ phases:
       - Investigation-only step; no source changes performed.'
   - id: rem.bridge_flake.cold-repro-and-soak
     name: Cold-start reproduction and soak verification for bridge timeout
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -26092,6 +26092,42 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-26T04:32:05.702516+00:00'
+    done_at: '2026-03-26T04:37:19.178981+00:00'
+    evidence: '## Contingency Verification Report
+
+      **Commands executed**:
+
+      ```bash
+
+      uv run python -m pytest tests/repro/test_connect_runtime_liveness.py -v --tb=short
+
+      NUM_RUNS=5 bash tests/repro/soak_cold_start.sh
+
+      NUM_RUNS=10 bash tests/repro/soak_cold_start.sh
+
+      ```
+
+
+      **Per-run results**:
+
+      - Initial cold run: 4/4 tests passed.
+
+      - Soak run (5 iterations): all 5 iterations passed (4/4 each iteration).
+
+      - Extended soak (10 iterations): all 10 iterations passed (4/4 each iteration).
+
+      - Cleanup policy between iterations: lockfile cleanup + orphan process kill
+      in harness script.
+
+
+      **Residual flake verdict**: NONE_OBSERVED
+
+
+      Notes:
+
+      - initialize/tools_list bridge path exercised repeatedly in every iteration.
+
+      - No timeout/connection failures observed across 15 cold-start iterations total.'
   - id: rem.bridge_flake.gate
     name: Gate bridge timeout contingency phase
     status: pending
