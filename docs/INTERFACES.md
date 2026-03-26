@@ -189,6 +189,54 @@ as conflicts.
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint |
 
+### 7.2.1 `GET /status` Response Schema
+
+The status endpoint returns a `StatusResponse` containing gateway runtime state. Response fields have the following guarantees:
+
+**Authoritative Fields** (directly from runtime state):
+| Field | Type | Semantics |
+|-------|------|-----------|
+| `uptime_seconds` | float | Gateway process uptime in seconds |
+| `server_count` | int | Number of configured downstream servers |
+| `connected_servers` | list[str] | Server names currently connected |
+| `active_connections` | int | **Numeric count** of active upstream connections |
+| `profile_count` | int | Number of configured profiles |
+| `total_tool_calls` | int | Cumulative tool calls since startup |
+| `connections` | list[ConnectionContext] | **Structural collection** of connection contexts |
+| `audit_entries` | list[AuditEntry] | Recent audit log entries (limit 100) |
+
+**Count-vs-Collection Semantics**:
+- `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)
+- `connections` is a **list** of `ConnectionContext` objects for structural inspection
+- These fields are logically related but semantically distinct: `len(connections)` should equal `active_connections` in steady state, but only `active_connections` is authoritative for count semantics
+
+**ConnectionContext** (structural):
+```json
+{
+  "connection_id": "bridge_abc123",
+  "profile_name": "developer",
+  "connected_at": "2026-03-25T12:00:00Z",
+  "tool_call_count": 5
+}
+```
+
+**AuditEntry** (structural):
+```json
+{
+  "timestamp": "2026-03-25T12:00:00Z",
+  "level": "L2",
+  "event": "tool_call",
+  "connection_id": "bridge_abc123",
+  "tool_name": "filesystem/read_file",
+  "details": {}
+}
+```
+
+**Field Presence Guarantees**:
+- All fields in `StatusResponse` are **guaranteed present** (non-null) in successful responses
+- List fields (`connections`, `audit_entries`, `connected_servers`) are guaranteed present and may be empty (`[]`)
+- `active_connections` is guaranteed to be the integer count (never null or omitted)
+
 ### 7.3 Lockfile Contract
 
 Location: `~/.tela/gateway.lock`
