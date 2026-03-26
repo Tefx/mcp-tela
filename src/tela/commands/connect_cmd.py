@@ -534,6 +534,22 @@ def _is_transient_url_error(exc: urllib_error.URLError) -> Result[bool, str]:
     """
     reason = exc.reason
     if isinstance(reason, OSError):
+        # Prefer type-based classification: Python's builtin subclasses
+        # (ConnectionRefusedError, ConnectionResetError, etc.) may carry
+        # errno=None when constructed with only a message string — which is
+        # the common pattern in both production urllib and test fixtures.
+        transient_types = (
+            ConnectionRefusedError,
+            ConnectionResetError,
+            ConnectionAbortedError,
+            BrokenPipeError,
+            TimeoutError,
+        )
+        if isinstance(reason, transient_types):
+            return Result(value=True)
+
+        # Fallback: errno check for generic OSError instances raised by the
+        # OS with a numeric errno but no dedicated exception subclass.
         import errno
 
         transient_errnos = {
