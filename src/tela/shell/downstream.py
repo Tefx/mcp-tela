@@ -20,8 +20,6 @@ from tela.shell.downstream_clients import (
     _ClientHandle,
     _enumerate_tools,
     _open_client_for_server as _transport_open_client_for_server,
-    _open_sse_client as _transport_open_sse_client,
-    _open_stdio_client as _transport_open_stdio_client,
     _validate_transport_mode as _transport_validate_transport_mode,
 )
 from tela.shell.downstream_registry import DownstreamRegistry
@@ -34,32 +32,6 @@ _registry_lock = asyncio.Lock()
 
 _clients: dict[str, _ClientHandle] = {}
 _server_instructions: dict[str, str] = {}
-
-
-async def _open_stdio_client(
-    server_name: str,
-    server_config: ServerConfig,
-    message_handler: MessageHandlerFnT | None = None,
-) -> Result[_ClientHandle, str]:
-    """Compatibility wrapper for stdio transport opener."""
-    return await _transport_open_stdio_client(
-        server_name,
-        server_config,
-        message_handler=message_handler,
-    )
-
-
-async def _open_sse_client(
-    server_name: str,
-    server_config: ServerConfig,
-    message_handler: MessageHandlerFnT | None = None,
-) -> Result[_ClientHandle, str]:
-    """Compatibility wrapper for SSE transport opener."""
-    return await _transport_open_sse_client(
-        server_name,
-        server_config,
-        message_handler=message_handler,
-    )
 
 
 def _validate_transport_mode(

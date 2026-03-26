@@ -235,31 +235,6 @@ def _create_upstream_server(config: GatewayStartupConfig) -> Result[FastMCP, str
     return Result(value=FastMCP("tela-gateway", instructions=merged_instructions))
 
 
-# @shell_orchestration: builds forwarding closure that delegates to downstream I/O sessions.
-def _make_registry_tool_handler(server_name: str, tool_name: str):
-    """Build per-tool FastMCP handler that forwards to downstream server."""
-
-    async def _forward_tool(**arguments: object) -> dict:
-        result = await call_tool(
-            server_name=server_name,
-            tool_name=tool_name,
-            arguments=dict(arguments),
-        )
-        if result.is_err:
-            assert result.error is not None
-            raise RuntimeError(f"{result.error.code}: {result.error.message}")
-
-        assert result.value is not None
-        return result.value
-
-    safe_name = "".join(ch if ch.isalnum() else "_" for ch in tool_name)
-    _forward_tool.__name__ = f"tool_{safe_name}"
-    _forward_tool.__doc__ = (
-        f"Forward MCP tool '{tool_name}' to downstream server '{server_name}'."
-    )
-    return _forward_tool
-
-
 # @shell_orchestration: registers FastMCP resource endpoint for profile introspection.
 def _register_profiles_resource(upstream_server: FastMCP) -> None:
     """Register tela.profiles resource on the upstream FastMCP server."""
@@ -330,26 +305,6 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
         assert result.value is not None
         return result.value
-
-
-# @shell_orchestration: iterates registry and registers each tool handler on FastMCP.
-def _register_registry_tools(upstream_server: FastMCP) -> None:
-    """Register all resolved registry tools as FastMCP tools."""
-
-    all_tools_result = get_all_tools()
-    if all_tools_result.is_err:
-        return
-    assert all_tools_result.value is not None
-    for server_name, resolved_tools in all_tools_result.value.items():
-        for resolved_tool in resolved_tools:
-            upstream_server.add_tool(
-                _make_registry_tool_handler(server_name, resolved_tool.name),
-                name=resolved_tool.name,
-                description=resolved_tool.description or (
-                    f"Forwarded downstream tool '{resolved_tool.name}' "
-                    f"from server '{server_name}'."
-                ),
-            )
 
 
 # @shell_orchestration: bridges reload digest into upstream connection broadcaster via callback wiring.
@@ -548,7 +503,6 @@ async def gateway_start(
     _wire_upstream_handlers(upstream_server)
     _register_http_routes(upstream_server)
     _register_profiles_resource(upstream_server)
-    _register_registry_tools(upstream_server)
     _wire_reload_notifications()
 
     # Store runtime state
