@@ -30096,3 +30096,33 @@ phases:
     depends_on:
     - instructions.impl
     agent: integration-verifier
+  - id: instructions.gate
+    name: 'Gate: Instructions Merge'
+    status: pending
+    description: 'Gate review: Verify instructions phase completion.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. ServerConfig.instructions field correctly typed (bool | str | None)
+
+      2. _merge_downstream_instructions respects all three modes
+
+      3. Markdown H2 format with tool name binding
+
+      4. tela.yaml.example documented
+
+      5. Tests cover all modes and edge cases
+
+      6. No regressions in gateway startup'
+    verification: '- All steps completed
+
+      - Evidence quality adequate
+
+      - No unresolved issues'
+    depends_on:
+    - instructions.verify
+    agent: gate-reviewer
