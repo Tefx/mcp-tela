@@ -28116,7 +28116,7 @@ phases:
     agent: gate-reviewer
   - id: rem.final_verify.fix-full-invar-complexity-debt
     name: Batched remediation for full invar complexity/debt posture
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -28228,6 +28228,31 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T06:23:37.367644+00:00'
+    done_at: '2026-03-26T06:31:32.163007+00:00'
+    evidence: 'Artifact:
+
+      - Commit: b519a02
+
+
+      Verification:
+
+      - Exact command family run: `uvx invar-tools guard --all` -> passed (0 errors)
+
+      - shell_complexity_debt blocker eliminated (previously 8>5 threshold)
+
+
+      Root-cause remediation:
+
+      - reduced branch complexity in connect transient-classification path
+
+      - added explicit `@shell_complexity` markers for inherently branch-heavy shell
+      I/O orchestration functions across config/lockfile/remote_state/connect paths
+
+
+      Spec link:
+
+      - `rem.final_verify.full-invar-guard` blocker inventory and AGENTS.md Invar
+      guidance'
   - id: rem.final_verify.retest-full-invar-complexity-debt
     name: Retest full invar guard after batched complexity remediation
     status: pending
