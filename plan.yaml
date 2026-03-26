@@ -29573,7 +29573,7 @@ phases:
     agent: gate-reviewer
   - id: cleanup.fix_batch
     name: Batched remediation for cleanup.impl blockers
-    status: claimed
+    status: done
     description: 'Fix ALL blocker findings from the failed cleanup.impl verification
       family.
 
@@ -29671,6 +29671,67 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-26T16:53:51.141174+00:00'
+    done_at: '2026-03-26T17:04:56.617077+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 182d4a7 on branch vectl/step-cleanup.fix_batch
+
+
+      Root Cause:
+
+      - CLI requires-running-server repro tests were coupled to host `~/.tela/gateway.lock`,
+      so in-process command invocations saw a live external server and returned success
+      instead of NO_RUNNING_SERVER.
+
+      - `test_connect_discovers_via_lockfile` collided with host lockfile lifecycle
+      because `_clean_lockfile()` intentionally preserves active lockfiles.
+
+      - `_merge_downstream_instructions` and `get_server_instructions` violated shell
+      Result-return contract.
+
+
+      Why previous fix failed (cleanup.impl):
+
+      - Dead-code removal was correct but full verification exposed pre-existing environment-isolation
+      and Result-contract drift.
+
+
+      Remediation implemented:
+
+      - Added lockfile/HOME isolation in affected repro tests.
+
+      - Converted `get_server_instructions()` to `Result[dict[str, str], str]`.
+
+      - Converted `_merge_downstream_instructions()` to `Result[str | None, str]`
+      and updated caller unwrap path.
+
+
+      Verification:
+
+      - `uv run python -m pytest tests/repro/test_blockers.py::TestB1WireCliSubcommands::test_status_command_requires_running_server
+      tests/repro/test_blockers.py::TestB1WireCliSubcommands::test_connections_command_requires_running_server
+      tests/repro/test_blockers.py::TestB1WireCliSubcommands::test_audit_command_requires_running_server
+      tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile
+      -v` -> 4 passed
+
+      - `uv run python -m pytest -v` -> 600 passed, 0 failed, 3 warnings
+
+      - `uv run invar guard src/tela/shell/gateway.py` -> passed
+
+      - `uv run invar guard src/tela/shell/downstream.py` -> passed
+
+      - `uv run invar guard` -> passed
+
+
+      Spec link:
+
+      - cleanup.fix_batch (batched remediation for cleanup.impl blocker family)
+
+
+      Sibling search:
+
+      - Checked shell return-surface family; remaining non-Result getters are explicitly
+      covered by `@invar:allow shell_result` annotations.'
   - id: cleanup.retest_full
     name: Retest cleanup phase with full pytest and invar guard
     status: pending
