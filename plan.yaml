@@ -27546,6 +27546,7 @@ phases:
     - rem.suggestions.add-lockfile-schema-regression
     - rem.suggestions.document-statusresponse-field-guarantees
     - rem.suggestions.verify-suggestion-pack
+    - rem.suggestions.retest-lockfile-extra-field-contract-alignment
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T05:48:37.916033+00:00'
