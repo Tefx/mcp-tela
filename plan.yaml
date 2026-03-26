@@ -27372,7 +27372,7 @@ phases:
       - verification:\n  - lockfile test suite passed (14 passed)"
   - id: rem.suggestions.document-statusresponse-field-guarantees
     name: Document StatusResponse field guarantees
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: default
@@ -27431,6 +27431,16 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-26T05:41:39.277512+00:00'
+    done_at: '2026-03-26T05:44:30.838403+00:00'
+    evidence: "## StatusResponse Documentation Update\n- docs updated:\n  - `docs/INTERFACES.md`\
+      \ (new status-response schema subsection)\n- guaranteed fields listed:\n  -\
+      \ uptime_seconds, server_count, connected_servers, active_connections, profile_count,\
+      \ total_tool_calls, connections, audit_entries\n- semantics clarified:\n  -\
+      \ `active_connections` documented as authoritative numeric count\n  - `connections`\
+      \ documented as structural collection\n  - count-vs-collection distinction and\
+      \ field-presence guarantees explicitly documented\n- alignment:\n  - wording\
+      \ aligned with repaired active_connections/connections semantics and runtime\
+      \ model surface"
   - id: rem.suggestions.verify-suggestion-pack
     name: Verify suggestion uptake pack
     status: pending
