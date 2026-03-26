@@ -28128,6 +28128,7 @@ phases:
     - rem.final_verify.affected-suite-broad-pass
     - rem.final_verify.retest-full-invar-complexity-debt
     - rem.final_verify.runtime-liveness-blackbox
+    - rem.final_verify.retest-b1-liveness-evidence
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-26T06:39:42.485456+00:00'
