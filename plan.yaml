@@ -36519,6 +36519,59 @@ phases:
       - Proof: connect/serve call sites use the coordinator instead of duplicating
       startup arbitration'
     agent: python-senior
+  - id: conn_v2.startup_coord.integrate_autostart
+    name: Integrate autostart leader/follower wiring into connect and serve
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n  - docs/USAGE.md#Running\
+      \ tela > tela serve\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.3\
+      \ Lockfile Contract\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  -\
+      \ src/tela/commands/serve_cmd.py\n  - src/tela/cli.py\nharness_refs:\n  - tests/shell/test_connect_cmd.py\n\
+      \  - tests/shell/test_serve_cmd.py\n  - tests/repro/test_connect_runtime_liveness.py\n\
+      consumer_surfaces:\n  - tela connect\n  - tela serve\n  - query commands via\
+      \ lockfile discovery\nIntegration path exercised: tela connect autostart/discovery\
+      \ -> startup coordinator -> tela serve startup publication -> follower discovery\
+      \ outcome\nOut-of-scope guardrail:\n  - no downstream convergence changes\n\
+      \  - no status snapshot redesign\nTasks:\n  - Wire connect and serve entrypoints\
+      \ to the startup coordinator so shared registry/entrypoint files are touched\
+      \ only in this serial integration step.\n  - Ensure config-path ownership, PID\
+      \ binding, and follower wait behavior are visible at the runnable surface, not\
+      \ only in helper tests.\n  - Preserve explicit tela serve startup path for direct\
+      \ operators."
+    verification: '- Integration proof shows concurrent connect invocations converge
+      on one serve process
+
+      - Lockfile publication happens only after leader-owned bind target is valid
+      or imminently bindable
+
+      - Query-command discovery still works through the published lockfile contract'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/repro/test_connect_runtime_liveness.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste test runner output>
+
+      ```
+
+
+      **Path exercised**: tela connect -> startup coordinator -> tela serve -> lockfile
+      discovery'
+    depends_on:
+    - conn_v2.startup_coord.impl_module
+    agent: python-executor
 - id: conn_v2.lifecycle
   name: Lifecycle Status and Discovery/Readiness Split
   status: locked
