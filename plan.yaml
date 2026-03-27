@@ -37198,17 +37198,29 @@ phases:
       \  - tests/repro/test_connection_count_semantics.py\nIntegration path exercised:\
       \ tela connect -> bridge control -> HTTP connect/disconnect -> gateway connection\
       \ tracker\nOut-of-scope guardrail:\n  - no startup-coordinator changes\n  -\
-      \ no CLI diagnostics copy sweep beyond what integration requires\nTasks:\n \
-      \ - Wire tela connect to the bridge control module for wait, attach, forward,\
-      \ and disconnect paths.\n  - Ensure gateway session tracking and idle shutdown\
-      \ consume one authoritative connection-count path.\n  - Preserve stdio bridge\
-      \ runtime surface and actual HTTP attach/detach behavior."
+      \ no CLI diagnostics copy sweep beyond what integration requires\nConnect readiness\
+      \ consumption boundary:\n  - Connect wait or attach policy MUST consume only\
+      \ the lifecycle snapshot and/or convergence result already produced by the authoritative\
+      \ upstream phases.\n  - Connect flow MUST NOT re-derive readiness from lockfile\
+      \ contents, transport-local heuristics, or bridge-local fallback logic.\n  -\
+      \ Lockfile remains a process identity or attach target surface; it is not a\
+      \ second readiness authority.\nTasks:\n  - Wire tela connect to the bridge control\
+      \ module for wait, attach, forward, and disconnect paths.\n  - Ensure gateway\
+      \ session tracking and idle shutdown consume one authoritative connection-count\
+      \ path.\n  - Preserve stdio bridge runtime surface and actual HTTP attach/detach\
+      \ behavior."
     verification: '- Integration proof exercises attach and detach against real HTTP
       endpoints or equivalent full-path harness
 
       - Connection counts increment and decrement exactly once per bridge session
 
-      - Hard interrupt path uses bridge control logic rather than inline connect cleanup'
+      - Hard interrupt path uses bridge control logic rather than inline connect cleanup
+
+      - Integration proof shows connect wait/attach decisions are driven only by lifecycle
+      snapshot or convergence result inputs
+
+      - Regression evidence shows no lockfile-based or connect-local readiness derivation
+      path remains in attach/wait control flow'
     evidence_template: '## Integration Evidence
 
 
