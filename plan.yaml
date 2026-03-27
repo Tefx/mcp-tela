@@ -37205,22 +37205,6 @@ phases:
     status schema, and connect interrupt behavior.
   depends_on:
   - conn_v2.validation
-  steps:
-  - id: conn_v2.doc_sync.update_docs
-    name: Update documentation for the connect/serve runtime refactor
-    status: pending
-    description: "step_type: review\nspec_refs:\n  - docs/USAGE.md\n  - docs/INTERFACES.md\n\
-      \  - docs/DESIGN.md\nTasks:\n  - Sync docs with implemented discovery/readiness\
-      \ split, lockfile meaning, status schema, startup_generation semantics, background\
-      \ convergence behavior, and hard-interrupt exit semantics.\n  - Update connect/serve/status\
-      \ troubleshooting and examples to reflect lifecycle truth and config ownership\
-      \ diagnostics.\n  - Remove language that implies timeout-only workaround or\
-      \ serial downstream-ready startup.\nagent_source: default"
-    verification: '- README/USAGE/INTERFACES/DESIGN references for connect/serve/status
-      all match implemented behavior
-
-      - No docs claim lockfile implies ready or final registry'
-    agent: doc-reviewer
 - id: conn_v2.deep_review
   name: Deep Review of Connect/Serve Runtime Refactor
   status: locked
@@ -37655,3 +37639,18 @@ phases:
     verification: '- Wiring report identifies any orphan exports, unreachable entrypoints,
       or write-only lifecycle fields'
     agent: wiring-auditor
+  - id: conn_v2.doc_sync.update_docs
+    name: Update documentation for the connect/serve runtime refactor
+    status: pending
+    description: "step_type: review\nspec_refs:\n  - docs/USAGE.md\n  - docs/INTERFACES.md\n\
+      \  - docs/DESIGN.md\nTasks:\n  - Sync docs with implemented discovery/readiness\
+      \ split, lockfile meaning, status schema, startup_generation semantics, background\
+      \ convergence behavior, and hard-interrupt exit semantics.\n  - Update connect/serve/status\
+      \ troubleshooting and examples to reflect lifecycle truth and config ownership\
+      \ diagnostics.\n  - Remove language that implies timeout-only workaround or\
+      \ serial downstream-ready startup.\nagent_source: default"
+    verification: '- README/USAGE/INTERFACES/DESIGN references for connect/serve/status
+      all match implemented behavior
+
+      - No docs claim lockfile implies ready or final registry'
+    agent: doc-reviewer
