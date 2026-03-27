@@ -38400,11 +38400,20 @@ phases:
 
       - changed core functions keep doctest-backed acceptance
 
-      - raw/exposed-name semantics are asserted, not implied'
+      - raw/exposed-name semantics are asserted, not implied
+
+      - acceptance and evidence language does not drop server_name when discussing
+      raw_name/exposed_name mapping
+
+      - observability-bearing contracts do not make raw_name or exposed_name implicit
+      on claimed audit/status/log paths'
     verification: '- Contract audit identifies whether new/changed core surfaces have
       meaningful contracts and doctests.
 
-      - Any vacuous or identity-only contract is treated as blocking.'
+      - Any vacuous or identity-only contract is treated as blocking.
+
+      - Review explicitly calls out whether observability semantics preserve server_name
+      + raw_name + exposed_name together where the feature claims key-path evidence.'
     depends_on:
     - tool_prefix.deep_review.wiring_audit
     agent: gate-reviewer
