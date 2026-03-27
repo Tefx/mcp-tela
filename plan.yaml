@@ -37497,12 +37497,15 @@ phases:
       \ runtime coordination in entrypoints with the dedicated startup, lifecycle,\
       \ convergence, and bridge modules.\n  - Verify no user-facing path terminates\
       \ at legacy ad hoc coordination logic when the new modules are available.\n\
-      \  - Keep this as the serial integration step for shared entrypoint files."
+      \  - Keep this as the serial integration step for shared entrypoint files after\
+      \ the host-facing diagnostics pass has settled shared CLI/HTTP output surfaces."
     verification: '- Entry points route through the new modules end-to-end
 
       - No shared entrypoint still owns duplicated lifecycle or startup logic
 
       - Runnable surfaces remain connect, serve, status, and HTTP'
+    depends_on:
+    - conn_v2.ux.conformance_review
     agent: python-senior
   - id: conn_v2.ux.impl_messages
     name: Implement startup, shutdown, and diagnostics messaging across host surfaces
