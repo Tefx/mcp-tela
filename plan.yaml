@@ -37184,62 +37184,6 @@ phases:
     contract across connect, serve, status, and HTTP surfaces.
   depends_on:
   - conn_v2.bridge
-  steps:
-  - id: conn_v2.ux.impl_messages
-    name: Implement startup, shutdown, and diagnostics messaging across host surfaces
-    status: pending
-    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
-      spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
-      \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
-      \ Schema\n  - conn_v2.contract.bridge_ux_contract outputs\ntouch_paths:\n  -\
-      \ src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n  -\
-      \ src/tela/commands/status_cmd.py\n  - src/tela/commands/remote_state.py\n \
-      \ - src/tela/shell/http_routes.py\nharness_refs:\n  - tests/shell/test_connect_cmd.py\n\
-      \  - tests/shell/test_serve_cmd.py\n  - tests/shell/test_query_commands_remote_state.py\n\
-      consumer_surfaces:\n  - tela connect stderr/stdout\n  - tela serve logs\n  -\
-      \ tela status human/json output\n  - GET /status\n⚠️ KNOWN RISKS (from project\
-      \ history):\n  - Output/formatting work often fixes one path and misses siblings;\
-      \ ALL connect, serve, status, and HTTP diagnostics paths must be checked.\n\
-      ## Gate Preview (what the gate WILL reject)\n1. Diagnostics that still imply\
-      \ lockfile discovery means ready\n2. Messaging that recommends timeout-only\
-      \ workaround instead of lifecycle truth\n3. Inconsistent wording or fields between\
-      \ CLI and HTTP status surfaces\nTasks:\n  - Implement the contract-defined message\
-      \ states for discoverable, warming, ready, degraded, config mismatch, and concurrent\
-      \ follower scenarios.\n  - Keep CLI JSON/status output structurally aligned\
-      \ with the runtime status contract.\n  - Ensure host-facing diagnostics differ\
-      \ by state, not by host implementation quirks.\nIntegration path exercised:\
-      \ lifecycle snapshot -> connect/serve/status/HTTP diagnostics"
-    verification: '- Main path: targeted tests prove state-specific diagnostics across
-      connect, serve, status, and HTTP
-
-      - Failure path: degraded/config-mismatch output is explicit and actionable without
-      timeout-only advice
-
-      - Proof: sibling output paths are all updated, not just one command'
-    evidence_template: '## Integration Evidence
-
-
-      **Command or test exercising the full path**:
-
-      ```
-
-      pytest tests/shell/test_connect_cmd.py tests/shell/test_serve_cmd.py tests/shell/test_query_commands_remote_state.py
-      -q
-
-      ```
-
-
-      **Actual output**:
-
-      ```
-
-      <paste test runner output>
-
-      ```
-
-
-      **Path exercised**: lifecycle status -> CLI/HTTP diagnostics'
-    agent: python-executor
 - id: conn_v2.system_wiring
   name: System Wiring and Entry Point Integration
   status: locked
@@ -37662,6 +37606,61 @@ phases:
 
       - Runnable surfaces remain connect, serve, status, and HTTP'
     agent: python-senior
+  - id: conn_v2.ux.impl_messages
+    name: Implement startup, shutdown, and diagnostics messaging across host surfaces
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
+      \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
+      \ Schema\n  - conn_v2.contract.bridge_ux_contract outputs\ntouch_paths:\n  -\
+      \ src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n  -\
+      \ src/tela/commands/status_cmd.py\n  - src/tela/commands/remote_state.py\n \
+      \ - src/tela/shell/http_routes.py\nharness_refs:\n  - tests/shell/test_connect_cmd.py\n\
+      \  - tests/shell/test_serve_cmd.py\n  - tests/shell/test_query_commands_remote_state.py\n\
+      consumer_surfaces:\n  - tela connect stderr/stdout\n  - tela serve logs\n  -\
+      \ tela status human/json output\n  - GET /status\n⚠️ KNOWN RISKS (from project\
+      \ history):\n  - Output/formatting work often fixes one path and misses siblings;\
+      \ ALL connect, serve, status, and HTTP diagnostics paths must be checked.\n\
+      ## Gate Preview (what the gate WILL reject)\n1. Diagnostics that still imply\
+      \ lockfile discovery means ready\n2. Messaging that recommends timeout-only\
+      \ workaround instead of lifecycle truth\n3. Inconsistent wording or fields between\
+      \ CLI and HTTP status surfaces\nTasks:\n  - Implement the contract-defined message\
+      \ states for discoverable, warming, ready, degraded, config mismatch, and concurrent\
+      \ follower scenarios.\n  - Keep CLI JSON/status output structurally aligned\
+      \ with the runtime status contract.\n  - Ensure host-facing diagnostics differ\
+      \ by state, not by host implementation quirks.\nIntegration path exercised:\
+      \ lifecycle snapshot -> connect/serve/status/HTTP diagnostics"
+    verification: '- Main path: targeted tests prove state-specific diagnostics across
+      connect, serve, status, and HTTP
+
+      - Failure path: degraded/config-mismatch output is explicit and actionable without
+      timeout-only advice
+
+      - Proof: sibling output paths are all updated, not just one command'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/shell/test_serve_cmd.py tests/shell/test_query_commands_remote_state.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste test runner output>
+
+      ```
+
+
+      **Path exercised**: lifecycle status -> CLI/HTTP diagnostics'
+    agent: python-executor
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
   status: locked
