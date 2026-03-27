@@ -37728,3 +37728,10 @@ phases:
     and integrated runtime validation after the core A+B+C+D runtime seams are implemented.
   depends_on:
   - conn_v2.bridge
+- id: conn_v2.finalize
+  name: Docs Sync and Final Independent Review
+  status: locked
+  gate: Compact final phase for docs alignment and final independent review after
+    integrated validation succeeds.
+  depends_on:
+  - conn_v2.integration_validate
