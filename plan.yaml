@@ -34704,7 +34704,7 @@ phases:
       \ -v --tb=short`\n  - result: `26 passed in 3.74s`\n- Commit:\n  - `7be9b95f1360969ef9aed17aac5480fedb76105d`"
   - id: agent_iface.surface_taxonomy.align_runtime_surface
     name: Align runtime surface and instruction emitter to the confirmed taxonomy
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34758,6 +34758,33 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T07:31:37.088330+00:00'
+    done_at: '2026-03-27T07:38:48.531509+00:00'
+    evidence: "Runtime alignment:\n- Chosen taxonomy applied:\n  - Applied CLI/HTTP-only\
+      \ taxonomy for `tela.status`, `tela.connections`, `tela.audit` (kept absent\
+      \ from MCP built-ins).\n  - Kept `tela.profiles` as MCP `resource` (not tool).\n\
+      \  - Runtime-generated instruction text now matches confirmed contract.\n- MCP\
+      \ surfaces added/kept/removed from advertising:\n  - Kept `tela.profiles` resource\
+      \ registration in `src/tela/shell/gateway.py`.\n  - Kept absent: no MCP built-in\
+      \ registrations for `tela.status`, `tela.connections`, `tela.audit`.\n  - Runtime\
+      \ advertising explicitly states: built-in MCP resource `tela.profiles`; built-in\
+      \ MCP tools none; status/connections/audit are operator-only.\n  - Implemented\
+      \ through new `src/tela/shell/surface_instructions.py` and gateway composition\
+      \ wiring.\n- Capability checks used:\n  - No new capability taxonomy introduced.\n\
+      \  - Avoided runtime claims of `tela_admin`.\n  - Existing `capabilities: family\
+      \ -> posture` behavior unchanged.\n  - Updated `src/tela/core/conflict.py` supported\
+      \ built-in surface names (`INTROSPECTION_TOOLS = (\"tela.profiles\",)`).\n-\
+      \ Commands/tests proving alignment:\n  - `uv run pytest tests/shell/test_merge_instructions.py\
+      \ tests/shell/test_gateway.py::test_fastmcp_profiles_resource_registered tests/shell/test_surface_contract.py\
+      \ tests/core/test_conflict.py -v --tb=short` → `46 passed`.\n  - `invar_guard(path=<worktree>,\
+      \ changed=true, strict=false)` → `status=passed` (0 errors; warnings only).\n\
+      \  - Added regressions in `tests/shell/test_merge_instructions.py` proving authoritative\
+      \ gateway block and no unsupported MCP-surface advertising.\n- Any intentionally\
+      \ unchanged CLI/HTTP surfaces:\n  - CLI unchanged: `tela status`, `tela connections`,\
+      \ `tela audit`, `tela profiles`.\n  - HTTP unchanged: `GET /status`, `GET /health`,\
+      \ `POST /connect`, `POST /disconnect`, `POST /mcp`.\n- Files modified:\n  -\
+      \ `src/tela/shell/gateway.py`\n  - `src/tela/shell/surface_instructions.py`\
+      \ (new)\n  - `src/tela/shell/gateway_http_auth.py` (new)\n  - `src/tela/core/conflict.py`\n\
+      \  - `tests/shell/test_merge_instructions.py`\n- Commit:\n  - `83e4090adc3a7418d7b60ead9104f037f9c0ef69`"
   - id: agent_iface.surface_taxonomy.update_agent_interface_doc
     name: Correct AGENT_INTERFACE.md to match the confirmed taxonomy
     status: pending
