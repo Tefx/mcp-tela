@@ -34241,7 +34241,7 @@ phases:
   - id: post.deep_review.retest_result_api_consumer_drift_pytest_gate
     name: Retest full pytest and runtime boundary checks after Result-API consumer
       drift remediation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -34360,3 +34360,7 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T04:31:24.541640+00:00'
+    done_at: '2026-03-27T04:34:16.488098+00:00'
+    evidence: Independent retest PASS. Full pytest passed (689/689) and targeted runtime-boundary/corruption-path
+      checks passed, confirming Result-API consumer drift and restore-path wrapper-injection
+      failures are closed for gate protection.
