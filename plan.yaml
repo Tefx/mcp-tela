@@ -35912,7 +35912,7 @@ phases:
       \ and runtime wiring are coherent and consistent."
   - id: agent_iface.final_review.spec_conformance
     name: Spec conformance review for agent-interface taxonomy
-    status: claimed
+    status: done
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -35945,6 +35945,15 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T10:19:08.808506+00:00'
+    done_at: '2026-03-27T10:23:49.414759+00:00'
+    evidence: "Spec conformance review:\n- Surface taxonomy checks:\n  - `tela.profiles`\
+      \ classified as MCP resource-read; status/connections/audit not described as\
+      \ MCP built-ins.\n- Capability wording checks:\n  - Conforms to approved taxonomy\
+      \ wording; no implicit/unsupported capability semantics.\n- Instruction merge\
+      \ wording checks:\n  - Preserves gateway-top-level authority with explicit append/suppress/override\
+      \ behaviors and no semantic resolver overclaim.\n- Residual mismatches:\n  -\
+      \ None within phase scope.\n- Verdict:\n  - Docs/runtime wording conform to\
+      \ confirmed taxonomy."
   - id: agent_iface.final_review.architecture
     name: Architecture review for runtime surface boundaries
     status: done
