@@ -35361,7 +35361,7 @@ phases:
       timestamp: '2026-03-27T08:45:08.815627+00:00'
   - id: agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
     name: Retest tela.yaml.example taxonomy wording consistency
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       Scoped retest: verify the `tela.yaml.example` contradiction is removed and the
@@ -35394,6 +35394,17 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-27T08:46:54.333931+00:00'
+    done_at: '2026-03-27T08:50:50.911352+00:00'
+    evidence: "Artifact:\n- Commit hash: none (verification-only scoped retest)\n\n\
+      Verification:\n- contradiction_removed: PASS\n  - `tela.yaml.example` has no\
+      \ `tela_admin` capability key in profile example.\n  - Example uses standard\
+      \ families only and clarifies operator-only status for `tela.status`/`tela.connections`/`tela.audit`\
+      \ and resource-read status for `tela.profiles`.\n- cross_doc_consistency: PASS\n\
+      \  - `docs/AGENT_INTERFACE.md` and `docs/INTERFACES.md` consistently classify\
+      \ `tela.profiles` as MCP resource and status/connections/audit as operator-only\
+      \ CLI/HTTP.\n- unrelated_debt_intersection: NON_BLOCKING\n  - Remaining references\
+      \ in plan metadata are historical/non-contract; no intersection with this phase\
+      \ acceptance.\n- readiness_for_gate: YES"
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
