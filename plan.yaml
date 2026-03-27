@@ -35207,6 +35207,47 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     agent: python-senior
+  - id: agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
+    name: Retest second remediation loop for conflict semantics and evidence consistency
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (blind-tester), re-check the second batched remediation
+      loop for the latest gate NO-GO blocker family. Your goal is to find remaining
+      overclaims, hollow regression coverage, or stale evidence drift.
+
+
+      Check all of the following:
+
+      - Docs/evidence describe instruction semantics only as ordering/append-only
+      behavior proven by implementation/tests
+
+      - The updated conflict-semantics regression contains concrete assertions and
+      no placeholder `pass`
+
+      - Evidence artifacts are internally consistent with corrected docs and current
+      runtime-backed claims, including removal of stale `tela_admin` or doc-drift
+      claims
+
+
+      Finding issues is a successful verification outcome.'
+    verification: '- Verification scope: phase-check protecting `agent_iface.surface_taxonomy.gate`
+
+      - Re-run focused review of the remediated blocker family and produce explicit
+      pass/fail results for: semantics wording, regression strength, and evidence
+      consistency
+
+      - Confirm the conflict-semantics test now contains concrete failing conditions
+      for overclaim scenarios; no placeholder `pass` or assertion-free branch remains
+
+      - Confirm reconciled evidence artifacts cite current corrected docs/runtime
+      sources and no stale `tela_admin` or doc-drift claims remain
+
+      - State readiness for `agent_iface.surface_taxonomy.gate` only if all three
+      sub-blockers are cleared'
+    depends_on:
+    - agent_iface.surface_taxonomy.remediate_conflict_semantics_loop2
+    agent: blind-tester
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
