@@ -32748,6 +32748,65 @@ phases:
     depends_on:
     - post.doc_sync.fix_batch
     agent: gate-reviewer
+  - id: post.doc_sync.fix_batch2
+    name: Second documentation sync remediation batch
+    status: pending
+    description: 'Fix remaining documentation blockers from the latest post.doc_sync
+      retest.
+
+
+      Files and exact line ranges from latest retest findings:
+
+      - docs/DESIGN.md:149-155 — stale downstream transport wording still says `url`
+      defaults to SSE.
+
+      - docs/INTERFACES.md:47-50 — stale required transport wording still says omitted
+      `transport` defaults to SSE.
+
+      - docs/USAGE.md:63-67 — stale transport-choice wording still says omitted `transport`
+      defaults to SSE.
+
+      - docs/USAGE.md:79-96 — legacy/example block must remain aligned with the real
+      default and transport labeling.
+
+      - docs/USAGE.md:509-513 — troubleshooting transport wording still says SSE is
+      the default.
+
+      - docs/MIGRATION-003-capability-only-profiles.md:132-141 — migration syntax
+      example still omits the required nested `overrides` map under `tool_overrides.<family>`.
+
+      - docs/MIGRATION-003-capability-only-profiles.md:169-188 — migration example
+      still omits the required nested `overrides` map in both legacy/after-migration
+      examples.
+
+      - docs/ADR-003-gateway-capability-only-profiles.md:22-31 — ADR target profile
+      example still omits the required nested `overrides` map.
+
+
+      Required outcome:
+
+      - Remove stale SSE-default wording from DESIGN / INTERFACES / USAGE and align
+      all affected text with the current transport default.
+
+      - Update migration/ADR examples so every `tool_overrides` example uses the required
+      `tool_overrides.<family>.overrides.<tool>` nesting.
+
+      - Search sibling wording/examples in the touched doc set so equivalent stale
+      claims are not left behind.
+
+
+      This is an IMPLEMENTATION step for docs remediation; completion requires substantive
+      doc corrections, not notes about remaining drift.'
+    verification: '- Stated line-range findings updated in the referenced docs
+
+      - No remaining stale SSE-default wording in DESIGN / INTERFACES / USAGE
+
+      - Migration and ADR examples use required nested tool_overrides.overrides shape
+
+      - Sibling search completed across touched documentation'
+    depends_on:
+    - post.doc_sync.retest
+    agent: python-executor
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
