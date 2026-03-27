@@ -37468,6 +37468,44 @@ phases:
     verification: '- Freeze evidence includes commit, clean tree, and named runtime
       scenarios'
     agent: software-architect
+  - id: conn_v2.validation.runtime_regressions
+    name: Validate OpenCode-like cold start, concurrent attach, and interrupt regressions
+    status: pending
+    description: "step_type: verification\nverification_scope: phase-check\nAs an\
+      \ INDEPENDENT TESTER (integration-verifier), validate the integrated runtime\
+      \ against the highest-risk host scenarios.\nIndependence Level: L2\nTest for:\n\
+      \  - OpenCode-like cold start with 7 downstreams\n  - concurrent attach/autostart\
+      \ follower behavior\n  - hard interrupt during waiting and active bridge\n \
+      \ - degraded vs ready reporting during convergence\nFinding issues is success."
+    verification: '- Evidence includes actual command or exact integration test invocation
+
+      - Main path: cold start reaches acceptable phase and attach succeeds
+
+      - Failure path: interrupt exits promptly and concurrent attach does not spawn
+      multiple gateways'
+    evidence_template: '## Verification Report
+
+
+      **Commands executed**:
+
+      ```
+
+      pytest tests/repro/test_connect_runtime_liveness.py tests/repro/test_disconnect_cleanup.py
+      tests/integration/test_end_to_end.py -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste test output>
+
+      ```'
+    depends_on:
+    - conn_v2.validation.freeze_full
+    agent: integration-verifier
 - id: conn_v2.doc_sync
   name: Documentation Sync for Connect/Serve Runtime
   status: locked
