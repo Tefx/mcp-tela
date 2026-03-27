@@ -34001,7 +34001,7 @@ phases:
       worker: mypy+ruff clean and targeted pytest suite passed (24 passed).'
   - id: post.deep_review.retest_invar_guard_gate_blockers_loop2
     name: 'Loop 2 retest: verify current-head invar guard and runtime migration blockers'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), validate from a fresh
       perspective that the loop-2 batched remediation closes the current-head blocker
       families.
@@ -34097,3 +34097,8 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T04:13:47.066684+00:00'
+    done_at: '2026-03-27T04:18:24.453584+00:00'
+    evidence: 'Independent loop-2 retest passed in fresh/cold environment. Evidence:
+      mypy clean for serve/runtime surfaces, invar guard src --all passed with errors=0,
+      runtime API migration suites passed, liveness repro suites passed, gate-blocker
+      regression suite passed, and no active dead_export escape hatches remained.'
