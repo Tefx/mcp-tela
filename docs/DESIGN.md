@@ -152,7 +152,7 @@ Upstream (gateway → MCP clients):
 
 Downstream (gateway → MCP servers):
 - `command`: stdio subprocess
-- `url`: SSE (default) or Streamable HTTP (`transport: http`)
+- `url`: Streamable HTTP (default) or SSE (`transport: sse`)
 
 ### `commands/`
 

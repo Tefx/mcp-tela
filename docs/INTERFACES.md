@@ -46,8 +46,8 @@ Each server defines one downstream MCP provider.
 
 Required transport choice:
 - `command` for stdio
-- `url` for SSE (legacy, default when `transport` is omitted)
-- `url` + `transport: http` for Streamable HTTP (MCP 2025-03-26+)
+- `url` for Streamable HTTP (default, MCP 2025-03-26+), omitted `transport`
+- `url` + `transport: sse` for SSE (legacy)
 
 Optional gateway controls:
 - `family`
@@ -394,11 +394,10 @@ connection mode per server:
 
 - stdio server contract: `ServerConfig.command` is required; client connect uses
   `command`, `args`, and `env` from config.
-- SSE server contract: `ServerConfig.url` is required; client connect uses `url`.
-  This is the default when `transport` is omitted.
-- Streamable HTTP server contract: `ServerConfig.url` is required and
-  `ServerConfig.transport` must be `"http"`; client connect uses
-  `streamable_http_client`.
+- Streamable HTTP server contract: `ServerConfig.url` is required; client connect uses
+  `url`. This is the default when `transport` is omitted.
+- SSE server contract: `ServerConfig.url` is required and
+  `ServerConfig.transport` must be `"sse"`; client connect uses `sse_client`.
 - mixed transport fields (`command` and `url` both set) are invalid and must be
   rejected as a config/runtime contract violation.
 

@@ -63,8 +63,8 @@ Each server entry declares one downstream MCP server.
 You must use exactly one transport per server:
 
 - `command` for stdio
-- `url` for SSE (legacy, default when `transport` is omitted)
-- `url` + `transport: http` for Streamable HTTP (MCP 2025-03-26+)
+- `url` for Streamable HTTP (default, MCP 2025-03-26+), omitted `transport`
+- `url` + `transport: sse` for SSE (legacy)
 
 Minimal stdio example:
 
@@ -76,23 +76,23 @@ servers:
     family: "filesystem"
 ```
 
-Minimal SSE example (legacy):
-
-```yaml
-servers:
-  github:
-    url: "http://localhost:3001/sse"
-    family: "git"
-```
-
 Minimal Streamable HTTP example:
 
 ```yaml
 servers:
   github:
     url: "http://localhost:3001/mcp"
-    transport: http
     family: "git"
+```
+
+Minimal SSE example (legacy):
+
+```yaml
+servers:
+  legacy-server:
+    url: "http://localhost:3001/sse"
+    transport: sse
+    family: "other"
 ```
 
 Important notes:
@@ -509,7 +509,7 @@ Check that exactly one profile is suitable as the default, or pass
 Check that each server defines exactly one transport:
 
 - `command` for stdio
-- `url` for SSE (default) or Streamable HTTP (`transport: http`)
+- `url` for Streamable HTTP (default) or SSE (`transport: sse`)
 
 Not both `command` and `url`, and not neither.
 

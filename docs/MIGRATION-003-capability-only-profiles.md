@@ -136,8 +136,9 @@ profiles:
       filesystem: read_write
     tool_overrides:
       filesystem:
-        delete_file: deny
-        dangerous_operation: deny
+        overrides:
+          delete_file: deny
+          dangerous_operation: deny
 ```
 
 ### Semantics Change
@@ -175,7 +176,8 @@ profiles:
     side_effect_policy: read_only
     tool_overrides:
       filesystem:
-        edit_file: allow  # implies read_write posture
+        overrides:
+          edit_file: allow  # implies read_write posture
 
 # After migration (downgrade strategy)
 profiles:
@@ -184,7 +186,8 @@ profiles:
       filesystem: read_only  # capped from read_write
     tool_overrides:
       filesystem:
-        edit_file: deny  # downgraded: cannot allow read_write in read_only family
+        overrides:
+          edit_file: deny  # downgraded: cannot allow read_write in read_only family
 ```
 
 ## Target Enforcement Model

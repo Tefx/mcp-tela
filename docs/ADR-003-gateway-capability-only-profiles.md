@@ -27,7 +27,8 @@ profiles:
       git: read_only
     tool_overrides:
       filesystem:
-        delete_file: deny
+        overrides:
+          delete_file: deny
 ```
 
 The core authorization primitive becomes:
