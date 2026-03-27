@@ -34910,3 +34910,34 @@ phases:
     depends_on:
     - agent_iface.final_review.wiring
     agent: software-architect
+  - id: agent_iface.final_review.contract_strength
+    name: Contract-strength review for surface taxonomy wording
+    status: pending
+    description: 'step_type: review
+
+      Verification scope: phase-check protecting agent_iface.final_review.gate.
+
+      Review the final contract/doc wording for vacuity and ambiguity. Reject any
+      final wording that collapses resource reads into tool calls, that leaves capability
+      names implicit, that leaves instruction merge ordering or conflict handling
+      underspecified, or that describes unsupported MCP surfaces as though they are
+      real.'
+    verification: '- Verification scope: phase-check protecting agent_iface.final_review.gate
+
+      - Evidence names each ambiguous or vacuous clause removed or remaining'
+    evidence_template: 'Contract-strength review:
+
+      - Resource vs tool distinctions checked:
+
+      - Capability wording checked:
+
+      - Merge-order wording checked:
+
+      - Unsupported surface claims checked:
+
+      - Verdict:
+
+      '
+    depends_on:
+    - agent_iface.final_review.wiring
+    agent: gate-reviewer
