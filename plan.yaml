@@ -34495,7 +34495,7 @@ phases:
       \ re-approves it."
   - id: agent_iface.surface_taxonomy.decide_taxonomy
     name: Decide intended product surface taxonomy
-    status: claimed
+    status: done
     description: 'Planning/spec decision step. Verification scope: phase-check protecting
       agent_iface.surface_taxonomy.gate. Resolve the intended product taxonomy after
       the audit and before contract, test, runtime, or doc work proceeds. Decision
@@ -34536,6 +34536,25 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T07:18:24.780914+00:00'
+    done_at: '2026-03-27T07:22:02.880670+00:00'
+    evidence: "Taxonomy decision:\n- `tela.profiles` kind:\n  - Intended kind: built-in\
+      \ MCP introspection tool (per authoritative docs/spec).\n  - Current runtime\
+      \ drift: currently source-verified as an MCP resource.\n- `tela.status` intended\
+      \ kind:\n  - Intended kind: built-in MCP introspection tool, with CLI/HTTP operator\
+      \ access as secondary surfaces.\n- `tela.connections` intended kind:\n  - Intended\
+      \ kind: built-in MCP introspection tool, with CLI/operator access as secondary\
+      \ surface.\n- `tela.audit` intended kind:\n  - Intended kind: built-in MCP introspection\
+      \ tool, with CLI/operator access as secondary surface.\n- Capability wording\
+      \ allowed in docs/runtime:\n  - `tela_admin` allowed and explicitly adopted\
+      \ by spec/docs as the family/capability label for built-in tela introspection\
+      \ surfaces.\n  - Constraint: adoption is spec-level; runtime enforcement alignment\
+      \ still required.\n- Runtime work required? yes/no and why:\n  - Yes.\n  - Reason:\
+      \ audited runtime drift indicates only `tela.profiles` is currently source-verified\
+      \ MCP surface (as resource), while `tela.status`/`tela.connections`/`tela.audit`\
+      \ are not source-verified MCP built-ins yet.\n- Blocking spec question(s), if\
+      \ any:\n  - None; authoritative docs were sufficient to make an intended taxonomy\
+      \ decision.\n- Decision artifact:\n  - `evidence/taxonomy_decision.md`\n  -\
+      \ commit `739af91164baf2bd963825543739416595fee3bf`"
   - id: agent_iface.surface_taxonomy.define_confirmed_contract
     name: Define confirmed agent-facing surface contract
     status: pending
