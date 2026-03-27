@@ -34522,3 +34522,41 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.decide_taxonomy
     agent: software-architect
+  - id: agent_iface.surface_taxonomy.add_surface_regressions
+    name: Add non-regression checks for the confirmed surface taxonomy
+    status: pending
+    description: 'step_type: test
+
+      Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
+
+      Add the regression coverage required by the confirmed contract before runtime
+      or doc alignment lands. Coverage must prove whichever taxonomy was chosen: if
+      new MCP built-ins are intended, add list/read/call tests that fail until those
+      surfaces exist; if CLI/HTTP-only is intended, add negative MCP-surface checks
+      plus positive CLI/HTTP coverage. In either case, include a regression for `tela.profiles`
+      as a resource, a regression preventing docs/runtime instructions from blurring
+      tool calls with resource reads, and a regression around downstream instruction
+      merge ordering/conflict handling.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Tests/non-regression checks encode the chosen taxonomy and fail on unsupported
+      claims
+
+      - Coverage explicitly includes `tela.profiles` resource behavior plus whichever
+      positive/negative assertions apply to status/connections/audit'
+    evidence_template: 'Regression coverage:
+
+      - MCP resource checks:
+
+      - MCP tool checks:
+
+      - CLI/HTTP checks:
+
+      - Instruction-merge checks:
+
+      - Negative assertions guarding unsupported surfaces:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.define_confirmed_contract
+    agent: python-executor
