@@ -37616,6 +37616,18 @@ phases:
 
       - No docs claim lockfile implies ready or final registry'
     agent: doc-reviewer
+  - id: conn_v2.doc_sync.gate
+    name: Gate documentation sync for runtime refactor
+    status: pending
+    description: 'step_type: gate
+
+      Gate review: verify runtime docs match the implemented refactor and validation
+      evidence.'
+    verification: '- Usage, interfaces, and design docs reflect discovery/readiness
+      split, convergence semantics, and hard-interrupt behavior'
+    depends_on:
+    - conn_v2.doc_sync.update_docs
+    agent: gate-reviewer
 - id: conn_v2.deep_review
   name: Deep Review of Connect/Serve Runtime Refactor
   status: locked
