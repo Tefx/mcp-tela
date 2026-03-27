@@ -34844,7 +34844,7 @@ phases:
       \ distinction and merge semantics wording.\n- Commit:\n  - `3826f3dfd96c5c05b185e28bb438ff52751eed3b`"
   - id: agent_iface.surface_taxonomy.sync_shared_docs
     name: Sync INTERFACES, USAGE, and README to the confirmed taxonomy
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34879,6 +34879,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.update_agent_interface_doc
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T07:45:18.977177+00:00'
   - id: agent_iface.surface_taxonomy.freeze_for_verification
     name: Freeze snapshot for agent-interface surface verification
     status: pending
