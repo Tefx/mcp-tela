@@ -36148,7 +36148,7 @@ phases:
       \ accepted phase scope."
 - id: conn_v2.contract
   name: Connect/Serve Runtime Refactor Contracts
-  status: pending
+  status: locked
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
@@ -36157,8 +36157,7 @@ phases:
     architecture, and remains frozen behind meta.review completion plus the latest
     completed runtime-surface review.'
   depends_on:
-  - meta.review
-  - agent_iface.final_review
+  - conn_v2.preflight_reconnect
   steps:
   - id: conn_v2.contract.lockfile_status_contract
     name: Codify lockfile, status, and lifecycle contracts
