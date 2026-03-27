@@ -38497,3 +38497,16 @@ phases:
       old duplicate-enumeration behavior and can distinguish >1 enumeration from the
       fixed value of exactly 1. Evidence records command and observed result.
     agent: python-executor
+  - id: conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
+    name: Reuse captured enumeration in reconnect path
+    status: pending
+    description: 'Fix reconnect/reload correctness by reusing the enumeration already
+      captured at the event entry seam instead of re-enumerating the same server downstream.
+      Scope is limited to this correctness fix. Non-goals: no generic apply_server_tool_update
+      helper, no connect_all convergence merge, no transport/HTTP/runtime helper extraction.'
+    verification: Focused regression proof turns green. Code path shows captured enumeration
+      is forwarded/reused rather than recomputed for the same reconnect event. Evidence
+      includes test/guard output.
+    depends_on:
+    - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
+    agent: python-executor
