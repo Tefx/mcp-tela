@@ -34960,7 +34960,7 @@ phases:
       \ frozen until verification completes."
   - id: agent_iface.surface_taxonomy.verify_surface_conformance
     name: Verify MCP/CLI/HTTP surface conformance from a fresh perspective
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (blind-tester), validate the externally visible taxonomy
@@ -35008,6 +35008,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.freeze_for_verification
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-27T07:51:49.375176+00:00'
   - id: agent_iface.surface_taxonomy.gate
     name: Gate agent-interface surface taxonomy alignment
     status: pending
