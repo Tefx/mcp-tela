@@ -38159,6 +38159,64 @@ phases:
     depends_on:
     - tool_prefix.runtime.integrate_reload_prefix_updates
     agent: wiring-auditor
+  - id: tool_prefix.runtime.spec_conformance
+    name: Spec conformance audit for tool-prefix behavior
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: phase-check
+
+      Spec conformance verification: compare implemented tool_prefix behavior against
+      the authoritative feature requirements and configuration docs field by field.
+
+
+      REQUIRED CHECKS:
+
+      - field name and default for ServerConfig.tool_prefix
+
+      - raw/exposed/routing mapping semantics match authoritative decisions
+
+      - reserved tela. prefix rejection matches spec wording
+
+      - tool_overrides still match raw names
+
+      - conflict detection uses final exposed names
+
+      - no-prefix behavior remains backward compatible'
+    verification: '- Every authoritative requirement is mapped to implementation evidence
+      with file:line references.
+
+      - Any drift between docs/spec and runtime behavior is reported before gate.'
+    evidence_template: '## Spec Conformance Report
+
+      | Spec Section | Requirement | Implementation File:Line | Match? | Notes |
+
+      |-------------|-------------|-------------------------|--------|-------|
+
+      | user decision 1 | prefix at registration/resolution | <file:line> | yes/no
+      | <detail> |
+
+      | user decision 2 | tool_overrides match raw names | <file:line> | yes/no |
+      <detail> |
+
+      | user decision 3 | conflict on exposed names | <file:line> | yes/no | <detail>
+      |
+
+      | user decision 4 | raw->exposed->routing preserved | <file:line> | yes/no |
+      <detail> |
+
+      | user decision 5 | tela. reserved prefix rejected | <file:line> | yes/no |
+      <detail> |
+
+      | user decision 6 | no-prefix compatibility | <file:line> | yes/no | <detail>
+      |
+
+      '
+    depends_on:
+    - tool_prefix.runtime.integrate_reload_prefix_updates
+    agent: doc-reviewer
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
