@@ -35166,7 +35166,7 @@ phases:
       - `evidence/surface_taxonomy_verification.md`"
   - id: agent_iface.surface_taxonomy.remediate_conflict_semantics_loop2
     name: Second batched remediation for conflict semantics evidence drift
-    status: claimed
+    status: done
     description: "step_type: implementation\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts\n\
       \  - agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation\nremaining_blocker:\
       \ latest gate NO-GO found three unresolved items in one blocker family: (1)\
@@ -35215,6 +35215,23 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T08:21:51.834167+00:00'
+    done_at: '2026-03-27T08:28:40.628616+00:00'
+    evidence: "Artifact:\n- Commit hash(es): `36e19f6`\n- Files changed:\n  - `docs/AGENT_INTERFACE.md`\n\
+      \  - `docs/CONFIRMED-SURFACE-CONTRACT.md`\n  - `docs/DESIGN.md`\n  - `docs/INTERFACES.md`\n\
+      \  - `docs/USAGE.md`\n  - `evidence/surface_audit_actual_surface.md`\n  - `evidence/surface_taxonomy_verification.md`\n\
+      \  - `tests/shell/test_surface_contract.py`\n\nVerification:\n- `uv run pytest\
+      \ -v tests/shell/test_surface_contract.py` -> `26 passed`.\n- Grep checks show\
+      \ no touched artifact retains overclaimed \"gateway wins\" resolver wording.\n\
+      - Grep checks show no placeholder `pass` remaining in conflict-semantics test\
+      \ area.\n\nSpec/code/test refs:\n- `docs/CONFIRMED-SURFACE-CONTRACT.md` semantics\
+      \ sections updated to implementation-backed ordering/append-only behavior.\n\
+      - `docs/AGENT_INTERFACE.md` conflict semantics wording updated to current runtime\
+      \ behavior.\n- `tests/shell/test_surface_contract.py::TestInstructionMergeOrdering::test_downstream_sections_appended_after_gateway`\
+      \ concrete assertions.\n- `tests/shell/test_surface_contract.py::TestInstructionConflictHandling::test_downstream_does_not_override_gateway_instructions`\
+      \ concrete assertions.\n- Evidence artifacts updated with loop2 delta and stale-claim\
+      \ reconciliation.\n\nNotes:\n- Loop2 closed remaining blocker family by removing\
+      \ resolver overclaims, strengthening regression assertions, and reconciling\
+      \ stale evidence (`tela_admin`/doc-drift language) to current corrected state."
   - id: agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
     name: Retest second remediation loop for conflict semantics and evidence consistency
     status: pending
