@@ -36148,17 +36148,23 @@ phases:
       \ accepted phase scope."
 - id: conn_v2.contract
   name: Connect/Serve Runtime Refactor Contracts
-  status: pending
+  status: locked
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
   context: 'Authoritative architecture basis already approved by user: A+B+C+D. This
     phase converts that basis into executable contract boundaries without re-deriving
-    architecture, and remains frozen behind meta.review completion plus the latest
-    completed runtime-surface review.'
+    architecture, and remains frozen behind meta.review completion, the latest completed
+    runtime-surface review, and the reconnect preflight seam. Contracts in this phase
+    must define source-of-truth boundaries for lockfile, discovery, lifecycle status/readiness,
+    and downstream convergence. They must also separate event-entry adapters from
+    a future single-server convergence kernel. Explicit exclusions: notify/audit policy
+    does not belong in the shared convergence core; connect_all orchestration does
+    not belong in the single-server kernel; generic helper extraction remains deferred.'
   depends_on:
   - meta.review
   - agent_iface.final_review
+  - conn_v2.preflight_reconnect
   steps:
   - id: conn_v2.contract.lockfile_status_contract
     name: Codify lockfile, status, and lifecycle contracts
