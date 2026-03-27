@@ -35,10 +35,16 @@ def _teardown() -> None:
     asyncio.run(disconnect_all())
 
 
-def _runtime():
-    from tela.shell.gateway import get_runtime
+def _get_config():
+    from tela.shell.gateway import get_runtime_config
 
-    return get_runtime()
+    return get_runtime_config()
+
+
+def _set_config(config):
+    from tela.shell.gateway import set_runtime_config
+
+    set_runtime_config(config)
 
 
 # --- on_tools_changed: accepted ---
@@ -146,8 +152,7 @@ def test_on_config_changed_updates_runtime() -> None:
 def test_on_config_changed_sets_runtime_config() -> None:
     """on_config_changed updates the runtime config reference."""
 
-    runtime = _runtime()
-    old_config = runtime.config  # Save current config
+    old_config = _get_config()  # Save current config
 
     try:
         # Empty config = no servers to connect
@@ -155,17 +160,16 @@ def test_on_config_changed_sets_runtime_config() -> None:
         # With no previous config set, it should succeed (no servers to manage)
         result = asyncio.run(on_config_changed(new_config))
         assert result.is_ok
-        assert runtime.config == new_config
+        assert _get_config() == new_config
     finally:
-        runtime.config = old_config
+        _set_config(old_config)
 
 
 def test_on_config_changed_detects_server_removal() -> None:
     """on_config_changed detects removed servers and triggers disconnect."""
     from tela.shell.downstream import get_all_tools
 
-    runtime = _runtime()
-    old_config_ref = runtime.config
+    old_config_ref = _get_config()
 
     # Setup: connect with initial servers
     servers = {"srv": ServerConfig(name="srv", command="cmd")}
@@ -177,26 +181,25 @@ def test_on_config_changed_detects_server_removal() -> None:
 
     # Set runtime config to match connected servers
     old_config = TelaConfig(servers=servers)
-    runtime.config = old_config
+    _set_config(old_config)
 
     try:
         # New config removes all servers
         new_config = TelaConfig(servers={})
         result = asyncio.run(on_config_changed(new_config))
         assert result.is_ok
-        assert runtime.config == new_config
+        assert _get_config() == new_config
         # Registry should be cleared after disconnect
         tools_result = get_all_tools()
         assert tools_result.is_ok and tools_result.value == {}
     finally:
-        runtime.config = old_config_ref
+        _set_config(old_config_ref)
 
 
 def test_on_config_changed_identical_config_no_reconnect() -> None:
     """When old and new configs are identical, no disconnect/reconnect occurs."""
 
-    runtime = _runtime()
-    old_config_ref = runtime.config
+    old_config_ref = _get_config()
 
     try:
         # Setup with tool_lists injection
@@ -207,14 +210,14 @@ def test_on_config_changed_identical_config_no_reconnect() -> None:
                 config.servers, tool_lists={"srv": [{"name": "t", "inputSchema": {}}]}
             )
         )
-        runtime.config = config
+        _set_config(config)
 
         # No server changes - on_config_changed sets config and returns
         # (removed and servers_to_reconnect are both empty sets)
         result = asyncio.run(on_config_changed(config))
         assert result.is_ok
     finally:
-        runtime.config = old_config_ref
+        _set_config(old_config_ref)
         _teardown()
 
 
@@ -225,8 +228,7 @@ def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
     tests, use the integration tests with real MCP servers.
     """
 
-    runtime = _runtime()
-    old_config_ref = runtime.config
+    old_config_ref = _get_config()
 
     # Setup: initial config
     old_servers = {"old_srv": ServerConfig(name="old_srv", command="cmd")}
@@ -239,7 +241,7 @@ def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
             tool_lists={"old_srv": [{"name": "t", "inputSchema": {}}]},
         )
     )
-    runtime.config = old_config
+    _set_config(old_config)
 
     try:
         # New config with different server triggers reconnect attempt
@@ -256,9 +258,9 @@ def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
         assert "DOWNSTREAM_CONNECT_FAILED" in (result.error or "")
 
         # Runtime config should still be updated (even on failure)
-        assert runtime.config == new_config
+        assert _get_config() == new_config
     finally:
-        runtime.config = old_config_ref
+        _set_config(old_config_ref)
         _teardown()
 
 

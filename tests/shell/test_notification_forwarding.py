@@ -24,7 +24,12 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.downstream import connect_all, disconnect_all, get_tool_server
-from tela.shell.gateway import get_runtime
+from tela.shell.gateway import (
+    add_runtime_connection,
+    clear_runtime_connections,
+    get_runtime_connections_snapshot,
+    set_runtime_config,
+)
 from tela.shell.reload import on_tools_changed, set_notify_callback
 from tela.shell.upstream import (
     _session_registry,
@@ -69,19 +74,17 @@ def _clear_all_sessions() -> None:
 
 def _setup_runtime_for_notifications() -> None:
     """Setup runtime config for notification tests."""
-    runtime = get_runtime()
-    runtime.config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={"dev": ProfileConfig(name="dev", default=True)},
-    )
+    ))
 
 
 def _teardown_runtime() -> None:
     """Teardown runtime config."""
-    runtime = get_runtime()
-    runtime.config = None
-    runtime.connections.clear()
+    set_runtime_config(None)
+    clear_runtime_connections()
 
 
 # --- Category 1: Session capture after _list_tools and multiple sessions ---
@@ -590,7 +593,6 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
 
     # Initialize variables at function scope for finally block
     sessions: dict[str, StubSession] = {}
-    runtime = get_runtime()
 
     try:
         # Capture sessions for multiple connections
@@ -599,7 +601,7 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
             capture_session(conn_id, session)
 
         # Add connections to runtime
-        runtime.connections.clear()
+        clear_runtime_connections()
         connections = [
             ConnectionContext(
                 connection_id=f"conn_{i}",
@@ -608,7 +610,8 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
             )
             for i in range(3)
         ]
-        runtime.connections.extend(connections)
+        for c in connections:
+            add_runtime_connection(c)
 
         # Simulate _notify_all_connections behavior
         async def _notify_all_connections(tools_digest: str) -> None:
@@ -616,7 +619,7 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
             import threading
 
             with threading.RLock():
-                conns = list(runtime.connections)
+                conns = get_runtime_connections_snapshot()
             for conn in conns:
                 await notify_tools_changed(conn, tools_digest)
 
@@ -630,7 +633,7 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
     finally:
         for conn_id in sessions:
             release_session(conn_id)
-        runtime.connections.clear()
+        clear_runtime_connections()
         _teardown_runtime()
 
 
@@ -715,7 +718,6 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
 
     _clear_all_sessions()
     _setup_runtime_for_notifications()
-    runtime = get_runtime()
 
     try:
         # Simulate two distinct upstream sessions
@@ -728,7 +730,7 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
             profile_name="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
-        runtime.connections.append(conn_a)
+        add_runtime_connection(conn_a)
         result_a = capture_session("conn_session_a", session_a)
         assert result_a.is_ok
 
@@ -738,7 +740,7 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
             profile_name="dev",
             connected_at="2026-01-01T00:00:01Z",
         )
-        runtime.connections.append(conn_b)
+        add_runtime_connection(conn_b)
         result_b = capture_session("conn_session_b", session_b)
         assert result_b.is_ok
 
@@ -776,7 +778,7 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
     finally:
         release_session("conn_session_a")
         release_session("conn_session_b")
-        runtime.connections.clear()
+        clear_runtime_connections()
         _teardown_runtime()
 
 

@@ -19,7 +19,12 @@ from tela.core.models import (
     ProfileConfig,
     TelaConfig,
 )
-from tela.shell.gateway import add_runtime_connection, get_runtime
+from tela.shell.gateway import (
+    add_runtime_connection,
+    clear_runtime_connections,
+    set_runtime_config,
+    set_runtime_running,
+)
 from tela.shell.http_routes import handle_disconnect
 from tela.shell.upstream import (
     _session_registry,
@@ -55,21 +60,21 @@ def _session_registry_size() -> int:
 
 
 def _setup_runtime() -> None:
-    runtime = get_runtime()
-    runtime.config = TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={"dev": ProfileConfig(name="dev", default=True)},
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+        )
     )
-    runtime.running = True
-    runtime.connections.clear()
+    set_runtime_running(True)
+    clear_runtime_connections()
 
 
 def _teardown_runtime() -> None:
-    runtime = get_runtime()
-    runtime.config = None
-    runtime.running = False
-    runtime.connections.clear()
+    set_runtime_config(None)
+    set_runtime_running(False)
+    clear_runtime_connections()
 
 
 # --- Category 1: handle_disconnect releases captured sessions ---

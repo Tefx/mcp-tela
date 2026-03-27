@@ -12,7 +12,14 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell import http_routes
-from tela.shell.gateway import get_runtime
+from tela.shell.gateway import (
+    add_runtime_connection,
+    clear_runtime_connections,
+    get_runtime_connections_snapshot,
+    set_runtime_config,
+    set_runtime_running,
+    set_runtime_total_tool_calls,
+)
 from tela.shell.http_auth import validate_bearer_token
 
 
@@ -48,7 +55,6 @@ class TestHandleStatus:
 
     def test_handle_status_accepts_valid_token_when_gateway_not_started(self) -> None:
         """Valid token but gateway not started should return error."""
-        _runtime = get_runtime()
         result = http_routes.handle_status("valid", "valid")
         assert result.is_err
         assert result.error is not None
@@ -56,11 +62,10 @@ class TestHandleStatus:
 
     def test_handle_status_returns_status_when_gateway_started(self) -> None:
         """Valid token with gateway running should return status."""
-        runtime = get_runtime()
-        runtime.config = TelaConfig()
-        runtime.running = True
-        runtime.connections.clear()
-        runtime.total_tool_calls = 0
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
+        set_runtime_total_tool_calls(0)
 
         try:
             result = http_routes.handle_status("valid", "valid")
@@ -72,8 +77,8 @@ class TestHandleStatus:
             assert hasattr(result.value, "profile_count")
             assert hasattr(result.value, "total_tool_calls")
         finally:
-            runtime.config = None
-            runtime.running = False
+            set_runtime_config(None)
+            set_runtime_running(False)
 
 
 class TestHandleConnect:
@@ -94,10 +99,9 @@ class TestHandleConnect:
         assert "GATEWAY_NOT_STARTED" in result.error
 
     def test_handle_connect_registers_connection(self) -> None:
-        runtime = get_runtime()
-        runtime.config = TelaConfig()
-        runtime.running = True
-        runtime.connections.clear()
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
 
         try:
             req = ConnectRequest(connection_id="test-conn-123")
@@ -106,11 +110,11 @@ class TestHandleConnect:
             assert result.value is not None
             assert result.value["connection_id"] == "test-conn-123"
             assert result.value["status"] == "connected"
-            assert len(runtime.connections) == 1
+            assert len(get_runtime_connections_snapshot()) == 1
         finally:
-            runtime.config = None
-            runtime.running = False
-            runtime.connections.clear()
+            set_runtime_config(None)
+            set_runtime_running(False)
+            clear_runtime_connections()
 
 
 class TestHandleDisconnect:
@@ -131,16 +135,15 @@ class TestHandleDisconnect:
         assert "GATEWAY_NOT_STARTED" in result.error
 
     def test_handle_disconnect_removes_connection(self) -> None:
-        runtime = get_runtime()
-        runtime.config = TelaConfig()
-        runtime.running = True
-        runtime.connections.clear()
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
         ctx = ConnectionContext(
             connection_id="remove-me",
             profile_name="default",
             connected_at="2026-01-01T00:00:00Z",
         )
-        runtime.connections.append(ctx)
+        add_runtime_connection(ctx)
 
         try:
             req = DisconnectRequest(connection_id="remove-me")
@@ -149,17 +152,16 @@ class TestHandleDisconnect:
             assert result.value is not None
             assert result.value["connection_id"] == "remove-me"
             assert result.value["status"] == "disconnected"
-            assert len(runtime.connections) == 0
+            assert len(get_runtime_connections_snapshot()) == 0
         finally:
-            runtime.config = None
-            runtime.running = False
-            runtime.connections.clear()
+            set_runtime_config(None)
+            set_runtime_running(False)
+            clear_runtime_connections()
 
     def test_handle_disconnect_fails_for_nonexistent_connection(self) -> None:
-        runtime = get_runtime()
-        runtime.config = TelaConfig()
-        runtime.running = True
-        runtime.connections.clear()
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
 
         try:
             req = DisconnectRequest(connection_id="nonexistent")
@@ -168,8 +170,8 @@ class TestHandleDisconnect:
             assert result.error is not None
             assert "CONNECTION_NOT_FOUND" in result.error
         finally:
-            runtime.config = None
-            runtime.running = False
+            set_runtime_config(None)
+            set_runtime_running(False)
 
 
 class TestBearerTokenUsage:

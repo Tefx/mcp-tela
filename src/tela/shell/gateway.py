@@ -12,7 +12,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, TypeVar
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
@@ -464,24 +464,29 @@ _runtime_lock = threading.RLock()
 
 
 # @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
-# @invar:allow dead_export: retained for single-threaded test setup only
+# @invar:allow dead_export: retained for API stability; raises at call site
 def get_runtime() -> GatewayRuntime:
-    """Return the module-level gateway runtime (**test-setup only**).
+    """**REMOVED (loop 4)** — no longer returns live runtime alias.
 
-    .. deprecated::
-        This function returns a **mutable** reference without lock protection.
-        Production code MUST use the lock-safe accessor helpers below.
-        This function is retained only for single-threaded test setup where
-        lock-safe write helpers (``set_runtime_config``, ``set_runtime_running``,
-        ``clear_runtime_connections``) are not sufficient (e.g. ``upstream_server``
-        assignment in integration tests).
+    All callers must migrate to lock-safe helpers:
 
-    .. warning::
-        Callers MUST NOT cache the returned object or pass it across thread
-        boundaries. Any mutation of fields outside ``_runtime_lock`` is a
-        data race.
+    * Config: ``set_runtime_config`` / ``get_runtime_config``
+    * Running: ``set_runtime_running`` / ``is_runtime_running``
+    * Connections: ``add_runtime_connection`` / ``clear_runtime_connections`` /
+      ``get_runtime_connections_snapshot``
+    * Secrets: ``set_runtime_secrets`` / ``get_runtime_secrets``
+    * Counters: ``set_runtime_total_tool_calls``
+    * Server: ``set_upstream_server`` / ``is_upstream_server_initialized`` /
+      ``with_upstream_server``
+
+    Raises:
+        RuntimeError: Always.
     """
-    return _runtime
+    raise RuntimeError(
+        "get_runtime() removed in loop 4: use lock-safe helpers "
+        "(set_runtime_config, set_runtime_running, clear_runtime_connections, "
+        "set_runtime_secrets, set_runtime_total_tool_calls, with_upstream_server, etc.)"
+    )
 
 
 # --- Locked runtime accessors ------------------------------------------
@@ -509,31 +514,23 @@ def get_runtime() -> GatewayRuntime:
 #                  increment_*) that acquire ``_runtime_lock`` for the
 #                  full mutation.
 #
-#   DEPRECATED:    get_runtime() and get_upstream_server() return live
-#                  runtime-owned references.  They are retained ONLY for
-#                  single-threaded test setup; production code MUST NOT
-#                  import or call them.  Enforced by regression tests in
+#   REMOVED:       get_runtime() and get_upstream_server() now raise
+#                  NotImplementedError.  All callers — including tests —
+#                  must use lock-safe helpers or operation accessors.
+#                  Enforced by regression tests in
 #                  tests/repro/test_runtime_boundary_immutability.py.
 #
-# Why previous loops failed (loop 1 & 2):
-#   Loop 1 introduced lock-safe helpers for config/connections but left
-#   ``get_upstream_server()`` returning the live FastMCP instance — a
-#   non-copyable runtime-owned service object that escapes the lock
-#   boundary.  Loop 2 hardened data accessors with deep-copy but still
-#   treated the service accessor identically to data reads.  Because
-#   FastMCP cannot be deep-copied (it owns registered handlers, I/O
-#   state), the same deep-copy pattern cannot apply.
-#
-# How loop 3 closes the blocker family:
-#   Introduces a third access class — OPERATION — for non-copyable
-#   services.  ``get_upstream_http_app()`` acquires the lock, calls
-#   ``streamable_http_app()`` on the live server, and returns the
-#   resulting Starlette app (a distinct object).  ``get_upstream_log_level()``
-#   reads the scalar setting under lock.  Neither exposes the FastMCP
-#   reference.  ``serve_cmd.py`` — the sole production consumer — is
-#   migrated to these operation accessors.  ``get_upstream_server()`` is
-#   deprecated alongside ``get_runtime()``, both guarded by the same
-#   regression test suite.
+# History (loops 1–4):
+#   Loop 1: lock-safe helpers for config/connections; left
+#   get_upstream_server() returning the live FastMCP instance.
+#   Loop 2: hardened data accessors with deep-copy; FastMCP cannot
+#   be deep-copied (owns handlers, I/O state).
+#   Loop 3: introduced OPERATION access class for non-copyable
+#   services; deprecated get_runtime() and get_upstream_server().
+#   Loop 4: removed live-alias bodies from get_runtime() and
+#   get_upstream_server() (both now raise NotImplementedError).
+#   Added narrow helpers: set_runtime_secrets, set_runtime_total_tool_calls,
+#   with_upstream_server (scoped callback for test introspection).
 # -----------------------------------------------------------------------
 
 
@@ -671,27 +668,90 @@ def get_runtime_secrets() -> list[str]:
         return list(_runtime.secrets)
 
 
-def get_upstream_server() -> FastMCP | None:
-    """**DEPRECATED** — returns live runtime-owned FastMCP; violates boundary policy.
+def set_runtime_secrets(secrets: list[str]) -> None:
+    """Replace the runtime auth secrets list under lock.
 
-    Retained ONLY for single-threaded test setup where the live server
-    reference is required (e.g. direct handler introspection).  Production
-    callers MUST use the operation accessors below:
+    Examples:
+        >>> set_runtime_secrets(["s1", "s2"])
+        >>> get_runtime_secrets()
+        ['s1', 's2']
+        >>> set_runtime_secrets([])
+    """
+    with _runtime_lock:
+        _runtime.secrets = list(secrets)
+
+
+def set_runtime_total_tool_calls(count: int) -> None:
+    """Set the runtime tool-call counter under lock.
+
+    Examples:
+        >>> set_runtime_total_tool_calls(0)
+    """
+    with _runtime_lock:
+        _runtime.total_tool_calls = count
+
+
+_T = TypeVar("_T")
+
+
+# @invar:allow dead_export: test-only scoped introspection helper
+def with_upstream_server(fn: Callable[[FastMCP], _T]) -> Result[_T, str]:
+    """Execute *fn* with the live upstream server under lock, return the result.
+
+    The server reference does **not** escape: *fn* receives it for a
+    single synchronous call inside ``_runtime_lock``, and only the return
+    value of *fn* is propagated to the caller.  This is the OPERATION
+    pattern applied to arbitrary test introspection (handler lookup,
+    attribute reads, etc.).
+
+    Intended for **test code only**.  Production callers should use the
+    typed operation accessors (``get_upstream_http_app``,
+    ``get_upstream_log_level``, ``is_upstream_server_initialized``).
+
+    Args:
+        fn: Synchronous callable receiving the ``FastMCP`` instance.
+
+    Returns:
+        Result containing *fn*'s return value, or an error string if the
+        upstream server is not initialized.
+
+    Examples:
+        >>> r = with_upstream_server(lambda s: type(s).__name__)
+        >>> r.is_ok or r.is_err
+        True
+    """
+    with _runtime_lock:
+        if _runtime.upstream_server is None:
+            return Result(error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized")
+        return Result(value=fn(_runtime.upstream_server))
+
+
+def get_upstream_server() -> FastMCP | None:
+    """**REMOVED (loop 4)** — no longer returns live FastMCP alias.
+
+    All callers must migrate to operation accessors:
 
     * ``is_upstream_server_initialized()`` — check readiness
     * ``get_upstream_http_app()`` — obtain the ASGI application
     * ``get_upstream_log_level()`` — read the server log level
+    * ``with_upstream_server(fn)`` — test-only scoped introspection
+    * ``set_upstream_server(server)`` — locked write
 
-    .. deprecated::
-        Leaks a mutable runtime-owned object.  Will be removed once test
-        helpers fully cover all setup patterns.
+    Raises:
+        RuntimeError: Always.
 
     Examples:
-        >>> isinstance(get_upstream_server(), (type(None), FastMCP))
+        >>> try:
+        ...     get_upstream_server()
+        ... except RuntimeError:
+        ...     True
         True
     """
-    with _runtime_lock:
-        return _runtime.upstream_server
+    raise RuntimeError(
+        "get_upstream_server() removed in loop 4: use operation accessors "
+        "(is_upstream_server_initialized, get_upstream_http_app, "
+        "get_upstream_log_level, with_upstream_server, set_upstream_server)"
+    )
 
 
 def is_upstream_server_initialized() -> bool:

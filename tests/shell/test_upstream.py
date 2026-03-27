@@ -183,10 +183,10 @@ def test_handle_initialize_returns_connection_context() -> None:
     """handle_initialize creates a connection context when gateway is started."""
     import asyncio
     from tela.shell.upstream import handle_initialize
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config
 
     # Without gateway started, should return error
-    get_runtime().config = None
+    set_runtime_config(None)
     r = asyncio.run(handle_initialize({}))
     assert r.is_err
 
@@ -204,7 +204,7 @@ def test_handle_initialize_uses_profile_binding_resolver(
         TelaConfig,
     )
     from tela.shell.config_loader import Result
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_initialize
 
     calls: list[InitializeContext] = []
@@ -230,12 +230,12 @@ def test_handle_initialize_uses_profile_binding_resolver(
         _fake_resolve,
     )
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={"dev": ProfileConfig(name="dev", default=True)},
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     result = asyncio.run(handle_initialize({"client": "desktop"}))
 
@@ -249,14 +249,14 @@ def test_handle_initialize_rejects_open_mode_without_resolved_profile() -> None:
     import asyncio
 
     from tela.core.models import AuthConfig, AuthMode, TelaConfig
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_initialize
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile=None,
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     result = asyncio.run(handle_initialize({}))
     assert result.is_err
@@ -268,9 +268,9 @@ def test_handle_tools_list_returns_empty_when_no_gateway() -> None:
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import handle_tools_list
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config
 
-    get_runtime().config = None
+    set_runtime_config(None)
     conn = ConnectionContext(
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
@@ -285,9 +285,9 @@ def test_handle_tools_call_returns_error_when_no_gateway() -> None:
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import handle_tools_call
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config
 
-    get_runtime().config = None
+    set_runtime_config(None)
     conn = ConnectionContext(
         connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
     )
@@ -298,9 +298,9 @@ def test_handle_tools_call_returns_error_when_no_gateway() -> None:
 def test_handle_profiles_list_returns_empty_when_no_gateway() -> None:
     """handle_profiles_list returns empty list when gateway not started."""
     from tela.shell.upstream import handle_profiles_list
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config
 
-    get_runtime().config = None
+    set_runtime_config(None)
     result = handle_profiles_list()
     assert result.is_err
     assert result.error is not None
@@ -316,17 +316,17 @@ def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
         ProfileConfig,
         TelaConfig,
     )
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config
     from tela.shell.upstream import handle_profiles_list
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         profiles={
             "dev": ProfileConfig(
                 name="dev", capabilities={"filesystem": Posture.READ_ONLY}
             )
         },
         auth=AuthConfig(mode=AuthMode.OPEN),
-    )
+    ))
 
     result = handle_profiles_list()
 
@@ -811,7 +811,7 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
         TelaConfig,
     )
     from tela.shell.config_loader import Result
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -830,7 +830,7 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
         ],
     )
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={
@@ -838,8 +838,8 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
                 name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
             )
         },
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     import tela.shell.upstream
 
@@ -876,7 +876,7 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
         TelaConfig,
     )
     from tela.shell.config_loader import Result
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -895,7 +895,7 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
         ],
     )
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={
@@ -903,8 +903,8 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
                 name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
             )
         },
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     import tela.shell.upstream
 
@@ -939,7 +939,7 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
         TelaConfig,
     )
     from tela.shell.config_loader import Result
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -958,7 +958,7 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
         ],
     )
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={
@@ -966,8 +966,8 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
                 name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
             )
         },
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     import tela.shell.upstream
 
@@ -1002,7 +1002,7 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
         TelaConfig,
     )
     from tela.shell.config_loader import Result
-    from tela.shell.gateway import get_runtime
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -1021,7 +1021,7 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
         ],
     )
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={
@@ -1029,8 +1029,8 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
                 name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
             )
         },
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     import tela.shell.upstream
 

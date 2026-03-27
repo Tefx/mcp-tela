@@ -13,7 +13,7 @@ from mcp.types import ListToolsResult, Tool
 from tela.core.models import ServerConfig, TelaConfig
 from tela.shell import downstream
 from tela.shell.config_loader import Result
-from tela.shell.gateway import get_runtime
+from tela.shell.gateway import get_runtime_config, set_runtime_config
 
 
 def test_connect_all_enumerates_real_stdio_server() -> None:
@@ -266,9 +266,8 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
     assert downstream.get_tool_server("initial_tool").value == "mocked"
     assert downstream.get_tool_server("new_tool").value is None
 
-    runtime = get_runtime()
-    previous_config = runtime.config
-    runtime.config = TelaConfig(servers=servers)
+    previous_config = get_runtime_config()
+    set_runtime_config(TelaConfig(servers=servers))
     try:
         re_enum_result = asyncio.run(downstream.re_enumerate("mocked"))
         assert re_enum_result.is_ok
@@ -279,7 +278,7 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
         assert downstream.get_tool_server("initial_tool").value == "mocked"
         assert downstream.get_tool_server("new_tool").value == "mocked"
     finally:
-        runtime.config = previous_config
+        set_runtime_config(previous_config)
 
     cleanup = asyncio.run(downstream.disconnect_all())
     assert cleanup.is_ok

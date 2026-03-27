@@ -20,7 +20,7 @@ from tela.core.models import (
 )
 from tela.shell.config_loader import Result
 from tela.shell.downstream_registry import DownstreamRegistry
-from tela.shell.gateway import get_runtime
+from tela.shell.gateway import clear_runtime_connections, set_runtime_config
 from tela.shell.upstream import handle_tools_list, handle_initialize
 
 
@@ -49,7 +49,7 @@ def test_list_tools_output_dict_includes_all_metadata_fields() -> None:
         ],
     )
 
-    get_runtime().config = TelaConfig(
+    set_runtime_config(TelaConfig(
         auth=AuthConfig(mode=AuthMode.OPEN),
         resolved_default_profile="dev",
         profiles={
@@ -57,8 +57,8 @@ def test_list_tools_output_dict_includes_all_metadata_fields() -> None:
                 name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
             )
         },
-    )
-    get_runtime().connections.clear()
+    ))
+    clear_runtime_connections()
 
     import tela.shell.upstream
 

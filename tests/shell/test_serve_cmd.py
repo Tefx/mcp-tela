@@ -13,7 +13,7 @@ from tela.core.models import AuthConfig, AuthMode, TelaConfig
 from tela.shell.config_loader import Result
 from starlette.applications import Starlette
 
-from tela.shell.gateway import get_runtime, set_runtime_running, set_upstream_server
+from tela.shell.gateway import clear_runtime_connections, set_runtime_running, set_upstream_server
 
 
 def test_serve_subcommand_exists() -> None:
@@ -288,8 +288,7 @@ def test_idle_shutdown_sets_stop_event_when_connections_stay_idle() -> None:
 
     async def _scenario() -> bool:
         stop_event = asyncio.Event()
-        runtime = get_runtime()
-        runtime.connections.clear()
+        clear_runtime_connections()
         await serve_cmd._idle_shutdown_watch(
             idle_timeout_seconds=1,
             stop_event=stop_event,

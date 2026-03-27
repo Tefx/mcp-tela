@@ -15,7 +15,6 @@ from tela.core.models import ConnectionContext, TelaConfig
 from tela.shell.gateway import (
     add_runtime_connection,
     clear_runtime_connections,
-    get_runtime,
     get_runtime_config,
     get_runtime_connections_snapshot,
     get_runtime_secrets,
@@ -27,6 +26,7 @@ from tela.shell.gateway import (
     remove_runtime_connection,
     set_runtime_config,
     set_runtime_running,
+    set_runtime_secrets,
     set_upstream_server,
 )
 
@@ -145,10 +145,11 @@ class TestB2SnapshotImmutability:
         # Verify it was captured correctly
         assert snap.config.resolved_default_profile == "snap-orig"
 
-        # Mutate would require unfreezing the dataclass, but config is a
-        # Pydantic model - verify it's not the live reference
-        runtime = get_runtime()
-        assert snap.config is not runtime.config
+        # Prove detachment: mutating a second snapshot doesn't affect the first
+        snap2 = get_runtime_config()
+        assert snap2 is not None
+        snap2.resolved_default_profile = "mutated-for-identity"
+        assert snap.config.resolved_default_profile == "snap-orig"
 
         set_runtime_config(None)
         set_runtime_running(False)
@@ -181,12 +182,10 @@ class TestB2SnapshotImmutability:
         snap = get_runtime_status_snapshot()
         snap_conn = [c for c in snap.connections if c.connection_id == "stat-member"][0]
 
-        # Verify detachment: not same object as runtime-owned
-        runtime = get_runtime()
-        runtime_conn = [
-            c for c in runtime.connections if c.connection_id == "stat-member"
-        ][0]
-        assert snap_conn is not runtime_conn
+        # Prove detachment: snapshot member is not identical to a fresh read
+        fresh = get_runtime_connections_snapshot()
+        fresh_conn = [c for c in fresh if c.connection_id == "stat-member"][0]
+        assert snap_conn is not fresh_conn  # different objects
         assert snap_conn.tool_call_count == 5
 
         remove_runtime_connection("stat-member")
@@ -194,13 +193,7 @@ class TestB2SnapshotImmutability:
     def test_secrets_snapshot_is_detached(self) -> None:
         """Mutating returned secrets list must not affect runtime."""
         # Secrets are strings (immutable), but the list container must be detached
-        runtime = get_runtime()
-        import threading
-
-        lock = threading.RLock()
-        # Use the runtime directly for setup (test-only pattern)
-        with lock:
-            runtime.secrets = ["s1", "s2"]
+        set_runtime_secrets(["s1", "s2"])
 
         snapshot = get_runtime_secrets()
         snapshot.append("s3")
@@ -209,7 +202,7 @@ class TestB2SnapshotImmutability:
         assert "s3" not in live
         assert len(live) == 2
 
-        runtime.secrets = []
+        set_runtime_secrets([])
 
 
 class TestB1B2NoProductionGetRuntime:
@@ -325,26 +318,12 @@ class TestB3UpstreamServerBoundaryPolicy:
         # Cleanup
         set_upstream_server(None)
 
-    def test_deprecated_get_upstream_server_returns_live_alias(self) -> None:
-        """Demonstrate that get_upstream_server leaks live runtime reference.
+    def test_deprecated_get_upstream_server_raises(self) -> None:
+        """get_upstream_server raises RuntimeError (removed in loop 4)."""
+        import pytest
 
-        This test documents the vulnerability in the deprecated accessor
-        and proves the operation accessors are needed.
-        """
-        from mcp.server.fastmcp import FastMCP
-
-        server = FastMCP("alias-test")
-        set_upstream_server(server)
-
-        # Deprecated accessor returns the SAME object (live alias)
-        leaked = get_upstream_server()
-        assert leaked is server  # proves live alias leak
-
-        # Operation accessors do NOT return the server
-        app_result = get_upstream_http_app()
-        assert app_result.value is not server
-
-        set_upstream_server(None)
+        with pytest.raises(RuntimeError, match="removed in loop 4"):
+            get_upstream_server()
 
     def test_uninitialised_server_operation_accessors(self) -> None:
         """Operation accessors handle None server gracefully."""
