@@ -33517,3 +33517,57 @@ phases:
     depends_on:
     - post.deep_review.architecture_fix_runtime_boundary_policy_loop3
     agent: software-architect
+  - id: post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4
+    name: 'Loop 4 investigation: decide authoritative handling for deprecated live-alias
+      accessors'
+    status: pending
+    description: "Investigation-style remediation for the repeated blocker family\
+      \ around deprecated live-alias accessors.\n\nstep_type: planning\nverification_scope:\
+      \ phase-check\nProtects downstream gate: post.deep_review.gate\nagent_source:\
+      \ default\nprior_loop:\n  - post.deep_review.architecture_fix_runtime_boundary_policy_loop3\n\
+      \  - post.deep_review.architecture_retest_runtime_boundary_policy_loop3\nblocker_family:\
+      \ deprecated-live-alias-accessors\nloop_count: 4\n\nThis is still an executable\
+      \ step, not a human checkpoint.\n\nRequired outputs:\n- blocker_fingerprint:\
+      \ deprecated get_runtime()/get_upstream_server() live alias accessors\n- root_cause_hypothesis:\
+      \ why deprecated accessors still expose live runtime-owned aliases after loop\
+      \ 3\n- why_previous_fix_failed: explain why the unified boundary-policy fix\
+      \ did not close deprecated accessor escape paths\n- environment_consistency_check:\
+      \ confirm whether hot/cold state, setup helpers, or test bootstrap needs are\
+      \ driving the surviving aliases\n- next_fix_constraint: specify the authoritative\
+      \ handling that the next fix MUST implement without breaking legitimate test/setup\
+      \ needs\n\nDecision scope:\n- decide whether deprecated get_runtime() must return\
+      \ a snapshot, raise, redirect to test-only helper, or use another non-live boundary-preserving\
+      \ path\n- decide whether deprecated get_upstream_server() must stop returning\
+      \ a live FastMCP alias and what compatibility bridge is still authorized\n-\
+      \ preserve necessary test/setup ergonomics explicitly instead of allowing production\
+      \ live-alias escape hatches\n- identify any sibling deprecated/runtime helper\
+      \ surfaces that would preserve the same blocker family if left unchanged"
+    verification: '- Evidence includes blocker_fingerprint, root_cause_hypothesis,
+      why_previous_fix_failed, environment_consistency_check, and next_fix_constraint
+
+      - The authoritative handling for deprecated get_runtime() and get_upstream_server()
+      is explicit enough to drive one follow-up fix step
+
+      - The output states how test/setup needs are preserved without retaining live
+      production alias accessors'
+    evidence_template: '## Investigation Evidence
+
+
+      - blocker_fingerprint: <stable blocker family>
+
+      - root_cause_hypothesis: <current best diagnosis>
+
+      - why_previous_fix_failed: <required>
+
+      - environment_consistency_check: <hot/cold, setup/bootstrap, command-family
+      notes>
+
+      - next_fix_constraint: <what the follow-up fix MUST do differently>
+
+      - authoritative handling decision: <deprecated get_runtime / get_upstream_server
+      disposition>
+
+      - test/setup preservation plan: <how non-production needs remain supported>'
+    depends_on:
+    - post.deep_review.architecture_retest_runtime_boundary_policy_loop3
+    agent: software-architect
