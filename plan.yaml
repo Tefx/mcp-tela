@@ -35870,7 +35870,7 @@ phases:
   steps:
   - id: agent_iface.final_review.wiring
     name: Wiring audit for agent-interface surfaces
-    status: claimed
+    status: done
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -35902,6 +35902,14 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-27T10:15:51.410081+00:00'
+    done_at: '2026-03-27T10:17:33.420581+00:00'
+    evidence: "Wiring audit:\n- Registered MCP resources:\n  - `tela.profiles` resource\
+      \ registration verified in gateway runtime and docs.\n- Registered MCP tools:\n\
+      \  - No built-in `tela.*` MCP tools; only downstream proxy list/call handlers.\n\
+      - Wired CLI commands:\n  - `serve`, `connect`, `status`, `profiles`, `connections`,\
+      \ `audit` registrations and dispatch paths verified.\n- Orphan/undocumented\
+      \ surfaces:\n  - None found for phase scope.\n- Verdict:\n  - Surface contract\
+      \ and runtime wiring are coherent and consistent."
   - id: agent_iface.final_review.spec_conformance
     name: Spec conformance review for agent-interface taxonomy
     status: pending
