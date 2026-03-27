@@ -38471,3 +38471,12 @@ phases:
     - tool_prefix.deep_review.contract_strength
     - tool_prefix.deep_review.black_box
     agent: gate-reviewer
+- id: conn_v2.preflight_reconnect
+  name: Preflight reconnect enumeration seam
+  status: pending
+  gate: Reconnect path reuses captured enumeration on reconnect, avoids duplicate
+    list_tools calls, and preserves registry/status correctness before conn_v2 contracts
+    begin.
+  depends_on:
+  - meta.review
+  - agent_iface.final_review
