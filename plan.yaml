@@ -37705,6 +37705,47 @@ phases:
     tests or runtime wiring.
   depends_on:
   - conn_v2.finalize
+  steps:
+  - id: tool_prefix.contract.define_semantics
+    name: Define tool-prefix contract and mapping semantics
+    status: pending
+    description: "step_type: contract\nagent_source: default\ncontract_purity: ENFORCED\n\
+      contract_outputs:\n  - signatures\n  - type_defs\n  - interfaces\n  - stubs\n\
+      spec_refs:\n  - user authoritative input: tool_prefix feature goals + decisions\
+      \ 1-6\n  - docs/INTERFACES.md#3.1 Servers\n  - docs/INTERFACES.md#7 MCP Surface\n\
+      \  - docs/USAGE.md#servers\ntouch_paths:\n  - src/tela/core/models.py\n  - src/tela/core/family.py\n\
+      \  - src/tela/core/conflict.py\n  - src/tela/shell/downstream_registry.py\n\
+      \  - src/tela/shell/downstream.py\n  - src/tela/shell/upstream.py\n  - src/tela/shell/reload.py\n\
+      harness_refs:\n  - tests/core/*config*\n  - tests/core/*family*\n  - tests/core/*conflict*\n\
+      \  - tests/shell/test_downstream.py\n  - tests/shell/test_reload.py\n  - tests/shell/test_upstream.py\n\
+      authoritative_interface:\n  - ServerConfig.tool_prefix: str | None = None\n\
+      \  - ResolvedTool.name is the exposed upstream tool name\n  - ResolvedTool.raw_name\
+      \ stores the downstream-advertised tool name\n  - routing_name for downstream\
+      \ calls remains raw_name\neffective_truth_owner: tela.core.models + tela.core.family\n\
+      consumer_surfaces:\n  - upstream tools/list\n  - upstream tools/call\n  - conflict\
+      \ detection\n  - hot reload tools/list_changed\nstate_strata:\n  - config intent:\
+      \ ServerConfig.tool_prefix\n  - resolved contract: raw_name/exposed_name/routing_name\
+      \ mapping on ResolvedTool\n  - mutable runtime state: downstream registry lookups\
+      \ by exposed name\nprovenance_contract:\n  - tool_overrides continue to match\
+      \ raw downstream tool names\ncross_cutting_policy:\n  - tela. remains reserved\
+      \ for built-in surfaces and is rejected when produced by tool_prefix or downstream\
+      \ name combination\n\nDefine the acceptance-only contract for config-driven\
+      \ tool prefixes.\n\nRequired semantics:\n- Prefix is applied during registration/resolution,\
+      \ never at call time.\n- Conflict detection keys off the final exposed name.\n\
+      - raw_name -> exposed_name -> routing_name mapping is preserved explicitly enough\
+      \ for downstream routing and audits.\n- tool_overrides keep matching raw downstream\
+      \ tool names.\n- tool_prefix=\"tela.\" is rejected as reserved-prefix input.\n\
+      - Omitted tool_prefix preserves backward-compatible exposed names.\n\nThis step\
+      \ may add docstrings, type fields, and acceptance notes only. It MUST NOT ship\
+      \ runtime logic."
+    verification: '- Contract artifacts pin the field and mapping semantics for ServerConfig
+      and ResolvedTool.
+
+      - Reserved-prefix rejection, backward compatibility, raw-name override matching,
+      and exposed-name conflict rules are explicit.
+
+      - No substantive implementation logic is introduced in this contract step.'
+    agent: software-architect
 - id: tool_prefix.test
   name: Tool Prefix Tests
   status: locked
