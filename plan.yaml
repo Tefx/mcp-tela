@@ -32610,7 +32610,7 @@ phases:
       \ camelCase in JSON/INTERFACES.md)"
   - id: post.doc_sync.gate
     name: 'Gate: Documentation Sync'
-    status: claimed
+    status: done
     description: 'Gate review: Verify documentation sync completeness.
 
 
@@ -32632,6 +32632,34 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T00:30:17.138076+00:00'
+    done_at: '2026-03-27T00:34:23.916736+00:00'
+    evidence: 'Artifact:
+
+      - post.doc_sync documentation gate audit (USAGE/INTERFACES/DESIGN/MIGRATION/ADR)
+
+
+      Verification:
+
+      - focused doc-alignment test suite passed
+
+      - parser/runtime spot-checks on documented YAML fragments passed
+
+      - stale malformed examples and stale transport-default claims no longer present
+
+
+      Spec link:
+
+      - post.doc_sync.gate criteria
+
+
+      Gate verdict:
+
+      - decision: PASS
+
+      - rationale: new features documented, stale references removed, examples accurate
+      against implementation
+
+      - required follow-ups: none'
   - id: post.doc_sync.fix_batch
     name: Fix doc-sync gate blockers
     status: done
