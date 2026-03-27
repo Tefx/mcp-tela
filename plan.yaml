@@ -35290,7 +35290,7 @@ phases:
       \ implementation-backed and test-backed evidence."
   - id: agent_iface.surface_taxonomy.remediate_tela_yaml_example_taxonomy_wording
     name: Scope-fix tela.yaml.example taxonomy wording
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       Scoped remediation: update `tela.yaml.example` so its `tela_admin` intro-surface
@@ -35328,6 +35328,29 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T08:41:25.350534+00:00'
+    done_at: '2026-03-27T08:42:33.676368+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): `0bd1b2f`
+
+      - Files changed: `tela.yaml.example`
+
+
+      Verification:
+
+      - Diff confirms wording updated to: `tela_admin` grants access to `tela.profiles`
+      MCP resource only; `tela.status`/`tela.connections`/`tela.audit` are operator-only
+      CLI/HTTP surfaces and not MCP built-ins.
+
+
+      Spec link:
+
+      - `docs/AGENT_INTERFACE.md` operator-only surface section
+
+      - `docs/INTERFACES.md` surface matrix (`tela.status`/`tela.connections`/`tela.audit`
+      operator-only)
+
+      '
   - id: agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
     name: Retest tela.yaml.example taxonomy wording consistency
     status: pending
