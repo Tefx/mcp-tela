@@ -33011,7 +33011,7 @@ phases:
       progression were reported.'
   - id: post.deep_review.spec_conformance
     name: Spec conformance audit
-    status: claimed
+    status: done
     description: 'Compare implemented behavior against MCP spec and project docs.
 
 
@@ -33037,6 +33037,12 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T00:44:39.021682+00:00'
+    done_at: '2026-03-27T00:48:01.499287+00:00'
+    evidence: 'Worker reported SUCCESS for spec conformance audit with verification
+      evidence: outputSchema wire naming verified, instructions merge None/False/string
+      semantics verified against docs, and notify_tools_changed behavior verified
+      against MCP notifications/tools/list_changed semantics. Targeted tests reported
+      passing and no spec-code drift detected.'
   - id: post.deep_review.architecture
     name: Architecture and concurrency review
     status: claimed
