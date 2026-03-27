@@ -36395,6 +36395,59 @@ phases:
     depends_on:
     - conn_v2.test.state_contract_tests
     agent: python-executor
+  - id: conn_v2.test.interrupt_diagnostics_tests
+    name: Add hard-interrupt and diagnostics regression tests
+    status: pending
+    description: "step_type: test\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
+      \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
+      \ Schema\n  - architecture basis UX surfaces and connect interrupt contract\n\
+      touch_paths:\n  - tests/shell/test_connect_cmd.py\n  - tests/shell/test_serve_cmd.py\n\
+      \  - tests/shell/test_query_commands_remote_state.py\n  - tests/repro/test_disconnect_cleanup.py\n\
+      harness_refs:\n  - tests/shell/test_connect_cmd.py\n  - tests/shell/test_serve_cmd.py\n\
+      \  - tests/repro/test_disconnect_cleanup.py\nTasks:\n  - Add tests for SIGINT/KeyboardInterrupt\
+      \ during autostart wait and active bridge to prove immediate exit and reliable\
+      \ detach/disconnect cleanup.\n  - Add diagnostics tests for warming, ready,\
+      \ degraded, and config mismatch output across tela connect, tela status, and\
+      \ GET /status-backed query commands.\n  - Add at least one assertion that host-facing\
+      \ output does not recommend timeout-only workaround when lifecycle state explains\
+      \ the condition.\n  - Keep step test-only.\nIntegration steps detected: 1\n\
+      \  - conn_v2.test.interrupt_diagnostics_tests: signal/input path -> CLI/status\
+      \ diagnostics sink (signal: source-sink + multi-module)"
+    verification: '- Interrupt regressions cover both wait-before-attach and attached-bridge
+      cases
+
+      - Diagnostics regressions cover warming/ready/degraded/config-mismatch states
+      across at least two consumer surfaces
+
+      - No implementation logic added'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/shell/test_query_commands_remote_state.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste test runner output>
+
+      ```
+
+
+      **Path exercised**: signal or lifecycle input -> connect/status command -> diagnostics
+      output'
+    depends_on:
+    - conn_v2.test.coldstart_concurrency_tests
+    agent: python-executor
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
   status: locked
