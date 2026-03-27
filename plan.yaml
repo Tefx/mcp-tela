@@ -33614,3 +33614,50 @@ phases:
     depends_on:
     - post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4
     agent: python-senior
+  - id: post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
+    name: 'Loop 4 retest: independent verification of deprecated live-alias accessor
+      handling'
+    status: pending
+    description: "Independent loop 4 retest of the deprecated live-alias accessor\
+      \ blocker family after post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4.\n\
+      \nstep_type: verification\nverification_scope: phase-check\nProtects downstream\
+      \ gate: post.deep_review.gate\nagent_source: default\nprior_loop:\n  - post.deep_review.architecture_retest_runtime_boundary_policy_loop3\n\
+      blocker_family: deprecated-live-alias-accessors\nloop_count: 4\n\nAs an INDEPENDENT\
+      \ REVIEWER (software-architect), validate from a fresh perspective that deprecated\
+      \ get_runtime() and get_upstream_server() no longer expose live runtime-owned\
+      \ aliases while preserving authorized test/setup needs.\n\nFocus:\n- verify\
+      \ deprecated get_runtime no longer returns a live mutable runtime alias\n- verify\
+      \ deprecated get_upstream_server no longer returns a live FastMCP alias\n- verify\
+      \ the investigation-approved compatibility/test path is the only surviving authorized\
+      \ access path\n- verify sibling deprecated/runtime helper surfaces do not preserve\
+      \ equivalent blocker-class live alias leaks that would fail post.deep_review.gate\n\
+      \nThis step is successful if it either confirms closure or reports any remaining\
+      \ blocker-class accessor leak explicitly."
+    verification: '- No deprecated accessor returns a live runtime-owned alias contrary
+      to the investigation decision
+
+      - Authorized test/setup handling remains available without a production live-alias
+      escape hatch
+
+      - Any surviving equivalent accessor leak is explicitly reported with the remaining
+      path
+
+      - Result is sufficient to protect post.deep_review.gate from the deprecated
+      live-alias blocker family'
+    evidence_template: '## Loop 4 Retest Report
+
+
+      - commands / review actions: <paste>
+
+      - deprecated get_runtime result: <pass/fail + path>
+
+      - deprecated get_upstream_server result: <pass/fail + path>
+
+      - authorized compatibility/test path check: <pass/fail>
+
+      - sibling leak scan: <results>
+
+      - verdict: PASS | ISSUES_FOUND'
+    depends_on:
+    - post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4
+    agent: software-architect
