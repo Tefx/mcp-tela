@@ -35290,7 +35290,7 @@ phases:
       \ implementation-backed and test-backed evidence."
   - id: agent_iface.surface_taxonomy.remediate_tela_yaml_example_taxonomy_wording
     name: Scope-fix tela.yaml.example taxonomy wording
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       Scoped remediation: update `tela.yaml.example` so its `tela_admin` intro-surface
@@ -35326,6 +35326,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T08:41:25.350534+00:00'
   - id: agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
     name: Retest tela.yaml.example taxonomy wording consistency
     status: pending
