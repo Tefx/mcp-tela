@@ -35647,6 +35647,112 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.retest_operator_surface_loop3
     agent: python-senior
+  - id: agent_iface.surface_taxonomy.retest_operator_surface_loop4
+    name: Retest root-cause operator-surface taxonomy remediation (loop 4)
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (blind-tester), validate the root-cause operator-surface
+      taxonomy remediation from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: runtime-backed taxonomy output, AGENT_INTERFACE, and INTERFACES
+      all present the same operator naming and preserve the `tela.profiles` MCP resource
+      distinction
+
+      - Edge cases: operator summaries include `tela profiles` and no operator-only
+      row reverts to dotted MCP-style labels
+
+      - Error scenarios: reintroduced dotted operator misuse or stale self-referential
+      test literals cause failures
+
+
+      Document ALL findings. A test that discovers issues is a SUCCESS.
+
+      A test that finds nothing must justify the coverage achieved.
+
+
+      Independence Level: L1
+
+      '
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Probe runtime output and docs consistency together: the confirmed runtime-backed
+      taxonomy output, docs/AGENT_INTERFACE.md operator table, and docs/INTERFACES.md
+      operator summary must agree on operator naming and resource/tool separation
+
+      - Explicitly verify `tela profiles` appears in operator summaries and that `tela.profiles`
+      remains reserved for the MCP resource surface
+
+      - Confirm tests/shell/test_surface_contract.py now fails when dotted operator-only
+      labels are reintroduced and no longer passes on self-referential markdown/evidence
+      constants
+
+      - Report exact runtime command/test path used as proof, plus whether docs and
+      tests would catch regression independently'
+    evidence_template: '## Loop 4 Retest Report
+
+
+      **Tester**: blind-tester
+
+      **Scope**: operator-surface runtime/docs/test consistency
+
+      **Independence Level**: L1
+
+
+      ### Runtime-backed probe
+
+      - Command or test exercising taxonomy output:
+
+      ```
+
+      <paste exact command/test>
+
+      ```
+
+      - Actual output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ### Docs consistency check
+
+      - AGENT_INTERFACE operator rows: <consistent/inconsistent>
+
+      - INTERFACES operator summary includes `tela profiles`: <yes/no>
+
+      - `tela.profiles` distinguished as MCP resource: <yes/no>
+
+
+      ### Regression sensitivity
+
+      - Reintroduced dotted operator misuse test result: <fails as expected / did
+      not fail>
+
+      - Self-referential assertion residue: <none / details>
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.investigate_operator_surface_loop4
+    agent: blind-tester
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
