@@ -35557,7 +35557,7 @@ phases:
       \ => `44 passed, 0 failed`.\n"
   - id: agent_iface.surface_taxonomy.investigate_operator_surface_loop4
     name: Investigate and fix root-cause operator-surface taxonomy drift (loop 4)
-    status: done
+    status: rejected
     description: "step_type: implementation\nInvestigation-style remediation for repeated\
       \ operator-surface taxonomy blocker family after three consecutive failures.\n\
       \nsymbolic_testing: false\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_operator_surface_loop3\n\
@@ -35657,19 +35657,10 @@ phases:
     claimed_by: python-senior
     claimed_at: '2026-03-27T10:01:46.823328+00:00'
     done_at: '2026-03-27T10:04:17.766977+00:00'
-    evidence: "Artifact:\n- Commit hash(es): `7c2fd6988cbaff9263dc0e3bb862f60009d35d02`\n\
-      - Files changed:\n  - `evidence/surface_taxonomy_verification.md`\n\nVerification:\n\
-      - `uv run pytest -v tests/shell/test_surface_contract.py tests/shell/test_merge_instructions.py\
-      \ tests/shell/test_gateway.py::test_fastmcp_profiles_resource_registered` ->\
-      \ `45 passed`.\n- `uv run python -c \"from tela.shell.surface_instructions import\
-      \ get_gateway_surface_instructions; r=get_gateway_surface_instructions(); print(r.value.splitlines()[0]\
-      \ if r.value else '')\"` -> runtime heading sampled.\n- Evidence artifact updated\
-      \ with current heading wording and current test totals (`30/30` surface contract\
-      \ and `45` overall).\n\nNotes:\n- Scope-local stale evidence drift resolved;\
-      \ no taxonomy logic changes."
-    rejection_reason: Final gate found stale phase-owned evidence/surface_taxonomy_verification.md
-      (obsolete test counts/runtime wording). Remediation incomplete; refresh evidence
-      artifact required.
+    rejection_reason: 'Gate found remaining phase-scope gaps: README operator summary
+      missing tela profiles, stale claims in evidence/surface_taxonomy_verification.md,
+      and repro loop4 test uses meta-string assertions instead of direct behavioral
+      checks.'
     rejection_history:
     - reason: Gate found remaining phase-owned summary mismatch in docs/USAGE.md using
         dotted operator names; remediation incomplete and must be amended.
@@ -35678,6 +35669,11 @@ phases:
         (obsolete test counts/runtime wording). Remediation incomplete; refresh evidence
         artifact required.
       timestamp: '2026-03-27T10:01:13.512433+00:00'
+    - reason: 'Gate found remaining phase-scope gaps: README operator summary missing
+        tela profiles, stale claims in evidence/surface_taxonomy_verification.md,
+        and repro loop4 test uses meta-string assertions instead of direct behavioral
+        checks.'
+      timestamp: '2026-03-27T10:07:34.277813+00:00'
   - id: agent_iface.surface_taxonomy.retest_operator_surface_loop4
     name: Retest root-cause operator-surface taxonomy remediation (loop 4)
     status: done
