@@ -38268,6 +38268,25 @@ phases:
       - At least one example shows two same-raw-name downstream tools exposed with
       different prefixes.'
     agent: doc-reviewer
+  - id: tool_prefix.doc_sync.gate
+    name: Gate tool-prefix doc sync
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: default
+
+      review_depth: QUICK
+
+      Verification scope: phase-check protecting final deep review.
+
+      Gate review for the tool-prefix documentation sync phase.'
+    verification: '- Docs reflect implemented tool_prefix semantics and examples.
+
+      - No doc/spec contradiction remains for raw-name overrides, exposed-name conflicts,
+      or reserved prefix handling.'
+    depends_on:
+    - tool_prefix.doc_sync.update_docs
+    agent: gate-reviewer
 - id: tool_prefix.deep_review
   name: Tool Prefix Deep Review
   status: locked
