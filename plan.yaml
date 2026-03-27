@@ -36192,3 +36192,10 @@ phases:
     are controlled by one bridge module and validated against concurrent attach behavior.
   depends_on:
   - conn_v2.convergence
+- id: conn_v2.ux
+  name: Host-Facing UX and Diagnostics
+  status: locked
+  gate: CLI startup/shutdown messaging and status diagnostics match the new runtime
+    contract across connect, serve, status, and HTTP surfaces.
+  depends_on:
+  - conn_v2.bridge
