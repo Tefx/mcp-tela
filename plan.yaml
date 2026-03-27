@@ -33470,3 +33470,34 @@ phases:
     depends_on:
     - post.deep_review.architecture_retest_runtime_locking_loop2
     agent: python-senior
+  - id: post.deep_review.architecture_retest_runtime_boundary_policy_loop3
+    name: 'Loop 3 retest: independent verification of unified runtime/upstream boundary
+      policy'
+    status: pending
+    description: "Independent loop 3 retest of the remaining runtime alias blocker\
+      \ family after post.deep_review.architecture_fix_runtime_boundary_policy_loop3.\n\
+      \nstep_type: verification\nverification_scope: phase-check\nProtects downstream\
+      \ gate: post.deep_review.gate\nagent_source: default\nprior_loop:\n  - post.deep_review.architecture_retest_runtime_locking\n\
+      \  - post.deep_review.architecture_retest_runtime_locking_loop2\n\nAs an INDEPENDENT\
+      \ REVIEWER (software-architect), validate from a fresh perspective that the\
+      \ chosen authoritative boundary policy is applied consistently across get_runtime\
+      \ and get_upstream_server.\n\nFocus:\n- verify get_runtime no longer returns\
+      \ a live mutable runtime alias\n- verify get_upstream_server no longer returns\
+      \ a live runtime-owned FastMCP alias\n- verify both surfaces now follow the\
+      \ same ownership rule and do not diverge by caller path\n- verify sibling runtime/read\
+      \ helper surfaces do not preserve equivalent live alias escape paths that would\
+      \ fail post.deep_review.gate\n\nThis step is successful if it either confirms\
+      \ closure or reports any remaining blocker-class alias/leak path explicitly."
+    verification: '- Concurrency/runtime ownership protection re-verified against
+      loop1 and loop2 findings
+
+      - No live mutable alias remains through get_runtime or get_upstream_server
+
+      - One authoritative boundary policy is observed consistently across both surfaces
+      and any intersecting sibling helpers
+
+      - Any remaining blocker-class leak is explicitly reported with the surviving
+      accessor path'
+    depends_on:
+    - post.deep_review.architecture_fix_runtime_boundary_policy_loop3
+    agent: software-architect
