@@ -35119,7 +35119,7 @@ phases:
       \ future promotion consideration."
   - id: agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     name: Retest remediated surface taxonomy before gate
-    status: pending
+    status: claimed
     description: Re-run focused review after the batched remediation to confirm the
       four blocker families are fully cleared and that the repo now presents one internally
       consistent taxonomy across docs, evidence, and implementation-backed claims.
@@ -35140,6 +35140,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-27T08:06:54.768903+00:00'
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
