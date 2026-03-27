@@ -35092,6 +35092,29 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.verify_surface_conformance
     agent: doc-reviewer
+  - id: agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
+    name: Retest remediated surface taxonomy before gate
+    status: pending
+    description: Re-run focused review after the batched remediation to confirm the
+      four blocker families are fully cleared and that the repo now presents one internally
+      consistent taxonomy across docs, evidence, and implementation-backed claims.
+    verification: '- Recheck that no reviewed artifact claims unsupported built-in
+      MCP introspection tools
+
+      - Recheck that `tela_admin` wording is consistent with the confirmed contract
+      in all remediated artifacts
+
+      - Recheck that `tela.profiles` is consistently classified at the resource/tool
+      boundary in docs and evidence
+
+      - Recheck that instruction-conflict semantics are limited to implementation-backed
+      ordering/append behavior and do not claim an unimplemented conflict resolver
+
+      - Produce explicit pass/fail evidence for each blocker family and state readiness
+      for `agent_iface.surface_taxonomy.gate`'
+    depends_on:
+    - agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
+    agent: blind-tester
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
