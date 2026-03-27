@@ -34495,7 +34495,7 @@ phases:
       \ re-approves it."
   - id: agent_iface.surface_taxonomy.decide_taxonomy
     name: Decide intended product surface taxonomy
-    status: pending
+    status: claimed
     description: 'Planning/spec decision step. Verification scope: phase-check protecting
       agent_iface.surface_taxonomy.gate. Resolve the intended product taxonomy after
       the audit and before contract, test, runtime, or doc work proceeds. Decision
@@ -34534,6 +34534,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.audit_actual_surface
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-27T07:18:24.780914+00:00'
   - id: agent_iface.surface_taxonomy.define_confirmed_contract
     name: Define confirmed agent-facing surface contract
     status: pending
