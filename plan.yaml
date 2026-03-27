@@ -37506,6 +37506,33 @@ phases:
     depends_on:
     - conn_v2.validation.freeze_full
     agent: integration-verifier
+  - id: conn_v2.validation.spec_conformance
+    name: Verify implemented runtime behavior against authoritative specs
+    status: pending
+    description: "step_type: verification\nverification_scope: phase-check\nSpec conformance\
+      \ verification: compare implemented behavior against authoritative spec requirements,\
+      \ field by field.\nThis is NOT \"do tests pass\" — it is \"does the implementation\
+      \ match what the spec says.\"\nREQUIRED CHECKS:\n  - lockfile fields and semantics\
+      \ match the lockfile contract after the discovery/readiness split\n  - GET /status\
+      \ fields, phase values, config_path, startup_generation, and per-server state\
+      \ match the authoritative runtime contract\n  - CLI behavior for tela connect\
+      \ and tela serve matches documented connect/autostart and explicit-server semantics\n\
+      \  - diagnostics and degraded reporting match the clarified contract\nFor EACH\
+      \ requirement checked, cite the spec section and implementation location."
+    verification: '- Evidence table maps each checked requirement to file:line and
+      match yes/no
+
+      - Any spec drift is reported before doc-sync'
+    evidence_template: '## Spec Conformance Report
+
+      | Spec Section | Requirement | Implementation File:Line | Match? | Notes |
+
+      |---|---|---|---|---|
+
+      | <section> | <requirement> | <file:line> | yes/no | <detail> |'
+    depends_on:
+    - conn_v2.validation.freeze_full
+    agent: doc-reviewer
 - id: conn_v2.doc_sync
   name: Documentation Sync for Connect/Serve Runtime
   status: locked
