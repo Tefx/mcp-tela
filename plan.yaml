@@ -35557,7 +35557,7 @@ phases:
       \ => `44 passed, 0 failed`.\n"
   - id: agent_iface.surface_taxonomy.investigate_operator_surface_loop4
     name: Investigate and fix root-cause operator-surface taxonomy drift (loop 4)
-    status: claimed
+    status: done
     description: "step_type: implementation\nInvestigation-style remediation for repeated\
       \ operator-surface taxonomy blocker family after three consecutive failures.\n\
       \nsymbolic_testing: false\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_operator_surface_loop3\n\
@@ -35656,6 +35656,65 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T09:36:30.001482+00:00'
+    done_at: '2026-03-27T09:40:25.335693+00:00'
+    evidence: '## Loop 4 Root-Cause Remediation Evidence
+
+
+      **Files updated**:
+
+      - `docs/AGENT_INTERFACE.md`
+
+      - `docs/INTERFACES.md`
+
+      - `tests/shell/test_surface_contract.py`
+
+
+      **Root cause closed**:
+
+      - Operator-only surfaces were previously expressed with dotted MCP-style names
+      in docs and supported by self-referential test literals.
+
+      - Remediation anchored assertions to runtime-backed taxonomy output and aligned
+      doc tables to operator command naming.
+
+
+      **Docs naming corrections**:
+
+      - AGENT_INTERFACE operator rows now use: `tela profiles`, `tela status`, `tela
+      connections`, `tela audit`.
+
+      - INTERFACES operator summary now includes: `tela profiles` and uses consistent
+      operator naming.
+
+      - MCP resource distinction preserved: `tela.profiles` remains the resource name.
+
+
+      **Assertion basis change**:
+
+      - Added runtime/doc parsing helpers and cross-artifact assertions in `tests/shell/test_surface_contract.py`.
+
+      - Removed constant-only/self-referential expectations and replaced with runtime
+      summary + parsed doc table checks.
+
+
+      **Regression proof**:
+
+      - If dotted operator misuse reappears, non-dotted membership and dotted-exclusion
+      assertions fail in runtime/doc consistency tests.
+
+      - If docs/runtime diverge, cross-artifact alignment assertions fail.
+
+
+      **Verification**:
+
+      - `uv run pytest -v tests/shell/test_surface_contract.py` -> `30 passed`.
+
+      - changed-file static guard passed with 0 errors.
+
+
+      **Commit**:
+
+      - `21de0c0`'
   - id: agent_iface.surface_taxonomy.retest_operator_surface_loop4
     name: Retest root-cause operator-surface taxonomy remediation (loop 4)
     status: pending
