@@ -33344,3 +33344,53 @@ phases:
     depends_on:
     - post.deep_review.architecture_retest_runtime_locking
     agent: python-senior
+  - id: post.deep_review.architecture_retest_runtime_locking_loop2
+    name: 'Loop 2 retest: independent architecture verification of hardened runtime
+      boundary alias safety'
+    status: pending
+    description: 'Independent loop 2 retest of the remaining concurrency blockers
+      after post.deep_review.architecture_fix_runtime_locking_loop2.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      Protects downstream gate: post.deep_review.gate
+
+
+      As an INDEPENDENT REVIEWER (software-architect), validate from a fresh perspective
+      that runtime boundary hardening closed the blocker family.
+
+
+      Focus:
+
+      - verify get_runtime no longer exposes a mutable runtime object or equivalent
+      live alias
+
+      - verify snapshot/status helpers return immutable or detached values, including
+      nested members
+
+      - verify no helper/accessor path leaks runtime-owned mutable objects through
+      shallow copies, views, or status wrappers
+
+      - verify caller-facing runtime reads now respect the authoritative boundary
+      rule consistently
+
+
+      This step is successful if it either confirms closure or reports any remaining
+      blocker-class alias/leak path explicitly.'
+    verification: '- Concurrency protection re-verified against the original and loop2
+      findings
+
+      - No mutable runtime escape path remains through get_runtime or equivalent accessor
+      surfaces
+
+      - Snapshot/status helper returns are verified alias-safe, including nested mutable
+      members
+
+      - Any remaining blocker-class alias or runtime ownership leak is explicitly
+      reported'
+    depends_on:
+    - post.deep_review.architecture_fix_runtime_locking_loop2
+    agent: software-architect
