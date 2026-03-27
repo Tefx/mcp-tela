@@ -34704,7 +34704,7 @@ phases:
       \ -v --tb=short`\n  - result: `26 passed in 3.74s`\n- Commit:\n  - `7be9b95f1360969ef9aed17aac5480fedb76105d`"
   - id: agent_iface.surface_taxonomy.align_runtime_surface
     name: Align runtime surface and instruction emitter to the confirmed taxonomy
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34756,6 +34756,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.add_surface_regressions
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-27T07:31:37.088330+00:00'
   - id: agent_iface.surface_taxonomy.update_agent_interface_doc
     name: Correct AGENT_INTERFACE.md to match the confirmed taxonomy
     status: pending
