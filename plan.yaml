@@ -36148,26 +36148,20 @@ phases:
       \ accepted phase scope."
 - id: conn_v2.contract
   name: Connect/Serve Runtime Refactor Contracts
-  status: locked
+  status: pending
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
   context: 'Authoritative architecture basis already approved by user: A+B+C+D. This
     phase converts that basis into executable contract boundaries without re-deriving
-    architecture, and remains frozen behind meta.review completion, the latest completed
-    runtime-surface review, and the reconnect preflight seam. Contracts in this phase
-    must define source-of-truth boundaries for lockfile, discovery, lifecycle status/readiness,
-    and downstream convergence. They must also separate event-entry adapters from
-    a future single-server convergence kernel. Explicit exclusions: notify/audit policy
-    does not belong in the shared convergence core; connect_all orchestration does
-    not belong in the single-server kernel; generic helper extraction remains deferred.'
+    architecture, and remains frozen behind meta.review completion plus the latest
+    completed runtime-surface review.'
   depends_on:
   - meta.review
   - agent_iface.final_review
-  - conn_v2.preflight_reconnect
   steps:
   - id: conn_v2.contract.lockfile_status_contract
-    name: Define lockfile, discovery, status, readiness, and convergence contracts
+    name: Codify lockfile, status, and lifecycle contracts
     status: pending
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
@@ -36181,19 +36175,17 @@ phases:
       \ identity + bind target + token + config ownership published\n  - lockfile\
       \ MUST NOT mean downstream ready or final tool registry\n  - /status SHOULD\
       \ expose phase, config_path, startup_generation, per-server state, tool digest/count\n\
-      \  - convergence state is distinct from lifecycle readiness and from lockfile\
-      \ discovery\nstate_strata:\n  - Process Discovery State\n  - Gateway Lifecycle\
-      \ State\n  - Downstream Runtime State\n  - Upstream Session State\neffective_truth_owner:\n\
+      state_strata:\n  - Process Discovery State\n  - Gateway Lifecycle State\n  -\
+      \ Downstream Runtime State\n  - Upstream Session State\neffective_truth_owner:\n\
       \  - lockfile -> active gateway endpoint\n  - gateway_runtime -> lifecycle phase\
-      \ and startup_generation\n  - convergence module -> per-server convergence summaries\
-      \ and registry digest/count\nconsumer_surfaces:\n  - tela connect\n  - tela\
-      \ serve\n  - tela status\n  - GET /health\n  - GET /status\ntouch_paths:\n \
-      \ - src/tela/core/models.py\n  - src/tela/shell/lockfile.py\n  - src/tela/shell/gateway_runtime.py\n\
-      \  - src/tela/shell/http_routes.py\n  - src/tela/commands/remote_state.py\n\
-      harness_refs:\n  - tests/core/test_models.py\n  - tests/shell/test_lockfile.py\n\
-      \  - tests/shell/test_http_routes.py\n  - tests/shell/test_gateway.py\nauthoritative_interface:\n\
-      \  - tela connect [--config path] [--default-profile name] [--server host:port]\
-      \ [--token tok]\n  - tela serve [--config path] [--port N] [--host addr] [--default-profile\
+      \ and startup_generation\nconsumer_surfaces:\n  - tela connect\n  - tela serve\n\
+      \  - tela status\n  - GET /health\n  - GET /status\ntouch_paths:\n  - src/tela/core/models.py\n\
+      \  - src/tela/shell/lockfile.py\n  - src/tela/shell/gateway_runtime.py\n  -\
+      \ src/tela/shell/http_routes.py\n  - src/tela/commands/remote_state.py\nharness_refs:\n\
+      \  - tests/core/test_models.py\n  - tests/shell/test_lockfile.py\n  - tests/shell/test_http_routes.py\n\
+      \  - tests/shell/test_gateway.py\nauthoritative_interface:\n  - tela connect\
+      \ [--config path] [--default-profile name] [--server host:port] [--token tok]\n\
+      \  - tela serve [--config path] [--port N] [--host addr] [--default-profile\
       \ name] [--idle-timeout sec] [--token tok]\nTasks:\n  - Define acceptance-only\
       \ contracts for lockfile payload, lifecycle phases (starting|warming|ready|degraded),\
       \ startup_generation semantics, and status snapshot ownership.\n  - Explicitly\
@@ -36201,10 +36193,8 @@ phases:
       \ discovery as downstream readiness.\n  - Clarify acceptable-phase policy as\
       \ a contract artifact before implementation; if attach readiness cannot be made\
       \ explicit from current sources, produce a narrow contract clarification output\
-      \ rather than guessing in implementation.\n  - Define source-of-truth boundaries\
-      \ for discovery, readiness, lifecycle snapshot ownership, and downstream convergence\
-      \ summaries.\n  - Non-goals: no runtime logic, no transport startup, no completed\
-      \ handlers."
+      \ rather than guessing in implementation.\n  - Non-goals: no runtime logic,\
+      \ no transport startup, no completed handlers."
     verification: '- Contract outputs pin lockfile vs /status semantics and lifecycle
       fields without implementation logic
 
@@ -36212,13 +36202,10 @@ phases:
       surfaces
 
       - Acceptable-phase policy is defined or escalated as a bounded contract clarification,
-      not left implicit
-
-      - Source-of-truth boundaries for lockfile, readiness, lifecycle snapshots, and
-      convergence summaries are explicit and non-overlapping'
+      not left implicit'
     agent: software-architect
   - id: conn_v2.contract.startup_convergence_contract
-    name: Define startup coordination and single-server convergence boundary
+    name: Codify startup coordination and downstream convergence contracts
     status: pending
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - interfaces\n  - stubs\nagent_source: default\nspec_refs:\n\
@@ -36233,10 +36220,7 @@ phases:
       \ Downstream Runtime State\ncross_cutting_policy:\n  - autostart leader/follower\
       \ semantics are single-owner\n  - downstream convergence is backgrounded after\
       \ endpoint publication\n  - re-enumeration/hot reload must preserve registry\
-      \ truth ownership\n  - event-entry adapters are distinct from single-server\
-      \ convergence logic\n  - notify/audit policy remain outside the shared convergence\
-      \ core\n  - connect_all orchestration remains outside the single-server convergence\
-      \ kernel\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
+      \ truth ownership\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
       \  - src/tela/shell/gateway.py\n  - src/tela/shell/downstream.py\n  - src/tela/shell/downstream_clients.py\n\
       \  - src/tela/shell/reload.py\n  - src/tela/shell/lockfile.py\nharness_refs:\n\
       \  - tests/shell/test_connect_cmd.py\n  - tests/shell/test_downstream.py\n \
@@ -36249,19 +36233,15 @@ phases:
       \ summaries.\n  - Define config_path ownership and mismatch diagnostics as a\
       \ contract output so attach-to-wrong-gateway behavior is explicit before implementation.\n\
       \  - State whether startup_generation changes on restart and on hot reload,\
-      \ and which surfaces consume it.\n  - Define event-entry vs single-server convergence-kernel\
-      \ boundaries so later implementation does not collapse them into a single entrypoint.\n\
-      \  - Non-goals: no process spawning code, no re-enumeration implementation."
+      \ and which surfaces consume it.\n  - Non-goals: no process spawning code, no\
+      \ re-enumeration implementation."
     verification: '- Contract outputs make single-instance coordination, background
       convergence, config ownership, and startup_generation semantics explicit
 
       - No implementation logic appears in the contract artifacts
 
       - Shared ownership boundaries for lockfile, runtime memory, and tool registry
-      are unambiguous
-
-      - Contract explicitly excludes notify/audit policy and connect_all orchestration
-      from the shared single-server convergence core'
+      are unambiguous'
     depends_on:
     - conn_v2.contract.lockfile_status_contract
     agent: software-architect
@@ -36701,7 +36681,7 @@ phases:
   - conn_v2.startup_coord
   steps:
   - id: conn_v2.lifecycle.impl_module
-    name: Implement lifecycle-backed readiness snapshot
+    name: Implement lifecycle status module and snapshot ownership
     status: pending
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  - docs/DESIGN.md#Runtime\
@@ -36728,8 +36708,7 @@ phases:
       \  - Introduce the lifecycle status module that owns phase transitions and detached\
       \ status snapshots.\n  - Separate discovery truth from readiness truth in runtime\
       \ memory and exported models.\n  - Keep status schema authoritative for all\
-      \ client/query surfaces.\n  - Ensure readiness is derived from lifecycle/status\
-      \ snapshots rather than lockfile discovery artifacts."
+      \ client/query surfaces."
     verification: '- Main path: targeted tests prove lifecycle transitions and status
       snapshot fields
 
@@ -36737,9 +36716,7 @@ phases:
       without falsifying readiness
 
       - Proof: status readers consume lifecycle snapshots instead of re-deriving state
-      locally
-
-      - Connect/query consumers do not infer readiness directly from lockfile discovery'
+      locally'
     agent: python-senior
   - id: conn_v2.lifecycle.integrate_status_consumers
     name: Integrate lifecycle snapshots into connect, status, and HTTP surfaces
@@ -36861,18 +36838,11 @@ phases:
   status: locked
   gate: Gateway startup reaches discoverable lifecycle without serial downstream blocking,
     while convergence/re-enumeration state remains visible and consistent.
-  context: 'This phase implements background downstream convergence on top of the
-    preflight reconnect seam and the lifecycle split. Reload/reconnect are event-entry
-    adapters; the convergence core should focus on single-server resolve/register/conflict/rollback
-    behavior and consume captured enumeration when available. Status surfaces expose
-    already-converged results rather than re-deriving them. Explicit exclusions: folding
-    connect_all into the single-server kernel, moving notify/audit policy into the
-    kernel, and unrelated helper extractions.'
   depends_on:
   - conn_v2.lifecycle
   steps:
   - id: conn_v2.convergence.impl_module
-    name: Implement single-server convergence kernel
+    name: Implement background downstream convergence module
     status: pending
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/INTERFACES.md#7.2.1\
@@ -36897,24 +36867,18 @@ phases:
       \ claims final tool state\n  - backward-compatible legacy behavior: downstream\
       \ calls still use real connected clients, not placeholder registry entries\n\
       Out-of-scope guardrail:\n  - no connect signal handling changes\n  - no host-facing\
-      \ message copy changes\n  - no folding connect_all into the single-server kernel\n\
-      \  - no notify/audit policy absorption into the kernel\nTasks:\n  - Move downstream\
-      \ connect/enumerate/retry into the dedicated convergence module.\n  - Implement\
-      \ a single-server convergence kernel that handles resolve/register/conflict/rollback\
-      \ while consuming captured enumeration when already available from reload/reconnect\
-      \ entry adapters.\n  - Publish per-server state summaries and tool registry\
-      \ digest/count updates into lifecycle status while startup remains discoverable.\n\
-      \  - Keep registry ownership centralized and ready for hot reload / re-enumeration."
+      \ message copy changes\nTasks:\n  - Move downstream connect/enumerate/retry\
+      \ into the dedicated convergence module.\n  - Publish per-server state summaries\
+      \ and tool registry digest/count updates into lifecycle status while startup\
+      \ remains discoverable.\n  - Keep registry ownership centralized and ready for\
+      \ hot reload / re-enumeration."
     verification: '- Main path: targeted tests prove background convergence updates
       runtime state and tool registry
 
       - Failure path: regressions cover per-server error, retry, and degraded lifecycle
       publication
 
-      - Proof: startup no longer blocks on full downstream readiness
-
-      - Reconnect/reload paths avoid duplicate enumeration when fresh raw_tools are
-      already captured upstream'
+      - Proof: startup no longer blocks on full downstream readiness'
     agent: python-senior
   - id: conn_v2.convergence.integrate_reload_and_status
     name: Integrate convergence state with reload, status, and registry consumers
@@ -37034,11 +36998,6 @@ phases:
   status: locked
   gate: tela connect attach/detach loop, signal handling, and hard-interrupt shutdown
     are controlled by one bridge module and validated against concurrent attach behavior.
-  context: Bridge work remains focused on attach/detach control, signal handling,
-    and hard-interrupt behavior. This phase must stay decoupled from shell convergence
-    refactors and command-layer HTTP/helper cleanup. Bridge should consume stable
-    lifecycle/convergence interfaces rather than pulling their internals into bridge
-    control.
   depends_on:
   - conn_v2.convergence
   steps:
@@ -38513,7 +38472,7 @@ phases:
     - tool_prefix.deep_review.black_box
     agent: gate-reviewer
 - id: conn_v2.preflight_reconnect
-  name: Preflight reconnect enumeration seam
+  name: Reconnect Enumeration Correctness Fix
   status: pending
   gate: Reconnect path reuses captured enumeration on reconnect, avoids duplicate
     list_tools calls, and preserves registry/status correctness before conn_v2 contracts
@@ -38521,52 +38480,3 @@ phases:
   depends_on:
   - meta.review
   - agent_iface.final_review
-  steps:
-  - id: conn_v2.preflight_reconnect.test_no_duplicate_enumeration
-    name: Add failing proof for reconnect duplicate enumeration
-    status: pending
-    description: Add a focused regression test or equivalent proof that exposes duplicate
-      enumeration during a single reconnect/reload flow for one server. The goal is
-      to lock down one reconnect event => one enumeration seam before broader conn_v2
-      work proceeds.
-    verification: New focused regression test or equivalent proof demonstrates the
-      old duplicate-enumeration behavior and can distinguish >1 enumeration from the
-      fixed value of exactly 1. Evidence records command and observed result.
-    agent: python-executor
-  - id: conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
-    name: Reuse captured enumeration in reconnect path
-    status: pending
-    description: 'Fix reconnect/reload correctness by reusing the enumeration already
-      captured at the event entry seam instead of re-enumerating the same server downstream.
-      Scope is limited to this correctness fix. Non-goals: no generic apply_server_tool_update
-      helper, no connect_all convergence merge, no transport/HTTP/runtime helper extraction.'
-    verification: Focused regression proof turns green. Code path shows captured enumeration
-      is forwarded/reused rather than recomputed for the same reconnect event. Evidence
-      includes test/guard output.
-    depends_on:
-    - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
-    agent: python-executor
-  - id: conn_v2.preflight_reconnect.seam_proof
-    name: Prove reconnect seam before convergence refactor
-    status: pending
-    description: Produce seam-level evidence that a stable captured-enumeration boundary
-      now exists for later conn_v2.convergence work. Entry adapters may capture and
-      forward raw tools, while later convergence logic should not repeat discovery
-      enumeration for the same reconnect event.
-    verification: Evidence shows reconnect entry exposes a stable captured-enumeration
-      seam usable by later convergence work, and status/reporting consumers do not
-      need to trigger a second enumeration to reflect the reconnect result.
-    depends_on:
-    - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
-    agent: integration-verifier
-  - id: conn_v2.preflight_reconnect.gate
-    name: Gate preflight reconnect seam
-    status: pending
-    description: Gate review before conn_v2.contract begins. Confirm duplicate enumeration
-      is fixed, regression coverage exists, and this preflight phase did not absorb
-      deferred generic refactors.
-    verification: Gate evidence summarizes prior steps, confirms duplicate enumeration
-      removal, and confirms deferred items remain out of scope.
-    depends_on:
-    - conn_v2.preflight_reconnect.seam_proof
-    agent: gate-reviewer
