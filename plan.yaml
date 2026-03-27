@@ -37026,14 +37026,30 @@ phases:
       \ tool digest/count evolution\n  - a real attach path works once acceptable\
       \ phase is reached even if convergence continues in background\n  - failure\
       \ path shows degraded state for downstream errors rather than hanging startup\n\
-      REALISM CHECK:\n  - Provide at least one seam-level real path proof; mock-heavy\
-      \ unit tests alone are insufficient."
+      Convergence truth preservation:\n  - reconnect with a fresh raw_tools payload\
+      \ MUST reuse the already-captured enumeration or result surface from the convergence\
+      \ kernel rather than re-enumerating readiness from local bridge state\n  - status\
+      \ and convergence truth MUST remain consistent across reconnect, status reads,\
+      \ and attach flow; reconnect must consume the same authoritative convergence/status\
+      \ result\n  - reconnect MUST NOT trigger a second readiness re-derivation path\
+      \ once convergence state has been resolved and published\nREALISM CHECK:\n \
+      \ - Provide at least one seam-level real path proof; mock-heavy unit tests alone\
+      \ are insufficient."
     verification: '- Real-path evidence shows startup reaches discoverable warming
       state ahead of full convergence
 
       - Failure-path evidence shows degraded reporting without false-ready semantics
 
-      - Remaining mocks, if any, are justified'
+      - Remaining mocks, if any, are justified
+
+      - Reconnect evidence shows a fresh raw_tools attach reuses previously captured
+      enumeration/tool digest state rather than recomputing readiness locally
+
+      - Status and convergence evidence show the same truth before and after reconnect,
+      with no split between /status reporting and attach behavior
+
+      - Proof shows reconnect does not invoke a second readiness derivation path after
+      convergence publication'
     evidence_template: '## Seam-Level Integration Evidence
 
 
