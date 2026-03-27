@@ -36448,6 +36448,25 @@ phases:
     depends_on:
     - conn_v2.test.coldstart_concurrency_tests
     agent: python-executor
+  - id: conn_v2.test.gate
+    name: Gate refactor test boundary
+    status: pending
+    description: "step_type: gate\nGate review: verify the test-first acceptance boundary\
+      \ is executable before runtime implementation.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
+      \  - Tests cover cold start, concurrency, lifecycle truth, and interrupt semantics\
+      \ for runnable surfaces\ncross_cutting_focus:\n  - minimal spec-derived fixtures\
+      \ exist\n  - OpenCode-like cold start is represented\n  - concurrent attach\
+      \ and interrupt paths are represented\n  - diagnostics tests consume one lifecycle\
+      \ fact model"
+    verification: '- Test steps define acceptance for lockfile/status contracts, cold-start
+      concurrency, and interrupt/diagnostics behavior
+
+      - No product implementation leaked into the test phase'
+    depends_on:
+    - conn_v2.test.state_contract_tests
+    - conn_v2.test.coldstart_concurrency_tests
+    - conn_v2.test.interrupt_diagnostics_tests
+    agent: gate-reviewer
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
   status: locked
