@@ -35027,7 +35027,7 @@ phases:
       \ surfaces."
   - id: agent_iface.surface_taxonomy.gate
     name: Gate agent-interface surface taxonomy alignment
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       Gate review: confirm the phase resolved the new agent-interface ambiguity without
@@ -35088,6 +35088,8 @@ phases:
     - agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
     - agent_iface.surface_taxonomy.retest_operator_surface_loop3
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T09:28:39.608196+00:00'
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
     status: done
