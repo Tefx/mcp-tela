@@ -33530,7 +33530,7 @@ phases:
   - id: post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 investigation: decide authoritative handling for deprecated live-alias
       accessors'
-    status: pending
+    status: claimed
     description: "Investigation-style remediation for the repeated blocker family\
       \ around deprecated live-alias accessors.\n\nstep_type: planning\nverification_scope:\
       \ phase-check\nProtects downstream gate: post.deep_review.gate\nagent_source:\
@@ -33581,6 +33581,8 @@ phases:
     depends_on:
     - post.deep_review.architecture_retest_runtime_boundary_policy_loop3
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-27T02:09:51.134949+00:00'
   - id: post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 fix: close deprecated live-alias accessors per investigation decision'
     status: pending
