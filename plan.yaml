@@ -36653,6 +36653,24 @@ phases:
     depends_on:
     - conn_v2.startup_coord.freeze_l2
     agent: blind-tester
+  - id: conn_v2.startup_coord.gate
+    name: Gate startup coordination phase
+    status: pending
+    description: "step_type: gate\nGate review: verify startup coordination and single-instance\
+      \ autostart are correct at the runnable surface.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
+      \  - phase touches startup races, lockfile ownership, and cross-process behavior\n\
+      cross_cutting_focus:\n  - one leader per config\n  - lockfile meaning stays\
+      \ narrow\n  - follower wait path is observable and diagnosable\n  - direct tela\
+      \ serve remains runnable"
+    verification: '- Implementation, integration, and liveness evidence are complete
+
+      - No blocker remains around duplicate serve startup, stale lock adoption, or
+      config ownership confusion'
+    depends_on:
+    - conn_v2.startup_coord.impl_module
+    - conn_v2.startup_coord.integrate_autostart
+    - conn_v2.startup_coord.liveness_probe
+    agent: gate-reviewer
 - id: conn_v2.lifecycle
   name: Lifecycle Status and Discovery/Readiness Split
   status: locked
