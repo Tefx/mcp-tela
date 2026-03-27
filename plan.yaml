@@ -34643,7 +34643,7 @@ phases:
       \  - commit `03fa5454247c6beb70cadc5019276f20d8a6d6ed`"
   - id: agent_iface.surface_taxonomy.add_surface_regressions
     name: Add non-regression checks for the confirmed surface taxonomy
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34679,6 +34679,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.define_confirmed_contract
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-27T07:26:20.371938+00:00'
   - id: agent_iface.surface_taxonomy.align_runtime_surface
     name: Align runtime surface and instruction emitter to the confirmed taxonomy
     status: pending
