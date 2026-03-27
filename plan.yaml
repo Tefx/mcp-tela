@@ -34768,3 +34768,41 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.freeze_for_verification
     agent: blind-tester
+  - id: agent_iface.surface_taxonomy.gate
+    name: Gate agent-interface surface taxonomy alignment
+    status: pending
+    description: 'step_type: gate
+
+      Gate review: confirm the phase resolved the new agent-interface ambiguity without
+      guesswork.
+
+
+      The gate must reject any completion that still assumes `tela.status`, `tela.connections`,
+      or `tela.audit` are built-in MCP tools without proof or implementation, that
+      reuses `tela_admin` without verification/spec adoption, that blurs `tela.profiles`
+      resource reads with tool calls, or that leaves downstream instruction merge
+      ordering/conflict semantics ambiguous across docs/runtime.'
+    verification: '- Verification scope: phase-check protecting final review and plan
+      completion
+
+      - Gate evidence states whether the chosen direction was ''implement missing
+      MCP surfaces'' or ''document CLI/HTTP-only reality'', and cites verification
+      proving the final repo is internally consistent'
+    evidence_template: 'Gate summary:
+
+      - Direction chosen:
+
+      - Verified MCP resources:
+
+      - Verified MCP tools:
+
+      - Verified CLI/HTTP-only surfaces:
+
+      - Remaining rejected assumptions:
+
+      - Go/no-go decision:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.verify_surface_conformance
+    agent: gate-reviewer
