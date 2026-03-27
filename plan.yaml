@@ -32632,7 +32632,7 @@ phases:
     agent: gate-reviewer
   - id: post.doc_sync.fix_batch
     name: Fix doc-sync gate blockers
-    status: pending
+    status: claimed
     description: 'Fix ALL documentation blockers found by the post.doc_sync gate.
 
 
@@ -32702,6 +32702,8 @@ phases:
     depends_on:
     - post.doc_sync.update
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T00:05:30.916874+00:00'
   - id: post.doc_sync.retest
     name: Retest documentation sync after fixes
     status: pending
