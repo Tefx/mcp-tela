@@ -35070,7 +35070,7 @@ phases:
     agent: gate-reviewer
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
-    status: claimed
+    status: done
     description: Apply one coordinated documentation/evidence remediation pass that
       resolves the failed gate findings without introducing a new unsupported product
       surface. The batched fix must, in one family of edits, remove or correct contradictory
@@ -35099,6 +35099,24 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T08:03:35.577513+00:00'
+    done_at: '2026-03-27T08:06:37.253575+00:00'
+    evidence: "Artifact:\n- Commit hash(es): `1f8afd3`\n- Files changed:\n  - `docs/DESIGN.md`\
+      \ (introspection taxonomy and instructions semantics sections)\n  - `evidence/taxonomy_decision.md`\
+      \ (rewritten to reflect confirmed contract)\n\nVerification:\n- `git diff HEAD~1\
+      \ --stat` -> `2 files changed, 56 insertions(+), 37 deletions(-)`\n- Verified\
+      \ updated `docs/DESIGN.md` introspection section reflects MCP resource only\
+      \ for `tela.profiles` and separates operator surfaces.\n- Verified updated `docs/DESIGN.md`\
+      \ instructions section reflects gateway-first append-only semantics without\
+      \ claiming a conflict resolver.\n- Verified updated `evidence/taxonomy_decision.md`\
+      \ aligns with confirmed contract and audit artifacts.\n\nSpec link:\n- `docs/CONFIRMED-SURFACE-CONTRACT.md`\
+      \ (surface matrix and semantics)\n- `evidence/surface_audit_actual_surface.md`\n\
+      - `src/tela/shell/surface_instructions.py`\n- `src/tela/shell/gateway.py` compose\
+      \ order\n\nNotes:\n- `tela.profiles` consistently described as MCP resource\
+      \ (read-only), not tool.\n- `tela.status`/`tela.connections`/`tela.audit` consistently\
+      \ described as operator-only CLI/HTTP surfaces.\n- `tela_admin` wording removed\
+      \ from touched artifacts.\n- Instruction semantics claims now limited to tested\
+      \ append/order behavior.\n- Added `# SPEC QUESTION` in taxonomy evidence for\
+      \ future promotion consideration."
   - id: agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     name: Retest remediated surface taxonomy before gate
     status: pending
