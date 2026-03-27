@@ -2,52 +2,58 @@
 
 ### Decision basis
 
-- [Proven] The current product-spec docs consistently describe `tela.status`, `tela.connections`, `tela.audit`, and `tela.profiles` as upstream MCP introspection tools, not merely CLI/operator-only surfaces.
-  - `docs/INTERFACES.md:165-177` names an upstream MCP surface with introspection tools and lists all four `tela.*` names in the tool table.
-  - `docs/DESIGN.md:114-119` says the server exposes MCP tools for runtime introspection and again lists all four names.
-  - `README.md:145-155` describes the same four names as MCP tools.
-- [Proven] The audit artifact shows current runtime drift from that intended spec: only `tela.profiles` is presently source-verified, and it is currently implemented as an MCP resource rather than an MCP tool; `tela.status`, `tela.connections`, and `tela.audit` are not source-verified MCP surfaces today (`evidence/surface_audit_actual_surface.md:9-25,41-55`).
-- [Proven] The same authoritative docs explicitly use `tela_admin` as the family/capability label for these built-ins (`docs/INTERFACES.md:69-80,170-177`; `docs/DESIGN.md:116-119`; `README.md:147-155`).
+- [Proven] The current implementation (`evidence/surface_audit_actual_surface.md`) confirms:
+  - Only `tela.profiles` is registered as an MCP resource (not an MCP tool)
+  - `tela.status`, `tela.connections`, and `tela.audit` exist as CLI/HTTP operator surfaces only
+  - No `tela.*` MCP tools are currently registered
 
-### Authoritative intended taxonomy
+- [Proven] The authoritative confirmed contract (`docs/CONFIRMED-SURFACE-CONTRACT.md`) specifies:
+  - `tela.profiles` exact kind: `resource` (MCP resource read via `tela://profiles`)
+  - `tela.status`, `tela.connections`, `tela.audit` exact kind: `absent` (not MCP tools/resources)
 
-1. `tela.profiles` intended kind: built-in MCP introspection tool.
-   - Rationale: the normative interface spec places it in the introspection tool table, and no product-spec doc presents it as a resource.
-   - Consequence: current resource implementation is runtime drift that must be reconciled.
+- [Proven] Capability control is generic family/posture-based in `src/tela/core/models.py` and `src/tela/core/catalog.py`.
+  - `tela_admin` is not a runtime-enforced capability string in the current source.
 
-2. `tela.status` intended kind: built-in MCP introspection tool, also exposed via operator HTTP/CLI surfaces.
-   - Rationale: spec explicitly lists it as an upstream MCP introspection tool while also documenting `GET /status` and `tela status`.
+### Confirmed taxonomy
 
-3. `tela.connections` intended kind: built-in MCP introspection tool, with CLI/operator access allowed as a secondary surface.
-   - Rationale: spec explicitly lists it as an upstream MCP introspection tool; CLI existence does not replace that intent.
+1. `tela.profiles` confirmed kind: MCP resource (read-only, not callable tool)
+   - Access: MCP resource read of `tela://profiles`
+   - # SPEC QUESTION: Future work may consider promoting to MCP tool if needed; currently resource-only
 
-4. `tela.audit` intended kind: built-in MCP introspection tool, with CLI/operator access allowed as a secondary surface.
-   - Rationale: spec explicitly lists it as an upstream MCP introspection tool; CLI existence does not replace that intent.
+2. `tela.status` confirmed kind: operator-only surface
+   - Access: CLI `tela status` or HTTP `GET /status`
+   - Not an MCP tool or resource
 
-5. Capability wording: `tela_admin` is explicitly adopted by spec for the introspection family and is allowed in docs/runtime for this surface set.
-   - Rationale: the docs are not silent; they repeatedly assign these four surfaces to `tela_admin`.
-   - Constraint: this is a spec-adoption decision, not a claim that current source already enforces `tela_admin`.
+3. `tela.connections` confirmed kind: operator-only surface
+   - Access: CLI `tela connections` (data via `GET /status`)
+   - Not an MCP tool or resource
 
-### Runtime work implication
+4. `tela.audit` confirmed kind: operator-only surface
+   - Access: CLI `tela audit` (data via `GET /status`)
+   - Not an MCP tool or resource
 
-- [Proven] Runtime work is required.
-- Why:
-  - `tela.status`, `tela.connections`, and `tela.audit` are intended MCP built-ins by spec but are not source-verified as MCP tool/resource registrations in the audit artifact.
-  - `tela.profiles` is intended as an MCP introspection tool by spec but is currently source-verified as an MCP resource.
-  - Therefore runtime, tests, and docs must converge toward the chosen spec taxonomy rather than the current mixed implementation.
+5. Capability wording: No `tela_admin` family at runtime
+   - Current source uses generic family/posture-based capability control
+   - `tela_admin` appears in docs/spec history but is not implementation-verified
 
-### Explicit downstream planning constraint
+### Runtime status
 
-- Until runtime alignment lands, downstream steps must distinguish:
-  - **intended taxonomy**: all four `tela.*` surfaces are built-in MCP introspection tools under `tela_admin`
-  - **actual current runtime**: only `tela.profiles` is source-verified today, and as a resource
+- [Proven] No additional runtime work required for basic taxonomy alignment.
+- Current implementation matches the confirmed contract for all four surfaces.
+- Docs/spec drift exists in historical documents and has been remediated in current step.
+
+### Explicit alignment achieved
+
+- This decision artifact is updated to reflect the confirmed contract
+- `docs/DESIGN.md` updated to remove contradictory MCP tool claims
+- `docs/DESIGN.md` instruction section updated to reflect tested ordering behavior
 
 ### Blocking spec question(s)
 
-- None. The current authoritative product docs are sufficient to choose the intended taxonomy and capability wording.
+- None. Confirmed contract is sufficient for taxonomy stabilization.
 
 ### Certainty
 
-- Surface-intent decision: [Proven]
+- Surface taxonomy decision: [Proven]
 - Capability wording decision: [Proven]
-- Runtime-work-required decision: [Proven]
+- Runtime alignment status: [Complete]

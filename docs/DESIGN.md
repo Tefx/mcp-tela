@@ -113,10 +113,13 @@ There is no separate workflow-policy layer in gateway authorization.
 
 ### Introspection
 
-The server exposes MCP tools for runtime introspection:
-- `tela.status`, `tela.connections`, `tela.audit`, `tela.profiles`
-- Belong to `tela_admin` family, controlled by profiles
-- Also available via HTTP `/status` endpoint for CLI queries
+Built-in MCP surface:
+- `tela.profiles` — exposed as MCP resource (read via `tela://profiles`)
+
+Operator surfaces (CLI/HTTP, not MCP):
+- `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`
+
+These are NOT MCP tools and do not belong to a `tela_admin` capability family.
 
 ## Module Boundaries
 
@@ -225,7 +228,7 @@ The gateway implements MCP `notifications/tools/list_changed` forwarding from do
 
 ## ServerConfig Instructions Field
 
-The `instructions` field in `ServerConfig` controls how downstream server instructions are merged into the upstream server's instructions.
+The `instructions` field in `ServerConfig` controls how downstream server instructions are appended to the upstream server's instructions.
 
 **Three modes:**
 
@@ -234,6 +237,11 @@ The `instructions` field in `ServerConfig` controls how downstream server instru
 | `None` (default) | Passthrough: use downstream server's instructions if available |
 | `False` | Suppress: exclude this server's instructions entirely |
 | `str` | Override: use the provided string instead of downstream instructions |
+
+**Merge semantics:**
+1. Gateway instructions come first (authoritative top-level rules).
+2. Downstream server sections are appended in configured order.
+3. When a downstream section is appended and tools are known, an `Available tools:` list is appended inside that server's section.
 
 **Merged output format:**
 ```markdown
@@ -245,6 +253,11 @@ Available tools:
 - tool_1
 - tool_2
 ```
+
+**Conflict handling:**
+- Downstream instructions are subordinate appendices, not authority over gateway rules.
+- Downstream text may add server-specific guidance but must not override gateway instructions.
+- Handle conflicts by suppressing, providing per-server override, or explicit spec change.
 
 ## Invariants
 
