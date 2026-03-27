@@ -32752,7 +32752,7 @@ phases:
     claimed_at: '2026-03-27T00:15:39.604393+00:00'
   - id: post.doc_sync.fix_batch2
     name: Second documentation sync remediation batch
-    status: claimed
+    status: done
     description: 'Fix remaining documentation blockers from the latest post.doc_sync
       retest.
 
@@ -32811,7 +32811,34 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-27T00:24:47.473820+00:00'
-    done_at: '2026-03-27T00:22:20.576693+00:00'
+    done_at: '2026-03-27T00:27:08.100543+00:00'
+    evidence: 'Artifact:
+
+      - commit: `f082f9807d3658ecf52db6146be38a4190ff9993`
+
+
+      Verification:
+
+      - stale SSE-default phrases removed from targeted docs
+
+      - stale `transport: http` guidance removed where it implied non-default HTTP
+
+      - nested `overrides:` structure present in migration/ADR tool_overrides examples
+
+      - `transport: sse` explicit examples retained where appropriate
+
+
+      Files changed:
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - docs/USAGE.md
+
+      - docs/MIGRATION-003-capability-only-profiles.md
+
+      - docs/ADR-003-gateway-capability-only-profiles.md'
     rejection_reason: Retest2 shows no actual doc corrections landed; reopening fix
       batch for concrete edits
     rejection_history:
