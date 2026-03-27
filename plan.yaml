@@ -36585,6 +36585,74 @@ phases:
     depends_on:
     - conn_v2.startup_coord.integrate_autostart
     agent: software-architect
+  - id: conn_v2.startup_coord.liveness_probe
+    name: Probe single-instance autostart liveness from the real entry point
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
+      \ validate startup coordination from the real tela connect/tela serve entrypoints.\n\
+      Independence Level: L2\nspec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n\
+      \  - docs/USAGE.md#Running tela > tela serve\n  - docs/INTERFACES.md#7.3 Lockfile\
+      \ Contract\nTest for:\n  - entry point starts from tela connect cold start\n\
+      \  - exactly one serve process owns startup for a shared config\n  - follower\
+      \ attach path waits for leader-published discovery state instead of spawning\
+      \ a second server\n  - failure path shows useful diagnostics on config mismatch\
+      \ or stale lock cleanup\nFinding issues is success.\nREALISM CHECK:\n  - Use\
+      \ an actual connect invocation or equivalent full-path harness, not only helper-level\
+      \ unit tests."
+    verification: '- Entry point starts and one connect-triggered gateway becomes
+      discoverable
+
+      - Concurrent second attach does not create a second serve process
+
+      - Actual command/output or full-path harness output is included'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: blind-tester
+
+      **Scope**: startup coordination and single-instance autostart
+
+      **Independence Level**: L2
+
+
+      ### Test Execution
+
+      - Command or harness:
+
+      ```
+
+      <paste exact command or test invocation>
+
+      ```
+
+      - Actual output:
+
+      ```
+
+      <paste stdout/stderr or harness output>
+
+      ```
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+      | blocker | <if any> | <file/entrypoint> | <steps> |
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - conn_v2.startup_coord.freeze_l2
+    agent: blind-tester
 - id: conn_v2.lifecycle
   name: Lifecycle Status and Discovery/Readiness Split
   status: locked
