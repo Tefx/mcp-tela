@@ -33115,18 +33115,19 @@ phases:
 
       - Spec-code drift detected
 
-      - Concurrency safety gaps in session management
+      - Concurrency safety gaps in session management or runtime locking discipline
+      remain after retest
 
       - Black-box tests found observable regressions'
     verification: '- All deep review steps passed or issues resolved
 
-      - No blocking findings remain
+      - No blocking findings remain, including runtime locking retest blockers
 
       - Plan complete'
     depends_on:
     - post.deep_review.spec_conformance
-    - post.deep_review.architecture
     - post.deep_review.black_box
+    - post.deep_review.architecture_retest_runtime_locking
     agent: gate-reviewer
   - id: post.deep_review.architecture_fix_runtime_locking
     name: Harden runtime locking discipline for deep-review concurrency blockers
