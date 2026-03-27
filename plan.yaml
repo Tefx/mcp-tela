@@ -33698,7 +33698,7 @@ phases:
       live-alias blocker family for downstream gate protection.
   - id: post.deep_review.fix_invar_guard_gate_blockers
     name: 'Batched fix: resolve invar guard gateway blockers'
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers from the failed post.deep_review.gate review in
       one remediation pass.
 
@@ -33784,6 +33784,8 @@ phases:
     - post.deep_review.black_box
     - post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-27T02:46:27.094393+00:00'
   - id: post.deep_review.retest_invar_guard_gate_blockers
     name: 'Retest: verify invar guard gateway blockers and regressions'
     status: pending
