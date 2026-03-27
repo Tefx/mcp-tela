@@ -36245,6 +36245,45 @@ phases:
     depends_on:
     - conn_v2.contract.lockfile_status_contract
     agent: software-architect
+  - id: conn_v2.contract.bridge_ux_contract
+    name: Codify bridge interrupt, startup messaging, and diagnostics contract
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - interfaces\n  - behavior_notes\n  - message_catalog_stubs\nagent_source:\
+      \ default\nspec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n  - docs/USAGE.md#CLI\
+      \ reference > tela connect\n  - docs/USAGE.md#CLI reference > tela serve\n \
+      \ - docs/USAGE.md#Troubleshooting > open mode fails to start cleanly\n  - docs/INTERFACES.md#2.\
+      \ CLI Surface\n  - docs/INTERFACES.md#7.2.1 GET /status Response Schema\narchitecture_basis:\n\
+      \  - ADR direction: D connect is interruptible\n  - UX surfaces: connect startup/timeout/interrupt\
+      \ messaging, serve startup logs, HTTP degraded reporting\nconsumer_surfaces:\n\
+      \  - tela connect stderr/stdout behavior\n  - tela serve logs\n  - tela status\
+      \ --json and human diagnostics\n  - GET /status\ncross_cutting_policy:\n  -\
+      \ hard interrupt must terminate connect immediately\n  - diagnostics must explain\
+      \ discovery vs warming vs degraded states without suggesting timeout-only workaround\n\
+      \  - host-facing messaging must be consistent across OpenCode-like and Claude-like\
+      \ hosts\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
+      \  - src/tela/commands/status_cmd.py\n  - src/tela/commands/remote_state.py\n\
+      \  - src/tela/shell/http_routes.py\nharness_refs:\n  - tests/shell/test_connect_cmd.py\n\
+      \  - tests/shell/test_serve_cmd.py\n  - tests/shell/test_query_commands_remote_state.py\n\
+      \  - tests/repro/test_connect_runtime_liveness.py\nauthoritative_interface:\n\
+      \  - tela connect [--config path] [--default-profile name] [--server host:port]\
+      \ [--token tok]\n  - tela serve [--config path] [--port N] [--host addr] [--default-profile\
+      \ name] [--idle-timeout sec] [--token tok]\nTasks:\n  - Define interrupt contract\
+      \ for SIGINT/SIGTERM/KeyboardInterrupt during autostart wait, attach loop, and\
+      \ bridge teardown.\n  - Define host-facing message states for discoverable,\
+      \ warming, ready, degraded, config mismatch, and concurrent startup follower\
+      \ conditions.\n  - Define status/diagnostic wording so CLI and HTTP surfaces\
+      \ report the same resolved fact set instead of each re-deriving state.\n  -\
+      \ Non-goals: no message rendering implementation, no finalized docs text."
+    verification: '- Contract outputs include explicit hard-interrupt semantics and
+      diagnostics matrix for connect/serve/status
+
+      - CLI and HTTP diagnostic surfaces are aligned to one status fact model
+
+      - No message implementation or logging code lands in this contract step'
+    depends_on:
+    - conn_v2.contract.startup_convergence_contract
+    agent: uiux-designer
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
   status: locked
