@@ -35290,7 +35290,7 @@ phases:
       \ implementation-backed and test-backed evidence."
   - id: agent_iface.surface_taxonomy.remediate_tela_yaml_example_taxonomy_wording
     name: Scope-fix tela.yaml.example taxonomy wording
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       Scoped remediation: update `tela.yaml.example` so its `tela_admin` intro-surface
@@ -35328,7 +35328,29 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T08:45:32.462855+00:00'
-    done_at: '2026-03-27T08:42:33.676368+00:00'
+    done_at: '2026-03-27T08:46:34.483061+00:00'
+    evidence: 'Artifact:
+
+      - Commit hash(es): `811df33`
+
+      - Files changed: `tela.yaml.example`
+
+
+      Verification:
+
+      - Diff shows removal/replacement of `tela_admin: "read_only"` capability key.
+
+      - `grep "tela_admin:" tela.yaml.example` -> no matches.
+
+      - `grep "tela_admin" tela.yaml.example` -> explanatory comment only.
+
+
+      Spec link:
+
+      - `docs/CONFIRMED-SURFACE-CONTRACT.md` section disallowing `tela_admin` as current-runtime
+      contract wording
+
+      - `evidence/surface_audit_actual_surface.md` capability model notes'
     rejection_reason: 'Retest found residual contradiction: tela.yaml.example still
       contains tela_admin family key. Remediation incomplete; requires rework to remove/replace
       key and align with confirmed taxonomy.'
