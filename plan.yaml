@@ -34941,3 +34941,43 @@ phases:
     depends_on:
     - agent_iface.final_review.wiring
     agent: gate-reviewer
+  - id: agent_iface.final_review.black_box
+    name: Black-box verification of agent-facing surfaces
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (blind-tester), verify the final user-visible behavior
+      using only the documented surface taxonomy and public entry points.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting agent_iface.final_review.gate.
+
+      Required focus: the observed MCP list/resources and CLI/HTTP behavior must match
+      the docs exactly; resource reads must be distinct from tool calls; and the docs
+      must lead a fresh reader to the correct introspection path without inventing
+      unsupported built-ins.'
+    verification: '- Verification scope: phase-check protecting agent_iface.final_review.gate
+
+      - Evidence states whether a fresh reader would correctly infer the actual available
+      surfaces and usage flows'
+    evidence_template: 'Black-box verification:
+
+      - Docs used:
+
+      - MCP observations:
+
+      - CLI/HTTP observations:
+
+      - Incorrect inferences the docs still encourage:
+
+      - Verdict:
+
+      '
+    depends_on:
+    - agent_iface.final_review.spec_conformance
+    agent: blind-tester
