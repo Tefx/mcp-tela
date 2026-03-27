@@ -34374,7 +34374,7 @@ phases:
       failures are closed for gate protection.
 - id: agent_iface.surface_taxonomy
   name: Agent Interface Surface Taxonomy and Alignment
-  status: pending
+  status: in_progress
   gate: Confirm actual MCP/CLI/HTTP taxonomy before any agent-facing runtime or doc
     assertions are finalized.
   depends_on:
@@ -34382,7 +34382,7 @@ phases:
   steps:
   - id: agent_iface.surface_taxonomy.audit_actual_surface
     name: Audit actual MCP built-in surface vs CLI/HTTP surfaces
-    status: pending
+    status: claimed
     description: 'Review-only authoritative surface audit. Verification scope: local-check
       protecting agent_iface.surface_taxonomy.gate and all downstream taxonomy work.
       Build a source-backed matrix for built-in MCP tools, MCP resources, CLI commands,
@@ -34428,6 +34428,8 @@ phases:
 
       '
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-27T07:12:32.261830+00:00'
   - id: agent_iface.surface_taxonomy.decide_taxonomy
     name: Decide intended product surface taxonomy
     status: pending
