@@ -36042,7 +36042,7 @@ phases:
       \ - Contract/doc wording is explicit, bounded, and non-vacuous."
   - id: agent_iface.final_review.black_box
     name: Black-box verification of agent-facing surfaces
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (blind-tester), verify the final user-visible behavior
@@ -36080,6 +36080,8 @@ phases:
     depends_on:
     - agent_iface.final_review.spec_conformance
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-27T10:24:20.251441+00:00'
   - id: agent_iface.final_review.gate
     name: Final gate for agent-interface surface consistency
     status: pending
