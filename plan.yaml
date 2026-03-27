@@ -36475,6 +36475,50 @@ phases:
     converge safely.
   depends_on:
   - conn_v2.test
+  steps:
+  - id: conn_v2.startup_coord.impl_module
+    name: Implement startup coordinator module
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#Runtime Architecture > Service discovery\n  - docs/DESIGN.md#Runtime\
+      \ Architecture > Process model\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.3\
+      \ Lockfile Contract\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  -\
+      \ src/tela/commands/serve_cmd.py\n  - src/tela/shell/lockfile.py\n  - src/tela/shell/gateway.py\n\
+      \  - src/tela/core/models.py\n  - src/tela/shell/startup_coordinator.py\nharness_refs:\n\
+      \  - tests/shell/test_connect_cmd.py\n  - tests/shell/test_serve_cmd.py\n  -\
+      \ tests/shell/test_lockfile.py\n  - tests/repro/test_connect_runtime_liveness.py\n\
+      effective_truth_owner:\n  - startup coordinator owns autostart leader/follower\
+      \ arbitration until runtime status is published\nconsumer_surfaces:\n  - tela\
+      \ connect\n  - tela serve\n  - lockfile readers\nstate_strata:\n  - Process\
+      \ Discovery State\n  - Gateway Lifecycle State\nknown_risks:\n  - lockfile identity\
+      \ races can attach followers to the wrong serve process if PID/config ownership\
+      \ is not bound explicitly\n  - startup coordination is a blocker-class persistence/state\
+      \ seam; timeout-only workarounds are not acceptable\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\nFailure-mode checklist:\n  - relative vs absolute config\
+      \ path behavior for coordinator ownership\n  - missing-file fallback behavior\
+      \ when no live lockfile exists\n  - stale lockfile vs new process precedence\n\
+      \  - partial-start / failed-bind behavior before lockfile publication\n  - concurrent\
+      \ follower attach while leader is still starting\nState semantics:\n  - last-writer-wins:\
+      \ none; followers must observe leader-owned startup, not overwrite it\n  - preserve\
+      \ exactly: one config-specific gateway instance owns startup and lock publication\
+      \ at a time\n  - backward-compatible legacy behavior: direct tela serve remains\
+      \ a valid explicit server entrypoint\nOut-of-scope guardrail:\n  - downstream\
+      \ convergence and bridge interrupt handling are deferred to later phases\nTasks:\n\
+      \  - Introduce the startup coordinator module that owns autostart lock, leader/follower\
+      \ startup semantics, and config ownership checks.\n  - Move race-sensitive startup\
+      \ arbitration out of ad hoc connect flow logic into the dedicated module while\
+      \ preserving CLI/server boundaries.\n  - Keep lockfile publication meaning limited\
+      \ to process identity + bind target + token + config ownership."
+    verification: '- Main path: targeted startup-coordinator tests prove one leader
+      and follower wait semantics
+
+      - Failure path: regression covers stale lockfile, partial startup failure, and
+      concurrent follower attach
+
+      - Proof: connect/serve call sites use the coordinator instead of duplicating
+      startup arbitration'
+    agent: python-senior
 - id: conn_v2.lifecycle
   name: Lifecycle Status and Discovery/Readiness Split
   status: locked
