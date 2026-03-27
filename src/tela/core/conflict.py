@@ -31,15 +31,10 @@ class ToolConflict(BaseModel):
 
 
 RESERVED_PREFIX = "tela."
-"""Prefix reserved for tela introspection tools."""
+"""Prefix reserved for tela-owned surfaces."""
 
-INTROSPECTION_TOOLS = (
-    "tela.status",
-    "tela.connections",
-    "tela.audit",
-    "tela.profiles",
-)
-"""Reserved introspection tools exposed by tela itself (INTERFACES.md §7.1)."""
+INTROSPECTION_TOOLS = ("tela.profiles",)
+"""Currently supported built-in tela MCP surface names."""
 
 
 @pre(lambda all_tools: isinstance(all_tools, dict))

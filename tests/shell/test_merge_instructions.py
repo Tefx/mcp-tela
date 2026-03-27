@@ -20,6 +20,7 @@ from tela.core.models import (
 )
 from tela.shell.config_loader import Result
 from tela.shell import gateway as gateway_module
+from tela.shell import surface_instructions
 
 
 def test_passthrough_instructions_none_includes_downstream(
@@ -425,3 +426,80 @@ def test_tools_list_sorted_alphabetically(
     # Check tools are in sorted order
     assert result.value.index("- alpha") < result.value.index("- middle")
     assert result.value.index("- middle") < result.value.index("- zebra")
+
+
+def test_compose_gateway_and_downstream_includes_gateway_authoritative_block(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Composed instructions must include the gateway-authoritative block first."""
+
+    def mock_get_server_instructions():
+        return Result(value={"fs": "Filesystem guidance"})
+
+    def mock_get_all_tools():
+        return Result(value={})
+
+    monkeypatch.setattr(
+        gateway_module, "get_server_instructions", mock_get_server_instructions
+    )
+    monkeypatch.setattr(gateway_module, "get_all_tools", mock_get_all_tools)
+
+    config = TelaConfig(servers={"fs": ServerConfig(name="fs", command="cmd")})
+    downstream = gateway_module._merge_downstream_instructions(config)
+    assert downstream.is_ok
+
+    gateway = surface_instructions.get_gateway_surface_instructions()
+    assert gateway.is_ok
+    assert gateway.value is not None
+
+    composed = surface_instructions.compose_gateway_and_downstream(
+        gateway.value,
+        downstream.value,
+    )
+    assert composed.is_ok
+    assert composed.value is not None
+    assert composed.value.startswith("# tela gateway surface contract")
+    assert "Built-in MCP resource: `tela.profiles`" in composed.value
+    assert "Built-in MCP tools: none." in composed.value
+    # Downstream section remains appended after authoritative block.
+    assert "## fs" in composed.value
+
+
+def test_compose_gateway_and_downstream_does_not_advertise_unsupported_mcp_surfaces(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Runtime instructions must not advertise absent MCP built-ins."""
+
+    def mock_get_server_instructions():
+        return Result(value={})
+
+    def mock_get_all_tools():
+        return Result(value={})
+
+    monkeypatch.setattr(
+        gateway_module, "get_server_instructions", mock_get_server_instructions
+    )
+    monkeypatch.setattr(gateway_module, "get_all_tools", mock_get_all_tools)
+
+    downstream = gateway_module._merge_downstream_instructions(TelaConfig(servers={}))
+    assert downstream.is_ok
+
+    gateway = surface_instructions.get_gateway_surface_instructions()
+    assert gateway.is_ok
+    assert gateway.value is not None
+
+    result = surface_instructions.compose_gateway_and_downstream(
+        gateway.value,
+        downstream.value,
+    )
+
+    assert result.is_ok
+    assert result.value is not None
+    assert "tela.status" not in result.value
+    assert "tela.connections" not in result.value
+    assert "tela.audit" not in result.value
+    # Guard against tool-call/resource-read blur.
+    assert (
+        "Do not use `tools/call` for `tela.profiles`; use resource read."
+        in result.value
+    )

@@ -37,6 +37,11 @@ from tela.shell.downstream import (
     get_all_tools,
     get_server_instructions,
 )
+from tela.shell.surface_instructions import (
+    compose_gateway_and_downstream,
+    get_gateway_surface_instructions,
+)
+from tela.shell.gateway_http_auth import extract_bearer_token
 from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
     _runtime,
     _runtime_lock,
@@ -82,20 +87,6 @@ class GatewayStartupConfig:
     host: str = "127.0.0.1"
 
 
-def _extract_bearer_token(request: Request) -> Result[str, str]:
-    """Extract bearer token from Authorization header."""
-
-    authorization_header = request.headers.get("authorization")
-    if authorization_header is None or not authorization_header.startswith("Bearer "):
-        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
-
-    request_token = authorization_header[len("Bearer ") :].strip()
-    if request_token == "":
-        return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
-
-    return Result(value=request_token)
-
-
 # @shell_orchestration: wires HTTP endpoint handlers onto FastMCP Starlette app.
 # @shell_complexity: mounted HTTP adapters enforce auth and payload contracts per endpoint.
 def _register_http_routes(upstream_server: FastMCP) -> None:
@@ -128,7 +119,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
     @upstream_server.custom_route("/status", methods=["GET"])
     async def _status_route(request: Request) -> Response:
-        token_result = _extract_bearer_token(request)
+        token_result = extract_bearer_token(request)
         if token_result.is_err:
             assert token_result.error is not None
             return _as_error_response(token_result.error)
@@ -145,7 +136,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:
-        token_result = _extract_bearer_token(request)
+        token_result = extract_bearer_token(request)
         if token_result.is_err:
             assert token_result.error is not None
             return _as_error_response(token_result.error)
@@ -175,7 +166,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
     @upstream_server.custom_route("/disconnect", methods=["POST"])
     async def _disconnect_route(request: Request) -> Response:
-        token_result = _extract_bearer_token(request)
+        token_result = extract_bearer_token(request)
         if token_result.is_err:
             assert token_result.error is not None
             return _as_error_response(token_result.error)
@@ -287,10 +278,22 @@ def _create_upstream_server(
         Result with FastMCP server instance.
     """
 
-    merge_result = _merge_downstream_instructions(tela_config)
-    if merge_result.is_err:
-        return Result(error=merge_result.error)
-    merged_instructions = merge_result.value
+    downstream_result = _merge_downstream_instructions(tela_config)
+    if downstream_result.is_err:
+        return Result(error=downstream_result.error)
+
+    gateway_result = get_gateway_surface_instructions()
+    if gateway_result.is_err:
+        return Result(error=gateway_result.error)
+    assert gateway_result.value is not None
+
+    compose_result = compose_gateway_and_downstream(
+        gateway_result.value,
+        downstream_result.value,
+    )
+    if compose_result.is_err:
+        return Result(error=compose_result.error)
+    merged_instructions = compose_result.value
 
     if (
         startup_config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
