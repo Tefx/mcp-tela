@@ -37859,6 +37859,63 @@ phases:
       - Proof: no core path still assumes raw_name is the only externally visible
       name once tool_prefix is present.'
     agent: python-senior
+  - id: tool_prefix.runtime.wire_registry_and_call_routing
+    name: Wire exposed-name registry and downstream raw-name routing
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - user authoritative input: architecture decisions 1-4, 6\n  -\
+      \ docs/INTERFACES.md#6.2 Per-call authorization\n  - docs/INTERFACES.md#7 MCP\
+      \ Surface\ntouch_paths:\n  - src/tela/shell/downstream_registry.py\n  - src/tela/shell/downstream.py\n\
+      \  - src/tela/shell/upstream.py\nharness_refs:\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_upstream.py\nauthoritative_interface:\n  - registry key\
+      \ for upstream lookup is exposed name\n  - downstream call_tool target remains\
+      \ raw_name\nconsumer_surfaces:\n  - tools/list\n  - tools/call\n  - enforcement\
+      \ lookup\n  - audit/server routing\nagent: python-senior\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\n\n## Gate Preview (what the gate WILL reject)\n1. Any path\
+      \ where upstream tools/call receives an exposed name but forwards that same\
+      \ exposed name to the downstream server.\n2. Any registry path that stores only\
+      \ raw names and therefore hides prefixed tools from upstream.\n3. Any override/enforcement\
+      \ path that starts matching on prefixed names instead of raw names.\n\nIntegration\
+      \ path: resolve_tools -> DownstreamRegistry register/get_tool -> upstream tools/list/tools/call\
+      \ -> downstream call_tool.\n\nImplement shell wiring so the registry stores\
+      \ and looks up exposed names while retaining raw_name for downstream calls and\
+      \ raw-name-based override/enforcement logic."
+    verification: '- Main path: same raw tool from two servers with distinct prefixes
+      is visible under both exposed names.
+
+      - Failure path: calling an exposed name that would collide without prefix proves
+      routing still reaches the correct raw downstream name.
+
+      - Proof: no shell lookup still assumes exposed name == raw_name after prefixing.'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact pytest selection or command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: resolve_tools -> DownstreamRegistry -> upstream tools/call
+      -> downstream call_tool(raw_name)
+
+      '
+    depends_on:
+    - tool_prefix.runtime.implement_core_name_mapping
+    agent: python-senior
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
