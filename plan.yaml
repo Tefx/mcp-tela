@@ -34382,7 +34382,7 @@ phases:
   steps:
   - id: agent_iface.surface_taxonomy.audit_actual_surface
     name: Audit actual MCP built-in surface vs CLI/HTTP surfaces
-    status: claimed
+    status: done
     description: 'Review-only authoritative surface audit. Verification scope: local-check
       protecting agent_iface.surface_taxonomy.gate and all downstream taxonomy work.
       Build a source-backed matrix for built-in MCP tools, MCP resources, CLI commands,
@@ -34430,6 +34430,69 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T07:12:32.261830+00:00'
+    done_at: '2026-03-27T07:17:58.874173+00:00'
+    evidence: "Surface audit evidence:\n- MCP resources verified:\n  - `tela.profiles`\
+      \ is verified as an MCP resource today.\n  - Proof: `src/tela/shell/gateway.py:317-323`\
+      \ registers `@upstream_server.resource(\"tela://profiles\", name=\"tela.profiles\"\
+      , ...)`.\n  - Startup wiring proves it is active: `src/tela/shell/gateway.py:586-588`.\n\
+      - MCP tools verified:\n  - No explicit built-in `tela.*` MCP tool registrations\
+      \ were found in `src/**/*.py`.\n  - The upstream MCP surface currently wires\
+      \ generic proxy handlers only: `tools/list` at `src/tela/shell/gateway.py:372-397`\
+      \ and `tools/call` at `src/tela/shell/gateway.py:399-412`.\n  - Therefore `tela.status`,\
+      \ `tela.connections`, and `tela.audit` must be treated as unverified-or-absent\
+      \ MCP surfaces unless later source adds explicit tool/resource registration.\n\
+      - CLI-only surfaces verified:\n  - `tela status`: wired in `src/tela/cli.py:110-119,182-188`;\
+      \ implemented in `src/tela/commands/status_cmd.py:12-51`; fetches `GET /status`\
+      \ via `src/tela/commands/remote_state.py:57-123`.\n  - `tela connections`: wired\
+      \ in `src/tela/cli.py:135-145,225-231`; implemented in `src/tela/commands/connections_cmd.py:13-55`;\
+      \ reads `connections` from `/status`.\n  - `tela audit`: wired in `src/tela/cli.py:147-166,232-240`;\
+      \ implemented in `src/tela/commands/audit_cmd.py:15-95`; reads `audit_entries`\
+      \ from `/status`.\n  - `tela profiles` also exists as CLI in `src/tela/cli.py:120-133,215-224`,\
+      \ but unlike the three above it is additionally verified as an MCP resource.\n\
+      - HTTP-only/operator surfaces verified:\n  - `GET /health`: mounted in `src/tela/shell/gateway.py:121-127`;\
+      \ handler contract in `src/tela/shell/http_routes.py:38-57`.\n  - `GET /status`:\
+      \ mounted in `src/tela/shell/gateway.py:129-145`; handler contract in `src/tela/shell/http_routes.py:67-124`.\n\
+      \  - `POST /connect`: mounted in `src/tela/shell/gateway.py:146-175`; handler\
+      \ contract in `src/tela/shell/http_routes.py:135-187`.\n  - `POST /disconnect`:\
+      \ mounted in `src/tela/shell/gateway.py:176-206`; handler contract in `src/tela/shell/http_routes.py:198-255`.\n\
+      \  - `POST /mcp` documented in `docs/INTERFACES.md:182-190` as Streamable HTTP\
+      \ endpoint; not a dedicated `custom_route(...)` registration in local code audit.\n\
+      - Unverified/absent surfaces:\n  - `tela.status`: no explicit MCP tool/resource\
+      \ registration found; present today only as CLI + HTTP (`GET /status`).\n  -\
+      \ `tela.connections`: no explicit MCP tool/resource registration found; present\
+      \ today only as CLI, with data piggybacking on `GET /status`.\n  - `tela.audit`:\
+      \ no explicit MCP tool/resource registration found; present today only as CLI,\
+      \ with data piggybacking on `GET /status`.\n  - No dedicated HTTP endpoints\
+      \ named for `tela.profiles`, `tela.connections`, or `tela.audit` were found.\n\
+      \  - Matrix:\n    - `tela.profiles` => MCP resource: yes; MCP tool: no proof\
+      \ found; CLI command: yes; HTTP endpoint: no dedicated endpoint; status: present.\n\
+      \    - `tela.status` => MCP resource: no proof found; MCP tool: no proof found;\
+      \ CLI command: yes; HTTP endpoint: `GET /status`; status: present as CLI+HTTP\
+      \ only.\n    - `tela.connections` => MCP resource: no proof found; MCP tool:\
+      \ no proof found; CLI command: yes; HTTP endpoint: none dedicated; status: present\
+      \ as CLI-only view over `/status`.\n    - `tela.audit` => MCP resource: no proof\
+      \ found; MCP tool: no proof found; CLI command: yes; HTTP endpoint: none dedicated;\
+      \ status: present as CLI-only view over `/status`.\n- Capability string audit\
+      \ (`tela_admin` or replacement):\n  - `tela_admin` found in docs/examples (`docs/INTERFACES.md`,\
+      \ `docs/DESIGN.md`, `docs/USAGE.md`, `README.md`) but not in executable source\
+      \ under `src/**/*.py`.\n  - Runtime capability control is family/posture-based\
+      \ (`src/tela/core/models.py`, `src/tela/core/catalog.py`, `src/tela/core/family.py`).\n\
+      \  - Result: `tela_admin` is currently a documented/spec label, not a verified\
+      \ runtime capability string enforced by code.\n- Source lines / commands used:\n\
+      \  - Greps for `tela.(profiles|status|connections|audit|admin)`, `resource(`,\
+      \ `tool(`, `custom_route(`, `list_tools(`, `call_tool(` across `src/**/*.py`.\n\
+      \  - Key files: `src/tela/shell/gateway.py`, `src/tela/shell/http_routes.py`,\
+      \ `src/tela/shell/upstream.py`, `src/tela/cli.py`, `src/tela/commands/*`, `src/tela/core/{models,catalog,family}.py`,\
+      \ docs files.\n  - Instruction merge facts verified in `src/tela/shell/gateway.py:209-273`\
+      \ with `None` passthrough, `False` suppress, `str` override, and merge wired\
+      \ into `FastMCP(..., instructions=...)`.\n  - Evidence file committed in worktree:\
+      \ `evidence/surface_audit_actual_surface.md` commit `6643801435f1f4ccaab3f62dccd406313b8250bf`.\n\
+      - Resulting risks / open questions:\n  - Docs/spec drift: docs describe status/connections/audit\
+      \ as MCP introspection tools; current code audit verifies only `tela.profiles`\
+      \ as MCP resource.\n  - Downstream steps must not assert MCP exposure for status/connections/audit\
+      \ without new explicit registration proof.\n  - `tela_admin` should not be reused\
+      \ as implementation-verified taxonomy unless code adopts it or spec explicitly\
+      \ re-approves it."
   - id: agent_iface.surface_taxonomy.decide_taxonomy
     name: Decide intended product surface taxonomy
     status: pending
