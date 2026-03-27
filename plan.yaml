@@ -33197,3 +33197,49 @@ phases:
     depends_on:
     - post.deep_review.architecture
     agent: python-senior
+  - id: post.deep_review.architecture_retest_runtime_locking
+    name: Re-run architecture concurrency verification after runtime locking hardening
+    status: pending
+    description: 'Independent retest of the concurrency blockers reported by post.deep_review.architecture
+      after runtime locking hardening.
+
+
+      Focus:
+
+      - verify mutable gateway runtime no longer escapes lock-safe boundaries
+
+      - verify _ensure_connection no longer reads live _runtime.connections without
+      protected snapshot/serialization
+
+      - verify cross-module runtime reads/writes consistently honor _runtime_lock
+      discipline
+
+
+      This step re-runs architecture concurrency verification from a fresh review
+      perspective and must report whether blocker-class races remain.'
+    verification: '- Concurrency protection re-verified against the original deep-review
+      findings
+
+      - No mutable runtime escape path remains through get_runtime()
+
+      - _ensure_connection lock/snapshot semantics verified
+
+      - Cross-module runtime reads/writes are consistently under _runtime_lock or
+      equivalent authoritative guard
+
+      - Any remaining blocker-class concurrency issue is explicitly reported'
+    evidence_template: '## Architecture Concurrency Retest
+
+      - Original finding set rechecked: get_runtime escape | _ensure_connection live
+      read | cross-module lock coverage
+
+      - Verification method: <code-path review / focused concurrency checklist>
+
+      - Result per finding: PASS/FAIL with file references
+
+      - Residual blockers: <none or list>
+
+      - Independence note: retest performed after implementation by separate agent'
+    depends_on:
+    - post.deep_review.architecture_fix_runtime_locking
+    agent: software-architect
