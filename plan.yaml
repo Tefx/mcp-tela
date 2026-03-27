@@ -37324,6 +37324,40 @@ phases:
 
       - Runnable surfaces remain connect, serve, status, and HTTP'
     agent: python-senior
+  - id: conn_v2.system_wiring.verify_e2e
+    name: Verify end-to-end data flow through real entry points
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
+      \ verify data flows through the real entry points using real implementations.\n\
+      Independence Level: L2\nFor EACH user-facing entry point under this refactor:\n\
+      \  1. tela connect --config ... cold start / attach\n  2. tela serve --config\
+      \ ... explicit server startup\n  3. tela status / GET /status diagnostics\n\
+      Evidence MUST show input submitted -> route matched -> dispatch executed ->\
+      \ runtime state observed.\n\"Starts without errors\" is NOT sufficient."
+    verification: '- Evidence covers connect, serve, and status paths with actual
+      output
+
+      - At least one path shows connect attach while gateway is warming and later
+      ready/degraded
+
+      - No step relies on stub or placeholder runtime behavior'
+    evidence_template: '## End-to-End Data Flow Verification
+
+      | Entry Point | Input | Path Traced | Output/Effect | Status |
+
+      |------------|-------|-------------|--------------|--------|
+
+      | tela connect | <command> | connect -> startup/lifecycle/bridge -> gateway
+      | <result> | PASS/FAIL |
+
+      | tela serve | <command> | serve -> lifecycle/convergence -> /status | <result>
+      | PASS/FAIL |
+
+      | tela status | <command> | status -> remote_state -> /status | <result> | PASS/FAIL
+      |'
+    depends_on:
+    - conn_v2.system_wiring.entrypoint_integration
+    agent: integration-verifier
 - id: conn_v2.validation
   name: Runtime Validation and Full-Plan Check
   status: locked
