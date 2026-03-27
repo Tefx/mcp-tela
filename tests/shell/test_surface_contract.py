@@ -40,6 +40,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIRMED_SURFACE_CONTRACT = PROJECT_ROOT / "docs" / "CONFIRMED-SURFACE-CONTRACT.md"
 DESIGN_DOC = PROJECT_ROOT / "docs" / "DESIGN.md"
 AGENT_INTERFACE_DOC = PROJECT_ROOT / "docs" / "AGENT_INTERFACE.md"
+INTERFACES_DOC = PROJECT_ROOT / "docs" / "INTERFACES.md"
 USAGE_DOC = PROJECT_ROOT / "docs" / "USAGE.md"
 SURFACE_VERIFICATION_ARTIFACT = (
     PROJECT_ROOT / "evidence" / "surface_taxonomy_verification.md"
@@ -67,6 +68,10 @@ def _read_usage_doc() -> str:
     return USAGE_DOC.read_text(encoding="utf-8")
 
 
+def _read_interfaces_doc() -> str:
+    return INTERFACES_DOC.read_text(encoding="utf-8")
+
+
 def _read_surface_verification_artifact() -> str:
     return SURFACE_VERIFICATION_ARTIFACT.read_text(encoding="utf-8")
 
@@ -81,6 +86,45 @@ def _contract_surface_kinds() -> dict[str, str]:
 
 def _contract_kind(surface_name: str) -> str | None:
     return _contract_surface_kinds().get(surface_name)
+
+
+def _runtime_operator_surfaces() -> set[str]:
+    """Parse operator surface names from runtime gateway summary output."""
+    gateway_result = surface_instructions.get_gateway_surface_instructions()
+    assert gateway_result.is_ok
+    assert gateway_result.value is not None
+    operator_line_match = re.search(
+        r"Operator-only surfaces \(not MCP built-ins\):\s*(.+?)\.",
+        gateway_result.value,
+    )
+    assert operator_line_match is not None
+    return set(re.findall(r"`([^`]+)`", operator_line_match.group(1)))
+
+
+def _agent_interface_operator_surfaces() -> set[str]:
+    """Parse operator surface names from AGENT_INTERFACE operator table."""
+    section_match = re.search(
+        r"### 2\.2 Operator Surfaces \(Not MCP Built-ins\).*?\n\n(.*?)\n\n\*\*Important:\*\*",
+        _read_agent_interface_doc(),
+        re.DOTALL,
+    )
+    assert section_match is not None
+    return set(
+        re.findall(r"^\|\s*`([^`]+)`\s*\|", section_match.group(1), re.MULTILINE)
+    )
+
+
+def _interfaces_builtin_summary_surfaces() -> set[str]:
+    """Parse surface names from INTERFACES built-in surfaces summary table."""
+    section_match = re.search(
+        r"### 7\.1a Built-in surfaces summary\n\n(.*?)\n\n### 7\.2 HTTP Endpoints",
+        _read_interfaces_doc(),
+        re.DOTALL,
+    )
+    assert section_match is not None
+    return set(
+        re.findall(r"^\|\s*`([^`]+)`\s*\|", section_match.group(1), re.MULTILINE)
+    )
 
 
 class TestCanonicalSurfaceMatrix:
@@ -544,36 +588,70 @@ class TestInstructionConflictHandling:
 class TestCLIHTTPSurfacesNotMCPBuiltins:
     """CLI and HTTP surfaces must NOT be claimed as MCP built-ins."""
 
+    def test_tela_profiles_cli_not_mcp_builtin(self) -> None:
+        """tela profiles command must stay operator-only and non-dotted."""
+        runtime_operator_surfaces = _runtime_operator_surfaces()
+        agent_interface_operator_surfaces = _agent_interface_operator_surfaces()
+        interfaces_surfaces = _interfaces_builtin_summary_surfaces()
+
+        assert _contract_kind("tela profiles") == "CLI"
+        assert _contract_kind("tela.profiles") == "resource"
+        assert "tela profiles" in runtime_operator_surfaces
+        assert "tela profiles" in agent_interface_operator_surfaces
+        assert "tela profiles" in interfaces_surfaces
+        assert "tela.profiles" not in runtime_operator_surfaces
+        assert "tela.profiles" not in agent_interface_operator_surfaces
+
     def test_tela_status_cli_not_mcp_builtin(self) -> None:
         """tela status CLI must NOT be documented as an MCP built-in."""
         usage_doc = _read_usage_doc()
-        agent_interface_doc = _read_agent_interface_doc()
-        gateway_summary = surface_instructions.get_gateway_surface_instructions()
+        runtime_operator_surfaces = _runtime_operator_surfaces()
+        agent_interface_operator_surfaces = _agent_interface_operator_surfaces()
+        interfaces_surfaces = _interfaces_builtin_summary_surfaces()
+
         assert _contract_kind("tela status") == "CLI"
         assert _contract_kind("tela.status") == "absent"
         assert "| `tela status` | CLI / `GET /status` |" in usage_doc
-        assert "| `tela.status` | CLI/HTTP |" in agent_interface_doc
-        assert gateway_summary.is_ok
-        assert gateway_summary.value is not None
-        assert "Built-in MCP tools: none." in gateway_summary.value
+        assert "tela status" in runtime_operator_surfaces
+        assert "tela status" in agent_interface_operator_surfaces
+        assert "tela status" in interfaces_surfaces
+        assert "tela.status" not in runtime_operator_surfaces
+        assert "tela.status" not in agent_interface_operator_surfaces
+        assert "tela.status" not in interfaces_surfaces
 
     def test_tela_connections_cli_not_mcp_builtin(self) -> None:
         """tela connections CLI must NOT be documented as an MCP built-in."""
         usage_doc = _read_usage_doc()
-        agent_interface_doc = _read_agent_interface_doc()
+        runtime_operator_surfaces = _runtime_operator_surfaces()
+        agent_interface_operator_surfaces = _agent_interface_operator_surfaces()
+        interfaces_surfaces = _interfaces_builtin_summary_surfaces()
+
         assert _contract_kind("tela connections") == "CLI"
         assert _contract_kind("tela.connections") == "absent"
         assert "| `tela connections` | CLI / via `/status` |" in usage_doc
-        assert "| `tela.connections` | CLI/HTTP |" in agent_interface_doc
+        assert "tela connections" in runtime_operator_surfaces
+        assert "tela connections" in agent_interface_operator_surfaces
+        assert "tela connections" in interfaces_surfaces
+        assert "tela.connections" not in runtime_operator_surfaces
+        assert "tela.connections" not in agent_interface_operator_surfaces
+        assert "tela.connections" not in interfaces_surfaces
 
     def test_tela_audit_cli_not_mcp_builtin(self) -> None:
         """tela audit CLI must NOT be documented as an MCP built-in."""
         usage_doc = _read_usage_doc()
-        agent_interface_doc = _read_agent_interface_doc()
+        runtime_operator_surfaces = _runtime_operator_surfaces()
+        agent_interface_operator_surfaces = _agent_interface_operator_surfaces()
+        interfaces_surfaces = _interfaces_builtin_summary_surfaces()
+
         assert _contract_kind("tela audit") == "CLI"
         assert _contract_kind("tela.audit") == "absent"
         assert "| `tela audit` | CLI / via `/status` |" in usage_doc
-        assert "| `tela.audit` | CLI/HTTP |" in agent_interface_doc
+        assert "tela audit" in runtime_operator_surfaces
+        assert "tela audit" in agent_interface_operator_surfaces
+        assert "tela audit" in interfaces_surfaces
+        assert "tela.audit" not in runtime_operator_surfaces
+        assert "tela.audit" not in agent_interface_operator_surfaces
+        assert "tela.audit" not in interfaces_surfaces
 
     def test_get_status_http_not_mcp_builtin(self) -> None:
         """GET /status HTTP endpoint must NOT be misnamed as tela.status MCP."""

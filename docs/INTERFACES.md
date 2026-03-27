@@ -180,9 +180,10 @@ as conflicts.
 | Surface | Kind | Access method | Status |
 |---------|------|---------------|--------|
 | `tela.profiles` | MCP resource | `tela://profiles` (resource read) | Supported |
-| `tela.status` | CLI/HTTP | `tela status` or `GET /status` | Operator-only (not MCP built-in) |
-| `tela.connections` | CLI/HTTP | `tela connections` or via `/status` | Operator-only (not MCP built-in) |
-| `tela.audit` | CLI/HTTP | `tela audit` or via `/status` | Operator-only (not MCP built-in) |
+| `tela profiles` | CLI/HTTP | `tela profiles` or `GET /status` (distinct from MCP resource name `tela.profiles`) | Operator-only (not MCP built-in) |
+| `tela status` | CLI/HTTP | `tela status` or `GET /status` | Operator-only (not MCP built-in) |
+| `tela connections` | CLI/HTTP | `tela connections` or via `/status` | Operator-only (not MCP built-in) |
+| `tela audit` | CLI/HTTP | `tela audit` or via `/status` | Operator-only (not MCP built-in) |
 
 ### 7.2 HTTP Endpoints
 
