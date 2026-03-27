@@ -37339,12 +37339,17 @@ phases:
     name: Freeze integrated runtime snapshot for validation
     status: pending
     description: "step_type: planning\nverification_scope: phase-check\nFreeze: lock\
-      \ snapshot for runtime validation and full-plan-check.\nRequirements:\n  - record\
-      \ git rev-parse HEAD\n  - record git status clean\n  - declare environment for\
-      \ OpenCode-like cold start and concurrent attach scenarios\n  - state that no\
-      \ code changes are allowed until validation gate completes"
+      \ snapshot for runtime validation and full-plan-check after integrated diagnostics\
+      \ and entrypoint wiring proof.\nRequirements:\n  - record git rev-parse HEAD\n\
+      \  - record git status clean\n  - declare environment for OpenCode-like cold\
+      \ start and concurrent attach scenarios\n  - state that no code changes are\
+      \ allowed until validation gate completes"
     verification: '- Freeze evidence includes commit, clean tree, and named runtime
       scenarios'
+    depends_on:
+    - conn_v2.system_wiring.verify_e2e
+    - conn_v2.system_wiring.wiring_audit
+    - conn_v2.system_wiring.liveness_probe
     agent: software-architect
   - id: conn_v2.system_wiring.wiring_audit
     name: Audit wiring completeness for new runtime symbols and CLI reachability
