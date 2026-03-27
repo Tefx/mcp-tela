@@ -36679,6 +36679,45 @@ phases:
     readiness.
   depends_on:
   - conn_v2.startup_coord
+  steps:
+  - id: conn_v2.lifecycle.impl_module
+    name: Implement lifecycle status module and snapshot ownership
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  - docs/DESIGN.md#Runtime\
+      \ Architecture > Connection lifecycle\n  - docs/DESIGN.md#Runtime Architecture\
+      \ > Service discovery\ntouch_paths:\n  - src/tela/shell/gateway_runtime.py\n\
+      \  - src/tela/core/models.py\n  - src/tela/shell/http_routes.py\n  - src/tela/commands/remote_state.py\n\
+      \  - src/tela/shell/lifecycle_status.py\nharness_refs:\n  - tests/core/test_models.py\n\
+      \  - tests/shell/test_http_routes.py\n  - tests/shell/test_gateway.py\n  - tests/shell/test_query_commands_remote_state.py\n\
+      effective_truth_owner:\n  - lifecycle module owns phase transitions and status\
+      \ snapshots\nconsumer_surfaces:\n  - tela connect\n  - tela status\n  - GET\
+      \ /status\n  - GET /health\nstate_strata:\n  - Gateway Lifecycle State\n  -\
+      \ Downstream Runtime State\nknown_risks:\n  - discovery/readiness conflation\
+      \ is a historical blocker; connect must not infer ready from lockfile presence\n\
+      ## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\nFailure-mode checklist:\n  - missing status\
+      \ data fallback behavior before full convergence\n  - stale-definition vs new-state\
+      \ precedence between lifecycle snapshot and downstream updates\n  - explicit\
+      \ degraded reason semantics\n  - startup_generation stability across warm runtime\
+      \ mutations\nState semantics:\n  - last-writer-wins: phase transitions owned\
+      \ by lifecycle module, not ad hoc consumers\n  - preserve exactly: config_path,\
+      \ startup_generation, and per-server summaries come from runtime state, not\
+      \ re-derived by clients\n  - backward-compatible legacy behavior: health endpoint\
+      \ still reports liveness even when readiness is warming or degraded\nTasks:\n\
+      \  - Introduce the lifecycle status module that owns phase transitions and detached\
+      \ status snapshots.\n  - Separate discovery truth from readiness truth in runtime\
+      \ memory and exported models.\n  - Keep status schema authoritative for all\
+      \ client/query surfaces."
+    verification: '- Main path: targeted tests prove lifecycle transitions and status
+      snapshot fields
+
+      - Failure path: regressions cover degraded snapshots and partial convergence
+      without falsifying readiness
+
+      - Proof: status readers consume lifecycle snapshots instead of re-deriving state
+      locally'
+    agent: python-senior
 - id: conn_v2.convergence
   name: Background Downstream Convergence
   status: locked
