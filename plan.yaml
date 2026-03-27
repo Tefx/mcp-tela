@@ -37996,6 +37996,104 @@ phases:
     depends_on:
     - tool_prefix.runtime.integrate_reload_prefix_updates
     agent: software-architect
+  - id: tool_prefix.runtime.verify_runtime
+    name: Verify exposed-name runtime behavior
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: phase-check
+
+      Independence Level: L2
+
+      As an INDEPENDENT TESTER (integration-verifier), validate the tool-prefix runtime
+      from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: no-prefix compatibility and distinct-prefix coexistence
+
+      - Edge cases: same-prefix conflicts, reserved tela prefix rejection, reload
+      prefix changes
+
+      - Error scenarios: exposed-name call forwards to the wrong raw tool, reload
+      rollback leaves stale registry entries
+
+      - Cross-surface conformance: tools/list, tools/call, conflict detection, and
+      reload notifications all interpret the same exposed-name set
+
+
+      If this step verifies symbolic testing, none is required here; focus on runtime
+      behavior only.'
+    verification: '- Main path: all seven user-mandated verification points are exercised.
+
+      - Failure path: at least one regression proves rejected collisions or reserved-prefix
+      inputs fail with explicit evidence.
+
+      - Consumer-boundary conformance: tools/list, tools/call, and reload notification
+      evidence use the same exposed-name fixture.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier
+
+      **Scope**: tool_prefix runtime behavior
+
+      **Independence Level**: L2
+
+
+      ### Commands executed
+
+      ```
+
+      <exact test commands>
+
+      ```
+
+
+      ### Coverage
+
+      - No prefix compatibility: <pass/fail>
+
+      - Distinct prefixes coexist: <pass/fail>
+
+      - Same exposed name collision: <pass/fail>
+
+      - Raw-name tool_overrides: <pass/fail>
+
+      - Exposed-name call routes to raw_name: <pass/fail>
+
+      - Reload prefix change emits tools/list_changed: <pass/fail>
+
+      - Reserved tela. prefix rejected: <pass/fail>
+
+
+      ### Cross-surface conformance
+
+      - Shared fixture/case id: <value>
+
+      - tools/list evidence: <summary>
+
+      - tools/call evidence: <summary>
+
+      - reload evidence: <summary>
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      '
+    depends_on:
+    - tool_prefix.runtime.freeze_for_l2
+    agent: integration-verifier
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
