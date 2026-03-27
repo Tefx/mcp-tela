@@ -37240,6 +37240,44 @@ phases:
 
       **Path exercised**: lifecycle status -> CLI/HTTP diagnostics'
     agent: python-executor
+  - id: conn_v2.ux.conformance_review
+    name: Review CLI and HTTP diagnostics for consumer-boundary conformance
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (uiux-designer),\
+      \ validate that all host-facing surfaces interpret the same lifecycle facts\
+      \ consistently.\nIndependence Level: L1\nTest for:\n  - tela connect, tela serve,\
+      \ tela status, and GET /status-backed query output agree on warming/ready/degraded/config\
+      \ mismatch\n  - startup and shutdown messaging remains comprehensible under\
+      \ OpenCode-like and Claude-like host behavior\n  - diagnostics guide users toward\
+      \ lifecycle truth, not blind timeout tuning\nConsumer-boundary conformance is\
+      \ mandatory here."
+    verification: '- Evidence cites the shared fixture or status snapshot used by
+      all surfaces
+
+      - Any mismatch between CLI and HTTP diagnostics is reported as a blocker or
+      should_fix item
+
+      - Output examples are included for at least warming, ready, and degraded states'
+    evidence_template: '## Verification Report
+
+
+      **Shared fixture/status snapshot**: <identifier>
+
+
+      | Surface | State | Output summary | Match? |
+
+      |---|---|---|---|
+
+      | tela connect | warming | <summary> | yes/no |
+
+      | tela serve | degraded | <summary> | yes/no |
+
+      | tela status | ready | <summary> | yes/no |
+
+      | GET /status | warming | <summary> | yes/no |'
+    depends_on:
+    - conn_v2.ux.impl_messages
+    agent: uiux-designer
 - id: conn_v2.system_wiring
   name: System Wiring and Entry Point Integration
   status: locked
