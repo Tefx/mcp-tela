@@ -35912,7 +35912,7 @@ phases:
       \ and runtime wiring are coherent and consistent."
   - id: agent_iface.final_review.spec_conformance
     name: Spec conformance review for agent-interface taxonomy
-    status: pending
+    status: claimed
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -35943,6 +35943,8 @@ phases:
     depends_on:
     - agent_iface.final_review.wiring
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T10:19:08.808506+00:00'
   - id: agent_iface.final_review.architecture
     name: Architecture review for runtime surface boundaries
     status: claimed
