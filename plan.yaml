@@ -37705,3 +37705,10 @@ phases:
     tests or runtime wiring.
   depends_on:
   - conn_v2.finalize
+- id: tool_prefix.test
+  name: Tool Prefix Tests
+  status: locked
+  gate: Executable acceptance boundary for tool-prefix config semantics, collision
+    handling, routing, and reload behavior before implementation.
+  depends_on:
+  - tool_prefix.contract
