@@ -38094,6 +38094,71 @@ phases:
     depends_on:
     - tool_prefix.runtime.freeze_for_l2
     agent: integration-verifier
+  - id: tool_prefix.runtime.wiring_audit
+    name: Wiring audit for tool-prefix runtime
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: phase-check
+
+      Wiring completeness audit: verify every new public symbol and config field for
+      tool_prefix is reachable at runtime.
+
+
+      REQUIRED CHECKS:
+
+      1. Config consumption: ServerConfig.tool_prefix is read by non-test runtime
+      code
+
+      2. Registry reachability: exposed-name lookups are used by upstream tools/list/tools/call
+      paths
+
+      3. Raw-name routing: downstream call path consumes raw_name, not only exposed
+      name
+
+      4. Contract consumption: any new ResolvedTool fields are read by non-test modules
+
+
+      Use grep/import-trace style evidence, not assertions.'
+    verification: '- Wiring audit report shows no orphan config field or unread mapping
+      field.
+
+      - No runtime path remains that forwards exposed name directly to downstream
+      call_tool.'
+    evidence_template: '## Wiring Audit Report
+
+      **Unconsumed config fields**:
+
+      ```
+
+      <grep output or none found>
+
+      ```
+
+      **Unread mapping fields**:
+
+      ```
+
+      <grep output or none found>
+
+      ```
+
+      **Registry reachability evidence**:
+
+      ```
+
+      <import/lookup trace>
+
+      ```
+
+      **Verdict**: PASS | ISSUES_FOUND
+
+      '
+    depends_on:
+    - tool_prefix.runtime.integrate_reload_prefix_updates
+    agent: wiring-auditor
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
