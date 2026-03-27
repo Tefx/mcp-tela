@@ -38294,3 +38294,22 @@ phases:
     safety, contract strength, and black-box behavior for tool prefixes.
   depends_on:
   - tool_prefix.doc_sync
+  steps:
+  - id: tool_prefix.deep_review.wiring_audit
+    name: Full wiring audit for tool-prefix feature
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: full-plan-check
+
+      Complete wiring audit for tool_prefix feature. Verify exposed-name registry
+      wiring, raw-name routing consumption, config field reachability, and absence
+      of orphan mapping fields.'
+    verification: '- Every new public/config field introduced for tool_prefix has
+      a runtime consumer.
+
+      - No exposed-name-only path bypasses raw-name routing where downstream calls
+      occur.'
+    agent: wiring-auditor
