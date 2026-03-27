@@ -37221,7 +37221,7 @@ phases:
   - conn_v2.bridge
   steps:
   - id: conn_v2.validation.gate
-    name: Gate runtime validation phase
+    name: Gate integrated UX, wiring, and runtime validation
     status: pending
     description: "step_type: gate\nGate review: verify the integrated runtime refactor\
       \ survives host-like scenarios and broad validation.\nreview_depth: THOROUGH\n\
@@ -37233,6 +37233,10 @@ phases:
       complete
 
       - Any blocker-class issue has explicit remediation ownership before proceeding'
+    depends_on:
+    - conn_v2.validation.runtime_regressions
+    - conn_v2.validation.spec_conformance
+    - conn_v2.validation.full_plan_check
     agent: gate-reviewer
   - id: conn_v2.validation.full_plan_check
     name: Run full-plan-check for integrated runtime refactor
