@@ -37159,6 +37159,24 @@ phases:
     depends_on:
     - conn_v2.bridge.freeze_l2
     agent: blind-tester
+  - id: conn_v2.bridge.gate
+    name: Gate bridge control phase
+    status: pending
+    description: "step_type: gate\nGate review: verify bridge control and hard-interrupt\
+      \ exit behavior are correct.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
+      \  - phase touches signal handling, connection accounting, and host-observed\
+      \ exit behavior\ncross_cutting_focus:\n  - immediate interrupt exit\n  - exact\
+      \ attach/detach counting\n  - no host-specific hang paths\n  - idle shutdown\
+      \ sees authoritative connection state"
+    verification: '- Bridge implementation, integration evidence, and interrupt probe
+      are complete
+
+      - No blocker remains around hung connect exit or stale active-connection count'
+    depends_on:
+    - conn_v2.bridge.impl_module
+    - conn_v2.bridge.integrate_connect_flow
+    - conn_v2.bridge.interrupt_probe
+    agent: gate-reviewer
 - id: conn_v2.ux
   name: Host-Facing UX and Diagnostics
   status: locked
