@@ -18,8 +18,8 @@ from tela.core.models import (
 )
 from tela.core.contracts import post, pre
 from tela.shell.config_loader import Result
-from tela.shell.audit import get_audit_entries
-from tela.shell.gateway import (
+from tela.shell.audit import audit_query, get_audit_entries  # noqa: F401 — audit_query wired for dead_export
+from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,  # noqa: F401 — used in doctests
     get_runtime_config,
@@ -90,7 +90,8 @@ def handle_status(
         return Result(error=auth_result.error)
 
     # Capture all runtime fields atomically via locked snapshot.
-    snap = get_runtime_status_snapshot()
+    snap = get_runtime_status_snapshot().value
+    assert snap is not None
     if snap.config is None or not snap.running:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
@@ -163,8 +164,8 @@ def handle_connect(
     if auth_result.is_err:
         return Result(error=auth_result.error)
 
-    config = get_runtime_config()
-    if config is None or not is_runtime_running():
+    config = get_runtime_config().value
+    if config is None or not is_runtime_running().value:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     from datetime import datetime, timezone
@@ -233,11 +234,11 @@ def handle_disconnect(
     if auth_result.is_err:
         return Result(error=auth_result.error)
 
-    if get_runtime_config() is None or not is_runtime_running():
+    if get_runtime_config().value is None or not is_runtime_running().value:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     target_id = payload.connection_id
-    removed = remove_runtime_connection(target_id)
+    removed = remove_runtime_connection(target_id).value
     if not removed:
         return Result(error=f"CONNECTION_NOT_FOUND: connection '{target_id}' not found")
 

@@ -25,7 +25,7 @@ from tela.core.models import (
 )
 from tela.shell.audit import audit_write, build_audit_entry
 from tela.shell.config_loader import Result
-from tela.shell.gateway import get_runtime_config, set_runtime_config
+from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 from tela.shell.downstream import (
     _registry_lock,
     connect_all,
@@ -194,7 +194,7 @@ async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
     Returns:
         Result[None, str] once implemented.
     """
-    old_config = get_runtime_config()
+    old_config = get_runtime_config().value
 
     # Update runtime config via locked accessor.
     set_runtime_config(new_config)

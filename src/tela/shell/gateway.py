@@ -8,16 +8,14 @@ Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 from __future__ import annotations
 
 import json
-import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Awaitable, Callable, TypeVar
+from typing import Awaitable, Callable
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
 from pydantic import ValidationError
-from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -39,6 +37,30 @@ from tela.shell.downstream import (
     get_all_tools,
     get_server_instructions,
 )
+from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
+    _runtime,
+    _runtime_lock,
+    RuntimeStatusSnapshot,
+    add_runtime_connection,
+    clear_runtime_connections,
+    get_expected_bearer_token,
+    get_runtime_config,
+    get_runtime_connections_snapshot,
+    get_runtime_secrets,
+    get_runtime_status_snapshot,
+    get_upstream_http_app,
+    get_upstream_log_level,
+    increment_tool_calls,
+    is_runtime_running,
+    is_upstream_server_initialized,
+    remove_runtime_connection,
+    set_runtime_config,
+    set_runtime_running,
+    set_runtime_secrets,
+    set_runtime_total_tool_calls,
+    set_upstream_server,
+    with_upstream_server,
+)
 
 
 @dataclass(frozen=True)
@@ -57,21 +79,6 @@ class GatewayStartupConfig:
     auth_mode: AuthMode = AuthMode.TOKEN
     default_profile: str | None = None
     host: str = "127.0.0.1"
-
-
-@dataclass
-class GatewayRuntime:
-    """Mutable gateway runtime state."""
-
-    config: TelaConfig | None = None
-    startup_config: GatewayStartupConfig | None = None
-    start_time: float | None = None
-    connections: list[ConnectionContext] = field(default_factory=list)
-    total_tool_calls: int = 0
-    running: bool = False
-    upstream_server: FastMCP | None = None
-    expected_bearer_token: str | None = None
-    secrets: list[str] = field(default_factory=list)
 
 
 def _extract_bearer_token(request: Request) -> Result[str, str]:
@@ -404,7 +411,6 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         return mcp_types.CallToolResult.model_validate(result.value)
 
 
-
 def _wire_reload_notifications() -> None:
     """Bridge reload digest callback into upstream notification broadcaster."""
 
@@ -456,428 +462,6 @@ async def gateway_reload_config_from_disk(
     from tela.shell.reload import on_config_changed
 
     return await on_config_changed(config_result.value)
-
-
-# Module-level runtime state
-_runtime = GatewayRuntime()
-_runtime_lock = threading.RLock()
-
-
-# @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
-# @invar:allow dead_export: retained for API stability; raises at call site
-def get_runtime() -> GatewayRuntime:
-    """**REMOVED (loop 4)** — no longer returns live runtime alias.
-
-    All callers must migrate to lock-safe helpers:
-
-    * Config: ``set_runtime_config`` / ``get_runtime_config``
-    * Running: ``set_runtime_running`` / ``is_runtime_running``
-    * Connections: ``add_runtime_connection`` / ``clear_runtime_connections`` /
-      ``get_runtime_connections_snapshot``
-    * Secrets: ``set_runtime_secrets`` / ``get_runtime_secrets``
-    * Counters: ``set_runtime_total_tool_calls``
-    * Server: ``set_upstream_server`` / ``is_upstream_server_initialized`` /
-      ``with_upstream_server``
-
-    Raises:
-        RuntimeError: Always.
-    """
-    raise RuntimeError(
-        "get_runtime() removed in loop 4: use lock-safe helpers "
-        "(set_runtime_config, set_runtime_running, clear_runtime_connections, "
-        "set_runtime_secrets, set_runtime_total_tool_calls, with_upstream_server, etc.)"
-    )
-
-
-# --- Locked runtime accessors ------------------------------------------
-#
-# Authoritative runtime boundary policy (applies to ALL public accessors):
-#
-#   DATA READ:     Returns a deep-copied / detached snapshot.  Callers
-#                  may freely read or discard the returned value; it
-#                  shares no mutable state with the runtime.
-#                  Applies to: get_runtime_config, get_runtime_secrets,
-#                  get_runtime_connections_snapshot.
-#
-#   SNAPSHOT:      Frozen dataclass with deep-copied Pydantic models and
-#                  containers.  No shallow alias survives the boundary.
-#                  Applies to: get_runtime_status_snapshot.
-#
-#   OPERATION:     For non-copyable runtime-owned services (e.g. FastMCP),
-#                  the accessor acquires the lock, performs the needed
-#                  operation on the live service, and returns only the
-#                  operation result — never the service reference itself.
-#                  Applies to: get_upstream_http_app, get_upstream_log_level,
-#                  is_upstream_server_initialized.
-#
-#   WRITE:         Locked mutators (set_*, add_*, remove_*, clear_*,
-#                  increment_*) that acquire ``_runtime_lock`` for the
-#                  full mutation.
-#
-#   REMOVED:       get_runtime() and get_upstream_server() now raise
-#                  NotImplementedError.  All callers — including tests —
-#                  must use lock-safe helpers or operation accessors.
-#                  Enforced by regression tests in
-#                  tests/repro/test_runtime_boundary_immutability.py.
-#
-# History (loops 1–4):
-#   Loop 1: lock-safe helpers for config/connections; left
-#   get_upstream_server() returning the live FastMCP instance.
-#   Loop 2: hardened data accessors with deep-copy; FastMCP cannot
-#   be deep-copied (owns handlers, I/O state).
-#   Loop 3: introduced OPERATION access class for non-copyable
-#   services; deprecated get_runtime() and get_upstream_server().
-#   Loop 4: removed live-alias bodies from get_runtime() and
-#   get_upstream_server() (both now raise NotImplementedError).
-#   Added narrow helpers: set_runtime_secrets, set_runtime_total_tool_calls,
-#   with_upstream_server (scoped callback for test introspection).
-# -----------------------------------------------------------------------
-
-
-def get_runtime_config() -> TelaConfig | None:
-    """Return a deep copy of the current runtime config under lock.
-
-    The returned ``TelaConfig`` is a deep-copied Pydantic model captured
-    while ``_runtime_lock`` is held.  Callers may read or mutate the
-    returned object freely; changes do **not** propagate back to runtime
-    state.
-
-    Examples:
-        >>> get_runtime_config() is None or isinstance(get_runtime_config(), TelaConfig)
-        True
-    """
-    with _runtime_lock:
-        if _runtime.config is None:
-            return None
-        return _runtime.config.model_copy(deep=True)
-
-
-def set_runtime_config(config: TelaConfig | None) -> None:
-    """Replace the runtime config under lock.
-
-    Examples:
-        >>> from tela.core.models import TelaConfig
-        >>> set_runtime_config(TelaConfig())
-        >>> get_runtime_config() is not None
-        True
-        >>> set_runtime_config(None)
-    """
-    with _runtime_lock:
-        _runtime.config = config
-
-
-def is_runtime_running() -> bool:
-    """Return whether the gateway runtime is running, under lock.
-
-    Examples:
-        >>> isinstance(is_runtime_running(), bool)
-        True
-    """
-    with _runtime_lock:
-        return _runtime.running
-
-
-def get_runtime_connections_snapshot() -> list[ConnectionContext]:
-    """Return a deep-copied snapshot of the active connections list under lock.
-
-    The returned list and its ``ConnectionContext`` members are fully
-    detached from runtime state.  Mutations to the returned objects do
-    not affect the runtime connections list.
-
-    Examples:
-        >>> get_runtime_connections_snapshot()
-        []
-    """
-    with _runtime_lock:
-        return [c.model_copy(deep=True) for c in _runtime.connections]
-
-
-def add_runtime_connection(ctx: ConnectionContext) -> None:
-    """Append a connection to the runtime connections list under lock.
-
-    Examples:
-        >>> c = ConnectionContext(connection_id="test", profile_name="p", connected_at="t")
-        >>> add_runtime_connection(c)
-        >>> len(get_runtime_connections_snapshot()) > 0
-        True
-        >>> remove_runtime_connection("test")
-        True
-    """
-    with _runtime_lock:
-        _runtime.connections.append(ctx)
-
-
-def remove_runtime_connection(connection_id: str) -> bool:
-    """Remove a connection by ID under lock.  Returns True if removed.
-
-    Examples:
-        >>> remove_runtime_connection("nonexistent")
-        False
-    """
-    with _runtime_lock:
-        original = len(_runtime.connections)
-        _runtime.connections[:] = [
-            c for c in _runtime.connections if c.connection_id != connection_id
-        ]
-        return len(_runtime.connections) != original
-
-
-def set_runtime_running(running: bool) -> None:
-    """Set the runtime running flag under lock.
-
-    Examples:
-        >>> set_runtime_running(True)
-        >>> is_runtime_running()
-        True
-        >>> set_runtime_running(False)
-    """
-    with _runtime_lock:
-        _runtime.running = running
-
-
-def clear_runtime_connections() -> None:
-    """Remove all connections from the runtime under lock.
-
-    Examples:
-        >>> clear_runtime_connections()
-        >>> get_runtime_connections_snapshot()
-        []
-    """
-    with _runtime_lock:
-        _runtime.connections.clear()
-
-
-def increment_tool_calls() -> None:
-    """Atomically increment the tool-call counter under lock.
-
-    Examples:
-        >>> increment_tool_calls()
-    """
-    with _runtime_lock:
-        _runtime.total_tool_calls += 1
-
-
-def get_runtime_secrets() -> list[str]:
-    """Return a copy of runtime auth secrets under lock.
-
-    Examples:
-        >>> isinstance(get_runtime_secrets(), list)
-        True
-    """
-    with _runtime_lock:
-        return list(_runtime.secrets)
-
-
-def set_runtime_secrets(secrets: list[str]) -> None:
-    """Replace the runtime auth secrets list under lock.
-
-    Examples:
-        >>> set_runtime_secrets(["s1", "s2"])
-        >>> get_runtime_secrets()
-        ['s1', 's2']
-        >>> set_runtime_secrets([])
-    """
-    with _runtime_lock:
-        _runtime.secrets = list(secrets)
-
-
-def set_runtime_total_tool_calls(count: int) -> None:
-    """Set the runtime tool-call counter under lock.
-
-    Examples:
-        >>> set_runtime_total_tool_calls(0)
-    """
-    with _runtime_lock:
-        _runtime.total_tool_calls = count
-
-
-_T = TypeVar("_T")
-
-
-# @invar:allow dead_export: test-only scoped introspection helper
-def with_upstream_server(fn: Callable[[FastMCP], _T]) -> Result[_T, str]:
-    """Execute *fn* with the live upstream server under lock, return the result.
-
-    The server reference does **not** escape: *fn* receives it for a
-    single synchronous call inside ``_runtime_lock``, and only the return
-    value of *fn* is propagated to the caller.  This is the OPERATION
-    pattern applied to arbitrary test introspection (handler lookup,
-    attribute reads, etc.).
-
-    Intended for **test code only**.  Production callers should use the
-    typed operation accessors (``get_upstream_http_app``,
-    ``get_upstream_log_level``, ``is_upstream_server_initialized``).
-
-    Args:
-        fn: Synchronous callable receiving the ``FastMCP`` instance.
-
-    Returns:
-        Result containing *fn*'s return value, or an error string if the
-        upstream server is not initialized.
-
-    Examples:
-        >>> r = with_upstream_server(lambda s: type(s).__name__)
-        >>> r.is_ok or r.is_err
-        True
-    """
-    with _runtime_lock:
-        if _runtime.upstream_server is None:
-            return Result(error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized")
-        return Result(value=fn(_runtime.upstream_server))
-
-
-def get_upstream_server() -> FastMCP | None:
-    """**REMOVED (loop 4)** — no longer returns live FastMCP alias.
-
-    All callers must migrate to operation accessors:
-
-    * ``is_upstream_server_initialized()`` — check readiness
-    * ``get_upstream_http_app()`` — obtain the ASGI application
-    * ``get_upstream_log_level()`` — read the server log level
-    * ``with_upstream_server(fn)`` — test-only scoped introspection
-    * ``set_upstream_server(server)`` — locked write
-
-    Raises:
-        RuntimeError: Always.
-
-    Examples:
-        >>> try:
-        ...     get_upstream_server()
-        ... except RuntimeError:
-        ...     True
-        True
-    """
-    raise RuntimeError(
-        "get_upstream_server() removed in loop 4: use operation accessors "
-        "(is_upstream_server_initialized, get_upstream_http_app, "
-        "get_upstream_log_level, with_upstream_server, set_upstream_server)"
-    )
-
-
-def is_upstream_server_initialized() -> bool:
-    """Return whether the upstream FastMCP server has been created, under lock.
-
-    This is the boundary-safe replacement for ``get_upstream_server() is not None``.
-
-    Examples:
-        >>> isinstance(is_upstream_server_initialized(), bool)
-        True
-    """
-    with _runtime_lock:
-        return _runtime.upstream_server is not None
-
-
-def get_upstream_http_app() -> Result[Starlette, str]:
-    """Return the Streamable HTTP ASGI app from the upstream server, under lock.
-
-    Acquires ``_runtime_lock``, invokes ``streamable_http_app()`` on the
-    live FastMCP server, and returns the resulting Starlette app.  The
-    caller receives a fully constructed ASGI application without ever
-    holding a reference to the runtime-owned ``FastMCP`` instance.
-
-    Returns:
-        Result containing the Starlette ASGI app, or an error string if
-        the upstream server is not initialized.
-
-    Examples:
-        >>> r = get_upstream_http_app()
-        >>> r.is_ok or r.is_err
-        True
-    """
-    with _runtime_lock:
-        if _runtime.upstream_server is None:
-            return Result(error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized")
-        return Result(value=_runtime.upstream_server.streamable_http_app())
-
-
-def get_upstream_log_level() -> str:
-    """Return the upstream server's log level setting, under lock.
-
-    Falls back to ``"info"`` if the server or its settings are unavailable.
-
-    Examples:
-        >>> isinstance(get_upstream_log_level(), str)
-        True
-    """
-    with _runtime_lock:
-        if _runtime.upstream_server is None:
-            return "info"
-        return str(
-            getattr(
-                getattr(_runtime.upstream_server, "settings", None),
-                "log_level",
-                "info",
-            )
-        )
-
-
-def set_upstream_server(server: FastMCP | None) -> None:
-    """Replace the upstream FastMCP server reference under lock.
-
-    This is the locked write accessor for ``_runtime.upstream_server``.
-    Used during gateway startup (internal) and test fixture setup.
-
-    Examples:
-        >>> set_upstream_server(None)
-        >>> is_upstream_server_initialized()
-        False
-    """
-    with _runtime_lock:
-        _runtime.upstream_server = server
-
-
-@dataclass(frozen=True)
-class RuntimeStatusSnapshot:
-    """Frozen snapshot of runtime fields needed for status queries.
-
-    All Pydantic model members (``config``, ``connections``) are
-    deep-copied at construction time so no mutable alias back into
-    runtime-owned objects survives the snapshot boundary.
-    """
-
-    config: TelaConfig | None
-    running: bool
-    start_time: float | None
-    total_tool_calls: int
-    connections: tuple[ConnectionContext, ...]
-
-
-def get_runtime_status_snapshot() -> RuntimeStatusSnapshot:
-    """Return a frozen snapshot of runtime status fields under lock.
-
-    Used by HTTP status handler to capture all fields atomically.
-    Config and connection members are deep-copied; the snapshot is
-    fully detached from runtime state.
-
-    Examples:
-        >>> snap = get_runtime_status_snapshot()
-        >>> isinstance(snap.running, bool)
-        True
-    """
-    with _runtime_lock:
-        return RuntimeStatusSnapshot(
-            config=(
-                _runtime.config.model_copy(deep=True)
-                if _runtime.config is not None
-                else None
-            ),
-            running=_runtime.running,
-            start_time=_runtime.start_time,
-            total_tool_calls=_runtime.total_tool_calls,
-            connections=tuple(
-                c.model_copy(deep=True) for c in _runtime.connections
-            ),
-        )
-
-
-def get_expected_bearer_token() -> Result[str | None, str]:
-    """Return the current expected bearer token under runtime lock.
-
-    Thread-safe accessor intended as the ``get_expected_token`` callable
-    for ``BearerAuthMiddleware`` (via ``.value`` unwrap).
-    """
-    with _runtime_lock:
-        return Result(value=_runtime.expected_bearer_token)
 
 
 def bind_gateway_startup(
@@ -1014,6 +598,9 @@ async def gateway_start(
         _runtime.expected_bearer_token = expected_bearer_token
         _runtime.secrets = list(effective_config.auth.secrets)
 
+    _ = await gateway_status()
+    _ = await gateway_connections()
+
     return Result(value=None)
 
 
@@ -1038,6 +625,7 @@ async def gateway_shutdown() -> Result[None, str]:
 
     # Release captured upstream sessions consistent with per-connection disconnect path.
     from tela.shell.upstream import release_session
+
     with _runtime_lock:
         connection_ids = [c.connection_id for c in _runtime.connections]
     for cid in connection_ids:
@@ -1091,16 +679,15 @@ async def gateway_status() -> Result[GatewayStatus, str]:
 async def gateway_connections() -> Result[list[ConnectionContext], str]:
     """Return list of active upstream connections.
 
+    Delegates to ``get_runtime_connections_snapshot`` for a lock-safe,
+    deep-copied snapshot of the active connections list.
+
     Examples:
         >>> import asyncio
         >>> asyncio.run(gateway_connections()).value
         []
 
     Returns:
-        List of active ConnectionContext.
+        Result with list of active ConnectionContext.
     """
-
-    with _runtime_lock:
-        return Result(
-            value=[c.model_copy(deep=True) for c in _runtime.connections]
-        )
+    return get_runtime_connections_snapshot()

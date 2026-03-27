@@ -471,7 +471,7 @@ async def re_enumerate(
         ``Result[list[ResolvedTool], str]`` with updated resolved tool list.
     """
 
-    from tela.shell.gateway import get_runtime_config
+    from tela.shell.gateway_runtime import get_runtime_config
 
     async with _registry_lock:
         client = _clients.get(server_name)
@@ -482,7 +482,7 @@ async def re_enumerate(
                 )
             )
 
-        config = get_runtime_config()
+        config = get_runtime_config().value
         if config is None:
             return Result(
                 error="DOWNSTREAM_UNAVAILABLE: gateway runtime config is not loaded"

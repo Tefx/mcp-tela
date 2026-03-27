@@ -25,6 +25,8 @@ from tela.shell.gateway import (
     GatewayStartupConfig,
     gateway_shutdown,
     gateway_start,
+)
+from tela.shell.gateway_runtime import (
     get_expected_bearer_token,
     get_upstream_http_app,
     get_upstream_log_level,
@@ -169,7 +171,7 @@ async def _run_serve_gateway(
         return Result(error=version_result.error)
     assert version_result.value is not None
 
-    if not is_upstream_server_initialized():
+    if not is_upstream_server_initialized().value:
         await gateway_shutdown()
         delete_lockfile()
         return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
@@ -183,7 +185,7 @@ async def _run_serve_gateway(
 
     http_server_result = await _launch_streamable_http_server(
         upstream_app=upstream_app_result.value,
-        upstream_log_level=get_upstream_log_level(),
+        upstream_log_level=get_upstream_log_level().value,
         host=startup_config.host,
         requested_port=startup_config.port or 0,
     )
