@@ -34106,7 +34106,7 @@ phases:
   - id: post.deep_review.fix_result_api_consumer_drift_pytest_gate
     name: Fix Result-API consumer drift and runtime corruption paths from latest pytest
       gate blockers
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nVerification scope:\
       \ phase-check protecting post.deep_review.gate and full-plan-check completion.\n\
       \nBatched fix: resolve ALL latest gate blockers causing full pytest failure\
@@ -34232,6 +34232,12 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T04:25:40.653296+00:00'
+    done_at: '2026-03-27T04:31:16.616893+00:00'
+    evidence: Batched Result-API drift remediation merged. Updated stale consumers
+      across failing src/tests to unwrap Result-returning runtime accessors consistently,
+      repaired restore/write-back corruption paths that could store Result objects
+      into runtime state, and validated with sibling search plus full verification
+      (pytest 689 passed, ruff clean, mypy clean).
   - id: post.deep_review.retest_result_api_consumer_drift_pytest_gate
     name: Retest full pytest and runtime boundary checks after Result-API consumer
       drift remediation
