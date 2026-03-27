@@ -35031,21 +35031,26 @@ phases:
     description: 'step_type: gate
 
       Gate review: confirm the phase resolved the new agent-interface ambiguity without
-      guesswork after the batched remediation/retest loop.
+      guesswork after both batched remediation/retest loops.
 
 
       The gate must reject any completion that still assumes `tela.status`, `tela.connections`,
       or `tela.audit` are built-in MCP tools without proof or implementation, that
       reuses `tela_admin` without verification/spec adoption, that blurs `tela.profiles`
-      resource reads with tool calls, or that leaves downstream instruction merge
-      ordering/conflict semantics ambiguous across docs/runtime.'
+      resource reads with tool calls, that leaves downstream instruction merge ordering/conflict
+      semantics ambiguous across docs/runtime, or that relies on placeholder conflict-semantics
+      coverage or stale evidence artifacts.'
     verification: '- Verification scope: phase-check protecting final review and plan
       completion
 
-      - Gate evidence must confirm the remediation/retest loop cleared all four blocker
+      - Gate evidence must confirm the remediation/retest loops cleared all blocker
       families: unsupported built-in MCP introspection claims, `tela_admin` wording
-      conflicts, `tela.profiles` resource/tool boundary contradictions, and over-claimed
-      instruction-conflict semantics
+      conflicts, `tela.profiles` resource/tool boundary contradictions, over-claimed
+      instruction-conflict semantics, hollow conflict-semantics regression coverage,
+      and stale evidence-artifact drift
+
+      - Gate evidence must confirm the latest retest verified concrete conflict-semantics
+      assertions (no placeholder `pass`) and reconciled evidence artifacts
 
       - Gate evidence states whether the chosen direction was ''implement missing
       MCP surfaces'' or ''document CLI/HTTP-only reality'', and cites verification
@@ -35067,6 +35072,7 @@ phases:
       '
     depends_on:
     - agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
+    - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
     agent: gate-reviewer
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
