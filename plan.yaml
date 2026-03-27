@@ -33644,7 +33644,7 @@ phases:
   - id: post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 retest: independent verification of deprecated live-alias accessor
       handling'
-    status: claimed
+    status: done
     description: "Independent loop 4 retest of the deprecated live-alias accessor\
       \ blocker family after post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4.\n\
       \nstep_type: verification\nverification_scope: phase-check\nProtects downstream\
@@ -33690,3 +33690,8 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T02:30:07.966821+00:00'
+    done_at: '2026-03-27T02:33:32.617440+00:00'
+    evidence: Independent loop4 retest passed. Verified deprecated get_runtime/get_upstream_server
+      now hard-fail (RuntimeError), regression tests pass, and no production module
+      imports/calls these deprecated accessor surfaces. This closes the deprecated
+      live-alias blocker family for downstream gate protection.
