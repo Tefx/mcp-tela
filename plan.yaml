@@ -34806,3 +34806,10 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.verify_surface_conformance
     agent: gate-reviewer
+- id: agent_iface.final_review
+  name: 'Final Review: Agent Interface Surface Consistency'
+  status: locked
+  gate: Final independent review of the newly clarified agent-facing surface taxonomy,
+    runtime exposure, and documentation consistency.
+  depends_on:
+  - agent_iface.surface_taxonomy
