@@ -33237,7 +33237,7 @@ phases:
       semantics. Verification reported full test suite pass (670 passed, 0 failed).
   - id: post.deep_review.architecture_retest_runtime_locking
     name: Re-run architecture concurrency verification after runtime locking hardening
-    status: claimed
+    status: done
     description: 'Independent retest of the concurrency blockers reported by post.deep_review.architecture
       after runtime locking hardening.
 
@@ -33283,6 +33283,13 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T01:39:04.328903+00:00'
+    done_at: '2026-03-27T01:39:11.094882+00:00'
+    evidence: 'Independent retest executed and reported blocker-class residual issues:
+      mutable runtime still escaped via get_runtime() and helper snapshot/status accessors
+      leaked mutable runtime-owned objects outside lock boundary. Findings captured
+      with file references and used to create batched loop2 remediation chain: post.deep_review.architecture_fix_runtime_locking_loop2
+      -> post.deep_review.architecture_retest_runtime_locking_loop2, with post.deep_review.gate
+      updated to depend on loop2 retest.'
   - id: post.deep_review.architecture_fix_runtime_locking_loop2
     name: 'Loop 2 fix: harden runtime boundary snapshots and alias safety for remaining
       deep-review concurrency blockers'
