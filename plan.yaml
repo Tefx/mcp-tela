@@ -37721,3 +37721,10 @@ phases:
     - conn_v2.deep_review.contract_strength
     - conn_v2.deep_review.black_box
     agent: gate-reviewer
+- id: conn_v2.integration_validate
+  name: Integrated UX, Wiring, and Runtime Validation
+  status: locked
+  gate: One compact late-stage phase for host-facing diagnostics, entrypoint wiring,
+    and integrated runtime validation after the core A+B+C+D runtime seams are implemented.
+  depends_on:
+  - conn_v2.bridge
