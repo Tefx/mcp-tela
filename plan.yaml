@@ -37179,14 +37179,14 @@ phases:
     agent: gate-reviewer
 - id: conn_v2.ux
   name: Host-Facing UX and Diagnostics
-  status: locked
+  status: done
   gate: CLI startup/shutdown messaging and status diagnostics match the new runtime
     contract across connect, serve, status, and HTTP surfaces.
   depends_on:
   - conn_v2.bridge
 - id: conn_v2.system_wiring
   name: System Wiring and Entry Point Integration
-  status: locked
+  status: pending
   gate: All new runtime modules are wired into the real connect/serve/status entry
     points with end-to-end behavioral proof, not just unit-level correctness.
   depends_on:
