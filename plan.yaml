@@ -34557,7 +34557,7 @@ phases:
       \ commit `739af91164baf2bd963825543739416595fee3bf`"
   - id: agent_iface.surface_taxonomy.define_confirmed_contract
     name: Define confirmed agent-facing surface contract
-    status: pending
+    status: claimed
     description: 'step_type: contract
 
       contract_purity: ENFORCED
@@ -34608,6 +34608,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.decide_taxonomy
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-27T07:22:27.559619+00:00'
   - id: agent_iface.surface_taxonomy.add_surface_regressions
     name: Add non-regression checks for the confirmed surface taxonomy
     status: pending
