@@ -33011,7 +33011,7 @@ phases:
       progression were reported.'
   - id: post.deep_review.spec_conformance
     name: Spec conformance audit
-    status: pending
+    status: claimed
     description: 'Compare implemented behavior against MCP spec and project docs.
 
 
@@ -33035,6 +33035,8 @@ phases:
     depends_on:
     - post.deep_review.wiring
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T00:44:39.021682+00:00'
   - id: post.deep_review.architecture
     name: Architecture and concurrency review
     status: claimed
