@@ -37282,19 +37282,6 @@ phases:
     depends_on:
     - conn_v2.deep_review.wiring_audit
     agent: gate-reviewer
-  - id: conn_v2.deep_review.black_box
-    name: Black-box verification of host-facing runtime behavior
-    status: pending
-    description: "step_type: verification\nUsing only the public CLI/HTTP contracts\
-      \ and documented formats:\n  - verify tela connect cold-start and attach behavior\n\
-      \  - verify tela serve explicit-server behavior\n  - verify lockfile and /status\
-      \ outputs with documented fixtures\n  - verify interrupt and degraded-state\
-      \ diagnostics from the host perspective"
-    verification: '- Black-box report includes documented fixtures, actual commands,
-      and observed output'
-    depends_on:
-    - conn_v2.deep_review.spec_conformance
-    agent: blind-tester
 - id: conn_v2.integration_validate
   name: Integrated UX, Wiring, and Runtime Validation
   status: locked
@@ -37664,3 +37651,14 @@ phases:
       - Remaining issues, if any, are explicitly rejected or remediated before phase
       completion'
     agent: gate-reviewer
+  - id: conn_v2.deep_review.black_box
+    name: Black-box verification of host-facing runtime behavior
+    status: pending
+    description: "step_type: verification\nUsing only the public CLI/HTTP contracts\
+      \ and documented formats:\n  - verify tela connect cold-start and attach behavior\n\
+      \  - verify tela serve explicit-server behavior\n  - verify lockfile and /status\
+      \ outputs with documented fixtures\n  - verify interrupt and degraded-state\
+      \ diagnostics from the host perspective"
+    verification: '- Black-box report includes documented fixtures, actual commands,
+      and observed output'
+    agent: blind-tester
