@@ -34649,3 +34649,40 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.align_runtime_surface
     agent: doc-reviewer
+  - id: agent_iface.surface_taxonomy.sync_shared_docs
+    name: Sync INTERFACES, USAGE, and README to the confirmed taxonomy
+    status: pending
+    description: 'step_type: implementation
+
+      Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
+
+      Propagate the confirmed taxonomy and instruction semantics across the remaining
+      user-facing docs. Update `docs/INTERFACES.md`, `docs/USAGE.md`, and `README.md`
+      so all surfaces use the same classification and wording as the confirmed contract
+      and `AGENT_INTERFACE.md`. This step must not drift ahead of the runtime contract:
+      if a surface remains CLI/HTTP-only, these docs must say so consistently; if
+      new MCP built-ins were added, these docs must describe the exact tool/resource
+      kinds and usage flows.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - INTERFACES/USAGE/README agree with the confirmed surface matrix, capability
+      wording, and instruction-merge semantics
+
+      - No doc says a CLI-only surface is an MCP tool, and no doc blurs resource reads
+      with tool calls'
+    evidence_template: 'Shared doc sync:
+
+      - Files updated:
+
+      - Surface taxonomy wording checked:
+
+      - Capability wording checked:
+
+      - Instruction merge wording checked:
+
+      - Cross-doc diffs reviewed:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.update_agent_interface_doc
+    agent: doc-reviewer
