@@ -38523,3 +38523,14 @@ phases:
     depends_on:
     - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     agent: integration-verifier
+  - id: conn_v2.preflight_reconnect.gate
+    name: Gate preflight reconnect seam
+    status: pending
+    description: Gate review before conn_v2.contract begins. Confirm duplicate enumeration
+      is fixed, regression coverage exists, and this preflight phase did not absorb
+      deferred generic refactors.
+    verification: Gate evidence summarizes prior steps, confirms duplicate enumeration
+      removal, and confirms deferred items remain out of scope.
+    depends_on:
+    - conn_v2.preflight_reconnect.seam_proof
+    agent: gate-reviewer
