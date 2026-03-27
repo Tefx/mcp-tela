@@ -33128,3 +33128,72 @@ phases:
     - post.deep_review.architecture
     - post.deep_review.black_box
     agent: gate-reviewer
+  - id: post.deep_review.architecture_fix_runtime_locking
+    name: Harden runtime locking discipline for deep-review concurrency blockers
+    status: pending
+    description: 'Fix blocker-class runtime locking gaps identified by post.deep_review.architecture.
+
+
+      Scope:
+
+      - Prevent mutable gateway runtime from escaping the _runtime_lock boundary via
+      get_runtime()
+
+      - Replace unlocked live reads of _runtime.connections in _ensure_connection
+      with a locked snapshot or equivalent serialized access pattern
+
+      - Eliminate remaining cross-module runtime reads/writes that bypass _runtime_lock
+
+
+      Required outputs:
+
+      - One authoritative locking discipline for runtime state access
+
+      - No exported or shared path returns mutable runtime state without lock-safe
+      semantics
+
+      - Cross-module callers use locked helpers/snapshots instead of direct live runtime
+      access
+
+
+      Failure modes to close:
+
+      - mutable runtime escape enabling unsynchronized mutation after accessor return
+
+      - initialization/connection checks observing torn or stale runtime state
+
+      - inconsistent lock coverage across modules causing race-prone read/write interleavings
+
+
+      Completion criteria:
+
+      - Fix ALL listed blockers, not just the first occurrence
+
+      - Search sibling runtime access paths for the same lock-boundary anti-pattern
+
+      - Preserve external behavior while hardening concurrency guarantees
+
+      - This is an IMPLEMENTATION step; review-only notes or partial wrappers do not
+      satisfy completion'
+    verification: '- Runtime locking hardening implemented for get_runtime(), _ensure_connection,
+      and sibling cross-module runtime access paths
+
+      - Sibling search completed for lock-boundary bypass patterns
+
+      - Evidence identifies the authoritative lock-safe access pattern adopted across
+      affected runtime callers'
+    evidence_template: '## Runtime Locking Hardening Evidence
+
+      - Blockers addressed: mutable runtime escape | unlocked _runtime.connections
+      read | cross-module lock bypass
+
+      - Authoritative lock-safe access pattern: <helper/snapshot/serialization approach>
+
+      - Affected runtime paths updated: <file/path list>
+
+      - Sibling search performed: <locations checked and result>
+
+      - Remaining ambiguity: <none or explain>'
+    depends_on:
+    - post.deep_review.architecture
+    agent: python-senior
