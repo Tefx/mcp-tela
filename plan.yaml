@@ -36162,3 +36162,11 @@ phases:
     must exist before implementation.'
   depends_on:
   - conn_v2.contract
+- id: conn_v2.startup_coord
+  name: Startup Coordination and Single-Instance Autostart
+  status: locked
+  gate: Autostart leader/follower semantics and lockfile publication are wired so
+    one gateway instance owns startup for a given config and competing connect clients
+    converge safely.
+  depends_on:
+  - conn_v2.test
