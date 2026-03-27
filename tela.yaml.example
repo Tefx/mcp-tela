@@ -293,10 +293,9 @@ profiles:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
-      # tela_admin grants access to the tela.profiles MCP resource.
-      # Note: tela.status, tela.connections, and tela.audit are operator-only
+      # NOTE: tela.status, tela.connections, and tela.audit are operator-only
       # CLI/HTTP surfaces, not MCP tools/resources.
-      tela_admin: "read_only"
+      # tela.profiles is available via the MCP resource interface (not a capability key).
 
     # Per-tool fine control within family posture ceiling
     # NOTE: The structure requires 'overrides' nesting:
