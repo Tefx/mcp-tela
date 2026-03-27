@@ -36199,3 +36199,10 @@ phases:
     contract across connect, serve, status, and HTTP surfaces.
   depends_on:
   - conn_v2.bridge
+- id: conn_v2.system_wiring
+  name: System Wiring and Entry Point Integration
+  status: locked
+  gate: All new runtime modules are wired into the real connect/serve/status entry
+    points with end-to-end behavioral proof, not just unit-level correctness.
+  depends_on:
+  - conn_v2.ux
