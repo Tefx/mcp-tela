@@ -33154,11 +33154,15 @@ phases:
       - No blocking findings remain, including runtime locking retest blockers
 
       - Plan complete'
+    refs:
+    - src/tela/commands/serve_cmd.py
+    - src/tela/commands/__init__.py
+    - src/tela/http_routes.py
     depends_on:
     - post.deep_review.spec_conformance
     - post.deep_review.black_box
     - post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
-    - post.deep_review.retest_invar_guard_gate_blockers
+    - post.deep_review.retest_invar_guard_gate_blockers_loop2
     agent: gate-reviewer
   - id: post.deep_review.architecture_fix_runtime_locking
     name: Harden runtime locking discipline for deep-review concurrency blockers
