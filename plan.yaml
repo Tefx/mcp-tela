@@ -36220,3 +36220,10 @@ phases:
     status schema, and connect interrupt behavior.
   depends_on:
   - conn_v2.validation
+- id: conn_v2.deep_review
+  name: Deep Review of Connect/Serve Runtime Refactor
+  status: locked
+  gate: Final independent multi-agent review for wiring, spec conformance, architecture
+    safety, contract strength, and black-box host behavior.
+  depends_on:
+  - conn_v2.doc_sync
