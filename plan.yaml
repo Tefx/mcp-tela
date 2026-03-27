@@ -33281,3 +33281,66 @@ phases:
     depends_on:
     - post.deep_review.architecture_fix_runtime_locking
     agent: software-architect
+  - id: post.deep_review.architecture_fix_runtime_locking_loop2
+    name: 'Loop 2 fix: harden runtime boundary snapshots and alias safety for remaining
+      deep-review concurrency blockers'
+    status: pending
+    description: "Fix ALL remaining blocker-class findings from post.deep_review.architecture_retest_runtime_locking\
+      \ together.\n\nstep_type: implementation\nprior_loop:\n  - post.deep_review.architecture_fix_runtime_locking\n\
+      \  - post.deep_review.architecture_retest_runtime_locking\nsymbolic_testing:\
+      \ false\n\n## Root Cause vs Symptom\n- Root cause: runtime ownership is still\
+      \ exposed through helper/accessor surfaces that return mutable runtime-owned\
+      \ objects or shallow aliases, so lock discipline ends at accessor return rather\
+      \ than at the runtime boundary.\n- Symptom: get_runtime and helper snapshot/status\
+      \ accessors still let callers observe or mutate live runtime-owned state after\
+      \ the lock-safe handoff.\n- why_previous_fix_failed: the prior fix hardened\
+      \ selected call paths but did not fully eliminate alias leakage at the authoritative\
+      \ runtime boundary; shallow or live helper returns left mutable ownership semantics\
+      \ unresolved.\n- why_this_fix_is_not_surface_level: harden the ownership model\
+      \ itself so runtime-facing helpers return immutable or detached values, and\
+      \ make boundary semantics explicit for every remaining accessor in the blocker\
+      \ family.\n\n## Blockers to Fix (ALL of these, not just the first)\n### B1:\
+      \ get_runtime still exposes mutable runtime object\nRemediation:\n- replace\
+      \ mutable runtime exposure with an authoritative lock-safe boundary that does\
+      \ not hand out the live runtime object\n- define exact ownership/immutability\
+      \ semantics for the returned value and align sibling accessors to the same rule\n\
+      - update all remaining callers that rely on live runtime mutation through accessor\
+      \ return paths\nSearch requirement:\n- inspect sibling runtime helpers/accessors\
+      \ for any return of live runtime-owned containers or objects\n\n### B2: helper\
+      \ snapshot/status accessors leak mutable runtime-owned objects (shallow/live\
+      \ aliases)\nRemediation:\n- harden snapshot/status helpers so returned structures\
+      \ are immutable or fully detached from runtime-owned mutable state\n- verify\
+      \ nested containers and object members do not preserve shallow aliases back\
+      \ into runtime-owned objects\n- ensure status/read helpers cannot be used as\
+      \ write-capable escape hatches\nSearch requirement:\n- search for sibling helper\
+      \ functions that return dict/list/object views over runtime-owned state and\
+      \ apply the same hardening rule where needed\n\n## Required hardening outputs\n\
+      - One authoritative runtime boundary rule for read access, snapshot access,\
+      \ and status access\n- Explicit explanation of why_previous_fix_failed and how\
+      \ the new boundary semantics close the blocker family\n- Root-cause hardening\
+      \ evidence showing mutable alias leakage is removed rather than merely wrapped\n\
+      - Out-of-scope guardrail: do not widen public API redesign beyond the affected\
+      \ runtime boundary; fix caller migration needed to honor the hardened boundary\
+      \ in current repo scope\n\n## Completion Criteria (stub exclusion)\nThis is\
+      \ an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach deliverable\
+      \ MUST contain substantive logic that processes its inputs and produces outputs\
+      \ that vary based on those inputs. Private stub classes (`_Runtime*`, `_Stub*`,\
+      \ `_Placeholder*`) do not satisfy this requirement.\n\nVerification scope: phase-check\
+      \ protecting post.deep_review.gate.\nknown_risks:\n- alias-safe snapshots must\
+      \ be deep enough to prevent nested mutable escape\n- boundary hardening must\
+      \ cover sibling helpers, not just get_runtime\n- caller migration must preserve\
+      \ behavior without reintroducing live runtime exposure"
+    verification: '- Main path: runtime accessors return only immutable or detached
+      values under the authoritative boundary rule
+
+      - Failure path: regression evidence covers attempted live alias escape via get_runtime
+      and helper snapshot/status accessors
+
+      - Proof: sibling helper search shows no remaining mutable runtime escape path
+      in the blocker family
+
+      - Evidence explains why_previous_fix_failed and how root-cause hardening closes
+      the remaining blockers'
+    depends_on:
+    - post.deep_review.architecture_retest_runtime_locking
+    agent: python-senior
