@@ -21,11 +21,13 @@ from tela.shell.config_loader import Result
 from tela.shell.audit import get_audit_entries
 from tela.shell.gateway import (
     add_runtime_connection,
-    get_runtime,
+    clear_runtime_connections,  # noqa: F401 — used in doctests
     get_runtime_config,
     get_runtime_status_snapshot,
     is_runtime_running,
     remove_runtime_connection,
+    set_runtime_config,  # noqa: F401 — used in doctests
+    set_runtime_running,  # noqa: F401 — used in doctests
 )
 from tela.shell.http_auth import validate_bearer_token
 from tela.shell.upstream import release_session
@@ -77,8 +79,7 @@ def handle_status(
         Result[StatusResponse, str] with gateway runtime status on success.
 
     Examples:
-        >>> runtime = get_runtime()
-        >>> runtime.config = None  # Gateway not started
+        >>> set_runtime_config(None)  # Gateway not started
         >>> result = handle_status("valid-token", "valid-token")
         >>> result.is_err
         True
@@ -116,7 +117,7 @@ def handle_status(
             active_connections=len(snap.connections),
             profile_count=profile_count,
             total_tool_calls=snap.total_tool_calls,
-            connections=snap.connections,
+            connections=list(snap.connections),
             audit_entries=audit_entries_result.value,
         )
     )
@@ -150,9 +151,8 @@ def handle_connect(
 
     Examples:
         >>> from tela.core.models import ConnectRequest, TelaConfig
-        >>> runtime = get_runtime()
-        >>> runtime.config = TelaConfig()
-        >>> runtime.running = True
+        >>> set_runtime_config(TelaConfig())
+        >>> set_runtime_running(True)
         >>> req = ConnectRequest(connection_id="test-conn-1")
         >>> result = handle_connect("valid-token", "valid-token", req)
         >>> result.is_ok
@@ -214,16 +214,15 @@ def handle_disconnect(
 
     Examples:
         >>> from tela.core.models import DisconnectRequest, TelaConfig, ConnectionContext
-        >>> runtime = get_runtime()
-        >>> runtime.config = TelaConfig()
-        >>> runtime.running = True
-        >>> runtime.connections.clear()
+        >>> set_runtime_config(TelaConfig())
+        >>> set_runtime_running(True)
+        >>> clear_runtime_connections()
         >>> ctx = ConnectionContext(
         ...     connection_id="test-disconnect-1",
         ...     profile_name="default",
         ...     connected_at="2026-01-01T00:00:00Z"
         ... )
-        >>> runtime.connections.append(ctx)
+        >>> add_runtime_connection(ctx)
         >>> req = DisconnectRequest(connection_id="test-disconnect-1")
         >>> result = handle_disconnect("valid-token", "valid-token", req)
         >>> result.is_ok

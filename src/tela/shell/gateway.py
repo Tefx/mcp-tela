@@ -463,42 +463,82 @@ _runtime_lock = threading.RLock()
 
 
 # @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
+# @invar:allow dead_export: retained for single-threaded test setup only
 def get_runtime() -> GatewayRuntime:
-    """Return the module-level gateway runtime.
+    """Return the module-level gateway runtime (**test-setup only**).
+
+    .. deprecated::
+        This function returns a **mutable** reference without lock protection.
+        Production code MUST use the lock-safe accessor helpers below.
+        This function is retained only for single-threaded test setup where
+        lock-safe write helpers (``set_runtime_config``, ``set_runtime_running``,
+        ``clear_runtime_connections``) are not sufficient (e.g. ``upstream_server``
+        assignment in integration tests).
 
     .. warning::
-        Returns a **mutable** reference without lock protection.
-        Production cross-module callers MUST use the locked accessor
-        helpers below instead.  This function is retained only for
-        single-threaded doctest setup (``runtime.config = None`` etc.).
+        Callers MUST NOT cache the returned object or pass it across thread
+        boundaries. Any mutation of fields outside ``_runtime_lock`` is a
+        data race.
     """
     return _runtime
 
 
 # --- Locked runtime accessors ------------------------------------------
 #
-# Authoritative lock-safe access pattern: every cross-module read or
-# write of ``_runtime`` fields goes through one of the helpers below.
-# Each helper acquires ``_runtime_lock`` for the duration of the access
-# and returns an immutable copy / snapshot so that callers never hold a
-# live mutable reference that could be observed or mutated outside the
-# lock boundary.
+# Authoritative runtime boundary rule:
+#
+#   READ ACCESS:   Returns a deep-copied / detached snapshot.  Callers
+#                  may freely read or discard the returned value; it
+#                  shares no mutable state with the runtime.
+#
+#   SNAPSHOT ACCESS: Same as read — frozen dataclass or deep-copied
+#                    Pydantic models.  Nested containers (lists, dicts)
+#                    and model members are deep-copied so no shallow
+#                    alias back into runtime-owned objects survives.
+#
+#   STATUS ACCESS: Equivalent to snapshot — the RuntimeStatusSnapshot
+#                  dataclass is frozen, and all mutable model fields are
+#                  deep-copied before embedding.
+#
+#   WRITE ACCESS:  Locked mutators (set_*, add_*, remove_*, clear_*,
+#                  increment_*) that acquire ``_runtime_lock`` for the
+#                  full mutation.
+#
+# Why previous fix failed:
+#   The prior hardening pass introduced lock-safe helpers but left some
+#   helpers returning the *live* Pydantic model reference (e.g.
+#   ``_runtime.config`` directly).  Because Pydantic V2 models are
+#   mutable by default, callers could mutate fields on the returned
+#   object and those mutations would propagate back into runtime state,
+#   violating the lock boundary.  Shallow ``list()`` copies of
+#   connection lists likewise preserved live ``ConnectionContext``
+#   references.
+#
+# How this fix closes the blocker family:
+#   Every read accessor now returns ``model_copy(deep=True)`` for
+#   Pydantic models, ensuring no alias back into runtime-owned state.
+#   ``RuntimeStatusSnapshot`` deep-copies both config and connection
+#   list members.  ``get_runtime()`` is deprecated with explicit docs;
+#   new lock-safe write helpers cover the remaining test-setup mutations.
 # -----------------------------------------------------------------------
 
 
 def get_runtime_config() -> TelaConfig | None:
-    """Return current runtime config under lock.
+    """Return a deep copy of the current runtime config under lock.
 
-    The returned ``TelaConfig`` is a Pydantic model snapshot captured
-    while ``_runtime_lock`` is held.  Callers may read its fields freely;
-    mutations on the returned object do not affect runtime state.
+    The returned ``TelaConfig`` is a deep-copied Pydantic model captured
+    while ``_runtime_lock`` is held.  Callers may read or mutate the
+    returned object freely; changes do **not** propagate back to runtime
+    state.
 
     Examples:
         >>> get_runtime_config() is None or isinstance(get_runtime_config(), TelaConfig)
         True
     """
     with _runtime_lock:
-        return _runtime.config
+        if _runtime.config is None:
+            return None
+        return _runtime.config.model_copy(deep=True)
 
 
 def set_runtime_config(config: TelaConfig | None) -> None:
@@ -527,17 +567,18 @@ def is_runtime_running() -> bool:
 
 
 def get_runtime_connections_snapshot() -> list[ConnectionContext]:
-    """Return a shallow copy of the active connections list under lock.
+    """Return a deep-copied snapshot of the active connections list under lock.
 
-    The returned list is a snapshot; mutations to it do not affect the
-    runtime connections list.
+    The returned list and its ``ConnectionContext`` members are fully
+    detached from runtime state.  Mutations to the returned objects do
+    not affect the runtime connections list.
 
     Examples:
         >>> get_runtime_connections_snapshot()
         []
     """
     with _runtime_lock:
-        return list(_runtime.connections)
+        return [c.model_copy(deep=True) for c in _runtime.connections]
 
 
 def add_runtime_connection(ctx: ConnectionContext) -> None:
@@ -568,6 +609,31 @@ def remove_runtime_connection(connection_id: str) -> bool:
             c for c in _runtime.connections if c.connection_id != connection_id
         ]
         return len(_runtime.connections) != original
+
+
+def set_runtime_running(running: bool) -> None:
+    """Set the runtime running flag under lock.
+
+    Examples:
+        >>> set_runtime_running(True)
+        >>> is_runtime_running()
+        True
+        >>> set_runtime_running(False)
+    """
+    with _runtime_lock:
+        _runtime.running = running
+
+
+def clear_runtime_connections() -> None:
+    """Remove all connections from the runtime under lock.
+
+    Examples:
+        >>> clear_runtime_connections()
+        >>> get_runtime_connections_snapshot()
+        []
+    """
+    with _runtime_lock:
+        _runtime.connections.clear()
 
 
 def increment_tool_calls() -> None:
@@ -604,19 +670,26 @@ def get_upstream_server() -> FastMCP | None:
 
 @dataclass(frozen=True)
 class RuntimeStatusSnapshot:
-    """Frozen snapshot of runtime fields needed for status queries."""
+    """Frozen snapshot of runtime fields needed for status queries.
+
+    All Pydantic model members (``config``, ``connections``) are
+    deep-copied at construction time so no mutable alias back into
+    runtime-owned objects survives the snapshot boundary.
+    """
 
     config: TelaConfig | None
     running: bool
     start_time: float | None
     total_tool_calls: int
-    connections: list[ConnectionContext]
+    connections: tuple[ConnectionContext, ...]
 
 
 def get_runtime_status_snapshot() -> RuntimeStatusSnapshot:
     """Return a frozen snapshot of runtime status fields under lock.
 
     Used by HTTP status handler to capture all fields atomically.
+    Config and connection members are deep-copied; the snapshot is
+    fully detached from runtime state.
 
     Examples:
         >>> snap = get_runtime_status_snapshot()
@@ -625,11 +698,17 @@ def get_runtime_status_snapshot() -> RuntimeStatusSnapshot:
     """
     with _runtime_lock:
         return RuntimeStatusSnapshot(
-            config=_runtime.config,
+            config=(
+                _runtime.config.model_copy(deep=True)
+                if _runtime.config is not None
+                else None
+            ),
             running=_runtime.running,
             start_time=_runtime.start_time,
             total_tool_calls=_runtime.total_tool_calls,
-            connections=list(_runtime.connections),
+            connections=tuple(
+                c.model_copy(deep=True) for c in _runtime.connections
+            ),
         )
 
 
@@ -864,4 +943,6 @@ async def gateway_connections() -> Result[list[ConnectionContext], str]:
     """
 
     with _runtime_lock:
-        return Result(value=list(_runtime.connections))
+        return Result(
+            value=[c.model_copy(deep=True) for c in _runtime.connections]
+        )

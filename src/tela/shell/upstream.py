@@ -38,10 +38,10 @@ from tela.shell.downstream import (
 )
 from tela.shell.gateway import (
     add_runtime_connection,
-    get_runtime,
     get_runtime_config,
     get_runtime_secrets,
     increment_tool_calls,
+    set_runtime_config,  # noqa: F401 — used in doctests
 )
 from tela.shell.idle_shutdown import get_idle_manager
 from tela.shell.upstream_utils import (
@@ -336,9 +336,8 @@ async def handle_initialize(
 
     Examples:
         >>> import asyncio
-        >>> from tela.shell.gateway import get_runtime
-        >>> runtime = get_runtime()
-        >>> runtime.config = None  # Gateway not started
+        >>> from tela.shell.gateway import set_runtime_config
+        >>> set_runtime_config(None)  # Gateway not started
         >>> result = asyncio.run(handle_initialize({}))
         >>> result.is_err
         True
@@ -450,10 +449,9 @@ async def handle_tools_list(
 
     Examples:
         >>> import asyncio
-        >>> from tela.shell.gateway import get_runtime
+        >>> from tela.shell.gateway import set_runtime_config
         >>> from tela.core.models import ConnectionContext
-        >>> runtime = get_runtime()
-        >>> runtime.config = None  # Gateway not started
+        >>> set_runtime_config(None)  # Gateway not started
         >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
         >>> result = asyncio.run(handle_tools_list(conn))
         >>> result.is_err and "GATEWAY_NOT_STARTED" in result.error
@@ -523,10 +521,9 @@ async def handle_tools_call(
 
     Examples:
         >>> import asyncio
-        >>> from tela.shell.gateway import get_runtime
+        >>> from tela.shell.gateway import set_runtime_config
         >>> from tela.core.models import ConnectionContext
-        >>> runtime = get_runtime()
-        >>> runtime.config = None  # Gateway not started
+        >>> set_runtime_config(None)  # Gateway not started
         >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
         >>> result = asyncio.run(handle_tools_call(conn, "read_file", {"path": "/tmp"}))
         >>> result.is_err
@@ -615,9 +612,8 @@ def handle_profiles_list() -> Result[list[dict], str]:
     Returns list of configured profiles.
 
     Examples:
-        >>> from tela.shell.gateway import get_runtime
-        >>> runtime = get_runtime()
-        >>> runtime.config = None  # Gateway not started
+        >>> from tela.shell.gateway import set_runtime_config
+        >>> set_runtime_config(None)  # Gateway not started
         >>> result = handle_profiles_list()
         >>> result.is_err and "GATEWAY_NOT_STARTED" in result.error
         True
