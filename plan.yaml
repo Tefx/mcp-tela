@@ -36185,3 +36185,10 @@ phases:
     while convergence/re-enumeration state remains visible and consistent.
   depends_on:
   - conn_v2.lifecycle
+- id: conn_v2.bridge
+  name: Bridge Control and Hard-Interrupt Exit
+  status: locked
+  gate: tela connect attach/detach loop, signal handling, and hard-interrupt shutdown
+    are controlled by one bridge module and validated against concurrent attach behavior.
+  depends_on:
+  - conn_v2.convergence
