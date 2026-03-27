@@ -35862,7 +35862,7 @@ phases:
       - Runtime/docs/tests consistent for loop4 scope; readiness for gate affirmed.'
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
-  status: in_progress
+  status: done
   gate: Final independent review of the newly clarified agent-facing surface taxonomy,
     runtime exposure, and documentation consistency.
   depends_on:
@@ -36093,7 +36093,7 @@ phases:
       \ usage and avoids unsupported built-in inference."
   - id: agent_iface.final_review.gate
     name: Final gate for agent-interface surface consistency
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       Gate review: final independent decision on whether the new agent-interface plan
@@ -36136,3 +36136,13 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T10:28:36.480457+00:00'
+    done_at: '2026-03-27T10:31:57.584965+00:00'
+    evidence: "Final review gate:\n- Surface taxonomy consistency:\n  - `tela.profiles`\
+      \ preserved as MCP resource-read surface; operator surfaces remain CLI/HTTP-only.\n\
+      - Runtime/doc consistency:\n  - Runtime instruction summary, docs, and verification\
+      \ tests align on final taxonomy.\n- Capability wording consistency:\n  - Family->posture\
+      \ wording consistent; no current-runtime overclaim of `tela_admin` for absent\
+      \ built-ins.\n- Instruction merge consistency:\n  - Gateway-first append-only\
+      \ semantics with explicit per-server suppress/override/passthrough; no semantic\
+      \ resolver overclaim.\n- Final decision:\n  - GO; no residual blocker intersecting\
+      \ accepted phase scope."
