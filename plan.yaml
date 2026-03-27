@@ -36908,28 +36908,73 @@ phases:
       - Protects conn_v2.convergence gate'
     agent: python-senior
   - id: conn_v2.convergence.integrate_reload_and_status
-    name: Integrate convergence state with reload, status, and registry consumers
+    name: Integrate reload and reconnect entry adapters with convergence and status
     status: pending
-    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
-      spec_refs:\n  - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  - docs/INTERFACES.md#9.\
-      \ Downstream fastmcp Client Contract\n  - docs/USAGE.md#Running tela > config\
-      \ hot reload\ntouch_paths:\n  - src/tela/shell/gateway.py\n  - src/tela/shell/reload.py\n\
-      \  - src/tela/shell/http_routes.py\n  - src/tela/commands/status_cmd.py\nharness_refs:\n\
-      \  - tests/shell/test_reload.py\n  - tests/shell/test_http_routes.py\n  - tests/integration/test_hot_reload.py\n\
-      Integration path exercised: convergence module -> gateway runtime registry ->\
-      \ hot reload/status consumers\nOut-of-scope guardrail:\n  - no connect interrupt\
-      \ handling\n  - no CLI copy pass beyond surfacing lifecycle truth\nTasks:\n\
-      \  - Wire convergence snapshots into reload and status consumers without reintroducing\
-      \ serial-ready assumptions.\n  - Ensure startup_generation, per-server summaries,\
-      \ and tool digest/count stay coherent across convergence and re-enumeration\
-      \ updates.\n  - Keep shared runtime/entrypoint wiring isolated to this serial\
-      \ integration step for these files."
-    verification: '- Reload and status consumers read convergence-owned state
+    description: 'step_type: implementation
 
-      - Failure path: re-enumeration or retry does not corrupt status truth or registry
-      ownership
 
-      - Integration evidence names the end-to-end path through reload/status consumers'
+      auto_tags:
+
+      - integration
+
+
+      Integrate reload/reconnect entry adapters with the convergence kernel and status
+      surfaces.
+
+
+      Required scope:
+
+      - Reload and reconnect entry points delegate consistently to the convergence
+      kernel.
+
+      - Status surfaces expose convergence results without re-deriving them independently.
+
+      - Entry adapters, not the kernel, own notify/audit policy.
+
+
+      Out-of-scope guardrail:
+
+      - No HTTP helper extraction in this step
+
+      - No runtime accessor cleanup in this step
+
+      - No transport opener refactor in this step
+
+
+      Spec refs:
+
+      - conn_v2.contract.startup_convergence_contract
+
+      - conn_v2.contract.lockfile_status_contract
+
+
+      Touch paths:
+
+      - src/tela/shell/reload.py
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/commands/status_cmd.py
+
+
+      Harness refs:
+
+      - tests/shell/test_reload.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/integration/test_hot_reload.py
+
+
+      Authoritative interface: NONE PINNED'
+    verification: '- Reload/reconnect entry points delegate to convergence kernel
+      consistently
+
+      - Status surfaces expose convergence results without re-deriving them
+
+      - No HTTP helper extraction or runtime accessor cleanup included
+
+      - Protects conn_v2.convergence seam proof and gate'
     evidence_template: '## Integration Evidence
 
 
@@ -36937,7 +36982,7 @@ phases:
 
       ```
 
-      pytest tests/shell/test_reload.py tests/integration/test_hot_reload.py -q
+      <exact command or test name>
 
       ```
 
@@ -36946,12 +36991,13 @@ phases:
 
       ```
 
-      <paste test runner output>
+      <paste stdout/stderr or test output>
 
       ```
 
 
-      **Path exercised**: convergence module -> registry/status -> reload consumer'
+      **Path exercised**: reload/reconnect entry adapter -> convergence kernel ->
+      status/registry consumer'
     depends_on:
     - conn_v2.convergence.impl_module
     agent: python-executor
