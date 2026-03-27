@@ -32848,7 +32848,7 @@ phases:
       reviewer: vectl-orchestrator
   - id: post.doc_sync.retest2
     name: Second retest for documentation sync remediation
-    status: claimed
+    status: done
     description: 'Re-run post.doc_sync validation after post.doc_sync.fix_batch2 completes.
 
 
@@ -32878,6 +32878,28 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T00:27:26.306157+00:00'
+    done_at: '2026-03-27T00:29:58.707319+00:00'
+    evidence: 'Artifact:
+
+      - Retest executed on refreshed post.doc_sync.retest2 worktree after fix_batch2
+      merge
+
+
+      Verification:
+
+      - Confirmed cited DESIGN/INTERFACES/USAGE ranges no longer claim SSE as omitted-transport
+      default
+
+      - Confirmed cited MIGRATION/ADR examples now use nested `tool_overrides.<family>.overrides.<tool>`
+      shape
+
+      - Performed sibling searches for equivalent stale transport-default phrasing
+      and malformed overrides examples in touched docs; none found
+
+
+      Result:
+
+      - All previously reported doc-sync issues resolved'
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
