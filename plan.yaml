@@ -36314,6 +36314,34 @@ phases:
     must exist before implementation.'
   depends_on:
   - conn_v2.contract
+  steps:
+  - id: conn_v2.test.state_contract_tests
+    name: Add lockfile, status, and lifecycle contract tests
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/INTERFACES.md#7.2.1\
+      \ GET /status Response Schema\n  - docs/INTERFACES.md#7.3 Lockfile Contract\n\
+      \  - docs/INTERFACES.md#2. CLI Surface\n  - docs/USAGE.md#Running tela > tela\
+      \ connect\n  - docs/USAGE.md#Running tela > tela serve\ntouch_paths:\n  - tests/core/test_models.py\n\
+      \  - tests/shell/test_lockfile.py\n  - tests/shell/test_http_routes.py\n  -\
+      \ tests/shell/test_gateway.py\n  - tests/shell/test_query_commands_remote_state.py\n\
+      harness_refs:\n  - tests/shell/test_lockfile.py\n  - tests/shell/test_http_routes.py\n\
+      \  - tests/shell/test_gateway.py\nauthoritative_interface:\n  - GET /status\n\
+      \  - ~/.tela/gateway.lock\n## Spec-Fixture Conformance (MANDATORY)\nAt least\
+      \ one fixture MUST use the exact documented lockfile and status formats from\
+      \ docs/INTERFACES.md with no convenience fields beyond the spec.\nTasks:\n \
+      \ - Add minimal spec-derived fixtures for lockfile payload and GET /status response\
+      \ including phase, config_path, startup_generation, per-server state summary,\
+      \ and tool digest/count.\n  - Add focused tests for discovery-vs-readiness split:\
+      \ readable lockfile does not imply ready downstreams.\n  - Add tests for config_path\
+      \ ownership and status exposure used by query commands.\n  - Keep step test-only;\
+      \ no runtime implementation."
+    verification: '- At least one minimal fixture cites docs/INTERFACES.md sections
+      for lockfile and /status
+
+      - Tests cover starting, warming, ready, and degraded lifecycle snapshots
+
+      - Tests prove lockfile discovery does not substitute for readiness'
+    agent: python-executor
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
   status: locked
