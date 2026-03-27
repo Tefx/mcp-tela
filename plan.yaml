@@ -37456,6 +37456,18 @@ phases:
     run against the integrated runtime before docs sync and final review.
   depends_on:
   - conn_v2.system_wiring
+  steps:
+  - id: conn_v2.validation.freeze_full
+    name: Freeze integrated runtime snapshot for validation
+    status: pending
+    description: "step_type: planning\nverification_scope: phase-check\nFreeze: lock\
+      \ snapshot for runtime validation and full-plan-check.\nRequirements:\n  - record\
+      \ git rev-parse HEAD\n  - record git status clean\n  - declare environment for\
+      \ OpenCode-like cold start and concurrent attach scenarios\n  - state that no\
+      \ code changes are allowed until validation gate completes"
+    verification: '- Freeze evidence includes commit, clean tree, and named runtime
+      scenarios'
+    agent: software-architect
 - id: conn_v2.doc_sync
   name: Documentation Sync for Connect/Serve Runtime
   status: locked
