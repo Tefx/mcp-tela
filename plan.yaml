@@ -35976,7 +35976,7 @@ phases:
     agent: software-architect
   - id: agent_iface.final_review.contract_strength
     name: Contract-strength review for surface taxonomy wording
-    status: pending
+    status: claimed
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -36005,6 +36005,8 @@ phases:
     depends_on:
     - agent_iface.final_review.wiring
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T10:18:01.456918+00:00'
   - id: agent_iface.final_review.black_box
     name: Black-box verification of agent-facing surfaces
     status: pending
