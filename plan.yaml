@@ -35063,6 +35063,35 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.verify_surface_conformance
     agent: gate-reviewer
+  - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
+    name: Batched remediation for taxonomy artifact and contract conflicts
+    status: pending
+    description: Apply one coordinated documentation/evidence remediation pass that
+      resolves the failed gate findings without introducing a new unsupported product
+      surface. The batched fix must, in one family of edits, remove or correct contradictory
+      taxonomy claims in `docs/DESIGN.md` and `evidence/taxonomy_decision.md`, align
+      every `tela_admin` reference with the confirmed contract, correct the `tela.profiles`
+      resource-versus-tool boundary in evidence artifacts, and downgrade instruction-conflict
+      claims so docs match the implementation-tested ordering/append-only behavior
+      rather than a nonexistent conflict resolver.
+    verification: '- Verification must explicitly show `docs/DESIGN.md` and `evidence/taxonomy_decision.md`
+      no longer claim unsupported built-in MCP introspection tools
+
+      - Verification must explicitly show `tela_admin` wording matches the confirmed
+      contract across touched artifacts
+
+      - Verification must explicitly show `tela.profiles` is described consistently
+      with the confirmed resource/tool boundary, including the evidence artifact
+
+      - Verification must explicitly show instruction-conflict semantics are documented
+      only as ordering/append behavior proven by tests, with no implementation-level
+      conflict resolver claimed
+
+      - Verification evidence must identify all touched artifacts and note any remaining
+      ambiguity as a `# SPEC QUESTION` rather than silently guessing'
+    depends_on:
+    - agent_iface.surface_taxonomy.verify_surface_conformance
+    agent: doc-reviewer
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
