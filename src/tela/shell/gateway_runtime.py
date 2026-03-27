@@ -352,6 +352,28 @@ def get_upstream_log_level() -> Result[str, str]:
         )
 
 
+def get_upstream_server() -> None:
+    """Removed in loop 4 — use operation accessors instead.
+
+    This function previously returned the live ``FastMCP`` reference,
+    leaking a mutable runtime alias across the boundary.  It was replaced
+    by ``is_upstream_server_initialized``, ``get_upstream_http_app``, and
+    ``get_upstream_log_level``.
+
+    Raises:
+        RuntimeError: Always, to surface stale call sites.
+
+    Examples:
+        >>> import pytest
+        >>> with pytest.raises(RuntimeError, match="removed in loop 4"):
+        ...     get_upstream_server()
+    """
+    raise RuntimeError(
+        "get_upstream_server removed in loop 4: use operation accessors "
+        "(is_upstream_server_initialized, get_upstream_http_app, get_upstream_log_level)"
+    )
+
+
 def set_upstream_server(server: FastMCP | None) -> None:
     """Replace the upstream FastMCP server reference under lock.
 

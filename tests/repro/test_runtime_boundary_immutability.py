@@ -38,18 +38,18 @@ class TestB1LockSafeWriteHelpers:
         """set_runtime_config must atomically replace config."""
         original = TelaConfig()
         set_runtime_config(original)
-        assert get_runtime_config() is not None
+        assert get_runtime_config().value is not None
         set_runtime_config(None)
-        assert get_runtime_config() is None
+        assert get_runtime_config().value is None
 
     def test_set_runtime_running_flag(self) -> None:
         """set_runtime_running must atomically set running flag."""
         set_runtime_running(True)
         from tela.shell.gateway import is_runtime_running
 
-        assert is_runtime_running() is True
+        assert is_runtime_running().value is True
         set_runtime_running(False)
-        assert is_runtime_running() is False
+        assert is_runtime_running().value is False
 
     def test_clear_runtime_connections(self) -> None:
         """clear_runtime_connections must atomically remove all connections."""
@@ -57,9 +57,11 @@ class TestB1LockSafeWriteHelpers:
             connection_id="test-clear", profile_name="p", connected_at="t"
         )
         add_runtime_connection(ctx)
-        assert len(get_runtime_connections_snapshot()) > 0
+        conns = get_runtime_connections_snapshot().value
+        assert conns is not None and len(conns) > 0
         clear_runtime_connections()
-        assert len(get_runtime_connections_snapshot()) == 0
+        conns2 = get_runtime_connections_snapshot().value
+        assert conns2 is not None and len(conns2) == 0
 
 
 class TestB2SnapshotImmutability:
@@ -70,13 +72,13 @@ class TestB2SnapshotImmutability:
         original = TelaConfig(resolved_default_profile="original")
         set_runtime_config(original)
 
-        snapshot = get_runtime_config()
+        snapshot = get_runtime_config().value
         assert snapshot is not None
         # Mutate the snapshot
         snapshot.resolved_default_profile = "mutated"
 
         # Runtime state must be unchanged
-        live = get_runtime_config()
+        live = get_runtime_config().value
         assert live is not None
         assert live.resolved_default_profile == "original"
 
@@ -88,7 +90,7 @@ class TestB2SnapshotImmutability:
         original = TelaConfig()
         set_runtime_config(original)
 
-        snapshot = get_runtime_config()
+        snapshot = get_runtime_config().value
         # Deep copy means different object identity
         assert snapshot is not original
 
@@ -101,11 +103,13 @@ class TestB2SnapshotImmutability:
         )
         add_runtime_connection(ctx)
 
-        snapshot = get_runtime_connections_snapshot()
+        snapshot = get_runtime_connections_snapshot().value
+        assert snapshot is not None
         snapshot.clear()  # mutate the returned list
 
         # Runtime connections must be unchanged
-        live = get_runtime_connections_snapshot()
+        live = get_runtime_connections_snapshot().value
+        assert live is not None
         assert len(live) > 0
         assert any(c.connection_id == "snap-test" for c in live)
 
@@ -121,15 +125,16 @@ class TestB2SnapshotImmutability:
         )
         add_runtime_connection(ctx)
 
-        snapshot = get_runtime_connections_snapshot()
-        assert len(snapshot) > 0
+        snapshot = get_runtime_connections_snapshot().value
+        assert snapshot is not None and len(snapshot) > 0
         snap_conn = [c for c in snapshot if c.connection_id == "member-test"][0]
 
         # Mutate the snapshot member
         snap_conn.tool_call_count = 999
 
         # Runtime member must be unchanged
-        live = get_runtime_connections_snapshot()
+        live = get_runtime_connections_snapshot().value
+        assert live is not None
         live_conn = [c for c in live if c.connection_id == "member-test"][0]
         assert live_conn.tool_call_count == 0
 
@@ -140,13 +145,14 @@ class TestB2SnapshotImmutability:
         set_runtime_config(TelaConfig(resolved_default_profile="snap-orig"))
         set_runtime_running(True)
 
-        snap = get_runtime_status_snapshot()
+        snap = get_runtime_status_snapshot().value
+        assert snap is not None
         assert snap.config is not None
         # Verify it was captured correctly
         assert snap.config.resolved_default_profile == "snap-orig"
 
         # Prove detachment: mutating a second snapshot doesn't affect the first
-        snap2 = get_runtime_config()
+        snap2 = get_runtime_config().value
         assert snap2 is not None
         snap2.resolved_default_profile = "mutated-for-identity"
         assert snap.config.resolved_default_profile == "snap-orig"
@@ -162,7 +168,8 @@ class TestB2SnapshotImmutability:
         )
         add_runtime_connection(ctx)
 
-        snap = get_runtime_status_snapshot()
+        snap = get_runtime_status_snapshot().value
+        assert snap is not None
         assert isinstance(snap.connections, tuple)
         assert len(snap.connections) > 0
 
@@ -179,11 +186,13 @@ class TestB2SnapshotImmutability:
         )
         add_runtime_connection(ctx)
 
-        snap = get_runtime_status_snapshot()
+        snap = get_runtime_status_snapshot().value
+        assert snap is not None
         snap_conn = [c for c in snap.connections if c.connection_id == "stat-member"][0]
 
         # Prove detachment: snapshot member is not identical to a fresh read
-        fresh = get_runtime_connections_snapshot()
+        fresh = get_runtime_connections_snapshot().value
+        assert fresh is not None
         fresh_conn = [c for c in fresh if c.connection_id == "stat-member"][0]
         assert snap_conn is not fresh_conn  # different objects
         assert snap_conn.tool_call_count == 5
@@ -195,10 +204,12 @@ class TestB2SnapshotImmutability:
         # Secrets are strings (immutable), but the list container must be detached
         set_runtime_secrets(["s1", "s2"])
 
-        snapshot = get_runtime_secrets()
+        snapshot = get_runtime_secrets().value
+        assert snapshot is not None
         snapshot.append("s3")
 
-        live = get_runtime_secrets()
+        live = get_runtime_secrets().value
+        assert live is not None
         assert "s3" not in live
         assert len(live) == 2
 
@@ -296,14 +307,16 @@ class TestB3UpstreamServerBoundaryPolicy:
     """B3: get_upstream_server() returns live alias; operation accessors do not."""
 
     def test_operation_accessors_do_not_leak_server_reference(self) -> None:
-        """Operation accessors return results, not the live FastMCP."""
+        """Operation accessors return Results wrapping values, not the live FastMCP."""
         from mcp.server.fastmcp import FastMCP
 
         server = FastMCP("boundary-test")
         set_upstream_server(server)
 
-        # is_upstream_server_initialized returns bool, not server
-        assert is_upstream_server_initialized() is True
+        # is_upstream_server_initialized returns Result[bool], not server
+        init_result = is_upstream_server_initialized()
+        assert init_result.is_ok
+        assert init_result.value is True
 
         # get_upstream_http_app returns a Result[Starlette], not FastMCP
         app_result = get_upstream_http_app()
@@ -311,9 +324,10 @@ class TestB3UpstreamServerBoundaryPolicy:
         assert app_result.value is not None
         assert not isinstance(app_result.value, FastMCP)
 
-        # get_upstream_log_level returns a string, not server
-        log_level = get_upstream_log_level()
-        assert isinstance(log_level, str)
+        # get_upstream_log_level returns Result[str], not server
+        log_result = get_upstream_log_level()
+        assert log_result.is_ok
+        assert isinstance(log_result.value, str)
 
         # Cleanup
         set_upstream_server(None)
@@ -329,23 +343,27 @@ class TestB3UpstreamServerBoundaryPolicy:
         """Operation accessors handle None server gracefully."""
         set_upstream_server(None)
 
-        assert is_upstream_server_initialized() is False
+        init_result = is_upstream_server_initialized()
+        assert init_result.is_ok
+        assert init_result.value is False
 
         app_result = get_upstream_http_app()
         assert app_result.is_err
         assert "UPSTREAM_NOT_INITIALIZED" in (app_result.error or "")
 
-        assert get_upstream_log_level() == "info"
+        log_result = get_upstream_log_level()
+        assert log_result.is_ok
+        assert log_result.value == "info"
 
     def test_set_upstream_server_locked_mutator(self) -> None:
         """set_upstream_server provides locked write access."""
         from mcp.server.fastmcp import FastMCP
 
-        assert not is_upstream_server_initialized()
+        assert not is_upstream_server_initialized().value
 
         server = FastMCP("mutator-test")
         set_upstream_server(server)
-        assert is_upstream_server_initialized()
+        assert is_upstream_server_initialized().value
 
         set_upstream_server(None)
-        assert not is_upstream_server_initialized()
+        assert not is_upstream_server_initialized().value

@@ -171,7 +171,12 @@ async def _run_serve_gateway(
         return Result(error=version_result.error)
     assert version_result.value is not None
 
-    if not is_upstream_server_initialized().value:
+    init_result = is_upstream_server_initialized()
+    if init_result.is_err:
+        await gateway_shutdown()
+        delete_lockfile()
+        return Result(error=init_result.error)
+    if not init_result.value:
         await gateway_shutdown()
         delete_lockfile()
         return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
@@ -183,9 +188,13 @@ async def _run_serve_gateway(
         return Result(error=upstream_app_result.error)
     assert upstream_app_result.value is not None
 
+    log_level_result = get_upstream_log_level()
+    _log_level_raw = log_level_result.value
+    resolved_log_level: str = _log_level_raw if _log_level_raw is not None else "info"
+
     http_server_result = await _launch_streamable_http_server(
         upstream_app=upstream_app_result.value,
-        upstream_log_level=get_upstream_log_level().value,
+        upstream_log_level=resolved_log_level,
         host=startup_config.host,
         requested_port=startup_config.port or 0,
     )

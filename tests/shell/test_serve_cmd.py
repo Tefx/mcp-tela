@@ -125,9 +125,9 @@ def test_serve_lockfile_written_then_deleted(
         return
 
     # Monkeypatch the operation accessors that serve_cmd now uses
-    # instead of get_upstream_server
+    # instead of get_upstream_server — must return Result to match signatures
     monkeypatch.setattr(
-        serve_cmd, "is_upstream_server_initialized", lambda: True
+        serve_cmd, "is_upstream_server_initialized", lambda: Result(value=True)
     )
     monkeypatch.setattr(
         serve_cmd,
@@ -135,7 +135,7 @@ def test_serve_lockfile_written_then_deleted(
         lambda: Result(value=Starlette()),
     )
     monkeypatch.setattr(
-        serve_cmd, "get_upstream_log_level", lambda: "info"
+        serve_cmd, "get_upstream_log_level", lambda: Result(value="info")
     )
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
     monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
@@ -243,8 +243,9 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
         return
 
     # Monkeypatch the operation accessors that serve_cmd now uses
+    # — must return Result to match signatures
     monkeypatch.setattr(
-        serve_cmd, "is_upstream_server_initialized", lambda: True
+        serve_cmd, "is_upstream_server_initialized", lambda: Result(value=True)
     )
     monkeypatch.setattr(
         serve_cmd,
@@ -252,7 +253,7 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
         lambda: Result(value=Starlette()),
     )
     monkeypatch.setattr(
-        serve_cmd, "get_upstream_log_level", lambda: "info"
+        serve_cmd, "get_upstream_log_level", lambda: Result(value="info")
     )
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
     monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)

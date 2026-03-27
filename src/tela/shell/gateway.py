@@ -50,6 +50,7 @@ from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backwar
     get_runtime_status_snapshot,
     get_upstream_http_app,
     get_upstream_log_level,
+    get_upstream_server,
     increment_tool_calls,
     is_runtime_running,
     is_upstream_server_initialized,
