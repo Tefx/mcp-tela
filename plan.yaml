@@ -36472,7 +36472,15 @@ phases:
       \ exactly: one config-specific gateway instance owns startup and lock publication\
       \ at a time\n  - backward-compatible legacy behavior: direct tela serve remains\
       \ a valid explicit server entrypoint\nOut-of-scope guardrail:\n  - downstream\
-      \ convergence and bridge interrupt handling are deferred to later phases\nTasks:\n\
+      \ convergence and bridge interrupt handling are deferred to later phases\nBoundary\
+      \ guardrail:\n  - The startup coordinator MAY trigger or sequence the entry\
+      \ flow needed to start or attach to the runtime surface.\n  - The startup coordinator\
+      \ MUST NOT own convergence-kernel semantics: resolve, register, conflict handling,\
+      \ rollback, or any second source of readiness truth.\n  - The startup coordinator\
+      \ MUST NOT own notify policy or audit policy; it may only consume or publish\
+      \ already-resolved state needed for startup sequencing.\n  - Any readiness or\
+      \ convergence decision consumed by startup flow MUST come from the lifecycle\
+      \ or convergence authorities, not from coordinator-local derivation.\nTasks:\n\
       \  - Introduce the startup coordinator module that owns autostart lock, leader/follower\
       \ startup semantics, and config ownership checks.\n  - Move race-sensitive startup\
       \ arbitration out of ad hoc connect flow logic into the dedicated module while\
@@ -36485,7 +36493,13 @@ phases:
       concurrent follower attach
 
       - Proof: connect/serve call sites use the coordinator instead of duplicating
-      startup arbitration'
+      startup arbitration
+
+      - Call-site evidence shows startup coordination only initiates entry flow and
+      consumes authoritative lifecycle/convergence outputs
+
+      - No resolve/register/conflict/rollback or notify/audit policy logic remains
+      in startup coordinator scope'
     agent: python-senior
   - id: conn_v2.startup_coord.integrate_autostart
     name: Integrate autostart leader/follower wiring into connect and serve
