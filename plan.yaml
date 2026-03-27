@@ -38485,3 +38485,15 @@ phases:
   depends_on:
   - meta.review
   - agent_iface.final_review
+  steps:
+  - id: conn_v2.preflight_reconnect.test_no_duplicate_enumeration
+    name: Add failing proof for reconnect duplicate enumeration
+    status: pending
+    description: Add a focused regression test or equivalent proof that exposes duplicate
+      enumeration during a single reconnect/reload flow for one server. The goal is
+      to lock down one reconnect event => one enumeration seam before broader conn_v2
+      work proceeds.
+    verification: New focused regression test or equivalent proof demonstrates the
+      old duplicate-enumeration behavior and can distinguish >1 enumeration from the
+      fixed value of exactly 1. Evidence records command and observed result.
+    agent: python-executor
