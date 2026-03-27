@@ -37240,21 +37240,6 @@ phases:
     verification: '- Wiring report identifies any orphan exports, unreachable entrypoints,
       or write-only lifecycle fields'
     agent: wiring-auditor
-  - id: conn_v2.deep_review.contract_strength
-    name: Contract strength audit for runtime state and lifecycle surfaces
-    status: pending
-    description: 'step_type: verification
-
-      Verify all new or changed contracts for lifecycle/state surfaces are non-vacuous
-      and exercised by doctests/tests where required.
-
-      Check that no contract still encodes discovery as readiness or leaves acceptable-phase
-      behavior implicit.'
-    verification: '- Contract audit flags vacuous or missing acceptance boundaries
-      for lifecycle and bridge state'
-    depends_on:
-    - conn_v2.deep_review.wiring_audit
-    agent: gate-reviewer
 - id: conn_v2.integration_validate
   name: Integrated UX, Wiring, and Runtime Validation
   status: locked
@@ -37658,3 +37643,16 @@ phases:
     verification: '- Review reports any ownership regressions, split-truth paths,
       or concurrency hazards'
     agent: software-architect
+  - id: conn_v2.deep_review.contract_strength
+    name: Contract strength audit for runtime state and lifecycle surfaces
+    status: pending
+    description: 'step_type: verification
+
+      Verify all new or changed contracts for lifecycle/state surfaces are non-vacuous
+      and exercised by doctests/tests where required.
+
+      Check that no contract still encodes discovery as readiness or leaves acceptable-phase
+      behavior implicit.'
+    verification: '- Contract audit flags vacuous or missing acceptance boundaries
+      for lifecycle and bridge state'
+    agent: gate-reviewer
