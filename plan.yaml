@@ -37106,6 +37106,59 @@ phases:
     depends_on:
     - conn_v2.bridge.integrate_connect_flow
     agent: software-architect
+  - id: conn_v2.bridge.interrupt_probe
+    name: Probe hard-interrupt behavior from the real connect entry point
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
+      \ validate hard-interrupt semantics for tela connect.\nIndependence Level: L2\n\
+      Test for:\n  - SIGINT/KeyboardInterrupt during autostart wait terminates connect\
+      \ immediately\n  - SIGINT/KeyboardInterrupt during active bridge terminates\
+      \ connect immediately\n  - best-effort detach/cleanup does not prevent process\
+      \ exit\n  - gateway connection tracker and idle state do not remain stuck after\
+      \ interrupt\nFinding issues is success.\nREALISM CHECK:\n  - Use actual signal\
+      \ delivery or a full-path harness, not helper-only unit tests."
+    verification: '- Evidence includes actual command or harness output for wait-path
+      and active-bridge interrupts
+
+      - Highest-risk failure path covers stuck connection count or hanging process
+      after interrupt
+
+      - Verdict is PASS or ISSUES_FOUND with reproduction'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: blind-tester
+
+      **Scope**: tela connect hard-interrupt semantics
+
+      **Independence Level**: L2
+
+
+      ### Test Execution
+
+      - Command or harness:
+
+      ```
+
+      <paste exact command or test>
+
+      ```
+
+      - Actual output:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+
+      ### Failure Path Evidence
+
+      - Show whether active connection count and idle state recovered after interrupt.'
+    depends_on:
+    - conn_v2.bridge.freeze_l2
+    agent: blind-tester
 - id: conn_v2.ux
   name: Host-Facing UX and Diagnostics
   status: locked
