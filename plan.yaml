@@ -37489,6 +37489,8 @@ phases:
       | tela status | ready | <summary> | yes/no |
 
       | GET /status | warming | <summary> | yes/no |'
+    depends_on:
+    - conn_v2.ux.impl_messages
     agent: uiux-designer
   - id: conn_v2.system_wiring.entrypoint_integration
     name: Wire connect, serve, status, and reload entrypoints to the new runtime modules
