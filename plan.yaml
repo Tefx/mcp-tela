@@ -32848,7 +32848,7 @@ phases:
       reviewer: vectl-orchestrator
   - id: post.doc_sync.retest2
     name: Second retest for documentation sync remediation
-    status: pending
+    status: claimed
     description: 'Re-run post.doc_sync validation after post.doc_sync.fix_batch2 completes.
 
 
@@ -32876,6 +32876,8 @@ phases:
     depends_on:
     - post.doc_sync.fix_batch2
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T00:27:26.306157+00:00'
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
