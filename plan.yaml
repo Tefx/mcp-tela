@@ -34469,3 +34469,56 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.audit_actual_surface
     agent: software-architect
+  - id: agent_iface.surface_taxonomy.define_confirmed_contract
+    name: Define confirmed agent-facing surface contract
+    status: pending
+    description: 'step_type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs:
+
+      - signatures
+
+      - type_defs
+
+      - interfaces
+
+      - stubs
+
+      Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
+
+      Pin the canonical agent-facing contract for built-in surfaces, including exact
+      separation between MCP tool calls and MCP resource reads, approved capability
+      wording, and precise downstream instruction merge semantics. Merge wording must
+      define ordering and conflict handling explicitly: tela top-level gateway instructions
+      remain authoritative, each downstream server contributes an appended per-server
+      section subject to pass-through/suppress/override rules, and downstream text
+      must not silently override the gateway''s own rules unless the confirmed product
+      contract explicitly says so. This step must produce the single wording source
+      that tests, runtime changes, and docs all follow.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Contract output names each built-in surface with an exact kind (`tool`, `resource`,
+      `CLI`, `HTTP`, or `absent`), approved capability language, and explicit instruction-merge
+      ordering/conflict semantics
+
+      - No contract text may assert unsupported MCP surfaces'
+    evidence_template: 'Confirmed contract:
+
+      - Canonical surface matrix:
+
+      - Tool vs resource rules:
+
+      - Capability wording:
+
+      - Instruction merge ordering:
+
+      - Instruction conflict handling:
+
+      - Files/surfaces that must align to this contract:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.decide_taxonomy
+    agent: software-architect
