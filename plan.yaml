@@ -33364,7 +33364,7 @@ phases:
   - id: post.deep_review.architecture_retest_runtime_locking_loop2
     name: 'Loop 2 retest: independent architecture verification of hardened runtime
       boundary alias safety'
-    status: claimed
+    status: pending
     description: 'Independent loop 2 retest of the remaining concurrency blockers
       after post.deep_review.architecture_fix_runtime_locking_loop2.
 
@@ -33411,5 +33411,3 @@ phases:
     depends_on:
     - post.deep_review.architecture_fix_runtime_locking_loop2
     agent: software-architect
-    claimed_by: software-architect
-    claimed_at: '2026-03-27T01:49:02.691272+00:00'
