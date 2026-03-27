@@ -36146,3 +36146,11 @@ phases:
       \ semantics with explicit per-server suppress/override/passthrough; no semantic\
       \ resolver overclaim.\n- Final decision:\n  - GO; no residual blocker intersecting\
       \ accepted phase scope."
+- id: conn_v2.contract
+  name: Connect/Serve Runtime Refactor Contracts
+  status: pending
+  gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
+    startup, background convergence, interrupt semantics, and host-facing status/UX
+    before implementation DAG begins.
+  depends_on:
+  - agent_iface.final_review
