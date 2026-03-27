@@ -19,7 +19,7 @@ from tela.core.models import (
     ProfileConfig,
     TelaConfig,
 )
-from tela.shell.gateway import _runtime_lock, get_runtime
+from tela.shell.gateway import add_runtime_connection, get_runtime
 from tela.shell.http_routes import handle_disconnect
 from tela.shell.upstream import (
     _session_registry,
@@ -87,9 +87,7 @@ def test_handle_disconnect_releases_captured_session() -> None:
             profile_name="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
-        runtime = get_runtime()
-        with _runtime_lock:
-            runtime.connections.append(ctx)
+        add_runtime_connection(ctx)
 
         session = StubSession()
         capture_session(conn_id, session)
@@ -119,9 +117,7 @@ def test_handle_disconnect_without_captured_session_succeeds() -> None:
             profile_name="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
-        runtime = get_runtime()
-        with _runtime_lock:
-            runtime.connections.append(ctx)
+        add_runtime_connection(ctx)
 
         # No session captured for this connection
         result = handle_disconnect("tok", "tok", DisconnectRequest(connection_id=conn_id))
@@ -150,9 +146,7 @@ def test_session_registry_bounded_across_connect_disconnect_cycles() -> None:
                 profile_name="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
-            runtime = get_runtime()
-            with _runtime_lock:
-                runtime.connections.append(ctx)
+            add_runtime_connection(ctx)
             capture_session(conn_id, StubSession())
 
             # Each cycle adds exactly one session (previous was already released)
@@ -177,7 +171,6 @@ def test_concurrent_connections_bounded_after_disconnect() -> None:
 
     try:
         conn_count = 10
-        runtime = get_runtime()
 
         # Connect all
         for i in range(conn_count):
@@ -187,8 +180,7 @@ def test_concurrent_connections_bounded_after_disconnect() -> None:
                 profile_name="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
-            with _runtime_lock:
-                runtime.connections.append(ctx)
+            add_runtime_connection(ctx)
             capture_session(conn_id, StubSession())
 
         assert _session_registry_size() == conn_count
@@ -221,9 +213,7 @@ def test_notification_skips_disconnected_session() -> None:
             profile_name="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
-        runtime = get_runtime()
-        with _runtime_lock:
-            runtime.connections.append(ctx)
+        add_runtime_connection(ctx)
 
         session = StubSession()
         capture_session(conn_id, session)
@@ -245,8 +235,6 @@ def test_notification_reaches_live_sessions_after_peer_disconnect() -> None:
     _setup_runtime()
 
     try:
-        runtime = get_runtime()
-
         # Connect two sessions
         live_session = StubSession()
         dead_session = StubSession()
@@ -257,8 +245,7 @@ def test_notification_reaches_live_sessions_after_peer_disconnect() -> None:
                 profile_name="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
-            with _runtime_lock:
-                runtime.connections.append(ctx)
+            add_runtime_connection(ctx)
             capture_session(conn_id, session)
 
         # Disconnect dead-conn
@@ -299,8 +286,6 @@ def test_gateway_shutdown_releases_all_sessions() -> None:
     _setup_runtime()
 
     try:
-        runtime = get_runtime()
-
         for i in range(5):
             conn_id = f"shutdown-conn-{i}"
             ctx = ConnectionContext(
@@ -308,8 +293,7 @@ def test_gateway_shutdown_releases_all_sessions() -> None:
                 profile_name="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
-            with _runtime_lock:
-                runtime.connections.append(ctx)
+            add_runtime_connection(ctx)
             capture_session(conn_id, StubSession())
 
         assert _session_registry_size() == 5

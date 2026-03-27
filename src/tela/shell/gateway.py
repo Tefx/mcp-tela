@@ -335,9 +335,12 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
     async def _ensure_connection() -> ConnectionContext:
         # Session-aware: return existing connection, or create new one.
+        # Use locked snapshot to prevent observing torn/stale connections.
         try:
+            with _runtime_lock:
+                connections_snapshot = list(_runtime.connections)
             conn_r = find_connection_for_session(
-                request_ctx.get().session, _runtime.connections
+                request_ctx.get().session, connections_snapshot
             )
             if conn_r.is_ok and conn_r.value is not None:
                 return conn_r.value
@@ -461,8 +464,173 @@ _runtime_lock = threading.RLock()
 
 # @invar:allow shell_result: returns runtime state object, not a failable I/O boundary.
 def get_runtime() -> GatewayRuntime:
-    """Return the module-level gateway runtime."""
+    """Return the module-level gateway runtime.
+
+    .. warning::
+        Returns a **mutable** reference without lock protection.
+        Production cross-module callers MUST use the locked accessor
+        helpers below instead.  This function is retained only for
+        single-threaded doctest setup (``runtime.config = None`` etc.).
+    """
     return _runtime
+
+
+# --- Locked runtime accessors ------------------------------------------
+#
+# Authoritative lock-safe access pattern: every cross-module read or
+# write of ``_runtime`` fields goes through one of the helpers below.
+# Each helper acquires ``_runtime_lock`` for the duration of the access
+# and returns an immutable copy / snapshot so that callers never hold a
+# live mutable reference that could be observed or mutated outside the
+# lock boundary.
+# -----------------------------------------------------------------------
+
+
+def get_runtime_config() -> TelaConfig | None:
+    """Return current runtime config under lock.
+
+    The returned ``TelaConfig`` is a Pydantic model snapshot captured
+    while ``_runtime_lock`` is held.  Callers may read its fields freely;
+    mutations on the returned object do not affect runtime state.
+
+    Examples:
+        >>> get_runtime_config() is None or isinstance(get_runtime_config(), TelaConfig)
+        True
+    """
+    with _runtime_lock:
+        return _runtime.config
+
+
+def set_runtime_config(config: TelaConfig | None) -> None:
+    """Replace the runtime config under lock.
+
+    Examples:
+        >>> from tela.core.models import TelaConfig
+        >>> set_runtime_config(TelaConfig())
+        >>> get_runtime_config() is not None
+        True
+        >>> set_runtime_config(None)
+    """
+    with _runtime_lock:
+        _runtime.config = config
+
+
+def is_runtime_running() -> bool:
+    """Return whether the gateway runtime is running, under lock.
+
+    Examples:
+        >>> isinstance(is_runtime_running(), bool)
+        True
+    """
+    with _runtime_lock:
+        return _runtime.running
+
+
+def get_runtime_connections_snapshot() -> list[ConnectionContext]:
+    """Return a shallow copy of the active connections list under lock.
+
+    The returned list is a snapshot; mutations to it do not affect the
+    runtime connections list.
+
+    Examples:
+        >>> get_runtime_connections_snapshot()
+        []
+    """
+    with _runtime_lock:
+        return list(_runtime.connections)
+
+
+def add_runtime_connection(ctx: ConnectionContext) -> None:
+    """Append a connection to the runtime connections list under lock.
+
+    Examples:
+        >>> c = ConnectionContext(connection_id="test", profile_name="p", connected_at="t")
+        >>> add_runtime_connection(c)
+        >>> len(get_runtime_connections_snapshot()) > 0
+        True
+        >>> remove_runtime_connection("test")
+        True
+    """
+    with _runtime_lock:
+        _runtime.connections.append(ctx)
+
+
+def remove_runtime_connection(connection_id: str) -> bool:
+    """Remove a connection by ID under lock.  Returns True if removed.
+
+    Examples:
+        >>> remove_runtime_connection("nonexistent")
+        False
+    """
+    with _runtime_lock:
+        original = len(_runtime.connections)
+        _runtime.connections[:] = [
+            c for c in _runtime.connections if c.connection_id != connection_id
+        ]
+        return len(_runtime.connections) != original
+
+
+def increment_tool_calls() -> None:
+    """Atomically increment the tool-call counter under lock.
+
+    Examples:
+        >>> increment_tool_calls()
+    """
+    with _runtime_lock:
+        _runtime.total_tool_calls += 1
+
+
+def get_runtime_secrets() -> list[str]:
+    """Return a copy of runtime auth secrets under lock.
+
+    Examples:
+        >>> isinstance(get_runtime_secrets(), list)
+        True
+    """
+    with _runtime_lock:
+        return list(_runtime.secrets)
+
+
+def get_upstream_server() -> FastMCP | None:
+    """Return the upstream FastMCP server instance under lock.
+
+    Examples:
+        >>> isinstance(get_upstream_server(), (type(None), FastMCP))
+        True
+    """
+    with _runtime_lock:
+        return _runtime.upstream_server
+
+
+@dataclass(frozen=True)
+class RuntimeStatusSnapshot:
+    """Frozen snapshot of runtime fields needed for status queries."""
+
+    config: TelaConfig | None
+    running: bool
+    start_time: float | None
+    total_tool_calls: int
+    connections: list[ConnectionContext]
+
+
+def get_runtime_status_snapshot() -> RuntimeStatusSnapshot:
+    """Return a frozen snapshot of runtime status fields under lock.
+
+    Used by HTTP status handler to capture all fields atomically.
+
+    Examples:
+        >>> snap = get_runtime_status_snapshot()
+        >>> isinstance(snap.running, bool)
+        True
+    """
+    with _runtime_lock:
+        return RuntimeStatusSnapshot(
+            config=_runtime.config,
+            running=_runtime.running,
+            start_time=_runtime.start_time,
+            total_tool_calls=_runtime.total_tool_calls,
+            connections=list(_runtime.connections),
+        )
 
 
 def get_expected_bearer_token() -> Result[str | None, str]:

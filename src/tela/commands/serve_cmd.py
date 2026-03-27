@@ -26,7 +26,7 @@ from tela.shell.gateway import (
     gateway_shutdown,
     gateway_start,
     get_expected_bearer_token,
-    get_runtime,
+    get_upstream_server,
 )
 from tela.shell.idle_shutdown import init_idle_manager, shutdown_idle_manager
 from tela.shell.lockfile import delete_lockfile, generate_bearer_token, write_lockfile
@@ -167,14 +167,14 @@ async def _run_serve_gateway(
         return Result(error=version_result.error)
     assert version_result.value is not None
 
-    runtime = get_runtime()
-    if runtime.upstream_server is None:
+    upstream_server = get_upstream_server()
+    if upstream_server is None:
         await gateway_shutdown()
         delete_lockfile()
         return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
 
     http_server_result = await _launch_streamable_http_server(
-        upstream_server=runtime.upstream_server,
+        upstream_server=upstream_server,
         host=startup_config.host,
         requested_port=startup_config.port or 0,
     )

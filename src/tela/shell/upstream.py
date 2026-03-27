@@ -36,7 +36,13 @@ from tela.shell.downstream import (
     get_all_tools,
     get_registry,
 )
-from tela.shell.gateway import _runtime_lock, get_runtime
+from tela.shell.gateway import (
+    add_runtime_connection,
+    get_runtime,
+    get_runtime_config,
+    get_runtime_secrets,
+    increment_tool_calls,
+)
 from tela.shell.idle_shutdown import get_idle_manager
 from tela.shell.upstream_utils import (
     enforce_tool_call,
@@ -346,22 +352,22 @@ async def handle_initialize(
         Result[ConnectionContext, str] once implemented.
     """
 
-    runtime = get_runtime()
-    if runtime.config is None:
+    config = get_runtime_config()
+    if config is None:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     connection_id = f"conn_{uuid.uuid4().hex[:8]}"
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    if runtime.config.auth.mode == AuthMode.OPEN:
+    if config.auth.mode == AuthMode.OPEN:
         status = (
             DefaultProfileResolutionStatus.RESOLVED
-            if runtime.config.resolved_default_profile is not None
+            if config.resolved_default_profile is not None
             else DefaultProfileResolutionStatus.MISSING
         )
 
         binding_result = resolve_initialize_profile_binding(
-            resolved_default_profile=runtime.config.resolved_default_profile,
+            resolved_default_profile=config.resolved_default_profile,
             default_resolution_status=status,
             context=InitializeContext(
                 connection_metadata={
@@ -404,7 +410,7 @@ async def handle_initialize(
         except Exception as e:
             return Result(error=f"INITIALIZE_REJECTED: invalid token fields: {e}")
 
-        secrets = runtime.secrets
+        secrets = get_runtime_secrets()
         if not secrets:
             return Result(
                 error="INITIALIZE_REJECTED: token mode requires secrets configured"
@@ -424,9 +430,8 @@ async def handle_initialize(
         connected_at=now_iso,
     )
 
-    # Register connection in runtime.
-    with _runtime_lock:
-        runtime.connections.append(ctx)
+    # Register connection in runtime via locked accessor.
+    add_runtime_connection(ctx)
     idle_manager = get_idle_manager()
     if idle_manager is not None:
         increment_result = await idle_manager.increment()
@@ -461,11 +466,11 @@ async def handle_tools_list(
         List of tool dicts once implemented.
     """
 
-    runtime = get_runtime()
-    if runtime.config is None:
+    config = get_runtime_config()
+    if config is None:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
-    profile = runtime.config.profiles.get(connection.profile_name)
+    profile = config.profiles.get(connection.profile_name)
     if profile is None:
         return Result(
             error=f"PROFILE_NOT_FOUND: profile '{connection.profile_name}' not found"
@@ -477,7 +482,7 @@ async def handle_tools_list(
     assert all_tools_result.value is not None
     all_tools = all_tools_result.value
     server_default_postures: dict[str, Posture] = {}
-    for sname, scfg in runtime.config.servers.items():
+    for sname, scfg in config.servers.items():
         server_default_postures[sname] = scfg.default_posture
 
     permitted_result = filter_tools_for_profile(
@@ -538,8 +543,8 @@ async def handle_tools_call(
         Result[dict, TelaError] once implemented.
     """
 
-    runtime = get_runtime()
-    if runtime.config is None:
+    config = get_runtime_config()
+    if config is None:
         return Result(
             error=TelaError(
                 code="GATEWAY_NOT_STARTED", message="Gateway has not been started"
@@ -568,7 +573,7 @@ async def handle_tools_call(
         )
 
     # Look up profile
-    profile = runtime.config.profiles.get(connection.profile_name)
+    profile = config.profiles.get(connection.profile_name)
     if profile is None:
         return Result(
             error=TelaError(
@@ -578,7 +583,7 @@ async def handle_tools_call(
         )
 
     # Enforce
-    server_config = runtime.config.servers.get(tool.server_name)
+    server_config = config.servers.get(tool.server_name)
     default_posture = server_config.default_posture if server_config else Posture.NONE
     enforcement_result = enforce_tool_call(tool_name, tool, profile, default_posture)
     if enforcement_result.is_err:
@@ -599,8 +604,7 @@ async def handle_tools_call(
             )
         )
 
-    with _runtime_lock:
-        runtime.total_tool_calls += 1
+    increment_tool_calls()
 
     return await call_tool(tool.server_name, tool_name, stripped_args)
 
@@ -622,8 +626,8 @@ def handle_profiles_list() -> Result[list[dict], str]:
         List of profile dicts once implemented.
     """
 
-    runtime = get_runtime()
-    if runtime.config is None:
+    config = get_runtime_config()
+    if config is None:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     # Migration: emit both 'capabilities' and 'tools' keys per ADR-003.
@@ -636,7 +640,7 @@ def handle_profiles_list() -> Result[list[dict], str]:
                 "capabilities": {k: v.value for k, v in p.capabilities.items()},
                 "tools": {k: v.value for k, v in p.capabilities.items()},
             }
-            for name, p in runtime.config.profiles.items()
+            for name, p in config.profiles.items()
         ]
     )
 
