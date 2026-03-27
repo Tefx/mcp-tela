@@ -33047,7 +33047,20 @@ phases:
     name: Architecture and concurrency review
     status: pending
     description: 'Review module boundaries, dependency direction, and concurrency
-      safety.
+      safety as an audit-disposition step.
+
+
+      This step completes by producing an architecture/concurrency audit outcome,
+      not only a pass-style review.
+
+
+      Acceptable completion outcomes:
+
+      1. No blockers found: record a clean audit with evidence for each focus area.
+
+      2. Blockers found: record the blocker report with explicit findings, identify
+      the affected surfaces/files, and confirm that a remediation branch/step chain
+      has been created for the blockers before handing off.
 
 
       Focus areas:
@@ -33063,14 +33076,23 @@ phases:
       - Import direction correct (Shell imports Core, not reverse)
 
       - _merge_downstream_instructions accessing runtime state has proper initialization
-      guarantees'
-    verification: '- Concurrency protection verified
+      guarantees
 
-      - Core/Shell boundary intact
 
-      - Import direction correct
+      Audit disposition requirement:
 
-      - No initialization race conditions'
+      - If blockers are found, the evidence must distinguish findings from disposition
+      and include explicit remediation handoff status.
+
+      - This step may be marked complete with blockers only when the blocker report
+      is captured and the remediation branch/step chain exists; unresolved blockers
+      without handoff do not satisfy completion.'
+    verification: "- Audit outcome recorded for each focus area\n- Completion is valid\
+      \ if either:\n  - no blockers are found, or\n  - blockers are found and an explicit\
+      \ blocker report plus remediation handoff is present\n- If blockers are found,\
+      \ evidence identifies affected files/surfaces and references the created remediation\
+      \ branch/step chain\n- Downstream remediation/gate wiring remains intact; this\
+      \ step does not require blockers themselves to be fixed before audit completion"
     depends_on:
     - post.deep_review.wiring
     agent: gate-reviewer
