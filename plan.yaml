@@ -37635,3 +37635,15 @@ phases:
     safety, contract strength, and black-box host behavior.
   depends_on:
   - conn_v2.doc_sync
+  steps:
+  - id: conn_v2.deep_review.wiring_audit
+    name: Full wiring audit for connect/serve runtime refactor
+    status: pending
+    description: "step_type: verification\nComplete system wiring audit. Verify:\n\
+      \  - every public export added for startup/lifecycle/convergence/bridge has\
+      \ a runtime caller\n  - connect, serve, status, and HTTP routes are registered\
+      \ and reachable\n  - lifecycle/config ownership fields are consumed by non-test\
+      \ runtime code\n  - no contract-only stubs remain on production runtime paths"
+    verification: '- Wiring report identifies any orphan exports, unreachable entrypoints,
+      or write-only lifecycle fields'
+    agent: wiring-auditor
