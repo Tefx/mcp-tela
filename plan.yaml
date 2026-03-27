@@ -34960,7 +34960,7 @@ phases:
       \ frozen until verification completes."
   - id: agent_iface.surface_taxonomy.verify_surface_conformance
     name: Verify MCP/CLI/HTTP surface conformance from a fresh perspective
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (blind-tester), validate the externally visible taxonomy
@@ -35010,6 +35010,21 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-27T07:51:49.375176+00:00'
+    done_at: '2026-03-27T07:57:23.441827+00:00'
+    evidence: "Independent verification:\n- MCP tools observed:\n  - None (no built-in\
+      \ `tela.*` MCP tool registrations observed).\n- MCP resources observed:\n  -\
+      \ `tela.profiles` observed as resource (gateway resource registration path in\
+      \ runtime).\n- CLI surfaces observed:\n  - `tela profiles`, `tela status`, `tela\
+      \ connections`, `tela audit` as operator CLI surfaces.\n- HTTP surfaces observed:\n\
+      \  - `GET /health`, `GET /status`, `POST /connect`, `POST /disconnect`, `POST\
+      \ /mcp` as operator/admin endpoints.\n- Doc/runtime mismatches found:\n  - None.\n\
+      - Instruction merge observations:\n  - Gateway instructions first and authoritative.\n\
+      \  - Downstream sections appended by server iteration order.\n  - Downstream\
+      \ cannot silently override gateway rules.\n  - Classification/contract tests\
+      \ passing.\n- Final pass/fail rationale:\n  - PASS: runtime surfaces match documented\
+      \ taxonomy; `tela.profiles` is resource-read (not tool-call), and `tela.status`/`tela.connections`/`tela.audit`\
+      \ remain absent from MCP built-ins and documented as CLI/HTTP operator-only\
+      \ surfaces."
   - id: agent_iface.surface_taxonomy.gate
     name: Gate agent-interface surface taxonomy alignment
     status: pending
