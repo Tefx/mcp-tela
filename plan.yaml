@@ -38193,11 +38193,23 @@ phases:
 
       - conflict detection uses final exposed names
 
-      - no-prefix behavior remains backward compatible'
+      - no-prefix behavior remains backward compatible
+
+      - prefix-only reload changes are treated as exposed tool-set changes even when
+      raw inventory is unchanged
+
+      - key-path observability preserves server_name + raw_name + exposed_name together
+      in audit/status/log evidence where those surfaces are claimed'
     verification: '- Every authoritative requirement is mapped to implementation evidence
       with file:line references.
 
-      - Any drift between docs/spec and runtime behavior is reported before gate.'
+      - Any drift between docs/spec and runtime behavior is reported before gate.
+
+      - Evidence explicitly shows the reload diff unit is the exposed tool set, not
+      raw inventory alone.
+
+      - Evidence explicitly shows server_name + raw_name + exposed_name are preserved
+      together on at least one claimed observability path.'
     evidence_template: '## Spec Conformance Report
 
       | Spec Section | Requirement | Implementation File:Line | Match? | Notes |
