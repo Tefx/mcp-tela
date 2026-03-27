@@ -38579,3 +38579,67 @@ phases:
 
       ```'
     agent: python-executor
+  - id: conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
+    name: Reuse captured reconnect enumeration in reload flow
+    status: pending
+    description: 'step_type: implementation
+
+
+      Fix reconnect correctness by threading the already captured reconnect enumeration
+      through the reload/update path instead of re-enumerating the same server.
+
+
+      Required boundary:
+
+      - Event entry may carry fresh raw_tools
+
+      - Reload/update path must consume provided enumeration when present
+
+      - No second list_tools or re_enumerate call for the same reconnect event
+
+
+      Spec refs:
+
+      - docs/DESIGN.md Runtime Architecture / Connection lifecycle
+
+
+      Touch paths:
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/reload.py
+
+
+      Harness refs:
+
+      - tests/shell/test_reload.py
+
+      - tests/shell/test_downstream.py
+
+
+      Authoritative interface: NONE PINNED
+
+
+      Out-of-scope guardrail:
+
+      - Do not introduce a generic apply_server_tool_update helper here
+
+      - Do not fold connect_all into this fix
+
+      - Do not extract transport opener helpers here
+
+      - Do not redesign lifecycle/readiness ownership here
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    verification: '- Main path: reconnect with provided raw_tools updates registry
+      and status correctly
+
+      - Failure path: regression test proves duplicate enumeration no longer occurs
+
+      - Protects local-check now and later conn_v2.convergence phase-check'
+    depends_on:
+    - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
+    agent: python-executor
