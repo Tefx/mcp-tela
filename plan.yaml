@@ -36042,7 +36042,7 @@ phases:
       \ - Contract/doc wording is explicit, bounded, and non-vacuous."
   - id: agent_iface.final_review.black_box
     name: Black-box verification of agent-facing surfaces
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (blind-tester), verify the final user-visible behavior
@@ -36082,6 +36082,15 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-27T10:24:20.251441+00:00'
+    done_at: '2026-03-27T10:28:04.398629+00:00'
+    evidence: "Black-box verification:\n- Docs used:\n  - confirmed contract, agent\
+      \ interface, interfaces, usage, design, README, runtime surface instruction\
+      \ text.\n- MCP observations:\n  - `tela.profiles` observed and documented as\
+      \ resource-read surface; no built-in `tela.*` MCP tools discovered.\n- CLI/HTTP\
+      \ observations:\n  - Operator CLI commands and HTTP routes matched documented\
+      \ operator-only surfaces.\n- Incorrect inferences docs still encourage:\n  -\
+      \ None in phase scope.\n- Verdict:\n  - Fresh-reader path leads to correct surface\
+      \ usage and avoids unsupported built-in inference."
   - id: agent_iface.final_review.gate
     name: Final gate for agent-interface surface consistency
     status: pending
