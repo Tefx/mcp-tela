@@ -37278,6 +37278,23 @@ phases:
     depends_on:
     - conn_v2.ux.impl_messages
     agent: uiux-designer
+  - id: conn_v2.ux.gate
+    name: Gate host-facing UX and diagnostics phase
+    status: pending
+    description: "step_type: gate\nGate review: verify host-facing messaging and diagnostics\
+      \ are consistent, truthful, and architecture-basis-conformant.\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale:\n  - phase touches output/formatting paths\
+      \ that historically drift across sibling surfaces\ncross_cutting_focus:\n  -\
+      \ all host-facing surfaces use one lifecycle fact model\n  - no timeout-only\
+      \ workaround messaging\n  - config ownership and degraded reporting are explicit"
+    verification: '- CLI and HTTP diagnostics agree on lifecycle states and ownership
+      facts
+
+      - Sibling output paths were checked, not only one command'
+    depends_on:
+    - conn_v2.ux.impl_messages
+    - conn_v2.ux.conformance_review
+    agent: gate-reviewer
 - id: conn_v2.system_wiring
   name: System Wiring and Entry Point Integration
   status: locked
