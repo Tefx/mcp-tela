@@ -36218,7 +36218,7 @@ phases:
       convergence summaries are explicit and non-overlapping'
     agent: software-architect
   - id: conn_v2.contract.startup_convergence_contract
-    name: Codify startup coordination and downstream convergence contracts
+    name: Define startup coordination and single-server convergence boundary
     status: pending
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - interfaces\n  - stubs\nagent_source: default\nspec_refs:\n\
@@ -36233,7 +36233,10 @@ phases:
       \ Downstream Runtime State\ncross_cutting_policy:\n  - autostart leader/follower\
       \ semantics are single-owner\n  - downstream convergence is backgrounded after\
       \ endpoint publication\n  - re-enumeration/hot reload must preserve registry\
-      \ truth ownership\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
+      \ truth ownership\n  - event-entry adapters are distinct from single-server\
+      \ convergence logic\n  - notify/audit policy remain outside the shared convergence\
+      \ core\n  - connect_all orchestration remains outside the single-server convergence\
+      \ kernel\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
       \  - src/tela/shell/gateway.py\n  - src/tela/shell/downstream.py\n  - src/tela/shell/downstream_clients.py\n\
       \  - src/tela/shell/reload.py\n  - src/tela/shell/lockfile.py\nharness_refs:\n\
       \  - tests/shell/test_connect_cmd.py\n  - tests/shell/test_downstream.py\n \
@@ -36246,15 +36249,19 @@ phases:
       \ summaries.\n  - Define config_path ownership and mismatch diagnostics as a\
       \ contract output so attach-to-wrong-gateway behavior is explicit before implementation.\n\
       \  - State whether startup_generation changes on restart and on hot reload,\
-      \ and which surfaces consume it.\n  - Non-goals: no process spawning code, no\
-      \ re-enumeration implementation."
+      \ and which surfaces consume it.\n  - Define event-entry vs single-server convergence-kernel\
+      \ boundaries so later implementation does not collapse them into a single entrypoint.\n\
+      \  - Non-goals: no process spawning code, no re-enumeration implementation."
     verification: '- Contract outputs make single-instance coordination, background
       convergence, config ownership, and startup_generation semantics explicit
 
       - No implementation logic appears in the contract artifacts
 
       - Shared ownership boundaries for lockfile, runtime memory, and tool registry
-      are unambiguous'
+      are unambiguous
+
+      - Contract explicitly excludes notify/audit policy and connect_all orchestration
+      from the shared single-server convergence core'
     depends_on:
     - conn_v2.contract.lockfile_status_contract
     agent: software-architect
