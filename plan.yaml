@@ -34560,3 +34560,57 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.define_confirmed_contract
     agent: python-executor
+  - id: agent_iface.surface_taxonomy.align_runtime_surface
+    name: Align runtime surface and instruction emitter to the confirmed taxonomy
+    status: pending
+    description: 'step_type: implementation
+
+      Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Apply the confirmed contract without reopening design. If the product decision
+      says status/connections/audit must exist as built-in MCP surfaces, implement
+      the missing MCP tools/resources and wire them into the runtime with the agreed
+      capability model. If the decision says they are intentionally CLI/HTTP-only,
+      keep runtime exposure limited accordingly and update any runtime-generated instructions
+      or metadata so tela no longer advertises unsupported MCP built-ins. In both
+      cases, preserve the verified `tela.profiles` resource behavior and ensure the
+      runtime surface taxonomy matches the contract exactly.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any claim that `tela.status`, `tela.connections`, or `tela.audit` are MCP
+      built-ins without actual registration proof
+
+      2. Any runtime instruction text that still blurs resource reads with tool calls
+
+      3. Any use of `tela_admin` without verified/spec-approved capability semantics
+
+      4. Any runtime surface matrix that conflicts with the chosen taxonomy decision'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Runtime behavior matches the chosen surface matrix exactly
+
+      - `tela.profiles` remains a resource
+
+      - Status/connections/audit are either implemented as the newly approved MCP
+      surfaces with tests passing, or remain absent from MCP exposure and absent from
+      runtime instructions/metadata if the taxonomy says CLI/HTTP-only'
+    evidence_template: 'Runtime alignment:
+
+      - Chosen taxonomy applied:
+
+      - MCP surfaces added/kept/removed from advertising:
+
+      - Capability checks used:
+
+      - Commands/tests proving alignment:
+
+      - Any intentionally unchanged CLI/HTTP surfaces:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.add_surface_regressions
+    agent: python-senior
