@@ -34813,3 +34813,36 @@ phases:
     runtime exposure, and documentation consistency.
   depends_on:
   - agent_iface.surface_taxonomy
+  steps:
+  - id: agent_iface.final_review.wiring
+    name: Wiring audit for agent-interface surfaces
+    status: pending
+    description: 'step_type: review
+
+      Verification scope: phase-check protecting agent_iface.final_review.gate.
+
+      Verify every agent-facing surface introduced or described by the prior phase
+      is actually wired to the correct runtime boundary. Required checks: `tela.profiles`
+      resource registration remains reachable; any newly approved MCP tools/resources
+      are actually registered and discoverable; CLI-only commands remain wired through
+      `src/tela/cli.py`; and no orphan doc claim remains for an unregistered surface.'
+    verification: '- Verification scope: phase-check protecting agent_iface.final_review.gate
+
+      - Evidence lists registered MCP resources/tools, wired CLI commands, and any
+      orphan claims
+
+      - Gate blocks if an agent-facing surface is documented but not wired'
+    evidence_template: 'Wiring audit:
+
+      - Registered MCP resources:
+
+      - Registered MCP tools:
+
+      - Wired CLI commands:
+
+      - Orphan/undocumented surfaces:
+
+      - Verdict:
+
+      '
+    agent: integration-verifier
