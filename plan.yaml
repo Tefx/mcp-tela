@@ -35862,7 +35862,7 @@ phases:
       - Runtime/docs/tests consistent for loop4 scope; readiness for gate affirmed.'
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
-  status: pending
+  status: in_progress
   gate: Final independent review of the newly clarified agent-facing surface taxonomy,
     runtime exposure, and documentation consistency.
   depends_on:
@@ -35870,7 +35870,7 @@ phases:
   steps:
   - id: agent_iface.final_review.wiring
     name: Wiring audit for agent-interface surfaces
-    status: pending
+    status: claimed
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -35900,6 +35900,8 @@ phases:
 
       '
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-27T10:15:51.410081+00:00'
   - id: agent_iface.final_review.spec_conformance
     name: Spec conformance review for agent-interface taxonomy
     status: pending
