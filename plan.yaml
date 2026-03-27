@@ -37665,6 +37665,8 @@ phases:
       behavior implicit.'
     verification: '- Contract audit flags vacuous or missing acceptance boundaries
       for lifecycle and bridge state'
+    depends_on:
+    - conn_v2.deep_review.wiring_audit
     agent: gate-reviewer
   - id: conn_v2.deep_review.wiring_audit
     name: Full wiring audit for connect/serve runtime refactor
