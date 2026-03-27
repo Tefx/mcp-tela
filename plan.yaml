@@ -33783,3 +33783,78 @@ phases:
     - post.deep_review.black_box
     - post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
     agent: python-senior
+  - id: post.deep_review.retest_invar_guard_gate_blockers
+    name: 'Retest: verify invar guard gateway blockers and regressions'
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer), validate from a fresh
+      perspective that the failed post.deep_review.gate blocker set is resolved.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - dead_export / wiring-orphan findings for gateway helpers and audit_query are
+      gone
+
+      - shell_result contract violations in gateway.py are gone
+
+      - no new invar guard blocker-class regressions appear in the same run
+
+
+      Independence Level: L1
+
+
+      This symbolic-testing retest must run in a fresh/cold environment and use the
+      exact project invar guard command family.'
+    verification: '- Run the project-standard full invar guard command in a fresh/cold
+      environment
+
+      - Confirm blocker findings for gateway helpers, audit_query, and gateway.py
+      shell_result are resolved
+
+      - Confirm no new blocker-class regressions appear in the guard output'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: gate-reviewer (independent of implementation)
+
+      **Scope**: post.deep_review gateway blocker retest
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      - Output summary:
+
+
+      ### Issues Found
+
+      - blocker:
+
+      - should_fix:
+
+      - suggestion:
+
+      - tech_debt:
+
+
+      ### Coverage Assessment
+
+      - dead_export / wiring-orphan verified:
+
+      - shell_result verified:
+
+      - regression sweep performed:
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE'
+    depends_on:
+    - post.deep_review.fix_invar_guard_gate_blockers
+    agent: gate-reviewer
