@@ -34614,3 +34614,38 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.add_surface_regressions
     agent: python-senior
+  - id: agent_iface.surface_taxonomy.update_agent_interface_doc
+    name: Correct AGENT_INTERFACE.md to match the confirmed taxonomy
+    status: pending
+    description: 'step_type: implementation
+
+      Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
+
+      Update `docs/AGENT_INTERFACE.md` only after the taxonomy contract and runtime
+      alignment are settled. Required corrections: explicitly treat `tela.profiles`
+      as a resource read surface; stop claiming `tela.status`, `tela.connections`,
+      or `tela.audit` are built-in MCP tools unless that was actually implemented
+      by the prior step; remove or replace unverified `tela_admin` wording; distinguish
+      tool calls from resource reads in workflow guidance; and tighten downstream
+      instruction merge wording around ordering and conflicts.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - The document contains no unsupported MCP-surface claim, explicitly distinguishes
+      resource reads from tool calls, and uses only confirmed capability/taxonomy
+      language'
+    evidence_template: 'Doc corrections in AGENT_INTERFACE.md:
+
+      - Surfaces reclassified:
+
+      - Capability wording fixed:
+
+      - Workflow/resource wording fixed:
+
+      - Merge semantics wording fixed:
+
+      - Remaining spec caveats (if any):
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.align_runtime_surface
+    agent: doc-reviewer
