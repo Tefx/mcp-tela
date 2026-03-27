@@ -34787,7 +34787,7 @@ phases:
       \  - `tests/shell/test_merge_instructions.py`\n- Commit:\n  - `83e4090adc3a7418d7b60ead9104f037f9c0ef69`"
   - id: agent_iface.surface_taxonomy.update_agent_interface_doc
     name: Correct AGENT_INTERFACE.md to match the confirmed taxonomy
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34822,6 +34822,26 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T07:39:07.123710+00:00'
+    done_at: '2026-03-27T07:44:37.759376+00:00'
+    evidence: "Doc corrections in AGENT_INTERFACE.md:\n- Surfaces reclassified:\n\
+      \  - `tela.profiles` documented as MCP resource read surface.\n  - `tela.status`,\
+      \ `tela.connections`, `tela.audit` documented as operator-only CLI/HTTP surfaces,\
+      \ not MCP built-ins.\n  - Explicit statement to avoid calling those via MCP\
+      \ `tools/call`.\n  - Section confirms no built-in MCP `tela.*` tools currently\
+      \ exposed.\n- Capability wording fixed:\n  - Removed `tela_admin` references.\n\
+      \  - Capability wording uses confirmed generic family/posture language only.\n\
+      - Workflow/resource wording fixed:\n  - `tela.profiles` explicitly labeled as\
+      \ MCP resource read (not `tools/call`).\n  - Workflow separates MCP resource\
+      \ reads from MCP tool calls and operator HTTP/CLI surfaces.\n- Merge semantics\
+      \ wording fixed:\n  - Gateway top-level instructions first and authoritative.\n\
+      \  - Downstream sections appended after gateway instructions.\n  - Per-server\
+      \ rules documented: `false` suppress, `<string>` override, `null` passthrough.\n\
+      \  - Conflict handling documented: downstream subordinate; gateway rules win;\
+      \ silent override forbidden.\n- Remaining spec caveats:\n  - None.\n- Files\
+      \ changed:\n  - `docs/AGENT_INTERFACE.md` only.\n- Verification commands:\n\
+      \  - git status/diff checks confirmed only AGENT_INTERFACE changed in worktree.\n\
+      \  - grep checks confirmed removal of `tela_admin` and inclusion of resource/tool\
+      \ distinction and merge semantics wording.\n- Commit:\n  - `3826f3dfd96c5c05b185e28bb438ff52751eed3b`"
   - id: agent_iface.surface_taxonomy.sync_shared_docs
     name: Sync INTERFACES, USAGE, and README to the confirmed taxonomy
     status: pending
