@@ -35945,7 +35945,7 @@ phases:
     agent: doc-reviewer
   - id: agent_iface.final_review.architecture
     name: Architecture review for runtime surface boundaries
-    status: pending
+    status: claimed
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -35974,6 +35974,8 @@ phases:
     depends_on:
     - agent_iface.final_review.wiring
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-27T10:18:52.434792+00:00'
   - id: agent_iface.final_review.contract_strength
     name: Contract-strength review for surface taxonomy wording
     status: pending
