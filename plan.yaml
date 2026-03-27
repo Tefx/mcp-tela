@@ -37746,6 +37746,25 @@ phases:
 
       - No substantive implementation logic is introduced in this contract step.'
     agent: software-architect
+  - id: tool_prefix.contract.gate
+    name: Gate tool-prefix contracts
+    status: pending
+    description: "step_type: gate\nagent_source: default\nreview_depth: STANDARD\n\
+      review_depth_rationale:\n  - Feature changes config contract, conflict semantics,\
+      \ and runtime naming surfaces.\nVerification scope: phase-check protecting downstream\
+      \ implementation, reload behavior, and doc-sync.\n\nAs an INDEPENDENT REVIEWER\
+      \ (gate-reviewer), confirm the contract phase defines a complete acceptance\
+      \ boundary for tool_prefix without leaking implementation logic."
+    verification: '- Contract step completed with acceptance-only semantics.
+
+      - Mapping invariants cover raw_name, exposed_name, and routing_name.
+
+      - Reserved-prefix rejection and raw-name tool_overrides behavior are explicit.
+
+      - Ready for test authoring.'
+    depends_on:
+    - tool_prefix.contract.define_semantics
+    agent: gate-reviewer
 - id: tool_prefix.test
   name: Tool Prefix Tests
   status: locked
