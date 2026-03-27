@@ -36178,3 +36178,10 @@ phases:
     readiness.
   depends_on:
   - conn_v2.startup_coord
+- id: conn_v2.convergence
+  name: Background Downstream Convergence
+  status: locked
+  gate: Gateway startup reaches discoverable lifecycle without serial downstream blocking,
+    while convergence/re-enumeration state remains visible and consistent.
+  depends_on:
+  - conn_v2.lifecycle
