@@ -38360,3 +38360,30 @@ phases:
     depends_on:
     - tool_prefix.deep_review.wiring_audit
     agent: software-architect
+  - id: tool_prefix.deep_review.contract_strength
+    name: Contract strength audit for tool-prefix contracts
+    status: pending
+    description: 'step_type: review
+
+      agent_source: default
+
+      verification_scope: full-plan-check
+
+      Verify contract and doctest strength for any new or changed core contract surfaces
+      involved in tool_prefix semantics.
+
+
+      Checks:
+
+      - no vacuous @pre/@post contracts
+
+      - changed core functions keep doctest-backed acceptance
+
+      - raw/exposed-name semantics are asserted, not implied'
+    verification: '- Contract audit identifies whether new/changed core surfaces have
+      meaningful contracts and doctests.
+
+      - Any vacuous or identity-only contract is treated as blocking.'
+    depends_on:
+    - tool_prefix.deep_review.wiring_audit
+    agent: gate-reviewer
