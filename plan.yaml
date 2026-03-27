@@ -36159,6 +36159,51 @@ phases:
   depends_on:
   - meta.review
   - agent_iface.final_review
+  steps:
+  - id: conn_v2.contract.lockfile_status_contract
+    name: Codify lockfile, status, and lifecycle contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
+      spec_refs:\n  - docs/DESIGN.md#Runtime Architecture > Service discovery\n  -\
+      \ docs/DESIGN.md#Runtime Architecture > Connection lifecycle\n  - docs/INTERFACES.md#2.\
+      \ CLI Surface\n  - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  -\
+      \ docs/INTERFACES.md#7.3 Lockfile Contract\n  - docs/USAGE.md#Running tela >\
+      \ tela connect\n  - docs/USAGE.md#Running tela > tela serve\narchitecture_basis:\n\
+      \  - discovery layer: lockfile and endpoint discovery only\n  - runtime gateway\
+      \ layer: /health /status /mcp lifecycle truth\n  - lockfile MUST mean process\
+      \ identity + bind target + token + config ownership published\n  - lockfile\
+      \ MUST NOT mean downstream ready or final tool registry\n  - /status SHOULD\
+      \ expose phase, config_path, startup_generation, per-server state, tool digest/count\n\
+      state_strata:\n  - Process Discovery State\n  - Gateway Lifecycle State\n  -\
+      \ Downstream Runtime State\n  - Upstream Session State\neffective_truth_owner:\n\
+      \  - lockfile -> active gateway endpoint\n  - gateway_runtime -> lifecycle phase\
+      \ and startup_generation\nconsumer_surfaces:\n  - tela connect\n  - tela serve\n\
+      \  - tela status\n  - GET /health\n  - GET /status\ntouch_paths:\n  - src/tela/core/models.py\n\
+      \  - src/tela/shell/lockfile.py\n  - src/tela/shell/gateway_runtime.py\n  -\
+      \ src/tela/shell/http_routes.py\n  - src/tela/commands/remote_state.py\nharness_refs:\n\
+      \  - tests/core/test_models.py\n  - tests/shell/test_lockfile.py\n  - tests/shell/test_http_routes.py\n\
+      \  - tests/shell/test_gateway.py\nauthoritative_interface:\n  - tela connect\
+      \ [--config path] [--default-profile name] [--server host:port] [--token tok]\n\
+      \  - tela serve [--config path] [--port N] [--host addr] [--default-profile\
+      \ name] [--idle-timeout sec] [--token tok]\nTasks:\n  - Define acceptance-only\
+      \ contracts for lockfile payload, lifecycle phases (starting|warming|ready|degraded),\
+      \ startup_generation semantics, and status snapshot ownership.\n  - Explicitly\
+      \ pin discovery-vs-readiness split so connect/query consumers never treat lockfile\
+      \ discovery as downstream readiness.\n  - Clarify acceptable-phase policy as\
+      \ a contract artifact before implementation; if attach readiness cannot be made\
+      \ explicit from current sources, produce a narrow contract clarification output\
+      \ rather than guessing in implementation.\n  - Non-goals: no runtime logic,\
+      \ no transport startup, no completed handlers."
+    verification: '- Contract outputs pin lockfile vs /status semantics and lifecycle
+      fields without implementation logic
+
+      - Discovery-ready split is explicit and reviewable across all listed consumer
+      surfaces
+
+      - Acceptable-phase policy is defined or escalated as a bounded contract clarification,
+      not left implicit'
+    agent: software-architect
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
   status: locked
