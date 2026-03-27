@@ -20,9 +20,14 @@ from tela.shell.gateway import (
     get_runtime_connections_snapshot,
     get_runtime_secrets,
     get_runtime_status_snapshot,
+    get_upstream_http_app,
+    get_upstream_log_level,
+    get_upstream_server,
+    is_upstream_server_initialized,
     remove_runtime_connection,
     set_runtime_config,
     set_runtime_running,
+    set_upstream_server,
 )
 
 
@@ -251,3 +256,117 @@ class TestB1B2NoProductionGetRuntime:
         assert import_lines == [], (
             f"http_routes.py still imports bare get_runtime: {import_lines}"
         )
+
+    def test_serve_cmd_does_not_import_get_upstream_server(self) -> None:
+        """serve_cmd.py must not import get_upstream_server (uses operation accessors)."""
+        import inspect
+
+        from tela.commands import serve_cmd
+
+        source = inspect.getsource(serve_cmd)
+        import_lines = [
+            line.strip()
+            for line in source.split("\n")
+            if line.strip().startswith(("from tela.shell.gateway import", "import"))
+            and "get_upstream_server" in line
+        ]
+        assert import_lines == [], (
+            f"serve_cmd.py still imports get_upstream_server: {import_lines}"
+        )
+
+    def test_no_production_module_imports_get_upstream_server(self) -> None:
+        """No production (non-test) module should import get_upstream_server."""
+        import inspect
+
+        from tela.shell import http_routes, upstream
+        from tela.commands import serve_cmd
+
+        production_modules = {
+            "upstream": upstream,
+            "http_routes": http_routes,
+            "serve_cmd": serve_cmd,
+        }
+        for name, mod in production_modules.items():
+            source = inspect.getsource(mod)
+            import_lines = [
+                line.strip()
+                for line in source.split("\n")
+                if line.strip().startswith(("from tela.shell.gateway import",))
+                and "get_upstream_server" in line
+            ]
+            assert import_lines == [], (
+                f"{name} still imports get_upstream_server: {import_lines}"
+            )
+
+
+class TestB3UpstreamServerBoundaryPolicy:
+    """B3: get_upstream_server() returns live alias; operation accessors do not."""
+
+    def test_operation_accessors_do_not_leak_server_reference(self) -> None:
+        """Operation accessors return results, not the live FastMCP."""
+        from mcp.server.fastmcp import FastMCP
+
+        server = FastMCP("boundary-test")
+        set_upstream_server(server)
+
+        # is_upstream_server_initialized returns bool, not server
+        assert is_upstream_server_initialized() is True
+
+        # get_upstream_http_app returns a Result[Starlette], not FastMCP
+        app_result = get_upstream_http_app()
+        assert app_result.is_ok
+        assert app_result.value is not None
+        assert not isinstance(app_result.value, FastMCP)
+
+        # get_upstream_log_level returns a string, not server
+        log_level = get_upstream_log_level()
+        assert isinstance(log_level, str)
+
+        # Cleanup
+        set_upstream_server(None)
+
+    def test_deprecated_get_upstream_server_returns_live_alias(self) -> None:
+        """Demonstrate that get_upstream_server leaks live runtime reference.
+
+        This test documents the vulnerability in the deprecated accessor
+        and proves the operation accessors are needed.
+        """
+        from mcp.server.fastmcp import FastMCP
+
+        server = FastMCP("alias-test")
+        set_upstream_server(server)
+
+        # Deprecated accessor returns the SAME object (live alias)
+        leaked = get_upstream_server()
+        assert leaked is server  # proves live alias leak
+
+        # Operation accessors do NOT return the server
+        app_result = get_upstream_http_app()
+        assert app_result.value is not server
+
+        set_upstream_server(None)
+
+    def test_uninitialised_server_operation_accessors(self) -> None:
+        """Operation accessors handle None server gracefully."""
+        set_upstream_server(None)
+
+        assert is_upstream_server_initialized() is False
+
+        app_result = get_upstream_http_app()
+        assert app_result.is_err
+        assert "UPSTREAM_NOT_INITIALIZED" in (app_result.error or "")
+
+        assert get_upstream_log_level() == "info"
+
+    def test_set_upstream_server_locked_mutator(self) -> None:
+        """set_upstream_server provides locked write access."""
+        from mcp.server.fastmcp import FastMCP
+
+        assert not is_upstream_server_initialized()
+
+        server = FastMCP("mutator-test")
+        set_upstream_server(server)
+        assert is_upstream_server_initialized()
+
+        set_upstream_server(None)
+        assert not is_upstream_server_initialized()

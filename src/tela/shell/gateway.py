@@ -17,6 +17,7 @@ from typing import Awaitable, Callable
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
 from pydantic import ValidationError
+from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -485,41 +486,54 @@ def get_runtime() -> GatewayRuntime:
 
 # --- Locked runtime accessors ------------------------------------------
 #
-# Authoritative runtime boundary rule:
+# Authoritative runtime boundary policy (applies to ALL public accessors):
 #
-#   READ ACCESS:   Returns a deep-copied / detached snapshot.  Callers
+#   DATA READ:     Returns a deep-copied / detached snapshot.  Callers
 #                  may freely read or discard the returned value; it
 #                  shares no mutable state with the runtime.
+#                  Applies to: get_runtime_config, get_runtime_secrets,
+#                  get_runtime_connections_snapshot.
 #
-#   SNAPSHOT ACCESS: Same as read — frozen dataclass or deep-copied
-#                    Pydantic models.  Nested containers (lists, dicts)
-#                    and model members are deep-copied so no shallow
-#                    alias back into runtime-owned objects survives.
+#   SNAPSHOT:      Frozen dataclass with deep-copied Pydantic models and
+#                  containers.  No shallow alias survives the boundary.
+#                  Applies to: get_runtime_status_snapshot.
 #
-#   STATUS ACCESS: Equivalent to snapshot — the RuntimeStatusSnapshot
-#                  dataclass is frozen, and all mutable model fields are
-#                  deep-copied before embedding.
+#   OPERATION:     For non-copyable runtime-owned services (e.g. FastMCP),
+#                  the accessor acquires the lock, performs the needed
+#                  operation on the live service, and returns only the
+#                  operation result — never the service reference itself.
+#                  Applies to: get_upstream_http_app, get_upstream_log_level,
+#                  is_upstream_server_initialized.
 #
-#   WRITE ACCESS:  Locked mutators (set_*, add_*, remove_*, clear_*,
+#   WRITE:         Locked mutators (set_*, add_*, remove_*, clear_*,
 #                  increment_*) that acquire ``_runtime_lock`` for the
 #                  full mutation.
 #
-# Why previous fix failed:
-#   The prior hardening pass introduced lock-safe helpers but left some
-#   helpers returning the *live* Pydantic model reference (e.g.
-#   ``_runtime.config`` directly).  Because Pydantic V2 models are
-#   mutable by default, callers could mutate fields on the returned
-#   object and those mutations would propagate back into runtime state,
-#   violating the lock boundary.  Shallow ``list()`` copies of
-#   connection lists likewise preserved live ``ConnectionContext``
-#   references.
+#   DEPRECATED:    get_runtime() and get_upstream_server() return live
+#                  runtime-owned references.  They are retained ONLY for
+#                  single-threaded test setup; production code MUST NOT
+#                  import or call them.  Enforced by regression tests in
+#                  tests/repro/test_runtime_boundary_immutability.py.
 #
-# How this fix closes the blocker family:
-#   Every read accessor now returns ``model_copy(deep=True)`` for
-#   Pydantic models, ensuring no alias back into runtime-owned state.
-#   ``RuntimeStatusSnapshot`` deep-copies both config and connection
-#   list members.  ``get_runtime()`` is deprecated with explicit docs;
-#   new lock-safe write helpers cover the remaining test-setup mutations.
+# Why previous loops failed (loop 1 & 2):
+#   Loop 1 introduced lock-safe helpers for config/connections but left
+#   ``get_upstream_server()`` returning the live FastMCP instance — a
+#   non-copyable runtime-owned service object that escapes the lock
+#   boundary.  Loop 2 hardened data accessors with deep-copy but still
+#   treated the service accessor identically to data reads.  Because
+#   FastMCP cannot be deep-copied (it owns registered handlers, I/O
+#   state), the same deep-copy pattern cannot apply.
+#
+# How loop 3 closes the blocker family:
+#   Introduces a third access class — OPERATION — for non-copyable
+#   services.  ``get_upstream_http_app()`` acquires the lock, calls
+#   ``streamable_http_app()`` on the live server, and returns the
+#   resulting Starlette app (a distinct object).  ``get_upstream_log_level()``
+#   reads the scalar setting under lock.  Neither exposes the FastMCP
+#   reference.  ``serve_cmd.py`` — the sole production consumer — is
+#   migrated to these operation accessors.  ``get_upstream_server()`` is
+#   deprecated alongside ``get_runtime()``, both guarded by the same
+#   regression test suite.
 # -----------------------------------------------------------------------
 
 
@@ -658,7 +672,19 @@ def get_runtime_secrets() -> list[str]:
 
 
 def get_upstream_server() -> FastMCP | None:
-    """Return the upstream FastMCP server instance under lock.
+    """**DEPRECATED** — returns live runtime-owned FastMCP; violates boundary policy.
+
+    Retained ONLY for single-threaded test setup where the live server
+    reference is required (e.g. direct handler introspection).  Production
+    callers MUST use the operation accessors below:
+
+    * ``is_upstream_server_initialized()`` — check readiness
+    * ``get_upstream_http_app()`` — obtain the ASGI application
+    * ``get_upstream_log_level()`` — read the server log level
+
+    .. deprecated::
+        Leaks a mutable runtime-owned object.  Will be removed once test
+        helpers fully cover all setup patterns.
 
     Examples:
         >>> isinstance(get_upstream_server(), (type(None), FastMCP))
@@ -666,6 +692,78 @@ def get_upstream_server() -> FastMCP | None:
     """
     with _runtime_lock:
         return _runtime.upstream_server
+
+
+def is_upstream_server_initialized() -> bool:
+    """Return whether the upstream FastMCP server has been created, under lock.
+
+    This is the boundary-safe replacement for ``get_upstream_server() is not None``.
+
+    Examples:
+        >>> isinstance(is_upstream_server_initialized(), bool)
+        True
+    """
+    with _runtime_lock:
+        return _runtime.upstream_server is not None
+
+
+def get_upstream_http_app() -> Result[Starlette, str]:
+    """Return the Streamable HTTP ASGI app from the upstream server, under lock.
+
+    Acquires ``_runtime_lock``, invokes ``streamable_http_app()`` on the
+    live FastMCP server, and returns the resulting Starlette app.  The
+    caller receives a fully constructed ASGI application without ever
+    holding a reference to the runtime-owned ``FastMCP`` instance.
+
+    Returns:
+        Result containing the Starlette ASGI app, or an error string if
+        the upstream server is not initialized.
+
+    Examples:
+        >>> r = get_upstream_http_app()
+        >>> r.is_ok or r.is_err
+        True
+    """
+    with _runtime_lock:
+        if _runtime.upstream_server is None:
+            return Result(error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized")
+        return Result(value=_runtime.upstream_server.streamable_http_app())
+
+
+def get_upstream_log_level() -> str:
+    """Return the upstream server's log level setting, under lock.
+
+    Falls back to ``"info"`` if the server or its settings are unavailable.
+
+    Examples:
+        >>> isinstance(get_upstream_log_level(), str)
+        True
+    """
+    with _runtime_lock:
+        if _runtime.upstream_server is None:
+            return "info"
+        return str(
+            getattr(
+                getattr(_runtime.upstream_server, "settings", None),
+                "log_level",
+                "info",
+            )
+        )
+
+
+def set_upstream_server(server: FastMCP | None) -> None:
+    """Replace the upstream FastMCP server reference under lock.
+
+    This is the locked write accessor for ``_runtime.upstream_server``.
+    Used during gateway startup (internal) and test fixture setup.
+
+    Examples:
+        >>> set_upstream_server(None)
+        >>> is_upstream_server_initialized()
+        False
+    """
+    with _runtime_lock:
+        _runtime.upstream_server = server
 
 
 @dataclass(frozen=True)

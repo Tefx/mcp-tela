@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from importlib import metadata
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from starlette.applications import Starlette
 
 from tela.core.models import AuthMode, GatewayTransport, LockfileData, TelaConfig
 from tela.shell.config_loader import Result, load_config
@@ -26,7 +26,9 @@ from tela.shell.gateway import (
     gateway_shutdown,
     gateway_start,
     get_expected_bearer_token,
-    get_upstream_server,
+    get_upstream_http_app,
+    get_upstream_log_level,
+    is_upstream_server_initialized,
 )
 from tela.shell.idle_shutdown import init_idle_manager, shutdown_idle_manager
 from tela.shell.lockfile import delete_lockfile, generate_bearer_token, write_lockfile
@@ -167,14 +169,21 @@ async def _run_serve_gateway(
         return Result(error=version_result.error)
     assert version_result.value is not None
 
-    upstream_server = get_upstream_server()
-    if upstream_server is None:
+    if not is_upstream_server_initialized():
         await gateway_shutdown()
         delete_lockfile()
         return Result(error="STARTUP_FAILED: upstream MCP server not initialized")
 
+    upstream_app_result = get_upstream_http_app()
+    if upstream_app_result.is_err:
+        await gateway_shutdown()
+        delete_lockfile()
+        return Result(error=upstream_app_result.error)
+    assert upstream_app_result.value is not None
+
     http_server_result = await _launch_streamable_http_server(
-        upstream_server=upstream_server,
+        upstream_app=upstream_app_result.value,
+        upstream_log_level=get_upstream_log_level(),
         host=startup_config.host,
         requested_port=startup_config.port or 0,
     )
@@ -248,23 +257,32 @@ async def _run_serve_gateway(
 # @shell_complexity: startup requires observing uvicorn socket bind before lockfile publication.
 async def _launch_streamable_http_server(
     *,
-    upstream_server: FastMCP,
+    upstream_app: Starlette,
+    upstream_log_level: str,
     host: str,
     requested_port: int,
 ) -> Result[_HttpServerHandle, str]:
-    """Start Streamable HTTP server and resolve the actual bound port."""
+    """Start Streamable HTTP server and resolve the actual bound port.
+
+    Args:
+        upstream_app: The Starlette ASGI application obtained via
+            ``get_upstream_http_app()`` (boundary-safe; no live FastMCP ref).
+        upstream_log_level: Log level string from ``get_upstream_log_level()``.
+        host: Bind address.
+        requested_port: Requested port (0 for auto-assign).
+
+    Returns:
+        Result containing the server handle, or error string.
+    """
 
     import uvicorn
 
     from tela.shell.http_auth import BearerAuthMiddleware
 
-    raw_app = upstream_server.streamable_http_app()
     app = BearerAuthMiddleware(
-        raw_app, get_expected_token=lambda: get_expected_bearer_token().value
+        upstream_app, get_expected_token=lambda: get_expected_bearer_token().value
     )
-    log_level = str(
-        getattr(getattr(upstream_server, "settings", None), "log_level", "info")
-    )
+    log_level = upstream_log_level
     config = uvicorn.Config(
         app,
         host=host,

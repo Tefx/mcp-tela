@@ -11,7 +11,9 @@ from tela.cli import main
 from tela.commands import serve_cmd
 from tela.core.models import AuthConfig, AuthMode, TelaConfig
 from tela.shell.config_loader import Result
-from tela.shell.gateway import get_runtime
+from starlette.applications import Starlette
+
+from tela.shell.gateway import get_runtime, set_runtime_running, set_upstream_server
 
 
 def test_serve_subcommand_exists() -> None:
@@ -67,15 +69,15 @@ def test_serve_lockfile_written_then_deleted(
     async def _fake_gateway_start(*args, **kwargs) -> Result[None, str]:
         _ = args
         _ = kwargs
-        runtime = get_runtime()
-        runtime.upstream_server = object()  # type: ignore[assignment]  # test fake: not a real FastMCP
-        runtime.running = True
+        set_upstream_server(object())  # type: ignore[arg-type]  # test fake: not a real FastMCP
+        set_runtime_running(True)
         return Result(value=None)
 
     async def _fake_launch_streamable_http_server(
-        *, upstream_server: object, host: str, requested_port: int
+        *, upstream_app: object, upstream_log_level: str, host: str, requested_port: int
     ) -> Result[serve_cmd._HttpServerHandle, str]:
-        _ = upstream_server
+        _ = upstream_app
+        _ = upstream_log_level
         _ = host
         task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
         return Result(
@@ -87,10 +89,10 @@ def test_serve_lockfile_written_then_deleted(
         )
 
     async def _fake_gateway_shutdown() -> Result[None, str]:
-        runtime = get_runtime()
-        runtime.upstream_server = None
-        runtime.running = False
-        runtime.connections.clear()
+        set_upstream_server(None)
+        set_runtime_running(False)
+        from tela.shell.gateway import clear_runtime_connections
+        clear_runtime_connections()
         return Result(value=None)
 
     def _fake_write_lockfile(data):
@@ -122,6 +124,19 @@ def test_serve_lockfile_written_then_deleted(
         _ = poll_interval_seconds
         return
 
+    # Monkeypatch the operation accessors that serve_cmd now uses
+    # instead of get_upstream_server
+    monkeypatch.setattr(
+        serve_cmd, "is_upstream_server_initialized", lambda: True
+    )
+    monkeypatch.setattr(
+        serve_cmd,
+        "get_upstream_http_app",
+        lambda: Result(value=Starlette()),
+    )
+    monkeypatch.setattr(
+        serve_cmd, "get_upstream_log_level", lambda: "info"
+    )
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
     monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
@@ -175,22 +190,22 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
     async def _fake_gateway_start(*args, **kwargs) -> Result[None, str]:
         _ = args
         _ = kwargs
-        runtime = get_runtime()
-        runtime.upstream_server = object()  # type: ignore[assignment]  # test fake: not a real FastMCP
-        runtime.running = True
+        set_upstream_server(object())  # type: ignore[arg-type]  # test fake: not a real FastMCP
+        set_runtime_running(True)
         return Result(value=None)
 
     async def _fake_gateway_shutdown() -> Result[None, str]:
-        runtime = get_runtime()
-        runtime.upstream_server = None
-        runtime.running = False
-        runtime.connections.clear()
+        set_upstream_server(None)
+        set_runtime_running(False)
+        from tela.shell.gateway import clear_runtime_connections
+        clear_runtime_connections()
         return Result(value=None)
 
     async def _fake_launch_streamable_http_server(
-        *, upstream_server: object, host: str, requested_port: int
+        *, upstream_app: object, upstream_log_level: str, host: str, requested_port: int
     ) -> Result[serve_cmd._HttpServerHandle, str]:
-        _ = upstream_server
+        _ = upstream_app
+        _ = upstream_log_level
         _ = host
         assert requested_port == 0
         task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
@@ -227,6 +242,18 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
         _ = poll_interval_seconds
         return
 
+    # Monkeypatch the operation accessors that serve_cmd now uses
+    monkeypatch.setattr(
+        serve_cmd, "is_upstream_server_initialized", lambda: True
+    )
+    monkeypatch.setattr(
+        serve_cmd,
+        "get_upstream_http_app",
+        lambda: Result(value=Starlette()),
+    )
+    monkeypatch.setattr(
+        serve_cmd, "get_upstream_log_level", lambda: "info"
+    )
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
     monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
