@@ -38417,3 +38417,27 @@ phases:
     depends_on:
     - tool_prefix.deep_review.spec_conformance
     agent: blind-tester
+  - id: tool_prefix.deep_review.gate
+    name: Final gate for tool-prefix feature
+    status: pending
+    description: "step_type: gate\nagent_source: default\nreview_depth: THOROUGH\n\
+      review_depth_rationale:\n  - Feature changes external configuration, upstream\
+      \ MCP naming, downstream routing, and reload semantics.\ncross_cutting_focus:\n\
+      \  - raw/exposed-name consistency across all consumer surfaces\n  - reserved\
+      \ tela prefix enforcement\n  - rollback safety on prefix changes\nVerification\
+      \ scope: full-plan-check protecting feature completion.\n\nAs an INDEPENDENT\
+      \ REVIEWER (gate-reviewer), block completion if any audit shows unresolved drift\
+      \ or missing evidence."
+    verification: '- All deep-review steps completed with adequate evidence.
+
+      - No unresolved blocker remains for config semantics, routing, reload behavior,
+      or documentation drift.
+
+      - Feature is ready for downstream execution or merge review.'
+    depends_on:
+    - tool_prefix.deep_review.wiring_audit
+    - tool_prefix.deep_review.spec_conformance
+    - tool_prefix.deep_review.architecture_review
+    - tool_prefix.deep_review.contract_strength
+    - tool_prefix.deep_review.black_box
+    agent: gate-reviewer
