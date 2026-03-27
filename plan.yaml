@@ -36701,7 +36701,7 @@ phases:
   - conn_v2.startup_coord
   steps:
   - id: conn_v2.lifecycle.impl_module
-    name: Implement lifecycle status module and snapshot ownership
+    name: Implement lifecycle-backed readiness snapshot
     status: pending
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  - docs/DESIGN.md#Runtime\
@@ -36728,7 +36728,8 @@ phases:
       \  - Introduce the lifecycle status module that owns phase transitions and detached\
       \ status snapshots.\n  - Separate discovery truth from readiness truth in runtime\
       \ memory and exported models.\n  - Keep status schema authoritative for all\
-      \ client/query surfaces."
+      \ client/query surfaces.\n  - Ensure readiness is derived from lifecycle/status\
+      \ snapshots rather than lockfile discovery artifacts."
     verification: '- Main path: targeted tests prove lifecycle transitions and status
       snapshot fields
 
@@ -36736,7 +36737,9 @@ phases:
       without falsifying readiness
 
       - Proof: status readers consume lifecycle snapshots instead of re-deriving state
-      locally'
+      locally
+
+      - Connect/query consumers do not infer readiness directly from lockfile discovery'
     agent: python-senior
   - id: conn_v2.lifecycle.integrate_status_consumers
     name: Integrate lifecycle snapshots into connect, status, and HTTP surfaces
