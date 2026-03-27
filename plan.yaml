@@ -35557,7 +35557,7 @@ phases:
       \ => `44 passed, 0 failed`.\n"
   - id: agent_iface.surface_taxonomy.investigate_operator_surface_loop4
     name: Investigate and fix root-cause operator-surface taxonomy drift (loop 4)
-    status: claimed
+    status: done
     description: "step_type: implementation\nInvestigation-style remediation for repeated\
       \ operator-surface taxonomy blocker family after three consecutive failures.\n\
       \nsymbolic_testing: false\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_operator_surface_loop3\n\
@@ -35656,7 +35656,16 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T09:52:43.510585+00:00'
-    done_at: '2026-03-27T09:40:25.335693+00:00'
+    done_at: '2026-03-27T09:55:51.329829+00:00'
+    evidence: "Artifact:\n- Commit hash(es): `abb8884fcc714f06ef067ccae57d388ada32f05d`\n\
+      - Files changed:\n  - `docs/USAGE.md`\n\nVerification:\n- Verified only `docs/USAGE.md`\
+      \ changed in commit.\n- `rg -n \"tela\\.(status|connections|audit)\" docs/USAGE.md`\
+      \ -> no matches.\n- `rg -n \"tela profiles|tela status|tela connections|tela\
+      \ audit|tela\\.profiles\" docs/USAGE.md` -> operator names in CLI/HTTP form,\
+      \ resource naming preserved.\n- Cross-check grep in AGENT_INTERFACE/INTERFACES/DESIGN\
+      \ confirms no dotted operator regressions reintroduced.\n\nNotes:\n- Fixed residual\
+      \ operator naming drift in USAGE summary block to align with phase taxonomy\
+      \ contract."
     rejection_reason: Gate found remaining phase-owned summary mismatch in docs/USAGE.md
       using dotted operator names; remediation incomplete and must be amended.
     rejection_history:
