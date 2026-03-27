@@ -33045,7 +33045,7 @@ phases:
       passing and no spec-code drift detected.'
   - id: post.deep_review.architecture
     name: Architecture and concurrency review
-    status: claimed
+    status: done
     description: 'Review module boundaries, dependency direction, and concurrency
       safety as an audit-disposition step.
 
@@ -33098,6 +33098,12 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T00:54:00.597945+00:00'
+    done_at: '2026-03-27T00:58:40.891142+00:00'
+    evidence: 'Architecture audit-disposition completed. Outcome included blocker
+      findings in runtime locking discipline (gateway runtime lock-boundary escape
+      and unlocked runtime.connections read path), affected surfaces identified, and
+      explicit remediation handoff confirmed through chain: post.deep_review.architecture_fix_runtime_locking
+      -> post.deep_review.architecture_retest_runtime_locking -> post.deep_review.gate.'
   - id: post.deep_review.black_box
     name: Black-box verification
     status: done
