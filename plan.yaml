@@ -36170,3 +36170,11 @@ phases:
     converge safely.
   depends_on:
   - conn_v2.test
+- id: conn_v2.lifecycle
+  name: Lifecycle Status and Discovery/Readiness Split
+  status: locked
+  gate: Lockfile and status contracts are split cleanly, status snapshots expose runtime
+    lifecycle truth, and connect/query consumers stop treating discovery as downstream
+    readiness.
+  depends_on:
+  - conn_v2.startup_coord
