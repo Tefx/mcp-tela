@@ -33695,3 +33695,91 @@ phases:
       now hard-fail (RuntimeError), regression tests pass, and no production module
       imports/calls these deprecated accessor surfaces. This closes the deprecated
       live-alias blocker family for downstream gate protection.
+  - id: post.deep_review.fix_invar_guard_gate_blockers
+    name: 'Batched fix: resolve invar guard gateway blockers'
+    status: pending
+    description: 'Fix ALL blockers from the failed post.deep_review.gate review in
+      one remediation pass.
+
+
+      symbolic_testing: true
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: gateway wiring/export paths and shell-layer result contracts no
+      longer satisfy the repo''s current invar expectations
+
+      - Symptom: invar guard reports dead_export / wiring-orphan findings for gateway
+      helpers and audit_query, plus shell_result contract violations in gateway.py
+
+      - Why this fix is not surface-level: it must repair the authoritative wiring
+      and contract semantics that the gate checks, not just suppress one report site
+
+
+      ### B1: dead_export / wiring-orphan findings
+
+      Locations: gateway helper surfaces, audit_query, and related gateway wiring/export
+      call paths
+
+      Remediation: remove orphaned exports/helpers or wire them through authoritative
+      runtime callers so the public/runtime surface is justified
+
+      Grep hint: search for gateway helper exports/usages and audit_query references
+      to prove no orphaned sibling paths remain
+
+      IMPORTANT: search for siblings beyond the listed findings
+
+
+      ### B2: shell_result contract violations in gateway.py
+
+      Locations: gateway.py shell-layer result contract paths
+
+      Remediation: align gateway.py result handling with shell_result contract expectations
+      and keep shell semantics explicit at the boundary
+
+      Grep hint: search gateway.py for shell Result-returning paths and adjacent helper
+      call sites to confirm the contract fix covers siblings
+
+
+      ## Completion Criteria
+
+      - ALL blocker families above are fixed
+
+      - Sibling search completed for each blocker family
+
+      - No new instances of either blocker pattern remain in the remediated scope'
+    verification: '- Use the project''s full invar guard command family for the blocker
+      class
+
+      - Each blocker family has focused evidence showing the root cause was repaired,
+      not only the observed symptom
+
+      - Gateway wiring/export behavior and gateway.py shell Result semantics remain
+      architecture-compliant'
+    evidence_template: '- prior_loop: post.deep_review.gate
+
+      - remaining_blocker: invar guard dead_export/wiring-orphan and shell_result
+      contract findings on gateway surfaces
+
+      - why_new_loop: gate emitted a new blocker family not closed by earlier deep-review
+      remediation
+
+      - why_previous_fix_failed: prior runtime-locking remediation chain did not cover
+      gateway wiring/contracts
+
+      - Files changed:
+
+      - Dead-export / wiring-orphan root cause and sibling-search summary:
+
+      - shell_result contract root cause and sibling-search summary:
+
+      - Cold-environment retest notes to hand to reviewer:'
+    depends_on:
+    - post.deep_review.spec_conformance
+    - post.deep_review.black_box
+    - post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
+    agent: python-senior
