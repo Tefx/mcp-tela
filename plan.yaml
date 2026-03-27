@@ -35323,6 +35323,39 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
     agent: doc-reviewer
+  - id: agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
+    name: Retest tela.yaml.example taxonomy wording consistency
+    status: pending
+    description: 'step_type: verification
+
+      Scoped retest: verify the `tela.yaml.example` contradiction is removed and the
+      phase artifacts remain consistent with the confirmed surface taxonomy.
+
+
+      Verification scope: phase-check protecting `agent_iface.surface_taxonomy.gate`
+
+
+      Check:
+
+      - `tela.yaml.example` no longer presents contradictory `tela_admin` intro-surface
+      wording
+
+      - confirmed taxonomy remains aligned across the example artifact and phase-owned
+      contract/docs
+
+      - any unrelated repo-wide type debt is recorded as non-blocking unless it explicitly
+      intersects this phase acceptance'
+    verification: '- Review `tela.yaml.example`, AGENT_INTERFACE.md, and INTERFACES.md
+      for consistent surface taxonomy wording
+
+      - Confirm the specific contradiction is removed without reopening prior blocker
+      families
+
+      - Record whether any broader repo debt intersects this phase contract; otherwise
+      treat it as non-blocking to this retest'
+    depends_on:
+    - agent_iface.surface_taxonomy.remediate_tela_yaml_example_taxonomy_wording
+    agent: blind-tester
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
