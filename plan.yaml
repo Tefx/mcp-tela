@@ -34643,7 +34643,7 @@ phases:
       \  - commit `03fa5454247c6beb70cadc5019276f20d8a6d6ed`"
   - id: agent_iface.surface_taxonomy.add_surface_regressions
     name: Add non-regression checks for the confirmed surface taxonomy
-    status: claimed
+    status: done
     description: 'step_type: test
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34681,6 +34681,27 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-27T07:26:20.371938+00:00'
+    done_at: '2026-03-27T07:31:07.579703+00:00'
+    evidence: "Regression coverage:\n- MCP resource checks:\n  - `tela.profiles` confirmed\
+      \ as `resource` (not tool) by `test_tela_profiles_is_resource_not_tool`.\n \
+      \ - `test_no_tela_profiles_mcp_tool_registration` enforces no MCP tool registration\
+      \ for `tela.profiles`.\n  - `test_profiles_resource_handler_returns_json` verifies\
+      \ resource-read handler behavior.\n- MCP tool checks:\n  - `test_no_tela_status_mcp_tool_registration`.\n\
+      \  - `test_no_tela_connections_mcp_tool_registration`.\n  - `test_no_tela_audit_mcp_tool_registration`.\n\
+      \  - Contract constant `CANONICAL_SURFACE_KINDS` encodes exact kinds.\n- CLI/HTTP\
+      \ checks:\n  - `test_operator_surfaces_are_cli_or_http_not_mcp`.\n  - `test_tela_status_cli_not_mcp_builtin`.\n\
+      \  - `test_tela_connections_cli_not_mcp_builtin`.\n  - `test_tela_audit_cli_not_mcp_builtin`.\n\
+      \  - `test_get_status_http_not_mcp_builtin`.\n- Instruction-merge checks:\n\
+      \  - `test_suppress_instructions_false_excludes_server`.\n  - `test_override_instructions_string_replaces_downstream`.\n\
+      \  - `test_passthrough_instructions_none_includes_downstream`.\n  - `test_mixed_servers_correct_ordering`.\n\
+      \  - `test_downstream_does_not_override_gateway_instructions`.\n  - `test_markdown_h2_headers_used_for_servers`.\n\
+      \  - `test_available_tools_list_included_when_tools_exist`.\n- Negative assertions\
+      \ guarding unsupported surfaces:\n  - `test_tela_status_is_absent_as_mcp_surface`.\n\
+      \  - `test_tela_connections_is_absent_as_mcp_surface`.\n  - `test_tela_audit_is_absent_as_mcp_surface`.\n\
+      \  - `test_tela_admin_not_approved_for_tela_status`.\n  - `test_tela_admin_not_approved_for_tela_connections`.\n\
+      \  - `test_tela_admin_not_approved_for_tela_audit`.\n- Test file:\n  - `tests/shell/test_surface_contract.py`\
+      \ with 26 cases.\n- Verification command/output:\n  - `uv run pytest tests/shell/test_surface_contract.py\
+      \ -v --tb=short`\n  - result: `26 passed in 3.74s`\n- Commit:\n  - `7be9b95f1360969ef9aed17aac5480fedb76105d`"
   - id: agent_iface.surface_taxonomy.align_runtime_surface
     name: Align runtime surface and instruction emitter to the confirmed taxonomy
     status: pending
