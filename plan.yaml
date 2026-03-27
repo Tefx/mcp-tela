@@ -33881,7 +33881,7 @@ phases:
   - id: post.deep_review.fix_invar_guard_gate_blockers_loop2
     name: 'Batched fix loop 2: resolve current-head invar guard and runtime migration
       blockers'
-    status: claimed
+    status: done
     description: "Fix ALL blockers found on current head after post.deep_review.retest_invar_guard_gate_blockers.\n\
       \nsymbolic_testing: true\nprior_loop:\n  - post.deep_review.fix_invar_guard_gate_blockers\n\
       \  - post.deep_review.retest_invar_guard_gate_blockers\nremaining_blocker: current-head\
@@ -33993,6 +33993,12 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T04:06:50.853139+00:00'
+    done_at: '2026-03-27T04:13:40.146918+00:00'
+    evidence: 'Loop2 batched remediation merged: fixed serve_cmd Optional[str] typing
+      boundary, aligned runtime API migration consumers/tests to Result-unwrapped
+      contract, restored get_upstream_server deprecation tombstone as explicit RuntimeError
+      surface, and removed dead deprecated_start_command export. Verification from
+      worker: mypy+ruff clean and targeted pytest suite passed (24 passed).'
   - id: post.deep_review.retest_invar_guard_gate_blockers_loop2
     name: 'Loop 2 retest: verify current-head invar guard and runtime migration blockers'
     status: pending
