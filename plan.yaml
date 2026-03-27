@@ -37821,6 +37821,44 @@ phases:
     and phase-level verification for the tool-prefix feature.
   depends_on:
   - tool_prefix.test
+  steps:
+  - id: tool_prefix.runtime.implement_core_name_mapping
+    name: Implement core tool-prefix name mapping and conflict semantics
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - user authoritative input: architecture decisions 1-6\n  - docs/INTERFACES.md#3.1\
+      \ Servers\n  - docs/INTERFACES.md#7 MCP Surface\ntouch_paths:\n  - src/tela/core/models.py\n\
+      \  - src/tela/core/family.py\n  - src/tela/core/conflict.py\nharness_refs:\n\
+      \  - tests/core/test_models.py\n  - tests/core/test_family.py\n  - tests/core/test_conflict.py\n\
+      authoritative_interface:\n  - ServerConfig.tool_prefix: str | None = None\n\
+      \  - ResolvedTool.raw_name: str\n  - ResolvedTool.name: exposed upstream name\n\
+      agent: python-senior\n\n## Completion Criteria (stub exclusion)\nThis is an\
+      \ IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach deliverable\
+      \ MUST contain substantive logic that processes its inputs and produces outputs\
+      \ that vary based on those inputs.\n\n## Hardened acceptance\nFailure-mode checklist:\n\
+      - omitted tool_prefix keeps exposed name identical to raw_name\n- identical\
+      \ raw_name across two servers with distinct prefixes does not collide\n- identical\
+      \ raw_name across two servers with the same final exposed name still collides\n\
+      - tool_prefix=\"tela.\" is rejected before a reserved exposed name can enter\
+      \ the registry\n- raw_name is preserved even when exposed name changes\n\nState\
+      \ semantics:\n- last-writer-wins does NOT apply to conflict detection; final\
+      \ exposed names must stay globally unique\n- raw_name must be preserved exactly\
+      \ for downstream routing and override lookup\n- backward-compatible legacy behavior\
+      \ means raw_name == exposed name when tool_prefix is omitted\n\nOut-of-scope\
+      \ guardrail:\n- downstream registry wiring, upstream tools/call routing, and\
+      \ reload notification emission are deferred to later runtime steps in this phase.\n\
+      \nImplement the core feature seam only: add the model field(s), produce exposed\
+      \ names during resolution, preserve raw names, and update conflict detection\
+      \ to operate on final exposed names plus reserved tela prefix rejection."
+    verification: '- Main path: targeted core tests for ServerConfig/ResolvedTool
+      resolution and conflict detection pass.
+
+      - Failure path: focused regressions cover reserved prefix rejection and same-exposed-name
+      collisions.
+
+      - Proof: no core path still assumes raw_name is the only externally visible
+      name once tool_prefix is present.'
+    agent: python-senior
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
