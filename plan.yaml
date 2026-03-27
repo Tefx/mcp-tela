@@ -37431,6 +37431,24 @@ phases:
     depends_on:
     - conn_v2.system_wiring.entrypoint_integration
     agent: blind-tester
+  - id: conn_v2.system_wiring.gate
+    name: Gate system wiring phase
+    status: pending
+    description: "step_type: gate\nGate review: verify the refactored runtime is fully\
+      \ wired into real entry points.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
+      \  - phase is the vertical integration barrier before repo-wide validation\n\
+      cross_cutting_focus:\n  - no legacy inline coordination remains on entrypoint\
+      \ paths\n  - connect/serve/status are all reachable\n  - wiring audit passed\n\
+      \  - liveness evidence is behavioral, not compile-only"
+    verification: '- End-to-end verification, wiring audit, and liveness probe all
+      complete
+
+      - Any orphaned runtime symbols or unreachable entrypoints block the gate'
+    depends_on:
+    - conn_v2.system_wiring.verify_e2e
+    - conn_v2.system_wiring.wiring_audit
+    - conn_v2.system_wiring.liveness_probe
+    agent: gate-reviewer
 - id: conn_v2.validation
   name: Runtime Validation and Full-Plan Check
   status: locked
