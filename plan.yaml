@@ -36284,6 +36284,28 @@ phases:
     depends_on:
     - conn_v2.contract.startup_convergence_contract
     agent: uiux-designer
+  - id: conn_v2.contract.gate
+    name: Gate connect/serve runtime contracts
+    status: pending
+    description: "step_type: gate\nGate review: verify the refactor contract phase\
+      \ is complete and architecture-basis-conformant.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
+      \  - Phase freezes the whole A+B+C+D runtime shape before implementation\n \
+      \ - Runnable surfaces span CLI, HTTP, background convergence, and signal behavior\n\
+      cross_cutting_focus:\n  - discovery vs readiness split is explicit\n  - single-instance\
+      \ autostart ownership is explicit\n  - connect interrupt semantics are explicit\n\
+      \  - CLI/HTTP diagnostics consume one fact model\n  - no implementation leakage\
+      \ in contract outputs"
+    verification: '- All contract steps completed with acceptance-only outputs
+
+      - Architecture basis A+B+C+D preserved without silent narrowing
+
+      - Open questions remaining are bounded and executable by downstream contract/test
+      steps, not hidden in implementation'
+    depends_on:
+    - conn_v2.contract.lockfile_status_contract
+    - conn_v2.contract.startup_convergence_contract
+    - conn_v2.contract.bridge_ux_contract
+    agent: gate-reviewer
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
   status: locked
