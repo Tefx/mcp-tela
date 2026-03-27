@@ -37000,6 +37000,49 @@ phases:
     are controlled by one bridge module and validated against concurrent attach behavior.
   depends_on:
   - conn_v2.convergence
+  steps:
+  - id: conn_v2.bridge.impl_module
+    name: Implement bridge control module for attach, detach, and hard interrupt
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/USAGE.md#Running tela > tela connect\n  - docs/INTERFACES.md#2. CLI\
+      \ Surface\n  - docs/DESIGN.md#Runtime Architecture > Connection lifecycle\n\
+      touch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/connect_transport.py\n\
+      \  - src/tela/shell/gateway.py\n  - src/tela/shell/idle_shutdown.py\n  - src/tela/shell/bridge_control.py\n\
+      harness_refs:\n  - tests/shell/test_connect_cmd.py\n  - tests/repro/test_disconnect_cleanup.py\n\
+      \  - tests/repro/test_connection_count_semantics.py\n  - tests/shell/test_idle_shutdown.py\n\
+      effective_truth_owner:\n  - bridge control owns connect attach loop, detach\
+      \ cleanup, and signal/interrupt policy\nconsumer_surfaces:\n  - tela connect\n\
+      \  - gateway connection tracker\n  - idle shutdown\nstate_strata:\n  - Upstream\
+      \ Session State\n  - Gateway Lifecycle State\nknown_risks:\n  - bridge connection\
+      \ accounting already had historical double-count defects\n  - signal handling\
+      \ can leak hung bridge processes under host differences\n## Gate Preview (what\
+      \ the gate WILL reject)\n1. Hard interrupt that waits for graceful teardown\
+      \ instead of exiting immediately\n2. Attach/detach paths that double-count or\
+      \ fail to decrement idle state\n3. Host-specific behavior that only works in\
+      \ Claude-like flows but hangs in OpenCode-like flows\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\nFailure-mode checklist:\n  - explicit clear / null overwrite\
+      \ semantics for disconnect on partially attached sessions\n  - stale-definition\
+      \ vs new-state precedence between local bridge state and remote gateway session\
+      \ tracker\n  - partial-write / disconnect-failure behavior on interrupt\nState\
+      \ semantics:\n  - last-writer-wins: gateway connection tracker is authoritative\
+      \ for active attachment count\n  - preserve exactly: hard interrupt exits connect\
+      \ immediately and cleanup path is best-effort, not a blocker to process exit\n\
+      \  - backward-compatible legacy behavior: normal EOF/graceful exit still triggers\
+      \ disconnect cleanup\nOut-of-scope guardrail:\n  - no startup coordination redesign\
+      \ here\n  - no status schema redesign here\nTasks:\n  - Introduce a dedicated\
+      \ bridge control module for attach loop, disconnect lifecycle, and signal policy.\n\
+      \  - Centralize bridge-accounting semantics so connect no longer coordinates\
+      \ signals and detach inline."
+    verification: '- Main path: attach, bridge, detach, and idle accounting tests
+      pass
+
+      - Failure path: interrupt during wait/bridge proves immediate exit and no leaked
+      authoritative connection count
+
+      - Proof: connect command delegates bridge lifecycle to the new module'
+    agent: python-senior
 - id: conn_v2.ux
   name: Host-Facing UX and Diagnostics
   status: locked
