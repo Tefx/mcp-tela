@@ -35031,17 +35031,18 @@ phases:
     description: 'step_type: gate
 
       Gate review: confirm the phase resolved the new agent-interface ambiguity without
-      guesswork after all scoped remediation/retest loops, including the final operator-surface/runtime-assertion
-      loop.
+      guesswork after all scoped remediation/retest loops, including the loop-4 root-cause
+      operator-surface remediation.
 
 
       The gate must reject any completion that still assumes `tela.status`, `tela.connections`,
       or `tela.audit` are built-in MCP tools without proof or implementation, that
       reuses `tela_admin` without verification/spec adoption, that blurs `tela.profiles`
       resource reads with tool calls, that omits `tela profiles` from operator-surface
-      summary blocks where surfaces are enumerated, that leaves DESIGN wording implying
-      built-in `tela.*` tool surfaces, or that relies on placeholder, self-referential,
-      or stale regression/evidence artifacts.'
+      summary blocks where surfaces are enumerated, that leaves AGENT_INTERFACE or
+      INTERFACES using dotted MCP-style labels for operator-only rows, that leaves
+      DESIGN wording implying built-in `tela.*` tool surfaces, or that relies on placeholder,
+      self-referential, or stale regression/evidence artifacts.'
     verification: '- Verification scope: phase-check protecting final review and plan
       completion
 
@@ -35051,6 +35052,10 @@ phases:
       semantics, regression coverage substance, and artifact consistency across phase-owned
       docs/examples/runtime summaries
 
+      - Gate evidence must confirm the loop-4 remediation/retest fixed both docs naming
+      mismatches (`docs/AGENT_INTERFACE.md`, `docs/INTERFACES.md`) and replaced self-referential
+      `tests/shell/test_surface_contract.py` assertions with runtime-backed checks
+
       - Gate evidence must confirm the final scoped remediation/retest included `tela
       profiles` consistently in operator-surface summaries where surface lists are
       shown
@@ -35059,7 +35064,8 @@ phases:
       tools and preserves the confirmed resource/tool boundary
 
       - Gate evidence must confirm regression checks assert against actual docs/runtime
-      outputs or emitted artifacts rather than self-referential constants
+      outputs or emitted artifacts rather than self-referential constants, and would
+      fail if dotted operator-only labels were reintroduced
 
       - Repo-wide debt outside this contract scope (including unrelated `uv run mypy
       src tests` errors) is non-blocking unless the evidence shows it intersects or
@@ -35087,6 +35093,7 @@ phases:
     - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
     - agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
     - agent_iface.surface_taxonomy.retest_operator_surface_loop3
+    - agent_iface.surface_taxonomy.retest_operator_surface_loop4
     agent: gate-reviewer
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
