@@ -36872,7 +36872,7 @@ phases:
   - conn_v2.lifecycle
   steps:
   - id: conn_v2.convergence.impl_module
-    name: Implement background downstream convergence module
+    name: Implement single-server convergence kernel
     status: pending
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/INTERFACES.md#7.2.1\
@@ -36897,18 +36897,24 @@ phases:
       \ claims final tool state\n  - backward-compatible legacy behavior: downstream\
       \ calls still use real connected clients, not placeholder registry entries\n\
       Out-of-scope guardrail:\n  - no connect signal handling changes\n  - no host-facing\
-      \ message copy changes\nTasks:\n  - Move downstream connect/enumerate/retry\
-      \ into the dedicated convergence module.\n  - Publish per-server state summaries\
-      \ and tool registry digest/count updates into lifecycle status while startup\
-      \ remains discoverable.\n  - Keep registry ownership centralized and ready for\
-      \ hot reload / re-enumeration."
+      \ message copy changes\n  - no folding connect_all into the single-server kernel\n\
+      \  - no notify/audit policy absorption into the kernel\nTasks:\n  - Move downstream\
+      \ connect/enumerate/retry into the dedicated convergence module.\n  - Implement\
+      \ a single-server convergence kernel that handles resolve/register/conflict/rollback\
+      \ while consuming captured enumeration when already available from reload/reconnect\
+      \ entry adapters.\n  - Publish per-server state summaries and tool registry\
+      \ digest/count updates into lifecycle status while startup remains discoverable.\n\
+      \  - Keep registry ownership centralized and ready for hot reload / re-enumeration."
     verification: '- Main path: targeted tests prove background convergence updates
       runtime state and tool registry
 
       - Failure path: regressions cover per-server error, retry, and degraded lifecycle
       publication
 
-      - Proof: startup no longer blocks on full downstream readiness'
+      - Proof: startup no longer blocks on full downstream readiness
+
+      - Reconnect/reload paths avoid duplicate enumeration when fresh raw_tools are
+      already captured upstream'
     agent: python-senior
   - id: conn_v2.convergence.integrate_reload_and_status
     name: Integrate convergence state with reload, status, and registry consumers
