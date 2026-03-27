@@ -36928,6 +36928,53 @@ phases:
     depends_on:
     - conn_v2.convergence.impl_module
     agent: python-executor
+  - id: conn_v2.convergence.seam_proof
+    name: Provide seam-level proof for warming startup with background convergence
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
+      \ validate that the gateway becomes discoverable before full downstream convergence\
+      \ while still reporting truthful warming/degraded state.\nIndependence Level:\
+      \ L2\nTest for:\n  - cold start publishes endpoint discovery before all 7 downstreams\
+      \ finish connecting\n  - /status exposes per-server convergence progress and\
+      \ tool digest/count evolution\n  - a real attach path works once acceptable\
+      \ phase is reached even if convergence continues in background\n  - failure\
+      \ path shows degraded state for downstream errors rather than hanging startup\n\
+      REALISM CHECK:\n  - Provide at least one seam-level real path proof; mock-heavy\
+      \ unit tests alone are insufficient."
+    verification: '- Real-path evidence shows startup reaches discoverable warming
+      state ahead of full convergence
+
+      - Failure-path evidence shows degraded reporting without false-ready semantics
+
+      - Remaining mocks, if any, are justified'
+    evidence_template: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: connect/serve cold start -> convergence module -> /status
+
+
+      **Exact command executed**:
+
+      ```
+
+      <paste actual command or integration test>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr or test output>
+
+      ```
+
+
+      **Verification**: proves discoverable startup and truthful background convergence'
+    depends_on:
+    - conn_v2.convergence.integrate_reload_and_status
+    agent: integration-verifier
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
   status: locked
