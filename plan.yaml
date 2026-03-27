@@ -37650,6 +37650,8 @@ phases:
       \ cleanup without corrupting gateway state"
     verification: '- Review reports any ownership regressions, split-truth paths,
       or concurrency hazards'
+    depends_on:
+    - conn_v2.deep_review.wiring_audit
     agent: software-architect
   - id: conn_v2.deep_review.contract_strength
     name: Contract strength audit for runtime state and lifecycle surfaces
