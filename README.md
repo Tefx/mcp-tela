@@ -142,16 +142,22 @@ See `tela.yaml.example` for the full commented reference.
 }
 ```
 
-## Introspection
+## Built-in Surfaces
 
-The gateway exposes MCP tools for runtime introspection:
+### MCP Resource
 
-- `tela.status` — uptime, server count, connection count
-- `tela.connections` — active upstream connections
-- `tela.audit` — query audit log
-- `tela.profiles` — list configured profiles
+- `tela.profiles` — list configured profiles (MCP resource read via `tela://profiles`)
+  - **Access:** Resource read, not `tools/call`
 
-These are controlled by the `tela_admin` family in profiles.
+### Operator Surfaces (CLI/HTTP)
+
+The following are operator-only surfaces, accessible via CLI commands or HTTP endpoints:
+
+- `tela status` — uptime, server count, connection count (CLI/HTTP)
+- `tela connections` — active upstream connections (CLI/HTTP)
+- `tela audit` — query audit log (CLI/HTTP)
+
+**Note:** These are not MCP built-in tools. Do not call via `tools/call`.
 
 ## Features
 

@@ -135,6 +135,21 @@ servers:
 
 The merged instructions appear in the upstream server's `instructions` field as Markdown with H2 headers for each server.
 
+**Merge semantics:**
+1. Tela top-level gateway instructions come first (authoritative)
+2. Downstream sections are appended in configured server iteration order
+3. Per-server rules:
+   - `instructions: false` → suppress that server's section
+   - `instructions: <string>` → use explicit override string
+   - `instructions: null` / omitted → use downstream's advertised instructions
+4. When tools are known, an `Available tools:` list is appended per server section
+
+**Conflict handling:**
+- Downstream instructions are subordinate appendices, not authority over gateway rules
+- Gateway instructions win if conflicts arise
+- Silent override by downstream text is forbidden
+- Handle conflicts by suppressing, overriding, or explicit spec change
+
 ### `profiles`
 
 Profiles define what a client is allowed to do.
@@ -154,7 +169,6 @@ profiles:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
-      tela_admin: "read_only"
     tool_overrides:
       filesystem:
         overrides:
@@ -165,8 +179,10 @@ profiles:
     default: true
 ```
 
-The `tela_admin` family controls access to introspection tools
-(`tela.status`, `tela.connections`, `tela.audit`, `tela.profiles`).
+Built-in surfaces:
+- `tela.profiles` is exposed as an MCP resource (read via resource read, not `tools/call`)
+- `tela.status`, `tela.connections`, and `tela.audit` are operator-only surfaces accessible via CLI/HTTP
+- No `tela.*` built-in MCP tools are currently supported
 
 Important notes:
 
@@ -449,20 +465,24 @@ tela audit [--json] [--since ISO-8601] [--limit N]
 
 Query commands discover the running server via `~/.tela/gateway.lock`.
 
-## Introspection
+## Built-in surfaces
 
-The gateway exposes MCP tools for runtime queries:
+### MCP Resource
 
-| Tool | Description |
-|------|-------------|
-| `tela.status` | Uptime, server count, connection count |
-| `tela.connections` | Active upstream connections |
-| `tela.audit` | Query audit log entries |
-| `tela.profiles` | List configured profiles |
+- `tela.profiles` — list configured profiles (MCP resource read via `tela://profiles`)
+  - **Access:** Resource read, not callable via `tools/call`
 
-These belong to the `tela_admin` family. Add `tela_admin: "read_only"` to a
-profile's capabilities to grant access. Profiles without `tela_admin` cannot
-see these tools.
+### Operator Surfaces (CLI/HTTP)
+
+The following are operator-only surfaces, not MCP built-in tools:
+
+| Surface | Access | Description |
+|---------|--------|-------------|
+| `tela status` | CLI / `GET /status` | Uptime, server count, connection count |
+| `tela connections` | CLI / via `/status` | Active upstream connections |
+| `tela audit` | CLI / via `/status` | Query audit log entries |
+
+**Note:** These surfaces are accessible via CLI or HTTP, not via MCP `tools/call`.
 
 ## Tool metadata passthrough
 
