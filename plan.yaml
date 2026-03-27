@@ -34787,7 +34787,7 @@ phases:
       \  - `tests/shell/test_merge_instructions.py`\n- Commit:\n  - `83e4090adc3a7418d7b60ead9104f037f9c0ef69`"
   - id: agent_iface.surface_taxonomy.update_agent_interface_doc
     name: Correct AGENT_INTERFACE.md to match the confirmed taxonomy
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34820,6 +34820,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.align_runtime_surface
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T07:39:07.123710+00:00'
   - id: agent_iface.surface_taxonomy.sync_shared_docs
     name: Sync INTERFACES, USAGE, and README to the confirmed taxonomy
     status: pending
