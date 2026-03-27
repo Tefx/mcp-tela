@@ -32752,7 +32752,7 @@ phases:
     claimed_at: '2026-03-27T00:15:39.604393+00:00'
   - id: post.doc_sync.fix_batch2
     name: Second documentation sync remediation batch
-    status: rejected
+    status: claimed
     description: 'Fix remaining documentation blockers from the latest post.doc_sync
       retest.
 
@@ -32810,7 +32810,7 @@ phases:
     - post.doc_sync.update
     agent: python-executor
     claimed_by: python-executor
-    claimed_at: '2026-03-27T00:15:32.649847+00:00'
+    claimed_at: '2026-03-27T00:24:47.473820+00:00'
     done_at: '2026-03-27T00:22:20.576693+00:00'
     rejection_reason: Retest2 shows no actual doc corrections landed; reopening fix
       batch for concrete edits
