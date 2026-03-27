@@ -35947,7 +35947,7 @@ phases:
     claimed_at: '2026-03-27T10:19:08.808506+00:00'
   - id: agent_iface.final_review.architecture
     name: Architecture review for runtime surface boundaries
-    status: claimed
+    status: done
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -35978,6 +35978,16 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T10:18:52.434792+00:00'
+    done_at: '2026-03-27T10:23:19.231071+00:00'
+    evidence: "Architecture review:\n- Runtime boundaries reviewed:\n  - Built-in\
+      \ MCP resource registration, downstream MCP tool proxying boundary, CLI command\
+      \ dispatch boundary, operator HTTP route boundary, and gateway instruction composition\
+      \ boundary.\n- Surface ownership map:\n  - `tela.profiles` -> MCP resource;\
+      \ no built-in `tela.*` MCP tools; `tela profiles/status/connections/audit` ->\
+      \ operator CLI/HTTP surfaces.\n- Any boundary drift found:\n  - None; operator-only\
+      \ surfaces were not reinterpreted as MCP surfaces and resource boundary remained\
+      \ intact.\n- Verdict:\n  - Runtime boundary direction remains coherent after\
+      \ taxonomy alignment."
   - id: agent_iface.final_review.contract_strength
     name: Contract-strength review for surface taxonomy wording
     status: claimed
