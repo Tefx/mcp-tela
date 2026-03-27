@@ -36160,48 +36160,30 @@ phases:
   - conn_v2.preflight_reconnect
   steps:
   - id: conn_v2.contract.lockfile_status_contract
-    name: Codify lockfile, status, and lifecycle contracts
+    name: Codify lockfile, status, and lifecycle source-of-truth contracts
     status: pending
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
-      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\nagent_source: default\n\
-      spec_refs:\n  - docs/DESIGN.md#Runtime Architecture > Service discovery\n  -\
-      \ docs/DESIGN.md#Runtime Architecture > Connection lifecycle\n  - docs/INTERFACES.md#2.\
-      \ CLI Surface\n  - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  -\
-      \ docs/INTERFACES.md#7.3 Lockfile Contract\n  - docs/USAGE.md#Running tela >\
-      \ tela connect\n  - docs/USAGE.md#Running tela > tela serve\narchitecture_basis:\n\
-      \  - discovery layer: lockfile and endpoint discovery only\n  - runtime gateway\
-      \ layer: /health /status /mcp lifecycle truth\n  - lockfile MUST mean process\
-      \ identity + bind target + token + config ownership published\n  - lockfile\
-      \ MUST NOT mean downstream ready or final tool registry\n  - /status SHOULD\
-      \ expose phase, config_path, startup_generation, per-server state, tool digest/count\n\
-      state_strata:\n  - Process Discovery State\n  - Gateway Lifecycle State\n  -\
-      \ Downstream Runtime State\n  - Upstream Session State\neffective_truth_owner:\n\
-      \  - lockfile -> active gateway endpoint\n  - gateway_runtime -> lifecycle phase\
-      \ and startup_generation\nconsumer_surfaces:\n  - tela connect\n  - tela serve\n\
-      \  - tela status\n  - GET /health\n  - GET /status\ntouch_paths:\n  - src/tela/core/models.py\n\
-      \  - src/tela/shell/lockfile.py\n  - src/tela/shell/gateway_runtime.py\n  -\
-      \ src/tela/shell/http_routes.py\n  - src/tela/commands/remote_state.py\nharness_refs:\n\
-      \  - tests/core/test_models.py\n  - tests/shell/test_lockfile.py\n  - tests/shell/test_http_routes.py\n\
-      \  - tests/shell/test_gateway.py\nauthoritative_interface:\n  - tela connect\
-      \ [--config path] [--default-profile name] [--server host:port] [--token tok]\n\
-      \  - tela serve [--config path] [--port N] [--host addr] [--default-profile\
-      \ name] [--idle-timeout sec] [--token tok]\nTasks:\n  - Define acceptance-only\
-      \ contracts for lockfile payload, lifecycle phases (starting|warming|ready|degraded),\
-      \ startup_generation semantics, and status snapshot ownership.\n  - Explicitly\
-      \ pin discovery-vs-readiness split so connect/query consumers never treat lockfile\
-      \ discovery as downstream readiness.\n  - Clarify acceptable-phase policy as\
-      \ a contract artifact before implementation; if attach readiness cannot be made\
-      \ explicit from current sources, produce a narrow contract clarification output\
-      \ rather than guessing in implementation.\n  - Non-goals: no runtime logic,\
-      \ no transport startup, no completed handlers."
-    verification: '- Contract outputs pin lockfile vs /status semantics and lifecycle
-      fields without implementation logic
+      \  - interfaces\n  - type_defs\n  - behavioral_notes\n\nUse the approved architecture\
+      \ basis to pin lockfile, status, readiness, and lifecycle truth without re-deriving\
+      \ architecture.\n\nRequired contract boundaries:\n- Lockfile is discovery truth\
+      \ only: process identity, bind target, token, config ownership, and endpoint\
+      \ discoverability.\n- Runtime status snapshot is lifecycle/readiness truth.\n\
+      - Downstream convergence state is separate from lockfile discovery and must\
+      \ not be inferred from lockfile presence.\n- Connect/serve consumers MUST NOT\
+      \ treat lockfile discovery as downstream ready.\n- Reconnect event payloads\
+      \ may already carry fresh raw_tools; downstream consumers MUST NOT blindly re-enumerate\
+      \ when authoritative fresh enumeration is already present.\n\nSpec refs:\n-\
+      \ docs/DESIGN.md Runtime Architecture / Connection lifecycle\n- docs/DESIGN.md\
+      \ Runtime Architecture / Discovery and readiness\n\nTouch paths:\n- docs/DESIGN.md\n\
+      - src/tela/shell/gateway_runtime.py\n- src/tela/shell/reload.py\n- src/tela/shell/downstream.py\n\
+      \nHarness refs:\n- tests/shell/test_gateway.py\n- tests/shell/test_reload.py\n\
+      \nAuthoritative interface: NONE PINNED"
+    verification: '- Contract pins lockfile=discovery truth, status snapshot=readiness/lifecycle
+      truth, convergence=downstream sync truth
 
-      - Discovery-ready split is explicit and reviewable across all listed consumer
-      surfaces
+      - Contract explicitly rejects treating discovery artifacts as readiness
 
-      - Acceptable-phase policy is defined or escalated as a bounded contract clarification,
-      not left implicit'
+      - Protects conn_v2.lifecycle, conn_v2.convergence, and conn_v2.bridge gates'
     agent: software-architect
   - id: conn_v2.contract.startup_convergence_contract
     name: Codify startup coordination and downstream convergence contracts
