@@ -32750,7 +32750,7 @@ phases:
     agent: gate-reviewer
   - id: post.doc_sync.fix_batch2
     name: Second documentation sync remediation batch
-    status: pending
+    status: claimed
     description: 'Fix remaining documentation blockers from the latest post.doc_sync
       retest.
 
@@ -32807,6 +32807,8 @@ phases:
     depends_on:
     - post.doc_sync.update
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-27T00:15:32.649847+00:00'
   - id: post.doc_sync.retest2
     name: Second retest for documentation sync remediation
     status: pending
