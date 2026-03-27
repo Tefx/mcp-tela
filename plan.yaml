@@ -34846,3 +34846,36 @@ phases:
 
       '
     agent: integration-verifier
+  - id: agent_iface.final_review.spec_conformance
+    name: Spec conformance review for agent-interface taxonomy
+    status: pending
+    description: 'step_type: review
+
+      Verification scope: phase-check protecting agent_iface.final_review.gate.
+
+      Review the final agent-facing docs and runtime wording against the confirmed
+      taxonomy. Required focus: `tela.profiles` remains classified as a resource read
+      surface unless intentionally changed by the chosen contract; status/connections/audit
+      are not described as MCP built-ins unless actually implemented; capability wording
+      matches the approved taxonomy; and downstream instruction merge wording preserves
+      tela-top-level authority plus explicit per-server append/override/suppress semantics.'
+    verification: '- Verification scope: phase-check protecting agent_iface.final_review.gate
+
+      - Review either confirms exact conformance or enumerates residual mismatches
+      with cited lines'
+    evidence_template: 'Spec conformance review:
+
+      - Surface taxonomy checks:
+
+      - Capability wording checks:
+
+      - Instruction merge wording checks:
+
+      - Residual mismatches:
+
+      - Verdict:
+
+      '
+    depends_on:
+    - agent_iface.final_review.wiring
+    agent: doc-reviewer
