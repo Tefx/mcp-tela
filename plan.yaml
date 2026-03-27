@@ -34102,3 +34102,130 @@ phases:
       mypy clean for serve/runtime surfaces, invar guard src --all passed with errors=0,
       runtime API migration suites passed, liveness repro suites passed, gate-blocker
       regression suite passed, and no active dead_export escape hatches remained.'
+  - id: post.deep_review.fix_result_api_consumer_drift_pytest_gate
+    name: Fix Result-API consumer drift and runtime corruption paths from latest pytest
+      gate blockers
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nVerification scope:\
+      \ phase-check protecting post.deep_review.gate and full-plan-check completion.\n\
+      \nBatched fix: resolve ALL latest gate blockers causing full pytest failure\
+      \ due to unresolved Result-API migration consumers and runtime-state corruption.\n\
+      \nsymbolic_testing: false\nprior_loop:\n  - post.deep_review.fix_invar_guard_gate_blockers_loop2\n\
+      \  - post.deep_review.retest_invar_guard_gate_blockers_loop2\nremaining_blocker:\
+      \ full pytest still fails because stale consumers treat Result-returning runtime\
+      \ accessors as raw values, and some restore/write-back paths inject Result wrappers\
+      \ into runtime state.\nwhy_new_loop: the existing invar/runtime migration remediation\
+      \ chain closed prior gate blockers but did not remove all Result-API consumer\
+      \ drift across runtime-boundary callers and restore paths now exercised by full\
+      \ pytest.\nwhy_previous_fix_failed: prior remediation stabilized boundary policy\
+      \ and guard blockers, but left downstream consumer normalization incomplete\
+      \ across src/tests and restore-path write-backs.\n\n## Root Cause vs Symptom\n\
+      - Root cause: mixed migration state at the runtime boundary: callers and tests\
+      \ still assume get_runtime_config/get_runtime_connections_snapshot/is_runtime_running\
+      \ return raw values, while newer boundary code returns Result wrappers.\n- Symptom:\
+      \ 10 pytest failures and restore flows that persist Result objects into runtime\
+      \ state, corrupting later reads.\n- Why this fix is not surface-level: it must\
+      \ normalize the full consumer set and repair write-back/restore semantics so\
+      \ Result is unwrapped or propagated only at the boundary contract.\n\n## Blockers\
+      \ to Fix (ALL of these, not just the first)\n### B1: stale runtime-boundary\
+      \ consumers use Result-returning accessors as raw values\nLocations: src/ and\
+      \ tests/ call sites implicated by latest pytest failures\nRemediation: update\
+      \ every consumer of get_runtime_config, get_runtime_connections_snapshot, and\
+      \ is_runtime_running to either unwrap/inspect the Result explicitly or move\
+      \ to the authoritative helper path that preserves Result semantics at the shell\
+      \ boundary.\nGrep hint: rg -n \"get_runtime_config|get_runtime_connections_snapshot|is_runtime_running\"\
+      \ src tests\nIMPORTANT: search for sibling call sites beyond the failing stack\
+      \ traces.\n\n### B2: restore and runtime-state mutation paths inject Result\
+      \ objects into persisted/live runtime state\nLocations: runtime restore/write-back\
+      \ helpers and tests exercising reload/restore flows\nRemediation: ensure restore/state\
+      \ mutation paths never store Result wrappers inside runtime state; only resolved\
+      \ payloads or explicit errors may cross into mutable runtime structures.\nGrep\
+      \ hint: rg -n \"restore|runtime state|connections_snapshot|runtime_config|is_running\"\
+      \ src tests\nIMPORTANT: inspect helpers that round-trip runtime snapshots/config\
+      \ through shell commands, reload logic, or restore fixtures.\n\n### B3: tests\
+      \ and helpers encode pre-migration raw-value assumptions\nLocations: pytest\
+      \ fixtures/helpers covering runtime config, connection snapshots, and runtime-running\
+      \ status\nRemediation: align affected tests/helpers with the authoritative Result\
+      \ API contract while preserving corruption regressions for restore-path failures.\n\
+      Grep hint: rg -n \"get_runtime_config|get_runtime_connections_snapshot|is_runtime_running|Result\\\
+      (\" tests src\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\nEach deliverable MUST contain\
+      \ substantive logic that processes its inputs and produces outputs that vary\
+      \ based on those inputs. Private stub classes (`_Runtime*`, `_Stub*`, `_Placeholder*`)\
+      \ do not satisfy this requirement.\n\n## Failure-mode checklist\n- raw Result\
+      \ object never persisted into runtime state\n- restore path handles explicit\
+      \ error vs resolved payload distinctly\n- stale raw-value callers are migrated\
+      \ or removed\n- backward-compatible behavior is defined at the boundary, not\
+      \ by implicit unwrapping in arbitrary consumers\n- regression coverage exists\
+      \ for the highest-risk corruption path\n\n## State semantics\n- last-writer-wins\
+      \ applies only to resolved runtime payloads written through authoritative state\
+      \ helpers\n- Result wrapper/error metadata must be preserved exactly at the\
+      \ shell boundary, not inside mutable runtime state stores\n- backward-compatible\
+      \ legacy behavior means callers may still observe the same resolved config/snapshot/running\
+      \ facts after explicit Result handling, without hidden wrapper leakage\n\n##\
+      \ Out-of-scope guardrail\n- do not redesign the public Result API contract in\
+      \ this step\n- include required call-site migration and restore-path repairs\
+      \ for implicated src/tests surfaces; broader API redesign remains deferred unless\
+      \ a new architecture blocker is found\n\n## KNOWN RISKS (from project history)\n\
+      - Runtime boundary split-truth and stale-definition precedence have already\
+      \ required 4 architecture remediation loops in this phase; verify sibling accessors\
+      \ and restore helpers, not only directly failing lines.\n- Persistence/restore\
+      \ semantics are a hardened-acceptance area: explicit clear/null overwrite and\
+      \ stale-definition precedence must be tested, not assumed."
+    verification: '- Main path: targeted regressions for Result-API consumer migration
+      pass across implicated src/tests surfaces
+
+      - Failure path: focused regression proves restore/write-back flows cannot inject
+      Result wrappers into mutable runtime state
+
+      - Proof: sibling search evidence shows no remaining stale raw-value consumer
+      pattern where migration scope requires removal
+
+      - Downstream gate protected: post.deep_review.gate (phase-check) and final plan
+      completion'
+    evidence_template: '## Result-API Drift Remediation Evidence
+
+
+      **Commands used for sibling search**:
+
+      ```
+
+      rg -n "get_runtime_config|get_runtime_connections_snapshot|is_runtime_running"
+      src tests
+
+      rg -n "restore|runtime state|connections_snapshot|runtime_config|is_running"
+      src tests
+
+      ```
+
+
+      **Root cause vs symptom**:
+
+      - Root cause: <describe mixed Result/raw boundary assumption>
+
+      - Symptom: <list failing pytest families>
+
+      - Why previous fix failed: <required>
+
+
+      **Updated consumer families**:
+
+      - <file:line -> Result handling change>
+
+
+      **Corruption-path regression added/updated**:
+
+      - <test name>
+
+
+      **Sibling search verdict**:
+
+      - <remaining matches or none>
+
+
+      **Highest-risk failure-path proof**:
+
+      - <show restore path no longer stores Result wrappers>'
+    depends_on:
+    - post.deep_review.retest_invar_guard_gate_blockers_loop2
+    agent: python-senior
