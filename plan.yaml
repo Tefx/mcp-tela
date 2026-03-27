@@ -37341,36 +37341,6 @@ phases:
     depends_on:
     - conn_v2.system_wiring.entrypoint_integration
     agent: integration-verifier
-  - id: conn_v2.system_wiring.wiring_audit
-    name: Audit wiring completeness for new runtime symbols and CLI reachability
-    status: pending
-    description: 'step_type: verification
-
-      Wiring completeness audit: verify every new public symbol and runtime entry
-      path is reachable.
-
-      REQUIRED CHECKS:
-
-      1. Entry-point reachability: every new startup/lifecycle/convergence/bridge
-      symbol has a runtime caller from connect, serve, status, or reload
-
-      2. CLI registration: connect/serve/status command wiring remains reachable from
-      src/tela/cli.py
-
-      3. Config consumption: config_path ownership and lifecycle fields are consumed
-      by non-test runtime code
-
-      4. Contract consumption: no contract-only stubs remain on production runtime
-      paths
-
-      Use import-trace or grep evidence, not assertions.'
-    verification: '- Wiring audit report lists orphan exports, unconsumed fields,
-      and unreachable runtime symbols
-
-      - Gate blocks on any orphaned runtime path'
-    depends_on:
-    - conn_v2.system_wiring.entrypoint_integration
-    agent: wiring-auditor
   - id: conn_v2.system_wiring.liveness_probe
     name: Probe integrated runtime liveness for connect and serve
     status: pending
@@ -37671,6 +37641,34 @@ phases:
     verification: '- Freeze evidence includes commit, clean tree, and named runtime
       scenarios'
     agent: software-architect
+  - id: conn_v2.system_wiring.wiring_audit
+    name: Audit wiring completeness for new runtime symbols and CLI reachability
+    status: pending
+    description: 'step_type: verification
+
+      Wiring completeness audit: verify every new public symbol and runtime entry
+      path is reachable.
+
+      REQUIRED CHECKS:
+
+      1. Entry-point reachability: every new startup/lifecycle/convergence/bridge
+      symbol has a runtime caller from connect, serve, status, or reload
+
+      2. CLI registration: connect/serve/status command wiring remains reachable from
+      src/tela/cli.py
+
+      3. Config consumption: config_path ownership and lifecycle fields are consumed
+      by non-test runtime code
+
+      4. Contract consumption: no contract-only stubs remain on production runtime
+      paths
+
+      Use import-trace or grep evidence, not assertions.'
+    verification: '- Wiring audit report lists orphan exports, unconsumed fields,
+      and unreachable runtime symbols
+
+      - Gate blocks on any orphaned runtime path'
+    agent: wiring-auditor
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
   status: locked
