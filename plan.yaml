@@ -38331,3 +38331,32 @@ phases:
     depends_on:
     - tool_prefix.deep_review.wiring_audit
     agent: doc-reviewer
+  - id: tool_prefix.deep_review.architecture_review
+    name: Architecture and concurrency review for tool-prefix mapping
+    status: pending
+    description: 'step_type: review
+
+      agent_source: default
+
+      verification_scope: full-plan-check
+
+      Review module boundaries, dependency direction, and mutable runtime state safety
+      for raw/exposed-name mapping across core and shell layers.
+
+
+      Focus:
+
+      - core owns name-resolution semantics
+
+      - shell owns registry and downstream routing
+
+      - reload preserves rollback safety for exposed-name updates
+
+      - no shared mutable registry path corrupts other servers during prefix changes'
+    verification: '- Architecture review confirms ownership boundaries and rollback
+      safety.
+
+      - Any split-truth or mutable-state hazard is explicitly reported.'
+    depends_on:
+    - tool_prefix.deep_review.wiring_audit
+    agent: software-architect
