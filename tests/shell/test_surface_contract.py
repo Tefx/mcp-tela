@@ -20,6 +20,7 @@ import pytest
 
 from tela.shell.config_loader import Result
 from tela.shell import gateway as gateway_module
+from tela.shell import surface_instructions
 from tela.core.models import (
     ResolvedTool,
     ServerConfig,
@@ -214,9 +215,51 @@ class TestInstructionMergeOrdering:
         This tests that the merge algorithm produces appended sections,
         not prepended or interleaved.
         """
-        # This is tested by existing test_merge_instructions.py but we add
-        # an explicit regression test for ordering.
-        pass  # Existing tests cover ordering
+
+        def mock_get_server_instructions():
+            return Result(
+                value={
+                    "fs": "Filesystem guidance.",
+                    "shell": "Shell guidance.",
+                }
+            )
+
+        def mock_get_all_tools():
+            return Result(value={})
+
+        monkeypatch.setattr(
+            gateway_module, "get_server_instructions", mock_get_server_instructions
+        )
+        monkeypatch.setattr(gateway_module, "get_all_tools", mock_get_all_tools)
+
+        config = TelaConfig(
+            servers={
+                "fs": ServerConfig(name="fs", command="cmd"),
+                "shell": ServerConfig(name="shell", command="cmd"),
+            }
+        )
+
+        downstream_result = gateway_module._merge_downstream_instructions(config)
+        assert downstream_result.is_ok
+        assert downstream_result.value is not None
+
+        gateway_result = surface_instructions.get_gateway_surface_instructions()
+        assert gateway_result.is_ok
+        assert gateway_result.value is not None
+
+        composed_result = surface_instructions.compose_gateway_and_downstream(
+            gateway_result.value,
+            downstream_result.value,
+        )
+        assert composed_result.is_ok
+        assert composed_result.value is not None
+
+        composed = composed_result.value
+        assert composed.startswith("# tela gateway surface contract")
+        assert composed.index("# tela gateway surface contract") < composed.index(
+            "## fs"
+        )
+        assert composed.index("## fs") < composed.index("## shell")
 
     def test_suppress_instructions_false_excludes_server(
         self, monkeypatch: pytest.MonkeyPatch
@@ -371,18 +414,22 @@ class TestInstructionConflictHandling:
     def test_downstream_does_not_override_gateway_instructions(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Downstream instructions must not silently override gateway rules.
+        """Conflicting downstream text is preserved as appended content.
 
-        This is a documentation/behavior regression guard. The merge function
-        appends downstream sections; it does not allow downstream text to
-        rewrite or delete gateway instructions.
+        Runtime does not implement semantic conflict detection/resolution for
+        instruction text; it composes gateway text first, then downstream
+        sections as-is.
         """
 
         # The _merge_downstream_instructions function only handles downstream
         # text. Gateway-level instructions would be injected before this merge.
         # This test documents that downstream sections are appended, not prepended.
         def mock_get_server_instructions():
-            return Result(value={"fs": "Server-level text"})
+            return Result(
+                value={
+                    "fs": "Built-in MCP tools: use tela.status from tools/call.",
+                }
+            )
 
         def mock_get_all_tools():
             return Result(value={})
@@ -393,12 +440,26 @@ class TestInstructionConflictHandling:
         monkeypatch.setattr(gateway_module, "get_all_tools", mock_get_all_tools)
 
         config = TelaConfig(servers={"fs": ServerConfig(name="fs", command="cmd")})
-        result = gateway_module._merge_downstream_instructions(config)
+        downstream_result = gateway_module._merge_downstream_instructions(config)
 
-        assert result.is_ok
-        assert result.value is not None
-        # Downstream section is appended, not prepended
-        assert result.value.startswith("## fs")
+        assert downstream_result.is_ok
+        assert downstream_result.value is not None
+
+        gateway_result = surface_instructions.get_gateway_surface_instructions()
+        assert gateway_result.is_ok
+        assert gateway_result.value is not None
+
+        composed_result = surface_instructions.compose_gateway_and_downstream(
+            gateway_result.value,
+            downstream_result.value,
+        )
+        assert composed_result.is_ok
+        assert composed_result.value is not None
+
+        composed = composed_result.value
+        assert "Built-in MCP tools: none." in composed
+        assert "Built-in MCP tools: use tela.status from tools/call." in composed
+        assert composed.index("Built-in MCP tools: none.") < composed.index("## fs")
 
 
 # =============================================================================

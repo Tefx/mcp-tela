@@ -90,8 +90,7 @@ SurfaceContract := {
 
 Instruction composition is ordered and non-commutative.
 
-1. Tela top-level gateway instructions, when present, come first and remain the
-   authoritative global rule set.
+1. Tela top-level gateway instructions, when present, are emitted first.
 2. After the gateway instructions, tela appends zero or more downstream server
    sections.
 3. Downstream sections are appended in configured server iteration order.
@@ -104,20 +103,17 @@ Instruction composition is ordered and non-commutative.
 5. When a downstream section is appended and tools are known, an `Available
    tools:` list is appended inside that server's section.
 
-## 5. Instruction conflict handling
+## 5. Instruction conflict semantics (implementation-backed)
 
-- Downstream instructions are subordinate per-server appendices, not authority
-  over the gateway's own top-level rules.
-- Downstream text may add server-specific guidance, affordances, or caveats.
-- Downstream text must not silently override, weaken, or reinterpret tela's
-  top-level gateway instructions.
-- If downstream instructions conflict with gateway instructions, the gateway
-  instructions win.
-- Conflicting downstream text must be handled explicitly by one of:
-  - suppressing that server section
-  - providing an explicit per-server override string
-  - revising the gateway contract in a future explicit spec change
-- Silent override by downstream text is forbidden.
+- Runtime behavior is append-only composition: gateway block first, then
+  downstream sections.
+- Runtime does not implement semantic conflict detection or automatic conflict
+  resolution for instruction text.
+- If downstream text contradicts gateway guidance, both texts are still present
+  in the composed output.
+- Practical mitigation is explicit configuration: suppress a server section,
+  provide a per-server replacement string, or revise contract/docs via explicit
+  follow-up spec work.
 
 ## 6. Alignment targets
 

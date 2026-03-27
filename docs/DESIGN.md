@@ -239,7 +239,7 @@ The `instructions` field in `ServerConfig` controls how downstream server instru
 | `str` | Override: use the provided string instead of downstream instructions |
 
 **Merge semantics:**
-1. Gateway instructions come first (authoritative top-level rules).
+1. Gateway instructions are emitted first.
 2. Downstream server sections are appended in configured order.
 3. When a downstream section is appended and tools are known, an `Available tools:` list is appended inside that server's section.
 
@@ -255,9 +255,9 @@ Available tools:
 ```
 
 **Conflict handling:**
-- Downstream instructions are subordinate appendices, not authority over gateway rules.
-- Downstream text may add server-specific guidance but must not override gateway instructions.
-- Handle conflicts by suppressing, providing per-server override, or explicit spec change.
+- Runtime composition is append-only and does not perform semantic conflict resolution.
+- Contradictory downstream text is preserved as appended text.
+- Mitigate contradictions by suppressing a section, providing a per-server replacement string, or revising contract/docs explicitly.
 
 ## Invariants
 

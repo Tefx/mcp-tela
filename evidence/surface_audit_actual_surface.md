@@ -47,7 +47,7 @@ Authoritative review-only audit of actual tela agent-facing surfaces in the curr
 
 ### Capability string audit (`tela_admin` or replacement)
 
-- `tela_admin` is present in docs and examples (`docs/INTERFACES.md:75,174-177`, `docs/DESIGN.md:116-119`, `docs/USAGE.md:157,168,463-464`, `README.md:154`) but was not found in executable source under `src/**/*.py`.
+- `tela_admin` appears only in documentation notes as disallowed/historical wording (for example `docs/CONFIRMED-SURFACE-CONTRACT.md`, `docs/AGENT_INTERFACE.md`, `docs/DESIGN.md`) and was not found in executable source under `src/**/*.py`.
 - Current executable capability control is family/posture-based in generic form, not hard-coded to `tela_admin`:
   - profiles are canonical `capabilities` maps in `src/tela/core/models.py:162-215`
   - builtin profiles use arbitrary family names like `filesystem`, `network`, `orchestration`, `execution` in `src/tela/core/catalog.py:22-80`
@@ -90,6 +90,6 @@ Authoritative review-only audit of actual tela agent-facing surfaces in the curr
 
 ### Resulting risks / open questions
 
-- Docs/spec drift exists: `docs/INTERFACES.md` and `docs/DESIGN.md` describe `tela.status`, `tela.connections`, and `tela.audit` as upstream MCP introspection tools, but current code audit verifies only `tela.profiles` as an MCP resource.
-- Taxonomy/test/doc/runtime follow-up work should treat `tela.status`, `tela.connections`, and `tela.audit` as unverified-or-absent MCP surfaces unless later source adds explicit MCP tool/resource registration.
+- Prior doc-drift finding has been remediated in current contract/docs: `tela.status`, `tela.connections`, and `tela.audit` are documented as operator-only (not built-in MCP tools/resources).
+- Follow-up work should continue to treat `tela.status`, `tela.connections`, and `tela.audit` as unverified-or-absent MCP built-ins unless later source adds explicit MCP tool/resource registration.
 - `tela_admin` should not be treated as implementation-verified capability taxonomy without either code adoption or an explicit architecture/spec decision; current runtime enforcement is generic family/posture based.

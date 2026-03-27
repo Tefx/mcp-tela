@@ -94,11 +94,11 @@ All documentation correctly states:
 
 ## 6. Instruction Merge Observations
 
-**Gateway Instructions (authoritative, first):**
+**Gateway Instructions (first block in composed output):**
 ```
 # tela gateway surface contract
 
-Authoritative rules for tela-owned surfaces:
+Gateway rules for tela-owned surfaces:
 - Built-in MCP resource: `tela.profiles` (read via `tela://profiles`).
 - Built-in MCP tools: none.
 - Operator-only surfaces (not MCP built-ins): `tela status`, `tela connections`, `tela audit`, and `GET /status`.
@@ -112,9 +112,10 @@ Authoritative rules for tela-owned surfaces:
 - Passthrough: `instructions: null` or omitted → downstream's advertised instructions
 
 **Conflict Handling:**
-- Downstream sections are **append-only**, cannot override gateway instructions
-- Gateway wins on conflict (documented, not enforced programmatically beyond ordering)
-- Tests verify merge produces `gateway_text + "\n\n" + downstream_text`
+- Downstream sections are appended after the gateway block
+- No semantic conflict resolver is implemented for contradictory instruction text
+- Conflicting downstream text is preserved as appended content
+- Tests verify ordering and non-resolution behavior via explicit string assertions
 
 **Test Evidence:**
 - `tests/shell/test_merge_instructions.py`: 14/14 pass
@@ -161,7 +162,7 @@ INTROSPECTION_TOOLS = ("tela.profiles",)
 
 3. **Doc/Runtime Alignment:** Documentation (`docs/AGENT_INTERFACE.md`, `docs/CONFIRMED-SURFACE-CONTRACT.md`, `README.md`) accurately reflects runtime reality.
 
-4. **Instruction Merge Ordering:** Gateway instructions come first and are authoritative. Downstream sections are appended, cannot override gateway rules.
+4. **Instruction Merge Semantics:** Gateway text is emitted first and downstream text is appended in order; semantic conflict resolution is not implemented.
 
 5. **Guidance Clarity:** Runtime instructions clearly state: "Do not use `tools/call` for `tela.profiles`; use resource read."
 
@@ -190,9 +191,19 @@ INTROSPECTION_TOOLS = ("tela.profiles",)
 
 ---
 
+## 11. Loop2 Delta (vs prior remediation loop)
+
+- Removed overclaim wording that implied an implemented "gateway wins" semantic conflict resolver.
+- Reframed instruction behavior everywhere in this artifact as implementation-backed ordering + append-only composition.
+- Replaced placeholder/weak conflict-semantics coverage in `tests/shell/test_surface_contract.py` with concrete assertions that:
+  - gateway text is emitted before downstream sections
+  - contradictory downstream text is preserved in composed output (no semantic conflict resolution)
+
+---
+
 ## Conclusion
 
-The `agent_iface.surface_taxonomy` step correctly documents and implements the surface taxonomy. No remediation required.
+Loop2 remediation aligned docs/evidence with implementation-backed instruction semantics: ordered append-only composition without a semantic conflict resolver.
 
 ---
 
@@ -204,6 +215,6 @@ evidence: |
   - CLI surfaces observed: tela profiles, status, connections, audit — all operator-only
   - HTTP surfaces observed: GET /health (no auth), GET /status (bearer), POST /connect (bearer), POST /disconnect (bearer), POST /mcp (bearer)
   - Doc/runtime mismatches found: NONE
-  - Instruction merge observations: Gateway-first ordering enforced; downstream append-only; conflict checks pass
+  - Instruction merge observations: gateway-first ordering and append-only composition verified; contradictory downstream text is preserved (no semantic conflict resolver)
   - Final pass/fail rationale: PASS — all runtime surfaces match documented taxonomy; resource/tool classification correct; operator surfaces correctly NOT registered as MCP built-ins
 error: ""

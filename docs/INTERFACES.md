@@ -364,7 +364,7 @@ The gateway implements MCP `notifications/tools/list_changed` forwarding from do
 The `instructions` field in `ServerConfig` controls how downstream server instructions are merged into the upstream server's instructions.
 
 **Merge semantics:**
-1. Tela top-level gateway instructions, when present, come first and remain the authoritative global rule set.
+1. Tela top-level gateway instructions, when present, are emitted first.
 2. After the gateway instructions, tela appends zero or more downstream server sections.
 3. Downstream sections are appended in configured server iteration order.
 4. For each downstream server:
@@ -374,12 +374,10 @@ The `instructions` field in `ServerConfig` controls how downstream server instru
 5. When a downstream section is appended and tools are known, an `Available tools:` list is appended inside that server's section.
 
 **Conflict handling:**
-- Downstream instructions are subordinate per-server appendices, not authority over the gateway's own top-level rules.
-- Downstream text may add server-specific guidance, affordances, or caveats.
-- Downstream text must not silently override, weaken, or reinterpret tela's top-level gateway instructions.
-- If downstream instructions conflict with gateway instructions, the gateway instructions win.
-- Conflicting downstream text must be handled explicitly by suppressing that server section, providing an explicit per-server override string, or revising the gateway contract in a future explicit spec change.
-- Silent override by downstream text is forbidden.
+- Runtime composition is append-only: gateway block first, then downstream sections.
+- Runtime does not implement semantic conflict detection/resolution for instruction text.
+- Contradictory downstream text remains present as appended content.
+- Mitigation is explicit configuration or spec/doc revision: suppress a section, provide per-server replacement text, or make an explicit follow-up contract change.
 
 **Configuration table:**
 

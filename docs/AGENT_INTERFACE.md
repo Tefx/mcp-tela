@@ -68,7 +68,7 @@ Rules:
 
 Instruction composition is ordered and non-commutative:
 
-1. **Tela top-level gateway instructions** come first and remain the authoritative global rule set.
+1. **Tela top-level gateway instructions** are emitted first.
 2. **Downstream server sections** are appended after the gateway instructions.
 3. Downstream sections are appended in configured server iteration order.
 4. Per-server rules:
@@ -77,16 +77,15 @@ Instruction composition is ordered and non-commutative:
    - `instructions: null` / omitted → append section using downstream's advertised instructions
 5. When a downstream section is appended and tools are known, an `Available tools:` list is included.
 
-### 5.2 Conflict Handling
+### 5.2 Conflict Semantics (Current Runtime)
 
-- Downstream instructions are **subordinate per-server appendices**, not authority over gateway rules.
-- Downstream text may add server-specific guidance but must not silently override gateway instructions.
-- If downstream instructions conflict with gateway instructions, the **gateway instructions win**.
-- Conflicting downstream text must be handled explicitly by:
-  - Suppressing that server section (`instructions: false`)
-  - Providing an explicit per-server override string
-  - Revising the contract in a future explicit spec change
-- **Silent override by downstream text is forbidden.**
+- Runtime composition is append-only: gateway block first, then downstream server sections.
+- No semantic conflict resolver is implemented for contradictory instruction text.
+- Conflicting downstream text is preserved as appended content.
+- Mitigation is configuration-based:
+  - Suppress a server section (`instructions: false`)
+  - Provide an explicit per-server replacement string (`instructions: <string>`)
+  - Revise contract/docs in an explicit follow-up spec change
 
 ## 6. HTTP Endpoints (Operator)
 
@@ -103,5 +102,5 @@ Instruction composition is ordered and non-commutative:
 - `tela.profiles` is a **resource read**, not a tool call
 - No built-in `tela.*` MCP tools are currently supported
 - `tela.status`, `tela.connections`, `tela.audit` are operator-only (CLI/HTTP)
-- Gateway instructions are authoritative; downstream sections are append-only
+- Gateway instructions are emitted first; downstream sections are append-only
 - The `tela.` prefix is reserved for future built-in surfaces

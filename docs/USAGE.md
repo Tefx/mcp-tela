@@ -136,7 +136,7 @@ servers:
 The merged instructions appear in the upstream server's `instructions` field as Markdown with H2 headers for each server.
 
 **Merge semantics:**
-1. Tela top-level gateway instructions come first (authoritative)
+1. Tela top-level gateway instructions are emitted first
 2. Downstream sections are appended in configured server iteration order
 3. Per-server rules:
    - `instructions: false` → suppress that server's section
@@ -145,10 +145,9 @@ The merged instructions appear in the upstream server's `instructions` field as 
 4. When tools are known, an `Available tools:` list is appended per server section
 
 **Conflict handling:**
-- Downstream instructions are subordinate appendices, not authority over gateway rules
-- Gateway instructions win if conflicts arise
-- Silent override by downstream text is forbidden
-- Handle conflicts by suppressing, overriding, or explicit spec change
+- Current implementation is append-only composition: gateway block, then downstream sections
+- No semantic conflict resolver is implemented; contradictory downstream text is preserved as appended text
+- To avoid contradictory guidance, use `instructions: false`/`instructions: <string>` or revise docs/spec explicitly
 
 ### `profiles`
 
