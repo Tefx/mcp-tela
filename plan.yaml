@@ -32632,7 +32632,7 @@ phases:
     agent: gate-reviewer
   - id: post.doc_sync.fix_batch
     name: Fix doc-sync gate blockers
-    status: claimed
+    status: done
     description: 'Fix ALL documentation blockers found by the post.doc_sync gate.
 
 
@@ -32704,6 +32704,18 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T00:05:30.916874+00:00'
+    done_at: '2026-03-27T00:08:38.911803+00:00'
+    evidence: "## Doc Fix Report\n- Updated files/sections:\n  - `docs/DESIGN.md`\
+      \ (transport default wording)\n  - `docs/INTERFACES.md` (transport default wording)\n\
+      \  - `docs/USAGE.md` (transport default wording and troubleshooting wording)\n\
+      \  - `docs/MIGRATION-003-capability-only-profiles.md` (tool_overrides nesting)\n\
+      \  - `docs/ADR-003-gateway-capability-only-profiles.md` (tool_overrides nesting)\n\
+      \nTransport default corrections applied:\n- Corrected SSE-default claims to\
+      \ HTTP-default when transport omitted\n\nMigration example corrections applied:\n\
+      - Corrected examples to required nesting:\n  - `tool_overrides.<family>.overrides.<tool>`\n\
+      \nSibling search evidence:\n- scanned touched doc set for stale SSE-default\
+      \ claims and malformed overrides examples\n- no remaining stale claims found\
+      \ in the reviewed set\n\nRemaining stale claims:\n- none in touched docs"
   - id: post.doc_sync.retest
     name: Retest documentation sync after fixes
     status: pending
