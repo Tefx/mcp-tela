@@ -37800,6 +37800,20 @@ phases:
       - Reload coverage proves prefix changes are treated as tool-surface changes,
       not no-op config churn.'
     agent: python-executor
+  - id: tool_prefix.test.gate
+    name: Gate tool-prefix tests
+    status: pending
+    description: "step_type: gate\nagent_source: default\nreview_depth: QUICK\nreview_depth_rationale:\n\
+      \  - Single feature test boundary, but spans core semantics plus shell reload\
+      \ behavior.\nAs an INDEPENDENT REVIEWER (gate-reviewer), confirm the test boundary\
+      \ is specific enough to catch raw/exposed-name drift and reload regressions."
+    verification: '- Tests explicitly cover backward compatibility, conflict behavior,
+      routing, reload notification, and reserved-prefix rejection.
+
+      - Harness is ready for implementation work.'
+    depends_on:
+    - tool_prefix.test.add_regressions
+    agent: gate-reviewer
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
   status: locked
