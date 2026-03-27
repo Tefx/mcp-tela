@@ -37498,48 +37498,6 @@ phases:
     depends_on:
     - conn_v2.validation.freeze_full
     agent: doc-reviewer
-  - id: conn_v2.validation.full_plan_check
-    name: Run full-plan-check for integrated runtime refactor
-    status: pending
-    description: "step_type: verification\nverification_scope: full-plan-check\nAs\
-      \ an INDEPENDENT TESTER (integration-verifier), run the nearest repo-wide validation\
-      \ boundary now, before doc-sync and deep review.\nThis check protects downstream\
-      \ gates from predictable repo-wide failures.\nRequired command family:\n  -\
-      \ uvx invar-tools guard --all\n  - project test command(s) covering the integrated\
-      \ runtime surface\nRules:\n  - use a fresh/cold environment for symbolic/static/full-scan\
-      \ validation\n  - if failures appear outside the immediate seam, report them\
-      \ with blocker ownership rather than marking them out-of-scope\n  - broad verifier\
-      \ findings require remediation ownership; they are not mere notes"
-    verification: '- Evidence includes the exact command family used
-
-      - Output identifies whether failures are local, cross-phase, or repo-wide
-
-      - No predictable full-plan failure is deferred without explicit non-intersection
-      evidence'
-    evidence_template: '## Full-Plan Check
-
-      **Commands**:
-
-      ```
-
-      uvx invar-tools guard --all
-
-      <project test command(s)>
-
-      ```
-
-      **Actual output**:
-
-      ```
-
-      <paste output>
-
-      ```
-
-      **Downstream gates protected**: doc_sync.gate, conn_v2.deep_review.gate'
-    depends_on:
-    - conn_v2.validation.runtime_regressions
-    agent: integration-verifier
 - id: conn_v2.doc_sync
   name: Documentation Sync for Connect/Serve Runtime
   status: locked
@@ -37678,6 +37636,46 @@ phases:
 
       - Any blocker-class issue has explicit remediation ownership before proceeding'
     agent: gate-reviewer
+  - id: conn_v2.validation.full_plan_check
+    name: Run full-plan-check for integrated runtime refactor
+    status: pending
+    description: "step_type: verification\nverification_scope: full-plan-check\nAs\
+      \ an INDEPENDENT TESTER (integration-verifier), run the nearest repo-wide validation\
+      \ boundary now, before doc-sync and deep review.\nThis check protects downstream\
+      \ gates from predictable repo-wide failures.\nRequired command family:\n  -\
+      \ uvx invar-tools guard --all\n  - project test command(s) covering the integrated\
+      \ runtime surface\nRules:\n  - use a fresh/cold environment for symbolic/static/full-scan\
+      \ validation\n  - if failures appear outside the immediate seam, report them\
+      \ with blocker ownership rather than marking them out-of-scope\n  - broad verifier\
+      \ findings require remediation ownership; they are not mere notes"
+    verification: '- Evidence includes the exact command family used
+
+      - Output identifies whether failures are local, cross-phase, or repo-wide
+
+      - No predictable full-plan failure is deferred without explicit non-intersection
+      evidence'
+    evidence_template: '## Full-Plan Check
+
+      **Commands**:
+
+      ```
+
+      uvx invar-tools guard --all
+
+      <project test command(s)>
+
+      ```
+
+      **Actual output**:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      **Downstream gates protected**: doc_sync.gate, conn_v2.deep_review.gate'
+    agent: integration-verifier
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
   status: locked
