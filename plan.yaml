@@ -33411,3 +33411,62 @@ phases:
     depends_on:
     - post.deep_review.architecture_fix_runtime_locking_loop2
     agent: software-architect
+  - id: post.deep_review.architecture_fix_runtime_boundary_policy_loop3
+    name: 'Loop 3 fix: unify authoritative boundary policy for runtime/upstream accessors'
+    status: pending
+    description: "Root-cause-oriented loop 3 remediation for repeated deep-review\
+      \ runtime alias blockers.\n\nstep_type: implementation\nverification_scope:\
+      \ phase-check\nProtects downstream gate: post.deep_review.gate\nagent_source:\
+      \ default\nprior_loop:\n  - post.deep_review.architecture_fix_runtime_locking\n\
+      \  - post.deep_review.architecture_retest_runtime_locking\n  - post.deep_review.architecture_fix_runtime_locking_loop2\n\
+      \  - post.deep_review.architecture_retest_runtime_locking_loop2\nsymbolic_testing:\
+      \ false\nwhy_previous_fix_failed: |\n  Loop 1 and loop 2 hardened selected accessor\
+      \ paths and snapshot behavior, but they did not force one authoritative boundary\
+      \ policy across both get_runtime and get_upstream_server. The blocker family\
+      \ persisted because callers could still obtain live runtime-owned objects through\
+      \ inconsistent accessor semantics, leaving ownership split between boundary\
+      \ helpers and runtime internals.\n\n## Root Cause vs Symptom\n- root_cause_hypothesis:\
+      \ accessor policy is inconsistent across runtime-facing surfaces, so the codebase\
+      \ still leaks live runtime-owned objects when one surface is hardened but a\
+      \ sibling surface preserves alias semantics.\n- symptom: get_runtime still returns\
+      \ a live mutable runtime alias, and get_upstream_server still returns a live\
+      \ runtime-owned FastMCP alias.\n- why_this_fix_is_not_surface_level: choose\
+      \ and enforce one authoritative boundary policy for both surfaces, then migrate\
+      \ sibling callers to that policy instead of wrapping only individual return\
+      \ paths.\n\n## Authoritative boundary policy (MANDATORY)\nChoose ONE explicit\
+      \ policy and apply it consistently to both get_runtime and get_upstream_server:\n\
+      - detached immutable snapshot boundary, OR\n- opaque handle boundary with all\
+      \ mutation/runtime interaction kept behind lock-owning methods\n\nThe implementation\
+      \ MUST record which policy was chosen and make get_runtime/get_upstream_server\
+      \ follow the same ownership rule. Mixed policy is not acceptable.\n\n## Required\
+      \ remediation scope\n- eliminate live runtime alias return from get_runtime\n\
+      - eliminate live runtime-owned FastMCP alias return from get_upstream_server\n\
+      - inspect sibling runtime/read helper surfaces for the same ownership leak pattern\
+      \ and migrate them if they intersect the chosen policy\n- update caller paths\
+      \ that currently depend on live alias semantics so behavior remains valid without\
+      \ reintroducing runtime-owned object escape\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\
+      Each deliverable MUST contain substantive logic that processes its inputs and\
+      \ produces outputs that vary based on those inputs. Private stub classes (`_Runtime*`,\
+      \ `_Stub*`, `_Placeholder*`) do not satisfy this requirement.\n\nknown_risks:\n\
+      - partial hardening of only one accessor will repeat the blocker family\n- shallow\
+      \ detachment is insufficient if nested FastMCP/runtime-owned members remain\
+      \ live\n- caller migration must not create new side channels that bypass the\
+      \ authoritative boundary policy\n\nGate Preview:\n1. Gate will reject any remaining\
+      \ live alias from either accessor surface\n2. Gate will reject inconsistent\
+      \ ownership semantics between get_runtime and get_upstream_server\n3. Gate will\
+      \ reject evidence that proves only the main path but not sibling accessor safety"
+    verification: '- Main path: both get_runtime and get_upstream_server obey one
+      documented authoritative boundary policy with no live runtime-owned object escape
+
+      - Failure path: focused regressions prove attempted alias extraction through
+      both surfaces no longer yields a mutable or runtime-owned live object
+
+      - Proof: sibling accessor search confirms no remaining blocker-class ownership
+      leak that intersects post.deep_review.gate
+
+      - Evidence explicitly explains why previous loops failed and why the chosen
+      boundary policy closes the blocker family'
+    depends_on:
+    - post.deep_review.architecture_retest_runtime_locking_loop2
+    agent: python-senior
