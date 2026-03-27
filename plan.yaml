@@ -33364,7 +33364,7 @@ phases:
   - id: post.deep_review.architecture_retest_runtime_locking_loop2
     name: 'Loop 2 retest: independent architecture verification of hardened runtime
       boundary alias safety'
-    status: claimed
+    status: done
     description: 'Independent loop 2 retest of the remaining concurrency blockers
       after post.deep_review.architecture_fix_runtime_locking_loop2.
 
@@ -33413,6 +33413,12 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T01:53:38.933438+00:00'
+    done_at: '2026-03-27T01:53:46.434915+00:00'
+    evidence: 'Loop2 independent retest executed and found residual blocker-class
+      alias paths: get_runtime and get_upstream_server still returned live runtime-owned
+      objects. Findings documented and consumed into loop3 remediation branch: post.deep_review.architecture_fix_runtime_boundary_policy_loop3
+      -> post.deep_review.architecture_retest_runtime_boundary_policy_loop3, and post.deep_review.gate
+      dependency updated to loop3 retest.'
   - id: post.deep_review.architecture_fix_runtime_boundary_policy_loop3
     name: 'Loop 3 fix: unify authoritative boundary policy for runtime/upstream accessors'
     status: pending
