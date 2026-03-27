@@ -33592,7 +33592,7 @@ phases:
       narrow lock-safe helpers/introspection paths.'
   - id: post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 fix: close deprecated live-alias accessors per investigation decision'
-    status: claimed
+    status: done
     description: "Batched implementation fix for the repeated deprecated live-alias\
       \ accessor blocker family, executing the authoritative handling chosen in post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4.\n\
       \nstep_type: implementation\nverification_scope: phase-check\nProtects downstream\
@@ -33635,6 +33635,12 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T02:12:36.018896+00:00'
+    done_at: '2026-03-27T02:29:54.100964+00:00'
+    evidence: Loop4 batched fix implemented and merged. Deprecated get_runtime/get_upstream_server
+      no longer return live runtime aliases (now hard-fail with migration guidance),
+      while test/setup use-cases were preserved through narrow lock-safe helper APIs
+      and migrated test callers. Verification reported full suite pass (689 passed,
+      0 failed).
   - id: post.deep_review.architecture_retest_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 retest: independent verification of deprecated live-alias accessor
       handling'
