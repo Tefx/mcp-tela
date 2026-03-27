@@ -37726,3 +37726,10 @@ phases:
     final review.
   depends_on:
   - tool_prefix.runtime
+- id: tool_prefix.deep_review
+  name: Tool Prefix Deep Review
+  status: locked
+  gate: Final independent multi-agent audit of wiring, spec conformance, architecture
+    safety, contract strength, and black-box behavior for tool prefixes.
+  depends_on:
+  - tool_prefix.doc_sync
