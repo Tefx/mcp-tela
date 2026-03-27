@@ -38217,6 +38217,32 @@ phases:
     depends_on:
     - tool_prefix.runtime.integrate_reload_prefix_updates
     agent: doc-reviewer
+  - id: tool_prefix.runtime.gate
+    name: Gate tool-prefix runtime
+    status: pending
+    description: "step_type: gate\nagent_source: default\nreview_depth: THOROUGH\n\
+      review_depth_rationale:\n  - Phase changes config model, name-resolution semantics,\
+      \ runtime registry wiring, and reload notifications.\ncross_cutting_focus:\n\
+      \  - raw_name vs exposed_name routing integrity\n  - reserved prefix rejection\n\
+      \  - reload tools/list_changed correctness\nVerification scope: phase-check\
+      \ protecting doc-sync and deep review.\n\nAs an INDEPENDENT REVIEWER (gate-reviewer),\
+      \ assess whether the runtime phase meets the quality bar for proceeding."
+    verification: '- All runtime steps completed successfully.
+
+      - L2 verification evidence is specific and covers all required scenarios.
+
+      - Wiring audit and spec conformance both pass or produce owned remediation.
+
+      - No unresolved blocker remains around raw/exposed-name drift or reload rollback.'
+    depends_on:
+    - tool_prefix.runtime.implement_core_name_mapping
+    - tool_prefix.runtime.wire_registry_and_call_routing
+    - tool_prefix.runtime.integrate_reload_prefix_updates
+    - tool_prefix.runtime.freeze_for_l2
+    - tool_prefix.runtime.verify_runtime
+    - tool_prefix.runtime.wiring_audit
+    - tool_prefix.runtime.spec_conformance
+    agent: gate-reviewer
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
