@@ -619,7 +619,7 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
             import threading
 
             with threading.RLock():
-                conns = get_runtime_connections_snapshot()
+                conns = get_runtime_connections_snapshot().value
             for conn in conns:
                 await notify_tools_changed(conn, tools_digest)
 

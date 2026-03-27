@@ -110,7 +110,7 @@ class TestHandleConnect:
             assert result.value is not None
             assert result.value["connection_id"] == "test-conn-123"
             assert result.value["status"] == "connected"
-            assert len(get_runtime_connections_snapshot()) == 1
+            assert len(get_runtime_connections_snapshot().value) == 1
         finally:
             set_runtime_config(None)
             set_runtime_running(False)
@@ -152,7 +152,7 @@ class TestHandleDisconnect:
             assert result.value is not None
             assert result.value["connection_id"] == "remove-me"
             assert result.value["status"] == "disconnected"
-            assert len(get_runtime_connections_snapshot()) == 0
+            assert len(get_runtime_connections_snapshot().value) == 0
         finally:
             set_runtime_config(None)
             set_runtime_running(False)

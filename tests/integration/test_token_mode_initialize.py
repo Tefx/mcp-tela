@@ -393,11 +393,11 @@ def test_handle_initialize_token_mode_registers_connection() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        initial_count = len(get_runtime_connections_snapshot())
+        initial_count = len(get_runtime_connections_snapshot().value)
         result = await handle_initialize(signed_token)
         assert result.is_ok
         # Connection must be registered
-        conns = get_runtime_connections_snapshot()
+        conns = get_runtime_connections_snapshot().value
         assert len(conns) == initial_count + 1
         # Last connection must match returned context
         assert conns[-1] == result.value

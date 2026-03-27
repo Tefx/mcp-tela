@@ -196,7 +196,7 @@ def test_gateway_start_succeeds_with_empty_config() -> None:
     )
     result = asyncio.run(gateway_start(config, tela_config=TelaConfig()))
     assert result.is_ok
-    assert is_runtime_running() is True
+    assert is_runtime_running().value is True
     # Cleanup
     asyncio.run(gateway_shutdown())
 
@@ -325,11 +325,11 @@ def test_gateway_shutdown_clears_state() -> None:
         default_profile="dev",
     )
     asyncio.run(gateway_start(config, tela_config=TelaConfig()))
-    assert is_runtime_running() is True
+    assert is_runtime_running().value is True
 
     result = asyncio.run(gateway_shutdown())
     assert result.is_ok
-    assert is_runtime_running() is False
+    assert is_runtime_running().value is False
 
 
 def test_gateway_status_after_start() -> None:

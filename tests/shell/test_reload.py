@@ -38,7 +38,7 @@ def _teardown() -> None:
 def _get_config():
     from tela.shell.gateway import get_runtime_config
 
-    return get_runtime_config()
+    return get_runtime_config().value
 
 
 def _set_config(config):

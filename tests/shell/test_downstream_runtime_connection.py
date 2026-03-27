@@ -266,7 +266,7 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
     assert downstream.get_tool_server("initial_tool").value == "mocked"
     assert downstream.get_tool_server("new_tool").value is None
 
-    previous_config = get_runtime_config()
+    previous_config = get_runtime_config().value
     set_runtime_config(TelaConfig(servers=servers))
     try:
         re_enum_result = asyncio.run(downstream.re_enumerate("mocked"))
