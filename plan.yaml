@@ -37380,6 +37380,8 @@ phases:
       and unreachable runtime symbols
 
       - Gate blocks on any orphaned runtime path'
+    depends_on:
+    - conn_v2.system_wiring.entrypoint_integration
     agent: wiring-auditor
   - id: conn_v2.system_wiring.verify_e2e
     name: Verify end-to-end data flow through real entry points
