@@ -37273,6 +37273,8 @@ phases:
       ```
 
       **Downstream gates protected**: doc_sync.gate, conn_v2.deep_review.gate'
+    depends_on:
+    - conn_v2.validation.runtime_regressions
     agent: integration-verifier
   - id: conn_v2.validation.spec_conformance
     name: Verify implemented runtime behavior against authoritative specs
