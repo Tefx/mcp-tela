@@ -230,11 +230,13 @@ def test_handle_initialize_uses_profile_binding_resolver(
         _fake_resolve,
     )
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={"dev": ProfileConfig(name="dev", default=True)},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+        )
+    )
     clear_runtime_connections()
 
     result = asyncio.run(handle_initialize({"client": "desktop"}))
@@ -242,6 +244,62 @@ def test_handle_initialize_uses_profile_binding_resolver(
     assert result.is_ok
     assert len(calls) == 1
     assert calls[0].connection_metadata == {"client": "desktop"}
+
+
+def test_handle_initialize_reuses_existing_bridge_connection() -> None:
+    """Bridge initialize must reuse the HTTP /connect connection context."""
+    import asyncio
+
+    from tela.core.models import AuthConfig, AuthMode, ConnectionContext, TelaConfig
+    from tela.shell.gateway import (
+        add_runtime_connection,
+        clear_runtime_connections,
+        set_runtime_config,
+    )
+    from tela.shell.idle_shutdown import (
+        _reset_idle_manager,
+        get_idle_manager,
+        init_idle_manager,
+    )
+    from tela.shell.upstream import handle_initialize
+
+    async def _scenario() -> None:
+        _reset_idle_manager()
+
+        async def _shutdown_callback() -> None:
+            return None
+
+        init_result = await init_idle_manager(30.0, _shutdown_callback)
+        assert init_result.is_ok
+        manager = get_idle_manager()
+        assert manager is not None
+
+        set_runtime_config(
+            TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+            )
+        )
+        clear_runtime_connections()
+
+        bridge_connection = ConnectionContext(
+            connection_id="bridge_abc",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+        add_runtime_connection(bridge_connection)
+        increment_result = await manager.increment()
+        assert increment_result.is_ok
+
+        result = await handle_initialize(
+            {"name": "probe", "tela_bridge_connection_id": "bridge_abc"}
+        )
+
+        assert result.is_ok
+        assert result.value == bridge_connection
+        assert manager.connection_count == 1
+
+    asyncio.run(_scenario())
 
 
 def test_handle_initialize_rejects_open_mode_without_resolved_profile() -> None:
@@ -252,10 +310,12 @@ def test_handle_initialize_rejects_open_mode_without_resolved_profile() -> None:
     from tela.shell.gateway import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_initialize
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile=None,
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile=None,
+        )
+    )
     clear_runtime_connections()
 
     result = asyncio.run(handle_initialize({}))
@@ -319,14 +379,16 @@ def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
     from tela.shell.gateway import set_runtime_config
     from tela.shell.upstream import handle_profiles_list
 
-    set_runtime_config(TelaConfig(
-        profiles={
-            "dev": ProfileConfig(
-                name="dev", capabilities={"filesystem": Posture.READ_ONLY}
-            )
-        },
-        auth=AuthConfig(mode=AuthMode.OPEN),
-    ))
+    set_runtime_config(
+        TelaConfig(
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev", capabilities={"filesystem": Posture.READ_ONLY}
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+        )
+    )
 
     result = handle_profiles_list()
 
@@ -357,7 +419,11 @@ def test_notify_tools_changed_sends_via_captured_session() -> None:
     """notify_tools_changed calls send_tool_list_changed on a captured session."""
     import asyncio
     from tela.core.models import ConnectionContext
-    from tela.shell.upstream import capture_session, notify_tools_changed, release_session
+    from tela.shell.upstream import (
+        capture_session,
+        notify_tools_changed,
+        release_session,
+    )
 
     sent: list[bool] = []
 
@@ -366,7 +432,9 @@ def test_notify_tools_changed_sends_via_captured_session() -> None:
             sent.append(True)
 
     conn = ConnectionContext(
-        connection_id="c_with_session", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="c_with_session",
+        profile_name="dev",
+        connected_at="2026-01-01T00:00:00Z",
     )
     capture_session("c_with_session", StubSession())
     try:
@@ -381,7 +449,11 @@ def test_notify_tools_changed_handles_session_send_failure() -> None:
     """notify_tools_changed returns error when session.send_tool_list_changed raises."""
     import asyncio
     from tela.core.models import ConnectionContext
-    from tela.shell.upstream import capture_session, notify_tools_changed, release_session
+    from tela.shell.upstream import (
+        capture_session,
+        notify_tools_changed,
+        release_session,
+    )
 
     class FailingSession:
         async def send_tool_list_changed(self) -> None:
@@ -404,7 +476,11 @@ def test_notify_tools_changed_handles_session_send_failure() -> None:
 
 def test_capture_session_and_retrieve() -> None:
     """capture_session stores a session retrievable via get_captured_session."""
-    from tela.shell.upstream import capture_session, get_captured_session, release_session
+    from tela.shell.upstream import (
+        capture_session,
+        get_captured_session,
+        release_session,
+    )
 
     class FakeSession:
         async def send_tool_list_changed(self) -> None: ...
@@ -451,7 +527,11 @@ def test_get_captured_session_missing() -> None:
 
 def test_release_session_cleans_up() -> None:
     """After release_session, get_captured_session returns error."""
-    from tela.shell.upstream import capture_session, get_captured_session, release_session
+    from tela.shell.upstream import (
+        capture_session,
+        get_captured_session,
+        release_session,
+    )
 
     class FakeSession:
         async def send_tool_list_changed(self) -> None: ...
@@ -472,7 +552,11 @@ def test_upstream_session_protocol_conformance() -> None:
 
 def test_capture_session_preserves_first_binding() -> None:
     """Capturing a different session for same connection_id preserves first binding."""
-    from tela.shell.upstream import capture_session, get_captured_session, release_session
+    from tela.shell.upstream import (
+        capture_session,
+        get_captured_session,
+        release_session,
+    )
 
     class SessionA:
         async def send_tool_list_changed(self) -> None: ...
@@ -830,15 +914,17 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
         ],
     )
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={
-            "dev": ProfileConfig(
-                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
-            )
-        },
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+                )
+            },
+        )
+    )
     clear_runtime_connections()
 
     import tela.shell.upstream
@@ -895,15 +981,17 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
         ],
     )
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={
-            "dev": ProfileConfig(
-                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
-            )
-        },
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+                )
+            },
+        )
+    )
     clear_runtime_connections()
 
     import tela.shell.upstream
@@ -958,15 +1046,17 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
         ],
     )
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={
-            "dev": ProfileConfig(
-                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
-            )
-        },
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+                )
+            },
+        )
+    )
     clear_runtime_connections()
 
     import tela.shell.upstream
@@ -1021,15 +1111,17 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
         ],
     )
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={
-            "dev": ProfileConfig(
-                name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
-            )
-        },
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+                )
+            },
+        )
+    )
     clear_runtime_connections()
 
     import tela.shell.upstream

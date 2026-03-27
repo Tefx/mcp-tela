@@ -10,6 +10,7 @@ import pytest
 
 from tela.cli import main
 from tela.commands import connect_cmd
+from tela.commands.connect_transport import inject_bridge_connection_id
 from tela.core.models import LockfileData
 from tela.shell.config_loader import Result
 
@@ -222,12 +223,14 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         *,
         mcp_url: str,
         bearer_token: str,
+        bridge_connection_id: str,
         should_stop: Callable[[], bool],
         stdin_buffer,
         stdout_buffer,
     ) -> Result[None, str]:
         _ = mcp_url
         _ = bearer_token
+        _ = bridge_connection_id
         _ = should_stop
         _ = stdin_buffer
         _ = stdout_buffer
@@ -246,6 +249,45 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         "http://127.0.0.1:8123/connect",
         "http://127.0.0.1:8123/disconnect",
     ]
+
+
+def test_inject_bridge_connection_id_enriches_initialize_client_info() -> None:
+    """Initialize payloads must carry the bridge connection identity."""
+
+    payload = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-03-26",
+                "capabilities": {},
+                "clientInfo": {"name": "probe", "version": "1.0"},
+            },
+        }
+    ).encode("utf-8")
+
+    result = inject_bridge_connection_id(
+        payload,
+        connection_id="bridge_abc",
+    )
+
+    message = json.loads(result)
+    assert message["params"]["clientInfo"]["tela_bridge_connection_id"] == "bridge_abc"
+    assert message["params"]["clientInfo"]["name"] == "probe"
+
+
+def test_inject_bridge_connection_id_leaves_non_initialize_unchanged() -> None:
+    """Non-initialize messages must pass through unchanged."""
+
+    payload = b'{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+
+    result = inject_bridge_connection_id(
+        payload,
+        connection_id="bridge_abc",
+    )
+
+    assert result == payload
 
 
 def test_read_framed_message_accepts_content_length_frames() -> None:
@@ -421,6 +463,7 @@ def test_forward_stdio_http_preserves_content_length_framing_for_tools_flow(
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
         bearer_token="token",
+        bridge_connection_id="bridge_test",
         should_stop=lambda: False,
         stdin_buffer=stdin_buffer,
         stdout_buffer=stdout_buffer,
@@ -477,6 +520,7 @@ def test_forward_stdio_http_preserves_newline_framing_for_tools_flow(
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
         bearer_token="token",
+        bridge_connection_id="bridge_test",
         should_stop=lambda: False,
         stdin_buffer=stdin_buffer,
         stdout_buffer=stdout_buffer,
@@ -503,7 +547,9 @@ def test_write_framed_message_returns_error_on_broken_pipe() -> None:
 
     stream = _BrokenStream()
     result = connect_cmd._write_framed_message(
-        stream, b'{"jsonrpc":"2.0"}', framed=False  # type: ignore[arg-type]  # test fake: not a real BinaryIO
+        stream,  # type: ignore[arg-type]  # test fake: not a real BinaryIO
+        b'{"jsonrpc":"2.0"}',
+        framed=False,
     )
 
     assert result.is_err
@@ -524,7 +570,9 @@ def test_write_framed_message_returns_error_on_os_error() -> None:
 
     stream = _ErrorStream()
     result = connect_cmd._write_framed_message(
-        stream, b'{"jsonrpc":"2.0"}', framed=True  # type: ignore[arg-type]  # test fake: not a real BinaryIO
+        stream,  # type: ignore[arg-type]  # test fake: not a real BinaryIO
+        b'{"jsonrpc":"2.0"}',
+        framed=True,
     )
 
     assert result.is_err
@@ -579,6 +627,7 @@ def test_forward_stdio_http_returns_error_on_write_failure(
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
         bearer_token="token",
+        bridge_connection_id="bridge_test",
         should_stop=lambda: False,
         stdin_buffer=stdin_buffer,
         stdout_buffer=_BrokenWriter(),  # type: ignore[arg-type]

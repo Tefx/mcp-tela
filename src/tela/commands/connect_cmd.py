@@ -27,6 +27,10 @@ from urllib import request as urllib_request
 import uuid
 
 from tela.core.models import LockfileData
+from tela.commands.connect_transport import (
+    extract_response_messages,
+    inject_bridge_connection_id,
+)
 from tela.shell.config_loader import Result
 from tela.shell.lockfile import delete_lockfile, read_lockfile
 
@@ -352,6 +356,7 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
         forward_result = _forward_stdio_http(
             mcp_url=f"{base_url}/mcp",
             bearer_token=bearer_token,
+            bridge_connection_id=connection_id,
             should_stop=stop_requested.is_set,
             stdin_buffer=sys.stdin.buffer,
             stdout_buffer=sys.stdout.buffer,
@@ -384,6 +389,7 @@ def _forward_stdio_http(
     *,
     mcp_url: str,
     bearer_token: str,
+    bridge_connection_id: str,
     should_stop: Callable[[], bool],
     stdin_buffer: BinaryIO,
     stdout_buffer: BinaryIO,
@@ -404,7 +410,10 @@ def _forward_stdio_http(
         framed_message = message_result.value
         if framed_message is None:
             return Result(value=None)
-        message = framed_message.payload
+        message = inject_bridge_connection_id(
+            framed_message.payload,
+            connection_id=bridge_connection_id,
+        )
 
         http_result = _post_mcp_message(
             mcp_url=mcp_url,
@@ -420,7 +429,7 @@ def _forward_stdio_http(
         if response_session_id is not None:
             session_id = response_session_id
 
-        response_messages_result = _extract_response_messages(
+        response_messages_result = extract_response_messages(
             content_type=content_type,
             response_body=response_body,
         )
@@ -512,7 +521,9 @@ def _write_framed_message(
             stream.write(payload.rstrip(b"\r\n") + b"\n")
         stream.flush()
     except BrokenPipeError:
-        return Result(error="BRIDGE_WRITE_FAILED: upstream client disconnected (BrokenPipe)")
+        return Result(
+            error="BRIDGE_WRITE_FAILED: upstream client disconnected (BrokenPipe)"
+        )
     except OSError as exc:
         return Result(error=f"BRIDGE_WRITE_FAILED: {exc}")
     return Result(value=None)
@@ -598,7 +609,9 @@ def _post_mcp_message(
             headers=headers,
         )
         try:
-            with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
+            with urllib_request.urlopen(
+                request, timeout=HTTP_TIMEOUT_SECONDS
+            ) as response:
                 content_type = response.headers.get("Content-Type", "")
                 resp_session_id = response.headers.get("mcp-session-id")
                 return Result(value=(content_type, response.read(), resp_session_id))
@@ -606,54 +619,14 @@ def _post_mcp_message(
             return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
         except urllib_error.URLError as exc:
             last_error = f"MCP_FORWARD_FAILED: {exc.reason}"
-            if not _is_transient_url_error(exc).value or attempt == HTTP_TRANSIENT_RETRIES:
+            if (
+                not _is_transient_url_error(exc).value
+                or attempt == HTTP_TRANSIENT_RETRIES
+            ):
                 return Result(error=last_error)
             time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
 
     return Result(error=last_error)
-
-
-# @shell_orchestration: response mapping stays in shell because it is transport framing glue.
-def _extract_response_messages(
-    *, content_type: str, response_body: bytes
-) -> Result[list[bytes], str]:
-    """Convert HTTP response body into one-or-more MCP stdio payloads."""
-
-    if response_body == b"":
-        return Result(value=[])
-
-    if "text/event-stream" in content_type.lower():
-        return _parse_sse_payloads(response_body)
-    return Result(value=[response_body])
-
-
-# @shell_complexity: parser handles event boundaries and data line accumulation.
-# @shell_orchestration: SSE parsing is coupled to HTTP transport framing behavior.
-def _parse_sse_payloads(raw_body: bytes) -> Result[list[bytes], str]:
-    """Parse SSE body into MCP JSON payload bytes."""
-
-    text = raw_body.decode("utf-8", errors="replace")
-    payloads: list[bytes] = []
-    current_data: list[str] = []
-    for line in text.splitlines():
-        stripped = line.strip()
-        if stripped == "":
-            if current_data:
-                payload = "\n".join(current_data)
-                if payload and payload != "[DONE]":
-                    payloads.append(payload.encode("utf-8"))
-                current_data.clear()
-            continue
-
-        if stripped.startswith("data:"):
-            current_data.append(stripped[5:].lstrip())
-
-    if current_data:
-        payload = "\n".join(current_data)
-        if payload and payload != "[DONE]":
-            payloads.append(payload.encode("utf-8"))
-
-    return Result(value=payloads)
 
 
 # @shell_complexity: HTTP POST with transient retry and backoff on connection errors.
@@ -687,7 +660,10 @@ def _post_json(
             return Result(error=f"HTTP_{exc.code}: {url}")
         except urllib_error.URLError as exc:
             last_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
-            if not _is_transient_url_error(exc).value or attempt == HTTP_TRANSIENT_RETRIES:
+            if (
+                not _is_transient_url_error(exc).value
+                or attempt == HTTP_TRANSIENT_RETRIES
+            ):
                 return Result(error=last_error)
             time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
 

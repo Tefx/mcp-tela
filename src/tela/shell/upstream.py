@@ -39,6 +39,7 @@ from tela.shell.downstream import (
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
     get_runtime_config,
+    get_runtime_connections_snapshot,
     get_runtime_secrets,
     increment_tool_calls,
     set_runtime_config,  # noqa: F401 — used in doctests
@@ -52,25 +53,13 @@ from tela.shell.upstream_utils import (
 
 logger = logging.getLogger(__name__)
 
+_BRIDGE_CONNECTION_ID_KEY = "tela_bridge_connection_id"
+
 
 # --- Session Capture Protocol ---
-
-
 @runtime_checkable
 class UpstreamSession(Protocol):
-    """Protocol for upstream MCP session objects that support tool-list notifications.
-
-    This protocol abstracts the ``ServerSession.send_tool_list_changed()`` method
-    so that ``notify_tools_changed`` can send real MCP notifications without
-    depending directly on the ``mcp`` package's concrete session type.
-
-    Implementors:
-        - ``mcp.server.session.ServerSession`` (production; satisfies this protocol)
-        - Test doubles for unit testing notification delivery
-
-    Gateway wiring captures the concrete session during handler registration
-    and stores it via ``capture_session``.
-    """
+    """Upstream MCP session that can receive tool-list-changed notifications."""
 
     async def send_tool_list_changed(self) -> None:
         """Send ``notifications/tools/list_changed`` to the upstream client."""
@@ -171,7 +160,9 @@ def get_captured_session(connection_id: str) -> Result[UpstreamSession, str]:
     with _session_registry_lock:
         session = _session_registry.get(connection_id)
     if session is None:
-        return Result(error=f"SESSION_NOT_FOUND: session for '{connection_id}' not found")
+        return Result(
+            error=f"SESSION_NOT_FOUND: session for '{connection_id}' not found"
+        )
     return Result(value=session)
 
 
@@ -347,13 +338,22 @@ async def handle_initialize(
     Args:
         client_info: MCP clientInfo dict.
 
-    Returns:
-        Result[ConnectionContext, str] once implemented.
+    Returns: Result[ConnectionContext, str] once implemented.
     """
 
     config = get_runtime_config().value
     if config is None:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+
+    bridge_connection_id = client_info.get(_BRIDGE_CONNECTION_ID_KEY)
+    if bridge_connection_id is not None:
+        connections_result = get_runtime_connections_snapshot()
+        if connections_result.is_err:
+            return Result(error=connections_result.error)
+        assert connections_result.value is not None
+        for existing in connections_result.value:
+            if existing.connection_id == str(bridge_connection_id):
+                return Result(value=existing)
 
     connection_id = f"conn_{uuid.uuid4().hex[:8]}"
     now_iso = datetime.now(timezone.utc).isoformat()

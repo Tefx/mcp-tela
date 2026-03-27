@@ -320,6 +320,26 @@ indefinitely:
 tela serve --config tela.yaml --port 8080 --idle-timeout 0
 ```
 
+### Config hot reload
+
+`tela serve` watches its loaded config file and hot-reloads changes without
+dropping upstream client connections.
+
+- polling-based watch on the running server's `config_path`
+- applies added/removed/changed downstream server definitions
+- re-enumerates tools and sends MCP `notifications/tools/list_changed` on success
+- rejects a reload that would introduce tool conflicts; the previous runtime
+  state stays in effect
+
+Operational notes:
+
+- if you started tela with `tela serve --config /path/to/tela.yaml`, edits to
+  that file are the ones that will be reloaded
+- if you use `tela connect` and it reuses an already-running shared gateway,
+  that gateway keeps watching the config file it was originally started with
+- changing a different local `tela.yaml` does not retarget an existing shared
+  gateway; restart with the desired `--config` if you need to change ownership
+
 ## Client connection patterns
 
 ### Pattern 1: local development (recommended)

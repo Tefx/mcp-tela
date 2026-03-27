@@ -84,7 +84,9 @@ def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
         del server_name
         del server_config
         del message_handler
-        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=fake_stack))  # type: ignore[arg-type]  # test fakes
+        return Result(
+            value=downstream._ClientHandle(session=FakeSession(), stack=fake_stack)
+        )  # type: ignore[arg-type]  # test fakes
 
     monkeypatch.setattr(
         downstream,
@@ -108,6 +110,143 @@ def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
     assert fake_stack.closed is True
     assert downstream._clients == {}
     assert downstream.get_all_tools().value == {}
+
+
+def test_connect_all_opens_downstreams_in_parallel(monkeypatch: Any) -> None:
+    """connect_all should overlap downstream startup instead of serializing it."""
+
+    class FakeSession:
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            del cursor
+            del params
+            return ListToolsResult(
+                tools=[Tool(name="shared_tool", inputSchema={})],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    inflight = 0
+    max_inflight = 0
+    lock = asyncio.Lock()
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        del server_config
+        del message_handler
+        nonlocal inflight, max_inflight
+
+        class _ServerSession(FakeSession):
+            async def list_tools(
+                self, cursor: str | None = None, *, params: Any = None
+            ) -> ListToolsResult:
+                del cursor
+                del params
+                return ListToolsResult(
+                    tools=[Tool(name=f"tool_{server_name}", inputSchema={})],
+                    nextCursor=None,
+                )
+
+        async with lock:
+            inflight += 1
+            max_inflight = max(max_inflight, inflight)
+        await asyncio.sleep(0.05)
+        async with lock:
+            inflight -= 1
+        return Result(
+            value=downstream._ClientHandle(session=_ServerSession(), stack=FakeStack())
+        )  # type: ignore[arg-type]  # test fakes
+
+    monkeypatch.setattr(
+        downstream,
+        "_open_client_for_server",
+        _fake_open_client_for_server,
+    )
+
+    servers = {
+        "a": ServerConfig(name="a", command="cmd-a"),
+        "b": ServerConfig(name="b", command="cmd-b"),
+        "c": ServerConfig(name="c", command="cmd-c"),
+    }
+
+    result = asyncio.run(downstream.connect_all(servers))
+    assert result.is_ok
+    assert max_inflight >= 2
+
+    cleanup = asyncio.run(downstream.disconnect_all())
+    assert cleanup.is_ok
+
+
+def test_connect_all_closes_successful_handles_when_parallel_peer_fails(
+    monkeypatch: Any,
+) -> None:
+    """Parallel startup failure must clean up handles opened by other servers."""
+
+    class FakeSession:
+        def __init__(self, *, fail: bool = False) -> None:
+            self.fail = fail
+
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            del cursor
+            del params
+            if self.fail:
+                raise RuntimeError("boom")
+            return ListToolsResult(
+                tools=[Tool(name="ok_tool", inputSchema={})],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        def __init__(self) -> None:
+            self.closed = False
+
+        async def aclose(self) -> None:
+            self.closed = True
+
+    stacks: dict[str, FakeStack] = {}
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        del server_config
+        del message_handler
+        stack = FakeStack()
+        stacks[server_name] = stack
+        return Result(
+            value=downstream._ClientHandle(
+                session=FakeSession(fail=(server_name == "bad")),
+                stack=stack,
+            )
+        )  # type: ignore[arg-type]  # test fakes
+
+    monkeypatch.setattr(
+        downstream,
+        "_open_client_for_server",
+        _fake_open_client_for_server,
+    )
+
+    servers = {
+        "good": ServerConfig(name="good", command="cmd-good"),
+        "bad": ServerConfig(name="bad", command="cmd-bad"),
+    }
+
+    result = asyncio.run(downstream.connect_all(servers))
+    assert result.is_err
+    assert "DOWNSTREAM_CONNECT_FAILED" in (result.error or "")
+    assert stacks["good"].closed is True
+    assert stacks["bad"].closed is True
+    assert downstream._clients == {}
 
 
 def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
@@ -140,9 +279,13 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
         assert server_name == "remote"
         assert server_config.url == "http://localhost:8765/sse"
         del message_handler
-        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))  # type: ignore[arg-type]  # test fakes
+        return Result(
+            value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack())
+        )  # type: ignore[arg-type]  # test fakes
 
-    monkeypatch.setattr(downstream, "_open_client_for_server", _fake_open_client_for_sse)
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_sse
+    )
 
     result = asyncio.run(
         downstream.connect_all(
@@ -252,7 +395,9 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
         del server_name
         del server_config
         del message_handler
-        return Result(value=downstream._ClientHandle(session=fake_session, stack=FakeStack()))  # type: ignore[arg-type]  # test fakes
+        return Result(
+            value=downstream._ClientHandle(session=fake_session, stack=FakeStack())
+        )  # type: ignore[arg-type]  # test fakes
 
     monkeypatch.setattr(
         downstream,
@@ -375,7 +520,9 @@ def test_message_handler_routes_reconnect_exception(monkeypatch: Any) -> None:
         del server_name
         del server_config
         del message_handler
-        return Result(value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack()))  # type: ignore[arg-type]  # test fakes
+        return Result(
+            value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack())
+        )  # type: ignore[arg-type]  # test fakes
 
     async def _fake_on_server_reconnect(
         server_name: str,

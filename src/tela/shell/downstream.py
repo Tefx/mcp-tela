@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from dataclasses import dataclass
 
 from mcp import types as mcp_types
 from mcp.client.session import MessageHandlerFnT
@@ -32,6 +33,16 @@ _registry_lock = asyncio.Lock()
 
 _clients: dict[str, _ClientHandle] = {}
 _server_instructions: dict[str, str] = {}
+
+
+@dataclass(frozen=True)
+class _ConnectedServerData:
+    """Temporary successful downstream startup result before registry publish."""
+
+    server_name: str
+    raw_tools: list[dict]
+    client_handle: _ClientHandle | None = None
+    instructions: str | None = None
 
 
 def _validate_transport_mode(
@@ -86,6 +97,56 @@ async def _enumerate_client_tools(
         )
     assert tools_result.value is not None
     return Result(value=tools_result.value)
+
+
+# @shell_orchestration: temporary handle cleanup closes transport stacks before registry publish.
+async def _close_client_handles(handles: list[_ClientHandle]) -> None:
+    """Close temporary client handles best-effort before registry publish."""
+
+    for handle in handles:
+        try:
+            await handle.stack.aclose()
+        except Exception:
+            continue
+
+
+async def _connect_server(
+    server_name: str,
+    server_config: ServerConfig,
+) -> Result[_ConnectedServerData, str]:
+    """Open one downstream client and enumerate its tools."""
+
+    open_result = await _open_client_for_server(
+        server_name,
+        server_config,
+        message_handler=_build_downstream_message_handler(server_name, server_config),
+    )
+    if open_result.is_err:
+        return Result(error=open_result.error)
+    assert open_result.value is not None
+    client_handle = open_result.value
+
+    tools_result = await _enumerate_tools(client_handle.session)
+    if tools_result.is_err:
+        try:
+            await client_handle.stack.aclose()
+        except Exception:
+            pass
+        return Result(
+            error=(
+                "DOWNSTREAM_CONNECT_FAILED: "
+                f"server '{server_name}' connection/enumeration failed: {tools_result.error}"
+            )
+        )
+    assert tools_result.value is not None
+    return Result(
+        value=_ConnectedServerData(
+            server_name=server_name,
+            raw_tools=tools_result.value,
+            client_handle=client_handle,
+            instructions=client_handle.instructions,
+        )
+    )
 
 
 async def _handle_tools_list_changed(
@@ -250,6 +311,7 @@ async def connect_all(
         _server_instructions.clear()
 
         all_resolved: dict[str, list[ResolvedTool]] = {}
+        connected: dict[str, _ConnectedServerData] = {}
 
         for server_name, server_config in servers.items():
             validation_result = _validate_transport_mode(server_name, server_config)
@@ -258,40 +320,38 @@ async def connect_all(
                 _registry.clear()
                 return Result(error=validation_result.error)
 
-            if tool_lists is not None:
-                raw_tools = tool_lists.get(server_name, [])
-            else:
-                open_result = await _open_client_for_server(
-                    server_name,
-                    server_config,
-                    message_handler=_build_downstream_message_handler(
-                        server_name,
-                        server_config,
-                    ),
+        if tool_lists is not None:
+            for server_name in servers:
+                connected[server_name] = _ConnectedServerData(
+                    server_name=server_name,
+                    raw_tools=tool_lists.get(server_name, []),
                 )
-                if open_result.is_err:
-                    await _close_all_clients_locked()
+        else:
+            startup_results = await asyncio.gather(
+                *[
+                    _connect_server(server_name, server_config)
+                    for server_name, server_config in servers.items()
+                ]
+            )
+            temporary_handles: list[_ClientHandle] = []
+            for startup_result in startup_results:
+                if startup_result.is_err:
+                    await _close_client_handles(temporary_handles)
                     _registry.clear()
-                    return Result(error=open_result.error)
-                assert open_result.value is not None
-                client_handle = open_result.value
-                _clients[server_name] = client_handle
-                if client_handle.instructions:
-                    _server_instructions[server_name] = client_handle.instructions
-                tools_result = await _enumerate_tools(client_handle.session)
-                if tools_result.is_err:
-                    await _close_all_clients_locked()
-                    _registry.clear()
-                    return Result(
-                        error=(
-                            "DOWNSTREAM_CONNECT_FAILED: "
-                            f"server '{server_name}' connection/enumeration failed: {tools_result.error}"
-                        )
-                    )
-                assert tools_result.value is not None
-                raw_tools = tools_result.value
+                    return Result(error=startup_result.error)
+                assert startup_result.value is not None
+                startup = startup_result.value
+                connected[startup.server_name] = startup
+                if startup.client_handle is not None:
+                    temporary_handles.append(startup.client_handle)
 
-            resolved = resolve_tools(server_name, server_config, raw_tools)
+        for server_name, server_config in servers.items():
+            startup = connected[server_name]
+            if startup.client_handle is not None:
+                _clients[server_name] = startup.client_handle
+            if startup.instructions:
+                _server_instructions[server_name] = startup.instructions
+            resolved = resolve_tools(server_name, server_config, startup.raw_tools)
             all_resolved[server_name] = resolved
             _registry.register(server_name, resolved)
 
