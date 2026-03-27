@@ -37712,3 +37712,10 @@ phases:
     handling, routing, and reload behavior before implementation.
   depends_on:
   - tool_prefix.contract
+- id: tool_prefix.runtime
+  name: Tool Prefix Runtime Wiring
+  status: locked
+  gate: Implement core naming semantics, shell registry/routing, reload propagation,
+    and phase-level verification for the tool-prefix feature.
+  depends_on:
+  - tool_prefix.test
