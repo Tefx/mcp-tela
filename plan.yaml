@@ -38643,3 +38643,83 @@ phases:
     depends_on:
     - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
     agent: python-executor
+  - id: conn_v2.preflight_reconnect.seam_proof
+    name: Verify reconnect event causes only one enumeration
+    status: pending
+    description: 'step_type: verification
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate reconnect correctness
+      from event entry through the reload/update path.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: one reconnect event with fresh raw_tools causes one enumeration
+      only
+
+      - Edge cases: reconnect preserves registry and status consistency after update
+
+      - Error scenarios: duplicate-enumeration regression would fail loudly
+
+
+      Document all findings. A test that discovers issues is a success.
+
+
+      Independence Level: L1
+
+      Verification scope declaration: local-check protecting conn_v2.convergence and
+      conn_v2.lifecycle gates.'
+    verification: '- Independent evidence shows one reconnect event triggers one enumeration
+      only
+
+      - Registry and status still converge correctly after reconnect
+
+      - Evidence includes exact test or probe path and actual observed call count/output'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier
+
+      **Scope**: reconnect event through reload/update path
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```
+
+      <exact command>
+
+      ```
+
+      - Output summary:
+
+      ```
+
+      <paste actual output>
+
+      ```
+
+
+      ### Call-count evidence
+
+      ```
+
+      <paste observed enumeration call count>
+
+      ```
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE'
+    depends_on:
+    - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
+    agent: integration-verifier
