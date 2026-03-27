@@ -36342,6 +36342,59 @@ phases:
 
       - Tests prove lockfile discovery does not substitute for readiness'
     agent: python-executor
+  - id: conn_v2.test.coldstart_concurrency_tests
+    name: Add OpenCode-like cold-start and concurrent attach regressions
+    status: pending
+    description: "step_type: test\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/USAGE.md#Running\
+      \ tela > tela connect\n  - docs/INTERFACES.md#2. CLI Surface\n  - architecture\
+      \ basis runtime_contract connect SHOULD discover/autostart, wait for acceptable\
+      \ phase, then attach\ntouch_paths:\n  - tests/shell/test_connect_cmd.py\n  -\
+      \ tests/repro/test_connect_runtime_liveness.py\n  - tests/integration/test_end_to_end.py\n\
+      \  - tests/integration/test_open_mode.py\nharness_refs:\n  - tests/shell/test_connect_cmd.py\n\
+      \  - tests/repro/test_connect_runtime_liveness.py\n  - tests/integration/test_end_to_end.py\n\
+      Tasks:\n  - Add regressions for cold start with 7 downstream servers where endpoint\
+      \ becomes discoverable before convergence completes.\n  - Add concurrent attach/autostart\
+      \ tests proving multiple connect invocations for the same config converge on\
+      \ one gateway leader and follower wait path.\n  - Add attach-to-existing-gateway\
+      \ tests that exercise config_path ownership / mismatch diagnostics.\n  - Keep\
+      \ step test-only; use minimal helpers/fixtures only.\nIntegration steps detected:\
+      \ 1\n  - conn_v2.test.coldstart_concurrency_tests: connect/autostart source\
+      \ -> gateway status and attach sink (signal: source-sink + multi-module)"
+    verification: '- Tests include one OpenCode-like cold-start scenario and one concurrent
+      attach scenario
+
+      - Evidence names the exact test modules for leader/follower autostart and config
+      mismatch behavior
+
+      - No product implementation lands in this step'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/repro/test_connect_runtime_liveness.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste test runner output>
+
+      ```
+
+
+      **Path exercised**: tela connect discovery/autostart -> gateway startup/lifecycle
+      -> attach follower/leader outcome'
+    depends_on:
+    - conn_v2.test.state_contract_tests
+    agent: python-executor
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
   status: locked
