@@ -38250,6 +38250,24 @@ phases:
     final review.
   depends_on:
   - tool_prefix.runtime
+  steps:
+  - id: tool_prefix.doc_sync.update_docs
+    name: Update docs for tool-prefix configuration and behavior
+    status: pending
+    description: "step_type: review\nagent_source: default\nspec_refs:\n  - user authoritative\
+      \ input: feature goal and examples\n  - docs/USAGE.md#servers\n  - docs/INTERFACES.md#3\
+      \ Configuration Contract\ntouch_paths:\n  - docs/USAGE.md\n  - docs/INTERFACES.md\n\
+      \  - tela.yaml.example\n\nSync documentation with the implemented tool_prefix\
+      \ behavior.\n\nRequired updates:\n- configuration examples showing two servers\
+      \ with distinct prefixes\n- statement that tool_overrides keep matching raw\
+      \ downstream names\n- statement that final exposed names are the conflict key\n\
+      - statement that tela. is reserved and rejected as a tool_prefix\n- backward-compatible\
+      \ behavior when tool_prefix is omitted"
+    verification: '- Operator docs and contract docs describe the same semantics.
+
+      - At least one example shows two same-raw-name downstream tools exposed with
+      different prefixes.'
+    agent: doc-reviewer
 - id: tool_prefix.deep_review
   name: Tool Prefix Deep Review
   status: locked
