@@ -72,7 +72,6 @@ profiles:
     capabilities:
       filesystem: read_write
       git: read_only
-      tela_admin: read_only
     tool_overrides:
       filesystem:
         overrides:
@@ -165,19 +164,25 @@ Approval and runtime read-only behavior are owned by the runtime layer.
 The upstream MCP surface exposes:
 - filtered `tools/list`
 - authorized `tools/call`
-- introspection tools (`tela.status`, `tela.connections`, `tela.audit`, `tela.profiles`)
+- resource read: `tela.profiles`
 
-### 7.1 Introspection Tools
+### 7.1 MCP Resources
 
-| Tool | Family | Posture | Description |
-|------|--------|---------|-------------|
-| `tela.status` | `tela_admin` | `read_only` | Gateway runtime status |
-| `tela.connections` | `tela_admin` | `read_only` | Active upstream connections |
-| `tela.audit` | `tela_admin` | `read_only` | Audit log query |
-| `tela.profiles` | `tela_admin` | `read_only` | Profile configuration |
+| Resource | Name | Purpose |
+|----------|------|---------|
+| `tela://profiles` | `tela.profiles` | Profile configuration (read via MCP resource read) |
 
 The `tela.` prefix is reserved. Downstream tools with this prefix are rejected
 as conflicts.
+
+### 7.1a Built-in surfaces summary
+
+| Surface | Kind | Access method | Status |
+|---------|------|---------------|--------|
+| `tela.profiles` | MCP resource | `tela://profiles` (resource read) | Supported |
+| `tela.status` | CLI/HTTP | `tela status` or `GET /status` | Operator-only (not MCP built-in) |
+| `tela.connections` | CLI/HTTP | `tela connections` or via `/status` | Operator-only (not MCP built-in) |
+| `tela.audit` | CLI/HTTP | `tela audit` or via `/status` | Operator-only (not MCP built-in) |
 
 ### 7.2 HTTP Endpoints
 
@@ -294,7 +299,9 @@ automatically. Remote clients pass it via `--token` or `TELA_BEARER_TOKEN`.
 This bearer token is independent of config `auth.mode` (which controls
 MCP-level profile binding via CapabilityToken).
 
-### `tela.profiles`
+### `tela.profiles` Resource
+
+`access: read` via MCP resource read (not `tools/call`).
 
 Migration payload shape (backward-compatible window):
 
@@ -354,7 +361,27 @@ The gateway implements MCP `notifications/tools/list_changed` forwarding from do
 
 ### 7.4 Instructions Configuration
 
-The `instructions` field in `ServerConfig` controls how downstream server instructions are merged into the upstream server's instructions:
+The `instructions` field in `ServerConfig` controls how downstream server instructions are merged into the upstream server's instructions.
+
+**Merge semantics:**
+1. Tela top-level gateway instructions, when present, come first and remain the authoritative global rule set.
+2. After the gateway instructions, tela appends zero or more downstream server sections.
+3. Downstream sections are appended in configured server iteration order.
+4. For each downstream server:
+   - `instructions: false` → no section is appended for that server
+   - `instructions: <string>` → append a server section using the explicit override string
+   - `instructions: null` / omitted → append a server section using the downstream server's own advertised instructions, if any
+5. When a downstream section is appended and tools are known, an `Available tools:` list is appended inside that server's section.
+
+**Conflict handling:**
+- Downstream instructions are subordinate per-server appendices, not authority over the gateway's own top-level rules.
+- Downstream text may add server-specific guidance, affordances, or caveats.
+- Downstream text must not silently override, weaken, or reinterpret tela's top-level gateway instructions.
+- If downstream instructions conflict with gateway instructions, the gateway instructions win.
+- Conflicting downstream text must be handled explicitly by suppressing that server section, providing an explicit per-server override string, or revising the gateway contract in a future explicit spec change.
+- Silent override by downstream text is forbidden.
+
+**Configuration table:**
 
 | Value | Behavior |
 |-------|----------|
@@ -364,6 +391,8 @@ The `instructions` field in `ServerConfig` controls how downstream server instru
 
 **Merged output format:**
 ```markdown
+<tela gateway instructions here>
+
 ## ServerName
 
 <instructions or override>
