@@ -37971,6 +37971,31 @@ phases:
     depends_on:
     - tool_prefix.runtime.wire_registry_and_call_routing
     agent: python-executor
+  - id: tool_prefix.runtime.freeze_for_l2
+    name: Freeze tool-prefix runtime snapshot for L2 verification
+    status: pending
+    description: 'step_type: planning
+
+      agent_source: default
+
+      Verification scope: phase-check protecting runtime integration, reload notifications,
+      and gate review.
+
+      Freeze step required before L2 verification.
+
+      Record git rev-parse HEAD, clean git status, environment declaration, and the
+      statement that no code changes are allowed until the subsequent verify step
+      completes.'
+    verification: '- git rev-parse HEAD captured
+
+      - git status clean captured
+
+      - environment declaration captured
+
+      - no-change freeze statement recorded'
+    depends_on:
+    - tool_prefix.runtime.integrate_reload_prefix_updates
+    agent: software-architect
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
