@@ -37575,6 +37575,24 @@ phases:
     depends_on:
     - conn_v2.validation.runtime_regressions
     agent: integration-verifier
+  - id: conn_v2.validation.gate
+    name: Gate runtime validation phase
+    status: pending
+    description: "step_type: gate\nGate review: verify the integrated runtime refactor\
+      \ survives host-like scenarios and broad validation.\nreview_depth: THOROUGH\n\
+      review_depth_rationale:\n  - this is the last validation boundary before docs\
+      \ sync and final deep review\ncross_cutting_focus:\n  - OpenCode-like cold start\
+      \ behavior\n  - concurrent attach and interrupt correctness\n  - spec conformance\
+      \ for lockfile/status/connect semantics\n  - full-plan-check readiness"
+    verification: '- Runtime regressions, spec conformance, and full-plan-check are
+      complete
+
+      - Any blocker-class issue has explicit remediation ownership before proceeding'
+    depends_on:
+    - conn_v2.validation.runtime_regressions
+    - conn_v2.validation.spec_conformance
+    - conn_v2.validation.full_plan_check
+    agent: gate-reviewer
 - id: conn_v2.doc_sync
   name: Documentation Sync for Connect/Serve Runtime
   status: locked
