@@ -38723,3 +38723,57 @@ phases:
     depends_on:
     - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     agent: integration-verifier
+  - id: conn_v2.preflight_reconnect.gate
+    name: Gate reconnect enumeration correctness
+    status: pending
+    description: 'step_type: gate
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), assess whether reconnect enumeration
+      duplication is removed and evidence is sufficient before conn_v2 contract work
+      proceeds.
+
+
+      Review criteria:
+
+      1. Regression coverage proves duplicate enumeration would fail
+
+      2. Implementation reuses captured reconnect enumeration
+
+      3. Verification evidence is specific and independent
+
+      4. No unresolved blocker remains in the reload/downstream reconnect path'
+    verification: '- All phase steps completed
+
+      - Duplicate enumeration regression covered
+
+      - No unresolved blocker remains in reload/downstream reconnect path
+
+      - Ready for conn_v2 contract work'
+    evidence_template: '## Gate Review Report
+
+
+      **Phase**: conn_v2.preflight_reconnect
+
+      **Reviewer**: gate-reviewer
+
+
+      ### Required checks
+
+      - [ ] Regression test coverage is specific
+
+      - [ ] Duplicate enumeration removed
+
+      - [ ] Independent verification evidence reviewed
+
+      - [ ] No blocker remains
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED'
+    depends_on:
+    - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
+    - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
+    - conn_v2.preflight_reconnect.seam_proof
+    agent: gate-reviewer
