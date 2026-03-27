@@ -35119,7 +35119,7 @@ phases:
       \ future promotion consideration."
   - id: agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     name: Retest remediated surface taxonomy before gate
-    status: claimed
+    status: done
     description: Re-run focused review after the batched remediation to confirm the
       four blocker families are fully cleared and that the repo now presents one internally
       consistent taxonomy across docs, evidence, and implementation-backed claims.
@@ -35142,6 +35142,22 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-27T08:06:54.768903+00:00'
+    done_at: '2026-03-27T08:13:46.522795+00:00'
+    evidence: "Artifact:\n- Commit hash: none (verification-only step)\n\nVerification:\n\
+      - Blocker 1 (unsupported built-in MCP introspection claims): PASS\n  - Runtime\
+      \ registration confirms only `tela.profiles` as MCP resource; no built-in `tela.status`/`tela.connections`/`tela.audit`\
+      \ MCP tools.\n  - Contract/docs/tests consistently mark absent MCP built-ins.\n\
+      - Blocker 2 (`tela_admin` wording conflict): PASS\n  - Runtime source lacks\
+      \ `tela_admin`; docs now align with confirmed contract and generic family/posture\
+      \ wording.\n- Blocker 3 (`tela.profiles` boundary): PASS\n  - `tela.profiles`\
+      \ consistently treated as resource-read, not tool-call, in runtime/docs/tests.\n\
+      - Blocker 4 (instruction conflict semantics overclaim): PASS\n  - Runtime implements\
+      \ and tests gateway-first append/order semantics with per-server modes; docs\
+      \ no longer claim unimplemented resolver behavior.\n\nReadiness:\n- readiness_for_gate:\
+      \ YES\n- Source/docs/tests aligned on confirmed taxonomy with no identified\
+      \ remediation gaps.\n\nSpec link:\n- `docs/CONFIRMED-SURFACE-CONTRACT.md`\n\
+      - `evidence/surface_audit_actual_surface.md`\n- `evidence/taxonomy_decision.md`\n\
+      - `evidence/surface_taxonomy_verification.md`"
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
