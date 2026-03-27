@@ -38480,3 +38480,102 @@ phases:
   depends_on:
   - meta.review
   - agent_iface.final_review
+  steps:
+  - id: conn_v2.preflight_reconnect.test_no_duplicate_enumeration
+    name: Test reconnect path reuses captured enumeration
+    status: pending
+    description: 'step_type: test
+
+
+      Add focused regression tests for reconnect handling.
+
+
+      Acceptance:
+
+      - When downstream reconnect handling already has fresh raw_tools, the reload/reconnect
+      flow MUST reuse that payload.
+
+      - Reconnect flow MUST NOT trigger a second list_tools or re_enumerate call for
+      the same reconnect event.
+
+      - Registry and status behavior remain correct after reconnect.
+
+
+      Spec refs:
+
+      - docs/DESIGN.md Runtime Architecture / Connection lifecycle
+
+
+      Touch paths:
+
+      - tests/shell/test_reload.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/shell/test_gateway.py
+
+
+      Harness refs:
+
+      - tests/shell/test_reload.py
+
+      - tests/shell/test_downstream.py
+
+
+      Authoritative interface: NONE PINNED
+
+
+      Non-goals:
+
+      - No generic helper extraction
+
+      - No lifecycle or discovery redesign
+
+      - No transport opener refactor in this step
+
+
+      Verification scope declaration: local-check protecting conn_v2.convergence and
+      conn_v2.lifecycle gates.
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one reconnect fixture MUST use the exact reconnect payload shape already
+      exercised by current runtime-facing tests, without adding convenience fields
+      beyond the documented/runtime-observed payload.'
+    verification: '- Focused regression tests cover one reconnect event => one enumeration
+
+      - Failure-path regression proves duplicate re_enumerate/list_tools would be
+      detected
+
+      - Protects conn_v2.convergence and conn_v2.lifecycle gates'
+    evidence_template: '## Reconnect Enumeration Regression Evidence
+
+
+      **Tests added/updated**:
+
+      - <exact test names>
+
+
+      **Reconnect fixture source**:
+
+      - <spec/runtime source used>
+
+
+      **Observed enumeration count evidence**:
+
+      ```
+
+      <paste assertion or mock-call output>
+
+      ```
+
+
+      **Registry/status post-reconnect evidence**:
+
+      ```
+
+      <paste focused test output>
+
+      ```'
+    agent: python-executor
