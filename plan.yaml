@@ -37298,6 +37298,8 @@ phases:
       |---|---|---|---|---|
 
       | <section> | <requirement> | <file:line> | yes/no | <detail> |'
+    depends_on:
+    - conn_v2.validation.freeze_full
     agent: doc-reviewer
   - id: conn_v2.validation.runtime_regressions
     name: Validate OpenCode-like cold start, concurrent attach, and interrupt regressions
