@@ -38313,3 +38313,21 @@ phases:
       - No exposed-name-only path bypasses raw-name routing where downstream calls
       occur.'
     agent: wiring-auditor
+  - id: tool_prefix.deep_review.spec_conformance
+    name: Full spec conformance audit for tool-prefix feature
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: full-plan-check
+
+      Compare all implemented tool_prefix behavior against authoritative feature decisions
+      and updated configuration docs, field by field and rule by rule.'
+    verification: '- All authoritative decisions 1-6 plus user verification points
+      1-7 are covered in the report.
+
+      - Any drift is reported with exact spec and implementation references.'
+    depends_on:
+    - tool_prefix.deep_review.wiring_audit
+    agent: doc-reviewer
