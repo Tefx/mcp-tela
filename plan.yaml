@@ -32517,7 +32517,7 @@ phases:
       - notifications.gate_retest2'
 - id: post.doc_sync
   name: Documentation Sync
-  status: in_progress
+  status: done
   depends_on:
   - notifications
   steps:
@@ -32748,7 +32748,7 @@ phases:
       \ in the reviewed set\n\nRemaining stale claims:\n- none in touched docs"
   - id: post.doc_sync.retest
     name: Retest documentation sync after fixes
-    status: claimed
+    status: skipped
     description: 'Re-run post.doc_sync validation after post.doc_sync.fix_batch completes.
 
 
@@ -32780,6 +32780,7 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T00:15:39.604393+00:00'
+    skipped_reason: superseded
   - id: post.doc_sync.fix_batch2
     name: Second documentation sync remediation batch
     status: done
@@ -32932,7 +32933,7 @@ phases:
       - All previously reported doc-sync issues resolved'
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
-  status: locked
+  status: pending
   depends_on:
   - post.doc_sync
   steps:
