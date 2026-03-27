@@ -33571,3 +33571,46 @@ phases:
     depends_on:
     - post.deep_review.architecture_retest_runtime_boundary_policy_loop3
     agent: software-architect
+  - id: post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4
+    name: 'Loop 4 fix: close deprecated live-alias accessors per investigation decision'
+    status: pending
+    description: "Batched implementation fix for the repeated deprecated live-alias\
+      \ accessor blocker family, executing the authoritative handling chosen in post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4.\n\
+      \nstep_type: implementation\nverification_scope: phase-check\nProtects downstream\
+      \ gate: post.deep_review.gate\nagent_source: default\nprior_loop:\n  - post.deep_review.architecture_fix_runtime_boundary_policy_loop3\n\
+      blocker_family: deprecated-live-alias-accessors\nloop_count: 4\n\nRequired scope:\n\
+      - implement the investigation-approved handling for deprecated get_runtime()\n\
+      - implement the investigation-approved handling for deprecated get_upstream_server()\n\
+      - preserve explicit test/setup/bootstrap needs through an approved non-live\
+      \ path rather than a production live alias\n- close equivalent sibling deprecated/runtime\
+      \ helper escape paths identified by the investigation when they are part of\
+      \ the same blocker family\n\nNon-goals:\n- do not reintroduce a live runtime\
+      \ alias for compatibility convenience\n- do not leave production behavior dependent\
+      \ on deprecated accessors returning mutable runtime-owned objects"
+    verification: '- Deprecated get_runtime() no longer returns a live mutable runtime
+      alias in the implementation state chosen by the investigation
+
+      - Deprecated get_upstream_server() no longer returns a live runtime-owned FastMCP
+      alias in the implementation state chosen by the investigation
+
+      - Test/setup/bootstrap needs still function through an explicit approved path
+
+      - Any sibling blocker-family live-alias escape path identified by the investigation
+      is either removed or explicitly justified as out-of-scope'
+    evidence_template: '## Loop 4 Fix Evidence
+
+
+      - authoritative handling implemented: <summary>
+
+      - deprecated get_runtime disposition: <snapshot/raise/redirect/helper/etc>
+
+      - deprecated get_upstream_server disposition: <snapshot/raise/redirect/helper/etc>
+
+      - preserved test/setup path: <explicit non-live path>
+
+      - sibling escape paths addressed: <list>
+
+      - verification commands and results: <required>'
+    depends_on:
+    - post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4
+    agent: python-senior
