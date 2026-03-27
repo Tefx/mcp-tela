@@ -35070,7 +35070,7 @@ phases:
     agent: gate-reviewer
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
-    status: pending
+    status: claimed
     description: Apply one coordinated documentation/evidence remediation pass that
       resolves the failed gate findings without introducing a new unsupported product
       surface. The batched fix must, in one family of edits, remove or correct contradictory
@@ -35097,6 +35097,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.verify_surface_conformance
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-27T08:03:35.577513+00:00'
   - id: agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     name: Retest remediated surface taxonomy before gate
     status: pending
