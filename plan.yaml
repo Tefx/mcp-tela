@@ -36844,6 +36844,13 @@ phases:
   status: locked
   gate: Gateway startup reaches discoverable lifecycle without serial downstream blocking,
     while convergence/re-enumeration state remains visible and consistent.
+  context: 'This phase implements background downstream convergence on top of the
+    preflight reconnect seam and the lifecycle split. Reload/reconnect are event-entry
+    adapters; the convergence core should focus on single-server resolve/register/conflict/rollback
+    behavior and consume captured enumeration when available. Status surfaces expose
+    already-converged results rather than re-deriving them. Explicit exclusions: folding
+    connect_all into the single-server kernel, moving notify/audit policy into the
+    kernel, and unrelated helper extractions.'
   depends_on:
   - conn_v2.lifecycle
   steps:
