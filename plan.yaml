@@ -35487,7 +35487,7 @@ phases:
   - id: agent_iface.surface_taxonomy.retest_operator_surface_loop3
     name: Retest final scoped remediation for operator-surface summaries and artifact-backed
       assertions
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (blind-tester), re-check the final scoped remediation
@@ -35534,6 +35534,15 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-27T09:12:18.949734+00:00'
+    done_at: '2026-03-27T09:14:57.618496+00:00'
+    evidence: "Verification:\n- operator_summary_completeness: PASS\n  - Operator-surface\
+      \ lists include `tela profiles` in phase-owned summaries/docs/runtime outputs.\n\
+      - design_wording_boundary: PASS\n  - `docs/DESIGN.md` now states `tela.profiles`\
+      \ as MCP resource and operator surfaces as CLI/HTTP, not built-in MCP tools.\n\
+      - regression_assertion_substance: PASS\n  - Targeted tests assert against parsed\
+      \ docs/runtime outputs/artifacts, not self-referential constants.\n- readiness_for_gate:\
+      \ PASS\n  - `uv run pytest tests/shell/test_surface_contract.py tests/repro/test_gate_blocker_regressions.py`\
+      \ => `44 passed, 0 failed`.\n"
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
