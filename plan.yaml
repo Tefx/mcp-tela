@@ -36998,6 +36998,11 @@ phases:
   status: locked
   gate: tela connect attach/detach loop, signal handling, and hard-interrupt shutdown
     are controlled by one bridge module and validated against concurrent attach behavior.
+  context: Bridge work remains focused on attach/detach control, signal handling,
+    and hard-interrupt behavior. This phase must stay decoupled from shell convergence
+    refactors and command-layer HTTP/helper cleanup. Bridge should consume stable
+    lifecycle/convergence interfaces rather than pulling their internals into bridge
+    control.
   depends_on:
   - conn_v2.convergence
   steps:
