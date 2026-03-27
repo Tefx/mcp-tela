@@ -37302,6 +37302,28 @@ phases:
     points with end-to-end behavioral proof, not just unit-level correctness.
   depends_on:
   - conn_v2.ux
+  steps:
+  - id: conn_v2.system_wiring.entrypoint_integration
+    name: Wire connect, serve, status, and reload entrypoints to the new runtime modules
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.2.1\
+      \ GET /status Response Schema\n  - docs/USAGE.md#Running tela > tela connect\n\
+      \  - docs/USAGE.md#Running tela > tela serve\ntouch_paths:\n  - src/tela/cli.py\n\
+      \  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
+      \  - src/tela/commands/status_cmd.py\n  - src/tela/shell/gateway.py\n  - src/tela/shell/http_routes.py\n\
+      harness_refs:\n  - tests/shell/test_cli_wiring.py\n  - tests/integration/test_end_to_end.py\n\
+      \  - tests/integration/test_hot_reload.py\nTasks:\n  - Replace remaining inline\
+      \ runtime coordination in entrypoints with the dedicated startup, lifecycle,\
+      \ convergence, and bridge modules.\n  - Verify no user-facing path terminates\
+      \ at legacy ad hoc coordination logic when the new modules are available.\n\
+      \  - Keep this as the serial integration step for shared entrypoint files."
+    verification: '- Entry points route through the new modules end-to-end
+
+      - No shared entrypoint still owns duplicated lifecycle or startup logic
+
+      - Runnable surfaces remain connect, serve, status, and HTTP'
+    agent: python-senior
 - id: conn_v2.validation
   name: Runtime Validation and Full-Plan Check
   status: locked
