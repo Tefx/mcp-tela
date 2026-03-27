@@ -33489,7 +33489,7 @@ phases:
   - id: post.deep_review.architecture_retest_runtime_boundary_policy_loop3
     name: 'Loop 3 retest: independent verification of unified runtime/upstream boundary
       policy'
-    status: claimed
+    status: pending
     description: "Independent loop 3 retest of the remaining runtime alias blocker\
       \ family after post.deep_review.architecture_fix_runtime_boundary_policy_loop3.\n\
       \nstep_type: verification\nverification_scope: phase-check\nProtects downstream\
@@ -33517,5 +33517,3 @@ phases:
     depends_on:
     - post.deep_review.architecture_fix_runtime_boundary_policy_loop3
     agent: software-architect
-    claimed_by: software-architect
-    claimed_at: '2026-03-27T02:03:30.006561+00:00'
