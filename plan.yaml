@@ -38510,3 +38510,16 @@ phases:
     depends_on:
     - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
     agent: python-executor
+  - id: conn_v2.preflight_reconnect.seam_proof
+    name: Prove reconnect seam before convergence refactor
+    status: pending
+    description: Produce seam-level evidence that a stable captured-enumeration boundary
+      now exists for later conn_v2.convergence work. Entry adapters may capture and
+      forward raw tools, while later convergence logic should not repeat discovery
+      enumeration for the same reconnect event.
+    verification: Evidence shows reconnect entry exposes a stable captured-enumeration
+      seam usable by later convergence work, and status/reporting consumers do not
+      need to trigger a second enumeration to reflect the reconnect result.
+    depends_on:
+    - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
+    agent: integration-verifier
