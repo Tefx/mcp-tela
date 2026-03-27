@@ -33698,7 +33698,7 @@ phases:
       live-alias blocker family for downstream gate protection.
   - id: post.deep_review.fix_invar_guard_gate_blockers
     name: 'Batched fix: resolve invar guard gateway blockers'
-    status: claimed
+    status: done
     description: 'Fix ALL blockers from the failed post.deep_review.gate review in
       one remediation pass.
 
@@ -33786,6 +33786,12 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T02:46:27.094393+00:00'
+    done_at: '2026-03-27T03:28:46.888011+00:00'
+    evidence: Batched remediation merged for gate-reported invar blockers. Fixed dead_export/wiring-orphan
+      root causes by restoring actual in-src wiring usage for gateway surfaces and
+      startup/audit references; corrected shell_result contract usage by migrating
+      callers to Result-unwrapping accessors from gateway_runtime. Verification reported
+      invar guard changed/all passing with zero errors.
   - id: post.deep_review.retest_invar_guard_gate_blockers
     name: 'Retest: verify invar guard gateway blockers and regressions'
     status: pending
