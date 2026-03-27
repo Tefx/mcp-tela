@@ -33874,3 +33874,116 @@ phases:
       (`uv run invar guard src --all`) returned status=passed with errors=0, confirming
       prior dead_export/wiring-orphan and gateway shell_result blocker families are
       resolved and no new blocker-class regressions appeared.
+  - id: post.deep_review.fix_invar_guard_gate_blockers_loop2
+    name: 'Batched fix loop 2: resolve current-head invar guard and runtime migration
+      blockers'
+    status: pending
+    description: "Fix ALL blockers found on current head after post.deep_review.retest_invar_guard_gate_blockers.\n\
+      \nsymbolic_testing: true\nprior_loop:\n  - post.deep_review.fix_invar_guard_gate_blockers\n\
+      \  - post.deep_review.retest_invar_guard_gate_blockers\nremaining_blocker: current-head\
+      \ gate blockers spanning serve_cmd typing, runtime-boundary API migration, liveness\
+      \ repro failures, and dead export cleanup\nwhy_new_loop: the first batched remediation\
+      \ closed earlier guard findings but current-head verification still intersects\
+      \ the final deep-review gate through newly surfaced migration/runtime regressions\n\
+      why_previous_fix_failed: the prior loop did not fully reconcile runtime-boundary\
+      \ API migration fallout across typing surfaces, test imports, liveness repro\
+      \ coverage, and command export cleanup\n\nFix ALL of these, not just the first.\n\
+      \n## Root Cause vs Symptom\n- Root cause: runtime-boundary API migration left\
+      \ mixed authoritative interfaces across shell/runtime/tests, so type signatures,\
+      \ import sites, and liveness probes no longer agree on the supported serve/upstream\
+      \ surface\n- Symptom: mypy rejects Optional-to-str flow in serve_cmd, tests\
+      \ import removed get_upstream_server / expect pre-migration HTTP API, repro\
+      \ liveness tests fail after migration, and deprecated_start_command remains\
+      \ exported as dead surface\n- Why this fix is not surface-level: it must reconcile\
+      \ the authoritative boundary contract across implementation, test consumers,\
+      \ liveness proof, and public command exports rather than adding local shims\
+      \ without boundary cleanup\n- Command lock: use the exact project verification\
+      \ command family required by the retest step; do not substitute another guard\
+      \ wrapper\n- Fresh environment: retest must run from a fresh/cold environment\n\
+      - Symptom-only patches forbidden: do not add compatibility guards or alias exports\
+      \ unless the root-cause evidence explains why they are part of the authoritative\
+      \ runtime boundary\n\n### B1: serve_cmd mypy Optional[str] -> str mismatch\n\
+      Locations: src/tela/commands/serve_cmd.py\nRemediation: make the authoritative\
+      \ serve command path prove non-None before passing values that require str,\
+      \ or adjust the surrounding contract so the typed boundary matches the runtime\
+      \ invariant without weakening type safety\nGrep hint: rg -n \"Optional\\[str\\\
+      ]|str \\| None|None\" src/tela/commands/serve_cmd.py\nIMPORTANT: search sibling\
+      \ call paths in serve/runtime wiring beyond the flagged line\n\n### B2: runtime-boundary\
+      \ API migration breakages\nLocations: tests importing missing get_upstream_server,\
+      \ HTTP route tests expecting old API, runtime boundary helpers around upstream/http\
+      \ routes\nRemediation: update implementation/tests to one authoritative post-migration\
+      \ API surface; remove stale imports/usages of removed helpers and align route\
+      \ tests with the runtime boundary that now owns upstream server access\nGrep\
+      \ hint: rg -n \"get_upstream_server|http_routes|upstream server|deprecated live\
+      \ alias|old API\" src tests\nIMPORTANT: search sibling consumers beyond the\
+      \ initially failing tests\n\n### B3: repro liveness test failures after migration\n\
+      Locations: repro/liveness verification paths for migrated serve/runtime behavior\n\
+      Remediation: repair the migrated liveness path so the runnable surface starts,\
+      \ stays alive, and exercises at least one real operation through the current\
+      \ boundary contract\nGrep hint: rg -n \"liveness|repro|serve|upstream|runtime\
+      \ boundary\" tests src\nIMPORTANT: verify the same resolved fact is shared across\
+      \ CLI/runtime/test surfaces instead of re-derived independently\n\n### B4: dead\
+      \ export deprecated_start_command\nLocations: src/tela/commands/__init__.py\n\
+      Remediation: remove or replace the dead export consistently with the current\
+      \ command surface and audit sibling exports for additional deprecated dead surfaces\n\
+      Grep hint: rg -n \"deprecated_start_command|__all__|from \\.|import .*start\"\
+      \ src/tela/commands\nIMPORTANT: search for sibling dead exports and stale consumers\
+      \ before claiming done\n\n## Completion Criteria\n- ALL four blocker families\
+      \ fixed\n- Sibling search completed for each blocker family\n- No new instances\
+      \ of the blocker patterns remain in the searched command/test/runtime surfaces\n\
+      - Root-cause evidence explains boundary reconciliation, not just local patches\n\
+      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\nEach deliverable MUST contain substantive logic\
+      \ that processes its inputs and produces outputs that vary based on those inputs.\
+      \ Private stub classes (`_Runtime*`, `_Stub*`, `_Placeholder*`) do not satisfy\
+      \ this requirement."
+    verification: '- Exact command family recorded
+
+      - Evidence covers all four blocker families
+
+      - Why previous fix failed is explained
+
+      - Main path and highest-risk failure path both evidenced'
+    evidence_template: '## Loop 2 Batched Remediation Evidence
+
+
+      **Command family used**:
+
+      ```
+
+      <paste exact commands>
+
+      ```
+
+
+      **Root-cause reconciliation**:
+
+      - serve_cmd typing boundary: <what authoritative invariant now proves str>
+
+      - runtime API migration: <what old API usage was removed/aligned>
+
+      - liveness repro: <what runtime path now succeeds>
+
+      - dead export cleanup: <what deprecated export/stale consumer was removed>
+
+
+      **Sibling search evidence**:
+
+      ```
+
+      <paste grep/rg outputs for each blocker family>
+
+      ```
+
+
+      **Why previous fix failed**:
+
+      <required>
+
+
+      **Why this loop closes the remaining blocker family**:
+
+      <required>'
+    depends_on:
+    - post.deep_review.retest_invar_guard_gate_blockers
+    agent: python-senior
