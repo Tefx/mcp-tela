@@ -35548,6 +35548,105 @@ phases:
       \ docs/runtime outputs/artifacts, not self-referential constants.\n- readiness_for_gate:\
       \ PASS\n  - `uv run pytest tests/shell/test_surface_contract.py tests/repro/test_gate_blocker_regressions.py`\
       \ => `44 passed, 0 failed`.\n"
+  - id: agent_iface.surface_taxonomy.investigate_operator_surface_loop4
+    name: Investigate and fix root-cause operator-surface taxonomy drift (loop 4)
+    status: pending
+    description: "step_type: implementation\nInvestigation-style remediation for repeated\
+      \ operator-surface taxonomy blocker family after three consecutive failures.\n\
+      \nsymbolic_testing: false\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_operator_surface_loop3\n\
+      \  - agent_iface.surface_taxonomy.retest_operator_surface_loop3\nblocker_fingerprint:\
+      \ operator-surface taxonomy drift across AGENT_INTERFACE, INTERFACES, and surface-contract\
+      \ regression tests\nroot_cause_hypothesis: prior loops corrected local wording\
+      \ but did not lock one runtime-backed taxonomy source across operator docs and\
+      \ regression assertions, allowing dotted MCP-style labels to persist in operator-only\
+      \ rows and tests to assert stale markdown constants instead of real surface\
+      \ outputs\nwhy_previous_fix_failed: prior remediation remained artifact-local\
+      \ and assertion-local; it did not fully replace self-referential test expectations\
+      \ with runtime-backed taxonomy checks that would fail when dotted operator misuse\
+      \ reappears\nenvironment_consistency_check: phase-local artifact/test remediation\
+      \ only; no hot/cold workspace drift is expected to explain recurrence, so proof\
+      \ must come from docs/runtime/test alignment rather than environment notes\n\
+      next_fix_constraint: fix the shared taxonomy contract at the runtime-backed\
+      \ output/assertion seam and update all listed phase-owned docs/tests in one\
+      \ batched pass; do not ship another wording-only patch or another self-referential\
+      \ regression\n\nFix ALL blockers from the latest gate evidence in one batched\
+      \ remediation step:\n1. Correct docs/AGENT_INTERFACE.md operator-surface table\
+      \ so operator-only rows use operator naming (`tela profiles`, `tela status`,\
+      \ `tela connections`, `tela audit`) and clearly distinguish those rows from\
+      \ the MCP resource `tela.profiles`.\n2. Correct docs/INTERFACES.md operator\
+      \ summary so it includes `tela profiles` and uses the same operator naming consistently.\n\
+      3. Replace self-referential assertions in tests/shell/test_surface_contract.py\
+      \ with runtime-backed assertions that verify the confirmed taxonomy outputs\
+      \ rather than locking bad markdown/evidence rows.\n\n## Root Cause vs Symptom\n\
+      - Root cause: taxonomy expectations are split between docs text and stale test\
+      \ literals instead of being anchored to runtime-backed surface outputs\n- Symptom:\
+      \ dotted MCP-style operator labels and incomplete operator summaries reappear\
+      \ while tests still pass\n- Why this fix is not surface-level: acceptance requires\
+      \ changing the assertion basis so docs drift and dotted operator misuse fail\
+      \ immediately\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\nEach deliverable MUST contain\
+      \ substantive logic that processes its inputs and produces outputs that vary\
+      \ based on those inputs. Private stub classes (`_Runtime*`, `_Stub*`, `_Placeholder*`)\
+      \ do not satisfy this requirement.\n"
+    verification: '- Verification scope: local-check protecting agent_iface.surface_taxonomy.retest_operator_surface_loop4
+      and agent_iface.surface_taxonomy.gate
+
+      - Evidence must show both docs naming mismatches were fixed: AGENT_INTERFACE
+      operator rows use operator naming and distinguish MCP resource `tela.profiles`;
+      INTERFACES operator summary includes `tela profiles` and uses consistent operator
+      naming
+
+      - Evidence must show tests/shell/test_surface_contract.py no longer uses self-referential
+      markdown/evidence assertions and instead asserts against runtime-backed taxonomy
+      outputs
+
+      - Evidence must explain how the updated assertions would fail again if dotted
+      operator-only labels are reintroduced
+
+      - Evidence must stay phase-local to the listed docs/tests/runtime taxonomy surfaces
+      only'
+    evidence_template: '## Loop 4 Root-Cause Remediation Evidence
+
+
+      **Files updated**:
+
+      - docs/AGENT_INTERFACE.md
+
+      - docs/INTERFACES.md
+
+      - tests/shell/test_surface_contract.py
+
+
+      **Root cause closed**:
+
+      - <how runtime-backed taxonomy output now anchors docs/tests>
+
+
+      **Docs naming corrections**:
+
+      - AGENT_INTERFACE operator rows now use: tela profiles / tela status / tela
+      connections / tela audit
+
+      - INTERFACES operator summary now includes: tela profiles
+
+      - MCP resource distinction preserved: tela.profiles
+
+
+      **Assertion basis change**:
+
+      - <runtime output or fixture used by tests>
+
+      - <which self-referential assertions were removed>
+
+
+      **Regression proof**:
+
+      - <why reintroduced dotted operator misuse would fail>
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.retest_operator_surface_loop3
+    agent: python-senior
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
