@@ -34428,3 +34428,44 @@ phases:
 
       '
     agent: software-architect
+  - id: agent_iface.surface_taxonomy.decide_taxonomy
+    name: Decide intended product surface taxonomy
+    status: pending
+    description: 'Planning/spec decision step. Verification scope: phase-check protecting
+      agent_iface.surface_taxonomy.gate. Resolve the intended product taxonomy after
+      the audit and before contract, test, runtime, or doc work proceeds. Decision
+      output must choose one authoritative direction for each disputed surface: either
+      (A) status/connections/audit are intended built-in MCP tools/resources and must
+      be implemented/tested/documented as such, or (B) they are intentionally CLI
+      and/or HTTP operator surfaces and all agent-facing docs/instructions must stop
+      presenting them as MCP built-ins. This step must also settle the capability-language
+      question: do not reuse `tela_admin` unless it is verified or explicitly adopted
+      by spec. If the current authoritative docs do not answer these questions, record
+      a blocking spec question instead of guessing.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Produces one explicit taxonomy decision artifact covering surface kind, naming,
+      capability wording, and whether runtime work is required
+
+      - Any unresolved item is emitted as a blocking spec question rather than silently
+      deferred'
+    evidence_template: 'Taxonomy decision:
+
+      - `tela.profiles` kind:
+
+      - `tela.status` intended kind:
+
+      - `tela.connections` intended kind:
+
+      - `tela.audit` intended kind:
+
+      - Capability wording allowed in docs/runtime:
+
+      - Runtime work required? yes/no and why:
+
+      - Blocking spec question(s), if any:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.audit_actual_surface
+    agent: software-architect
