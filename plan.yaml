@@ -32718,7 +32718,7 @@ phases:
       \ in the reviewed set\n\nRemaining stale claims:\n- none in touched docs"
   - id: post.doc_sync.retest
     name: Retest documentation sync after fixes
-    status: pending
+    status: claimed
     description: 'Re-run post.doc_sync validation after post.doc_sync.fix_batch completes.
 
 
@@ -32748,6 +32748,8 @@ phases:
     depends_on:
     - post.doc_sync.fix_batch
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T00:12:58.637858+00:00'
   - id: post.doc_sync.fix_batch2
     name: Second documentation sync remediation batch
     status: pending
