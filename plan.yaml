@@ -36769,6 +36769,51 @@ phases:
     depends_on:
     - conn_v2.lifecycle.impl_module
     agent: python-executor
+  - id: conn_v2.lifecycle.vertical_slice
+    name: 'Early vertical slice: cold start to warming/ready status path'
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
+      \ wire one complete path early: tela connect --config ... -> discovery/autostart\
+      \ -> HTTP /status lifecycle snapshot -> attach wait policy.\nThis is the mandatory\
+      \ early vertical slice for a multi-phase runtime refactor.\nMUST NOT use stubs\
+      \ or mocks at the runtime boundary.\nFor frontend-style visual proof N/A; CLI/runtime\
+      \ proof required.\nTest for:\n  - one cold-start path reaches discoverable endpoint\n\
+      \  - /status reports warming then ready/degraded truth as convergence evolves\n\
+      \  - connect wait policy follows lifecycle phase, not lockfile presence\n  -\
+      \ observable output or harness trace shows the full layer path"
+    verification: '- Exact command or full-path harness is provided
+
+      - Evidence shows layers traversed: connect -> startup coordinator -> serve ->
+      /status -> attach policy
+
+      - Stubs used: NONE'
+    evidence_template: '## Vertical Slice Evidence
+
+      **Entry point**: tela connect --config <path>
+
+      **Command executed**:
+
+      ```
+
+      <paste exact command or integration test>
+
+      ```
+
+      **Layers traversed**: connect -> startup coordinator -> serve -> lifecycle status
+      -> /status -> attach policy
+
+      **Observable output**:
+
+      ```
+
+      <paste actual output>
+
+      ```
+
+      **Stubs used**: NONE'
+    depends_on:
+    - conn_v2.lifecycle.integrate_status_consumers
+    agent: integration-verifier
 - id: conn_v2.convergence
   name: Background Downstream Convergence
   status: locked
