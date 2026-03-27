@@ -154,6 +154,7 @@ See `tela.yaml.example` for the full commented reference.
 The following are operator-only surfaces, accessible via CLI commands or HTTP endpoints:
 
 - `tela status` — uptime, server count, connection count (CLI/HTTP)
+- `tela profiles` — configured profile listing (CLI/HTTP)
 - `tela connections` — active upstream connections (CLI/HTTP)
 - `tela audit` — query audit log (CLI/HTTP)
 
