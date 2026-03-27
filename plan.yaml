@@ -34718,3 +34718,53 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.sync_shared_docs
     agent: gate-reviewer
+  - id: agent_iface.surface_taxonomy.verify_surface_conformance
+    name: Verify MCP/CLI/HTTP surface conformance from a fresh perspective
+    status: pending
+    description: 'step_type: verification
+
+      As an INDEPENDENT TESTER (blind-tester), validate the externally visible taxonomy
+      from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
+
+      Black-box and white-box evidence must agree on what is actually exposed. Required
+      focus: `tela.profiles` is currently a resource read surface; status/connections/audit
+      must appear as MCP built-ins only if that was intentionally implemented by this
+      phase; docs and runtime instructions must not advertise unsupported MCP surfaces;
+      workflow guidance must distinguish resource reads from tool calls; and downstream
+      instruction merge wording must match observed ordering/conflict behavior.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Independent verification includes direct surface probes and explicitly states
+      whether each `tela.*` item is present as MCP tool, MCP resource, CLI command,
+      HTTP endpoint, or absent
+
+      - A successful review must prove either the new MCP surface exists or the docs/runtime
+      correctly avoid claiming it'
+    evidence_template: 'Independent verification:
+
+      - MCP tools observed:
+
+      - MCP resources observed:
+
+      - CLI surfaces observed:
+
+      - HTTP surfaces observed:
+
+      - Doc/runtime mismatches found:
+
+      - Instruction merge observations:
+
+      - Final pass/fail rationale:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.freeze_for_verification
+    agent: blind-tester
