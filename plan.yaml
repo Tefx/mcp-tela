@@ -36814,6 +36814,25 @@ phases:
     depends_on:
     - conn_v2.lifecycle.integrate_status_consumers
     agent: integration-verifier
+  - id: conn_v2.lifecycle.gate
+    name: Gate lifecycle status phase
+    status: pending
+    description: "step_type: gate\nGate review: verify discovery/readiness split and\
+      \ lifecycle status ownership are correct.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
+      \  - phase redefines status truth consumed by multiple runtime surfaces\ncross_cutting_focus:\n\
+      \  - lockfile != readiness\n  - acceptable-phase policy is implemented through\
+      \ status\n  - lifecycle fields remain authoritative and consistent across consumers"
+    verification: '- Lifecycle implementation and consumer integration are complete
+
+      - Early vertical slice proves one real path from connect through /status and
+      attach policy
+
+      - No consumer still infers readiness from lockfile alone'
+    depends_on:
+    - conn_v2.lifecycle.impl_module
+    - conn_v2.lifecycle.integrate_status_consumers
+    - conn_v2.lifecycle.vertical_slice
+    agent: gate-reviewer
 - id: conn_v2.convergence
   name: Background Downstream Convergence
   status: locked
