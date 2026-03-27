@@ -37043,6 +37043,56 @@ phases:
 
       - Proof: connect command delegates bridge lifecycle to the new module'
     agent: python-senior
+  - id: conn_v2.bridge.integrate_connect_flow
+    name: Integrate bridge control into tela connect and gateway session tracking
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/DESIGN.md#Runtime\
+      \ Architecture > Connection lifecycle\n  - docs/INTERFACES.md#7.2.1 GET /status\
+      \ Response Schema\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/connect_transport.py\n\
+      \  - src/tela/shell/gateway.py\n  - src/tela/shell/http_routes.py\nharness_refs:\n\
+      \  - tests/shell/test_connect_cmd.py\n  - tests/repro/test_disconnect_cleanup.py\n\
+      \  - tests/repro/test_connection_count_semantics.py\nIntegration path exercised:\
+      \ tela connect -> bridge control -> HTTP connect/disconnect -> gateway connection\
+      \ tracker\nOut-of-scope guardrail:\n  - no startup-coordinator changes\n  -\
+      \ no CLI diagnostics copy sweep beyond what integration requires\nTasks:\n \
+      \ - Wire tela connect to the bridge control module for wait, attach, forward,\
+      \ and disconnect paths.\n  - Ensure gateway session tracking and idle shutdown\
+      \ consume one authoritative connection-count path.\n  - Preserve stdio bridge\
+      \ runtime surface and actual HTTP attach/detach behavior."
+    verification: '- Integration proof exercises attach and detach against real HTTP
+      endpoints or equivalent full-path harness
+
+      - Connection counts increment and decrement exactly once per bridge session
+
+      - Hard interrupt path uses bridge control logic rather than inline connect cleanup'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/repro/test_connection_count_semantics.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste test runner output>
+
+      ```
+
+
+      **Path exercised**: tela connect -> bridge control -> HTTP connect/disconnect
+      -> gateway runtime'
+    depends_on:
+    - conn_v2.bridge.impl_module
+    agent: python-executor
 - id: conn_v2.ux
   name: Host-Facing UX and Diagnostics
   status: locked
