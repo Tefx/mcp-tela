@@ -37916,6 +37916,61 @@ phases:
     depends_on:
     - tool_prefix.runtime.implement_core_name_mapping
     agent: python-senior
+  - id: tool_prefix.runtime.integrate_reload_prefix_updates
+    name: Integrate reload handling for prefix-driven tool-surface changes
+    status: pending
+    description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
+      spec_refs:\n  - user authoritative input: architecture decisions 1, 3-6\n  -\
+      \ docs/INTERFACES.md#7 MCP Surface\n  - docs/USAGE.md#servers\ntouch_paths:\n\
+      \  - src/tela/shell/reload.py\n  - src/tela/shell/downstream.py\n  - src/tela/shell/gateway.py\n\
+      harness_refs:\n  - tests/shell/test_reload.py\n  - tests/shell/test_downstream.py\n\
+      \  - tests/repro/*reload*\nagent: python-executor\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\n\n## Known risks\n- reload regression: prefix changes must\
+      \ be treated as tool-surface changes, not silent metadata changes\n- notification\
+      \ drift: tools/list_changed must reflect the new exposed-name digest after accepted\
+      \ reloads\n\n## Gate Preview (what the gate WILL reject)\n1. Prefix changes\
+      \ that update config equality but do not force registry/tool digest refresh.\n\
+      2. tools/list_changed emission without actual exposed-name set change proof.\n\
+      3. Reload rollback that preserves stale exposed names after rejected conflicts.\n\
+      \nImplement reload and reconnect behavior so prefix changes re-enumerate exposed\
+      \ names, preserve rollback safety, and notify upstream when the exposed tool\
+      \ set actually changes."
+    verification: '- Main path: accepted reload with a new prefix updates the registry
+      and emits tools/list_changed.
+
+      - Failure path: rejected reload with colliding final exposed names rolls back
+      cleanly and preserves the previous registry surface.
+
+      - Proof: digest/notification logic keys off exposed names, not raw names alone.'
+    evidence_template: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <exact pytest selection or command>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: config change -> reload.on_config_changed/on_tools_changed
+      -> registry update or rollback -> notify_tools_changed
+
+      '
+    depends_on:
+    - tool_prefix.runtime.wire_registry_and_call_routing
+    agent: python-executor
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
