@@ -33078,7 +33078,7 @@ phases:
     claimed_at: '2026-03-27T00:40:48.285133+00:00'
   - id: post.deep_review.black_box
     name: Black-box verification
-    status: pending
+    status: claimed
     description: 'Using ONLY the spec and public API (no implementation source):
 
       - Verify tool metadata fields appear in tools/list response
@@ -33094,6 +33094,8 @@ phases:
     depends_on:
     - post.deep_review.spec_conformance
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-27T00:48:06.543426+00:00'
   - id: post.deep_review.gate
     name: Final deep review gate
     status: pending
