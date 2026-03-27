@@ -32628,7 +32628,7 @@ phases:
 
       - No stale references'
     depends_on:
-    - post.doc_sync.retest
+    - post.doc_sync.retest2
     agent: gate-reviewer
   - id: post.doc_sync.fix_batch
     name: Fix doc-sync gate blockers
