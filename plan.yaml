@@ -33794,7 +33794,7 @@ phases:
       invar guard changed/all passing with zero errors.
   - id: post.deep_review.retest_invar_guard_gate_blockers
     name: 'Retest: verify invar guard gateway blockers and regressions'
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), validate from a fresh
       perspective that the failed post.deep_review.gate blocker set is resolved.
 
@@ -33869,3 +33869,8 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T03:29:01.377248+00:00'
+    done_at: '2026-03-27T03:31:29.487977+00:00'
+    evidence: Independent fresh/cold retest passed. Exact project guard command family
+      (`uv run invar guard src --all`) returned status=passed with errors=0, confirming
+      prior dead_export/wiring-orphan and gateway shell_result blocker families are
+      resolved and no new blocker-class regressions appeared.
