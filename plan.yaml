@@ -36093,7 +36093,7 @@ phases:
       \ usage and avoids unsupported built-in inference."
   - id: agent_iface.final_review.gate
     name: Final gate for agent-interface surface consistency
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       Gate review: final independent decision on whether the new agent-interface plan
@@ -36134,3 +36134,5 @@ phases:
     - agent_iface.final_review.contract_strength
     - agent_iface.final_review.black_box
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T10:28:36.480457+00:00'
