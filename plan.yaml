@@ -37240,18 +37240,6 @@ phases:
     verification: '- Wiring report identifies any orphan exports, unreachable entrypoints,
       or write-only lifecycle fields'
     agent: wiring-auditor
-  - id: conn_v2.deep_review.spec_conformance
-    name: Full spec conformance audit for runtime surfaces
-    status: pending
-    description: 'step_type: verification
-
-      Compare ALL implemented connect/serve/status behavior against authoritative
-      specs: CLI surface, lockfile contract, status schema, and troubleshooting guidance.'
-    verification: '- Spec conformance report covers lockfile, /status, CLI behavior,
-      and diagnostics language'
-    depends_on:
-    - conn_v2.deep_review.wiring_audit
-    agent: doc-reviewer
   - id: conn_v2.deep_review.architecture_review
     name: Architecture and concurrency review for startup, lifecycle, convergence,
       and bridge modules
@@ -37662,3 +37650,13 @@ phases:
     verification: '- Black-box report includes documented fixtures, actual commands,
       and observed output'
     agent: blind-tester
+  - id: conn_v2.deep_review.spec_conformance
+    name: Full spec conformance audit for runtime surfaces
+    status: pending
+    description: 'step_type: verification
+
+      Compare ALL implemented connect/serve/status behavior against authoritative
+      specs: CLI surface, lockfile contract, status schema, and troubleshooting guidance.'
+    verification: '- Spec conformance report covers lockfile, /status, CLI behavior,
+      and diagnostics language'
+    agent: doc-reviewer
