@@ -34379,3 +34379,52 @@ phases:
     assertions are finalized.
   depends_on:
   - post.deep_review
+  steps:
+  - id: agent_iface.surface_taxonomy.audit_actual_surface
+    name: Audit actual MCP built-in surface vs CLI/HTTP surfaces
+    status: pending
+    description: 'Review-only authoritative surface audit. Verification scope: local-check
+      protecting agent_iface.surface_taxonomy.gate and all downstream taxonomy work.
+      Build a source-backed matrix for built-in MCP tools, MCP resources, CLI commands,
+      and HTTP endpoints before any new agent-facing assertions are accepted. Minimum
+      required evidence: `tela.profiles` is currently verified as an MCP resource
+      registered from `src/tela/shell/gateway.py`; `tela.status`, `tela.connections`,
+      and `tela.audit` must be treated as unverified-or-absent MCP surfaces unless
+      explicit tool/resource registration is found. Also verify whether `tela_admin`
+      exists anywhere as an actual capability string or whether capability control
+      remains family/posture-based. This step must not implement code; it only establishes
+      the factual surface inventory and instruction-merge facts that downstream steps
+      may rely on.'
+    verification: '- Verification scope: local-check protecting agent_iface.surface_taxonomy.gate
+      and downstream taxonomy/test/runtime/doc steps
+
+      - Evidence includes a concrete surface matrix with one row per `tela.*` surface,
+      naming whether each is currently exposed as MCP tool, MCP resource, CLI command,
+      HTTP endpoint, or not present
+
+      - Evidence explicitly states that `tela.profiles` is verified as a resource
+      today and that status/connections/audit MCP exposure remains unverified or absent
+      unless new proof is found
+
+      - Evidence also records whether `tela_admin` is real, absent, or superseded
+      by another capability taxonomy'
+    evidence_template: 'Surface audit evidence:
+
+      - MCP resources verified:
+
+      - MCP tools verified:
+
+      - CLI-only surfaces verified:
+
+      - HTTP-only/operator surfaces verified:
+
+      - Unverified/absent surfaces:
+
+      - Capability string audit (`tela_admin` or replacement):
+
+      - Source lines / commands used:
+
+      - Resulting risks / open questions:
+
+      '
+    agent: software-architect
