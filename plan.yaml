@@ -32933,13 +32933,13 @@ phases:
       - All previously reported doc-sync issues resolved'
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
-  status: pending
+  status: in_progress
   depends_on:
   - post.doc_sync
   steps:
   - id: post.deep_review.wiring
     name: Full wiring audit
-    status: pending
+    status: claimed
     description: 'Complete system wiring audit. Verify:
 
       - Every public export has a runtime caller
@@ -33002,6 +33002,8 @@ phases:
 
       **Verdict**: PASS | ISSUES_FOUND'
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-27T00:35:54.557574+00:00'
   - id: post.deep_review.spec_conformance
     name: Spec conformance audit
     status: pending
