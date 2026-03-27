@@ -34879,3 +34879,34 @@ phases:
     depends_on:
     - agent_iface.final_review.wiring
     agent: doc-reviewer
+  - id: agent_iface.final_review.architecture
+    name: Architecture review for runtime surface boundaries
+    status: pending
+    description: 'step_type: review
+
+      Verification scope: phase-check protecting agent_iface.final_review.gate.
+
+      Review whether the final runtime boundary remains coherent: MCP resources/tools,
+      CLI commands, HTTP endpoints, and instruction generation each stay in their
+      intended layer, and the phase did not silently reinterpret operator-only surfaces
+      as MCP surfaces or vice versa. Also confirm that any new built-in MCP surfaces,
+      if added, preserve the existing gateway/runtime boundary rather than bypassing
+      it.'
+    verification: '- Verification scope: phase-check protecting agent_iface.final_review.gate
+
+      - Evidence explains whether runtime surface ownership and boundary direction
+      remain coherent after the taxonomy alignment'
+    evidence_template: 'Architecture review:
+
+      - Runtime boundaries reviewed:
+
+      - Surface ownership map:
+
+      - Any boundary drift found:
+
+      - Verdict:
+
+      '
+    depends_on:
+    - agent_iface.final_review.wiring
+    agent: software-architect
