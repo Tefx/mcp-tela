@@ -37719,3 +37719,10 @@ phases:
     and phase-level verification for the tool-prefix feature.
   depends_on:
   - tool_prefix.test
+- id: tool_prefix.doc_sync
+  name: Tool Prefix Documentation Sync
+  status: locked
+  gate: Sync operator and contract docs with implemented tool-prefix behavior before
+    final review.
+  depends_on:
+  - tool_prefix.runtime
