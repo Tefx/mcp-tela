@@ -33045,7 +33045,7 @@ phases:
       passing and no spec-code drift detected.'
   - id: post.deep_review.architecture
     name: Architecture and concurrency review
-    status: pending
+    status: claimed
     description: 'Review module boundaries, dependency direction, and concurrency
       safety as an audit-disposition step.
 
@@ -33096,6 +33096,8 @@ phases:
     depends_on:
     - post.deep_review.wiring
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T00:54:00.597945+00:00'
   - id: post.deep_review.black_box
     name: Black-box verification
     status: done
