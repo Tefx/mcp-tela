@@ -34981,3 +34981,46 @@ phases:
     depends_on:
     - agent_iface.final_review.spec_conformance
     agent: blind-tester
+  - id: agent_iface.final_review.gate
+    name: Final gate for agent-interface surface consistency
+    status: pending
+    description: 'step_type: gate
+
+      Gate review: final independent decision on whether the new agent-interface plan
+      closes the factual/documentation/runtime gap.
+
+
+      Block if any of the following remain true:
+
+      - `tela.profiles` is not treated consistently as a resource read surface (unless
+      the contract intentionally changed it and verification proved the new surface)
+
+      - `tela.status`, `tela.connections`, or `tela.audit` are still described as
+      MCP built-ins without proof
+
+      - capability wording still relies on unverified `tela_admin`
+
+      - docs and runtime still disagree about downstream instruction merge ordering/conflicts'
+    verification: '- Verification scope: final plan gate
+
+      - All final-review findings are either resolved or turned into explicit follow-up
+      work with justified non-intersection'
+    evidence_template: 'Final review gate:
+
+      - Surface taxonomy consistency:
+
+      - Runtime/doc consistency:
+
+      - Capability wording consistency:
+
+      - Instruction merge consistency:
+
+      - Final decision:
+
+      '
+    depends_on:
+    - agent_iface.final_review.spec_conformance
+    - agent_iface.final_review.architecture
+    - agent_iface.final_review.contract_strength
+    - agent_iface.final_review.black_box
+    agent: gate-reviewer
