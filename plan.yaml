@@ -35285,6 +35285,44 @@ phases:
       \ corrected docs/runtime claims; stale/contradictory `tela_admin` and doc-drift\
       \ claims reconciled.\n- readiness_for_gate: YES\n  - Sub-blockers cleared with\
       \ implementation-backed and test-backed evidence."
+  - id: agent_iface.surface_taxonomy.remediate_tela_yaml_example_taxonomy_wording
+    name: Scope-fix tela.yaml.example taxonomy wording
+    status: pending
+    description: 'step_type: implementation
+
+      Scoped remediation: update `tela.yaml.example` so its `tela_admin` intro-surface
+      wording matches the confirmed agent-interface taxonomy contract and no longer
+      contradicts the phase decision.
+
+
+      Scope constraints:
+
+      - Only fix the in-phase taxonomy wording conflict in `tela.yaml.example`
+
+      - Keep contract terminology aligned with the confirmed MCP/CLI/HTTP surface
+      taxonomy
+
+      - Do not broaden into unrelated repo-wide type debt or other non-intersecting
+      cleanup
+
+
+      Refs:
+
+      - tela.yaml.example
+
+      - AGENT_INTERFACE.md
+
+      - INTERFACES.md'
+    verification: '- `tela.yaml.example` wording no longer contradicts the confirmed
+      taxonomy contract
+
+      - `tela_admin` intro-surface wording matches the agreed agent-facing surface
+      language
+
+      - No unrelated artifact churn beyond the scoped wording fix'
+    depends_on:
+    - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
+    agent: doc-reviewer
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
