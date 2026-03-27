@@ -34686,3 +34686,35 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.update_agent_interface_doc
     agent: doc-reviewer
+  - id: agent_iface.surface_taxonomy.freeze_for_verification
+    name: Freeze snapshot for agent-interface surface verification
+    status: pending
+    description: 'step_type: planning
+
+      Freeze: lock snapshot for L2 verification of MCP/CLI/HTTP taxonomy.
+
+      Record the exact commit/worktree snapshot, the chosen taxonomy decision, and
+      the specific MCP/CLI/HTTP probes that will be used. No further code or doc changes
+      are allowed until verification completes.'
+    verification: '- Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate
+
+      - Evidence records `git rev-parse HEAD`, `git status --short`, the chosen taxonomy,
+      and the exact probe plan for MCP list/resources plus CLI/HTTP checks'
+    evidence_template: 'Freeze evidence:
+
+      - git rev-parse HEAD:
+
+      - git status --short:
+
+      - Chosen taxonomy snapshot:
+
+      - MCP probes planned:
+
+      - CLI/HTTP probes planned:
+
+      - Statement that changes are frozen until verification ends:
+
+      '
+    depends_on:
+    - agent_iface.surface_taxonomy.sync_shared_docs
+    agent: gate-reviewer
