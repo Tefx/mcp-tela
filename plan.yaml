@@ -37698,3 +37698,10 @@ phases:
 
       - No docs claim lockfile implies ready or final registry'
     agent: doc-reviewer
+- id: tool_prefix.contract
+  name: Tool Prefix Contracts
+  status: locked
+  gate: Freeze contract and naming semantics for config-driven tool prefixes before
+    tests or runtime wiring.
+  depends_on:
+  - conn_v2.finalize
