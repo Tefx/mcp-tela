@@ -34557,7 +34557,7 @@ phases:
       \ commit `739af91164baf2bd963825543739416595fee3bf`"
   - id: agent_iface.surface_taxonomy.define_confirmed_contract
     name: Define confirmed agent-facing surface contract
-    status: claimed
+    status: done
     description: 'step_type: contract
 
       contract_purity: ENFORCED
@@ -34610,6 +34610,37 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T07:22:27.559619+00:00'
+    done_at: '2026-03-27T07:26:01.455474+00:00'
+    evidence: "Confirmed contract:\n- Canonical surface matrix:\n  - Canonical source:\
+      \ `docs/CONFIRMED-SURFACE-CONTRACT.md`\n  - Built-in `tela.*` MCP surfaces:\n\
+      \    - `tela.profiles` => `resource`\n    - `tela.status` => `absent`\n    -\
+      \ `tela.connections` => `absent`\n    - `tela.audit` => `absent`\n  - Operator\
+      \ companion surfaces:\n    - `tela profiles`, `tela status`, `tela connections`,\
+      \ `tela audit` => `CLI`\n    - `GET /health`, `GET /status`, `POST /connect`,\
+      \ `POST /disconnect`, `POST /mcp` => `HTTP`\n- Tool vs resource rules:\n  -\
+      \ Confirmed built-in `tela.*` MCP tools: none.\n  - Confirmed built-in `tela.*`\
+      \ MCP resources: exactly one (`tela.profiles`).\n  - `tela.profiles` is resource-read,\
+      \ not tool-call.\n  - CLI/HTTP operator surfaces must not be described as MCP\
+      \ built-ins unless separately confirmed as `tool` or `resource`.\n- Capability\
+      \ wording:\n  - Approved current wording: profiles express capability ceilings\
+      \ only; capabilities are `family -> posture`.\n  - `tela_admin` is not approved\
+      \ as current-runtime contract wording for absent MCP built-ins (`tela.status`,\
+      \ `tela.connections`, `tela.audit`).\n- Instruction merge ordering:\n  - Gateway\
+      \ top-level instructions, when present, come first and remain authoritative.\n\
+      \  - Downstream sections are appended after gateway instructions in configured\
+      \ server iteration order.\n  - Per-server rules: `instructions: false` suppress,\
+      \ `instructions: <string>` override text, `instructions: null/omitted` passthrough\
+      \ if available.\n  - If tools are known, append `Available tools:` list inside\
+      \ each downstream section.\n- Instruction conflict handling:\n  - Downstream\
+      \ text is subordinate appendix and must not silently override gateway rules.\n\
+      \  - On conflict, gateway rules win.\n  - Conflicts are handled explicitly via\
+      \ suppression, explicit per-server override text, or explicit future contract/spec\
+      \ change.\n- Files/surfaces that must align to this contract:\n  - `docs/INTERFACES.md`,\
+      \ `docs/DESIGN.md`, `README.md`, `docs/USAGE.md`\n  - Tests classifying agent-facing\
+      \ surfaces\n  - Runtime registration/wiring in `src/tela/shell/gateway.py`\n\
+      \  - Any tests/docs claiming `tela.status`/`tela.connections`/`tela.audit` as\
+      \ built-in MCP surfaces\n- Artifact / commit:\n  - `docs/CONFIRMED-SURFACE-CONTRACT.md`\n\
+      \  - commit `03fa5454247c6beb70cadc5019276f20d8a6d6ed`"
   - id: agent_iface.surface_taxonomy.add_surface_regressions
     name: Add non-regression checks for the confirmed surface taxonomy
     status: pending
