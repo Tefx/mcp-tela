@@ -35557,7 +35557,7 @@ phases:
       \ => `44 passed, 0 failed`.\n"
   - id: agent_iface.surface_taxonomy.investigate_operator_surface_loop4
     name: Investigate and fix root-cause operator-surface taxonomy drift (loop 4)
-    status: claimed
+    status: done
     description: "step_type: implementation\nInvestigation-style remediation for repeated\
       \ operator-surface taxonomy blocker family after three consecutive failures.\n\
       \nsymbolic_testing: false\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_operator_surface_loop3\n\
@@ -35656,7 +35656,17 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T10:07:59.836709+00:00'
-    done_at: '2026-03-27T10:04:17.766977+00:00'
+    done_at: '2026-03-27T10:12:30.695860+00:00'
+    evidence: "Artifact:\n- Commit hash(es): `1eba07c`\n- Files changed:\n  - `README.md`\n\
+      \  - `evidence/surface_taxonomy_verification.md`\n  - `tests/repro/test_loop4_remediation.py`\n\
+      \nVerification:\n- `uv run pytest -q tests/repro/test_loop4_remediation.py`\
+      \ -> `4 passed`\n- `uv run pytest -q tests/shell/test_surface_contract.py` ->\
+      \ `30 passed`\n- `uv run pytest -q tests/shell/test_merge_instructions.py` ->\
+      \ `14 passed`\n- `uv run pytest -q tests/shell/test_gateway.py::test_fastmcp_profiles_resource_registered`\
+      \ -> `1 passed`\n\nNotes:\n- README operator summary now includes `tela profiles`\
+      \ with correct operator naming.\n- Evidence artifact refreshed to current totals/wording\
+      \ and consistency claims.\n- Loop4 repro checks now use direct behavioral/runtime-doc\
+      \ checks, replacing meta-string style assertions."
     rejection_reason: 'Gate found remaining phase-scope gaps: README operator summary
       missing tela profiles, stale claims in evidence/surface_taxonomy_verification.md,
       and repro loop4 test uses meta-string assertions instead of direct behavioral
