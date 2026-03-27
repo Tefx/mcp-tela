@@ -34229,3 +34229,123 @@ phases:
     depends_on:
     - post.deep_review.retest_invar_guard_gate_blockers_loop2
     agent: python-senior
+  - id: post.deep_review.retest_result_api_consumer_drift_pytest_gate
+    name: Retest full pytest and runtime boundary checks after Result-API consumer
+      drift remediation
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      Verification scope: full-plan-check protecting post.deep_review.gate and final
+      plan completion.
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), validate from a fresh perspective
+      that the latest Result-API migration blockers are actually closed.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: full pytest passes after Result-API consumer normalization
+
+      - Edge cases: runtime-boundary accessors return Result wrappers without breaking
+      migrated consumers
+
+      - Error scenarios: restore/write-back paths do not persist Result objects into
+      runtime state, even when restore input carries boundary errors or partial state
+
+      - Cross-cutting: runtime-boundary consumers in src/tests no longer re-derive
+      raw values independently
+
+
+      Independence Level: L1
+
+
+      ## Consumer-Boundary Conformance Check (MANDATORY)
+
+      Use a shared fixture or targeted runtime-boundary checks to prove all implicated
+      consumer surfaces interpret the same resolved fact consistently and no surface
+      re-derives raw runtime facts independently.
+
+
+      ## Integration Evidence Required
+
+      Path exercised: runtime accessor boundary -> consumer/restore helpers -> pytest/runtime
+      verification sink.
+
+      Actual command outputs must be pasted, not summarized as ''tests pass''.'
+    verification: '- Run full pytest and capture actual output
+
+      - Run targeted runtime-boundary checks covering get_runtime_config, get_runtime_connections_snapshot,
+      is_runtime_running, and at least one restore/write-back corruption regression
+
+      - Evidence proves no Result object is persisted into mutable runtime state on
+      the highest-risk failure path
+
+      - If issues are found, report them as findings; this verification step is successful
+      when it produces actionable evidence
+
+      - Downstream gate protected: post.deep_review.gate and final plan completion'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: gate-reviewer (independent of implementation)
+
+      **Scope**: full pytest plus targeted runtime-boundary Result migration checks
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```
+
+      pytest
+
+      <targeted runtime-boundary test commands>
+
+      ```
+
+      - Actual output:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+
+      ### Runtime-boundary conformance
+
+      - Shared fixture / contract snapshot used: <name>
+
+      - Consumer surfaces checked: <src/tests families>
+
+      - Corruption-path regression result: <pass/fail>
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | blocker/should_fix | <issue or none> | <location> | <steps> |
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - post.deep_review.fix_result_api_consumer_drift_pytest_gate
+    agent: gate-reviewer
