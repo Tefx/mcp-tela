@@ -37388,6 +37388,49 @@ phases:
     depends_on:
     - conn_v2.system_wiring.entrypoint_integration
     agent: wiring-auditor
+  - id: conn_v2.system_wiring.liveness_probe
+    name: Probe integrated runtime liveness for connect and serve
+    status: pending
+    description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
+      \ actually run the integrated entry points.\nIndependence Level: L2\nVerification\
+      \ criteria:\n  - tela serve starts and stays alive long enough to answer /health\
+      \ and /status\n  - tela connect can discover or autostart, attach bridge, and\
+      \ complete at least one operation through the real entrypoint path\n  - status\
+      \ surfaces answer while runtime is warming and after convergence settles\nFinding\
+      \ issues is success."
+    verification: '- Exact launch/invocation commands are provided
+
+      - Proof shows /health or /status answers from a real serve process
+
+      - At least one documented connect operation reaches the real entrypoint end-to-end'
+    evidence_template: '## Liveness Probe
+
+      **Serve command**:
+
+      ```
+
+      <paste exact serve command>
+
+      ```
+
+      **Connect command**:
+
+      ```
+
+      <paste exact connect command or harness>
+
+      ```
+
+      **Observed output**:
+
+      ```
+
+      <paste stdout/stderr or probe output>
+
+      ```'
+    depends_on:
+    - conn_v2.system_wiring.entrypoint_integration
+    agent: blind-tester
 - id: conn_v2.validation
   name: Runtime Validation and Full-Plan Check
   status: locked
