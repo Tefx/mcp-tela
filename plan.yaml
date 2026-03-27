@@ -33421,7 +33421,7 @@ phases:
       dependency updated to loop3 retest.'
   - id: post.deep_review.architecture_fix_runtime_boundary_policy_loop3
     name: 'Loop 3 fix: unify authoritative boundary policy for runtime/upstream accessors'
-    status: claimed
+    status: done
     description: "Root-cause-oriented loop 3 remediation for repeated deep-review\
       \ runtime alias blockers.\n\nstep_type: implementation\nverification_scope:\
       \ phase-check\nProtects downstream gate: post.deep_review.gate\nagent_source:\
@@ -33480,6 +33480,12 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-27T01:53:56.077871+00:00'
+    done_at: '2026-03-27T02:03:21.958673+00:00'
+    evidence: Loop3 root-cause remediation implemented and merged. Established consistent
+      runtime boundary policy across get_runtime/get_upstream_server surfaces by replacing
+      live upstream-server alias access with operation-level accessors and updating
+      callers. Verification reported 689 tests passing and runtime-boundary repro
+      tests passing (including new upstream-boundary cases).
   - id: post.deep_review.architecture_retest_runtime_boundary_policy_loop3
     name: 'Loop 3 retest: independent verification of unified runtime/upstream boundary
       policy'
