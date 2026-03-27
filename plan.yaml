@@ -37412,6 +37412,8 @@ phases:
 
       | tela status | <command> | status -> remote_state -> /status | <result> | PASS/FAIL
       |'
+    depends_on:
+    - conn_v2.system_wiring.entrypoint_integration
     agent: integration-verifier
   - id: conn_v2.system_wiring.liveness_probe
     name: Probe integrated runtime liveness for connect and serve
