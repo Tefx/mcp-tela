@@ -36975,6 +36975,24 @@ phases:
     depends_on:
     - conn_v2.convergence.integrate_reload_and_status
     agent: integration-verifier
+  - id: conn_v2.convergence.gate
+    name: Gate background convergence phase
+    status: pending
+    description: "step_type: gate\nGate review: verify background convergence replaces\
+      \ serial downstream blocking without losing runtime truth.\nreview_depth: THOROUGH\n\
+      review_depth_rationale:\n  - phase changes startup latency semantics, registry\
+      \ population timing, and reload coherence\ncross_cutting_focus:\n  - endpoint\
+      \ discovery is decoupled from downstream-ready\n  - per-server state remains\
+      \ visible\n  - registry ownership remains centralized\n  - degraded reporting\
+      \ is truthful"
+    verification: '- Background convergence and status/reload integration are complete
+
+      - Seam-level proof covers discoverable warming startup and degraded/error behavior'
+    depends_on:
+    - conn_v2.convergence.impl_module
+    - conn_v2.convergence.integrate_reload_and_status
+    - conn_v2.convergence.seam_proof
+    agent: gate-reviewer
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
   status: locked
