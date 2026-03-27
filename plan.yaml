@@ -33078,7 +33078,7 @@ phases:
     claimed_at: '2026-03-27T00:40:48.285133+00:00'
   - id: post.deep_review.black_box
     name: Black-box verification
-    status: claimed
+    status: done
     description: 'Using ONLY the spec and public API (no implementation source):
 
       - Verify tool metadata fields appear in tools/list response
@@ -33096,6 +33096,11 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-27T00:48:06.543426+00:00'
+    done_at: '2026-03-27T00:50:38.567485+00:00'
+    evidence: 'Worker reported SUCCESS for black-box verification using public API
+      behavior tests. Evidence indicates documented behavior works externally: tool
+      metadata passthrough, instructions None/False/string modes, and tools/list_changed
+      forwarding; no observable regressions were reported.'
   - id: post.deep_review.gate
     name: Final deep review gate
     status: pending
