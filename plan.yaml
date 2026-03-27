@@ -37674,6 +37674,8 @@ phases:
       \ runtime code\n  - no contract-only stubs remain on production runtime paths"
     verification: '- Wiring report identifies any orphan exports, unreachable entrypoints,
       or write-only lifecycle fields'
+    depends_on:
+    - conn_v2.doc_sync.update_docs
     agent: wiring-auditor
   - id: conn_v2.doc_sync.update_docs
     name: Update documentation for the connect/serve runtime refactor
