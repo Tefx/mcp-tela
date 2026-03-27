@@ -37457,6 +37457,8 @@ phases:
       <paste stdout/stderr or probe output>
 
       ```'
+    depends_on:
+    - conn_v2.system_wiring.entrypoint_integration
     agent: blind-tester
   - id: conn_v2.ux.conformance_review
     name: Review CLI and HTTP diagnostics for consumer-boundary conformance
