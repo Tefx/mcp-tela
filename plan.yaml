@@ -32807,6 +32807,36 @@ phases:
     depends_on:
     - post.doc_sync.retest
     agent: python-executor
+  - id: post.doc_sync.retest2
+    name: Second retest for documentation sync remediation
+    status: pending
+    description: 'Re-run post.doc_sync validation after post.doc_sync.fix_batch2 completes.
+
+
+      Independently verify the exact latest-retet findings are closed:
+
+      - stale SSE-default wording removed from docs/DESIGN.md:149-155, docs/INTERFACES.md:47-50,
+      docs/USAGE.md:63-67, docs/USAGE.md:79-96, and docs/USAGE.md:509-513
+
+      - required nested tool_overrides.overrides shape present in docs/MIGRATION-003-capability-only-profiles.md:132-141,
+      docs/MIGRATION-003-capability-only-profiles.md:169-188, and docs/ADR-003-gateway-capability-only-profiles.md:22-31
+
+      - no equivalent stale wording or malformed override examples remain in the touched
+      documentation set
+
+
+      This focused retest must complete before the phase gate review runs.'
+    verification: '- Independently verify each referenced line-range issue is resolved
+
+      - Confirm no remaining stale SSE-default claim in DESIGN / INTERFACES / USAGE
+
+      - Confirm migration and ADR examples conform to required nested overrides shape
+
+      - Confirm no equivalent malformed examples remain in the touched documentation
+      set'
+    depends_on:
+    - post.doc_sync.fix_batch2
+    agent: gate-reviewer
 - id: post.deep_review
   name: Deep Review (Independent Multi-Agent Audit)
   status: locked
