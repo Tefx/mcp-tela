@@ -37772,6 +37772,34 @@ phases:
     handling, routing, and reload behavior before implementation.
   depends_on:
   - tool_prefix.contract
+  steps:
+  - id: tool_prefix.test.add_regressions
+    name: Add tool-prefix contract and reload regressions
+    status: pending
+    description: "step_type: test\nagent_source: default\nspec_fixture_conformance:\
+      \ required\nspec_refs:\n  - user authoritative input: verification points 1-7\n\
+      \  - docs/INTERFACES.md#3.1 Servers\n  - docs/INTERFACES.md#7 MCP Surface\n\
+      \  - docs/USAGE.md#Configuration model\ntouch_paths:\n  - tests/core/test_models.py\n\
+      \  - tests/core/test_family.py\n  - tests/core/test_conflict.py\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_reload.py\n  - tests/shell/test_upstream.py\nfixtures:\n\
+      \  - no-prefix backward-compat server fixture\n  - same-raw-name distinct-prefix\
+      \ two-server fixture\n  - same-raw-name same-prefix collision fixture\n  - raw-name\
+      \ tool_overrides fixture\n  - exposed-name upstream call-routing fixture\n \
+      \ - config-reload prefix-change notification fixture\n  - reserved tela-prefix\
+      \ rejection fixture\n\nAdd the acceptance tests before runtime work. Cover at\
+      \ minimum:\n1. omitted tool_prefix keeps old exposed names;\n2. identical raw\
+      \ tools under distinct prefixes coexist;\n3. identical raw tools under the same\
+      \ exposed prefix still conflict;\n4. tool_overrides continue to match raw downstream\
+      \ names;\n5. calling the exposed name routes to the raw downstream name;\n6.\
+      \ changing tool_prefix on reload emits tools/list_changed and refreshes the\
+      \ tool set;\n7. tool_prefix=\"tela.\" is rejected.\n\nPrefer behavioral tests\
+      \ over source-text assertions and keep fixtures minimal."
+    verification: '- Targeted tests fail before implementation and pin all seven authoritative
+      verification points.
+
+      - Reload coverage proves prefix changes are treated as tool-surface changes,
+      not no-op config churn.'
+    agent: python-executor
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
   status: locked
