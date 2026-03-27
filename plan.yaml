@@ -34904,7 +34904,7 @@ phases:
       \ modified files.\n- Commit:\n  - `3a8279e64cf2a833fdc29033409587d696cde159`"
   - id: agent_iface.surface_taxonomy.freeze_for_verification
     name: Freeze snapshot for agent-interface surface verification
-    status: pending
+    status: claimed
     description: 'step_type: planning
 
       Freeze: lock snapshot for L2 verification of MCP/CLI/HTTP taxonomy.
@@ -34934,6 +34934,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.sync_shared_docs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-27T07:49:35.829921+00:00'
   - id: agent_iface.surface_taxonomy.verify_surface_conformance
     name: Verify MCP/CLI/HTTP surface conformance from a fresh perspective
     status: pending
