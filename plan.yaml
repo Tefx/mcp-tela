@@ -34374,7 +34374,7 @@ phases:
       failures are closed for gate protection.
 - id: agent_iface.surface_taxonomy
   name: Agent Interface Surface Taxonomy and Alignment
-  status: in_progress
+  status: done
   gate: Confirm actual MCP/CLI/HTTP taxonomy before any agent-facing runtime or doc
     assertions are finalized.
   depends_on:
@@ -35027,7 +35027,7 @@ phases:
       \ surfaces."
   - id: agent_iface.surface_taxonomy.gate
     name: Gate agent-interface surface taxonomy alignment
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       Gate review: confirm the phase resolved the new agent-interface ambiguity without
@@ -35097,6 +35097,30 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T10:13:10.707633+00:00'
+    done_at: '2026-03-27T10:15:26.101271+00:00'
+    evidence: 'Gate summary:
+
+      - Direction chosen: document/maintain CLI/HTTP-only reality for `tela status`/`tela
+      connections`/`tela audit`; keep `tela.profiles` as sole built-in MCP resource.
+
+      - Verified MCP resources: `tela.profiles` registered and reachable; docs/runtime/tests
+      aligned.
+
+      - Verified MCP tools: no built-in `tela.*` MCP tools.
+
+      - Verified CLI/HTTP-only surfaces: `tela profiles`, `tela status`, `tela connections`,
+      `tela audit`, plus operator HTTP routes, consistently named across phase-owned
+      summaries.
+
+      - Remaining rejected assumptions: treating operator surfaces as MCP built-ins;
+      using `tela_admin` as current runtime capability family; stale/self-referential
+      evidence claims.
+
+      - Go/no-go decision: GO.
+
+      - Verification: substantive suites passed including surface contract, loop4
+      repro, merge instructions, and profiles resource registration checks; evidence
+      artifacts refreshed and consistent.'
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
     status: done
@@ -35838,7 +35862,7 @@ phases:
       - Runtime/docs/tests consistent for loop4 scope; readiness for gate affirmed.'
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
-  status: locked
+  status: pending
   gate: Final independent review of the newly clarified agent-facing surface taxonomy,
     runtime exposure, and documentation consistency.
   depends_on:
