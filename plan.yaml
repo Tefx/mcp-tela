@@ -38387,3 +38387,33 @@ phases:
     depends_on:
     - tool_prefix.deep_review.wiring_audit
     agent: gate-reviewer
+  - id: tool_prefix.deep_review.black_box
+    name: Black-box verification of prefixed tool behavior
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: default
+
+      verification_scope: full-plan-check
+
+      As an INDEPENDENT TESTER (blind-tester), verify the feature using only the documented
+      config and exposed MCP behavior.
+
+
+      Required black-box checks:
+
+      - two downstream servers advertising the same raw tool can coexist when prefixes
+      differ
+
+      - calling the prefixed exposed name reaches the correct downstream tool
+
+      - omitted tool_prefix preserves old visible names
+
+      - reserved tela. prefix is rejected'
+    verification: '- Evidence uses spec-derived fixtures and actual exposed names.
+
+      - At least one real end-to-end call proves prefixed routing without implementation-source
+      assumptions.'
+    depends_on:
+    - tool_prefix.deep_review.spec_conformance
+    agent: blind-tester
