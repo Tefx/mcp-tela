@@ -35557,7 +35557,7 @@ phases:
       \ => `44 passed, 0 failed`.\n"
   - id: agent_iface.surface_taxonomy.investigate_operator_surface_loop4
     name: Investigate and fix root-cause operator-surface taxonomy drift (loop 4)
-    status: rejected
+    status: claimed
     description: "step_type: implementation\nInvestigation-style remediation for repeated\
       \ operator-surface taxonomy blocker family after three consecutive failures.\n\
       \nsymbolic_testing: false\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_operator_surface_loop3\n\
@@ -35655,7 +35655,7 @@ phases:
     - agent_iface.surface_taxonomy.retest_operator_surface_loop3
     agent: python-senior
     claimed_by: python-senior
-    claimed_at: '2026-03-27T09:36:30.001482+00:00'
+    claimed_at: '2026-03-27T09:52:43.510585+00:00'
     done_at: '2026-03-27T09:40:25.335693+00:00'
     rejection_reason: Gate found remaining phase-owned summary mismatch in docs/USAGE.md
       using dotted operator names; remediation incomplete and must be amended.
