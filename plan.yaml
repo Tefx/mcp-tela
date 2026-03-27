@@ -35031,7 +35031,7 @@ phases:
     description: 'step_type: gate
 
       Gate review: confirm the phase resolved the new agent-interface ambiguity without
-      guesswork.
+      guesswork after the batched remediation/retest loop.
 
 
       The gate must reject any completion that still assumes `tela.status`, `tela.connections`,
@@ -35041,6 +35041,11 @@ phases:
       ordering/conflict semantics ambiguous across docs/runtime.'
     verification: '- Verification scope: phase-check protecting final review and plan
       completion
+
+      - Gate evidence must confirm the remediation/retest loop cleared all four blocker
+      families: unsupported built-in MCP introspection claims, `tela_admin` wording
+      conflicts, `tela.profiles` resource/tool boundary contradictions, and over-claimed
+      instruction-conflict semantics
 
       - Gate evidence states whether the chosen direction was ''implement missing
       MCP surfaces'' or ''document CLI/HTTP-only reality'', and cites verification
@@ -35061,7 +35066,7 @@ phases:
 
       '
     depends_on:
-    - agent_iface.surface_taxonomy.verify_surface_conformance
+    - agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     agent: gate-reviewer
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
