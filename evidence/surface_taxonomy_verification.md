@@ -98,7 +98,7 @@ All documentation correctly states:
 ```
 # tela gateway surface contract
 
-Gateway rules for tela-owned surfaces:
+Authoritative rules for tela-owned surfaces:
 - Built-in MCP resource: `tela.profiles` (read via `tela://profiles`).
 - Built-in MCP tools: none.
 - Operator-only surfaces (not MCP built-ins): `tela profiles`, `tela status`, `tela connections`, `tela audit`, and `GET /status`.
@@ -119,7 +119,7 @@ Gateway rules for tela-owned surfaces:
 
 **Test Evidence:**
 - `tests/shell/test_merge_instructions.py`: 14/14 pass
-- `tests/shell/test_surface_contract.py`: 26/26 pass
+- `tests/shell/test_surface_contract.py`: 30/30 pass
 - `tests/shell/test_gateway.py::test_fastmcp_profiles_resource_registered`: PASS
 
 ---
@@ -128,11 +128,11 @@ Gateway rules for tela-owned surfaces:
 
 | Test Suite | Tests | Pass | Fail |
 |------------|-------|------|------|
-| `test_surface_contract.py` | 26 | 26 | 0 |
+| `test_surface_contract.py` | 30 | 30 | 0 |
 | `test_merge_instructions.py` | 14 | 14 | 0 |
 | `test_gateway.py::test_fastmcp_profiles_resource_registered` | 1 | 1 | 0 |
 
-**Total:** 41 tests, 41 pass, 0 fail.
+**Total:** 45 tests, 45 pass, 0 fail.
 
 ---
 
@@ -166,7 +166,7 @@ INTROSPECTION_TOOLS = ("tela.profiles",)
 
 5. **Guidance Clarity:** Runtime instructions clearly state: "Do not use `tools/call` for `tela.profiles`; use resource read."
 
-6. **Surface Classification Tests:** All 41 tests pass, asserting the canonical surface matrix matches documentation.
+6. **Surface Classification Tests:** All 45 tests pass, asserting the canonical surface matrix matches documentation.
 
 ---
 
