@@ -35487,7 +35487,7 @@ phases:
   - id: agent_iface.surface_taxonomy.retest_operator_surface_loop3
     name: Retest final scoped remediation for operator-surface summaries and artifact-backed
       assertions
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       As an INDEPENDENT TESTER (blind-tester), re-check the final scoped remediation
@@ -35532,6 +35532,8 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.remediate_operator_surface_loop3
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-27T09:12:18.949734+00:00'
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
