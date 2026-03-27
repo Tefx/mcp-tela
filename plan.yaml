@@ -37295,25 +37295,6 @@ phases:
     depends_on:
     - conn_v2.deep_review.spec_conformance
     agent: blind-tester
-  - id: conn_v2.deep_review.gate
-    name: Final gate for connect/serve runtime refactor
-    status: pending
-    description: "step_type: gate\nFinal gate: verify the A+B+C+D refactor is complete,\
-      \ stable, and aligned with the authoritative architecture basis.\nreview_depth:\
-      \ THOROUGH\ncross_cutting_focus:\n  - no discovery/readiness split regressions\n\
-      \  - single-instance startup coordination proven\n  - background convergence\
-      \ proven\n  - hard-interrupt exit proven\n  - host-facing diagnostics and docs\
-      \ aligned"
-    verification: '- Independent review set completed
-
-      - Remaining issues, if any, are explicitly rejected or remediated before phase
-      completion'
-    depends_on:
-    - conn_v2.deep_review.spec_conformance
-    - conn_v2.deep_review.architecture_review
-    - conn_v2.deep_review.contract_strength
-    - conn_v2.deep_review.black_box
-    agent: gate-reviewer
 - id: conn_v2.integration_validate
   name: Integrated UX, Wiring, and Runtime Validation
   status: locked
@@ -37668,3 +37649,18 @@ phases:
     integrated validation succeeds.
   depends_on:
   - conn_v2.integration_validate
+  steps:
+  - id: conn_v2.deep_review.gate
+    name: Final gate for connect/serve runtime refactor
+    status: pending
+    description: "step_type: gate\nFinal gate: verify the A+B+C+D refactor is complete,\
+      \ stable, and aligned with the authoritative architecture basis.\nreview_depth:\
+      \ THOROUGH\ncross_cutting_focus:\n  - no discovery/readiness split regressions\n\
+      \  - single-instance startup coordination proven\n  - background convergence\
+      \ proven\n  - hard-interrupt exit proven\n  - host-facing diagnostics and docs\
+      \ aligned"
+    verification: '- Independent review set completed
+
+      - Remaining issues, if any, are explicitly rejected or remediated before phase
+      completion'
+    agent: gate-reviewer
