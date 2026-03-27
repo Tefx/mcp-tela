@@ -124,6 +124,8 @@ surfaces. `tela.profiles` remains the only built-in tela MCP surface, and it is
 a resource read surface (not a tool). These do not belong to a `tela_admin`
 capability family.
 
+No built-in `tela.*` MCP tools are currently implemented.
+
 ## Module Boundaries
 
 ### `core/`

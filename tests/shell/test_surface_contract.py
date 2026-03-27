@@ -39,6 +39,8 @@ from tela.core.models import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIRMED_SURFACE_CONTRACT = PROJECT_ROOT / "docs" / "CONFIRMED-SURFACE-CONTRACT.md"
 DESIGN_DOC = PROJECT_ROOT / "docs" / "DESIGN.md"
+AGENT_INTERFACE_DOC = PROJECT_ROOT / "docs" / "AGENT_INTERFACE.md"
+USAGE_DOC = PROJECT_ROOT / "docs" / "USAGE.md"
 SURFACE_VERIFICATION_ARTIFACT = (
     PROJECT_ROOT / "evidence" / "surface_taxonomy_verification.md"
 )
@@ -55,6 +57,14 @@ def _read_gateway_source() -> str:
 
 def _read_design_doc() -> str:
     return DESIGN_DOC.read_text(encoding="utf-8")
+
+
+def _read_agent_interface_doc() -> str:
+    return AGENT_INTERFACE_DOC.read_text(encoding="utf-8")
+
+
+def _read_usage_doc() -> str:
+    return USAGE_DOC.read_text(encoding="utf-8")
 
 
 def _read_surface_verification_artifact() -> str:
@@ -78,19 +88,41 @@ class TestCanonicalSurfaceMatrix:
 
     def test_tela_profiles_is_resource_not_tool(self) -> None:
         """tela.profiles must be a resource, NOT a tool."""
+        gateway_source = _read_gateway_source()
         assert _contract_kind("tela.profiles") == "resource"
+        assert "tela://profiles" in gateway_source
+        assert 'name="tela.profiles"' in gateway_source
+        assert '@upstream_server.tool("tela.profiles")' not in gateway_source
 
     def test_tela_status_is_absent_as_mcp_surface(self) -> None:
         """tela.status must NOT be claimed as current MCP tool or resource."""
+        gateway_source = _read_gateway_source()
+        gateway_result = surface_instructions.get_gateway_surface_instructions()
         assert _contract_kind("tela.status") == "absent"
+        assert '@upstream_server.tool("tela.status")' not in gateway_source
+        assert gateway_result.is_ok
+        assert gateway_result.value is not None
+        assert "`tela status`" in gateway_result.value
 
     def test_tela_connections_is_absent_as_mcp_surface(self) -> None:
         """tela.connections must NOT be claimed as current MCP tool or resource."""
+        gateway_source = _read_gateway_source()
+        gateway_result = surface_instructions.get_gateway_surface_instructions()
         assert _contract_kind("tela.connections") == "absent"
+        assert '@upstream_server.tool("tela.connections")' not in gateway_source
+        assert gateway_result.is_ok
+        assert gateway_result.value is not None
+        assert "`tela connections`" in gateway_result.value
 
     def test_tela_audit_is_absent_as_mcp_surface(self) -> None:
         """tela.audit must NOT be claimed as current MCP tool or resource."""
+        gateway_source = _read_gateway_source()
+        gateway_result = surface_instructions.get_gateway_surface_instructions()
         assert _contract_kind("tela.audit") == "absent"
+        assert '@upstream_server.tool("tela.audit")' not in gateway_source
+        assert gateway_result.is_ok
+        assert gateway_result.value is not None
+        assert "`tela audit`" in gateway_result.value
 
     def test_operator_surfaces_are_cli_or_http_not_mcp(self) -> None:
         """All operator companion surfaces must be CLI or HTTP, not MCP."""
@@ -514,26 +546,44 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
 
     def test_tela_status_cli_not_mcp_builtin(self) -> None:
         """tela status CLI must NOT be documented as an MCP built-in."""
-        # Per contract: tela.status is 'absent' for MCP surfaces.
-        # The 'tela status' CLI exists but is not an MCP built-in.
+        usage_doc = _read_usage_doc()
+        agent_interface_doc = _read_agent_interface_doc()
+        gateway_summary = surface_instructions.get_gateway_surface_instructions()
         assert _contract_kind("tela status") == "CLI"
         assert _contract_kind("tela.status") == "absent"
+        assert "| `tela status` | CLI / `GET /status` |" in usage_doc
+        assert "| `tela.status` | CLI/HTTP |" in agent_interface_doc
+        assert gateway_summary.is_ok
+        assert gateway_summary.value is not None
+        assert "Built-in MCP tools: none." in gateway_summary.value
 
     def test_tela_connections_cli_not_mcp_builtin(self) -> None:
         """tela connections CLI must NOT be documented as an MCP built-in."""
+        usage_doc = _read_usage_doc()
+        agent_interface_doc = _read_agent_interface_doc()
         assert _contract_kind("tela connections") == "CLI"
         assert _contract_kind("tela.connections") == "absent"
+        assert "| `tela connections` | CLI / via `/status` |" in usage_doc
+        assert "| `tela.connections` | CLI/HTTP |" in agent_interface_doc
 
     def test_tela_audit_cli_not_mcp_builtin(self) -> None:
         """tela audit CLI must NOT be documented as an MCP built-in."""
+        usage_doc = _read_usage_doc()
+        agent_interface_doc = _read_agent_interface_doc()
         assert _contract_kind("tela audit") == "CLI"
         assert _contract_kind("tela.audit") == "absent"
+        assert "| `tela audit` | CLI / via `/status` |" in usage_doc
+        assert "| `tela.audit` | CLI/HTTP |" in agent_interface_doc
 
     def test_get_status_http_not_mcp_builtin(self) -> None:
         """GET /status HTTP endpoint must NOT be misnamed as tela.status MCP."""
+        usage_doc = _read_usage_doc()
+        agent_interface_doc = _read_agent_interface_doc()
         assert _contract_kind("GET /status") == "HTTP"
         # The canonical tabela.status MCP surface is 'absent'
         assert _contract_kind("tela.status") == "absent"
+        assert "CLI / `GET /status`" in usage_doc
+        assert "`GET /status` endpoint" in agent_interface_doc
 
 
 # =============================================================================
@@ -556,25 +606,37 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         # 'tela.status', that contradicts the contract.
         # This test guards against that change.
         contract_text = _read_contract_text()
+        design_text = _read_design_doc()
+        gateway_summary = surface_instructions.get_gateway_surface_instructions()
         assert _contract_kind("tela.status") == "absent"
         assert "not approved as current-runtime contract wording" in contract_text
         assert "tela.status" in contract_text
+        assert "These do not belong to a `tela_admin`" in design_text
+        assert gateway_summary.is_ok
+        assert gateway_summary.value is not None
+        assert "Built-in MCP tools: none." in gateway_summary.value
 
     def test_tela_admin_not_approved_for_tela_connections(self) -> None:
         """tela_admin MUST NOT be used as current enforcement wording for
         tela.connections because tela.connections is an absent MCP surface.
         """
         contract_text = _read_contract_text()
+        design_text = _read_design_doc()
         assert _contract_kind("tela.connections") == "absent"
         assert "tela.connections" in contract_text
+        assert (
+            "No built-in `tela.*` MCP tools are currently implemented." in design_text
+        )
 
     def test_tela_admin_not_approved_for_tela_audit(self) -> None:
         """tela_admin MUST NOT be used as current enforcement wording for
         tela.audit because tela.audit is an absent MCP surface.
         """
         contract_text = _read_contract_text()
+        design_text = _read_design_doc()
         assert _contract_kind("tela.audit") == "absent"
         assert "tela.audit" in contract_text
+        assert "operator-facing surfaces (CLI/HTTP)" in design_text
 
 
 # =============================================================================

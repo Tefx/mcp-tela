@@ -20,11 +20,12 @@ The following surfaces are **operator-only** and accessible via CLI/HTTP. They a
 
 | Surface | Kind | Access Method |
 |---------|------|---------------|
+| `tela.profiles` | CLI/HTTP | `tela profiles` command or via `GET /status` |
 | `tela.status` | CLI/HTTP | `tela status` command or `GET /status` endpoint |
 | `tela.connections` | CLI/HTTP | `tela connections` command or via `GET /status` |
 | `tela.audit` | CLI/HTTP | `tela audit` command or via `GET /status` |
 
-**Important:** Do not attempt to call `tela.status`, `tela.connections`, or `tela.audit` via MCP `tools/call`. These are not MCP tools.
+**Important:** Do not attempt to call `tela profiles`, `tela status`, `tela connections`, or `tela audit` via MCP `tools/call`. These are not MCP tools.
 
 ## 3. Resource vs Tool Distinction
 
@@ -101,6 +102,6 @@ Instruction composition is ordered and non-commutative:
 
 - `tela.profiles` is a **resource read**, not a tool call
 - No built-in `tela.*` MCP tools are currently supported
-- `tela.status`, `tela.connections`, `tela.audit` are operator-only (CLI/HTTP)
+- `tela profiles`, `tela.status`, `tela.connections`, `tela.audit` are operator-only (CLI/HTTP)
 - Gateway instructions are emitted first; downstream sections are append-only
 - The `tela.` prefix is reserved for future built-in surfaces

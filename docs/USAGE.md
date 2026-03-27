@@ -180,7 +180,7 @@ profiles:
 
 Built-in surfaces:
 - `tela.profiles` is exposed as an MCP resource (read via resource read, not `tools/call`)
-- `tela.status`, `tela.connections`, and `tela.audit` are operator-only surfaces accessible via CLI/HTTP
+- `tela profiles`, `tela.status`, `tela.connections`, and `tela.audit` are operator-only surfaces accessible via CLI/HTTP
 - No `tela.*` built-in MCP tools are currently supported
 
 Important notes:
@@ -477,6 +477,7 @@ The following are operator-only surfaces, not MCP built-in tools:
 
 | Surface | Access | Description |
 |---------|--------|-------------|
+| `tela profiles` | CLI / via `/status` | List configured profiles and capability ceilings |
 | `tela status` | CLI / `GET /status` | Uptime, server count, connection count |
 | `tela connections` | CLI / via `/status` | Active upstream connections |
 | `tela audit` | CLI / via `/status` | Query audit log entries |
