@@ -37334,6 +37334,8 @@ phases:
       <paste test output>
 
       ```'
+    depends_on:
+    - conn_v2.validation.freeze_full
     agent: integration-verifier
   - id: conn_v2.validation.freeze_full
     name: Freeze integrated runtime snapshot for validation
