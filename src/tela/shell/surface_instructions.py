@@ -14,8 +14,8 @@ def get_gateway_surface_instructions() -> Result[str, str]:
             "Authoritative rules for tela-owned surfaces:\n"
             "- Built-in MCP resource: `tela.profiles` (read via `tela://profiles`).\n"
             "- Built-in MCP tools: none.\n"
-            "- Operator-only surfaces (not MCP built-ins): `tela status`, "
-            "`tela connections`, `tela audit`, and `GET /status`.\n"
+            "- Operator-only surfaces (not MCP built-ins): `tela profiles`, "
+            "`tela status`, `tela connections`, `tela audit`, and `GET /status`.\n"
             "- Do not use `tools/call` for `tela.profiles`; use resource read."
         )
     )

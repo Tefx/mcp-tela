@@ -65,8 +65,8 @@ SurfaceContract := {
 - CLI and HTTP operator surfaces are real product surfaces, but they are not to
   be described as MCP built-ins unless separately confirmed as `tool` or
   `resource`.
-- `tela status`, `tela connections`, and `tela audit` are confirmed operator
-  surfaces only.
+- `tela profiles` (CLI companion), `tela status`, `tela connections`, and
+  `tela audit` are confirmed operator surfaces.
 - `GET /status` is an operator/runtime HTTP endpoint and must not be renamed in
   docs/tests as `tela.status` MCP access.
 

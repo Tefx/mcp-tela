@@ -117,9 +117,12 @@ Built-in MCP surface:
 - `tela.profiles` — exposed as MCP resource (read via `tela://profiles`)
 
 Operator surfaces (CLI/HTTP, not MCP):
-- `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`
+- `tela profiles`, `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`
 
-These are NOT MCP tools and do not belong to a `tela_admin` capability family.
+These are operator-facing surfaces (CLI/HTTP) and are **not** built-in MCP tool
+surfaces. `tela.profiles` remains the only built-in tela MCP surface, and it is
+a resource read surface (not a tool). These do not belong to a `tela_admin`
+capability family.
 
 ## Module Boundaries
 
@@ -267,6 +270,7 @@ Available tools:
 - classification is concrete-provider aware
 - unclassified access is handled conservatively
 - approval semantics do not appear in gateway profiles
-- `tela.` tool prefix is reserved for introspection tools
+- `tela.` MCP surface names are tela-owned; currently `tela.profiles` is the only
+  built-in tela MCP surface (resource)
 - each server instance stamps audit entries with a unique `instance_id`
 - tool metadata (`annotations`, `title`, `output_schema`) is preserved from downstream through upstream

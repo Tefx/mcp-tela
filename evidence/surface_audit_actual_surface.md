@@ -25,10 +25,12 @@ Authoritative review-only audit of actual tela agent-facing surfaces in the curr
 
 ### CLI-only surfaces verified
 
+- `tela profiles` (`src/tela/cli.py:120-133,215-224`; implementation in `src/tela/commands/profiles_cmd.py:12-51`)
 - `tela status` (`src/tela/cli.py:110-119,182-188`; implementation in `src/tela/commands/status_cmd.py:12-51`)
 - `tela connections` (`src/tela/cli.py:135-145,225-231`; implementation in `src/tela/commands/connections_cmd.py:13-55`)
 - `tela audit` (`src/tela/cli.py:147-166,232-240`; implementation in `src/tela/commands/audit_cmd.py:15-95`)
-- `tela profiles` also exists as CLI, but unlike the three above it is additionally verified as an MCP resource.
+
+`tela profiles` is additionally verified as an MCP resource.
 
 ### HTTP-only/operator surfaces verified
 

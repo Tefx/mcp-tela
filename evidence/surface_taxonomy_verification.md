@@ -101,7 +101,7 @@ All documentation correctly states:
 Gateway rules for tela-owned surfaces:
 - Built-in MCP resource: `tela.profiles` (read via `tela://profiles`).
 - Built-in MCP tools: none.
-- Operator-only surfaces (not MCP built-ins): `tela status`, `tela connections`, `tela audit`, and `GET /status`.
+- Operator-only surfaces (not MCP built-ins): `tela profiles`, `tela status`, `tela connections`, `tela audit`, and `GET /status`.
 - Do not use `tools/call` for `tela.profiles`; use resource read.
 ```
 
