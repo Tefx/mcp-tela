@@ -36213,3 +36213,10 @@ phases:
     run against the integrated runtime before docs sync and final review.
   depends_on:
   - conn_v2.system_wiring
+- id: conn_v2.doc_sync
+  name: Documentation Sync for Connect/Serve Runtime
+  status: locked
+  gate: Usage/design/interface docs reflect the implemented lifecycle, lockfile semantics,
+    status schema, and connect interrupt behavior.
+  depends_on:
+  - conn_v2.validation
