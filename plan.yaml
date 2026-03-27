@@ -35990,7 +35990,7 @@ phases:
       \ taxonomy alignment."
   - id: agent_iface.final_review.contract_strength
     name: Contract-strength review for surface taxonomy wording
-    status: claimed
+    status: done
     description: 'step_type: review
 
       Verification scope: phase-check protecting agent_iface.final_review.gate.
@@ -36021,6 +36021,16 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-27T10:19:00.042830+00:00'
+    done_at: '2026-03-27T10:23:40.168950+00:00'
+    evidence: "Contract-strength review:\n- Resource vs tool distinctions checked:\n\
+      \  - `tela.profiles` remains resource-read only; operator surfaces are not treated\
+      \ as MCP built-ins.\n- Capability wording checked:\n  - Approved family->posture\
+      \ language used; `tela_admin` not treated as current runtime capability for\
+      \ absent built-ins.\n- Merge-order wording checked:\n  - Gateway-first append-only\
+      \ semantics documented with explicit suppress/override/passthrough, no resolver\
+      \ overclaim.\n- Unsupported surface claims checked:\n  - `tela.status`/`tela.connections`/`tela.audit`\
+      \ consistently described as operator-only CLI/HTTP surfaces.\n- Verdict:\n \
+      \ - Contract/doc wording is explicit, bounded, and non-vacuous."
   - id: agent_iface.final_review.black_box
     name: Black-box verification of agent-facing surfaces
     status: pending
