@@ -36204,6 +36204,47 @@ phases:
       - Acceptable-phase policy is defined or escalated as a bounded contract clarification,
       not left implicit'
     agent: software-architect
+  - id: conn_v2.contract.startup_convergence_contract
+    name: Codify startup coordination and downstream convergence contracts
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - interfaces\n  - stubs\nagent_source: default\nspec_refs:\n\
+      \  - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/DESIGN.md#Runtime\
+      \ Architecture > Service discovery\n  - docs/INTERFACES.md#2. CLI Surface\n\
+      \  - docs/INTERFACES.md#7.3 Lockfile Contract\narchitecture_basis:\n  - module_split_recommendations:\
+      \ Startup Coordinator Module + Downstream Convergence Module\n  - source_of_truth_matrix:\
+      \ config ownership by config_path recorded by gateway; downstream connection\
+      \ state and tool registry live in gateway runtime memory\n  - ADR direction:\
+      \ B background downstream convergence, C single-instance startup coordination\n\
+      state_strata:\n  - Process Discovery State\n  - Gateway Lifecycle State\n  -\
+      \ Downstream Runtime State\ncross_cutting_policy:\n  - autostart leader/follower\
+      \ semantics are single-owner\n  - downstream convergence is backgrounded after\
+      \ endpoint publication\n  - re-enumeration/hot reload must preserve registry\
+      \ truth ownership\ntouch_paths:\n  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/serve_cmd.py\n\
+      \  - src/tela/shell/gateway.py\n  - src/tela/shell/downstream.py\n  - src/tela/shell/downstream_clients.py\n\
+      \  - src/tela/shell/reload.py\n  - src/tela/shell/lockfile.py\nharness_refs:\n\
+      \  - tests/shell/test_connect_cmd.py\n  - tests/shell/test_downstream.py\n \
+      \ - tests/shell/test_reload.py\n  - tests/repro/test_connect_runtime_liveness.py\n\
+      authoritative_interface: NONE PINNED\nTasks:\n  - Define contract-level leader/follower\
+      \ startup coordination so concurrent tela connect calls for the same config\
+      \ cannot spawn multiple tela serve instances.\n  - Define contract-level background\
+      \ convergence semantics: endpoint becomes discoverable before all downstream\
+      \ servers are ready, while status reports warming/degraded truth and per-server\
+      \ summaries.\n  - Define config_path ownership and mismatch diagnostics as a\
+      \ contract output so attach-to-wrong-gateway behavior is explicit before implementation.\n\
+      \  - State whether startup_generation changes on restart and on hot reload,\
+      \ and which surfaces consume it.\n  - Non-goals: no process spawning code, no\
+      \ re-enumeration implementation."
+    verification: '- Contract outputs make single-instance coordination, background
+      convergence, config ownership, and startup_generation semantics explicit
+
+      - No implementation logic appears in the contract artifacts
+
+      - Shared ownership boundaries for lockfile, runtime memory, and tool registry
+      are unambiguous'
+    depends_on:
+    - conn_v2.contract.lockfile_status_contract
+    agent: software-architect
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
   status: locked
