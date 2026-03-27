@@ -34844,7 +34844,7 @@ phases:
       \ distinction and merge semantics wording.\n- Commit:\n  - `3826f3dfd96c5c05b185e28bb438ff52751eed3b`"
   - id: agent_iface.surface_taxonomy.sync_shared_docs
     name: Sync INTERFACES, USAGE, and README to the confirmed taxonomy
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       Verification scope: phase-check protecting agent_iface.surface_taxonomy.gate.
@@ -34881,6 +34881,27 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-27T07:45:18.977177+00:00'
+    done_at: '2026-03-27T07:49:15.353250+00:00'
+    evidence: "Shared doc sync:\n- Files updated:\n  - `docs/USAGE.md`\n  - `README.md`\n\
+      \  - `docs/INTERFACES.md` verified already aligned; no additional edits required\
+      \ in this step.\n- Surface taxonomy wording checked:\n  - `tela.profiles` documented\
+      \ as MCP resource-read (not tool-call).\n  - `tela.status`, `tela.connections`,\
+      \ `tela.audit` documented as operator-only CLI/HTTP surfaces.\n  - INTERFACES\
+      \ section 7.1a already reflected operator-only classification.\n- Capability\
+      \ wording checked:\n  - Removed `tela_admin` references from USAGE profile example\
+      \ and built-in surface wording.\n  - No `tela_admin` references remain in README/USAGE.\n\
+      - Instruction merge wording checked:\n  - USAGE now documents merge ordering/conflict\
+      \ handling: gateway-first authoritative block, downstream appended in server\
+      \ order, per-server rules (`false` suppress, `<string>` override, `null` passthrough),\
+      \ downstream subordinate, gateway wins conflicts, silent override forbidden.\n\
+      - Cross-doc diffs reviewed:\n  - USAGE: built-in surfaces section and merge\
+      \ semantics/conflict handling updated.\n  - README: built-in surfaces section\
+      \ updated to separate MCP resource vs operator CLI/HTTP surfaces.\n  - INTERFACES\
+      \ remained aligned to confirmed contract.\n- Remaining caveats:\n  - `docs/DESIGN.md`\
+      \ still contains older introspection wording outside this step scope.\n- Verification\
+      \ commands:\n  - Grep checks for `tela_admin`, `introspection tools`, `resource\
+      \ read`, and section headings across README/USAGE.\n  - `git diff --stat` for\
+      \ modified files.\n- Commit:\n  - `3a8279e64cf2a833fdc29033409587d696cde159`"
   - id: agent_iface.surface_taxonomy.freeze_for_verification
     name: Freeze snapshot for agent-interface surface verification
     status: pending
