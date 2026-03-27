@@ -35405,6 +35405,61 @@ phases:
       \ CLI/HTTP.\n- unrelated_debt_intersection: NON_BLOCKING\n  - Remaining references\
       \ in plan metadata are historical/non-contract; no intersection with this phase\
       \ acceptance.\n- readiness_for_gate: YES"
+  - id: agent_iface.surface_taxonomy.remediate_operator_surface_loop3
+    name: Final scoped remediation for operator-surface summaries, DESIGN taxonomy
+      wording, and runtime-output assertions
+    status: pending
+    description: "step_type: implementation\nprior_loop:\n  - agent_iface.surface_taxonomy.remediate_conflict_semantics_loop2\n\
+      \  - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2\nremaining_blocker:\
+      \ latest gate findings still show three tightly-coupled scope-local gaps: (1)\
+      \ operator-surface summary blocks omit `tela profiles` where surface lists are\
+      \ shown, (2) `docs/DESIGN.md` still blurs the resource/tool boundary by implying\
+      \ built-in `tela.*` tool surfaces, and (3) some regression checks still rely\
+      \ on self-referential constants instead of substantive assertions against real\
+      \ docs/runtime artifacts.\nwhy_new_loop: the prior remediation loops resolved\
+      \ taxonomy and conflict-semantics drift, but the newest gate findings identify\
+      \ one remaining phase-local blocker family spanning docs, runtime instruction\
+      \ summaries, and regression evidence quality.\nwhy_previous_fix_failed: prior\
+      \ loops hardened wording and conflict checks, but they did not exhaustively\
+      \ normalize operator-surface summary lists, eliminate the remaining DESIGN implication\
+      \ of built-in `tela.*` tools, or replace every self-referential constant check\
+      \ with artifact-backed assertions.\n\nApply ONE final scoped remediation pass\
+      \ inside `agent_iface.surface_taxonomy` only.\n\nRequired outputs:\n- Include\
+      \ `tela profiles` consistently in operator-surface summaries wherever the surface\
+      \ list is shown in phase-owned docs/runtime instruction summary blocks.\n- Remove\
+      \ or clarify `docs/DESIGN.md` wording so it does not imply built-in `tela.*`\
+      \ tool surfaces and instead preserves the confirmed resource/tool boundary.\n\
+      - Replace self-referential regression checks with substantive assertions against\
+      \ actual docs/runtime outputs or emitted summary artifacts, not constants that\
+      \ merely restate themselves.\n\nCompletion criteria:\n- All targeted operator-surface\
+      \ summaries that enumerate surfaces now include `tela profiles` consistently.\n\
+      - `docs/DESIGN.md` no longer implies built-in `tela.*` tools.\n- Regression\
+      \ coverage proves actual emitted/runtime/doc content, not self-referential constants.\n\
+      - Scope stays inside this phase's owned docs/runtime summary emitters/tests\
+      \ only.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\nEach deliverable MUST contain\
+      \ substantive logic that processes its inputs and produces outputs that vary\
+      \ based on those inputs. Private stub classes (`_Runtime*`, `_Stub*`, `_Placeholder*`)\
+      \ do not satisfy this requirement."
+    verification: '- Verification scope: phase-check protecting `agent_iface.surface_taxonomy.gate`
+
+      - Include `tela profiles` consistently in operator-surface summaries where surface
+      lists are shown, across all phase-owned docs/runtime instruction summary blocks
+      touched by this phase
+
+      - Remove or clarify `docs/DESIGN.md` wording so it does not imply built-in `tela.*`
+      tools and preserves the confirmed resource/tool boundary
+
+      - Replace self-referential checks with assertions against actual docs/runtime
+      outputs or emitted artifacts; constant-vs-same-constant checks are insufficient
+
+      - Evidence must name the exact touched summary blocks/tests and explain why
+      the new assertions would fail on real drift'
+    depends_on:
+    - agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
+    - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
+    - agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
+    agent: python-senior
 - id: agent_iface.final_review
   name: 'Final Review: Agent Interface Surface Consistency'
   status: locked
