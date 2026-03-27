@@ -36840,6 +36840,46 @@ phases:
     while convergence/re-enumeration state remains visible and consistent.
   depends_on:
   - conn_v2.lifecycle
+  steps:
+  - id: conn_v2.convergence.impl_module
+    name: Implement background downstream convergence module
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
+      \ - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/INTERFACES.md#7.2.1\
+      \ GET /status Response Schema\n  - docs/INTERFACES.md#9. Downstream fastmcp\
+      \ Client Contract\ntouch_paths:\n  - src/tela/shell/downstream.py\n  - src/tela/shell/downstream_clients.py\n\
+      \  - src/tela/shell/downstream_registry.py\n  - src/tela/shell/gateway_runtime.py\n\
+      \  - src/tela/shell/convergence.py\nharness_refs:\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_downstream_runtime_connection.py\n  - tests/integration/test_end_to_end.py\n\
+      \  - tests/integration/test_hot_reload.py\neffective_truth_owner:\n  - convergence\
+      \ module owns background connect/enumerate/retry flow\nconsumer_surfaces:\n\
+      \  - GET /status\n  - gateway tool registry\n  - hot reload\nstate_strata:\n\
+      \  - Downstream Runtime State\n  - Gateway Lifecycle State\nknown_risks:\n \
+      \ - serial startup bottlenecks and hidden partial-convergence states are historical\
+      \ rework patterns\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\nFailure-mode checklist:\n \
+      \ - partial convergence after endpoint publication\n  - per-server error fallback\
+      \ and degraded reporting\n  - stale-definition vs new-state precedence during\
+      \ retry/re-enumeration\n  - explicit clear semantics when a server disconnects\
+      \ or reload rejects new tools\nState semantics:\n  - last-writer-wins: current\
+      \ per-server runtime state replaces prior transient attempt state\n  - preserve\
+      \ exactly: tool registry truth stays in gateway runtime registry; lockfile never\
+      \ claims final tool state\n  - backward-compatible legacy behavior: downstream\
+      \ calls still use real connected clients, not placeholder registry entries\n\
+      Out-of-scope guardrail:\n  - no connect signal handling changes\n  - no host-facing\
+      \ message copy changes\nTasks:\n  - Move downstream connect/enumerate/retry\
+      \ into the dedicated convergence module.\n  - Publish per-server state summaries\
+      \ and tool registry digest/count updates into lifecycle status while startup\
+      \ remains discoverable.\n  - Keep registry ownership centralized and ready for\
+      \ hot reload / re-enumeration."
+    verification: '- Main path: targeted tests prove background convergence updates
+      runtime state and tool registry
+
+      - Failure path: regressions cover per-server error, retry, and degraded lifecycle
+      publication
+
+      - Proof: startup no longer blocks on full downstream readiness'
+    agent: python-senior
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
   status: locked
