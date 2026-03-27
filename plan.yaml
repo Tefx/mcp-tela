@@ -34372,3 +34372,10 @@ phases:
     evidence: Independent retest PASS. Full pytest passed (689/689) and targeted runtime-boundary/corruption-path
       checks passed, confirming Result-API consumer drift and restore-path wrapper-injection
       failures are closed for gate protection.
+- id: agent_iface.surface_taxonomy
+  name: Agent Interface Surface Taxonomy and Alignment
+  status: pending
+  gate: Confirm actual MCP/CLI/HTTP taxonomy before any agent-facing runtime or doc
+    assertions are finalized.
+  depends_on:
+  - post.deep_review
