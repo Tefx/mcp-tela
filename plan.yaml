@@ -35043,18 +35043,20 @@ phases:
     verification: '- Verification scope: phase-check protecting final review and plan
       completion
 
-      - Gate evidence must confirm the remediation/retest loops cleared all blocker
-      families: unsupported built-in MCP introspection claims, `tela_admin` wording
-      conflicts, `tela.profiles` resource/tool boundary contradictions, over-claimed
-      instruction-conflict semantics, hollow conflict-semantics regression coverage,
-      and stale evidence-artifact drift
+      - Gate evidence must evaluate this phase''s accepted taxonomy contract scope:
+      MCP/CLI/HTTP surface taxonomy, `tela_admin` wording consistency, `tela.profiles`
+      resource/tool boundary correctness, instruction-conflict semantics, regression
+      coverage substance, and artifact consistency across phase-owned docs/examples
 
-      - Gate evidence must confirm the latest retest verified concrete conflict-semantics
-      assertions (no placeholder `pass`) and reconciled evidence artifacts
+      - Gate evidence must confirm the new scoped remediation/retest removed the `tela.yaml.example`
+      contradiction and kept phase artifacts internally consistent
 
-      - Gate evidence states whether the chosen direction was ''implement missing
-      MCP surfaces'' or ''document CLI/HTTP-only reality'', and cites verification
-      proving the final repo is internally consistent'
+      - Repo-wide debt outside this contract scope (including unrelated `uv run mypy
+      src tests` errors) is non-blocking unless the evidence shows it intersects or
+      invalidates this phase acceptance
+
+      - If broader debt is claimed as intersecting, gate evidence must explain the
+      intersection explicitly rather than failing on repo-wide status alone'
     evidence_template: 'Gate summary:
 
       - Direction chosen:
@@ -35073,6 +35075,7 @@ phases:
     depends_on:
     - agent_iface.surface_taxonomy.retest_surface_taxonomy_remediation
     - agent_iface.surface_taxonomy.retest_conflict_semantics_loop2
+    - agent_iface.surface_taxonomy.retest_tela_yaml_example_taxonomy_wording
     agent: gate-reviewer
   - id: agent_iface.surface_taxonomy.remediate_artifact_taxonomy_conflicts
     name: Batched remediation for taxonomy artifact and contract conflicts
