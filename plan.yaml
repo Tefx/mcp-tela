@@ -32807,7 +32807,7 @@ phases:
 
       - Sibling search completed across touched documentation'
     depends_on:
-    - post.doc_sync.retest
+    - post.doc_sync.update
     agent: python-executor
   - id: post.doc_sync.retest2
     name: Second retest for documentation sync remediation
