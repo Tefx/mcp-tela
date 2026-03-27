@@ -36152,7 +36152,12 @@ phases:
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
+  context: 'Authoritative architecture basis already approved by user: A+B+C+D. This
+    phase converts that basis into executable contract boundaries without re-deriving
+    architecture, and remains frozen behind meta.review completion plus the latest
+    completed runtime-surface review.'
   depends_on:
+  - meta.review
   - agent_iface.final_review
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
