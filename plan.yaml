@@ -37186,14 +37186,14 @@ phases:
   - conn_v2.bridge
 - id: conn_v2.system_wiring
   name: System Wiring and Entry Point Integration
-  status: pending
+  status: done
   gate: All new runtime modules are wired into the real connect/serve/status entry
     points with end-to-end behavioral proof, not just unit-level correctness.
   depends_on:
   - conn_v2.ux
 - id: conn_v2.validation
   name: Runtime Validation and Full-Plan Check
-  status: locked
+  status: pending
   gate: OpenCode-like cold start, concurrent attach, interrupt, and full-plan verification
     run against the integrated runtime before docs sync and final review.
   depends_on:
