@@ -33530,7 +33530,7 @@ phases:
   - id: post.deep_review.architecture_investigate_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 investigation: decide authoritative handling for deprecated live-alias
       accessors'
-    status: claimed
+    status: done
     description: "Investigation-style remediation for the repeated blocker family\
       \ around deprecated live-alias accessors.\n\nstep_type: planning\nverification_scope:\
       \ phase-check\nProtects downstream gate: post.deep_review.gate\nagent_source:\
@@ -33583,6 +33583,13 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-27T02:09:51.134949+00:00'
+    done_at: '2026-03-27T02:12:30.937208+00:00'
+    evidence: 'Loop4 investigation completed with explicit diagnosis and next-fix
+      constraints. It identified that deprecated get_runtime/get_upstream_server were
+      intentionally preserved as live-alias escape hatches, explained prior-fix failure
+      mechanism, validated issue reproduction in fresh worktree, and defined authoritative
+      remediation: remove public live-alias behavior and preserve test/setup through
+      narrow lock-safe helpers/introspection paths.'
   - id: post.deep_review.architecture_fix_deprecated_live_alias_accessors_loop4
     name: 'Loop 4 fix: close deprecated live-alias accessors per investigation decision'
     status: pending
