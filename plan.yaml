@@ -36154,3 +36154,11 @@ phases:
     before implementation DAG begins.
   depends_on:
   - agent_iface.final_review
+- id: conn_v2.test
+  name: Connect/Serve Refactor Tests and Harness
+  status: locked
+  gate: 'Executable acceptance boundary for the runtime refactor: spec-derived tests,
+    cold-start harness, concurrent attach regressions, and interrupt-path coverage
+    must exist before implementation.'
+  depends_on:
+  - conn_v2.contract
