@@ -37233,69 +37233,38 @@ phases:
   - id: conn_v2.bridge.impl_module
     name: Implement bridge control module without shell convergence refactor coupling
     status: pending
-    description: 'step_type: implementation
-
-
-      auto_tags:
-
-      - integration
-
-
-      Implement the bridge control module for attach, detach, interrupt, and session-control
-      flow.
-
-
-      Required scope:
-
-      - Bridge module owns attach/detach loop, signal handling, hard-interrupt shutdown,
-      and session-control flow.
-
-      - Shell convergence logic remains outside the bridge module.
-
-      - Bridge/control work must consume lifecycle and convergence results, not re-derive
-      them.
-
-
-      Out-of-scope guardrail:
-
-      - No command-layer HTTP helper extraction bundled here
-
-      - No shell convergence refactor bundled here
-
-      - No transport opener lifecycle refactor bundled here
-
-
-      Spec refs:
-
-      - conn_v2.contract.bridge_ux_contract
-
-      - conn_v2.contract.lockfile_status_contract
-
-      - conn_v2.contract.startup_convergence_contract
-
-
-      Touch paths:
-
-      - src/tela/commands/connect_cmd.py
-
-      - src/tela/shell/gateway.py
-
-      - src/tela/shell/upstream.py
-
-
-      Harness refs:
-
-      - tests/integration/
-
-      - tests/shell/
-
-
-      Authoritative interface: NONE PINNED
-
-
-      ## Completion Criteria (stub exclusion)
-
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    description: "step_type: implementation\n\nauto_tags:\n- integration\n\nFill in\
+      \ stub bodies for the bridge control module for attach, detach, interrupt, and\
+      \ session-control flow.\n\nRequired scope:\n- Bridge module owns attach/detach\
+      \ loop, signal handling, hard-interrupt shutdown, and session-control flow.\n\
+      - Shell convergence logic remains outside the bridge module.\n- Bridge/control\
+      \ work must consume lifecycle and convergence results, not re-derive them.\n\
+      \nOut-of-scope guardrail:\n- No command-layer HTTP helper extraction bundled\
+      \ here\n- No shell convergence refactor bundled here\n- No transport opener\
+      \ lifecycle refactor bundled here\n\nSpec refs:\n- conn_v2.contract.bridge_ux_contract\n\
+      - conn_v2.contract.lockfile_status_contract\n- conn_v2.contract.startup_convergence_contract\n\
+      \nTouch paths:\n- src/tela/commands/connect_cmd.py\n- src/tela/shell/gateway.py\n\
+      - src/tela/shell/upstream.py\n\nHarness refs:\n- tests/integration/\n- tests/shell/\n\
+      \nAuthoritative interface: NONE PINNED\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\n\
+      ## Contract-Preserving Implementation Mode\nFill in stub bodies and replace\
+      \ NotImplementedError / pass / ... within the existing bridge control signatures\
+      \ only.\n\nUPSTREAM ARTIFACTS (from contract/test steps):\n- src/tela/commands/connect_cmd.py\
+      \ — bridge UX contract surface is AUTHORITATIVE (contract)\n- src/tela/shell/gateway_runtime.py\
+      \ — lifecycle/readiness contract is AUTHORITATIVE (contract)\n- tests/shell/test_connect_cmd.py\
+      \ — interrupt/attach assertions are PROTECTED (test)\n- tests/repro/test_disconnect_cleanup.py\
+      \ — disconnect cleanup assertions are PROTECTED (test)\n- tests/shell/test_query_commands_remote_state.py\
+      \ — diagnostics assertions are PROTECTED (test)\n\nYOUR SCOPE: complete the\
+      \ implementation within existing signatures; bridge logic must consume lifecycle/convergence\
+      \ outputs rather than recreating them.\n\nDeviation protocol: if a contract\
+      \ artifact is wrong or incomplete, record a deviation note with type, what,\
+      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nupstream_artifacts:\n\
+      - path: src/tela/commands/connect_cmd.py\n  from_step: conn_v2.contract.bridge_ux_contract\n\
+      \  tier: contract\n- path: src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \  tier: contract\n- path: tests/shell/test_connect_cmd.py\n  from_step: conn_v2.test.interrupt_diagnostics_tests\n\
+      \  tier: test\n- path: tests/repro/test_disconnect_cleanup.py\n  from_step:\
+      \ conn_v2.test.interrupt_diagnostics_tests\n  tier: test\n- path: tests/shell/test_query_commands_remote_state.py\n\
+      \  from_step: conn_v2.test.interrupt_diagnostics_tests\n  tier: test"
     verification: '- Bridge module owns attach/detach, interrupt, and session-control
       flow only
 
