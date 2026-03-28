@@ -36512,7 +36512,7 @@ phases:
     claimed_at: '2026-03-28T19:26:54.008954+00:00'
   - id: conn_v2.test.interrupt_diagnostics_tests
     name: Add hard-interrupt and diagnostics regression tests
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
       \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
@@ -36561,6 +36561,8 @@ phases:
       **Path exercised**: signal or lifecycle input -> connect/status command -> diagnostics
       output'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-28T19:27:00.383067+00:00'
   - id: conn_v2.test.gate
     name: Gate refactor test boundary
     status: pending
