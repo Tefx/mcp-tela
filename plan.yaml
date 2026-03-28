@@ -38198,9 +38198,10 @@ phases:
       \ within existing signatures; edit bodies only and preserve the pinned raw_name/exposed_name/routing_name\
       \ contract.\n\nDeviation protocol: if a contract artifact is wrong or incomplete,\
       \ record a deviation note with type, what, why, and impact — do NOT silently\
-      \ rewrite the contract or tests.\n\nupstream_artifacts:\n  - path: src/tela/core/models.py\n\
-      \    from_step: tool_prefix.contract.define_semantics\n    tier: contract\n\
-      \  - path: src/tela/core/family.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \ rewrite the contract or tests.\n\nAfter implementation, run spec-verifier\
+      \ scoped to changed files to check for spec-code drift.\n\nupstream_artifacts:\n\
+      \  - path: src/tela/core/models.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \    tier: contract\n  - path: src/tela/core/family.py\n    from_step: tool_prefix.contract.define_semantics\n\
       \    tier: contract\n  - path: tests/core/test_models.py\n    from_step: tool_prefix.test.add_regressions\n\
       \    tier: test\n  - path: tests/core/test_family.py\n    from_step: tool_prefix.test.add_regressions\n\
       \    tier: test\n  - path: tests/core/test_conflict.py\n    from_step: tool_prefix.test.add_regressions\n\
