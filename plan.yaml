@@ -36148,7 +36148,7 @@ phases:
       \ accepted phase scope."
 - id: conn_v2.contract
   name: Connect/Serve Runtime Refactor Contracts
-  status: in_progress
+  status: done
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
@@ -36361,7 +36361,7 @@ phases:
       - invar guard passed'
   - id: conn_v2.contract.gate
     name: Gate connect/serve runtime contracts
-    status: claimed
+    status: done
     description: "step_type: gate\nGate review: verify the refactor contract phase\
       \ is complete and architecture-basis-conformant.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - Phase freezes the whole A+B+C+D runtime shape before implementation\n \
@@ -36383,9 +36383,47 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-28T19:21:41.507849+00:00'
+    done_at: '2026-03-28T19:26:30.755711+00:00'
+    evidence: '## Gate Review Report
+
+
+      **Phase**: conn_v2.contract
+
+      **Reviewer**: gate-reviewer
+
+
+      ### Required checks
+
+      - [x] All contract steps completed (f039ea7, aaa0878, 2599358)
+
+      - [x] Architecture basis preserved (A+B+C+D all explicit)
+
+      - [x] No implementation leakage (all @dataclass(frozen=True), Protocol bodies
+      are ...)
+
+      - [x] Discovery/readiness split explicit (LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for)
+
+      - [x] Interrupt semantics defined (autostart_wait, attach_loop, bridge_teardown
+      with "immediately")
+
+      - [x] CLI/HTTP diagnostics aligned (5 surfaces, 8 shared facts)
+
+
+      ### Additional verification
+
+      - 65 tests pass for contract-related code
+
+      - Invar guard passes
+
+      - DESIGN.md updated with source-of-truth tables
+
+
+      ### Gate Decision
+
+      **OPEN** ✅'
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
-  status: locked
+  status: pending
   gate: 'Executable acceptance boundary for the runtime refactor: spec-derived tests,
     cold-start harness, concurrent attach regressions, and interrupt-path coverage
     must exist before implementation.'
