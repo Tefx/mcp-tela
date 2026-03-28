@@ -37264,9 +37264,11 @@ phases:
       \ implementation within existing signatures; bridge logic must consume lifecycle/convergence\
       \ outputs rather than recreating them.\n\nDeviation protocol: if a contract\
       \ artifact is wrong or incomplete, record a deviation note with type, what,\
-      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nupstream_artifacts:\n\
-      - path: src/tela/commands/connect_cmd.py\n  from_step: conn_v2.contract.bridge_ux_contract\n\
-      \  tier: contract\n- path: src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nAfter\
+      \ implementation, run spec-verifier scoped to changed files to check for spec-code\
+      \ drift.\n\nupstream_artifacts:\n- path: src/tela/commands/connect_cmd.py\n\
+      \  from_step: conn_v2.contract.bridge_ux_contract\n  tier: contract\n- path:\
+      \ src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
       \  tier: contract\n- path: tests/shell/test_connect_cmd.py\n  from_step: conn_v2.test.interrupt_diagnostics_tests\n\
       \  tier: test\n- path: tests/repro/test_disconnect_cleanup.py\n  from_step:\
       \ conn_v2.test.interrupt_diagnostics_tests\n  tier: test\n- path: tests/shell/test_query_commands_remote_state.py\n\
