@@ -36247,8 +36247,6 @@ phases:
       - CLI and HTTP diagnostic surfaces are aligned to one status fact model
 
       - No message implementation or logging code lands in this contract step'
-    depends_on:
-    - conn_v2.contract.startup_convergence_contract
     agent: uiux-designer
   - id: conn_v2.contract.gate
     name: Gate connect/serve runtime contracts
