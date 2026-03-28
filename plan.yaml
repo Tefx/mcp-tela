@@ -36148,7 +36148,7 @@ phases:
       \ accepted phase scope."
 - id: conn_v2.contract
   name: Connect/Serve Runtime Refactor Contracts
-  status: locked
+  status: pending
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
@@ -38598,7 +38598,7 @@ phases:
     agent: gate-reviewer
 - id: conn_v2.preflight_reconnect
   name: Reconnect Enumeration Correctness Fix
-  status: in_progress
+  status: done
   gate: Reconnect path reuses captured enumeration on reconnect, avoids duplicate
     list_tools calls, and preserves registry/status correctness before conn_v2 contracts
     begin.
@@ -38968,7 +38968,7 @@ phases:
       \ tests pass. Registry and status converge correctly after reconnect."
   - id: conn_v2.preflight_reconnect.gate
     name: Gate reconnect enumeration correctness
-    status: claimed
+    status: done
     description: 'step_type: gate
 
 
@@ -39022,3 +39022,18 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-28T18:49:27.063628+00:00'
+    done_at: '2026-03-28T18:57:41.461850+00:00'
+    evidence: "## Gate Review Report\n\n**Phase**: conn_v2.preflight_reconnect\n**Reviewer**:\
+      \ gate-reviewer\n\n### Required checks\n- [x] Regression test coverage is specific\n\
+      - [x] Duplicate enumeration removed\n- [x] Independent verification evidence\
+      \ reviewed\n- [x] No blocker remains\n\n### Implementation Verification\n\n\
+      **Code Flow (verified):**\n```\n_handle_reconnect → _enumerate_client_tools\
+      \ (ONE enumeration)\n                  → raw_tools passed to on_server_reconnect\n\
+      on_server_reconnect → on_tools_changed(tool_list) // No re_enumerate\non_tools_changed\
+      \ → resolve_tools(tool_list) // Transform only\n```\n\n**Key Evidence:**\n1.\
+      \ `reload.py` contains NO `re_enumerate` import or call\n2. Docstring explicitly\
+      \ declares: \"The fresh tool list is already enumerated\"\n3. `resolve_tools()`\
+      \ is pure transformation, not enumeration\n\n**Test Results:**\n- 24 tests pass\
+      \ (all test_reload.py)\n- 4 dedicated reconnect enumeration regression tests\n\
+      - Monkeypatch-based detection of duplicate enumeration calls\n\n### Gate Decision\n\
+      **OPEN** ✅"
