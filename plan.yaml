@@ -37764,7 +37764,7 @@ phases:
     depends_on:
     - conn_v2.deep_review.wiring_audit
     - conn_v2.doc_sync.update_docs
-    agent: doc-reviewer
+    agent: spec-verifier
   - id: conn_v2.deep_review.architecture_review
     name: Architecture and concurrency review for startup, lifecycle, convergence,
       and bridge modules
