@@ -38608,7 +38608,7 @@ phases:
   steps:
   - id: conn_v2.preflight_reconnect.test_no_duplicate_enumeration
     name: Test reconnect path reuses captured enumeration
-    status: claimed
+    status: done
     description: 'step_type: test
 
 
@@ -38706,6 +38706,40 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-28T18:28:46.228593+00:00'
+    done_at: '2026-03-28T18:37:34.106374+00:00'
+    evidence: "## Reconnect Enumeration Regression Evidence\n\n**Tests added/updated**:\n\
+      - `test_reload.py::test_on_server_reconnect_reuses_passed_tool_list` (NEW -\
+      \ FAILS as expected)\n- `test_reload.py::test_on_server_reconnect_does_not_trigger_duplicate_enumeration`\
+      \ (NEW - FAILS as expected)\n- `test_reload.py::test_on_server_reconnect_registry_reflects_passed_tools`\
+      \ (NEW - PASSES)\n- `test_reload.py::test_on_server_reconnect_notify_callback_fired_once`\
+      \ (NEW - PASSES)\n- `test_reload.py::test_on_server_reconnect_preserves_other_servers_tools`\
+      \ (NEW - PASSES)\n- `test_reload.py::test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect`\
+      \ (NEW - FAILS as expected)\n- `test_downstream.py::test_handle_reconnect_calls_enumerate_once`\
+      \ (NEW - PASSES)\n- `test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect`\
+      \ (NEW - PASSES)\n- `test_downstream.py::test_handle_reconnect_swaps_client_before_enumeration`\
+      \ (NEW - PASSES)\n\n**Reconnect fixture source**:\n- Runtime-observed payload\
+      \ shape: `on_server_reconnect(server_name, server_config, tool_list)` where\
+      \ `tool_list` is `list[dict]` with MCP Tool schema\n\n**Observed enumeration\
+      \ count evidence**:\n```\nFAILED tests/shell/test_reload.py::test_on_server_reconnect_reuses_passed_tool_list\n\
+      AssertionError: on_server_reconnect must NOT call re_enumerate when tool_list\
+      \ is provided. \nre_enumerate was called for: ['fs']. Bug: downstream already\
+      \ enumerated fresh tools in _handle_reconnect\n\nFAILED tests/shell/test_reload.py::test_on_server_reconnect_does_not_trigger_duplicate_enumeration\n\
+      AssertionError: Duplicate enumeration detected: re_enumerate was called ['fs'].\
+      \ \n\nFAILED tests/shell/test_reload.py::test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect\n\
+      AssertionError: Duplicate enumeration path detected: ['re_enumerate:fs'].\n\
+      ```\n\n**Registry/status post-reconnect evidence**:\n```\nPASSED tests/shell/test_reload.py::test_on_server_reconnect_registry_reflects_passed_tools\n\
+      PASSED tests/shell/test_reload.py::test_on_server_reconnect_preserves_other_servers_tools\n\
+      PASSED tests/shell/test_downstream.py::test_handle_reconnect_calls_enumerate_once\n\
+      PASSED tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\n\
+      PASSED tests/shell/test_downstream.py::test_handle_reconnect_swaps_client_before_enumeration\n\
+      \nSummary: 3 failed (bug-detecting regression tests), 6 passed\n```\n\n**Bug\
+      \ Identified**: `src/tela/shell/reload.py:174` in `on_server_reconnect` ignores\
+      \ passed `tool_list` and calls `re_enumerate(server_name)` causing duplicate\
+      \ enumeration.\n\n**Product implementation files modified**: NONE (test-only\
+      \ step)\n\n**step_intent**: test_define_red\n**expected_result**: red\n**observed_result**:\
+      \ 3 tests FAIL (correctly exposing bug), 6 tests PASS\n**failure_alignment**:\
+      \ Tests correctly detect that `on_server_reconnect` ignores the provided `tool_list`\
+      \ and re-enumerates, causing duplicate enumeration for the same reconnect event."
   - id: conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     name: Reuse captured reconnect enumeration in reload flow
     status: pending
