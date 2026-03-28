@@ -36407,8 +36407,6 @@ phases:
 
       **Path exercised**: signal or lifecycle input -> connect/status command -> diagnostics
       output'
-    depends_on:
-    - conn_v2.test.coldstart_concurrency_tests
     agent: python-executor
   - id: conn_v2.test.gate
     name: Gate refactor test boundary
