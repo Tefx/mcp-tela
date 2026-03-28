@@ -38212,9 +38212,29 @@ phases:
       \ raw names and therefore hides prefixed tools from upstream.\n3. Any override/enforcement\
       \ path that starts matching on prefixed names instead of raw names.\n\nIntegration\
       \ path: resolve_tools -> DownstreamRegistry register/get_tool -> upstream tools/list/tools/call\
-      \ -> downstream call_tool.\n\nImplement shell wiring so the registry stores\
-      \ and looks up exposed names while retaining raw_name for downstream calls and\
-      \ raw-name-based override/enforcement logic."
+      \ -> downstream call_tool.\n\nFill in stub bodies for shell wiring so the registry\
+      \ stores and looks up exposed names while retaining raw_name for downstream\
+      \ calls and raw-name-based override/enforcement logic.\n\n## Contract-Preserving\
+      \ Implementation Mode\nFill in stub bodies and replace NotImplementedError /\
+      \ pass / ... within the existing registry/upstream wiring signatures only.\n\
+      \nUPSTREAM ARTIFACTS (from contract/test steps):\n  - src/tela/shell/downstream_registry.py\
+      \ — exposed-name registry contract is AUTHORITATIVE (contract)\n  - src/tela/shell/upstream.py\
+      \ — exposed-name in / raw-name out routing contract is AUTHORITATIVE (contract)\n\
+      \  - tests/shell/test_downstream.py — registry/runtime assertions are PROTECTED\
+      \ (test)\n  - tests/shell/test_upstream.py — tools/list/tools/call assertions\
+      \ are PROTECTED (test)\n  - tests/core/test_family.py — exposed-name resolution\
+      \ assertions are PROTECTED (test)\n\nYOUR SCOPE: complete the implementation\
+      \ within existing signatures; wire existing registry and call-routing paths\
+      \ without redesigning the contract surface.\n\nDeviation protocol: if a contract\
+      \ artifact is wrong or incomplete, record a deviation note with type, what,\
+      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nupstream_artifacts:\n\
+      \  - path: src/tela/shell/downstream_registry.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \    tier: contract\n  - path: src/tela/shell/upstream.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \    tier: contract\n  - path: tests/shell/test_downstream.py\n    from_step:\
+      \ tool_prefix.test.add_regressions\n    tier: test\n  - path: tests/shell/test_upstream.py\n\
+      \    from_step: tool_prefix.test.add_regressions\n    tier: test\n  - path:\
+      \ tests/core/test_family.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test"
     verification: '- Main path: same raw tool from two servers with distinct prefixes
       is visible under both exposed names.
 
