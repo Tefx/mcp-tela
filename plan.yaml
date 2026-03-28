@@ -37075,63 +37075,38 @@ phases:
   - id: conn_v2.convergence.integrate_reload_and_status
     name: Integrate reload and reconnect entry adapters with convergence and status
     status: pending
-    description: 'step_type: implementation
-
-
-      auto_tags:
-
-      - integration
-
-
-      Integrate reload/reconnect entry adapters with the convergence kernel and status
-      surfaces.
-
-
-      Required scope:
-
-      - Reload and reconnect entry points delegate consistently to the convergence
-      kernel.
-
-      - Status surfaces expose convergence results without re-deriving them independently.
-
-      - Entry adapters, not the kernel, own notify/audit policy.
-
-
-      Out-of-scope guardrail:
-
-      - No HTTP helper extraction in this step
-
-      - No runtime accessor cleanup in this step
-
-      - No transport opener refactor in this step
-
-
-      Spec refs:
-
-      - conn_v2.contract.startup_convergence_contract
-
-      - conn_v2.contract.lockfile_status_contract
-
-
-      Touch paths:
-
-      - src/tela/shell/reload.py
-
-      - src/tela/shell/gateway.py
-
-      - src/tela/commands/status_cmd.py
-
-
-      Harness refs:
-
-      - tests/shell/test_reload.py
-
-      - tests/shell/test_gateway.py
-
-      - tests/integration/test_hot_reload.py
-
-
-      Authoritative interface: NONE PINNED'
+    description: "step_type: implementation\n\nauto_tags:\n- integration\n\nIntegrate\
+      \ reload/reconnect entry adapters with the convergence kernel and status surfaces.\n\
+      \nRequired scope:\n- Reload and reconnect entry points delegate consistently\
+      \ to the convergence kernel.\n- Status surfaces expose convergence results without\
+      \ re-deriving them independently.\n- Entry adapters, not the kernel, own notify/audit\
+      \ policy.\n\nOut-of-scope guardrail:\n- No HTTP helper extraction in this step\n\
+      - No runtime accessor cleanup in this step\n- No transport opener refactor in\
+      \ this step\n\nSpec refs:\n- conn_v2.contract.startup_convergence_contract\n\
+      - conn_v2.contract.lockfile_status_contract\n\nTouch paths:\n- src/tela/shell/reload.py\n\
+      - src/tela/shell/gateway.py\n- src/tela/commands/status_cmd.py\n\nHarness refs:\n\
+      - tests/shell/test_reload.py\n- tests/shell/test_gateway.py\n- tests/integration/test_hot_reload.py\n\
+      \nAuthoritative interface: NONE PINNED\n\n## Contract-Preserving Implementation\
+      \ Mode\nFill in stub bodies in the reload/status integration seam and replace\
+      \ NotImplementedError / pass / ... within existing adapter signatures only.\n\
+      \nUPSTREAM ARTIFACTS (from contract/test steps):\n- src/tela/shell/downstream.py\
+      \ — convergence result contract is AUTHORITATIVE (contract)\n- src/tela/shell/gateway_runtime.py\
+      \ — status truth contract is AUTHORITATIVE (contract)\n- tests/shell/test_reload.py\
+      \ — reload/reconnect assertions are PROTECTED (test)\n- tests/shell/test_gateway.py\
+      \ — gateway status assertions are PROTECTED (test)\n- tests/integration/test_hot_reload.py\
+      \ — integration assertions are PROTECTED (test)\n\nYOUR SCOPE: complete the\
+      \ implementation within existing signatures; adapters may delegate and wire,\
+      \ but must not invent a second convergence or readiness authority.\n\nDeviation\
+      \ protocol: if a contract artifact is wrong or incomplete, record a deviation\
+      \ note with type, what, why, and impact — do NOT silently rewrite the contract\
+      \ or tests.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\n\nupstream_artifacts:\n- path:\
+      \ src/tela/shell/downstream.py\n  from_step: conn_v2.contract.startup_convergence_contract\n\
+      \  tier: contract\n- path: src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \  tier: contract\n- path: tests/shell/test_reload.py\n  from_step: conn_v2.test.state_contract_tests\n\
+      \  tier: test\n- path: tests/shell/test_gateway.py\n  from_step: conn_v2.test.state_contract_tests\n\
+      \  tier: test\n- path: tests/integration/test_hot_reload.py\n  from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \  tier: test"
     verification: '- Reload/reconnect entry points delegate to convergence kernel
       consistently
 
