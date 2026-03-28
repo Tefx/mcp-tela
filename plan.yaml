@@ -36919,14 +36919,15 @@ phases:
       \ fact model rather than inventing new readiness logic.\n\nDeviation protocol:\
       \ if a contract artifact is wrong or incomplete, record a deviation note with\
       \ type, what, why, and impact — do NOT silently rewrite the contract or tests.\n\
-      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
-      \ completion is NOT acceptable.\n\nupstream_artifacts:\n  - path: src/tela/shell/gateway_runtime.py\n\
-      \    from_step: conn_v2.contract.lockfile_status_contract\n    tier: contract\n\
-      \  - path: src/tela/commands/status_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
-      \    tier: contract\n  - path: tests/shell/test_http_routes.py\n    from_step:\
-      \ conn_v2.test.state_contract_tests\n    tier: test\n  - path: tests/shell/test_query_commands_remote_state.py\n\
-      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
-      \ - path: tests/shell/test_connect_cmd.py\n    from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \nAfter implementation, run spec-verifier scoped to changed files to check for\
+      \ spec-code drift.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\n\nupstream_artifacts:\n  -\
+      \ path: src/tela/shell/gateway_runtime.py\n    from_step: conn_v2.contract.lockfile_status_contract\n\
+      \    tier: contract\n  - path: src/tela/commands/status_cmd.py\n    from_step:\
+      \ conn_v2.contract.bridge_ux_contract\n    tier: contract\n  - path: tests/shell/test_http_routes.py\n\
+      \    from_step: conn_v2.test.state_contract_tests\n    tier: test\n  - path:\
+      \ tests/shell/test_query_commands_remote_state.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
+      \    tier: test\n  - path: tests/shell/test_connect_cmd.py\n    from_step: conn_v2.test.coldstart_concurrency_tests\n\
       \    tier: test"
     verification: '- Main path: connect/status/HTTP surfaces consume shared lifecycle
       status data
