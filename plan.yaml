@@ -36738,7 +36738,7 @@ phases:
       None - only test files were modified'
   - id: conn_v2.test.gate
     name: Gate refactor test boundary
-    status: pending
+    status: claimed
     description: "step_type: gate\nGate review: verify the test-first acceptance boundary\
       \ is executable before runtime implementation.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - Tests cover cold start, concurrency, lifecycle truth, and interrupt semantics\
@@ -36755,6 +36755,8 @@ phases:
     - conn_v2.test.coldstart_concurrency_tests
     - conn_v2.test.interrupt_diagnostics_tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-28T20:42:51.551141+00:00'
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
   status: locked
