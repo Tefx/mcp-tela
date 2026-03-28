@@ -36148,7 +36148,7 @@ phases:
       \ accepted phase scope."
 - id: conn_v2.contract
   name: Connect/Serve Runtime Refactor Contracts
-  status: pending
+  status: in_progress
   gate: Freeze architecture-basis-driven contracts for discovery vs readiness, single-instance
     startup, background convergence, interrupt semantics, and host-facing status/UX
     before implementation DAG begins.
@@ -36213,7 +36213,7 @@ phases:
     agent: software-architect
   - id: conn_v2.contract.bridge_ux_contract
     name: Codify bridge interrupt, startup messaging, and diagnostics contract
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - interfaces\n  - behavior_notes\n  - message_catalog_stubs\nagent_source:\
       \ default\nspec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n  - docs/USAGE.md#CLI\
@@ -36248,6 +36248,8 @@ phases:
 
       - No message implementation or logging code lands in this contract step'
     agent: uiux-designer
+    claimed_by: uiux-designer
+    claimed_at: '2026-03-28T18:58:13.157961+00:00'
   - id: conn_v2.contract.gate
     name: Gate connect/serve runtime contracts
     status: pending
