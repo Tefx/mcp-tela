@@ -37293,6 +37293,8 @@ phases:
       ### Failure Path Evidence
 
       - Show whether active connection count and idle state recovered after interrupt.'
+    depends_on:
+    - conn_v2.bridge.integrate_connect_flow
     agent: blind-tester
   - id: conn_v2.bridge.gate
     name: Gate bridge control phase
