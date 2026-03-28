@@ -37107,9 +37107,10 @@ phases:
       \ but must not invent a second convergence or readiness authority.\n\nDeviation\
       \ protocol: if a contract artifact is wrong or incomplete, record a deviation\
       \ note with type, what, why, and impact — do NOT silently rewrite the contract\
-      \ or tests.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
-      \ step. Stub-only completion is NOT acceptable.\n\nupstream_artifacts:\n- path:\
-      \ src/tela/shell/downstream.py\n  from_step: conn_v2.contract.startup_convergence_contract\n\
+      \ or tests.\n\nAfter implementation, run spec-verifier scoped to changed files\
+      \ to check for spec-code drift.\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\n\
+      upstream_artifacts:\n- path: src/tela/shell/downstream.py\n  from_step: conn_v2.contract.startup_convergence_contract\n\
       \  tier: contract\n- path: src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
       \  tier: contract\n- path: tests/shell/test_reload.py\n  from_step: conn_v2.test.state_contract_tests\n\
       \  tier: test\n- path: tests/shell/test_gateway.py\n  from_step: conn_v2.test.state_contract_tests\n\
