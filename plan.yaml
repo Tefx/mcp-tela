@@ -37031,63 +37031,38 @@ phases:
   - id: conn_v2.convergence.impl_module
     name: Implement single-server convergence kernel
     status: pending
-    description: 'step_type: implementation
-
-
-      Implement the single-server convergence kernel described by conn_v2 contracts.
-
-
-      Required scope:
-
-      - Kernel owns resolve/register/conflict/rollback semantics.
-
-      - Kernel returns structured results for callers.
-
-      - Kernel does not own event notifications or audit policy.
-
-      - Reconnect path avoids duplicate enumeration when fresh raw_tools already exist.
-
-      - connect_all remains outside this kernel.
-
-
-      Known risks / gate preview:
-
-      - Gate will reject any implementation that mixes entry-trigger logic with kernel
-      state convergence.
-
-      - Gate will reject any implementation that re-introduces blind re-enumeration
-      on reconnect.
-
-
-      Spec refs:
-
-      - conn_v2.contract.startup_convergence_contract
-
-      - docs/DESIGN.md Runtime Architecture / Convergence and reload
-
-
-      Touch paths:
-
-      - src/tela/shell/downstream.py
-
-      - src/tela/shell/reload.py
-
-      - src/tela/core/conflict.py
-
-
-      Harness refs:
-
-      - tests/shell/test_reload.py
-
-      - tests/shell/test_downstream.py
-
-
-      Authoritative interface: NONE PINNED
-
-
-      ## Completion Criteria (stub exclusion)
-
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    description: "step_type: implementation\n\nFill in stub bodies for the single-server\
+      \ convergence kernel described by conn_v2 contracts.\n\nRequired scope:\n- Kernel\
+      \ owns resolve/register/conflict/rollback semantics.\n- Kernel returns structured\
+      \ results for callers.\n- Kernel does not own event notifications or audit policy.\n\
+      - Reconnect path avoids duplicate enumeration when fresh raw_tools already exist.\n\
+      - connect_all remains outside this kernel.\n\nKnown risks / gate preview:\n\
+      - Gate will reject any implementation that mixes entry-trigger logic with kernel\
+      \ state convergence.\n- Gate will reject any implementation that re-introduces\
+      \ blind re-enumeration on reconnect.\n\nSpec refs:\n- conn_v2.contract.startup_convergence_contract\n\
+      - docs/DESIGN.md Runtime Architecture / Convergence and reload\n\nTouch paths:\n\
+      - src/tela/shell/downstream.py\n- src/tela/shell/reload.py\n- src/tela/core/conflict.py\n\
+      \nHarness refs:\n- tests/shell/test_reload.py\n- tests/shell/test_downstream.py\n\
+      \nAuthoritative interface: NONE PINNED\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\n\
+      ## Contract-Preserving Implementation Mode\nFill in stub bodies and replace\
+      \ NotImplementedError / pass / ... within the existing convergence signatures\
+      \ only.\n\nUPSTREAM ARTIFACTS (from contract/test steps):\n- src/tela/shell/downstream.py\
+      \ — convergence kernel contract is AUTHORITATIVE (contract)\n- src/tela/shell/reload.py\
+      \ — reconnect/reload boundary semantics are AUTHORITATIVE (contract)\n- tests/shell/test_downstream.py\
+      \ — convergence result assertions are PROTECTED (test)\n- tests/shell/test_reload.py\
+      \ — reload/reconnect assertions are PROTECTED (test)\n- tests/integration/test_end_to_end.py\
+      \ — cold-start integration expectations are PROTECTED (test)\n\nYOUR SCOPE:\
+      \ complete the implementation within existing signatures; keep entry-trigger\
+      \ logic outside the kernel and edit bodies only.\n\nDeviation protocol: if a\
+      \ contract artifact is wrong or incomplete, record a deviation note with type,\
+      \ what, why, and impact — do NOT silently rewrite the contract or tests.\n\n\
+      upstream_artifacts:\n- path: src/tela/shell/downstream.py\n  from_step: conn_v2.contract.startup_convergence_contract\n\
+      \  tier: contract\n- path: src/tela/shell/reload.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \  tier: contract\n- path: tests/shell/test_downstream.py\n  from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \  tier: test\n- path: tests/shell/test_reload.py\n  from_step: conn_v2.test.state_contract_tests\n\
+      \  tier: test\n- path: tests/integration/test_end_to_end.py\n  from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \  tier: test"
     verification: '- Kernel handles resolve/register/conflict/rollback and returns
       structured results
 
