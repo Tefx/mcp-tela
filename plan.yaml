@@ -36432,7 +36432,7 @@ phases:
   steps:
   - id: conn_v2.test.state_contract_tests
     name: Add lockfile, status, and lifecycle contract tests
-    status: pending
+    status: claimed
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/INTERFACES.md#7.2.1\
       \ GET /status Response Schema\n  - docs/INTERFACES.md#7.3 Lockfile Contract\n\
       \  - docs/INTERFACES.md#2. CLI Surface\n  - docs/USAGE.md#Running tela > tela\
@@ -36457,6 +36457,8 @@ phases:
 
       - Tests prove lockfile discovery does not substitute for readiness'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-28T19:27:07.122379+00:00'
   - id: conn_v2.test.coldstart_concurrency_tests
     name: Add OpenCode-like cold-start and concurrent attach regressions
     status: claimed
