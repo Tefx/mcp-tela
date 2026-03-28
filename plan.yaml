@@ -36461,7 +36461,7 @@ phases:
     claimed_at: '2026-03-28T20:09:16.025461+00:00'
   - id: conn_v2.test.coldstart_concurrency_tests
     name: Add OpenCode-like cold-start and concurrent attach regressions
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/USAGE.md#Running\
       \ tela > tela connect\n  - docs/INTERFACES.md#2. CLI Surface\n  - architecture\
@@ -36512,6 +36512,28 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-28T20:09:02.041878+00:00'
+    done_at: '2026-03-28T20:38:28.309228+00:00'
+    evidence: "## Integration Evidence\n\n**Command or test exercising the full path**:\n\
+      ```\npytest tests/shell/test_connect_cmd.py tests/repro/test_connect_runtime_liveness.py\
+      \ -q\n```\n\n**Actual output**:\n```\n.................................    \
+      \                                    [100%]\n33 passed in 22.81s\n```\n\n**Path\
+      \ exercised**: tela connect discovery/autostart -> gateway startup/lifecycle\
+      \ -> attach follower/leader outcome\n\n**step_intent**: Add regression tests\
+      \ for:\n1. Cold start with 7 downstream servers where endpoint becomes discoverable\
+      \ before convergence completes\n2. Concurrent attach/autostart tests proving\
+      \ multiple connect invocations for the same config converge on one gateway leader\
+      \ and follower wait path\n3. Attach-to-existing-gateway tests exercising config_path\
+      \ ownership / mismatch diagnostics\n\n**expected_result**: \n- Tests include\
+      \ one OpenCode-like cold-start scenario (test_coldstart_endpoint_discovers_before_convergence)\n\
+      - One concurrent attach scenario (test_concurrent_attach_converges_on_single_leader)\n\
+      - Config mismatch behavior tests (test_attach_to_existing_gateway_*)\n- Evidence\
+      \ names exact test modules\n\n**observed_result**: All 33 tests pass (27 shell\
+      \ tests + 6 repro tests)\n\n**Test modules with new tests**:\n- tests/repro/test_connect_runtime_liveness.py:\
+      \ \n  - test_coldstart_endpoint_discovers_before_convergence\n  - test_concurrent_attach_converges_on_single_leader\n\
+      - tests/shell/test_connect_cmd.py:\n  - test_attach_to_existing_gateway_with_matching_config_path\n\
+      \  - test_attach_to_existing_gateway_detects_config_path_mismatch\n  - test_attach_to_existing_gateway_without_config_path_in_lockfile\n\
+      \n**failure_alignment**: N/A (no failures observed)\n\n**product implementation\
+      \ files modified**: None (test-only step)"
   - id: conn_v2.test.interrupt_diagnostics_tests
     name: Add hard-interrupt and diagnostics regression tests
     status: claimed
