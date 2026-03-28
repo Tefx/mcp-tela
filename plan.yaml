@@ -37860,15 +37860,16 @@ phases:
       \ message states and avoid creating alternate output schemas.\n\nDeviation protocol:\
       \ if a contract artifact is wrong or incomplete, record a deviation note with\
       \ type, what, why, and impact — do NOT silently rewrite the contract or tests.\n\
-      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
-      \ completion is NOT acceptable.\n\nupstream_artifacts:\n  - path: src/tela/commands/connect_cmd.py\n\
-      \    from_step: conn_v2.contract.bridge_ux_contract\n    tier: contract\n  -\
-      \ path: src/tela/commands/status_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
-      \    tier: contract\n  - path: tests/shell/test_connect_cmd.py\n    from_step:\
-      \ conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n  - path: tests/shell/test_serve_cmd.py\n\
+      \nAfter implementation, run spec-verifier scoped to changed files to check for\
+      \ spec-code drift.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. Stub-only completion is NOT acceptable.\n\nupstream_artifacts:\n  -\
+      \ path: src/tela/commands/connect_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
+      \    tier: contract\n  - path: src/tela/commands/status_cmd.py\n    from_step:\
+      \ conn_v2.contract.bridge_ux_contract\n    tier: contract\n  - path: tests/shell/test_connect_cmd.py\n\
       \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
-      \ - path: tests/shell/test_query_commands_remote_state.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
-      \    tier: test"
+      \ - path: tests/shell/test_serve_cmd.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
+      \    tier: test\n  - path: tests/shell/test_query_commands_remote_state.py\n\
+      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test"
     verification: '- Main path: targeted tests prove state-specific diagnostics across
       connect, serve, status, and HTTP
 
