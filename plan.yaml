@@ -37783,7 +37783,30 @@ phases:
       \ convergence, and bridge modules.\n  - Verify no user-facing path terminates\
       \ at legacy ad hoc coordination logic when the new modules are available.\n\
       \  - Keep this as the serial integration step for shared entrypoint files after\
-      \ the host-facing diagnostics pass has settled shared CLI/HTTP output surfaces."
+      \ the host-facing diagnostics pass has settled shared CLI/HTTP output surfaces.\n\
+      \n## Contract-Preserving Implementation Mode\nFill in stub bodies in the shared\
+      \ entrypoint wiring and replace NotImplementedError / pass / ... within the\
+      \ existing CLI/HTTP entry signatures only.\n\nUPSTREAM ARTIFACTS (from contract/test\
+      \ steps):\n  - src/tela/shell/startup_coordinator.py — startup authority is\
+      \ AUTHORITATIVE (contract)\n  - src/tela/shell/gateway_runtime.py — lifecycle/status\
+      \ truth is AUTHORITATIVE (contract)\n  - tests/shell/test_cli_wiring.py — entrypoint\
+      \ wiring assertions are PROTECTED (test)\n  - tests/integration/test_end_to_end.py\
+      \ — real entrypoint path assertions are PROTECTED (test)\n  - tests/integration/test_hot_reload.py\
+      \ — reload/runtime integration assertions are PROTECTED (test)\n\nYOUR SCOPE:\
+      \ complete the implementation within existing signatures; replace inline coordination\
+      \ with the already-defined modules instead of creating new entrypoint-specific\
+      \ logic.\n\nDeviation protocol: if a contract artifact is wrong or incomplete,\
+      \ record a deviation note with type, what, why, and impact — do NOT silently\
+      \ rewrite the contract or tests.\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\n\
+      upstream_artifacts:\n  - path: src/tela/shell/startup_coordinator.py\n    from_step:\
+      \ conn_v2.contract.startup_convergence_contract\n    tier: contract\n  - path:\
+      \ src/tela/shell/gateway_runtime.py\n    from_step: conn_v2.contract.lockfile_status_contract\n\
+      \    tier: contract\n  - path: tests/shell/test_cli_wiring.py\n    from_step:\
+      \ conn_v2.ux.conformance_review\n    tier: test\n  - path: tests/integration/test_end_to_end.py\n\
+      \    from_step: conn_v2.test.coldstart_concurrency_tests\n    tier: test\n \
+      \ - path: tests/integration/test_hot_reload.py\n    from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \    tier: test"
     verification: '- Entry points route through the new modules end-to-end
 
       - No shared entrypoint still owns duplicated lifecycle or startup logic
