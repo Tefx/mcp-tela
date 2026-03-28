@@ -37,6 +37,9 @@ from tela.commands.connect_transport import (
 )
 from tela.shell.config_loader import Result
 from tela.shell.lockfile import delete_lockfile, read_lockfile
+from tela.shell.startup_coordinator import (
+    discover_or_autostart as _coordinator_discover_or_autostart,
+)
 
 
 LOCKFILE_WAIT_TIMEOUT_SECONDS = 5.0
@@ -200,45 +203,37 @@ def _resolve_connect_token(
     )
 
 
-# @shell_complexity: discovery flow includes stale handling, autostart, and race retries.
+# @shell_complexity: discovery flow delegates to startup coordinator for leader/follower arbitration.
+def _autostart_serve_adapter(
+    config_path: str,
+    default_profile: str | None,
+) -> Result[int, str]:
+    """Adapter for startup coordinator: wraps _autostart_serve with positional args."""
+
+    return _autostart_serve(
+        config_path=config_path,
+        default_profile=default_profile,
+    )
+
+
 def _discover_or_autostart(
     *,
     config_path: str,
     default_profile: str | None,
 ) -> Result[LockfileData, str]:
-    """Discover running server via lockfile, auto-starting with race retry."""
+    """Discover running server via lockfile or coordinate autostart leadership.
 
-    lockfile_result = read_lockfile()
-    if lockfile_result.is_ok:
-        assert lockfile_result.value is not None
-        return Result(value=lockfile_result.value)
+    Delegates to the startup coordinator for single-leader election and
+    config-path ownership validation during concurrent connect invocations.
+    """
 
-    for _attempt in range(LOCKFILE_START_RACE_RETRIES):
-        lockfile_result = _wait_for_live_lockfile(timeout_seconds=0.3)
-        if lockfile_result.is_ok:
-            assert lockfile_result.value is not None
-            return Result(value=lockfile_result.value)
-
-        start_result = _autostart_serve(
-            config_path=config_path,
-            default_profile=default_profile,
-        )
-        if start_result.is_err:
-            continue
-
-        spawned_pid = start_result.value
-        wait_result = _wait_for_live_lockfile(
-            timeout_seconds=LOCKFILE_WAIT_TIMEOUT_SECONDS,
-            expected_pid=spawned_pid,
-        )
-        if wait_result.is_ok:
-            assert wait_result.value is not None
-            return Result(value=wait_result.value)
-
-    return Result(
-        error=(
-            "DISCOVERY_FAILED: could not discover or auto-start tela serve via lockfile"
-        )
+    return _coordinator_discover_or_autostart(
+        config_path=config_path,
+        default_profile=default_profile,
+        read_lockfile=read_lockfile,
+        wait_for_live_lockfile=_wait_for_live_lockfile,
+        autostart_serve=_autostart_serve_adapter,
+        lockfile_wait_timeout_seconds=LOCKFILE_WAIT_TIMEOUT_SECONDS,
     )
 
 
