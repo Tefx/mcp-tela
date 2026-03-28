@@ -36870,9 +36870,11 @@ phases:
       \ the implementation within existing signatures; edit bodies only and keep lockfile\
       \ discovery separate from readiness truth.\n\nDeviation protocol: if a contract\
       \ artifact is wrong or incomplete, record a deviation note with type, what,\
-      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nupstream_artifacts:\n\
-      - path: src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
-      \  tier: contract\n- path: src/tela/shell/reload.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nAfter\
+      \ implementation, run spec-verifier scoped to changed files to check for spec-code\
+      \ drift.\n\nupstream_artifacts:\n- path: src/tela/shell/gateway_runtime.py\n\
+      \  from_step: conn_v2.contract.lockfile_status_contract\n  tier: contract\n\
+      - path: src/tela/shell/reload.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
       \  tier: contract\n- path: tests/shell/test_gateway.py\n  from_step: conn_v2.test.state_contract_tests\n\
       \  tier: test\n- path: tests/shell/test_lockfile.py\n  from_step: conn_v2.test.state_contract_tests\n\
       \  tier: test\n- path: tests/shell/test_query_commands_remote_state.py\n  from_step:\
