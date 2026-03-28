@@ -36161,7 +36161,7 @@ phases:
   steps:
   - id: conn_v2.contract.lockfile_status_contract
     name: Codify lockfile, status, and lifecycle source-of-truth contracts
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - interfaces\n  - type_defs\n  - behavioral_notes\n\nUse the approved architecture\
       \ basis to pin lockfile, status, readiness, and lifecycle truth without re-deriving\
@@ -36185,6 +36185,8 @@ phases:
 
       - Protects conn_v2.lifecycle, conn_v2.convergence, and conn_v2.bridge gates'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-28T18:58:22.012919+00:00'
   - id: conn_v2.contract.startup_convergence_contract
     name: Codify startup coordination and convergence kernel boundaries
     status: pending
