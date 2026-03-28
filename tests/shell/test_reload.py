@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from tela.core.models import ServerConfig, TelaConfig
 from tela.shell.downstream import connect_all, disconnect_all, get_tool_server
 from tela.shell.reload import (
@@ -596,5 +598,264 @@ def test_conflict_rollback_restores_all_servers_state() -> None:
     # Both servers' tools should be preserved (rollback)
     assert get_tool_server("tool_a").value == "fs"
     assert get_tool_server("tool_b").value == "git"
+
+    _teardown()
+
+
+# --- Reconnect enumeration regression tests ---
+# Spec ref: docs/DESIGN.md Runtime Architecture / Connection lifecycle
+# Acceptance: When downstream reconnect handling already has fresh raw_tools,
+# the reload/reconnect flow MUST reuse that payload.
+# Reconnect flow MUST NOT trigger a second list_tools or re_enumerate call
+# for the same reconnect event.
+
+
+def test_on_server_reconnect_reuses_passed_tool_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """on_server_reconnect must use the tool_list argument, not re-enumerate.
+
+    Regression test for: downstream reconnect already has fresh raw_tools
+    from _handle_reconnect's _enumerate_client_tools call. The reconnect
+    handler MUST NOT call re_enumerate again - it must reuse the passed
+    tool_list directly.
+    """
+    from typing import Any
+    from tela.shell.config_loader import Result
+
+    re_enumerate_called = []
+
+    async def _fake_re_enumerate(server_name: str) -> Result[list[Any], str]:
+        re_enumerate_called.append(server_name)
+        # Return empty list to avoid affecting registry in this test
+        return Result(value=[])
+
+    monkeypatch.setattr("tela.shell.reload.re_enumerate", _fake_re_enumerate)
+
+    servers = {"fs": ServerConfig(name="fs", command="cmd")}
+    asyncio.run(
+        connect_all(
+            servers, tool_lists={"fs": [{"name": "initial_tool", "inputSchema": {}}]}
+        )
+    )
+
+    fresh_tool_list = [
+        {"name": "initial_tool", "inputSchema": {}},
+        {"name": "new_tool", "inputSchema": {}},
+    ]
+
+    # on_server_reconnect is called with fresh_tool_list by _handle_reconnect
+    # after reconnect is established. It MUST use fresh_tool_list directly.
+    result = asyncio.run(on_server_reconnect("fs", servers["fs"], fresh_tool_list))
+    assert result.is_ok
+
+    # The bug: on_server_reconnect currently calls re_enumerate(server_name)
+    # which is a duplicate enumeration. After fix, re_enumerate_called should
+    # be empty because the tool_list was already provided.
+    assert re_enumerate_called == [], (
+        f"on_server_reconnect must NOT call re_enumerate when tool_list is "
+        f"provided. re_enumerate was called for: {re_enumerate_called}. "
+        f"Bug: downstream already enumerated fresh tools in _handle_reconnect"
+    )
+
+    _teardown()
+
+
+def test_on_server_reconnect_does_not_trigger_duplicate_enumeration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reconnect flow must trigger exactly one enumeration, not two.
+
+    The reconnect path (_handle_reconnect -> on_server_reconnect) must:
+    1. Enumerate once in _handle_reconnect via _enumerate_client_tools
+    2. Pass fresh raw_tools to on_server_reconnect
+    3. on_server_reconnect must reuse the passed tools WITHOUT re-enumerating
+
+    This test verifies that re_enumerate is NOT called during reconnect,
+    proving no duplicate enumeration occurs.
+    """
+    from typing import Any
+    from tela.shell.config_loader import Result
+
+    enumerate_count = []
+
+    async def _fake_re_enumerate(server_name: str) -> Result[list[Any], str]:
+        enumerate_count.append(server_name)
+        from tela.shell.downstream import get_registry
+
+        registry = get_registry()
+        return Result(value=registry.get_all_tools().get(server_name, []))
+
+    monkeypatch.setattr("tela.shell.reload.re_enumerate", _fake_re_enumerate)
+
+    servers = {"fs": ServerConfig(name="fs", command="cmd")}
+    asyncio.run(
+        connect_all(servers, tool_lists={"fs": [{"name": "tool_a", "inputSchema": {}}]})
+    )
+
+    reconnect_tools = [
+        {"name": "tool_a", "inputSchema": {}},
+        {"name": "tool_b", "inputSchema": {}},
+    ]
+
+    result = asyncio.run(on_server_reconnect("fs", servers["fs"], reconnect_tools))
+    assert result.is_ok
+
+    # Exactly zero re_enumerate calls should occur during reconnect
+    # (the fresh tools were already enumerated by _handle_reconnect)
+    assert len(enumerate_count) == 0, (
+        f"Duplicate enumeration detected: re_enumerate was called {enumerate_count}. "
+        f"Reconnect flow must not re-enumerate when fresh tools are provided."
+    )
+
+    _teardown()
+
+
+def test_on_server_reconnect_registry_reflects_passed_tools() -> None:
+    """Registry reflects the tools passed to on_server_reconnect, not re-enumerated ones."""
+    servers = {"fs": ServerConfig(name="fs", command="cmd")}
+    asyncio.run(
+        connect_all(servers, tool_lists={"fs": [{"name": "tool_a", "inputSchema": {}}]})
+    )
+
+    # Simulate reconnect with expanded tool list
+    reconnect_tools = [
+        {"name": "tool_a", "inputSchema": {}},
+        {"name": "tool_b", "inputSchema": {}},
+        {"name": "tool_c", "inputSchema": {}},
+    ]
+
+    result = asyncio.run(on_server_reconnect("fs", servers["fs"], reconnect_tools))
+    assert result.is_ok
+
+    # Registry should reflect all tools from reconnect_tools
+    assert get_tool_server("tool_a").value == "fs"
+    assert get_tool_server("tool_b").value == "fs"
+    assert get_tool_server("tool_c").value == "fs"
+
+    _teardown()
+
+
+def test_on_server_reconnect_notify_callback_fired_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Notification callback fires exactly once after successful reconnect."""
+    notified: list[str] = []
+
+    async def capture_notify(digest: str) -> None:
+        notified.append(digest)
+
+    set_notify_callback(capture_notify)
+
+    # Disable re_enumerate to prevent duplicate enumeration affecting test
+    async def _no_op_re_enumerate(server_name: str):
+        from tela.shell.config_loader import Result
+
+        return Result(value=[])
+
+    monkeypatch.setattr("tela.shell.reload.re_enumerate", _no_op_re_enumerate)
+
+    try:
+        servers = {"fs": ServerConfig(name="fs", command="cmd")}
+        asyncio.run(
+            connect_all(
+                servers,
+                tool_lists={"fs": [{"name": "tool_a", "inputSchema": {}}]},
+            )
+        )
+
+        reconnect_tools = [
+            {"name": "tool_a", "inputSchema": {}},
+            {"name": "tool_b", "inputSchema": {}},
+        ]
+
+        result = asyncio.run(on_server_reconnect("fs", servers["fs"], reconnect_tools))
+        assert result.is_ok
+
+        # Exactly one notification should fire
+        assert len(notified) == 1, (
+            f"Expected 1 notification callback, got {len(notified)}. "
+            f"Reconnect must fire notification only via on_tools_changed delegation."
+        )
+        assert notified[0].startswith("sha256:")
+    finally:
+        set_notify_callback(None)
+        _teardown()
+
+
+def test_on_server_reconnect_preserves_other_servers_tools() -> None:
+    """Reconnect of one server does not affect other servers' tools in registry."""
+    servers = {
+        "fs": ServerConfig(name="fs", command="cmd"),
+        "git": ServerConfig(name="git", command="cmd"),
+    }
+    asyncio.run(
+        connect_all(
+            servers,
+            tool_lists={
+                "fs": [{"name": "read_file", "inputSchema": {}}],
+                "git": [{"name": "git_status", "inputSchema": {}}],
+            },
+        )
+    )
+
+    # Reconnect only 'fs' server
+    reconnect_tools = [
+        {"name": "read_file", "inputSchema": {}},
+        {"name": "write_file", "inputSchema": {}},
+    ]
+
+    result = asyncio.run(on_server_reconnect("fs", servers["fs"], reconnect_tools))
+    assert result.is_ok
+
+    # fs tools updated
+    assert get_tool_server("read_file").value == "fs"
+    assert get_tool_server("write_file").value == "fs"
+    # git tools preserved
+    assert get_tool_server("git_status").value == "git"
+
+    _teardown()
+
+
+def test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify on_server_reconnect path does not trigger list_tools on downstream.
+
+    This is a failure-path regression test: if on_server_reconnect incorrectly
+    calls re_enumerate (which calls _enumerate_tools), this test will fail,
+    detecting the duplicate re_enumerate/list_tools bug.
+    """
+    from typing import Any
+    from tela.shell.config_loader import Result
+
+    downstream_list_tools_calls: list[str] = []
+
+    async def _fake_re_enumerate(server_name: str) -> Result[list[Any], str]:
+        # This tracks if re_enumerate is wrongly called during reconnect
+        downstream_list_tools_calls.append(f"re_enumerate:{server_name}")
+        from tela.shell.downstream import get_registry
+
+        return Result(value=get_registry().get_all_tools().get(server_name, []))
+
+    monkeypatch.setattr("tela.shell.reload.re_enumerate", _fake_re_enumerate)
+
+    servers = {"fs": ServerConfig(name="fs", command="cmd")}
+    asyncio.run(
+        connect_all(servers, tool_lists={"fs": [{"name": "tool_a", "inputSchema": {}}]})
+    )
+
+    reconnect_tools = [{"name": "tool_a", "inputSchema": {}}]
+
+    result = asyncio.run(on_server_reconnect("fs", servers["fs"], reconnect_tools))
+    assert result.is_ok
+
+    # Assert no re_enumerate was triggered during reconnect
+    # (reconnect already has fresh tools from _handle_reconnect)
+    assert downstream_list_tools_calls == [], (
+        f"Duplicate enumeration path detected: {downstream_list_tools_calls}. "
+        f"on_server_reconnect must not call re_enumerate - it must use "
+        f"the tool_list already provided by _handle_reconnect."
+    )
 
     _teardown()

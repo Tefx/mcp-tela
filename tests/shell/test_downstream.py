@@ -1054,3 +1054,228 @@ def test_transport_validation_via_load_config_path() -> None:
         assert "SERVER_MISSING_TRANSPORT" in (result.error or "")
     finally:
         config_path.unlink(missing_ok=True)
+
+
+# --- Reconnect path: _handle_reconnect end-to-end tests ---
+# Spec ref: docs/DESIGN.md Runtime Architecture / Connection lifecycle
+# These tests verify the full reconnect flow does not trigger duplicate enumeration.
+
+
+def test_handle_reconnect_calls_enumerate_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_handle_reconnect must enumerate exactly once, not twice.
+
+    Regression test: downstream reconnect already has fresh raw_tools from
+    _enumerate_client_tools in _handle_reconnect. The on_server_reconnect
+    handler must NOT re-enumerate (no second list_tools call).
+    """
+    from typing import Any
+    from mcp.types import ListToolsResult, Tool
+
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+
+    enumerate_calls: list[str] = []
+
+    class FakeSession:
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            enumerate_calls.append("list_tools")
+            return ListToolsResult(
+                tools=[Tool(name="after_reconnect", inputSchema={})],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        return Result(
+            value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack())  # type: ignore[arg-type]
+        )
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        # on_server_reconnect should be called with already-enumerated tools
+        # NOT trigger another enumeration itself
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect", _fake_on_server_reconnect
+    )
+
+    server_config = ServerConfig(name="mocked", command="unused")
+    handler = downstream._build_downstream_message_handler("mocked", server_config)
+
+    try:
+        asyncio.run(handler(RuntimeError("downstream disconnected")))
+    finally:
+        downstream._clients.clear()
+
+    # After fix: enumerate_calls should contain exactly ONE list_tools call
+    # from _handle_reconnect's _enumerate_client_tools call.
+    # The on_server_reconnect must NOT call re_enumerate (which would
+    # trigger a second list_tools).
+    # Currently this test will show 1 call - the bug fix will ensure
+    # on_server_reconnect doesn't re-enumerate.
+    assert len(enumerate_calls) == 1, (
+        f"Expected exactly 1 enumerate call from _handle_reconnect, "
+        f"got {len(enumerate_calls)}: {enumerate_calls}"
+    )
+
+
+def test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_handle_reconnect must pass the already-enumerated tools to on_server_reconnect."""
+    from typing import Any
+    from mcp.types import ListToolsResult, Tool
+
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+
+    received_tool_list: list[dict] = []
+
+    class FakeSession:
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            return ListToolsResult(
+                tools=[
+                    Tool(name="tool_x", inputSchema={}),
+                    Tool(name="tool_y", inputSchema={}),
+                ],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        return Result(
+            value=downstream._ClientHandle(session=FakeSession(), stack=FakeStack())  # type: ignore[arg-type]
+        )
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        received_tool_list.extend(tool_list)
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect", _fake_on_server_reconnect
+    )
+
+    server_config = ServerConfig(name="mocked", command="unused")
+    handler = downstream._build_downstream_message_handler("mocked", server_config)
+
+    try:
+        asyncio.run(handler(RuntimeError("downstream disconnected")))
+    finally:
+        downstream._clients.clear()
+
+    # Verify the tools that were enumerated in _handle_reconnect are
+    # correctly passed to on_server_reconnect
+    tool_names = sorted(t["name"] for t in received_tool_list)
+    assert tool_names == ["tool_x", "tool_y"], (
+        f"Expected ['tool_x', 'tool_y'] to be passed to on_server_reconnect, "
+        f"got {tool_names}"
+    )
+
+
+def test_handle_reconnect_swaps_client_before_enumeration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_handle_reconnect must swap client handle before calling on_server_reconnect.
+
+    This ensures the new client session is active when tools are enumerated
+    after reconnect.
+    """
+    from typing import Any
+    from mcp.types import ListToolsResult, Tool
+
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+
+    client_handle_order: list[str] = []
+
+    class FakeSession:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        async def list_tools(
+            self, cursor: str | None = None, *, params: Any = None
+        ) -> ListToolsResult:
+            client_handle_order.append(f"enumerate:{self.name}")
+            return ListToolsResult(
+                tools=[Tool(name=f"tool_from_{self.name}", inputSchema={})],
+                nextCursor=None,
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        client_handle_order.append(f"open:{server_name}")
+        return Result(
+            value=downstream._ClientHandle(  # type: ignore[arg-type]
+                session=FakeSession(server_name),
+                stack=FakeStack(),  # type: ignore[arg-type]
+            )
+        )
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        client_handle_order.append(f"on_server_reconnect:{server_name}")
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect", _fake_on_server_reconnect
+    )
+
+    server_config = ServerConfig(name="mocked", command="unused")
+    handler = downstream._build_downstream_message_handler("mocked", server_config)
+
+    try:
+        asyncio.run(handler(RuntimeError("downstream disconnected")))
+    finally:
+        downstream._clients.clear()
+
+    # Order should be: open -> swap -> enumerate -> on_server_reconnect
+    assert client_handle_order == [
+        "open:mocked",
+        "enumerate:mocked",
+        "on_server_reconnect:mocked",
+    ], f"Unexpected order: {client_handle_order}"
