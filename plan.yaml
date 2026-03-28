@@ -36189,7 +36189,7 @@ phases:
     claimed_at: '2026-03-28T18:58:22.012919+00:00'
   - id: conn_v2.contract.startup_convergence_contract
     name: Codify startup coordination and convergence kernel boundaries
-    status: pending
+    status: claimed
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - interfaces\n  - type_defs\n  - behavioral_notes\n\nUse the approved architecture\
       \ basis to separate startup coordination, event-entry adapters, and the single-server\
@@ -36213,6 +36213,8 @@ phases:
 
       - Protects conn_v2.startup_coord and conn_v2.convergence gates'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-28T18:58:28.679060+00:00'
   - id: conn_v2.contract.bridge_ux_contract
     name: Codify bridge interrupt, startup messaging, and diagnostics contract
     status: claimed
