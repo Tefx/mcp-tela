@@ -38476,7 +38476,7 @@ phases:
       - Any drift is reported with exact spec and implementation references.'
     depends_on:
     - tool_prefix.deep_review.wiring_audit
-    agent: doc-reviewer
+    agent: spec-verifier
   - id: tool_prefix.deep_review.architecture_review
     name: Architecture and concurrency review for tool-prefix mapping
     status: pending
