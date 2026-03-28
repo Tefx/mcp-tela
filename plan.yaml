@@ -37343,14 +37343,15 @@ phases:
       \ paths to the bridge control module instead of inventing new readiness logic.\n\
       \nDeviation protocol: if a contract artifact is wrong or incomplete, record\
       \ a deviation note with type, what, why, and impact — do NOT silently rewrite\
-      \ the contract or tests.\n\n## Completion Criteria (stub exclusion)\nThis is\
-      \ an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\nupstream_artifacts:\n\
-      \  - path: src/tela/commands/connect_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
-      \    tier: contract\n  - path: src/tela/shell/gateway_runtime.py\n    from_step:\
-      \ conn_v2.contract.lockfile_status_contract\n    tier: contract\n  - path: tests/shell/test_connect_cmd.py\n\
-      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
-      \ - path: tests/repro/test_disconnect_cleanup.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
-      \    tier: test\n  - path: tests/repro/test_connection_count_semantics.py\n\
+      \ the contract or tests.\n\nAfter implementation, run spec-verifier scoped to\
+      \ changed files to check for spec-code drift.\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\
+      \nupstream_artifacts:\n  - path: src/tela/commands/connect_cmd.py\n    from_step:\
+      \ conn_v2.contract.bridge_ux_contract\n    tier: contract\n  - path: src/tela/shell/gateway_runtime.py\n\
+      \    from_step: conn_v2.contract.lockfile_status_contract\n    tier: contract\n\
+      \  - path: tests/shell/test_connect_cmd.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
+      \    tier: test\n  - path: tests/repro/test_disconnect_cleanup.py\n    from_step:\
+      \ conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n  - path: tests/repro/test_connection_count_semantics.py\n\
       \    from_step: conn_v2.test.coldstart_concurrency_tests\n    tier: test"
     verification: '- Integration proof exercises attach and detach against real HTTP
       endpoints or equivalent full-path harness
