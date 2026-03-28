@@ -38254,9 +38254,11 @@ phases:
       \ within existing signatures; wire existing registry and call-routing paths\
       \ without redesigning the contract surface.\n\nDeviation protocol: if a contract\
       \ artifact is wrong or incomplete, record a deviation note with type, what,\
-      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nupstream_artifacts:\n\
-      \  - path: src/tela/shell/downstream_registry.py\n    from_step: tool_prefix.contract.define_semantics\n\
-      \    tier: contract\n  - path: src/tela/shell/upstream.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nAfter\
+      \ implementation, run spec-verifier scoped to changed files to check for spec-code\
+      \ drift.\n\nupstream_artifacts:\n  - path: src/tela/shell/downstream_registry.py\n\
+      \    from_step: tool_prefix.contract.define_semantics\n    tier: contract\n\
+      \  - path: src/tela/shell/upstream.py\n    from_step: tool_prefix.contract.define_semantics\n\
       \    tier: contract\n  - path: tests/shell/test_downstream.py\n    from_step:\
       \ tool_prefix.test.add_regressions\n    tier: test\n  - path: tests/shell/test_upstream.py\n\
       \    from_step: tool_prefix.test.add_regressions\n    tier: test\n  - path:\
