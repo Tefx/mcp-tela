@@ -1,7 +1,12 @@
 """Hot reload orchestration.
 
-Implements re-enumeration, conflict checking, upstream notification
-callbacks, and TOOL_CONFLICT audit warning emission.
+Contract boundary notes:
+- Event-entry adapters own reconnect, reload, watcher, and manual
+  re-enumeration triggers.
+- The single-server convergence kernel owns resolve/register/conflict/rollback
+  semantics only.
+- Notify/audit policy remains outside the convergence kernel even when current
+  wrapper functions still perform those side effects.
 
 No-drop-connection invariant: active upstream connections are never dropped
 during hot reload. On conflict, the previous tool list is preserved.
@@ -10,9 +15,8 @@ during hot reload. On conflict, the previous tool list is preserved.
 from __future__ import annotations
 
 import hashlib
-
 from dataclasses import dataclass
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Literal, Protocol, TypeAlias
 
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
@@ -32,6 +36,71 @@ from tela.shell.downstream import (
     connect_all,
     disconnect_all,
     get_registry,
+)
+
+
+ConvergenceTrigger: TypeAlias = Literal[
+    "reconnect",
+    "reload",
+    "watcher",
+    "manual_reenumeration",
+]
+ReconnectEnumerationPolicy: TypeAlias = Literal[
+    "reuse_fresh_raw_tools",
+    "requires_new_enumeration",
+]
+KernelDisposition: TypeAlias = Literal["applied", "conflict"]
+
+
+@dataclass(frozen=True)
+class ConvergenceConflictNote:
+    """Structured conflict fact surfaced by the convergence kernel."""
+
+    tool_name: str
+    servers: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SingleServerConvergenceResult:
+    """Structured kernel result returned before notify/audit policy is applied."""
+
+    disposition: KernelDisposition
+    trigger: ConvergenceTrigger
+    server_name: str
+    rollback_applied: bool
+    resolved_tool_names: tuple[str, ...]
+    conflicts: tuple[ConvergenceConflictNote, ...] = ()
+
+
+class SingleServerConvergenceKernel(Protocol):
+    """Resolve/register/conflict/rollback boundary for one server update."""
+
+    async def converge(
+        self,
+        server_name: str,
+        server_config: ServerConfig,
+        raw_tools: list[dict],
+        *,
+        trigger: ConvergenceTrigger,
+    ) -> Result[SingleServerConvergenceResult, str]: ...
+
+
+class ConvergencePolicyConsumer(Protocol):
+    """Adapter/orchestrator policy surface consuming kernel facts."""
+
+    async def handle_result(
+        self,
+        outcome: SingleServerConvergenceResult,
+    ) -> Result[None, str]: ...
+
+
+CONVERGENCE_BEHAVIORAL_NOTES: tuple[str, ...] = (
+    "Entry adapters own reconnect, reload, watcher, and manual re-enumeration triggers.",
+    "The single-server convergence kernel is limited to resolve/register/conflict/rollback semantics for one server update.",
+    "The kernel returns structured results; it does not own notify or audit policy.",
+    "Reconnect reuses fresh raw_tools already enumerated by the reconnect adapter.",
+    "Reload, watcher, and manual re-enumeration paths must enumerate fresh raw_tools before invoking the kernel.",
+    "connect_all remains startup coordination outside the single-server convergence kernel.",
 )
 
 

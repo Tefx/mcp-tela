@@ -1,7 +1,13 @@
 """Downstream server management.
 
-Manages connections to downstream MCP servers, real MCP ``tools/list``
-enumeration, resolved-tool registry construction, and tool call forwarding.
+Contract boundary notes:
+- Startup coordination stays here: transport open/close, session swaps,
+  connect_all, and full-registry bootstrap.
+- Event-entry adapters stay here: downstream disconnect/reconnect signals,
+  tools/list_changed notifications, watcher-driven reload hooks, and manual
+  re-enumeration entrypoints.
+- The single-server convergence kernel lives behind reload contracts and must
+  not absorb connect_all or notify/audit policy.
 """
 
 from __future__ import annotations
@@ -14,6 +20,7 @@ from typing import Literal
 from mcp import types as mcp_types
 from mcp.client.session import MessageHandlerFnT
 from mcp.shared.session import RequestResponder
+from typing import Literal, Protocol, TypeAlias
 
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
@@ -35,6 +42,8 @@ _registry_lock = asyncio.Lock()
 _clients: dict[str, _ClientHandle] = {}
 _server_instructions: dict[str, str] = {}
 
+
+# --- Downstream convergence contracts (from lockfile_status_contract) ---
 
 DownstreamSyncTruth = Literal["registry", "reconnect_payload", "live_reenumeration"]
 
@@ -65,6 +74,40 @@ DOWNSTREAM_CONVERGENCE_CONTRACT = DownstreamConvergenceContract(
 DOWNSTREAM_CONVERGENCE_BEHAVIORAL_NOTES: tuple[str, ...] = (
     "Downstream convergence is established by successful connect_all, reload acceptance, or reconnect payload application.",
     "Lockfile discovery proves endpoint discoverability only; it does not prove downstream sync.",
+)
+
+
+# --- Startup convergence contracts (from startup_convergence_contract) ---
+
+EventEntryKind: TypeAlias = Literal[
+    "reconnect",
+    "reload",
+    "watcher",
+    "manual_reenumeration",
+]
+EnumerationFreshness: TypeAlias = Literal[
+    "reuse_fresh_raw_tools",
+    "requires_new_enumeration",
+]
+
+
+class EventEntryAdapter(Protocol):
+    """Adapter boundary that translates runtime events into convergence input."""
+
+    async def collect_raw_tools(
+        self,
+        server_name: str,
+        server_config: ServerConfig,
+        *,
+        entry_kind: EventEntryKind,
+    ) -> Result[list[dict], str]: ...
+
+
+STARTUP_BEHAVIORAL_NOTES: tuple[str, ...] = (
+    "connect_all owns multi-server startup coordination and remains outside the single-server convergence kernel in this refactor.",
+    "Reconnect entry adapters must reuse fresh raw_tools already obtained during reconnect before calling the convergence kernel.",
+    "Reload, watcher, and manual re-enumeration entry adapters must obtain a new enumeration before calling the convergence kernel.",
+    "Entry adapters own trigger detection and transport recovery; they do not own resolve/register/conflict/rollback semantics.",
 )
 
 
@@ -186,7 +229,11 @@ async def _handle_tools_list_changed(
     server_name: str,
     server_config: ServerConfig,
 ) -> None:
-    """Re-enumerate server tools after downstream list-changed notification."""
+    """Re-enumerate server tools after downstream list-changed notification.
+
+    Contract role: event-entry adapter.
+    Enumeration policy: requires_new_enumeration.
+    """
 
     async with _registry_lock:
         client = _clients.get(server_name)
@@ -220,7 +267,11 @@ async def _handle_reconnect(
     server_name: str,
     server_config: ServerConfig,
 ) -> None:
-    """Attempt downstream reconnect and route updated tools into reload flow."""
+    """Attempt downstream reconnect and route updated tools into reload flow.
+
+    Contract role: event-entry adapter.
+    Enumeration policy: reuse_fresh_raw_tools once reconnect enumeration succeeds.
+    """
 
     open_result = await _open_client_for_server(
         server_name,
@@ -314,6 +365,9 @@ async def connect_all(
 
     Enumerates tools, resolves families and posture, and runs conflict detection.
     Fails fast on tool name conflicts.
+
+    Contract role: startup coordinator, not part of the single-server
+    convergence kernel.
 
     When ``tool_lists`` is provided, it is treated as test-only scaffolding and
     bypasses transport/session setup. Production runtime leaves ``tool_lists``

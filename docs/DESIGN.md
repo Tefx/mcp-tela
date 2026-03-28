@@ -91,6 +91,39 @@ Implications:
 - a discovered endpoint may still be starting, degraded, or disconnected from downstreams
 - reconnect handling may already hold fresh authoritative `raw_tools`; when that payload is present, downstream consumers MUST reuse it and MUST NOT blindly trigger a second enumeration
 
+### Startup coordination
+
+Startup coordination is distinct from single-server convergence.
+
+- `connect_all` owns process/session startup across the configured server set.
+- Startup coordination may enumerate multiple servers and publish the initial
+  registry only after transport validation and conflict checks complete.
+- Startup coordination remains outside the single-server convergence kernel in
+  the startup-convergence refactor.
+- Config-change orchestration may choose to call `disconnect_all` + `connect_all`
+  as the safe whole-registry path; that policy decision is not part of the
+  single-server convergence kernel.
+
+### Convergence and reload
+
+Runtime event-entry adapters are separate from convergence semantics.
+
+| Boundary | Owns | Explicitly does not own |
+|----------|------|-------------------------|
+| Event-entry adapters | reconnect triggers, downstream `tools/list_changed`, watcher reload hooks, manual re-enumeration triggers, acquiring fresh `raw_tools` when required | resolve/register/conflict/rollback semantics |
+| Single-server convergence kernel | `resolve_tools`, tentative register, conflict detection, rollback, structured convergence result | notify policy, audit policy, startup `connect_all`, trigger discovery |
+| Orchestration / adapter policy | whether to notify upstream, whether to write audit warnings, when to choose whole-registry reconnect | core convergence mutation logic |
+
+Freshness rules for `raw_tools`:
+
+- Reconnect path: reuse the fresh `raw_tools` already enumerated after the new
+  client handle is established.
+- Reload/watcher/manual re-enumeration paths: perform a new enumeration before
+  invoking the single-server convergence kernel.
+
+The convergence kernel returns structured results so callers can apply notify and
+audit policy without the kernel owning those policies directly.
+
 ### Idle shutdown
 
 When a `tela serve` process is auto-started by `tela connect`, it monitors active
