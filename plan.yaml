@@ -38362,7 +38362,7 @@ phases:
       '
     depends_on:
     - tool_prefix.runtime.integrate_reload_prefix_updates
-    agent: doc-reviewer
+    agent: spec-verifier
   - id: tool_prefix.runtime.gate
     name: Gate tool-prefix runtime
     status: pending
