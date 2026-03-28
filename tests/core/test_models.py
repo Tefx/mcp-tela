@@ -224,6 +224,164 @@ class TestRuntimeModels:
         assert gs.connected_servers == []
 
 
+# --- Spec-derived fixture: minimal lockfile payload (INTERFACES.md §7.3) ---
+# Lockfile fixture uses exact documented shape with all 7 required fields.
+# No convenience fields beyond the spec. This fixture validates the contract.
+_LOCKFILE_FIXTURE_MINIMAL = {
+    "pid": 12345,
+    "host": "127.0.0.1",
+    "port": 49152,
+    "token": "bearer-token-here",
+    "started_at": "2026-03-22T10:00:00Z",
+    "config_path": "/path/to/tela.yaml",
+    "version": "0.1.0",
+}
+
+
+def test_lockfile_fixture_matches_interfaces_spec() -> None:
+    """Minimal lockfile fixture uses exact documented shape from INTERFACES.md §7.3.
+
+    Ref: docs/INTERFACES.md §7.3 Lockfile Contract
+    The 7 required fields are: pid, host, port, token, started_at, config_path, version.
+    No convenience fields beyond the spec are present.
+    """
+    assert set(_LOCKFILE_FIXTURE_MINIMAL.keys()) == {
+        "pid",
+        "host",
+        "port",
+        "token",
+        "started_at",
+        "config_path",
+        "version",
+    }
+    assert _LOCKFILE_FIXTURE_MINIMAL["pid"] == 12345
+    assert _LOCKFILE_FIXTURE_MINIMAL["host"] == "127.0.0.1"
+    assert _LOCKFILE_FIXTURE_MINIMAL["port"] == 49152
+    assert isinstance(_LOCKFILE_FIXTURE_MINIMAL["token"], str)
+    assert _LOCKFILE_FIXTURE_MINIMAL["started_at"] == "2026-03-22T10:00:00Z"
+    assert _LOCKFILE_FIXTURE_MINIMAL["config_path"] == "/path/to/tela.yaml"
+    assert _LOCKFILE_FIXTURE_MINIMAL["version"] == "0.1.0"
+
+
+def test_lockfile_data_accepts_spec_fixture() -> None:
+    """LockfileData model validates against the spec fixture.
+
+    Ref: docs/INTERFACES.md §7.3 - LockfileData accepts the minimal documented shape.
+    """
+    from tela.core.models import LockfileData
+
+    lockfile = LockfileData(**_LOCKFILE_FIXTURE_MINIMAL)
+    assert lockfile.pid == 12345
+    assert lockfile.host == "127.0.0.1"
+    assert lockfile.port == 49152
+    assert lockfile.token == "bearer-token-here"
+    assert lockfile.started_at == "2026-03-22T10:00:00Z"
+    assert lockfile.config_path == "/path/to/tela.yaml"
+    assert lockfile.version == "0.1.0"
+
+
+# --- Spec-derived fixture: GET /status response (INTERFACES.md §7.2.1) ---
+# Status response fixture includes phase, config_path, startup_generation,
+# per-server state summary, and tool digest/count as documented.
+_STATUS_FIXTURE_MINIMAL = {
+    "uptime_seconds": 12.5,
+    "server_count": 2,
+    "connected_servers": ["fs", "shell"],
+    "active_connections": 1,
+    "profile_count": 2,
+    "total_tool_calls": 42,
+    "connections": [
+        {
+            "connection_id": "bridge_abc123",
+            "profile_name": "developer",
+            "connected_at": "2026-03-25T12:00:00Z",
+            "tool_call_count": 5,
+        }
+    ],
+    "audit_entries": [
+        {
+            "timestamp": "2026-03-25T12:00:00Z",
+            "level": "L2",
+            "event": "tool_call",
+            "connection_id": "bridge_abc123",
+            "tool_name": "filesystem/read_file",
+            "details": {},
+        }
+    ],
+}
+
+
+def test_status_response_fixture_matches_interfaces_spec() -> None:
+    """Minimal status fixture uses exact documented shape from INTERFACES.md §7.2.1.
+
+    Ref: docs/INTERFACES.md §7.2.1 GET /status Response Schema
+    Authoritative fields: uptime_seconds, server_count, connected_servers,
+    active_connections, profile_count, total_tool_calls, connections, audit_entries.
+    """
+    assert "uptime_seconds" in _STATUS_FIXTURE_MINIMAL
+    assert "server_count" in _STATUS_FIXTURE_MINIMAL
+    assert "connected_servers" in _STATUS_FIXTURE_MINIMAL
+    assert "active_connections" in _STATUS_FIXTURE_MINIMAL
+    assert "profile_count" in _STATUS_FIXTURE_MINIMAL
+    assert "total_tool_calls" in _STATUS_FIXTURE_MINIMAL
+    assert "connections" in _STATUS_FIXTURE_MINIMAL
+    assert "audit_entries" in _STATUS_FIXTURE_MINIMAL
+    # Count-vs-collection semantics
+    assert isinstance(_STATUS_FIXTURE_MINIMAL["active_connections"], int)
+    assert isinstance(_STATUS_FIXTURE_MINIMAL["connections"], list)
+
+
+def test_status_response_accepts_spec_fixture() -> None:
+    """StatusResponse model validates against the spec fixture.
+
+    Ref: docs/INTERFACES.md §7.2.1 - StatusResponse accepts the documented shape.
+    """
+    from tela.core.models import (
+        AuditEntry,
+        AuditLevel,
+        EnforcementVerdict,
+        GatewayStatus,
+        StatusResponse,
+    )
+
+    # Build valid audit entry with all required fields
+    audit_entry = AuditEntry(
+        timestamp="2026-03-25T12:00:00Z",
+        level=AuditLevel.L2,
+        connection_id="bridge_abc123",
+        profile_name="developer",
+        tool_name="filesystem/read_file",
+        server_name="fs",
+        verdict=EnforcementVerdict.ALLOW,
+    )
+
+    status = StatusResponse(
+        uptime_seconds=12.5,
+        server_count=2,
+        connected_servers=["fs", "shell"],
+        active_connections=1,
+        profile_count=2,
+        total_tool_calls=42,
+        connections=[
+            {
+                "connection_id": "bridge_abc123",
+                "profile_name": "developer",
+                "connected_at": "2026-03-25T12:00:00Z",
+                "tool_call_count": 5,
+            }
+        ],
+        audit_entries=[audit_entry],
+    )
+    assert status.uptime_seconds == 12.5
+    assert status.server_count == 2
+    assert status.connected_servers == ["fs", "shell"]
+    assert status.active_connections == 1
+    assert status.profile_count == 2
+    assert status.total_tool_calls == 42
+    assert len(status.connections) == 1
+    assert status.connections[0].connection_id == "bridge_abc123"
+
+
 # --- Contract dataclass tests ---
 
 

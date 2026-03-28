@@ -10,6 +10,7 @@ import pytest
 
 from tela.core.models import LockfileData
 from tela.shell import lockfile
+from tela.shell.gateway_runtime import LOCKFILE_DISCOVERY_CONTRACT
 
 
 def _sample_lockfile_data(config_path: str = "/tmp/tela.yaml") -> LockfileData:
@@ -383,6 +384,138 @@ def test_read_lockfile_validates_minimal_schema(
     result = lockfile.read_lockfile()
     assert result.is_ok
     assert result.value is not None
+    assert result.value.pid == 12345
+    assert result.value.host == "127.0.0.1"
+    assert result.value.port == 49152
+    assert result.value.token == "tela_tok_a1b2c3d4e5f6g7h8"
+    assert result.value.started_at == "2026-03-22T10:00:00Z"
+    assert result.value.config_path == "/home/user/.tela/tela.yaml"
+    assert result.value.version == "0.1.0"
+
+
+# --- Discovery vs Readiness split tests ---
+# Ref: docs/INTERFACES.md §7.3 Lockfile Contract
+# These tests prove that lockfile discovery does NOT imply downstream readiness.
+
+
+def test_lockfile_discovery_does_not_prove_downstream_ready(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Lockfile readable does NOT mean downstreams are ready.
+
+    Ref: docs/INTERFACES.md §7.3 - Lockfile proves discovery only.
+    This test validates the contract: a valid lockfile may exist while
+    the gateway is still starting, warming, or in degraded state.
+    """
+    from tela.shell import lockfile
+
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write a valid lockfile for a "starting" gateway
+    starting_payload = {
+        "pid": os.getpid(),
+        "host": "127.0.0.1",
+        "port": 49152,
+        "token": "starting-token",
+        "started_at": "2026-03-22T10:00:00Z",
+        "config_path": str(tmp_path / "tela.yaml"),
+        "version": "0.1.0",
+    }
+    path.write_text(json.dumps(starting_payload), encoding="utf-8")
+
+    # Lockfile IS readable (discovery succeeds)
+    result = lockfile.read_lockfile()
+    assert result.is_ok, "Lockfile must be readable for discovery"
+
+    # But lockfile does NOT contain:
+    # - connected_servers list
+    # - running flag
+    # - active_connections count
+    lockfile_data = result.value
+    assert not hasattr(lockfile_data, "connected_servers")
+    assert not hasattr(lockfile_data, "running")
+    assert not hasattr(lockfile_data, "active_connections")
+
+    # Contract: discovery is not authoritative for readiness
+    assert "lifecycle_readiness" in LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
+    assert "downstream_convergence" in LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
+
+
+def test_lockfile_config_path_ownership_contract(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Lockfile config_path establishes ownership for query commands.
+
+    Ref: docs/INTERFACES.md §7.3 - config_path field is used by query commands
+    to verify they are querying the correct gateway instance.
+    """
+    from tela.shell import lockfile
+
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    owner_config = str(tmp_path / "owned.yaml")
+    path.write_text(
+        json.dumps(
+            {
+                "pid": os.getpid(),
+                "host": "127.0.0.1",
+                "port": 49153,
+                "token": "ownership-token",
+                "started_at": "2026-03-22T10:00:00Z",
+                "config_path": owner_config,
+                "version": "0.1.0",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = lockfile.read_lockfile()
+    assert result.is_ok
+    assert result.value.config_path == owner_config
+
+
+# --- Minimal spec fixture tests ---
+# Ref: docs/INTERFACES.md §7.3 - minimal lockfile fixture with exactly 7 required fields
+
+
+def test_lockfile_minimal_fixture_is_valid(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Minimal lockfile with exactly 7 required fields validates successfully.
+
+    Ref: docs/INTERFACES.md §7.3 Lockfile Contract
+    The minimal documented shape contains only the 7 required fields.
+    """
+    from tela.shell import lockfile
+
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Exactly the 7 required fields per INTERFACES.md §7.3
+    minimal_payload = {
+        "pid": 12345,
+        "host": "127.0.0.1",
+        "port": 49152,
+        "token": "tela_tok_a1b2c3d4e5f6g7h8",
+        "started_at": "2026-03-22T10:00:00Z",
+        "config_path": "/home/user/.tela/tela.yaml",
+        "version": "0.1.0",
+    }
+    path.write_text(json.dumps(minimal_payload), encoding="utf-8")
+
+    # Patch is_stale to return False so the live process check doesn't interfere
+    monkeypatch.setattr(lockfile, "is_stale", lambda _data: False)
+
+    result = lockfile.read_lockfile()
+    assert result.is_ok
     assert result.value.pid == 12345
     assert result.value.host == "127.0.0.1"
     assert result.value.port == 49152

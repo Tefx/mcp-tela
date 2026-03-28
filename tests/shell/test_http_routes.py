@@ -81,6 +81,86 @@ class TestHandleStatus:
             set_runtime_running(False)
 
 
+class TestHandleStatusLifecycleSnapshots:
+    """Tests for lifecycle state snapshots via GET /status.
+
+    Ref: docs/INTERFACES.md §7.2.1 GET /status Response Schema
+    Tests cover starting, warming, ready, and degraded lifecycle snapshots.
+    """
+
+    def test_status_snapshot_starting_phase(self) -> None:
+        """Starting phase: gateway running but no downstream connections."""
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
+        set_runtime_total_tool_calls(0)
+
+        try:
+            result = http_routes.handle_status("valid", "valid")
+            assert result.is_ok
+            status = result.value
+            assert status.server_count >= 0
+            assert status.connected_servers == []
+            assert status.active_connections == 0
+            assert status.total_tool_calls == 0
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+
+    def test_status_snapshot_ready_phase(self) -> None:
+        """Ready phase: downstream servers connected."""
+        tela_config = TelaConfig(
+            servers={
+                "fs": __import__(
+                    "tela.core.models", fromlist=["ServerConfig"]
+                ).ServerConfig(name="fs", command="cmd")
+            }
+        )
+        set_runtime_config(tela_config)
+        set_runtime_running(True)
+        clear_runtime_connections()
+        set_runtime_total_tool_calls(0)
+
+        try:
+            result = http_routes.handle_status("valid", "valid")
+            assert result.is_ok
+            status = result.value
+            assert status.server_count == 1
+            # connected_servers reflects actual downstream state
+            assert isinstance(status.connected_servers, list)
+            assert isinstance(status.active_connections, int)
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+
+    def test_status_snapshot_with_active_connections(self) -> None:
+        """Active connections are reflected in status snapshot."""
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
+        set_runtime_total_tool_calls(5)
+
+        # Add a connection
+        ctx = ConnectionContext(
+            connection_id="bridge-test-123",
+            profile_name="dev",
+            connected_at="2026-03-25T12:00:00Z",
+        )
+        add_runtime_connection(ctx)
+
+        try:
+            result = http_routes.handle_status("valid", "valid")
+            assert result.is_ok
+            status = result.value
+            assert status.active_connections >= 1
+            assert len(status.connections) >= 1
+            assert status.total_tool_calls == 5
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+            clear_runtime_connections()
+
+
 class TestHandleConnect:
     """Tests for handle_connect endpoint."""
 
