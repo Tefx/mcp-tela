@@ -36423,7 +36423,7 @@ phases:
       **OPEN** ✅'
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
-  status: in_progress
+  status: done
   gate: 'Executable acceptance boundary for the runtime refactor: spec-derived tests,
     cold-start harness, concurrent attach regressions, and interrupt-path coverage
     must exist before implementation.'
@@ -36738,7 +36738,7 @@ phases:
       None - only test files were modified'
   - id: conn_v2.test.gate
     name: Gate refactor test boundary
-    status: claimed
+    status: done
     description: "step_type: gate\nGate review: verify the test-first acceptance boundary\
       \ is executable before runtime implementation.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - Tests cover cold start, concurrency, lifecycle truth, and interrupt semantics\
@@ -36757,9 +36757,60 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-28T20:42:51.551141+00:00'
+    done_at: '2026-03-28T20:46:12.149553+00:00'
+    evidence: "## Gate Review: conn_v2.test Phase\n\n### Phase 0: Automated Gates\n\
+      - **Test Execution**: All 169 tests passed in 31.93s\n- **Command**: `pytest\
+      \ tests/shell/test_connect_cmd.py tests/repro/test_connect_runtime_liveness.py\
+      \ tests/shell/test_query_commands_remote_state.py tests/shell/test_gateway.py\
+      \ tests/shell/test_http_routes.py tests/shell/test_lockfile.py tests/core/test_models.py\
+      \ -q`\n\n### Phase 1: Test Step Verification\n\n#### 1. conn_v2.test.state_contract_tests\
+      \ ✅\n\n**Files covering this step:**\n- `tests/shell/test_lockfile.py` (525\
+      \ lines, ~30 tests)\n- `tests/shell/test_gateway.py` (1228 lines, ~35 tests)\n\
+      - `tests/shell/test_http_routes.py` (323 lines, ~25 tests)\n- `tests/core/test_models.py`\
+      \ (430 lines, ~25 tests)\n\n**Spec-derivation verification:**\n- `test_lockfile.py`:\
+      \ Lines 127-525 explicitly reference \"INTERFACES.md §7.3 Lockfile Contract\"\
+      \n- `test_gateway.py`: Lines 218, 264, 312, 353 reference INTERFACES.md sections\n\
+      - `test_http_routes.py`: Line 87 references \"docs/INTERFACES.md §7.2.1 GET\
+      \ /status Response Schema\"\n- `test_models.py`: Lines 227-337 define spec-derived\
+      \ fixtures with INTERFACES.md citations\n\n**Minimal spec-derived fixtures confirmed:**\n\
+      - `test_core/core_test_models.py` lines 230-238: `_LOCKFILE_FIXTURE_MINIMAL`\
+      \ with exactly 7 required fields\n- `test_core/core_test_models.py` lines 286-310:\
+      \ `_STATUS_FIXTURE_MINIMAL` per INTERFACES.md §7.2.1\n- `test_lockfile.py` lines\
+      \ 487-525: `test_lockfile_minimal_fixture_is_valid` validates spec shape\n\n\
+      **Tests are test-only (no product implementation):** Confirmed - all files are\
+      \ in `tests/` directory\n\n#### 2. conn_v2.test.coldstart_concurrency_tests\
+      \ ✅\n\n**OpenCode-like cold start tests:**\n- `test_coldstart_endpoint_discovers_before_convergence`\
+      \ (test_connect_runtime_liveness.py:604-717)\n  - Tests scenario where endpoint\
+      \ appears in lockfile before full convergence\n  - References docs/DESIGN.md\
+      \ Runtime Architecture (simulates 7 downstream servers)\n  - Verifies connect\
+      \ succeeds even when gateway is still converging\n\n**Concurrent attach tests:**\n\
+      - `test_concurrent_attach_converges_on_single_leader` (test_connect_runtime_liveness.py:720-833)\n\
+      \  - Tests multiple concurrent connect invocations\n  - Verifies leader election\
+      \ and stabilization on single gateway\n  - Uses subprocess isolation for realistic\
+      \ concurrency\n\n**Evidence of passing:** Runtime liveness tests (lines 110-597)\
+      \ all passed in test run\n\n#### 3. conn_v2.test.interrupt_diagnostics_tests\
+      \ ✅\n\n**One lifecycle fact model:**\n- `test_query_commands_remote_state.py`\
+      \ defines `BRIDGE_STATUS_FACT_FIELDS` and `BRIDGE_DIAGNOSTIC_SURFACES` as shared\
+      \ fact model\n- Line 181-198: `test_bridge_diagnostic_surfaces_share_one_fact_model`\
+      \ verifies CLI and HTTP diagnostics share same field set\n\n**Interrupt path\
+      \ coverage:**\n- `test_autostart_wait_interrupt_terminates_immediately` (test_connect_cmd.py:646-704)\n\
+      - `test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup` (test_connect_cmd.py:707-766)\n\
+      - `test_bridge_teardown_interrupt_does_not_block_process_exit` (test_connect_cmd.py:769-810)\n\
+      - Contract tests verifying all stages declare immediate termination\n\n### Summary\n\
+      \n| Requirement | Status | Evidence |\n|-------------|--------|----------|\n\
+      | Minimal spec-derived fixtures exist | ✅ PASS | `_LOCKFILE_FIXTURE_MINIMAL`,\
+      \ `_STATUS_FIXTURE_MINIMAL` |\n| OpenCode-like cold start represented | ✅ PASS\
+      \ | `test_coldstart_endpoint_discovers_before_convergence` |\n| Concurrent attach\
+      \ represented | ✅ PASS | `test_concurrent_attach_converges_on_single_leader`\
+      \ |\n| Interrupt paths represented | ✅ PASS | 5 interrupt tests across 2 files\
+      \ |\n| One lifecycle fact model | ✅ PASS | `BRIDGE_STATUS_FACT_FIELDS` verified\
+      \ |\n| Tests are test-only | ✅ PASS | All files in tests/ directory |\n| Evidence\
+      \ shows passing tests | ✅ PASS | 169 passed in 31.93s |\n\n### Gaps Found: None\n\
+      \nAll three test steps are complete with spec-derived fixtures and passing tests.\
+      \ Phase can advance to conn_v2.startup_coord."
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
-  status: locked
+  status: pending
   gate: Autostart leader/follower semantics and lockfile publication are wired so
     one gateway instance owns startup for a given config and competing connect clients
     converge safely.
