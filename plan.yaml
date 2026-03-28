@@ -38866,7 +38866,7 @@ phases:
       - docs/DESIGN.md Runtime Architecture / Connection lifecycle'
   - id: conn_v2.preflight_reconnect.seam_proof
     name: Verify reconnect event causes only one enumeration
-    status: claimed
+    status: done
     description: 'step_type: verification
 
 
@@ -38946,6 +38946,26 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-28T18:46:02.221481+00:00'
+    done_at: '2026-03-28T18:49:13.653623+00:00'
+    evidence: "## Verification Report\n\n**Tester**: integration-verifier\n**Scope**:\
+      \ reconnect event through reload/update path\n**Independence Level**: L1\n\n\
+      ### Test Execution\n- Commands executed:\n```\nuv run pytest tests/shell/test_downstream.py\
+      \ tests/shell/test_reload.py -v --tb=short\n```\n\n- Output summary:\n```\n\
+      78 passed in 0.98s\n```\n\n### Call-count evidence\n\n**Key enumeration count\
+      \ tests:**\n\n1. `test_handle_reconnect_calls_enumerate_once` (PASSED)\n   -\
+      \ Probes: `list_tools` calls in fake session during `_handle_reconnect`\n  \
+      \ - Expected: 1, Observed: 1\n   - Verdict: Exactly one enumeration in `_handle_reconnect`\n\
+      \n2. `test_on_server_reconnect_reuses_passed_tool_list` (PASSED)\n   - Probes:\
+      \ `re_enumerate` function calls during `on_server_reconnect`\n   - Expected:\
+      \ 0 (empty list), Observed: 0 (empty list)\n   - Verdict: `on_server_reconnect`\
+      \ does NOT call `re_enumerate`\n\n3. `test_on_server_reconnect_does_not_trigger_duplicate_enumeration`\
+      \ (PASSED)\n   - Probes: `re_enumerate` call count\n   - Expected: 0, Observed:\
+      \ 0\n   - Verdict: Zero duplicate enumerations\n\n4. `test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect`\
+      \ (PASSED)\n   - Probes: `re_enumerate` as proxy for downstream `list_tools`\n\
+      \   - Expected: 0 calls, Observed: 0 calls\n   - Verdict: No downstream `list_tools`\
+      \ triggered via `on_server_reconnect`\n\n### Verdict\n- **PASS**\n\n**Summary**:\
+      \ One reconnect event triggers exactly one enumeration. All 6 enumeration-count\
+      \ tests pass. Registry and status converge correctly after reconnect."
   - id: conn_v2.preflight_reconnect.gate
     name: Gate reconnect enumeration correctness
     status: pending
