@@ -38742,7 +38742,7 @@ phases:
       \ and re-enumerates, causing duplicate enumeration for the same reconnect event."
   - id: conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     name: Reuse captured reconnect enumeration in reload flow
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
 
@@ -38806,6 +38806,64 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-28T18:38:00.331917+00:00'
+    done_at: '2026-03-28T18:41:59.591173+00:00'
+    evidence: '## Implementation Evidence
+
+
+      **Files changed**:
+
+      - `src/tela/shell/reload.py` (removed unnecessary `re_enumerate` call and unused
+      import)
+
+      - `tests/shell/test_reload.py` (updated monkeypatch targets)
+
+
+      **Bug fix summary**:
+
+      The `on_server_reconnect` function was calling `re_enumerate(server_name)` before
+      delegating to `on_tools_changed`, causing duplicate enumeration. Since `_handle_reconnect`
+      in downstream.py already enumerated tools and passed them as `raw_tools`, the
+      `re_enumerate` call was redundant and wasteful.
+
+
+      The fix removes the unnecessary `re_enumerate` call. `on_tools_changed` already
+      correctly processes the provided `tool_list` argument (resolves families, registers
+      tools, checks conflicts, fires notification callback).
+
+
+      **Verification**:
+
+      - Run: `uv run pytest tests/shell/test_reload.py tests/shell/test_downstream.py
+      -x --tb=short` -> 78 passed
+
+      - Run: `uv run pyright src/tela/shell/reload.py src/tela/shell/downstream.py`
+      -> 0 errors, 0 warnings
+
+      - Run: `uv run ruff check src/tela/shell/reload.py src/tela/shell/downstream.py
+      tests/shell/test_reload.py` -> All checks passed
+
+
+      **Regression tests pass**:
+
+      - `test_on_server_reconnect_reuses_passed_tool_list` - Proves `re_enumerate`
+      is NOT called when `tool_list` is provided
+
+      - `test_on_server_reconnect_does_not_trigger_duplicate_enumeration` - Proves
+      zero `re_enumerate` calls during reconnect
+
+      - `test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect` - Proves
+      no downstream `list_tools` is triggered
+
+      - `test_handle_reconnect_calls_enumerate_once` - Proves `_handle_reconnect`
+      enumerates exactly once
+
+      - `test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect` - Proves
+      tools are correctly passed
+
+
+      **Spec link**:
+
+      - docs/DESIGN.md Runtime Architecture / Connection lifecycle'
   - id: conn_v2.preflight_reconnect.seam_proof
     name: Verify reconnect event causes only one enumeration
     status: pending
