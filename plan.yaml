@@ -36900,7 +36900,29 @@ phases:
       \ inference in client/query surfaces with lifecycle snapshot consumption.\n\
       \  - Ensure connect waits for the contract-defined acceptable phase using runtime\
       \ status, not lockfile semantics.\n  - Ensure status diagnostics and JSON output\
-      \ expose one authoritative lifecycle fact set."
+      \ expose one authoritative lifecycle fact set.\n\n## Contract-Preserving Implementation\
+      \ Mode\nFill in stub bodies in the status/connect/query/HTTP consumers and replace\
+      \ NotImplementedError / pass / ... within the existing signatures and routes.\n\
+      \nUPSTREAM ARTIFACTS (from contract/test steps):\n  - src/tela/shell/gateway_runtime.py\
+      \ — lifecycle snapshot contract is AUTHORITATIVE (contract)\n  - src/tela/commands/status_cmd.py\
+      \ — consumer surface shape pinned by prior contract notes and existing signatures\
+      \ (contract)\n  - tests/shell/test_http_routes.py — /status assertions are PROTECTED\
+      \ (test)\n  - tests/shell/test_query_commands_remote_state.py — query/status\
+      \ assertions are PROTECTED (test)\n  - tests/shell/test_connect_cmd.py — connect\
+      \ wait-path assertions are PROTECTED (test)\n\nYOUR SCOPE: complete the implementation\
+      \ within existing signatures; consumers must read one authoritative lifecycle\
+      \ fact model rather than inventing new readiness logic.\n\nDeviation protocol:\
+      \ if a contract artifact is wrong or incomplete, record a deviation note with\
+      \ type, what, why, and impact — do NOT silently rewrite the contract or tests.\n\
+      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\n\nupstream_artifacts:\n  - path: src/tela/shell/gateway_runtime.py\n\
+      \    from_step: conn_v2.contract.lockfile_status_contract\n    tier: contract\n\
+      \  - path: src/tela/commands/status_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
+      \    tier: contract\n  - path: tests/shell/test_http_routes.py\n    from_step:\
+      \ conn_v2.test.state_contract_tests\n    tier: test\n  - path: tests/shell/test_query_commands_remote_state.py\n\
+      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
+      \ - path: tests/shell/test_connect_cmd.py\n    from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \    tier: test"
     verification: '- Main path: connect/status/HTTP surfaces consume shared lifecycle
       status data
 
