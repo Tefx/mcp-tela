@@ -38092,24 +38092,36 @@ phases:
   - id: tool_prefix.test.add_regressions
     name: Add tool-prefix contract and reload regressions
     status: pending
-    description: "step_type: test\nagent_source: default\nspec_fixture_conformance:\
-      \ required\nspec_refs:\n  - user authoritative input: verification points 1-7\n\
-      \  - docs/INTERFACES.md#3.1 Servers\n  - docs/INTERFACES.md#7 MCP Surface\n\
-      \  - docs/USAGE.md#Configuration model\ntouch_paths:\n  - tests/core/test_models.py\n\
-      \  - tests/core/test_family.py\n  - tests/core/test_conflict.py\n  - tests/shell/test_downstream.py\n\
-      \  - tests/shell/test_reload.py\n  - tests/shell/test_upstream.py\nfixtures:\n\
-      \  - no-prefix backward-compat server fixture\n  - same-raw-name distinct-prefix\
-      \ two-server fixture\n  - same-raw-name same-prefix collision fixture\n  - raw-name\
-      \ tool_overrides fixture\n  - exposed-name upstream call-routing fixture\n \
-      \ - config-reload prefix-change notification fixture\n  - reserved tela-prefix\
-      \ rejection fixture\n\nAdd the acceptance tests before runtime work. Cover at\
-      \ minimum:\n1. omitted tool_prefix keeps old exposed names;\n2. identical raw\
-      \ tools under distinct prefixes coexist;\n3. identical raw tools under the same\
-      \ exposed prefix still conflict;\n4. tool_overrides continue to match raw downstream\
-      \ names;\n5. calling the exposed name routes to the raw downstream name;\n6.\
-      \ changing tool_prefix on reload emits tools/list_changed and refreshes the\
-      \ tool set;\n7. tool_prefix=\"tela.\" is rejected.\n\nPrefer behavioral tests\
-      \ over source-text assertions and keep fixtures minimal."
+    description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
+      \ red\nagent_source: default\nspec_fixture_conformance: required\nspec_refs:\n\
+      \  - user authoritative input: verification points 1-7\n  - docs/INTERFACES.md#3.1\
+      \ Servers\n  - docs/INTERFACES.md#7 MCP Surface\n  - docs/USAGE.md#Configuration\
+      \ model\ntouch_paths:\n  - tests/core/test_models.py\n  - tests/core/test_family.py\n\
+      \  - tests/core/test_conflict.py\n  - tests/shell/test_downstream.py\n  - tests/shell/test_reload.py\n\
+      \  - tests/shell/test_upstream.py\nfixtures:\n  - no-prefix backward-compat\
+      \ server fixture\n  - same-raw-name distinct-prefix two-server fixture\n  -\
+      \ same-raw-name same-prefix collision fixture\n  - raw-name tool_overrides fixture\n\
+      \  - exposed-name upstream call-routing fixture\n  - config-reload prefix-change\
+      \ notification fixture\n  - reserved tela-prefix rejection fixture\n\nAdd the\
+      \ acceptance tests before runtime work. Cover at minimum:\n1. omitted tool_prefix\
+      \ keeps old exposed names;\n2. identical raw tools under distinct prefixes coexist;\n\
+      3. identical raw tools under the same exposed prefix still conflict;\n4. tool_overrides\
+      \ continue to match raw downstream names;\n5. calling the exposed name routes\
+      \ to the raw downstream name;\n6. changing tool_prefix on reload emits tools/list_changed\
+      \ and refreshes the tool set;\n7. tool_prefix=\"tela.\" is rejected.\n\nThis\
+      \ is a pre-implementation test-definition step: expected red is correct until\
+      \ runtime wiring exists.\nSuccess means the gap is exposed without modifying\
+      \ product code.\n\n## Spec-Fixture Conformance (MANDATORY)\nAt least one MINIMAL\
+      \ spec-derived fixture MUST:\n- use the exact documented configuration shape\
+      \ from docs/INTERFACES.md#3.1 Servers and docs/USAGE.md#Configuration model\n\
+      - omit convenience fields beyond the documented format\n- exercise tool_prefix\
+      \ directly from the documented server config shape\n- cite the spec section\
+      \ used for the fixture\n\nEvidence must include:\n- modified files limited to\
+      \ tests/ plus minimal helpers/fixtures\n- expected_failures or exposed_gaps\n\
+      - downstream implementation owner: tool_prefix.runtime.*\n\nPrefer behavioral\
+      \ tests over source-text assertions and keep fixtures minimal.\nVerification\
+      \ scope declaration: local-check protecting tool_prefix.runtime and downstream\
+      \ spec-conformance/gate steps."
     verification: '- Targeted tests fail before implementation and pin all seven authoritative
       verification points.
 
