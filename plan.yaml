@@ -37815,7 +37815,29 @@ phases:
       \ follower scenarios.\n  - Keep CLI JSON/status output structurally aligned\
       \ with the runtime status contract.\n  - Ensure host-facing diagnostics differ\
       \ by state, not by host implementation quirks.\nIntegration path exercised:\
-      \ lifecycle snapshot -> connect/serve/status/HTTP diagnostics"
+      \ lifecycle snapshot -> connect/serve/status/HTTP diagnostics\n\n## Contract-Preserving\
+      \ Implementation Mode\nFill in stub bodies in the existing diagnostics/message\
+      \ emitters and replace NotImplementedError / pass / ... within the existing\
+      \ signatures and serializers only.\n\nUPSTREAM ARTIFACTS (from contract/test\
+      \ steps):\n  - src/tela/commands/connect_cmd.py — host-facing message contract\
+      \ is AUTHORITATIVE (contract)\n  - src/tela/commands/status_cmd.py — status\
+      \ wording/shape contract is AUTHORITATIVE (contract)\n  - tests/shell/test_connect_cmd.py\
+      \ — connect messaging assertions are PROTECTED (test)\n  - tests/shell/test_serve_cmd.py\
+      \ — serve/log messaging assertions are PROTECTED (test)\n  - tests/shell/test_query_commands_remote_state.py\
+      \ — status/query messaging assertions are PROTECTED (test)\n\nYOUR SCOPE: complete\
+      \ the implementation within existing signatures; preserve the contract-defined\
+      \ message states and avoid creating alternate output schemas.\n\nDeviation protocol:\
+      \ if a contract artifact is wrong or incomplete, record a deviation note with\
+      \ type, what, why, and impact — do NOT silently rewrite the contract or tests.\n\
+      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\n\nupstream_artifacts:\n  - path: src/tela/commands/connect_cmd.py\n\
+      \    from_step: conn_v2.contract.bridge_ux_contract\n    tier: contract\n  -\
+      \ path: src/tela/commands/status_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
+      \    tier: contract\n  - path: tests/shell/test_connect_cmd.py\n    from_step:\
+      \ conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n  - path: tests/shell/test_serve_cmd.py\n\
+      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
+      \ - path: tests/shell/test_query_commands_remote_state.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
+      \    tier: test"
     verification: '- Main path: targeted tests prove state-specific diagnostics across
       connect, serve, status, and HTTP
 
