@@ -37833,11 +37833,11 @@ phases:
       ## Gate Preview (what the gate WILL reject)\n1. Diagnostics that still imply\
       \ lockfile discovery means ready\n2. Messaging that recommends timeout-only\
       \ workaround instead of lifecycle truth\n3. Inconsistent wording or fields between\
-      \ CLI and HTTP status surfaces\nTasks:\n  - Implement the contract-defined message\
-      \ states for discoverable, warming, ready, degraded, config mismatch, and concurrent\
-      \ follower scenarios.\n  - Keep CLI JSON/status output structurally aligned\
-      \ with the runtime status contract.\n  - Ensure host-facing diagnostics differ\
-      \ by state, not by host implementation quirks.\nIntegration path exercised:\
+      \ CLI and HTTP status surfaces\nTasks:\n  - Fill in stub bodies for the contract-defined\
+      \ message states for discoverable, warming, ready, degraded, config mismatch,\
+      \ and concurrent follower scenarios.\n  - Keep CLI JSON/status output structurally\
+      \ aligned with the runtime status contract.\n  - Ensure host-facing diagnostics\
+      \ differ by state, not by host implementation quirks.\nIntegration path exercised:\
       \ lifecycle snapshot -> connect/serve/status/HTTP diagnostics\n\n## Contract-Preserving\
       \ Implementation Mode\nFill in stub bodies in the existing diagnostics/message\
       \ emitters and replace NotImplementedError / pass / ... within the existing\
