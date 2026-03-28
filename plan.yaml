@@ -36921,7 +36921,7 @@ phases:
       \nDeviation records:\n- none"
   - id: conn_v2.startup_coord.integrate_autostart
     name: Integrate autostart leader/follower wiring into connect and serve
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n  - docs/USAGE.md#Running\
       \ tela > tela serve\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.3\
@@ -36995,6 +36995,8 @@ phases:
     depends_on:
     - conn_v2.startup_coord.impl_module
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-28T20:59:45.916287+00:00'
   - id: conn_v2.startup_coord.liveness_probe
     name: Probe single-instance autostart liveness from the real entry point
     status: pending
