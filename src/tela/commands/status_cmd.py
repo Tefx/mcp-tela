@@ -1,6 +1,10 @@
 """Status CLI command surface.
 
 Provides the ``tela status`` command for displaying gateway runtime status.
+
+Human and JSON diagnostics are expected to serialize the shared fact model
+declared in ``tela.commands.remote_state`` rather than inventing parallel
+wording or state derivations.
 """
 
 from __future__ import annotations

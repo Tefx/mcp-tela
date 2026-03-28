@@ -8,6 +8,10 @@ Implements ``tela connect`` service discovery, optional auto-start of
 3. Register connection via ``POST /connect``
 4. Forward stdio MCP frames to ``POST /mcp``
 5. Deregister connection via ``POST /disconnect`` on exit/signals
+
+Interrupt semantics and host-facing message-state contracts are declared in
+``tela.commands.remote_state``. This module intentionally stays focused on
+bridge wiring and does not finalize host rendering text.
 """
 
 from __future__ import annotations

@@ -78,6 +78,12 @@ def handle_status(
     Returns:
         Result[StatusResponse, str] with gateway runtime status on success.
 
+    Contract note:
+        ``GET /status`` is the HTTP authority for the shared diagnostic fact set
+        consumed by ``tela status`` and host-facing bridge messaging. HTTP and
+        CLI surfaces must align to the same resolved facts instead of deriving
+        parallel state labels independently.
+
     Examples:
         >>> set_runtime_config(None)  # Gateway not started
         >>> result = handle_status("valid-token", "valid-token")

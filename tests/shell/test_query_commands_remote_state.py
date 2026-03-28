@@ -13,6 +13,7 @@ import pytest
 
 from tela.commands.audit_cmd import audit_command
 from tela.commands.connections_cmd import connections_command
+from tela.commands import remote_state
 from tela.commands.status_cmd import status_command
 
 
@@ -160,6 +161,62 @@ def test_query_commands_use_remote_status_when_lockfile_present(
     assert "uptime: 12.5s" in output
     assert "bridge_123" in output
     assert "ALLOW read_file (fs) profile=dev" in output
+
+
+def test_bridge_interrupt_contract_covers_hard_interrupt_stages() -> None:
+    """Contract must declare immediate interrupt semantics for all bridge stages."""
+
+    contracts = remote_state.BRIDGE_INTERRUPT_CONTRACTS
+    assert [item.stage for item in contracts] == [
+        "autostart_wait",
+        "attach_loop",
+        "bridge_teardown",
+    ]
+    for item in contracts:
+        assert "immediately" in item.termination_semantics
+        assert "stdout" in item.stdout_contract.lower()
+        assert item.message_key.startswith("connect.interrupt.")
+
+
+def test_bridge_diagnostic_surfaces_share_one_fact_model() -> None:
+    """CLI and HTTP diagnostics must be pinned to one shared resolved fact set."""
+
+    fact_names = {field.name for field in remote_state.BRIDGE_STATUS_FACT_FIELDS}
+    status_json = next(
+        surface
+        for surface in remote_state.BRIDGE_DIAGNOSTIC_SURFACES
+        if surface.surface == "status.json"
+    )
+    http_status = next(
+        surface
+        for surface in remote_state.BRIDGE_DIAGNOSTIC_SURFACES
+        if surface.surface == "http.status"
+    )
+
+    assert set(status_json.fact_fields) == fact_names
+    assert set(http_status.fact_fields) == fact_names
+    assert status_json.fact_fields == http_status.fact_fields
+
+
+def test_bridge_message_catalog_stubs_cover_required_host_states() -> None:
+    """Contract must stub the required bridge startup and degradation states."""
+
+    states = {item.state for item in remote_state.BRIDGE_MESSAGE_CATALOG_STUBS}
+    assert states == {
+        "discoverable",
+        "warming",
+        "ready",
+        "degraded",
+        "config_mismatch",
+        "concurrent_startup_follower",
+    }
+
+    degraded = next(
+        item
+        for item in remote_state.BRIDGE_MESSAGE_CATALOG_STUBS
+        if item.state == "degraded"
+    )
+    assert "timeout-only" in degraded.template_stub
 
 
 @pytest.mark.parametrize(

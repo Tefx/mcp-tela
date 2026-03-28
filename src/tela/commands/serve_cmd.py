@@ -2,6 +2,10 @@
 
 Implements ``tela serve`` as the HTTP gateway entrypoint with lockfile,
 bearer-token lifecycle, config watching, and optional idle shutdown.
+
+Startup log-state vocabulary is contract-owned by
+``tela.commands.remote_state`` so serve, connect, CLI status, and ``GET /status``
+share one diagnostic fact model.
 """
 
 from __future__ import annotations
