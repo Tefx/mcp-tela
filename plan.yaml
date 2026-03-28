@@ -36536,7 +36536,7 @@ phases:
       \ files modified**: None (test-only step)"
   - id: conn_v2.test.interrupt_diagnostics_tests
     name: Add hard-interrupt and diagnostics regression tests
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
       \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
@@ -36587,6 +36587,103 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-28T20:09:09.267744+00:00'
+    done_at: '2026-03-28T20:39:00.231067+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command exercising the full path**:
+
+      ```
+
+      uv run pytest tests/shell/test_connect_cmd.py tests/shell/test_query_commands_remote_state.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      .....................................................                       [100%]
+
+      46 passed in 6.43s
+
+      ```
+
+
+      **Path exercised**: signal or lifecycle input -> connect/status command -> diagnostics
+      output
+
+
+      ### Step Intent
+
+      Add regression tests for SIGINT/KeyboardInterrupt handling during autostart
+      wait and active bridge, plus diagnostics tests for warming/ready/degraded/config-mismatch
+      states across tela connect and status commands.
+
+
+      ### Expected Result
+
+      - Interrupt tests cover autostart_wait, attach_loop, and bridge_teardown stages
+
+      - Diagnostics tests cover warming, ready, degraded, and config_mismatch states
+
+      - Assertion that degraded state output does NOT recommend timeout-only workarounds
+
+
+      ### Observed Result
+
+      - All 46 tests pass in the two modified test files
+
+      - All 58 tests pass across all four affected test files (including serve_cmd
+      and disconnect_cleanup)
+
+
+      ### Tests Added
+
+
+      **Interrupt regression tests (test_connect_cmd.py)**:
+
+      - `test_autostart_wait_interrupt_terminates_immediately` - SIGINT during autostart
+      wait terminates without waiting for timeout
+
+      - `test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup` - SIGINT
+      during bridge forwarding exits immediately and calls disconnect
+
+      - `test_bridge_teardown_interrupt_does_not_block_process_exit` - KeyboardInterrupt
+      during teardown does not block process exit
+
+
+      **Diagnostics regression tests (test_query_commands_remote_state.py)**:
+
+      - `test_diagnostics_state_warming_to_config_mismatch_via_status_command` (4
+      states) - Status human output covers all lifecycle states
+
+      - `test_diagnostics_state_warming_to_config_mismatch_via_status_json` (4 states)
+      - Status JSON output covers all lifecycle states
+
+      - `test_degraded_state_does_not_recommend_timeout_only_workaround` - Degraded
+      output does not suggest timeout-only remedy
+
+      - `test_bridge_interrupt_contracts_declare_immediate_termination_for_all_stages`
+      - All interrupt stages declare immediate termination
+
+      - `test_diagnostic_surfaces_cover_connect_and_serve_stderr` - Connect/serve
+      diagnostics share fact model with status surfaces
+
+      - `test_message_catalog_stubs_define_degraded_without_timeout_only_advice` -
+      Degraded catalog stub does not contain "increase timeout" advice
+
+
+      ### Failure Alignment
+
+      N/A - all tests pass
+
+
+      ### Product Implementation Files Modified
+
+      None - only test files were modified'
   - id: conn_v2.test.gate
     name: Gate refactor test boundary
     status: pending
