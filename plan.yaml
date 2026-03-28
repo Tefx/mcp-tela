@@ -36819,7 +36819,7 @@ phases:
   steps:
   - id: conn_v2.startup_coord.impl_module
     name: Implement startup coordinator module
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#Runtime Architecture > Service discovery\n  - docs/DESIGN.md#Runtime\
       \ Architecture > Process model\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.3\
@@ -36898,6 +36898,27 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-28T20:46:26.504532+00:00'
+    done_at: '2026-03-28T20:59:28.702586+00:00'
+    evidence: "Artifact:\n- commit: c308186 (branch: vectl/step-conn_v2.startup_coord.impl_module)\n\
+      \nVerification:\n- Run: uv run pytest -q tests/shell/test_connect_cmd.py tests/shell/test_lockfile.py\
+      \ tests/shell/test_serve_cmd.py tests/repro/test_connect_runtime_liveness.py\
+      \ tests/shell/test_startup_coordinator.py -> 60 passed in 25.30s\n- Run: uv\
+      \ run invar guard -> status=passed, errors=0 (warnings: connect_cmd file_size_warning\
+      \ only)\n\nSpec link:\n- docs/DESIGN.md#Runtime Architecture > Process model\n\
+      - docs/DESIGN.md#Runtime Architecture > Service discovery\n- docs/INTERFACES.md#2.\
+      \ CLI Surface\n- docs/INTERFACES.md#7.3 Lockfile Contract\n\nDelivered:\n- Added\
+      \ src/tela/shell/startup_coordinator.py implementing:\n  - per-config startup\
+      \ leader lock (flock-based)\n  - leader/follower startup arbitration\n  - config\
+      \ ownership-aware lockfile attach checks\n  - stale lockfile cleanup in owned\
+      \ wait path\n  - PID-bound wait integration for leader-published lockfile\n\
+      - Updated src/tela/commands/connect_cmd.py:\n  - moved race-sensitive discovery/autostart\
+      \ arbitration to startup_coordinator.discover_or_autostart\n  - preserved connect\
+      \ command boundary and existing wait/autostart helpers as adapters\n- Added\
+      \ tests/shell/test_startup_coordinator.py:\n  - relative vs absolute config\
+      \ ownership behavior\n  - follower wait while leader lock is held (no duplicate\
+      \ autostart)\n  - leader autostart after race-wait timeout\n  - stale cleanup\
+      \ in owned wait path\n  - mismatched owner lockfile ignored before autostart\n\
+      \nDeviation records:\n- none"
   - id: conn_v2.startup_coord.integrate_autostart
     name: Integrate autostart leader/follower wiring into connect and serve
     status: pending
