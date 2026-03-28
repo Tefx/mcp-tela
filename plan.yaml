@@ -37817,7 +37817,7 @@ phases:
   gate: Freeze contract and naming semantics for config-driven tool prefixes before
     tests or runtime wiring.
   depends_on:
-  - conn_v2.finalize
+  - conn_v2.integration_validate
   steps:
   - id: tool_prefix.contract.define_semantics
     name: Define tool-prefix contract and mapping semantics
