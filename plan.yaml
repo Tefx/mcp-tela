@@ -36210,8 +36210,6 @@ phases:
       - Contract excludes notify/audit policy and connect_all from the kernel
 
       - Protects conn_v2.startup_coord and conn_v2.convergence gates'
-    depends_on:
-    - conn_v2.contract.lockfile_status_contract
     agent: software-architect
   - id: conn_v2.contract.bridge_ux_contract
     name: Codify bridge interrupt, startup messaging, and diagnostics contract
