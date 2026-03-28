@@ -36226,7 +36226,7 @@ phases:
       - invar guard passed'
   - id: conn_v2.contract.startup_convergence_contract
     name: Codify startup coordination and convergence kernel boundaries
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - interfaces\n  - type_defs\n  - behavioral_notes\n\nUse the approved architecture\
       \ basis to separate startup coordination, event-entry adapters, and the single-server\
@@ -36252,6 +36252,36 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-28T18:58:28.679060+00:00'
+    done_at: '2026-03-28T19:10:34.372905+00:00'
+    evidence: '## Contract Evidence
+
+
+      **Contract outputs defined**:
+
+      - interfaces: SingleServerConvergenceKernel, ConvergencePolicyConsumer, EventEntryAdapter
+
+      - type_defs: ConvergenceTrigger, ReconnectEnumerationPolicy, KernelDisposition,
+      ConvergenceConflictNote, SingleServerConvergenceResult, EventEntryKind, EnumerationFreshness
+
+      - behavioral notes: CONVERGENCE_BEHAVIORAL_NOTES, STARTUP_BEHAVIORAL_NOTES
+
+
+      **Files modified**:
+
+      - docs/DESIGN.md
+
+      - src/tela/shell/reload.py
+
+      - src/tela/shell/downstream.py
+
+
+      **Verification**:
+
+      - Commit: 7420c23
+
+      - 78 tests pass (24 reload + 54 downstream)
+
+      - invar guard passed'
   - id: conn_v2.contract.bridge_ux_contract
     name: Codify bridge interrupt, startup messaging, and diagnostics contract
     status: done
