@@ -37077,7 +37077,7 @@ phases:
       still work'
   - id: conn_v2.startup_coord.liveness_probe
     name: Probe single-instance autostart liveness from the real entry point
-    status: pending
+    status: claimed
     description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
       \ validate startup coordination from the real tela connect/tela serve entrypoints.\n\
       Independence Level: L2\nspec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n\
@@ -37143,6 +37143,8 @@ phases:
     depends_on:
     - conn_v2.startup_coord.integrate_autostart
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-28T21:12:42.631606+00:00'
   - id: conn_v2.startup_coord.gate
     name: Gate startup coordination phase
     status: pending
