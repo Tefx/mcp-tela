@@ -36217,7 +36217,7 @@ phases:
     claimed_at: '2026-03-28T18:58:28.679060+00:00'
   - id: conn_v2.contract.bridge_ux_contract
     name: Codify bridge interrupt, startup messaging, and diagnostics contract
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - interfaces\n  - behavior_notes\n  - message_catalog_stubs\nagent_source:\
       \ default\nspec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n  - docs/USAGE.md#CLI\
@@ -36254,6 +36254,44 @@ phases:
     agent: uiux-designer
     claimed_by: uiux-designer
     claimed_at: '2026-03-28T18:58:13.157961+00:00'
+    done_at: '2026-03-28T19:10:16.375194+00:00'
+    evidence: '## Contract Evidence
+
+
+      **Contract outputs defined**:
+
+      - interfaces: BridgeInterruptContract, BridgeBehaviorNote, StatusFactField,
+      DiagnosticSurfaceContract, HostMessageCatalogStub
+
+      - behavior notes: hard interrupt semantics, shared fact authority, degraded
+      wording distinctions
+
+      - message catalog stubs: discoverable, warming, ready, degraded, config_mismatch,
+      concurrent_startup_follower
+
+
+      **Files modified**:
+
+      - src/tela/commands/remote_state.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/serve_cmd.py
+
+      - src/tela/commands/status_cmd.py
+
+      - src/tela/shell/http_routes.py
+
+      - tests/shell/test_query_commands_remote_state.py
+
+
+      **Verification**:
+
+      - Commit: e85a9c8
+
+      - 7+33 tests pass
+
+      - invar guard passed'
   - id: conn_v2.contract.gate
     name: Gate connect/serve runtime contracts
     status: pending
