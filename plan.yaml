@@ -36161,7 +36161,7 @@ phases:
   steps:
   - id: conn_v2.contract.lockfile_status_contract
     name: Codify lockfile, status, and lifecycle source-of-truth contracts
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - interfaces\n  - type_defs\n  - behavioral_notes\n\nUse the approved architecture\
       \ basis to pin lockfile, status, readiness, and lifecycle truth without re-deriving\
@@ -36187,6 +36187,43 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-28T18:58:22.012919+00:00'
+    done_at: '2026-03-28T19:10:25.767736+00:00'
+    evidence: '## Contract Evidence
+
+
+      **Contract outputs defined**:
+
+      - interfaces: RuntimeTruthContract, DownstreamConvergenceContract, ReconnectEnumerationContract
+
+      - type_defs: RuntimeTruthPlane, DownstreamSyncTruth, LOCKFILE_DISCOVERY_CONTRACT,
+      STATUS_SNAPSHOT_CONTRACT, DOWNSTREAM_CONVERGENCE_CONTRACT, RECONNECT_ENUMERATION_CONTRACT
+
+      - behavioral notes: RUNTIME_TRUTH_BEHAVIORAL_NOTES, DOWNSTREAM_CONVERGENCE_BEHAVIORAL_NOTES,
+      RELOAD_BEHAVIORAL_NOTES
+
+
+      **Files modified**:
+
+      - docs/DESIGN.md
+
+      - src/tela/shell/gateway_runtime.py
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/reload.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/shell/test_reload.py
+
+
+      **Verification**:
+
+      - Commit: d1d506922336a9bf2e72b033d485b0c182972058
+
+      - 58 tests pass
+
+      - invar guard passed'
   - id: conn_v2.contract.startup_convergence_contract
     name: Codify startup coordination and convergence kernel boundaries
     status: claimed
