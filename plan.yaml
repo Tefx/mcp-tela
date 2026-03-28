@@ -38866,7 +38866,7 @@ phases:
       - docs/DESIGN.md Runtime Architecture / Connection lifecycle'
   - id: conn_v2.preflight_reconnect.seam_proof
     name: Verify reconnect event causes only one enumeration
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
 
@@ -38944,6 +38944,8 @@ phases:
     depends_on:
     - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-28T18:46:02.221481+00:00'
   - id: conn_v2.preflight_reconnect.gate
     name: Gate reconnect enumeration correctness
     status: pending
