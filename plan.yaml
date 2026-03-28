@@ -36432,7 +36432,7 @@ phases:
   steps:
   - id: conn_v2.test.state_contract_tests
     name: Add lockfile, status, and lifecycle contract tests
-    status: claimed
+    status: done
     description: "step_type: test\nagent_source: default\nspec_refs:\n  - docs/INTERFACES.md#7.2.1\
       \ GET /status Response Schema\n  - docs/INTERFACES.md#7.3 Lockfile Contract\n\
       \  - docs/INTERFACES.md#2. CLI Surface\n  - docs/USAGE.md#Running tela > tela\
@@ -36459,6 +36459,58 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-28T20:09:16.025461+00:00'
+    done_at: '2026-03-28T20:42:38.000313+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Artifact**:
+
+      - Commit: 6dffe7d
+
+      - Add state contract tests for lockfile discovery vs readiness split
+
+
+      **Verification**:
+
+      - Run: uv run pytest tests/shell/test_gateway.py tests/shell/test_http_routes.py
+      tests/shell/test_lockfile.py tests/core/test_models.py tests/shell/test_query_commands_remote_state.py
+      --no-header -q -> 136 passed
+
+
+      **Spec link**:
+
+      - docs/INTERFACES.md §7.3 Lockfile Contract
+
+      - docs/INTERFACES.md §7.2.1 GET /status Response Schema
+
+      - docs/INTERFACES.md §2. CLI Surface (query commands)
+
+
+      **step_intent**: Add minimal spec-derived fixtures for lockfile payload and
+      GET /status response, focused tests for discovery-vs-readiness split, and tests
+      for config_path ownership and status exposure used by query commands. Keep step
+      test-only.
+
+
+      **expected_result**: Tests validate that:
+
+      1. Lockfile discovery does NOT imply downstream readiness
+
+      2. GET /status is required to determine readiness
+
+      3. config_path from lockfile is used by query commands for ownership verification
+
+      4. Lifecycle snapshots (starting, warming, ready) are distinguishable via status
+
+
+      **observed_result**: All 136 tests pass. 12 new tests added covering spec fixtures,
+      discovery vs readiness split, config_path ownership, and lifecycle snapshots.
+
+
+      **failure_alignment**: N/A (all tests pass)
+
+
+      **product_implementation_files_modified**: [] (test-only step)'
   - id: conn_v2.test.coldstart_concurrency_tests
     name: Add OpenCode-like cold-start and concurrent attach regressions
     status: done
