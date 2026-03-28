@@ -36810,7 +36810,7 @@ phases:
       \ Phase can advance to conn_v2.startup_coord."
 - id: conn_v2.startup_coord
   name: Startup Coordination and Single-Instance Autostart
-  status: pending
+  status: in_progress
   gate: Autostart leader/follower semantics and lockfile publication are wired so
     one gateway instance owns startup for a given config and competing connect clients
     converge safely.
@@ -36819,7 +36819,7 @@ phases:
   steps:
   - id: conn_v2.startup_coord.impl_module
     name: Implement startup coordinator module
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - docs/DESIGN.md#Runtime Architecture > Service discovery\n  - docs/DESIGN.md#Runtime\
       \ Architecture > Process model\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.3\
@@ -36896,6 +36896,8 @@ phases:
       - No resolve/register/conflict/rollback or notify/audit policy logic remains
       in startup coordinator scope'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-28T20:46:26.504532+00:00'
   - id: conn_v2.startup_coord.integrate_autostart
     name: Integrate autostart leader/follower wiring into connect and serve
     status: pending
