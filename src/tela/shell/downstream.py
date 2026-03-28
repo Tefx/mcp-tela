@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
+from typing import Literal
 
 from mcp import types as mcp_types
 from mcp.client.session import MessageHandlerFnT
@@ -33,6 +34,38 @@ _registry_lock = asyncio.Lock()
 
 _clients: dict[str, _ClientHandle] = {}
 _server_instructions: dict[str, str] = {}
+
+
+DownstreamSyncTruth = Literal["registry", "reconnect_payload", "live_reenumeration"]
+
+
+@dataclass(frozen=True)
+class DownstreamConvergenceContract:
+    """Declarative contract for downstream synchronization truth.
+
+    This module owns downstream convergence state: connected sessions, resolved
+    tool registry contents, and reconnect/reload update application.
+    """
+
+    authoritative_sources: tuple[DownstreamSyncTruth, ...]
+    not_authoritative_sources: tuple[str, ...]
+    consumer_rule: str
+
+
+DOWNSTREAM_CONVERGENCE_CONTRACT = DownstreamConvergenceContract(
+    authoritative_sources=("registry", "reconnect_payload", "live_reenumeration"),
+    not_authoritative_sources=("~/.tela/gateway.lock",),
+    consumer_rule=(
+        "Treat downstream registry state and accepted reconnect/reload payloads as sync truth. "
+        "Do not infer downstream readiness or tool convergence from lockfile discovery alone."
+    ),
+)
+
+
+DOWNSTREAM_CONVERGENCE_BEHAVIORAL_NOTES: tuple[str, ...] = (
+    "Downstream convergence is established by successful connect_all, reload acceptance, or reconnect payload application.",
+    "Lockfile discovery proves endpoint discoverability only; it does not prove downstream sync.",
+)
 
 
 @dataclass(frozen=True)

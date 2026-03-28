@@ -16,6 +16,7 @@ import pytest
 from tela.core.models import ServerConfig, TelaConfig
 from tela.shell.downstream import connect_all, disconnect_all, get_tool_server
 from tela.shell.reload import (
+    RECONNECT_ENUMERATION_CONTRACT,
     on_config_changed,
     on_server_reconnect,
     on_tools_changed,
@@ -141,6 +142,14 @@ def test_on_server_reconnect_updates_tools() -> None:
     assert result.is_ok
     assert get_tool_server("new_tool").value == "fs"
     _teardown()
+
+
+def test_reconnect_contract_marks_fresh_payload_authoritative() -> None:
+    """Declarative reconnect contract forbids duplicate enumeration."""
+
+    assert RECONNECT_ENUMERATION_CONTRACT.authoritative_payload_name == "tool_list"
+    assert RECONNECT_ENUMERATION_CONTRACT.authoritative_payload_fields == ("raw_tools",)
+    assert "second enumeration" in RECONNECT_ENUMERATION_CONTRACT.forbidden_behavior
 
 
 # --- on_config_changed ---

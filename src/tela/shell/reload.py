@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 
+from dataclasses import dataclass
 from typing import Awaitable, Callable
 
 from tela.core.conflict import detect_conflicts
@@ -38,6 +39,34 @@ from tela.shell.downstream import (
 NotifyCallback = Callable[[str], Awaitable[None]]  # tools_digest -> None
 
 _notify_callback: NotifyCallback | None = None
+
+
+@dataclass(frozen=True)
+class ReconnectEnumerationContract:
+    """Contract for reconnect payload handling in reload flow."""
+
+    authoritative_payload_name: str
+    authoritative_payload_fields: tuple[str, ...]
+    consumer_rule: str
+    forbidden_behavior: str
+
+
+RECONNECT_ENUMERATION_CONTRACT = ReconnectEnumerationContract(
+    authoritative_payload_name="tool_list",
+    authoritative_payload_fields=("raw_tools",),
+    consumer_rule=(
+        "When reconnect handling already carries fresh raw_tools, downstream reload consumers must reuse that payload as authoritative for the reconnect event."
+    ),
+    forbidden_behavior=(
+        "Do not blindly trigger a second enumeration or re_enumerate call when authoritative fresh enumeration is already present."
+    ),
+)
+
+
+RELOAD_BEHAVIORAL_NOTES: tuple[str, ...] = (
+    "Accepted reload updates downstream convergence state but do not redefine discovery truth.",
+    "Reconnect payloads may already contain fresh raw_tools and therefore short-circuit duplicate enumeration.",
+)
 
 
 def set_notify_callback(callback: NotifyCallback | None) -> Result[None, str]:

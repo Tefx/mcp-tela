@@ -46,7 +46,23 @@ are spawned once by the server, not per-client.
 
 `tela connect` discovers the running server via `~/.tela/gateway.lock`.
 If no server is running, it auto-starts one as a detached subprocess.
-The lockfile contains `pid`, `port`, and `token` for auth.
+
+The lockfile is **discovery truth only**. Its contract is limited to:
+- process identity (`pid`)
+- bind target / endpoint discoverability (`host`, `port`)
+- transport auth bootstrap (`token`)
+- startup config ownership (`config_path`)
+- instance metadata (`started_at`, `version`)
+
+The lockfile is **not** readiness truth and **not** downstream convergence truth.
+Its presence means only that a process advertised an endpoint; it does **not** mean:
+- downstream servers are connected
+- tool enumeration succeeded
+- reconnect convergence completed
+- `tela connect` may skip runtime lifecycle checks
+
+Consumers of `tela connect` and `tela serve` MUST NOT treat lockfile discovery as
+proof that downstreams are ready.
 
 ### Connection lifecycle
 
@@ -54,6 +70,26 @@ The lockfile contains `pid`, `port`, and `token` for auth.
 2. Bridge active: stdio ↔ HTTP MCP session
 3. `tela connect` exits → `POST /disconnect` → server deregisters
 4. Last connection gone + idle timeout → server auto-shuts down (if auto-started)
+
+### Discovery and readiness
+
+Runtime lifecycle/readiness truth comes from the in-process runtime status snapshot
+(and operator surfaces derived from it, such as `GET /status`), not from the
+lockfile.
+
+Source-of-truth split:
+
+| Concern | Authoritative source | Explicitly not authoritative |
+|---------|----------------------|------------------------------|
+| Discovery | `~/.tela/gateway.lock` | runtime readiness, downstream convergence |
+| Lifecycle / readiness | runtime status snapshot / `GET /status` | lockfile presence |
+| Downstream convergence | downstream registry + reconnect/reload flow | lockfile presence |
+
+Implications:
+- readiness/lifecycle checks must read runtime status, not infer from discovery artifacts
+- downstream sync state remains separate from lockfile discovery
+- a discovered endpoint may still be starting, degraded, or disconnected from downstreams
+- reconnect handling may already hold fresh authoritative `raw_tools`; when that payload is present, downstream consumers MUST reuse it and MUST NOT blindly trigger a second enumeration
 
 ### Idle shutdown
 

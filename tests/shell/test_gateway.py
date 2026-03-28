@@ -24,6 +24,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.commands.start import start_command
+from tela.shell.downstream import DOWNSTREAM_CONVERGENCE_CONTRACT
 from tela.shell.gateway import (
     GatewayStartupConfig,
     bind_gateway_startup,
@@ -35,6 +36,10 @@ from tela.shell.gateway import (
     is_runtime_running,
     is_upstream_server_initialized,
     with_upstream_server,
+)
+from tela.shell.gateway_runtime import (
+    LOCKFILE_DISCOVERY_CONTRACT,
+    STATUS_SNAPSHOT_CONTRACT,
 )
 
 
@@ -181,6 +186,27 @@ def test_gateway_status_model_defaults() -> None:
         total_tool_calls=0,
     )
     assert status.connected_servers == []
+
+
+def test_runtime_truth_contract_separates_discovery_status_and_convergence() -> None:
+    """Declarative contracts keep discovery, readiness, and convergence separate."""
+
+    assert LOCKFILE_DISCOVERY_CONTRACT.plane == "discovery"
+    assert LOCKFILE_DISCOVERY_CONTRACT.authoritative_artifact == "~/.tela/gateway.lock"
+    assert "lifecycle_readiness" in LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
+    assert "downstream_convergence" in LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
+
+    assert STATUS_SNAPSHOT_CONTRACT.plane == "lifecycle_readiness"
+    assert (
+        STATUS_SNAPSHOT_CONTRACT.authoritative_artifact
+        == "RuntimeStatusSnapshot / GET /status"
+    )
+    assert "running" in STATUS_SNAPSHOT_CONTRACT.authoritative_fields
+
+    assert (
+        "~/.tela/gateway.lock"
+        in DOWNSTREAM_CONVERGENCE_CONTRACT.not_authoritative_sources
+    )
 
 
 # --- Gateway lifecycle (start/shutdown/status/connections) ---
@@ -420,7 +446,9 @@ def test_fastmcp_tools_list_returns_filtered_tools() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 
@@ -468,7 +496,9 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
         start_result = await gateway_start(config, tela_config=tela)
         assert start_result.is_ok
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.CallToolRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
             assert handler_result.is_ok
 
             response = await handler_result.value(
@@ -519,12 +549,16 @@ def test_fastmcp_profiles_resource_registered() -> None:
     try:
         assert is_upstream_server_initialized()
 
-        resources_result = with_upstream_server(lambda s: asyncio.run(s.list_resources()))
+        resources_result = with_upstream_server(
+            lambda s: asyncio.run(s.list_resources())
+        )
         assert resources_result.is_ok
         resources = resources_result.value
         assert any(resource.name == "tela.profiles" for resource in resources)
 
-        contents_result = with_upstream_server(lambda s: asyncio.run(s.read_resource("tela://profiles")))
+        contents_result = with_upstream_server(
+            lambda s: asyncio.run(s.read_resource("tela://profiles"))
+        )
         assert contents_result.is_ok
         contents = contents_result.value
         payload = json.loads(contents[0].content)  # type: ignore[index]  # contents is indexable at runtime
@@ -562,7 +596,9 @@ def test_fastmcp_tools_call_denies_unadmitted_family() -> None:
             tool_lists={"shell": [{"name": "exec", "inputSchema": {}}]},
         )
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.CallToolRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(
                 types.CallToolRequest(
@@ -684,7 +720,9 @@ def test_list_tools_preserves_all_metadata_fields() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 
@@ -747,7 +785,9 @@ def test_list_tools_preserves_partial_metadata() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 
@@ -806,7 +846,9 @@ def test_list_tools_handles_absent_metadata() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 
@@ -864,7 +906,9 @@ def test_list_tools_preserves_only_title() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 
@@ -921,7 +965,9 @@ def test_list_tools_preserves_only_output_schema() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 
@@ -978,7 +1024,9 @@ def test_list_tools_preserves_only_annotations() -> None:
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
         try:
-            handler_result = with_upstream_server(lambda s: s._mcp_server.request_handlers[types.ListToolsRequest])
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
             assert handler_result.is_ok
             response = await handler_result.value(types.ListToolsRequest())
 

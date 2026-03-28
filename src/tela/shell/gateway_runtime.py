@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field
-from typing import Callable, TypeVar
+from typing import Callable, Literal, TypeVar
 
 from mcp.server.fastmcp import FastMCP
 from starlette.applications import Starlette
@@ -40,6 +40,79 @@ from tela.core.models import ConnectionContext, TelaConfig
 from tela.shell.result import Result
 
 _T = TypeVar("_T")
+
+RuntimeTruthPlane = Literal[
+    "discovery",
+    "lifecycle_readiness",
+    "downstream_convergence",
+]
+
+
+@dataclass(frozen=True)
+class RuntimeTruthContract:
+    """Declarative source-of-truth contract for one runtime plane.
+
+    These contracts are intentionally descriptive only. They define which
+    artifact a consumer may trust for a given concern and, equally important,
+    which adjacent concerns MUST NOT be inferred from that artifact.
+    """
+
+    plane: RuntimeTruthPlane
+    authoritative_artifact: str
+    authoritative_fields: tuple[str, ...]
+    not_authoritative_for: tuple[RuntimeTruthPlane, ...]
+    consumer_rule: str
+
+
+LOCKFILE_DISCOVERY_CONTRACT = RuntimeTruthContract(
+    plane="discovery",
+    authoritative_artifact="~/.tela/gateway.lock",
+    authoritative_fields=(
+        "pid",
+        "host",
+        "port",
+        "token",
+        "config_path",
+        "started_at",
+        "version",
+    ),
+    not_authoritative_for=("lifecycle_readiness", "downstream_convergence"),
+    consumer_rule=(
+        "Use lockfile data only to discover process identity, bind target, auth bootstrap, "
+        "and startup config ownership. Do not infer readiness or downstream sync from lockfile presence."
+    ),
+)
+
+
+STATUS_SNAPSHOT_CONTRACT = RuntimeTruthContract(
+    plane="lifecycle_readiness",
+    authoritative_artifact="RuntimeStatusSnapshot / GET /status",
+    authoritative_fields=(
+        "running",
+        "start_time",
+        "connections",
+        "total_tool_calls",
+        "config",
+    ),
+    not_authoritative_for=("discovery",),
+    consumer_rule=(
+        "Use runtime status snapshots to answer gateway lifecycle/readiness questions. "
+        "Do not replace status checks with lockfile existence checks."
+    ),
+)
+
+
+RUNTIME_TRUTH_CONTRACTS: tuple[RuntimeTruthContract, ...] = (
+    LOCKFILE_DISCOVERY_CONTRACT,
+    STATUS_SNAPSHOT_CONTRACT,
+)
+
+
+RUNTIME_TRUTH_BEHAVIORAL_NOTES: tuple[str, ...] = (
+    "Discovery succeeds when an endpoint can be located; readiness remains a separate runtime question.",
+    "A live process advertised by the lockfile may still be unready or unconverged downstream.",
+    "Connect/serve consumers must gate lifecycle decisions on runtime status, not discovery artifacts.",
+)
 
 
 @dataclass
@@ -276,7 +349,9 @@ def with_upstream_server(fn: Callable[[FastMCP], _T]) -> Result[_T, str]:
     """
     with _runtime_lock:
         if _runtime.upstream_server is None:
-            return Result(error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized")
+            return Result(
+                error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized"
+            )
         return Result(value=fn(_runtime.upstream_server))
 
 
@@ -319,7 +394,9 @@ def get_upstream_http_app() -> Result[Starlette, str]:
     """
     with _runtime_lock:
         if _runtime.upstream_server is None:
-            return Result(error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized")
+            return Result(
+                error="UPSTREAM_NOT_INITIALIZED: upstream MCP server not initialized"
+            )
         return Result(value=_runtime.upstream_server.streamable_http_app())
 
 
