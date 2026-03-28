@@ -37319,7 +37319,28 @@ phases:
       \ module for wait, attach, forward, and disconnect paths.\n  - Ensure gateway\
       \ session tracking and idle shutdown consume one authoritative connection-count\
       \ path.\n  - Preserve stdio bridge runtime surface and actual HTTP attach/detach\
-      \ behavior."
+      \ behavior.\n\n## Contract-Preserving Implementation Mode\nFill in stub bodies\
+      \ in the connect/transport/gateway integration seam and replace NotImplementedError\
+      \ / pass / ... within the existing signatures only.\n\nUPSTREAM ARTIFACTS (from\
+      \ contract/test steps):\n  - src/tela/commands/connect_cmd.py — bridge UX contract\
+      \ surface is AUTHORITATIVE (contract)\n  - src/tela/shell/gateway_runtime.py\
+      \ — lifecycle/readiness contract is AUTHORITATIVE (contract)\n  - tests/shell/test_connect_cmd.py\
+      \ — attach/wait assertions are PROTECTED (test)\n  - tests/repro/test_disconnect_cleanup.py\
+      \ — disconnect cleanup assertions are PROTECTED (test)\n  - tests/repro/test_connection_count_semantics.py\
+      \ — connection-count assertions are PROTECTED (test)\n\nYOUR SCOPE: complete\
+      \ the implementation within existing signatures; wire existing connect flow\
+      \ paths to the bridge control module instead of inventing new readiness logic.\n\
+      \nDeviation protocol: if a contract artifact is wrong or incomplete, record\
+      \ a deviation note with type, what, why, and impact — do NOT silently rewrite\
+      \ the contract or tests.\n\n## Completion Criteria (stub exclusion)\nThis is\
+      \ an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\nupstream_artifacts:\n\
+      \  - path: src/tela/commands/connect_cmd.py\n    from_step: conn_v2.contract.bridge_ux_contract\n\
+      \    tier: contract\n  - path: src/tela/shell/gateway_runtime.py\n    from_step:\
+      \ conn_v2.contract.lockfile_status_contract\n    tier: contract\n  - path: tests/shell/test_connect_cmd.py\n\
+      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
+      \ - path: tests/repro/test_disconnect_cleanup.py\n    from_step: conn_v2.test.interrupt_diagnostics_tests\n\
+      \    tier: test\n  - path: tests/repro/test_connection_count_semantics.py\n\
+      \    from_step: conn_v2.test.coldstart_concurrency_tests\n    tier: test"
     verification: '- Integration proof exercises attach and detach against real HTTP
       endpoints or equivalent full-path harness
 
