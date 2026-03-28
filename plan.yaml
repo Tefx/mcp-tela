@@ -36688,7 +36688,29 @@ phases:
       \ only in this serial integration step.\n  - Ensure config-path ownership, PID\
       \ binding, and follower wait behavior are visible at the runnable surface, not\
       \ only in helper tests.\n  - Preserve explicit tela serve startup path for direct\
-      \ operators."
+      \ operators.\n\n## Contract-Preserving Implementation Mode\nFill in stub bodies\
+      \ in src/tela/commands/connect_cmd.py, src/tela/commands/serve_cmd.py, and src/tela/cli.py;\
+      \ replace NotImplementedError / pass / ... while preserving the approved coordinator\
+      \ and status contracts.\n\nUPSTREAM ARTIFACTS (from contract/test steps):\n\
+      \  - src/tela/shell/startup_coordinator.py — startup sequencing contract surface\
+      \ is AUTHORITATIVE (contract)\n  - src/tela/shell/gateway_runtime.py — readiness/status\
+      \ truth is AUTHORITATIVE (contract)\n  - tests/shell/test_connect_cmd.py — autostart/follower\
+      \ assertions are PROTECTED (test)\n  - tests/shell/test_serve_cmd.py — serve\
+      \ startup assertions are PROTECTED (test)\n  - tests/repro/test_connect_runtime_liveness.py\
+      \ — runnable path evidence is PROTECTED (test)\n\nYOUR SCOPE: complete the implementation\
+      \ within existing signatures; wire existing entrypoints to the coordinator rather\
+      \ than inventing new entry surfaces.\n\nDeviation protocol: if a contract artifact\
+      \ is wrong or incomplete, record a deviation note with type, what, why, and\
+      \ impact — do NOT silently rewrite the contract or tests.\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\n\nupstream_artifacts:\n  - path: src/tela/shell/startup_coordinator.py\n\
+      \    from_step: conn_v2.contract.startup_convergence_contract\n    tier: contract\n\
+      \  - path: src/tela/shell/gateway_runtime.py\n    from_step: conn_v2.contract.lockfile_status_contract\n\
+      \    tier: contract\n  - path: tests/shell/test_connect_cmd.py\n    from_step:\
+      \ conn_v2.test.coldstart_concurrency_tests\n    tier: test\n  - path: tests/shell/test_serve_cmd.py\n\
+      \    from_step: conn_v2.test.interrupt_diagnostics_tests\n    tier: test\n \
+      \ - path: tests/repro/test_connect_runtime_liveness.py\n    from_step: conn_v2.test.coldstart_concurrency_tests\n\
+      \    tier: test"
     verification: '- Integration proof shows concurrent connect invocations converge
       on one serve process
 
