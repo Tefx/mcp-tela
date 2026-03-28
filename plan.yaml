@@ -36546,19 +36546,6 @@ phases:
     depends_on:
     - conn_v2.startup_coord.impl_module
     agent: python-executor
-  - id: conn_v2.startup_coord.freeze_l2
-    name: Freeze startup-coordination snapshot for L2 verification
-    status: pending
-    description: "step_type: planning\nFreeze: lock snapshot for L2 startup-coordination\
-      \ verification.\nRequirements:\n  - record git rev-parse HEAD\n  - record git\
-      \ status clean\n  - declare config fixture and concurrent attach scenario under\
-      \ test\n  - state that no code changes are allowed until liveness probe and\
-      \ gate complete"
-    verification: '- Freeze evidence includes commit, clean tree, and named concurrent-start
-      scenario'
-    depends_on:
-    - conn_v2.startup_coord.integrate_autostart
-    agent: software-architect
   - id: conn_v2.startup_coord.liveness_probe
     name: Probe single-instance autostart liveness from the real entry point
     status: pending
@@ -36624,8 +36611,6 @@ phases:
       - [ ] ISSUES_FOUND
 
       - [ ] INCOMPLETE'
-    depends_on:
-    - conn_v2.startup_coord.freeze_l2
     agent: blind-tester
   - id: conn_v2.startup_coord.gate
     name: Gate startup coordination phase
