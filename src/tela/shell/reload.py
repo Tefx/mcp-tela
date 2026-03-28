@@ -31,7 +31,6 @@ from tela.shell.downstream import (
     connect_all,
     disconnect_all,
     get_registry,
-    re_enumerate,
 )
 
 
@@ -150,6 +149,9 @@ async def on_server_reconnect(
 ) -> Result[None, str]:
     """Handle a downstream server reconnecting after disconnect.
 
+    The fresh tool list is already enumerated by _handle_reconnect before this
+    is called. This function reuses that enumeration rather than re-enumerating.
+
     Examples:
         >>> import asyncio
         >>> from tela.core.models import ServerConfig
@@ -166,12 +168,11 @@ async def on_server_reconnect(
     Args:
         server_name: Name of the reconnecting server.
         server_config: Server configuration.
-        tool_list: New tool list from the reconnected server.
+        tool_list: Already-enumerated tool list from the reconnected server.
 
     Returns:
         Result[None, str].
     """
-    _ = await re_enumerate(server_name)
     return await on_tools_changed(server_name, server_config, tool_list)
 
 

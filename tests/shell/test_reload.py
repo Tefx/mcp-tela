@@ -630,7 +630,7 @@ def test_on_server_reconnect_reuses_passed_tool_list(
         # Return empty list to avoid affecting registry in this test
         return Result(value=[])
 
-    monkeypatch.setattr("tela.shell.reload.re_enumerate", _fake_re_enumerate)
+    monkeypatch.setattr("tela.shell.downstream.re_enumerate", _fake_re_enumerate)
 
     servers = {"fs": ServerConfig(name="fs", command="cmd")}
     asyncio.run(
@@ -686,7 +686,7 @@ def test_on_server_reconnect_does_not_trigger_duplicate_enumeration(
         registry = get_registry()
         return Result(value=registry.get_all_tools().get(server_name, []))
 
-    monkeypatch.setattr("tela.shell.reload.re_enumerate", _fake_re_enumerate)
+    monkeypatch.setattr("tela.shell.downstream.re_enumerate", _fake_re_enumerate)
 
     servers = {"fs": ServerConfig(name="fs", command="cmd")}
     asyncio.run(
@@ -753,7 +753,7 @@ def test_on_server_reconnect_notify_callback_fired_once(
 
         return Result(value=[])
 
-    monkeypatch.setattr("tela.shell.reload.re_enumerate", _no_op_re_enumerate)
+    monkeypatch.setattr("tela.shell.downstream.re_enumerate", _no_op_re_enumerate)
 
     try:
         servers = {"fs": ServerConfig(name="fs", command="cmd")}
@@ -838,7 +838,7 @@ def test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect(
 
         return Result(value=get_registry().get_all_tools().get(server_name, []))
 
-    monkeypatch.setattr("tela.shell.reload.re_enumerate", _fake_re_enumerate)
+    monkeypatch.setattr("tela.shell.downstream.re_enumerate", _fake_re_enumerate)
 
     servers = {"fs": ServerConfig(name="fs", command="cmd")}
     asyncio.run(
