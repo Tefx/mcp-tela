@@ -36843,62 +36843,38 @@ phases:
   - id: conn_v2.lifecycle.impl_module
     name: Implement lifecycle snapshot core and readiness policy
     status: pending
-    description: 'step_type: implementation
-
-
-      Implement lifecycle snapshot ownership and readiness policy using the approved
-      conn_v2 contracts.
-
-
-      Required scope:
-
-      - Lifecycle module owns readiness and phase truth.
-
-      - Discovery-only artifacts such as lockfile presence must not leak into readiness
-      decisions.
-
-      - Status snapshot is the authoritative source consumed by connect, status, and
-      HTTP status surfaces.
-
-
-      Known risks / gate preview:
-
-      - Gate will reject any path that still treats lockfile discovery as downstream
-      ready.
-
-      - Gate will reject duplicated lifecycle truth across lockfile/status/readiness
-      code paths.
-
-
-      Spec refs:
-
-      - docs/DESIGN.md Runtime Architecture / Discovery and readiness
-
-      - conn_v2.contract.lockfile_status_contract
-
-
-      Touch paths:
-
-      - src/tela/shell/gateway_runtime.py
-
-      - src/tela/commands/status_cmd.py
-
-      - src/tela/shell/gateway.py
-
-
-      Harness refs:
-
-      - tests/shell/test_gateway.py
-
-      - tests/shell/test_status.py
-
-
-      Authoritative interface: NONE PINNED
-
-
-      ## Completion Criteria (stub exclusion)
-
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    description: "step_type: implementation\n\nFill in stub bodies for lifecycle snapshot\
+      \ ownership and readiness policy using the approved conn_v2 contracts.\n\nRequired\
+      \ scope:\n- Lifecycle module owns readiness and phase truth.\n- Discovery-only\
+      \ artifacts such as lockfile presence must not leak into readiness decisions.\n\
+      - Status snapshot is the authoritative source consumed by connect, status, and\
+      \ HTTP status surfaces.\n\nKnown risks / gate preview:\n- Gate will reject any\
+      \ path that still treats lockfile discovery as downstream ready.\n- Gate will\
+      \ reject duplicated lifecycle truth across lockfile/status/readiness code paths.\n\
+      \nSpec refs:\n- docs/DESIGN.md Runtime Architecture / Discovery and readiness\n\
+      - conn_v2.contract.lockfile_status_contract\n\nTouch paths:\n- src/tela/shell/gateway_runtime.py\n\
+      - src/tela/commands/status_cmd.py\n- src/tela/shell/gateway.py\n\nHarness refs:\n\
+      - tests/shell/test_gateway.py\n- tests/shell/test_status.py\n\nAuthoritative\
+      \ interface: NONE PINNED\n\n## Completion Criteria (stub exclusion)\nThis is\
+      \ an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\n## Contract-Preserving\
+      \ Implementation Mode\nFill in stub bodies and replace NotImplementedError /\
+      \ pass / ... within existing lifecycle/status signatures only.\n\nUPSTREAM ARTIFACTS\
+      \ (from contract/test steps):\n- src/tela/shell/gateway_runtime.py — lifecycle/readiness\
+      \ contract semantics are AUTHORITATIVE (contract)\n- src/tela/shell/reload.py\
+      \ — discovery/readiness split boundaries are AUTHORITATIVE (contract)\n- tests/shell/test_gateway.py\
+      \ — lifecycle snapshot assertions are PROTECTED (test)\n- tests/shell/test_lockfile.py\
+      \ — lockfile-vs-readiness assertions are PROTECTED (test)\n- tests/shell/test_query_commands_remote_state.py\
+      \ — consumer status assertions are PROTECTED (test)\n\nYOUR SCOPE: complete\
+      \ the implementation within existing signatures; edit bodies only and keep lockfile\
+      \ discovery separate from readiness truth.\n\nDeviation protocol: if a contract\
+      \ artifact is wrong or incomplete, record a deviation note with type, what,\
+      \ why, and impact — do NOT silently rewrite the contract or tests.\n\nupstream_artifacts:\n\
+      - path: src/tela/shell/gateway_runtime.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \  tier: contract\n- path: src/tela/shell/reload.py\n  from_step: conn_v2.contract.lockfile_status_contract\n\
+      \  tier: contract\n- path: tests/shell/test_gateway.py\n  from_step: conn_v2.test.state_contract_tests\n\
+      \  tier: test\n- path: tests/shell/test_lockfile.py\n  from_step: conn_v2.test.state_contract_tests\n\
+      \  tier: test\n- path: tests/shell/test_query_commands_remote_state.py\n  from_step:\
+      \ conn_v2.test.interrupt_diagnostics_tests\n  tier: test"
     verification: '- Lifecycle module owns readiness and phase truth
 
       - Discovery artifacts do not leak into readiness decisions
