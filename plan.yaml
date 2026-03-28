@@ -36361,7 +36361,7 @@ phases:
       - invar guard passed'
   - id: conn_v2.contract.gate
     name: Gate connect/serve runtime contracts
-    status: pending
+    status: claimed
     description: "step_type: gate\nGate review: verify the refactor contract phase\
       \ is complete and architecture-basis-conformant.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - Phase freezes the whole A+B+C+D runtime shape before implementation\n \
@@ -36381,6 +36381,8 @@ phases:
     - conn_v2.contract.startup_convergence_contract
     - conn_v2.contract.bridge_ux_contract
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-28T19:21:41.507849+00:00'
 - id: conn_v2.test
   name: Connect/Serve Refactor Tests and Harness
   status: locked
