@@ -38742,7 +38742,7 @@ phases:
       \ and re-enumerates, causing duplicate enumeration for the same reconnect event."
   - id: conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     name: Reuse captured reconnect enumeration in reload flow
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
 
@@ -38804,6 +38804,8 @@ phases:
     depends_on:
     - conn_v2.preflight_reconnect.test_no_duplicate_enumeration
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-28T18:38:00.331917+00:00'
   - id: conn_v2.preflight_reconnect.seam_proof
     name: Verify reconnect event causes only one enumeration
     status: pending
