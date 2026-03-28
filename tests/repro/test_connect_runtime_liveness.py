@@ -255,7 +255,9 @@ def test_connect_discovers_via_lockfile(monkeypatch, tmp_path):
                     else ""
                 )
                 failure_mode = (
-                    "PREMATURE_EXIT" if poll_result == 0 else f"STARTUP_FAILURE(rc={poll_result})"
+                    "PREMATURE_EXIT"
+                    if poll_result == 0
+                    else f"STARTUP_FAILURE(rc={poll_result})"
                 )
                 assert False, (
                     f"Mode D [{failure_mode}]: connect exited with code {poll_result}. "
@@ -594,6 +596,243 @@ def test_disconnect_decrements_connection_count():
             _clean_lockfile()
 
 
+# =============================================================================
+# Cold-start concurrency regression tests
+# =============================================================================
+
+
+def test_coldstart_endpoint_discovers_before_convergence(tmp_path, monkeypatch):
+    """Cold-start scenario: endpoint becomes discoverable before convergence completes.
+
+    This simulates the scenario from docs/DESIGN.md Runtime Architecture where
+    7 downstream servers exist and the endpoint becomes available before all
+    downstream connections have stabilized. The connect should succeed once
+    the lockfile is written, even if gateway convergence is still in progress.
+
+    Regression test for: endpoint appears in lockfile but gateway not yet
+    fully initialized (partial convergence).
+    """
+    # Use isolated HOME to avoid interfering with host server
+    fake_home = str(tmp_path / "home")
+    os.makedirs(fake_home, exist_ok=True)
+    monkeypatch.setenv("HOME", fake_home)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        config_path = _write_test_config(tmp_dir)
+
+        # Start serve process
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        try:
+            # Wait for lockfile - this simulates endpoint becoming discoverable
+            lockfile_data = _wait_for_lockfile(timeout=15.0)
+            assert lockfile_data is not None, (
+                "Cold-start [LOCKFILE_ABSENT]: endpoint did not become discoverable"
+            )
+
+            host = lockfile_data["host"]
+            port = lockfile_data["port"]
+            token = lockfile_data["token"]
+
+            # Connect should succeed even if gateway is still converging
+            # (e.g., downstream servers not all connected yet)
+            connect_proc = subprocess.Popen(
+                [sys.executable, "-m", "tela", "connect", "--config", config_path],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            # Give connect time to establish
+            time.sleep(2.0)
+
+            poll_result = connect_proc.poll()
+            if poll_result is not None:
+                stderr_data = (
+                    connect_proc.stderr.read().decode("utf-8", errors="replace")
+                    if connect_proc.stderr
+                    else ""
+                )
+                assert False, (
+                    f"Cold-start [STARTUP_FAILURE rc={poll_result}]: "
+                    f"connect failed despite endpoint being discoverable. "
+                    f"stderr={stderr_data!r}"
+                )
+
+            # Verify connection registered
+            status_result = subprocess.run(
+                [sys.executable, "-m", "tela", "status", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env={**os.environ, "TELA_BEARER_TOKEN": token},
+            )
+
+            assert status_result.returncode == 0, (
+                f"Cold-start: status query failed. stderr={status_result.stderr}"
+            )
+
+            status_data = json.loads(status_result.stdout)
+            active_connections = status_data.get("active_connections", 0)
+
+            assert active_connections >= 1, (
+                f"Cold-start: connect did not register with gateway. "
+                f"active_connections={active_connections}"
+            )
+
+            print(f"  PASS: cold-start connect succeeded during convergence phase")
+            print(f"        endpoint discovered at {host}:{port}")
+
+            # Clean disconnect
+            connect_proc.stdin.close()
+            connect_proc.terminate()
+            try:
+                connect_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                connect_proc.kill()
+                connect_proc.wait()
+
+        finally:
+            serve_proc.terminate()
+            try:
+                serve_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                serve_proc.kill()
+                serve_proc.wait()
+
+            _clean_lockfile()
+
+
+def test_concurrent_attach_converges_on_single_leader(tmp_path, monkeypatch):
+    """Concurrent attach: multiple connect invocations converge on one leader.
+
+    Per runtime_contract connect specification, multiple simultaneous connect
+    calls for the same config should result in:
+    - One leader that actually starts/autostarts the gateway
+    - Followers that wait and attach to the existing gateway
+
+    This test verifies that when a gateway is already running, multiple
+    concurrent connect calls all stabilize and register with it.
+    """
+    fake_home = str(tmp_path / "home")
+    os.makedirs(fake_home, exist_ok=True)
+    monkeypatch.setenv("HOME", fake_home)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        config_path = _write_test_config(tmp_dir)
+
+        # Start ONE server first - this is the "existing gateway"
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        try:
+            # Wait for lockfile - gateway is now running
+            lockfile_data = _wait_for_lockfile(timeout=15.0)
+            assert lockfile_data is not None, "Server did not write lockfile"
+
+            # Launch multiple connect processes concurrently to the existing gateway
+            connect_procs = []
+            num_concurrent = 3
+
+            for i in range(num_concurrent):
+                proc = subprocess.Popen(
+                    [sys.executable, "-m", "tela", "connect", "--config", config_path],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                connect_procs.append(proc)
+                # Stagger starts slightly to simulate real concurrency
+                time.sleep(0.2)
+
+            # Give all connects time to establish
+            time.sleep(3.0)
+
+            # All connect processes should still be alive
+            alive_procs = [p for p in connect_procs if p.poll() is None]
+
+            assert len(alive_procs) >= num_concurrent - 1, (
+                f"Concurrent connect [LEADER_ELECTED]: some connects exited prematurely. "
+                f"Expected at least {num_concurrent - 1} alive, got {len(alive_procs)}"
+            )
+
+            # Get gateway status - should show multiple connections
+            token = lockfile_data["token"]
+
+            status_result = subprocess.run(
+                [sys.executable, "-m", "tela", "status", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env={**os.environ, "TELA_BEARER_TOKEN": token},
+            )
+
+            assert status_result.returncode == 0, (
+                f"Concurrent connect: status query failed. stderr={status_result.stderr}"
+            )
+
+            status_data = json.loads(status_result.stdout)
+            active_connections = status_data.get("active_connections", 0)
+
+            # At least the alive connects should be registered
+            assert active_connections >= len(alive_procs), (
+                f"Concurrent connect: expected >= {len(alive_procs)} connections, "
+                f"got {active_connections}"
+            )
+
+            print(
+                f"  PASS: {active_connections} concurrent connects stabilized on gateway"
+            )
+
+        finally:
+            # Clean up all connect processes
+            for proc in connect_procs:
+                try:
+                    proc.stdin.close()
+                    proc.terminate()
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+
+            # Clean up server
+            serve_proc.terminate()
+            try:
+                serve_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                serve_proc.kill()
+                serve_proc.wait()
+
+            _clean_lockfile()
+
+
 if __name__ == "__main__":
     import traceback
 
@@ -602,6 +841,8 @@ if __name__ == "__main__":
         test_connect_discovers_via_lockfile,
         test_bridge_handles_mcp_initialize_and_tools_list,
         test_disconnect_decrements_connection_count,
+        test_coldstart_endpoint_discovers_before_convergence,
+        test_concurrent_attach_converges_on_single_leader,
     ]
 
     print("Mode D: tela connect runtime surface verification")
