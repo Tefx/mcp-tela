@@ -38968,7 +38968,7 @@ phases:
       \ tests pass. Registry and status converge correctly after reconnect."
   - id: conn_v2.preflight_reconnect.gate
     name: Gate reconnect enumeration correctness
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
 
@@ -39020,3 +39020,5 @@ phases:
     - conn_v2.preflight_reconnect.impl_reuse_captured_enumeration
     - conn_v2.preflight_reconnect.seam_proof
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-28T18:49:27.063628+00:00'
