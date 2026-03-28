@@ -37241,19 +37241,6 @@ phases:
     depends_on:
     - conn_v2.bridge.impl_module
     agent: python-executor
-  - id: conn_v2.bridge.freeze_l2
-    name: Freeze bridge snapshot for interrupt verification
-    status: pending
-    description: "step_type: planning\nFreeze: lock snapshot for L2 bridge interrupt\
-      \ verification.\nRequirements:\n  - record git rev-parse HEAD\n  - record git\
-      \ status clean\n  - declare signal scenarios under test (autostart wait, attached\
-      \ bridge)\n  - state that no code changes are allowed until interrupt verification\
-      \ and gate complete"
-    verification: '- Freeze evidence identifies both wait and active-bridge interrupt
-      scenarios'
-    depends_on:
-    - conn_v2.bridge.integrate_connect_flow
-    agent: software-architect
   - id: conn_v2.bridge.interrupt_probe
     name: Probe hard-interrupt behavior from the real connect entry point
     status: pending
@@ -37304,8 +37291,6 @@ phases:
       ### Failure Path Evidence
 
       - Show whether active connection count and idle state recovered after interrupt.'
-    depends_on:
-    - conn_v2.bridge.freeze_l2
     agent: blind-tester
   - id: conn_v2.bridge.gate
     name: Gate bridge control phase
