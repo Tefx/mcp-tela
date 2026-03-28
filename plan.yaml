@@ -36921,7 +36921,7 @@ phases:
       \nDeviation records:\n- none"
   - id: conn_v2.startup_coord.integrate_autostart
     name: Integrate autostart leader/follower wiring into connect and serve
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n  - docs/USAGE.md#Running\
       \ tela > tela serve\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.3\
@@ -36997,6 +36997,84 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-28T20:59:45.916287+00:00'
+    done_at: '2026-03-28T21:12:20.634430+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/shell/test_serve_cmd.py tests/repro/test_connect_runtime_liveness.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      ..............................                                   [100%]
+
+      38 passed in 27.88s
+
+      ```
+
+
+      **Path exercised**: tela connect -> startup coordinator -> tela serve -> lockfile
+      discovery
+
+
+      ### Implementation Summary
+
+
+      Wire `startup_coordinator.py` (from `impl_module`) into `connect_cmd._discover_or_autostart()`:
+
+
+      1. **Added import** of `discover_or_autostart as _coordinator_discover_or_autostart`
+      from startup_coordinator
+
+      2. **Added adapter function** `_autostart_serve_adapter` to bridge keyword-only
+      to positional args (required by `AutostartServe` type)
+
+      3. **Replaced implementation** of `_discover_or_autostart` to delegate to the
+      coordinator
+
+
+      The coordinator provides:
+
+      - Config ownership matching for lockfile discovery
+
+      - Single-leader autostart lock per resolved config path
+
+      - Follower wait/attach behavior while leader is starting
+
+
+      ### Verification Results
+
+      - All 27 connect_cmd tests pass
+
+      - All 5 serve_cmd tests pass
+
+      - All 6 repro/runtime_liveness tests pass
+
+      - invar guard: passed (0 errors, 1 warning about file size, 1 info about complexity)
+
+
+      ### Deviation Records
+
+      None - this is a straightforward integration wiring task.
+
+
+      ### Gaps/Notes
+
+      - No downstream convergence changes
+
+      - No status snapshot redesign
+
+      - Existing function signatures preserved; tests monkeypatching internal functions
+      still work'
   - id: conn_v2.startup_coord.liveness_probe
     name: Probe single-instance autostart liveness from the real entry point
     status: pending
