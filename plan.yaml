@@ -36461,7 +36461,7 @@ phases:
     claimed_at: '2026-03-28T19:27:07.122379+00:00'
   - id: conn_v2.test.coldstart_concurrency_tests
     name: Add OpenCode-like cold-start and concurrent attach regressions
-    status: claimed
+    status: pending
     description: "step_type: test\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/DESIGN.md#Runtime Architecture > Process model\n  - docs/USAGE.md#Running\
       \ tela > tela connect\n  - docs/INTERFACES.md#2. CLI Surface\n  - architecture\
@@ -36510,8 +36510,6 @@ phases:
       **Path exercised**: tela connect discovery/autostart -> gateway startup/lifecycle
       -> attach follower/leader outcome'
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-28T19:26:54.008954+00:00'
   - id: conn_v2.test.interrupt_diagnostics_tests
     name: Add hard-interrupt and diagnostics regression tests
     status: pending
