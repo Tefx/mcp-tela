@@ -38163,9 +38163,27 @@ phases:
       \ means raw_name == exposed name when tool_prefix is omitted\n\nOut-of-scope\
       \ guardrail:\n- downstream registry wiring, upstream tools/call routing, and\
       \ reload notification emission are deferred to later runtime steps in this phase.\n\
-      \nImplement the core feature seam only: add the model field(s), produce exposed\
-      \ names during resolution, preserve raw names, and update conflict detection\
-      \ to operate on final exposed names plus reserved tela prefix rejection."
+      \nFill in stub bodies for the core feature seam only: add the model field(s),\
+      \ produce exposed names during resolution, preserve raw names, and update conflict\
+      \ detection to operate on final exposed names plus reserved tela prefix rejection.\n\
+      \n## Contract-Preserving Implementation Mode\nFill in stub bodies and replace\
+      \ NotImplementedError / pass / ... within the existing model and resolution\
+      \ signatures only.\n\nUPSTREAM ARTIFACTS (from contract/test steps):\n  - src/tela/core/models.py\
+      \ — tool_prefix/raw_name contract is AUTHORITATIVE (contract)\n  - src/tela/core/family.py\
+      \ — exposed-name resolution contract is AUTHORITATIVE (contract)\n  - tests/core/test_models.py\
+      \ — model/compat assertions are PROTECTED (test)\n  - tests/core/test_family.py\
+      \ — resolution/collision assertions are PROTECTED (test)\n  - tests/core/test_conflict.py\
+      \ — conflict semantics are PROTECTED (test)\n\nYOUR SCOPE: complete the implementation\
+      \ within existing signatures; edit bodies only and preserve the pinned raw_name/exposed_name/routing_name\
+      \ contract.\n\nDeviation protocol: if a contract artifact is wrong or incomplete,\
+      \ record a deviation note with type, what, why, and impact — do NOT silently\
+      \ rewrite the contract or tests.\n\nupstream_artifacts:\n  - path: src/tela/core/models.py\n\
+      \    from_step: tool_prefix.contract.define_semantics\n    tier: contract\n\
+      \  - path: src/tela/core/family.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \    tier: contract\n  - path: tests/core/test_models.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test\n  - path: tests/core/test_family.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test\n  - path: tests/core/test_conflict.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test"
     verification: '- Main path: targeted core tests for ServerConfig/ResolvedTool
       resolution and conflict detection pass.
 
