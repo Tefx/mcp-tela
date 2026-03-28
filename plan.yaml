@@ -38287,9 +38287,28 @@ phases:
       \ that update config equality but do not force registry/tool digest refresh.\n\
       2. tools/list_changed emission without actual exposed-name set change proof.\n\
       3. Reload rollback that preserves stale exposed names after rejected conflicts.\n\
-      \nImplement reload and reconnect behavior so prefix changes re-enumerate exposed\
-      \ names, preserve rollback safety, and notify upstream when the exposed tool\
-      \ set actually changes."
+      \nFill in stub bodies for reload and reconnect behavior so prefix changes re-enumerate\
+      \ exposed names, preserve rollback safety, and notify upstream when the exposed\
+      \ tool set actually changes.\n\n## Contract-Preserving Implementation Mode\n\
+      Fill in stub bodies and replace NotImplementedError / pass / ... within the\
+      \ existing reload/reconnect signatures only.\n\nUPSTREAM ARTIFACTS (from contract/test\
+      \ steps):\n  - src/tela/shell/reload.py — exposed-set reload semantics are AUTHORITATIVE\
+      \ (contract)\n  - src/tela/shell/downstream.py — reconnect/raw-name preservation\
+      \ semantics are AUTHORITATIVE (contract)\n  - tests/shell/test_reload.py — reload\
+      \ digest/notification assertions are PROTECTED (test)\n  - tests/shell/test_downstream.py\
+      \ — reconnect/runtime assertions are PROTECTED (test)\n  - tests/core/test_family.py\
+      \ — exposed-name change semantics are PROTECTED (test)\n\nYOUR SCOPE: complete\
+      \ the implementation within existing signatures; edit bodies only and preserve\
+      \ rollback/digest semantics already pinned by contract and tests.\n\nDeviation\
+      \ protocol: if a contract artifact is wrong or incomplete, record a deviation\
+      \ note with type, what, why, and impact — do NOT silently rewrite the contract\
+      \ or tests.\n\nupstream_artifacts:\n  - path: src/tela/shell/reload.py\n   \
+      \ from_step: tool_prefix.contract.define_semantics\n    tier: contract\n  -\
+      \ path: src/tela/shell/downstream.py\n    from_step: tool_prefix.contract.define_semantics\n\
+      \    tier: contract\n  - path: tests/shell/test_reload.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test\n  - path: tests/shell/test_downstream.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test\n  - path: tests/core/test_family.py\n    from_step: tool_prefix.test.add_regressions\n\
+      \    tier: test"
     verification: '- Main path: accepted reload with a new prefix updates the registry
       and emits tools/list_changed.
 
