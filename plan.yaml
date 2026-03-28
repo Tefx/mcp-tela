@@ -36356,8 +36356,6 @@ phases:
 
       **Path exercised**: tela connect discovery/autostart -> gateway startup/lifecycle
       -> attach follower/leader outcome'
-    depends_on:
-    - conn_v2.test.state_contract_tests
     agent: python-executor
   - id: conn_v2.test.interrupt_diagnostics_tests
     name: Add hard-interrupt and diagnostics regression tests
