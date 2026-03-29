@@ -41017,7 +41017,7 @@ phases:
       **Commit**: 37ecc5f48'
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
-  status: pending
+  status: in_progress
   gate: Sync operator and contract docs with implemented tool-prefix behavior before
     final review.
   depends_on:
@@ -41025,7 +41025,7 @@ phases:
   steps:
   - id: tool_prefix.doc_sync.update_docs
     name: Update docs for tool-prefix configuration and behavior
-    status: pending
+    status: claimed
     description: "step_type: review\nagent_source: default\nspec_refs:\n  - user authoritative\
       \ input: feature goal and examples\n  - docs/USAGE.md#servers\n  - docs/INTERFACES.md#3\
       \ Configuration Contract\ntouch_paths:\n  - docs/USAGE.md\n  - docs/INTERFACES.md\n\
@@ -41040,6 +41040,8 @@ phases:
       - At least one example shows two same-raw-name downstream tools exposed with
       different prefixes.'
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-29T14:08:42.635778+00:00'
   - id: tool_prefix.doc_sync.gate
     name: Gate tool-prefix doc sync
     status: pending
