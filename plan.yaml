@@ -41670,3 +41670,10 @@ phases:
     - gw_remed.teardown_contracts.replace_vacuous_route_contracts
     - gw_remed.teardown_contracts.verify_cleanup_and_contracts
     agent: gate-reviewer
+- id: gw_remed.plan_c_adr
+  name: 'Gateway remediation: record Plan C future architecture ADR'
+  status: locked
+  gate: Capture the deferred stronger state-machine direction as ADR-only guidance
+    before unrelated runtime work continues.
+  depends_on:
+  - gw_remed.teardown_contracts
