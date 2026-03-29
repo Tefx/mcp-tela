@@ -39502,11 +39502,11 @@ phases:
     agent: doc-reviewer
 - id: tool_prefix.contract
   name: Tool Prefix Contracts
-  status: pending
+  status: locked
   gate: Freeze contract and naming semantics for config-driven tool prefixes before
     tests or runtime wiring.
   depends_on:
-  - conn_v2.integration_validate
+  - conn_v2.gate1_fix
   steps:
   - id: tool_prefix.contract.define_semantics
     name: Define tool-prefix contract and mapping semantics
