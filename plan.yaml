@@ -37584,7 +37584,7 @@ phases:
       - No consumers derive readiness from lockfile'
 - id: conn_v2.convergence
   name: Background Downstream Convergence
-  status: in_progress
+  status: done
   gate: Gateway startup reaches discoverable lifecycle without serial downstream blocking,
     while convergence/re-enumeration state remains visible and consistent.
   depends_on:
@@ -37903,7 +37903,7 @@ phases:
       - No skips, no failures'
   - id: conn_v2.convergence.gate
     name: Gate background convergence phase
-    status: claimed
+    status: done
     description: "step_type: gate\nGate review: verify background convergence replaces\
       \ serial downstream blocking without losing runtime truth.\nreview_depth: THOROUGH\n\
       review_depth_rationale:\n  - phase changes startup latency semantics, registry\
@@ -37921,9 +37921,27 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T03:02:14.608652+00:00'
+    done_at: '2026-03-29T03:06:42.394120+00:00'
+    evidence: "## Gate Review: conn_v2.convergence\n\n**Verdict**: PASS\n\n### Summary\n\
+      - **Blocking Issues:** 0\n- **Should-Fix Issues:** 0  \n- **Test Results:**\
+      \ 94/94 passed\n- **Confidence:** High\n\n### Test Results\nAll 94 tests passed:\n\
+      - tests/shell/test_reload.py: 30 tests (PASSED)\n- tests/shell/test_downstream.py:\
+      \ 49 tests (PASSED)\n- tests/integration/test_hot_reload.py: 6 tests (PASSED)\n\
+      - tests/repro/test_seam_convergence_proof.py: 7 tests (PASSED)\n\n### Convergence\
+      \ Kernel Verification\n\n1. **Kernel handles resolve/register/conflict/rollback**\
+      \ - `reload.py:142-191` `_RegistrySingleServerConvergenceKernel.converge()`\n\
+      2. **Kernel does NOT own notify/audit policy** - Entry adapters handle audit\
+      \ after kernel returns\n3. **Reconnect enumeration contract enforced** - RECONNECT_ENUMERATION_CONTRACT\
+      \ in reload.py\n\n### Discovery vs Convergence Separation\n- LOCKFILE_DISCOVERY_CONTRACT\
+      \ excludes lifecycle_readiness and downstream_convergence\n- Seam proof test\
+      \ P1 PASSED: lockfile appears before downstream convergence\n\n### Per-Server\
+      \ State Visibility\n- _get_status_lifecycle_facts() queries live registry\n\
+      - StatusResponse shows server_count vs connected_servers\n\n### Degraded Reporting\n\
+      - Status returns (not hangs) and reports truthful state\n- No false-ready claim\
+      \ when servers fail\n\n### Invar Guard\n- ✅ PASS (0 errors)"
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
-  status: locked
+  status: pending
   gate: tela connect attach/detach loop, signal handling, and hard-interrupt shutdown
     are controlled by one bridge module and validated against concurrent attach behavior.
   depends_on:
