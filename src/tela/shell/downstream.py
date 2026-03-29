@@ -39,6 +39,8 @@ _registry_lock = asyncio.Lock()
 
 _clients: dict[str, _ClientHandle] = {}
 _server_instructions: dict[str, str] = {}
+_attempted_servers: set[str] = set()
+_successful_servers: set[str] = set()
 
 
 # --- Downstream convergence contracts (from lockfile_status_contract) ---
@@ -410,8 +412,15 @@ async def connect_all(
                 _registry.clear()
                 return Result(error=validation_result.error)
 
+        _attempted_servers.clear()
+        _successful_servers.clear()
+
         if tool_lists is not None:
             for server_name in servers:
+                _attempted_servers.add(server_name)
+                # tool_lists provided - server is successful only if it has tool_lists entry
+                if server_name in tool_lists:
+                    _successful_servers.add(server_name)
                 connected[server_name] = _ConnectedServerData(
                     server_name=server_name,
                     raw_tools=tool_lists.get(server_name, []),
@@ -424,13 +433,17 @@ async def connect_all(
                 ]
             )
             temporary_handles: list[_ClientHandle] = []
-            for startup_result in startup_results:
+            server_names_list = list(servers.keys())
+            for idx, startup_result in enumerate(startup_results):
                 if startup_result.is_err:
+                    # Server was attempted but failed - mark as attempted before aborting
+                    _attempted_servers.add(server_names_list[idx])
                     await _close_client_handles(temporary_handles)
                     _registry.clear()
                     return Result(error=startup_result.error)
                 assert startup_result.value is not None
                 startup = startup_result.value
+                _attempted_servers.add(startup.server_name)
                 connected[startup.server_name] = startup
                 if startup.client_handle is not None:
                     temporary_handles.append(startup.client_handle)
@@ -444,6 +457,11 @@ async def connect_all(
             resolved = resolve_tools(server_name, server_config, startup.raw_tools)
             all_resolved[server_name] = resolved
             _registry.register(server_name, resolved)
+
+        # In non-tool_lists mode, all servers that reached this point connected successfully
+        if tool_lists is None:
+            for server_name in servers:
+                _successful_servers.add(server_name)
 
         conflicts = detect_conflicts(all_resolved)
         if conflicts:
@@ -475,6 +493,8 @@ async def disconnect_all() -> Result[None, str]:
     async with _registry_lock:
         await _close_all_clients_locked()
         _registry.clear()
+        _attempted_servers.clear()
+        _successful_servers.clear()
     return Result(value=None)
 
 
@@ -587,7 +607,31 @@ async def get_connected_server_names() -> Result[set[str], str]:
     Returns:
         Result with set of server names that have active client handles.
     """
-    raise NotImplementedError
+    async with _registry_lock:
+        return Result(value=set(_clients.keys()))
+
+
+def get_attempted_servers() -> set[str]:
+    """Return names of servers that were attempted during connection.
+
+    This set tracks which servers were part of a connection attempt,
+    regardless of whether they succeeded or failed. Used to distinguish
+    between "disconnected" (never attempted) and "failed" (attempted but
+    did not succeed) server states.
+
+    Returns:
+        Set of server names that were attempted during connection.
+    """
+    return set(_attempted_servers)
+
+
+def get_successful_servers() -> set[str]:
+    """Return names of servers that successfully connected.
+
+    Returns:
+        Set of server names that successfully connected.
+    """
+    return set(_successful_servers)
 
 
 def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:

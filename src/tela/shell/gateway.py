@@ -33,6 +33,11 @@ from tela.core.models import (
 )
 from tela.shell.config_loader import Result, load_config
 from tela.shell.audit import audit_close, audit_init
+from tela.shell.builtin_tools import (
+    BUILTIN_TOOLS,
+    BUILTIN_TOOL_NAMES,
+    handle_list_providers,
+)
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.downstream import (
     connect_all,
@@ -393,7 +398,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             raise RuntimeError(tools_result.error or "TOOLS_LIST_REJECTED")
         assert tools_result.value is not None
         filtered_tools = tools_result.value
-        return [
+        downstream_tools = [
             mcp_types.Tool(
                 name=tool["name"],
                 inputSchema=dict(tool.get("inputSchema") or {}),
@@ -404,11 +409,32 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             )
             for tool in filtered_tools
         ]
+        # Merge builtin tools into the returned list
+        builtin_tools = [
+            mcp_types.Tool(
+                name=bt["name"],
+                inputSchema=dict(bt.get("inputSchema") or {}),
+                description=bt.get("description", ""),
+            )
+            for bt in BUILTIN_TOOLS
+        ]
+        return downstream_tools + builtin_tools
 
     @upstream_server._mcp_server.call_tool(validate_input=False)
     async def _call_tool(
         tool_name: str, arguments: dict[str, object]
     ) -> mcp_types.CallToolResult:
+        # Check if this is a builtin tool
+        if tool_name in BUILTIN_TOOL_NAMES:
+            providers_result = await handle_list_providers()
+            # Convert ProviderInfo (TypedDict) to plain dict for JSON serialization
+            return mcp_types.CallToolResult(
+                content=[
+                    mcp_types.TextContent(type="text", text=str(providers_result))
+                ],
+                isError=False,
+            )
+
         connection = await _ensure_connection()
         result = await handle_tools_call(connection, tool_name, dict(arguments))
         if result.is_err:
