@@ -42643,7 +42643,7 @@ phases:
       **Commit**: 16ce2ea'
 - id: gw_remed.plan_c_adr
   name: 'Gateway remediation: record Plan C future architecture ADR'
-  status: pending
+  status: in_progress
   gate: ADR capture is complete, explicitly deferred, and non-blocking for current
     execution once teardown/contracts remediation is gated.
   context: Keep this phase doc-only and architecture-preserving.
@@ -42652,7 +42652,7 @@ phases:
   steps:
   - id: gw_remed.plan_c_adr.write_future_state_machine_adr
     name: Record Plan C gateway state-machine ADR as deferred architecture only
-    status: pending
+    status: claimed
     description: 'Write docs/ADR-004-gateway-startup-state-machine.md as a deferred-architecture
       ADR only.
 
@@ -42702,6 +42702,8 @@ phases:
     - docs/DESIGN.md
     - docs/ADR-004-gateway-startup-state-machine.md
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-29T13:12:44.125964+00:00'
   - id: gw_remed.plan_c_adr.verify_adr_alignment
     name: Verify ADR-004 stays within approved deferred scope
     status: pending
