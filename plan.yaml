@@ -40577,7 +40577,7 @@ phases:
       are test artifacts, not code changes.'
   - id: tool_prefix.runtime.verify_runtime
     name: Verify exposed-name runtime behavior
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -40673,6 +40673,8 @@ phases:
     depends_on:
     - tool_prefix.runtime.freeze_for_l2
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T13:39:55.577419+00:00'
   - id: tool_prefix.runtime.wiring_audit
     name: Wiring audit for tool-prefix runtime
     status: pending
