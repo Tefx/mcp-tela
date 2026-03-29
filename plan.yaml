@@ -43833,6 +43833,42 @@ phases:
   status: locked
   depends_on:
   - pm.p0_verify
+  steps:
+  - id: pm.p2_contract.rewrite_desc
+    name: Description rewriting contract
+    status: pending
+    description: 'Add rewrite_descriptions field to ServerConfig (default False).
+      Define contract for backtick-quoted tool name replacement in resolve_tools()
+      — only within same server''s tool set.
+
+
+      Step type: contract
+
+      Contract purity: ENFORCED
+
+      Contract outputs: signatures, type_defs, stubs
+
+
+      Deliverables:
+
+      - rewrite_descriptions: bool = False field on ServerConfig in core/family.py
+
+      - Contract/stub for rewrite logic in resolve_tools() or helper function
+
+      - @pre/@post contracts specifying: only backtick-quoted raw names replaced,
+      only within same server scope
+
+      - Doctest stubs showing replacement behavior'
+    evidence_template: '## Evidence
+
+      - [ ] rewrite_descriptions field added to ServerConfig
+
+      - [ ] Rewrite contract/stub defined with @pre/@post
+
+      - [ ] Scope limited to same-server tool names
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.p2_impl
   name: P2 Description Rewriting Implementation
   status: locked
