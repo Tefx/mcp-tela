@@ -41600,3 +41600,16 @@ phases:
     resuming unrelated runtime work.
   depends_on:
   - gw_remed.startup_plan_a
+  steps:
+  - id: gw_remed.teardown_contracts.extract_cleanup_authority
+    name: Extract idempotent connection cleanup authority and bounded teardown section
+    status: pending
+    description: Fill in src/tela/shell/connection_lifecycle.py as the shared cleanup
+      authority keyed by connection_id, then complete the bounded critical teardown
+      section in src/tela/commands/connect_cmd.py so interrupt-driven cleanup cannot
+      orphan runtime/session state.
+    verification: Extend repro coverage so repeated or interrupted cleanup paths stay
+      idempotent and do not underflow connection accounting.
+    evidence_template: List modified files and paste targeted test results proving
+      cleanup remains safe under repeated calls and interrupt timing.
+    agent: python-senior
