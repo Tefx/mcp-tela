@@ -40203,7 +40203,7 @@ phases:
   steps:
   - id: tool_prefix.runtime.implement_core_name_mapping
     name: Implement core tool-prefix name mapping and conflict semantics
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - user authoritative input: architecture decisions 1-6\n  - docs/INTERFACES.md#3.1\
       \ Servers\n  - docs/INTERFACES.md#7 MCP Surface\ntouch_paths:\n  - src/tela/core/models.py\n\
@@ -40259,6 +40259,39 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T13:20:37.084675+00:00'
+    done_at: '2026-03-29T13:23:41.149987+00:00'
+    evidence: '## Implementation Complete
+
+
+      **Artifact**: afc05f1
+
+
+      **Files modified**: src/tela/core/family.py
+
+
+      **Verification**:
+
+      - `uv run pytest -q tests/core/test_models.py tests/core/test_family.py tests/core/test_conflict.py
+      tests/core/test_tool_prefix_contract.py` → 56 passed, 2 xfailed, 11 xpassed
+
+
+      **Implementation decisions**:
+
+      1. Expose prefixed name at resolution time, not call-routing time
+
+      2. Preserve downstream raw name separately in ResolvedTool.raw_name
+
+      3. Run posture/family resolution against raw_name, not exposed name
+
+      4. Reject reserved tela namespace before registry
+
+      5. Conflict detection keyed on ResolvedTool.name (final exposed name)
+
+
+      **Spec link**: tool_prefix.contract.define_semantics + tool_prefix.test.add_regressions
+
+
+      **Commit**: afc05f1'
   - id: tool_prefix.runtime.wire_registry_and_call_routing
     name: Wire exposed-name registry and downstream raw-name routing
     status: pending
