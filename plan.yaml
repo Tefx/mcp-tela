@@ -38525,7 +38525,7 @@ phases:
     agent: integration-verifier
   - id: conn_v2.system_wiring.wiring_audit
     name: Audit wiring completeness for new runtime symbols and CLI reachability
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       Wiring completeness audit: verify every new public symbol and runtime entry
@@ -38555,6 +38555,21 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-29T04:22:49.927013+00:00'
+    done_at: '2026-03-29T04:40:59.035873+00:00'
+    evidence: "## W13: Entry-to-Effect Trace\nAll 10 entry points are EFFECTFUL -\
+      \ serve_command, connect_command, status_command all properly chain to I/O primitives.\n\
+      \n## W1: Dead Exports  \n2 TEST-ONLY intentionally (start_command deprecated,\
+      \ bind_gateway_startup used only in tests).\n\n## W8: Dependency-Import Alignment\
+      \ (BLOCKING)\n- **PHANTOM**: `fastmcp>=2.0.0` declared but never imported. Code\
+      \ uses `from mcp.server.fastmcp import FastMCP` (MCP SDK package).\n- **UNDECLARED**:\
+      \ Three runtime dependencies not in pyproject.toml:\n  - `mcp`: Import at gateway.py:17,\
+      \ gateway.py:340\n  - `starlette`: Import at gateway.py:19-20, serve_cmd.py:24,\
+      \ gateway_runtime.py:37, gateway_http_auth.py:5\n  - `uvicorn`: Import at serve_cmd.py:293\n\
+      \n## W4: CLI Registration\nAll production commands registered: serve, connect,\
+      \ status, profiles, connections, audit - LIVE\n\n## W9: Transitive Reachability\n\
+      All CLI commands chain from __main__.py → cli.main → command handlers.\n\n###\
+      \ Issue Found: Dependency Manifest Mismatch\nInstalling from clean environment\
+      \ will fail because `mcp`, `starlette`, and `uvicorn` are not declared in dependencies."
   - id: conn_v2.system_wiring.verify_e2e
     name: Verify end-to-end data flow through real entry points
     status: done
