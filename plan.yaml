@@ -41594,6 +41594,80 @@ phases:
     - gw_remed.startup_plan_a.reject_connect_while_warming
     - gw_remed.startup_plan_a.verify_plan_a_runtime
     agent: gate-reviewer
+  - id: gw_remed.startup_plan_a.harden_post_bind_failure_rollback
+    name: Harden post-bind convergence failure rollback
+    status: pending
+    description: 'Isolate the Plan A failure-path work after startup resequencing.
+
+
+      Scope:
+
+      - src/tela/commands/serve_cmd.py
+
+      - src/tela/shell/gateway.py
+
+
+      Replace any partial/implicit rollback path with one explicit post-bind failure
+      sequence:
+
+      1. HTTP bind has already succeeded
+
+      2. lockfile has been published
+
+      3. downstream convergence fails
+
+      4. lockfile is removed
+
+      5. HTTP server is torn down
+
+      6. lifecycle/readiness state reports non-ready without leaving discovery artifacts
+      behind
+
+
+      This step owns ONLY the post-bind failure path.
+
+      Do not change warmup admission rules, connect-side diagnostics, or steady-state
+      readiness logic here.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Evidence must show an actual failure-path implementation, not just comments
+      or TODO branches.'
+    verification: '- Focused regression proves post-bind convergence failure removes
+      the lockfile
+
+      - Focused regression proves HTTP teardown happens on the same failure path
+
+      - Evidence distinguishes discovery truth from readiness truth after rollback'
+    evidence_template: '## Failure-Path Rollback Evidence
+
+      **Failure injected at**: <convergence step>
+
+      **Observed sequence**:
+
+      1. bind succeeded
+
+      2. lockfile published
+
+      3. convergence failed
+
+      4. lockfile removed
+
+      5. HTTP server torn down
+
+      **Proof**:
+
+      - failing test name(s)
+
+      - runtime/log output or assertions showing each transition
+
+      - final discovery/readiness state summary'
+    depends_on:
+    - gw_remed.startup_plan_a.resequence_bind_publish_converge
+    agent: python-senior
 - id: gw_remed.teardown_contracts
   name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
   status: locked
