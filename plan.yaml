@@ -40083,7 +40083,7 @@ phases:
       '
   - id: tool_prefix.test.gate
     name: Gate tool-prefix tests
-    status: pending
+    status: claimed
     description: "step_type: gate\nagent_source: default\nreview_depth: QUICK\nreview_depth_rationale:\n\
       \  - Single feature test boundary, but spans core semantics plus shell reload\
       \ behavior.\nAs an INDEPENDENT REVIEWER (gate-reviewer), confirm the test boundary\
@@ -40095,6 +40095,8 @@ phases:
     depends_on:
     - tool_prefix.test.add_regressions
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T09:25:17.109830+00:00'
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
   status: locked
