@@ -41594,8 +41594,10 @@ phases:
 - id: gw_remed.startup_plan_a
   name: 'Gateway remediation: A4 startup sequencing via Plan A'
   status: locked
-  gate: Move runtime startup back to the documented bind -> publish lockfile -> converge
-    order before downstream work resumes.
+  gate: Nominal Plan A ordering, warming admission rejection, and post-bind failure
+    rollback are all proven before downstream runtime work resumes.
+  context: Split nominal startup sequencing from failure rollback so evidence is stronger
+    and ownership clearer.
   depends_on:
   - gw_remed.lifecycle_authority
   steps:
