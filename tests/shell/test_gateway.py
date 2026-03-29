@@ -16,6 +16,7 @@ from starlette.testclient import TestClient
 from tela.core.models import (
     AuthConfig,
     AuthMode,
+    ConnectionContext,
     GatewayStatus,
     GatewayTransport,
     Posture,
@@ -24,6 +25,8 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.commands.start import start_command
+from tela.shell.config_loader import Result
+from tela.shell.connection_lifecycle import ConnectionCleanupOutcome
 from tela.shell.downstream import DOWNSTREAM_CONVERGENCE_CONTRACT
 from tela.shell.gateway import (
     GatewayStartupConfig,
@@ -40,6 +43,8 @@ from tela.shell.gateway import (
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,
     STATUS_SNAPSHOT_CONTRACT,
+    add_runtime_connection,
+    clear_runtime_connections,
     set_runtime_config,
     set_runtime_running,
 )
@@ -563,6 +568,61 @@ def test_gateway_shutdown_clears_state() -> None:
     result = asyncio.run(gateway_shutdown())
     assert result.is_ok
     assert is_runtime_running().value is False
+
+
+def test_gateway_shutdown_uses_shared_cleanup_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """gateway_shutdown delegates per-connection cleanup to shared authority."""
+
+    called_ids: list[str] = []
+
+    async def _fake_disconnect_all() -> Result[None, str]:
+        return Result(value=None)
+
+    async def _fake_audit_close() -> Result[None, str]:
+        return Result(value=None)
+
+    def _fake_cleanup(connection_id: str) -> Result[ConnectionCleanupOutcome, str]:
+        called_ids.append(connection_id)
+        return Result(
+            value=ConnectionCleanupOutcome(
+                connection_id=connection_id,
+                removed_runtime_connection=True,
+            )
+        )
+
+    monkeypatch.setattr("tela.shell.gateway.disconnect_all", _fake_disconnect_all)
+    monkeypatch.setattr("tela.shell.gateway.audit_close", _fake_audit_close)
+    monkeypatch.setattr("tela.shell.gateway.cleanup_connection_by_id", _fake_cleanup)
+
+    set_runtime_config(TelaConfig())
+    set_runtime_running(True)
+
+    clear_runtime_connections()
+    add_runtime_connection(
+        ConnectionContext(
+            connection_id="shutdown-cleanup-1",
+            profile_name="default",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+    )
+    add_runtime_connection(
+        ConnectionContext(
+            connection_id="shutdown-cleanup-2",
+            profile_name="default",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+    )
+
+    try:
+        result = asyncio.run(gateway_shutdown())
+        assert result.is_ok
+        assert called_ids == ["shutdown-cleanup-1", "shutdown-cleanup-2"]
+    finally:
+        clear_runtime_connections()
+        set_runtime_running(False)
+        set_runtime_config(None)
 
 
 def test_gateway_status_after_start() -> None:

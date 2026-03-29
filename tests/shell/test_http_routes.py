@@ -12,6 +12,8 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell import http_routes
+from tela.shell.config_loader import Result
+from tela.shell.connection_lifecycle import ConnectionCleanupOutcome
 from tela.shell.gateway import (
     add_runtime_connection,
     clear_runtime_connections,
@@ -182,7 +184,6 @@ class TestHandleConnect:
         """Bridge admission is rejected while lifecycle is warming."""
         from tela.shell.gateway_runtime import set_runtime_config, set_runtime_running
         from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
-        from unittest.mock import patch
 
         # Configure gateway with servers but no connected downstreams (warming state)
         tela_config = TelaConfig(
@@ -215,7 +216,6 @@ class TestHandleConnect:
     def test_handle_connect_accepts_when_ready(self) -> None:
         """Bridge admission succeeds once lifecycle is ready."""
         from tela.shell.gateway_runtime import set_runtime_config, set_runtime_running
-        from tela.shell.downstream import connect_all
 
         # Configure with empty servers so it's immediately ready (no convergence needed)
         set_runtime_config(TelaConfig())
@@ -301,6 +301,33 @@ class TestHandleDisconnect:
             assert result.is_err
             assert result.error is not None
             assert "CONNECTION_NOT_FOUND" in result.error
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+
+    def test_handle_disconnect_uses_shared_cleanup_authority(self, monkeypatch) -> None:
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
+
+        called_ids: list[str] = []
+
+        def _fake_cleanup(connection_id: str) -> Result[ConnectionCleanupOutcome, str]:
+            called_ids.append(connection_id)
+            return Result(
+                value=ConnectionCleanupOutcome(
+                    connection_id=connection_id,
+                    removed_runtime_connection=True,
+                )
+            )
+
+        monkeypatch.setattr(http_routes, "cleanup_connection_by_id", _fake_cleanup)
+
+        try:
+            req = DisconnectRequest(connection_id="cleanup-authority-1")
+            result = http_routes.handle_disconnect("valid", "valid", req)
+            assert result.is_ok
+            assert called_ids == ["cleanup-authority-1"]
         finally:
             set_runtime_config(None)
             set_runtime_running(False)

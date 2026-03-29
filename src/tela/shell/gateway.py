@@ -33,6 +33,7 @@ from tela.core.models import (
 )
 from tela.shell.config_loader import Result, load_config
 from tela.shell.audit import audit_close, audit_init
+from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.downstream import (
     connect_all,
     disconnect_all,
@@ -665,13 +666,12 @@ async def gateway_shutdown() -> Result[None, str]:
         return audit_close_result
     _set_reload_notify_callback(None)
 
-    # Release captured upstream sessions consistent with per-connection disconnect path.
-    from tela.shell.upstream import release_session
-
     with _runtime_lock:
         connection_ids = [c.connection_id for c in _runtime.connections]
     for cid in connection_ids:
-        release_session(cid)
+        cleanup_result = cleanup_connection_by_id(cid)
+        if cleanup_result.is_err:
+            return Result(error=cleanup_result.error)
     with _runtime_lock:
         _runtime.config = None
         _runtime.startup_config = None

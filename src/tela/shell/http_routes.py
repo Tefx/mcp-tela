@@ -19,18 +19,17 @@ from tela.core.models import (
 from tela.core.contracts import post, pre
 from tela.shell.config_loader import Result
 from tela.shell.audit import audit_query, get_audit_entries  # noqa: F401 — audit_query wired for dead_export
+from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,  # noqa: F401 — used in doctests
     get_runtime_config,
     is_runtime_running,
-    remove_runtime_connection,
     set_runtime_config,  # noqa: F401 — used in doctests
     set_runtime_running,  # noqa: F401 — used in doctests
 )
 from tela.shell.http_auth import validate_bearer_token
-from tela.shell.upstream import release_session
 
 
 def _is_auth_error(result: Result[object, str]) -> bool:
@@ -385,14 +384,13 @@ def handle_disconnect(
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
 
     target_id = payload.connection_id
-    removed = remove_runtime_connection(target_id).value
-    if not removed:
-        return Result(error=f"CONNECTION_NOT_FOUND: connection '{target_id}' not found")
+    cleanup_result = cleanup_connection_by_id(target_id)
+    if cleanup_result.is_err:
+        return Result(error=cleanup_result.error)
+    assert cleanup_result.value is not None
 
-    # Release captured upstream session to prevent stale session leaks.
-    # Must happen AFTER removing from runtime.connections so that any
-    # concurrent notification broadcast sees a consistent state.
-    release_session(target_id)
+    if not cleanup_result.value.removed_runtime_connection:
+        return Result(error=f"CONNECTION_NOT_FOUND: connection '{target_id}' not found")
 
     return Result(
         value={
