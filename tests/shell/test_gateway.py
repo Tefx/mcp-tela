@@ -1121,9 +1121,10 @@ def test_list_tools_handles_absent_metadata() -> None:
             response = await handler_result.value(types.ListToolsRequest())
 
             tools = response.root.tools  # type: ignore[union-attr]
-            assert len(tools) == 1
-            tool = tools[0]
-            assert tool.name == "read_file"
+            assert len(tools) >= 1
+            # Find the downstream tool (read_file), builtin tool may also be present
+            tool = next((t for t in tools if t.name == "read_file"), None)
+            assert tool is not None
             assert tool.title is None
             assert tool.outputSchema is None
             assert tool.annotations is None
