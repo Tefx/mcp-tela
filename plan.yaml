@@ -41961,15 +41961,43 @@ phases:
   - id: gw_remed.teardown_contracts.verify_cleanup_and_contracts
     name: Verify teardown hardening and route contract strength
     status: pending
-    description: Independently verify A2/A3 by exercising interrupt cleanup, repeated
-      disconnect, shutdown cleanup reuse, and route contract enforcement together.
-    verification: Run focused repro + shell suites and confirm cleanup authority reuse
-      plus non-vacuous contracts.
-    evidence_template: Provide exact commands, raw outputs, and a pass/fail note for
-      interrupt cleanup, endpoint cleanup reuse, contract falsifiability, and guard
-      status.
+    description: 'Independent verification for A2/A3.
+
+
+      Cover:
+
+      - interrupt-driven cleanup
+
+      - repeated disconnect
+
+      - shutdown cleanup reuse
+
+      - route contract enforcement / doctest-backed failure semantics
+
+
+      Treat orphaned state and remaining vacuous contracts as blocker findings.'
+    verification: '- Cleanup main path passes
+
+      - Highest-risk failure path (interrupt during teardown) is exercised
+
+      - Contract audit finds no remaining vacuous route contracts'
+    evidence_template: '## A2/A3 Verification Report
+
+      **Cleanup tests**: <list>
+
+      **Interrupt-path result**: <result>
+
+      **Repeated disconnect result**: <result>
+
+      **Shutdown reuse result**: <result>
+
+      **Contract audit result**: <result>'
+    refs:
+    - tests
+    - src/tela/shell/http_routes.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/connection_lifecycle.py
     depends_on:
-    - gw_remed.teardown_contracts.extract_cleanup_authority
     - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     - gw_remed.teardown_contracts.replace_vacuous_route_contracts
     agent: integration-verifier
