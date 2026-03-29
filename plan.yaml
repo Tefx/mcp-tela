@@ -43631,13 +43631,13 @@ phases:
       \ NotImplementedError stub\n- Commit: d8856a5 on branch main"
 - id: pm.p0_test
   name: P0 Built-in Tool Tests
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p0_contract
   steps:
   - id: pm.p0_test.builtin_tests
     name: P0 expected-red tests for built-in tool
-    status: pending
+    status: claimed
     description: 'Write expected-red tests defining the acceptance gap for P0 built-in
       tool.
 
@@ -43787,6 +43787,8 @@ phases:
     - src/tela/core/models.py
     - src/tela/shell/gateway_runtime.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T18:42:45.753658+00:00'
   - id: pm.p0_test.gate
     name: P0 test gate review
     status: pending
