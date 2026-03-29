@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Mapping
+from typing import Any, Mapping, TypedDict
 
 from typing import Literal
 
@@ -312,6 +312,16 @@ class ResolvedTool(BaseModel):
     annotations: dict | None = None
     title: str | None = None
     output_schema: dict | None = None
+
+
+class ProviderInfo(TypedDict):
+    """Per-provider summary returned by tela_list_providers."""
+
+    name: str
+    status: str  # "connected" | "disconnected" | "failed"
+    tool_prefix: str | None
+    tool_count: int
+    tool_names: list[str]  # post-enforcement-filter exposed names
 
 
 class ConnectionContext(BaseModel):
