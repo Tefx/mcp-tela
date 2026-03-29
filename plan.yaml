@@ -41579,3 +41579,17 @@ phases:
     - gw_remed.startup_plan_a.resequence_bind_publish_converge
     - gw_remed.startup_plan_a.reject_connect_while_warming
     agent: integration-verifier
+  - id: gw_remed.startup_plan_a.gate
+    name: Gate A4 Plan A startup remediation
+    status: pending
+    description: Review Plan A evidence and reject the phase if code still contradicts
+      the documented startup contract.
+    verification: Confirm A4 is closed under Plan A and downstream phases may assume
+      the documented startup order.
+    evidence_template: Record blocker/should_fix findings and explicitly answer whether
+      bind->publish->converge is now enforced.
+    depends_on:
+    - gw_remed.startup_plan_a.resequence_bind_publish_converge
+    - gw_remed.startup_plan_a.reject_connect_while_warming
+    - gw_remed.startup_plan_a.verify_plan_a_runtime
+    agent: gate-reviewer
