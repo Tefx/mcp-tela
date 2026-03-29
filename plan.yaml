@@ -39430,7 +39430,7 @@ phases:
     agent: blind-tester
   - id: conn_v2.deep_review.spec_conformance
     name: Full spec conformance audit for runtime surfaces
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       Compare ALL implemented connect/serve/status behavior against authoritative
@@ -39442,6 +39442,8 @@ phases:
     - conn_v2.deep_review.wiring_audit
     - conn_v2.doc_sync.update_docs
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-03-29T09:01:49.684585+00:00'
   - id: conn_v2.deep_review.architecture_review
     name: Architecture and concurrency review for startup, lifecycle, convergence,
       and bridge modules
