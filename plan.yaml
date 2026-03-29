@@ -43461,3 +43461,8 @@ phases:
   status: locked
   depends_on:
   - pm.p0_impl
+- id: pm.p1_contract
+  name: P1 Instructions Manifest Contracts
+  status: locked
+  depends_on:
+  - pm.p0_verify
