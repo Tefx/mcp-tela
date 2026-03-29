@@ -37498,7 +37498,7 @@ phases:
       \ consumers must gate lifecycle decisions on runtime status, not discovery artifacts.\""
   - id: conn_v2.lifecycle.gate
     name: Gate lifecycle status phase
-    status: pending
+    status: claimed
     description: "step_type: gate\nGate review: verify discovery/readiness split and\
       \ lifecycle status ownership are correct.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - phase redefines status truth consumed by multiple runtime surfaces\ncross_cutting_focus:\n\
@@ -37515,6 +37515,8 @@ phases:
     - conn_v2.lifecycle.integrate_status_consumers
     - conn_v2.lifecycle.vertical_slice
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T02:34:22.578878+00:00'
 - id: conn_v2.convergence
   name: Background Downstream Convergence
   status: locked
