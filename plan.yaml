@@ -41651,16 +41651,44 @@ phases:
     - src/tela/shell/gateway_lifecycle.py
     agent: python-senior
   - id: gw_remed.startup_plan_a.reject_connect_while_warming
-    name: Reject bridge admission while gateway is warming
+    name: Reject bridge admission while lifecycle state is warming
     status: pending
-    description: Complete the warmup admission path in src/tela/shell/http_routes.py,
-      src/tela/commands/connect_cmd.py, and src/tela/commands/remote_state.py so /connect
-      refuses bridge registration while lifecycle state is warming and connect-side
-      diagnostics rely on status truth rather than lockfile presence alone.
-    verification: Extend command/route tests so warming rejects /connect with a falsifiable
-      error path and ready state admits it.
-    evidence_template: Provide commands/results for route + connect tests and quote
-      the exact warming rejection behavior observed before readiness.
+    description: 'Implement the warming-state admission guard in:
+
+      - src/tela/shell/http_routes.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+
+      Scope:
+
+      - /connect rejects registration while lifecycle state is warming
+
+      - connect-side diagnostics consult lifecycle/status truth rather than lockfile
+      presence alone
+
+
+      Do not change startup ordering or rollback behavior here.'
+    verification: '- Warming-state admission rejection is covered explicitly
+
+      - Diagnostics show status-based reasoning, not lockfile-only reasoning'
+    evidence_template: '## Warming Admission Evidence
+
+      **Request/command**: <exact call>
+
+      **Lifecycle state under test**: warming
+
+      **Observed rejection**: <status/code/message>
+
+      **Diagnostic source**: <status truth path used>'
+    refs:
+    - docs/DESIGN.md
+    - src/tela/shell/http_routes.py
+    - src/tela/commands/connect_cmd.py
+    - src/tela/commands/remote_state.py
+    - gw_remed.lifecycle_authority.extract_status_authority
     depends_on:
     - gw_remed.startup_plan_a.resequence_bind_publish_converge
     agent: python-executor
