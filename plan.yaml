@@ -43906,19 +43906,72 @@ phases:
     name: Extend config validation for tela_ prefix
     status: pending
     description: "Extend config validation to reject tool_prefix starting with \"\
-      tela_\" (currently only \"tela.\" is rejected). This prevents user-defined servers\
-      \ from shadowing built-in tool names.\n\nUPSTREAM ARTIFACTS:\n  - src/tela/core/family.py\
-      \ — existing validation logic is AUTHORITATIVE\n  - src/tela/shell/config_loader.py\
-      \ — existing config loading is AUTHORITATIVE\n\nYOUR SCOPE: Add \"tela_\" to\
-      \ the rejected prefix patterns in the existing validation path. Use Edit to\
-      \ modify the condition only.\n\nStep type: implementation"
-    evidence_template: '## Evidence
+      tela_\" in addition to existing \"tela.\" rejection.\n\nUPSTREAM ARTIFACTS:\n\
+      \  - src/tela/core/config.py — validate_config() at line 197 is AUTHORITATIVE\n\
+      \  - src/tela/core/family.py — resolve_tools() at line 72 is AUTHORITATIVE\n\
+      \nYOUR SCOPE: Add \"tela_\" prefix rejection in TWO locations. Use Edit tool\
+      \ to modify conditions only.\n\n## Location 1: src/tela/core/config.py — validate_config()\
+      \ (line 236-248)\n\nInside the `for name, server in config.servers.items():`\
+      \ loop, AFTER the transport validation block (line 246), add:\n\n```python\n\
+      \        if server.tool_prefix is not None and (\n            server.tool_prefix.startswith(\"\
+      tela_\") or server.tool_prefix.startswith(\"tela.\")\n        ):\n         \
+      \   errors.append(\n                f\"SERVER_RESERVED_PREFIX: server '{name}'\
+      \ tool_prefix '{server.tool_prefix}' \"\n                \"uses reserved 'tela_'\
+      \ or 'tela.' namespace.\"\n            )\n```\n\n## Location 2: src/tela/core/family.py\
+      \ — resolve_tools() (line 120-126)\n\nModify the existing check at line 121:\n\
+      ```python\n# BEFORE:\nif tool_prefix == \"tela.\":\n    raise ValueError(\"\
+      ServerConfig.tool_prefix 'tela.' is reserved\")\n\n# AFTER:\nif tool_prefix\
+      \ is not None and (tool_prefix.startswith(\"tela.\") or tool_prefix.startswith(\"\
+      tela_\")):\n    raise ValueError(f\"ServerConfig.tool_prefix '{tool_prefix}'\
+      \ uses reserved namespace\")\n```\n\nAlso add a check for the composed exposed\
+      \ name at line 125:\n```python\n# BEFORE:\nif exposed_name.startswith(\"tela.\"\
+      ):\n    raise ValueError(\"Resolved tool name enters reserved 'tela.' namespace\"\
+      )\n\n# AFTER:\nif exposed_name.startswith(\"tela.\") or exposed_name.startswith(\"\
+      tela_\"):\n    raise ValueError(f\"Resolved tool name '{exposed_name}' enters\
+      \ reserved namespace\")\n```\n\n## Key constraints\n- validate_config is the\
+      \ early (config-time) check — returns error strings, does not raise\n- resolve_tools\
+      \ is the late (resolution-time) check — raises ValueError\n- Both paths must\
+      \ block \"tela_\" AND \"tela.\" prefixes\n- Existing doctests in family.py must\
+      \ still pass (they use ServerConfig without tool_prefix)\n- The @pre/@post contracts\
+      \ on validate_config and resolve_tools are unchanged\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Both validation paths must\
+      \ actively reject \"tela_\" prefixes."
+    evidence_template: '## Implementation Evidence
 
-      - [ ] "tela_" prefix now rejected in validation
+      **validate_config change** (paste modified loop body):
 
-      - [ ] Existing "tela." rejection preserved
+      ```
+
+      <modified for loop section>
+
+      ```
+
+
+      **resolve_tools change** (paste modified prefix checks):
+
+      ```
+
+      <modified lines 120-126>
+
+      ```
+
+
+      **Verification**:
+
+      - [ ] validate_config rejects tool_prefix="tela_foo" with SERVER_RESERVED_PREFIX
+
+      - [ ] validate_config rejects tool_prefix="tela.foo" with SERVER_RESERVED_PREFIX
+
+      - [ ] resolve_tools raises ValueError for tool_prefix starting with "tela_"
+
+      - [ ] resolve_tools raises ValueError for composed names starting with "tela_"
+
+      - [ ] Existing doctests in family.py still pass
 
       - [ ] invar guard passes'
+    refs:
+    - src/tela/core/config.py
+    - src/tela/core/family.py
     agent: python-executor
   - id: pm.p0_impl.gateway_wiring
     name: Wire built-in tools into gateway
