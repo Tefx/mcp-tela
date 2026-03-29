@@ -44195,17 +44195,26 @@ phases:
   - id: pm.p0_verify.gate
     name: P0 gate review
     status: pending
-    description: 'P0 gate review. Verify:
-
-      1. Contracts preserved from contract step
-
-      2. Profile enforcement integration correct
-
-      3. Hot-reload compatibility (built-in tools survive reload)
-
-      4. No regressions in existing test suite
-
-      5. L2 audit logging present for built-in tool calls'
+    description: "P0 gate review. Independent reviewer verifies P0 deliverables.\n\
+      \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Phase introduces new\
+      \ runtime surface (built-in tool in gateway)\n  - Integration-tagged step (gateway_wiring)\
+      \ touches list_tools + call_tool dispatch\n  - New module-level state interaction\
+      \ (builtin_tools reads from DownstreamRegistry)\n\n## Gate criteria\n\n1. **Contract\
+      \ preservation**: ProviderInfo TypedDict and handle_list_providers signature\
+      \ match contract step exactly\n2. **Profile enforcement**: handle_list_providers\
+      \ returns post-filter tool_names (not raw unfiltered names)\n3. **Hot-reload\
+      \ compatibility**: built-in tools survive reload (they are not stored in DownstreamRegistry,\
+      \ so registry clear does not remove them)\n4. **Status semantics**: connected/disconnected/failed\
+      \ status accurately reflects _clients and registry state\n5. **Config validation**:\
+      \ validate_config rejects both \"tela_\" and \"tela.\" prefixes with clear error\
+      \ codes\n6. **resolve_tools hardening**: resolve_tools raises ValueError for\
+      \ \"tela_\" composed names\n7. **Audit logging**: L2 audit entry recorded for\
+      \ tela_list_providers calls with server_name=\"tela\"\n8. **No regressions**:\
+      \ full test suite passes, invar guard clean\n9. **Wiring completeness**: BUILTIN_TOOL_NAMES\
+      \ check happens BEFORE downstream registry lookup in _call_tool\n\n## Cross-cutting\
+      \ check\n- grep for any remaining \"Built-in MCP tools: none\" in surface_instructions.py\
+      \ (will be updated in P1, but should not be falsely asserted here)\n- Verify\
+      \ tela_list_providers does NOT appear in DownstreamRegistry at any point"
     evidence_template: '## Evidence
 
       - [ ] Contracts intact
@@ -44221,6 +44230,15 @@ phases:
       - Blockers: (list or NONE)
 
       - Should-fix: (list or NONE)'
+    refs:
+    - src/tela/shell/builtin_tools.py
+    - src/tela/core/models.py
+    - src/tela/shell/gateway.py
+    - src/tela/core/config.py
+    - src/tela/core/family.py
+    - src/tela/shell/downstream.py
+    - tests/shell/test_builtin_tools.py
+    - tests/shell/test_gateway.py
     depends_on:
     - pm.p0_verify.retest
     agent: gate-reviewer
