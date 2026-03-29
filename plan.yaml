@@ -42225,7 +42225,7 @@ phases:
   steps:
   - id: gw_remed.teardown_contracts.extract_cleanup_authority
     name: Extract connection_id-scoped cleanup authority
-    status: claimed
+    status: done
     description: 'Fill in src/tela/shell/connection_lifecycle.py as the shared cleanup
       authority keyed by connection_id.
 
@@ -42267,6 +42267,43 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T12:36:24.812890+00:00'
+    done_at: '2026-03-29T12:43:24.405857+00:00'
+    evidence: '## Cleanup Authority Extraction
+
+      **Authority**: `cleanup_connection_by_id` (src/tela/shell/connection_lifecycle.py)
+
+      **Key**: connection_id
+
+      **Idempotency proof**: tests/shell/test_connection_lifecycle.py::test_cleanup_connection_by_id_is_idempotent_by_connection_id
+
+      - first call => removed_runtime_connection is True
+
+      - second call for same connection_id => removed_runtime_connection is False
+
+      - both calls return Result.is_ok
+
+
+      **Intended callers**:
+
+      - disconnect endpoint
+
+      - gateway shutdown
+
+
+      **Files modified**:
+
+      - src/tela/shell/connection_lifecycle.py (new)
+
+      - src/tela/shell/http_routes.py (updated handle_disconnect)
+
+      - src/tela/shell/gateway.py (updated gateway_shutdown)
+
+      - tests/shell/test_connection_lifecycle.py (new)
+
+
+      **Verification**: 67 passed in 1.13s ✅
+
+      **Commit**: da74749'
   - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     name: Route disconnect endpoint and gateway shutdown through shared cleanup authority
     status: pending
