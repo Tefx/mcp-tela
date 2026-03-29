@@ -41919,17 +41919,44 @@ phases:
     - gw_remed.teardown_contracts.harden_interrupt_teardown_window
     agent: python-executor
   - id: gw_remed.teardown_contracts.replace_vacuous_route_contracts
-    name: Replace vacuous route contracts with falsifiable guarantees and doctests
+    name: Replace vacuous HTTP route contracts with falsifiable guarantees
     status: pending
-    description: Replace tautological @post contracts in src/tela/shell/http_routes.py
-      with falsifiable guarantees tied to actual success/error semantics, add doctests
-      where required, and tighten any supporting model constraints needed in src/tela/core/models.py.
-    verification: Run route-level pytest plus invar guard and confirm vacuous success/error
-      contracts are gone.
-    evidence_template: Paste the old vs new contract summary, doctest/pytest commands,
-      and guard output demonstrating the route contracts are now falsifiable.
+    description: 'Replace tautological @post contracts in src/tela/shell/http_routes.py
+      with falsifiable guarantees tied to actual success/error semantics.
+
+
+      Scope:
+
+      - contract expressions
+
+      - required doctests
+
+      - only the minimal supporting model constraints in src/tela/core/models.py needed
+      to make those contracts meaningful
+
+
+      This step does NOT own route behavior changes beyond what is strictly required
+      to make the contracts non-vacuous.'
+    verification: '- No identity/tautological route contracts remain
+
+      - Each new contract references real result semantics
+
+      - At least one doctest exercises a failure-oriented route outcome'
+    evidence_template: '## Route Contract Strengthening
+
+      **Replaced contracts**: <list>
+
+      **New falsifiable predicates**: <list>
+
+      **Doctests added**: <list>
+
+      **Behavior changes required**: none|minimal <details>'
+    refs:
+    - INVAR.md
+    - src/tela/shell/http_routes.py
+    - src/tela/core/models.py
     depends_on:
-    - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
+    - gw_remed.teardown_contracts.extract_cleanup_authority
     agent: python-senior
   - id: gw_remed.teardown_contracts.verify_cleanup_and_contracts
     name: Verify teardown hardening and route contract strength
