@@ -41965,7 +41965,7 @@ phases:
     agent: gate-reviewer
   - id: gw_remed.startup_plan_a.harden_post_bind_failure_rollback
     name: Harden post-bind convergence failure rollback
-    status: pending
+    status: claimed
     description: 'Isolate the Plan A failure-path work after startup resequencing.
 
 
@@ -42037,6 +42037,8 @@ phases:
     depends_on:
     - gw_remed.startup_plan_a.resequence_bind_publish_converge
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T12:08:41.422225+00:00'
 - id: gw_remed.teardown_contracts
   name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
   status: locked
