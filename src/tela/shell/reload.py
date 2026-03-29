@@ -138,6 +138,64 @@ RELOAD_BEHAVIORAL_NOTES: tuple[str, ...] = (
 )
 
 
+@dataclass(frozen=True)
+class _RegistrySingleServerConvergenceKernel:
+    """Registry-backed implementation of the single-server convergence kernel."""
+
+    async def converge(
+        self,
+        server_name: str,
+        server_config: ServerConfig,
+        raw_tools: list[dict],
+        *,
+        trigger: ConvergenceTrigger,
+    ) -> Result[SingleServerConvergenceResult, str]:
+        """Apply one server update with resolve/register/conflict/rollback semantics."""
+
+        async with _registry_lock:
+            registry = get_registry()
+            snap = registry.snapshot()
+
+            resolved = resolve_tools(server_name, server_config, raw_tools)
+            registry.register(server_name, resolved)
+
+            conflicts = detect_conflicts(registry.get_all_tools())
+            if conflicts:
+                registry.restore(snap)
+                conflict_notes = tuple(
+                    ConvergenceConflictNote(
+                        tool_name=conflict.tool_name,
+                        servers=tuple(conflict.servers),
+                    )
+                    for conflict in conflicts
+                )
+                return Result(
+                    value=SingleServerConvergenceResult(
+                        disposition="conflict",
+                        trigger=trigger,
+                        server_name=server_name,
+                        rollback_applied=True,
+                        resolved_tool_names=(),
+                        conflicts=conflict_notes,
+                    )
+                )
+
+            return Result(
+                value=SingleServerConvergenceResult(
+                    disposition="applied",
+                    trigger=trigger,
+                    server_name=server_name,
+                    rollback_applied=False,
+                    resolved_tool_names=tuple(tool.name for tool in resolved),
+                )
+            )
+
+
+_single_server_kernel: SingleServerConvergenceKernel = (
+    _RegistrySingleServerConvergenceKernel()
+)
+
+
 def set_notify_callback(callback: NotifyCallback | None) -> Result[None, str]:
     """Set the upstream notification callback for tools/list_changed."""
     global _notify_callback
@@ -181,61 +239,53 @@ async def on_tools_changed(
     Returns:
         Result[None, str] on success, or error string if conflict detected.
     """
-    async with _registry_lock:
-        registry = get_registry()
-        # Snapshot FULL registry state before tentative register for atomic rollback.
-        # Previous approach only saved one server's tools, corrupting the flat
-        # _tool_to_server map for other servers on conflict rollback (B4).
-        snap = registry.snapshot()
+    kernel_result = await _single_server_kernel.converge(
+        server_name,
+        server_config,
+        new_tool_list,
+        trigger="reload",
+    )
+    if kernel_result.is_err:
+        return Result(error=kernel_result.error)
+    assert kernel_result.value is not None
+    outcome = kernel_result.value
 
-        # Re-enumerate
-        resolved = resolve_tools(server_name, server_config, new_tool_list)
+    if outcome.disposition == "conflict":
+        conflict_desc = "; ".join(
+            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in outcome.conflicts
+        )
 
-        # Temporarily update registry
-        registry.register(server_name, resolved)
+        warning_entry_result = build_audit_entry(
+            level=AuditLevel.L1,
+            connection=ConnectionContext(
+                connection_id="system",
+                profile_name="system",
+                connected_at="",
+            ),
+            tool_name=outcome.conflicts[0].tool_name,
+            server_name=server_name,
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="tool_conflict",
+                error_code="TOOL_CONFLICT",
+                error_message=conflict_desc,
+            ),
+        )
+        if warning_entry_result.is_err:
+            return Result(error=warning_entry_result.error)
+        assert warning_entry_result.value is not None
+        _ = await audit_write(warning_entry_result.value)
+        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
 
-        # Check conflicts
-        conflicts = detect_conflicts(registry.get_all_tools())
-        if conflicts:
-            # Rollback entire registry to pre-change state
-            registry.restore(snap)
-
-            conflict_desc = "; ".join(
-                f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
-            )
-
-            # Emit TOOL_CONFLICT audit warning
-            warning_entry_result = build_audit_entry(
-                level=AuditLevel.L1,
-                connection=ConnectionContext(
-                    connection_id="system",
-                    profile_name="system",
-                    connected_at="",
-                ),
-                tool_name=conflicts[0].tool_name,
-                server_name=server_name,
-                result=EnforcementResult(
-                    verdict=EnforcementVerdict.DENY,
-                    denied_by="tool_conflict",
-                    error_code="TOOL_CONFLICT",
-                    error_message=conflict_desc,
-                ),
-            )
-            if warning_entry_result.is_err:
-                return Result(error=warning_entry_result.error)
-            assert warning_entry_result.value is not None
-            _ = await audit_write(warning_entry_result.value)
-
-            return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
-
-        # Success: notify upstream if callback set
-        if _notify_callback is not None:
+    if _notify_callback is not None:
+        async with _registry_lock:
+            registry = get_registry()
             tool_names = sorted(
                 t.name for ts in registry.get_all_tools().values() for t in ts
             )
-            raw = ":".join(tool_names).encode()
-            digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
-            await _notify_callback(digest)
+        raw = ":".join(tool_names).encode()
+        digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
+        await _notify_callback(digest)
 
     return Result(value=None)
 
@@ -271,7 +321,54 @@ async def on_server_reconnect(
     Returns:
         Result[None, str].
     """
-    return await on_tools_changed(server_name, server_config, tool_list)
+    kernel_result = await _single_server_kernel.converge(
+        server_name,
+        server_config,
+        tool_list,
+        trigger="reconnect",
+    )
+    if kernel_result.is_err:
+        return Result(error=kernel_result.error)
+    assert kernel_result.value is not None
+    outcome = kernel_result.value
+
+    if outcome.disposition == "conflict":
+        conflict_desc = "; ".join(
+            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in outcome.conflicts
+        )
+        warning_entry_result = build_audit_entry(
+            level=AuditLevel.L1,
+            connection=ConnectionContext(
+                connection_id="system",
+                profile_name="system",
+                connected_at="",
+            ),
+            tool_name=outcome.conflicts[0].tool_name,
+            server_name=server_name,
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="tool_conflict",
+                error_code="TOOL_CONFLICT",
+                error_message=conflict_desc,
+            ),
+        )
+        if warning_entry_result.is_err:
+            return Result(error=warning_entry_result.error)
+        assert warning_entry_result.value is not None
+        _ = await audit_write(warning_entry_result.value)
+        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+
+    if _notify_callback is not None:
+        async with _registry_lock:
+            registry = get_registry()
+            tool_names = sorted(
+                t.name for ts in registry.get_all_tools().values() for t in ts
+            )
+        raw = ":".join(tool_names).encode()
+        digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
+        await _notify_callback(digest)
+
+    return Result(value=None)
 
 
 # Production callback target for runtime config-file watcher wiring.

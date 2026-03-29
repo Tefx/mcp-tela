@@ -98,23 +98,25 @@ def detect_conflicts(
 
     # Check for prefix violations first (single server can cause this)
     for tool_name, servers in sorted(tool_owners.items()):
+        unique_servers = sorted(set(servers))
         if tool_name.startswith(RESERVED_PREFIX):
             conflicts.append(
                 ToolConflict(
                     tool_name=tool_name,
-                    servers=servers,
+                    servers=unique_servers,
                     conflict_type=ConflictType.PREFIX_VIOLATION,
                 )
             )
 
     # Check for name collisions (multiple servers with same name)
     for tool_name, servers in sorted(tool_owners.items()):
-        if len(servers) > 1 and not tool_name.startswith(RESERVED_PREFIX):
+        unique_servers = sorted(set(servers))
+        if len(unique_servers) > 1 and not tool_name.startswith(RESERVED_PREFIX):
             # PREFIX_VIOLATION already handled above; don't double-report
             conflicts.append(
                 ToolConflict(
                     tool_name=tool_name,
-                    servers=servers,
+                    servers=unique_servers,
                     conflict_type=ConflictType.NAME_COLLISION,
                 )
             )
