@@ -43559,7 +43559,7 @@ phases:
       \ not yet wired to _call_tool dispatch\n- Commit: 1f37aefa on branch vectl/step-pm.p0_contract.downstream_accessor"
   - id: pm.p0_contract.downstream_accessor
     name: Downstream accessor contract
-    status: pending
+    status: claimed
     description: "Add get_connected_server_names() accessor to downstream.py with\
       \ contract stub.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
       \ outputs: signatures, stubs\n\n## Deliverable: New function in src/tela/shell/downstream.py\n\
@@ -43608,6 +43608,8 @@ phases:
     refs:
     - src/tela/shell/downstream.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T18:39:22.779932+00:00'
 - id: pm.p0_test
   name: P0 Built-in Tool Tests
   status: locked
