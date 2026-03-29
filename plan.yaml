@@ -39430,7 +39430,7 @@ phases:
     agent: blind-tester
   - id: conn_v2.deep_review.spec_conformance
     name: Full spec conformance audit for runtime surfaces
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       Compare ALL implemented connect/serve/status behavior against authoritative
@@ -39444,6 +39444,58 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-03-29T09:01:49.684585+00:00'
+    done_at: '2026-03-29T09:11:18.485651+00:00'
+    evidence: 'Spec conformance audit found 1 critical divergence + 18 conformant
+      requirements.
+
+
+      **Status: FAIL — 1 critical divergence**
+
+
+      **R1 (CRITICAL — spec vs implementation mismatch):**
+
+      - Spec claim (INTERFACES.md §7.3): "lockfile is discovery truth only, written
+      atomically after HTTP server bind but BEFORE downstream server startup completes"
+
+      - Implementation (serve_cmd.py:211-225): lockfile written AFTER `gateway_start()`
+      which includes `connect_all()` establishing downstream connections (gateway.py:579)
+
+      - Impact: lockfile presence now effectively indicates downstream readiness,
+      contradicting the spec''s explicit discovery ≠ readiness distinction
+
+      - The docs sync (R5) correctly documents this distinction, but the implementation
+      order violates it
+
+
+      **18 requirements CONFORM:** lockfile fields, PID stale detection, extra-field
+      ignore, lifecycle state computation, degraded_reason, bearer token generation/validation,
+      auth exemption for /health, token precedence, CLI surface, HTTP endpoints, SIGINT/SIGTERM
+      behavior, etc.
+
+
+      **2 behavioral claims need runtime verification:**
+
+      - R5 (discovery-only semantics): Race-condition window where lockfile exists
+      but connected_servers is empty
+
+      - R11 (attach-loop interrupt): Verify no MCP frames forwarded after SIGTERM
+
+
+      **Fix options for R1:**
+
+      A) Move lockfile write earlier in serve_cmd.py (before gateway_start/discover
+      downstream)
+
+      B) Update INTERFACES.md §7.3 to accurately reflect implementation ordering
+
+
+      **Artifact:** spec conformance audit (no file changes)
+
+
+      **Note:** User requested stop after conn_v2.finalize. This divergence is a blocker
+      for the phase gate and requires decision on fix approach.
+
+      '
   - id: conn_v2.deep_review.architecture_review
     name: Architecture and concurrency review for startup, lifecycle, convergence,
       and bridge modules
