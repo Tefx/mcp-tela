@@ -43853,13 +43853,13 @@ phases:
       **Should-fix note:** tool_prefix field assertion missing in one test (non-blocking)'
 - id: pm.p0_impl
   name: P0 Built-in Tool Implementation
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p0_test
   steps:
   - id: pm.p0_impl.builtin_handler
     name: Implement built-in tool handler
-    status: pending
+    status: claimed
     description: "Fill in stub body of handle_list_providers() in src/tela/shell/builtin_tools.py\
       \ per the contract from step pm.p0_contract.builtin_tool_schema.\n\nUPSTREAM\
       \ ARTIFACTS (from contract step):\n  - src/tela/shell/builtin_tools.py — handle_list_providers\
@@ -43931,6 +43931,8 @@ phases:
     - src/tela/shell/downstream.py
     - src/tela/shell/gateway_runtime.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T19:35:36.620733+00:00'
   - id: pm.p0_impl.downstream_accessor
     name: Implement downstream accessor
     status: pending
