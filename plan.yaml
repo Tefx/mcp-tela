@@ -37431,7 +37431,7 @@ phases:
       **Deviation records**: none'
   - id: conn_v2.lifecycle.vertical_slice
     name: 'Early vertical slice: cold start to warming/ready status path'
-    status: pending
+    status: claimed
     description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
       \ wire one complete path early: tela connect --config ... -> discovery/autostart\
       \ -> HTTP /status lifecycle snapshot -> attach wait policy.\nThis is the mandatory\
@@ -37474,6 +37474,8 @@ phases:
     depends_on:
     - conn_v2.lifecycle.integrate_status_consumers
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T02:27:45.528457+00:00'
   - id: conn_v2.lifecycle.gate
     name: Gate lifecycle status phase
     status: pending
