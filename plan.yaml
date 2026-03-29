@@ -41479,7 +41479,7 @@ phases:
       '
 - id: gw_remed.lifecycle_authority
   name: 'Gateway remediation: A1 lifecycle authority split'
-  status: in_progress
+  status: done
   gate: Status truth is unified behind one authority and independently proven across
     all status consumers before startup resequencing begins.
   context: Narrow A1 to authority extraction plus consumer-conformance proof; no startup
@@ -41689,7 +41689,7 @@ phases:
       **Commit**: 27584b7'
   - id: gw_remed.lifecycle_authority.gate
     name: Gate A1 lifecycle authority extraction
-    status: claimed
+    status: done
     description: Review A1 evidence and block progression if lifecycle/readiness truth
       is still split across gateway.py and http_routes.py.
     verification: Confirm the phase closes A1 and leaves a single authority for downstream
@@ -41702,9 +41702,60 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T11:57:38.540041+00:00'
+    done_at: '2026-03-29T12:02:14.161559+00:00'
+    evidence: '## Gate Review Summary
+
+
+      **Verdict**: **PASS**
+
+
+      | Metric      | Value |
+
+      | ----------- | ----- |
+
+      | Blockers    | 0     |
+
+      | Should-Fix  | 0     |
+
+      | Suggestions | 0     |
+
+
+      **Tests**: 12 passed ✅
+
+      **Invar Guard**: PASS (escape hatch budget 15/16 within limit) ✅
+
+
+      ## Single Authority Module
+
+      `src/tela/shell/gateway_lifecycle.py`
+
+      - Function: `get_lifecycle_status_facts()` -> `Result[LifecycleStatusFacts,
+      str]`
+
+      - Consumed by: `gateway_status()` (gateway.py) and `handle_status()` (http_routes.py)
+
+      - State derivation: centralized (warming/ready/degraded logic in ONE location)
+
+
+      ## Truth Separation Verified
+
+      - **Discovery truth** (LOCKFILE_DISCOVERY_CONTRACT): pid, host, port, token,
+      config_path → excludes lifecycle_readiness
+
+      - **Readiness truth** (STATUS_SNAPSHOT_CONTRACT): running, start_time, connections,
+      total_tool_calls, state, connected_servers → excludes discovery
+
+
+      ## A4 Consumption: SAFE
+
+      - Authority surface is exported, documented, frozen dataclass
+
+      - Tests verify both consumers derive identical facts from shared fixture state
+
+      - No split truth sources remain between gateway.py and http_routes.py'
 - id: gw_remed.startup_plan_a
   name: 'Gateway remediation: A4 startup sequencing via Plan A'
-  status: locked
+  status: pending
   gate: Nominal Plan A ordering, warming admission rejection, and post-bind failure
     rollback are all proven before downstream runtime work resumes.
   context: Split nominal startup sequencing from failure rollback so evidence is stronger
