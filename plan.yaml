@@ -38040,7 +38040,7 @@ phases:
       \ connection identity\n\n### Deviation Records: None"
   - id: conn_v2.bridge.integrate_connect_flow
     name: Integrate bridge control into tela connect and gateway session tracking
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/DESIGN.md#Runtime\
       \ Architecture > Connection lifecycle\n  - docs/INTERFACES.md#7.2.1 GET /status\
@@ -38124,6 +38124,62 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T03:12:41.676301+00:00'
+    done_at: '2026-03-29T03:22:24.275748+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/repro/test_connection_count_semantics.py
+      tests/repro/test_disconnect_cleanup.py -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      39 passed in 3.68s
+
+      ```
+
+
+      **Path exercised**: tela connect -> bridge control -> HTTP connect/disconnect
+      -> gateway runtime
+
+
+      **Implementation from commit c439c80**:
+
+      - connect_cmd.py: Hard-interrupt signal handling with nested try/except for
+      connect, attach, and teardown phases
+
+      - upstream.py: bridge_connection_id validation at initialize time against pre-registered
+      connections
+
+
+      **Regression evidence**:
+
+      - test_bridge_lifecycle_posts_connect_and_disconnect: PASS
+
+      - test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup: PASS
+
+      - test_bridge_teardown_interrupt_does_not_block_process_exit: PASS
+
+      - test_handle_disconnect_releases_captured_session: PASS
+
+      - test_session_registry_bounded_across_connect_disconnect_cycles: PASS
+
+      - test_gateway_status_active_connections_is_int: PASS
+
+
+      **Lockfile readiness derivation**: None found in attach/wait paths. Bridge control
+      uses only HTTP lifecycle endpoints.
+
+
+      **Deviation records**: None'
   - id: conn_v2.bridge.interrupt_probe
     name: Probe hard-interrupt behavior from the real connect entry point
     status: pending
