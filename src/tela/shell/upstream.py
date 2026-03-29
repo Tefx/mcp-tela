@@ -560,7 +560,6 @@ async def handle_tools_call(
     stripped_args, held_meta = stripped_result.value
     _ = held_meta
 
-    # Look up tool
     tool = get_registry().get_tool(tool_name)
     if tool is None:
         return Result(
@@ -568,8 +567,7 @@ async def handle_tools_call(
                 code="TOOL_NOT_FOUND", message=f"Tool '{tool_name}' not found"
             )
         )
-
-    # Look up profile
+    routing_name = tool.raw_name or tool.name
     profile = config.profiles.get(connection.profile_name)
     if profile is None:
         return Result(
@@ -579,10 +577,9 @@ async def handle_tools_call(
             )
         )
 
-    # Enforce
     server_config = config.servers.get(tool.server_name)
     default_posture = server_config.default_posture if server_config else Posture.NONE
-    enforcement_result = enforce_tool_call(tool_name, tool, profile, default_posture)
+    enforcement_result = enforce_tool_call(routing_name, tool, profile, default_posture)
     if enforcement_result.is_err:
         return Result(
             error=TelaError(
@@ -602,8 +599,7 @@ async def handle_tools_call(
         )
 
     increment_tool_calls()
-
-    return await call_tool(tool.server_name, tool_name, stripped_args)
+    return await call_tool(tool.server_name, routing_name, stripped_args)
 
 
 def handle_profiles_list() -> Result[list[dict], str]:

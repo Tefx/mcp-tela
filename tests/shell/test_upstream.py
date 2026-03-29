@@ -1146,3 +1146,225 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
         assert tool_dict.get("annotations") is None
     finally:
         tela.shell.upstream.get_all_tools = original_get_all_tools
+
+
+def test_handle_tools_list_exposes_distinct_prefixed_names() -> None:
+    """tools/list exposes both prefixed names for identical raw downstream names."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.upstream import handle_initialize, handle_tools_list
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "server_a",
+        [
+            ResolvedTool(
+                name="a.read_file",
+                raw_name="read_file",
+                server_name="server_a",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="read from server a",
+            )
+        ],
+    )
+    registry.register(
+        "server_b",
+        [
+            ResolvedTool(
+                name="b.read_file",
+                raw_name="read_file",
+                server_name="server_b",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="read from server b",
+            )
+        ],
+    )
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            servers={
+                "server_a": ServerConfig(
+                    name="server_a", command="cmd", tool_prefix="a."
+                ),
+                "server_b": ServerConfig(
+                    name="server_b", command="cmd", tool_prefix="b."
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev", default=True, capabilities={"fs": Posture.READ_ONLY}
+                )
+            },
+        )
+    )
+    clear_runtime_connections()
+
+    import tela.shell.upstream
+
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+
+    try:
+        initialize_result = asyncio.run(handle_initialize({"client": "test"}))
+        assert initialize_result.is_ok
+        assert initialize_result.value is not None
+
+        list_result = asyncio.run(handle_tools_list(initialize_result.value))
+        assert list_result.is_ok
+        assert list_result.value is not None
+        names = sorted(tool["name"] for tool in list_result.value)
+        assert names == ["a.read_file", "b.read_file"]
+    finally:
+        tela.shell.upstream.get_all_tools = original_get_all_tools
+
+
+def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """tools/call lookup is by exposed name, downstream routing uses raw_name."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway import set_runtime_config
+    from tela.shell.upstream import handle_tools_call
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "server_a",
+        [
+            ResolvedTool(
+                name="a.read_file",
+                raw_name="read_file",
+                server_name="server_a",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+            )
+        ],
+    )
+    registry.register(
+        "server_b",
+        [
+            ResolvedTool(
+                name="b.read_file",
+                raw_name="read_file",
+                server_name="server_b",
+                family="fs",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+            )
+        ],
+    )
+
+    routed_calls: list[tuple[str, str, dict]] = []
+
+    async def _fake_call_tool(
+        server_name: str,
+        tool_name: str,
+        arguments: dict,
+    ) -> Result[dict, object]:
+        routed_calls.append((server_name, tool_name, arguments))
+        return Result(value={"content": [{"type": "text", "text": server_name}]})
+
+    monkeypatch.setattr("tela.shell.upstream.get_registry", lambda: registry)
+    monkeypatch.setattr("tela.shell.upstream.call_tool", _fake_call_tool)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            servers={
+                "server_a": ServerConfig(
+                    name="server_a", command="cmd", tool_prefix="a."
+                ),
+                "server_b": ServerConfig(
+                    name="server_b", command="cmd", tool_prefix="b."
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(name="dev", capabilities={"fs": Posture.READ_ONLY})
+            },
+        )
+    )
+
+    connection = ConnectionContext(
+        connection_id="c1",
+        profile_name="dev",
+        connected_at="2026-01-01T00:00:00Z",
+    )
+
+    call_a = asyncio.run(
+        handle_tools_call(connection, "a.read_file", {"path": "/tmp/a"})
+    )
+    assert call_a.is_ok
+    call_b = asyncio.run(
+        handle_tools_call(connection, "b.read_file", {"path": "/tmp/b"})
+    )
+    assert call_b.is_ok
+
+    assert routed_calls == [
+        ("server_a", "read_file", {"path": "/tmp/a"}),
+        ("server_b", "read_file", {"path": "/tmp/b"}),
+    ]
+
+
+def test_filter_tools_for_profile_matches_tool_override_on_raw_name() -> None:
+    """tools/list filtering applies profile tool overrides against raw_name."""
+    from tela.core.models import (
+        EnforcementVerdict,
+        Posture,
+        ProfileConfig,
+        ProfileToolOverrides,
+        ResolvedTool,
+    )
+    from tela.shell.upstream_utils import filter_tools_for_profile
+
+    tools = {
+        "server_a": [
+            ResolvedTool(
+                name="a.read_file",
+                raw_name="read_file",
+                server_name="server_a",
+                family="fs",
+                posture=Posture.READ_ONLY,
+            )
+        ]
+    }
+    profile = ProfileConfig(
+        name="dev",
+        capabilities={"fs": Posture.READ_WRITE},
+        tool_overrides={
+            "fs": ProfileToolOverrides(overrides={"read_file": EnforcementVerdict.DENY})
+        },
+    )
+
+    result = filter_tools_for_profile(tools, profile, {"server_a": Posture.NONE})
+    assert result.is_ok
+    assert result.value == []

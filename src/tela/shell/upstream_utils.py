@@ -58,7 +58,14 @@ def filter_tools_for_profile(
     for server_name, tools in all_tools.items():
         default_posture = server_default_postures.get(server_name, Posture.NONE)
         for tool in tools:
-            result = enforce(tool.name, tool, profile, allowed_token, default_posture)
+            routing_name = tool.raw_name or tool.name
+            result = enforce(
+                routing_name,
+                tool,
+                profile,
+                allowed_token,
+                default_posture,
+            )
             if result.verdict == EnforcementVerdict.ALLOW:
                 permitted.append(tool)
 
