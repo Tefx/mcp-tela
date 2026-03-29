@@ -41479,7 +41479,7 @@ phases:
       '
 - id: gw_remed.lifecycle_authority
   name: 'Gateway remediation: A1 lifecycle authority split'
-  status: pending
+  status: in_progress
   gate: Status truth is unified behind one authority and independently proven across
     all status consumers before startup resequencing begins.
   context: Narrow A1 to authority extraction plus consumer-conformance proof; no startup
@@ -41489,7 +41489,7 @@ phases:
   steps:
   - id: gw_remed.lifecycle_authority.extract_status_authority
     name: Extract single lifecycle/readiness authority for gateway status surfaces
-    status: pending
+    status: claimed
     description: 'Fill in src/tela/shell/gateway_lifecycle.py as the only authority
       for lifecycle/discovery/readiness facts consumed by:
 
@@ -41536,6 +41536,8 @@ phases:
     - src/tela/shell/gateway.py
     - src/tela/shell/http_routes.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T11:46:18.035997+00:00'
   - id: gw_remed.lifecycle_authority.verify_status_truth
     name: Verify lifecycle authority consistency across status consumers
     status: pending
