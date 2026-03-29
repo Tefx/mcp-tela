@@ -40940,7 +40940,7 @@ phases:
       **DIVERGENCES**: 0'
   - id: tool_prefix.runtime.gate
     name: Gate tool-prefix runtime
-    status: pending
+    status: claimed
     description: "step_type: gate\nagent_source: default\nreview_depth: THOROUGH\n\
       review_depth_rationale:\n  - Phase changes config model, name-resolution semantics,\
       \ runtime registry wiring, and reload notifications.\ncross_cutting_focus:\n\
@@ -40964,6 +40964,8 @@ phases:
     - tool_prefix.runtime.wiring_audit
     - tool_prefix.runtime.spec_conformance
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T13:53:59.604542+00:00'
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
   status: locked
