@@ -37949,7 +37949,7 @@ phases:
   steps:
   - id: conn_v2.bridge.impl_module
     name: Implement bridge control module without shell convergence refactor coupling
-    status: claimed
+    status: done
     description: "step_type: implementation\n\nauto_tags:\n- integration\n\nFill in\
       \ stub bodies for the bridge control module for attach, detach, interrupt, and\
       \ session-control flow.\n\nRequired scope:\n- Bridge module owns attach/detach\
@@ -38018,6 +38018,26 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T03:07:01.569437+00:00'
+    done_at: '2026-03-29T03:12:18.039733+00:00'
+    evidence: "## Integration Evidence\n\n**Command or test exercising the full path**:\n\
+      ```\nuv run pytest -q tests/shell/test_connect_cmd.py tests/repro/test_disconnect_cleanup.py\
+      \ tests/shell/test_query_commands_remote_state.py\n```\n\n**Actual output**:\n\
+      ```\n.....................................................                 \
+      \   [100%]\n53 passed in 6.89s\n```\n\n**Path exercised**: connect entrypoint\
+      \ -> bridge control -> lifecycle/convergence consumption -> shutdown/interrupt\
+      \ path\n\n### Additional Verification\n- Upstream session-control: 50 tests\
+      \ passed\n- invar guard: passed (0 errors, 2 warnings)\n\n### Files Modified\n\
+      \n**src/tela/commands/connect_cmd.py**:\n- Hardened bridge lifecycle interrupt\
+      \ handling:\n  - Signal handler now triggers immediate `KeyboardInterrupt` for\
+      \ hard-interrupt semantics\n  - Explicit interrupt handling for registration,\
+      \ attach loop, and teardown\n  - Restores prior SIGINT/SIGTERM handlers on all\
+      \ interrupt paths\n  - Best-effort disconnect attempt and diagnostics on teardown\n\
+      \n**src/tela/shell/upstream.py**:\n- Enforced bridge session-control contract\
+      \ in `handle_initialize`:\n  - When `tela_bridge_connection_id` is present,\
+      \ must attach to pre-registered runtime connection\n  - Returns `CONNECTION_NOT_FOUND`\
+      \ instead of creating new connection if no pre-registered bridge exists\n  -\
+      \ Consumes lifecycle output (`/connect` registration) instead of re-deriving\
+      \ connection identity\n\n### Deviation Records: None"
   - id: conn_v2.bridge.integrate_connect_flow
     name: Integrate bridge control into tela connect and gateway session tracking
     status: pending
