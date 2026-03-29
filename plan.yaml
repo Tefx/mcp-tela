@@ -42652,7 +42652,7 @@ phases:
   steps:
   - id: gw_remed.plan_c_adr.write_future_state_machine_adr
     name: Record Plan C gateway state-machine ADR as deferred architecture only
-    status: claimed
+    status: done
     description: 'Write docs/ADR-004-gateway-startup-state-machine.md as a deferred-architecture
       ADR only.
 
@@ -42704,6 +42704,35 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-29T13:12:44.125964+00:00'
+    done_at: '2026-03-29T13:16:02.134210+00:00'
+    evidence: '## ADR-004 Coverage
+
+      | Required Topic            | Present | Notes |
+
+      | ------------------------- | ------- | ----- |
+
+      | states                    | yes     | preparing, bound_discoverable, converging,
+      ready, degraded, shutting_down, stopped |
+
+      | transitions               | yes     | Transition Rules define normal path
+      and disallowed interpretations |
+
+      | truth boundaries          | yes     | Preserves discovery vs readiness vs
+      convergence ownership from DESIGN.md |
+
+      | admission rules           | yes     | Connection Admission Rules map behavior
+      by state |
+
+      | interrupt/crash semantics | yes     | Covers intentional stop, interrupt during
+      startup, abrupt crash, restart |
+
+      | adoption triggers         | yes     | States when Plan C should be considered,
+      includes non-trigger |
+
+
+      **ADR Status**: Deferred/future-only Plan C architecture capture
+
+      **Commit**: 3608910fb'
   - id: gw_remed.plan_c_adr.verify_adr_alignment
     name: Verify ADR-004 stays within approved deferred scope
     status: pending
