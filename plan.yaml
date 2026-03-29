@@ -37903,7 +37903,7 @@ phases:
       - No skips, no failures'
   - id: conn_v2.convergence.gate
     name: Gate background convergence phase
-    status: pending
+    status: claimed
     description: "step_type: gate\nGate review: verify background convergence replaces\
       \ serial downstream blocking without losing runtime truth.\nreview_depth: THOROUGH\n\
       review_depth_rationale:\n  - phase changes startup latency semantics, registry\
@@ -37919,6 +37919,8 @@ phases:
     - conn_v2.convergence.integrate_reload_and_status
     - conn_v2.convergence.seam_proof
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T03:02:14.608652+00:00'
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
   status: locked
