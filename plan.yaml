@@ -43450,32 +43450,86 @@ phases:
   - id: pm.p0_contract.builtin_tool_schema
     name: Built-in tool schema and handler contract
     status: pending
-    description: 'Define ProviderInfo model in core/models.py and tela_list_providers
-      tool schema + handler signature in new shell/builtin_tools.py. Write @pre/@post
-      contracts and doctest stubs.
+    description: "Define ProviderInfo model and tela_list_providers tool schema +\
+      \ handler contract.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
+      \ outputs: signatures, type_defs, interfaces, stubs\n\n## Deliverable 1: ProviderInfo\
+      \ TypedDict in src/tela/core/models.py\n\nAdd after the `ResolvedTool` class\
+      \ (line ~315):\n\n```python\nclass ProviderInfo(TypedDict):\n    \"\"\"Per-provider\
+      \ summary returned by tela_list_providers.\"\"\"\n    name: str\n    status:\
+      \ str  # \"connected\" | \"disconnected\" | \"failed\"\n    tool_prefix: str\
+      \ | None\n    tool_count: int\n    tool_names: list[str]  # post-enforcement-filter\
+      \ exposed names\n```\n\nImport `TypedDict` from `typing` at the top of the file.\n\
+      \n## Deliverable 2: New file src/tela/shell/builtin_tools.py\n\nCreate the file\
+      \ with:\n\n```python\n\"\"\"Built-in tools owned by tela gateway (not downstream\
+      \ servers).\"\"\"\n\nfrom __future__ import annotations\nfrom typing import\
+      \ TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from tela.core.models import ProviderInfo\n\
+      \nBUILTIN_TOOLS: list[dict] = [\n    {\n        \"name\": \"tela_list_providers\"\
+      ,\n        \"description\": \"List connected downstream providers with their\
+      \ status and tool counts.\",\n        \"inputSchema\": {\"type\": \"object\"\
+      , \"properties\": {}, \"required\": []},\n    },\n]\n\nBUILTIN_TOOL_NAMES: set[str]\
+      \ = {t[\"name\"] for t in BUILTIN_TOOLS}\n\n\nasync def handle_list_providers(\n\
+      \    # No parameters needed — reads live from DownstreamRegistry\n) -> list[\"\
+      ProviderInfo\"]:\n    \"\"\"Return per-provider summary from live DownstreamRegistry.\n\
+      \n    Reads connected servers, their tool counts (post-enforcement-filter),\n\
+      \    and connection status. Includes failed servers with status \"failed\".\n\
+      \n    Examples:\n        >>> import asyncio\n        >>> result = asyncio.run(handle_list_providers())\n\
+      \        >>> isinstance(result, list)\n        True\n\n    Returns:\n      \
+      \  List of ProviderInfo dicts, one per configured server.\n    \"\"\"\n    raise\
+      \ NotImplementedError\n```\n\n## Constraints\n- builtin_tools.py is Shell zone\
+      \ (I/O allowed, reads from registry)\n- ProviderInfo lives in Core zone models.py\
+      \ — no I/O imports\n- BUILTIN_TOOLS schema dict follows the same shape as raw\
+      \ tool dicts from downstream enumeration (name, description, inputSchema)\n\
+      - BUILTIN_TOOL_NAMES is a set for O(1) lookup in _call_tool dispatch\n- handler\
+      \ returns list[ProviderInfo], NOT Result — built-in tool errors raise exceptions\
+      \ (matching FastMCP @tool pattern)\n\n## Pattern reference\n- See `_register_profiles_resource()`\
+      \ in src/tela/shell/gateway.py lines 321-337 for how gateway registers built-in\
+      \ surfaces\n- See `ResolvedTool` in src/tela/core/models.py line 287 for the\
+      \ existing tool model shape"
+    evidence_template: '## Contract Artifacts
+
+      **ProviderInfo model** (paste from models.py):
+
+      ```
+
+      <exact class definition>
+
+      ```
 
 
-      Step type: contract
+      **BUILTIN_TOOLS schema** (paste from builtin_tools.py):
 
-      Contract purity: ENFORCED
+      ```
 
-      Contract outputs: signatures, type_defs, interfaces, stubs
+      <exact list definition>
+
+      ```
 
 
-      Deliverables:
+      **handle_list_providers signature** (paste):
 
-      - ProviderInfo TypedDict or dataclass in core/models.py with fields: name, tool_prefix,
-      tool_count, connected
+      ```
 
-      - handle_list_providers() stub in shell/builtin_tools.py with @pre/@post and
-      NotImplementedError
+      <full function signature + docstring + NotImplementedError>
 
-      - BUILTIN_TOOLS list with tool schema dict for tela_list_providers
+      ```
 
-      - Doctest stubs showing expected return shape'
+
+      **Verification**:
+
+      - [ ] ProviderInfo is TypedDict with fields: name, status, tool_prefix, tool_count,
+      tool_names
+
+      - [ ] BUILTIN_TOOL_NAMES set exists for dispatch lookup
+
+      - [ ] handle_list_providers raises NotImplementedError (stub only)
+
+      - [ ] No implementation logic in any deliverable
+
+      - [ ] invar guard passes (no contract violations)'
     refs:
     - src/tela/shell/builtin_tools.py
     - src/tela/core/models.py
+    - src/tela/shell/gateway.py
     agent: python-executor
   - id: pm.p0_contract.downstream_accessor
     name: Downstream accessor contract
