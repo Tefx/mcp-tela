@@ -38557,7 +38557,7 @@ phases:
     claimed_at: '2026-03-29T04:22:49.927013+00:00'
   - id: conn_v2.system_wiring.verify_e2e
     name: Verify end-to-end data flow through real entry points
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
       \ verify data flows through the real entry points using real implementations.\n\
       Independence Level: L2\nFor EACH user-facing entry point under this refactor:\n\
@@ -38591,6 +38591,71 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T04:22:39.749633+00:00'
+    done_at: '2026-03-29T04:36:51.244025+00:00'
+    evidence: '## End-to-End Data Flow Verification
+
+
+      | Entry Point | Input | Path Traced | Output/Effect | Status |
+
+      |------------|-------|-------------|--------------|--------|
+
+      | tela serve | --config tela.yaml --port 0 | config_loader -> gateway_start
+      -> uvicorn bind -> lockfile write -> HTTP serve | PID alive, lockfile valid,
+      GET /status returns 200 | PASS |
+
+      | tela status | (implicit lockfile discovery) | read_lockfile -> GET /status
+      -> JSON output | state=ready, uptime_seconds, server_count all present | PASS
+      |
+
+      | tela connect | --config tela.yaml (lockfile discovery) | read_lockfile ->
+      POST /connect -> MCP bridge -> POST /disconnect | active_connections 0->1->0,
+      MCP initialize/tools/list work | PASS |
+
+      | tela connect (cold-start) | --config (no lockfile) | autostart_serve subprocess
+      -> wait_for_lockfile -> POST /connect | Gateway spawned, MCP works during warming
+      | PASS |
+
+      | tela connect (explicit) | --server host:port --token xxx | _parse_server ->
+      POST /connect (bypass lockfile) | Connection without lockfile, token-only auth
+      | PASS |
+
+      | GET /status | HTTP GET with Bearer token | BearerAuthMiddleware -> status_handler
+      -> JSONResponse | 200 OK, valid JSON with state/connections | PASS |
+
+      | POST /mcp | HTTP POST with Bearer token | BearerAuthMiddleware -> MCP route
+      -> FastMCP handler | JSON response with result/error | PASS |
+
+
+      ### Route Dispatch Verification
+
+      - **/connect route**: POST /connect correctly registers bridge connections,
+      increments active_connections counter
+
+      - **/disconnect route**: POST /disconnect decrements connection count on bridge
+      termination
+
+      - **/status route**: GET /status returns runtime state including server_count,
+      active_connections, connected_servers
+
+      - **/mcp route**: POST /mcp forwards MCP frames through FastMCP handler
+
+
+      ### State Transitions Observed
+
+      - Gateway startup: warming → ready
+
+      - Connect attach: active_connections 0 → 1
+
+      - Cold-start: no lockfile → autostart → lockfile → connect during warming
+
+      - Explicit server: bypass lockfile discovery entirely
+
+
+      ### Tests Run
+
+      - tests/repro/test_connect_runtime_liveness.py: 6 tests passed
+
+      - Additional P9 smoke tests: All PASS'
   - id: conn_v2.system_wiring.liveness_probe
     name: Probe integrated runtime liveness for connect and serve
     status: done
