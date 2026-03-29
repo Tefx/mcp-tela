@@ -41535,15 +41535,44 @@ phases:
     - src/tela/shell/http_routes.py
     agent: python-senior
   - id: gw_remed.lifecycle_authority.verify_status_truth
-    name: Verify lifecycle authority consistency across CLI and HTTP status
+    name: Verify lifecycle authority consistency across status consumers
     status: pending
-    description: Independently verify that lockfile discovery, gateway_status(), and
-      GET /status preserve the documented split between discovery truth and readiness
-      truth after lifecycle authority extraction.
-    verification: Run focused shell and black-box status checks and confirm no duplicated
-      lifecycle derivation remains.
-    evidence_template: 'Provide commands, raw outputs, and a short verdict for: shared-authority
-      proof, lockfile-vs-status truth split, and any remaining drift.'
+    description: 'Independent consumer-boundary verification for lifecycle truth.
+
+
+      Validate that these surfaces report the same resolved facts from the new authority:
+
+      - lockfile discovery view
+
+      - gateway_status()
+
+      - GET /status
+
+
+      Treat discovery truth and readiness truth as separate facts and reject any surface
+      that collapses them back together.'
+    verification: '- One shared state fixture is exercised through all three surfaces
+
+      - Evidence shows agreement on discovery truth
+
+      - Evidence shows agreement on readiness truth
+
+      - Evidence shows the two truths remain distinct'
+    evidence_template: '## Status Truth Verification
+
+      | Surface          | Discovery Truth | Readiness Truth | Matches Authority |
+
+      | ---------------- | --------------- | --------------- | ----------------- |
+
+      | lockfile         | ...             | n/a             | ...               |
+
+      | gateway_status() | ...             | ...             | ...               |
+
+      | GET /status      | ...             | ...             | ...               |'
+    refs:
+    - src/tela/shell/gateway_lifecycle.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/http_routes.py
     depends_on:
     - gw_remed.lifecycle_authority.extract_status_authority
     agent: integration-verifier
