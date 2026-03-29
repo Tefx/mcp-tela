@@ -41879,18 +41879,44 @@ phases:
     - src/tela/shell/http_routes.py
     agent: python-senior
   - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
-    name: Route disconnect endpoint and gateway shutdown through the shared cleanup
-      path
+    name: Route disconnect endpoint and gateway shutdown through shared cleanup authority
     status: pending
-    description: Complete the integration wiring in src/tela/shell/http_routes.py
-      and src/tela/shell/gateway.py so handle_disconnect() and gateway shutdown both
-      use the same cleanup authority and preserve idempotent behavior by connection_id.
-    verification: Update shell/repro coverage for shared cleanup routing across disconnect
-      and shutdown paths.
-    evidence_template: Provide command outputs and a short matrix showing disconnect
-      path, shutdown path, repeated disconnect, and missing-connection cleanup results.
+    description: 'Integrate the shared cleanup authority into:
+
+      - src/tela/shell/http_routes.py
+
+      - src/tela/shell/gateway.py
+
+
+      Required outcomes:
+
+      - handle_disconnect() uses the shared cleanup path
+
+      - gateway shutdown uses the same cleanup path
+
+      - both preserve idempotent behavior by connection_id
+
+
+      Do not change route contracts in this step.'
+    verification: '- Disconnect and shutdown both call the same cleanup surface
+
+      - Repeated disconnect and shutdown reuse do not orphan or double-remove state'
+    evidence_template: '## Shared Cleanup Wiring
+
+      **Disconnect caller path**: <trace>
+
+      **Shutdown caller path**: <trace>
+
+      **Shared authority reached**: yes/no
+
+      **Idempotency result**: <assertions>'
+    refs:
+    - src/tela/shell/http_routes.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/connection_lifecycle.py
     depends_on:
     - gw_remed.teardown_contracts.extract_cleanup_authority
+    - gw_remed.teardown_contracts.harden_interrupt_teardown_window
     agent: python-executor
   - id: gw_remed.teardown_contracts.replace_vacuous_route_contracts
     name: Replace vacuous route contracts with falsifiable guarantees and doctests
