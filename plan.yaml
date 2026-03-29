@@ -38589,7 +38589,7 @@ phases:
     agent: integration-verifier
   - id: conn_v2.system_wiring.liveness_probe
     name: Probe integrated runtime liveness for connect and serve
-    status: pending
+    status: claimed
     description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
       \ actually run the integrated entry points.\nIndependence Level: L2\nVerification\
       \ criteria:\n  - tela serve starts and stays alive long enough to answer /health\
@@ -38630,6 +38630,8 @@ phases:
     depends_on:
     - conn_v2.system_wiring.entrypoint_integration
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-29T04:22:29.438653+00:00'
   - id: conn_v2.ux.conformance_review
     name: Review CLI and HTTP diagnostics for consumer-boundary conformance
     status: done
