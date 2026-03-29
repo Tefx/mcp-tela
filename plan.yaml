@@ -39389,7 +39389,7 @@ phases:
       **Deviation Records**: None'
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
-  status: pending
+  status: in_progress
   gate: Compact final phase for docs alignment and final independent review after
     integrated validation succeeds.
   depends_on:
@@ -39487,7 +39487,7 @@ phases:
     agent: wiring-auditor
   - id: conn_v2.doc_sync.update_docs
     name: Update documentation for the connect/serve runtime refactor
-    status: pending
+    status: claimed
     description: "step_type: review\nspec_refs:\n  - docs/USAGE.md\n  - docs/INTERFACES.md\n\
       \  - docs/DESIGN.md\nTasks:\n  - Sync docs with implemented discovery/readiness\
       \ split, lockfile meaning, status schema, startup_generation semantics, background\
@@ -39500,6 +39500,8 @@ phases:
 
       - No docs claim lockfile implies ready or final registry'
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-29T08:43:45.283878+00:00'
 - id: tool_prefix.contract
   name: Tool Prefix Contracts
   status: pending
