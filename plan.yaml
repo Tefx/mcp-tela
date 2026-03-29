@@ -44496,6 +44496,20 @@ phases:
     depends_on:
     - pm.p0_verify.retest
     agent: gate-reviewer
+  - id: pm.p0_verify.audit_logging_fix
+    name: Add audit logging for builtin tool calls
+    status: pending
+    description: "Add L2 audit entry for builtin tool calls in gateway.py _call_tool\
+      \ handler.\n\n**Root cause:** handle_list_providers and other builtin tool calls\
+      \ do not emit audit entries.\n\n**Fix location:** src/tela/shell/gateway.py\
+      \ lines 427-436\n\n**Implementation:**\n1. Import build_audit_entry and audit_write\
+      \ from tela.shell.audit\n2. Import AuditLevel, EnforcementResult, EnforcementVerdict\
+      \ from tela.core.models\n3. In _call_tool, before returning the result for builtin\
+      \ tools, emit L2 audit entry:\n   - tool_name from arguments\n   - connection_id\
+      \ from current session\n   - profile_name from runtime config\n   - verdict=ALLOW\n\
+      \   - latency_ms from measured elapsed time\n\n**Dependencies:** pm.p0_verify.retest"
+    depends_on:
+    - pm.p0_verify.retest
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
   status: locked
