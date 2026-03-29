@@ -41939,7 +41939,7 @@ phases:
       **Commit**: a169393bb'
   - id: gw_remed.startup_plan_a.verify_plan_a_runtime
     name: Verify Plan A startup contract end-to-end
-    status: claimed
+    status: done
     description: 'Independent L2 verification for Plan A runtime behavior.
 
 
@@ -41987,6 +41987,26 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T12:22:17.835388+00:00'
+    done_at: '2026-03-29T12:28:39.791651+00:00'
+    evidence: "## Plan A Runtime Verification\n\n**Nominal path command/test**: \n\
+      - `uv run pytest tests/integration/test_end_to_end.py::test_end_to_end_real_stdio_server_enumerate_and_call`\
+      \ → PASSED\n\n**Failure path command/test**:\n- `uv run pytest tests/shell/test_serve_cmd.py::test_post_bind_convergence_failure_rolls_back_discovery_and_runtime`\
+      \ → PASSED\n\n**Admission test**:\n- `uv run pytest tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_rejects_while_warming`\
+      \ → PASSED\n\n**Actual outputs / assertions**:\n\n### Nominal Path\n- `gateway_prepare_startup`\
+      \ -> `gateway_converge_startup` -> ready state -> bridge connections accepted\n\
+      - Real FastMCP downstream process starts, handle_initialize succeeds, tools\
+      \ listed/called successfully\n\n### Failure Path (post-bind convergence rollback)\n\
+      - Observed order: [\"prepare\", \"bind\", \"publish_lockfile\", \"convergence_failed\"\
+      , \"remove_lockfile\", \"teardown_http\", \"shutdown_runtime\"]\n- Convergence\
+      \ failure triggers complete rollback: lockfile removal, HTTP teardown, runtime\
+      \ reset\n\n### Warming Rejection\n- State \"warming\" when server_count > connected_servers\n\
+      - ADMISSION_REJECTED_WARMING error returned when connect attempted during warming\n\
+      - Ready state when server_count == connected_servers -> admission succeeds\n\
+      \n### Truth Separation\n- LockfileData contains ONLY discovery fields (port,\
+      \ token, pid, host, config_path, started_at, version)\n- StatusResponse contains\
+      \ readiness fields from lifecycle authority (state, connected_servers, degraded_reason)\n\
+      - Both surfaces derive from get_lifecycle_status_facts() - single authority\
+      \ confirmed"
   - id: gw_remed.startup_plan_a.gate
     name: Gate A4 Plan A startup remediation
     status: pending
