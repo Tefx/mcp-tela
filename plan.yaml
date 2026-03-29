@@ -42436,7 +42436,7 @@ phases:
       \ passed in 2.61s ✅\n- invar guard passed ✅\n\n**Commit**: 86f8e3a"
   - id: gw_remed.teardown_contracts.verify_cleanup_and_contracts
     name: Verify teardown hardening and route contract strength
-    status: pending
+    status: claimed
     description: 'Independent verification for A2/A3.
 
 
@@ -42477,6 +42477,8 @@ phases:
     - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     - gw_remed.teardown_contracts.replace_vacuous_route_contracts
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T12:55:29.834782+00:00'
   - id: gw_remed.teardown_contracts.gate
     name: Gate A2/A3 teardown and contract remediation
     status: pending
