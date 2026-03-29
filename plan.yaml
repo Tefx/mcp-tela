@@ -44107,7 +44107,7 @@ phases:
       **Commit:** faf81ca7'
   - id: pm.p0_impl.gateway_wiring
     name: Wire built-in tools into gateway
-    status: claimed
+    status: done
     description: "Wire built-in tools into gateway startup, list_tools, and call_tool\
       \ paths. This is the serial integration step depending on all three parallel\
       \ implementation steps.\n\nUPSTREAM ARTIFACTS:\n  - src/tela/shell/gateway.py\
@@ -44220,6 +44220,21 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T19:50:59.180931+00:00'
+    done_at: '2026-03-29T19:52:35.873189+00:00'
+    evidence: "## Integration Evidence\n\n**Wiring verified in src/tela/shell/gateway.py:**\n\
+      \n1. **Imports (lines 37-39):**\n```python\nfrom tela.shell.builtin_tools import\
+      \ (\n    BUILTIN_TOOLS,\n    BUILTIN_TOOL_NAMES,\n    handle_list_providers,\n\
+      )\n```\n\n2. **_list_tools includes builtins (lines 415-428):**\n```python\n\
+      for bt in BUILTIN_TOOLS\n    builtin_mcp_tools = [...]\nreturn builtin_mcp_tools\
+      \ + [...filtered downstream tools...]\n```\n\n3. **_call_tool dispatches builtins\
+      \ (lines 428-437):**\n```python\nif tool_name in BUILTIN_TOOL_NAMES:\n    providers_result\
+      \ = await handle_list_providers()\n    return mcp_types.CallToolResult(...)\n\
+      ```\n\n**Test verification:**\n```\ntests/shell/test_gateway.py::test_gateway_list_tools_includes_builtin\
+      \ PASSED\ntests/shell/test_gateway.py::test_gateway_call_tool_dispatches_builtin\
+      \ PASSED\n```\n\n**Note:** 1 test failure in `test_handle_list_providers_includes_disconnected_server`\
+      \ is due to posture enforcement (test fixture sets `default_posture=NONE` which\
+      \ denies all tools). This is correct behavior and needs test fixture fix, not\
+      \ implementation fix.\n\n**Commit:** faf81ca7"
   - id: pm.p0_impl.builtin_tool_fix_tests
     name: Builtin tool test compatibility fix
     status: pending
