@@ -39447,7 +39447,7 @@ phases:
   - id: conn_v2.deep_review.architecture_review
     name: Architecture and concurrency review for startup, lifecycle, convergence,
       and bridge modules
-    status: claimed
+    status: done
     description: "step_type: verification\nReview module boundaries, dependency direction,\
       \ and concurrency safety.\nSpecifically check:\n  - startup coordinator owns\
       \ leader/follower arbitration\n  - lifecycle module remains source of truth\
@@ -39461,6 +39461,61 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-29T09:01:35.233628+00:00'
+    done_at: '2026-03-29T09:10:41.872548+00:00'
+    evidence: 'Architecture review identified 3 categories of pre-existing architectural
+      issues (not introduced by current phase).
+
+
+      **Status: ISSUES (non-blocking)**
+
+
+      **Split-truth paths:**
+
+      1. Lifecycle state re-derived in two places: `gateway_status()` (gateway.py:655-700)
+      and `handle_status()` (http_routes.py:101-167) independently compute `warming|ready|degraded`
+      from runtime snapshot + downstream registry — no single lifecycle state machine
+      delegate
+
+      2. Convergence/runtime truth split between downstream registry (downstream.py,
+      downstream_registry.py) and lifecycle consumers (gateway.py, http_routes.py)
+      that interpret registry contents independently
+
+      3. Reload updates runtime config BEFORE downstream reconnection completes (reload.py:407-435
+      → `set_runtime_config(new_config)` before `disconnect_all()/connect_all()` succeeds)
+      — config truth advances ahead of actual convergence
+
+
+      **Concurrency hazards:**
+
+      1. Bridge teardown is best-effort only: `KeyboardInterrupt` during `/disconnect`
+      leaves `bridge_error = INTERRUPT` and exits without guaranteed deregistration
+      — can strand gateway runtime/session state until later cleanup
+
+      2. Interrupted bridge leaves stale `runtime.connections` and idle-manager counts
+      if disconnect never reaches gateway
+
+
+      **NOT blocking (pre-existing, outside current phase scope):**
+
+      - No `lifecycle.py` module exists — lifecycle authority distributed across gateway_runtime.py,
+      gateway.py, http_routes.py
+
+      - No `convergence.py` module — convergence split across downstream.py and reload.py
+
+
+      **Positive findings:**
+
+      ✓ Startup coordinator owns lockfile/autostart arbitration correctly
+
+      ✓ Discovery boundary preserved: downstream.py and reload.py explicitly forbid
+      inferring readiness from lockfile
+
+      ✓ Bridge interrupt does not corrupt gateway state directly
+
+
+      **Artifact:** architecture review (no file changes)
+
+      '
   - id: conn_v2.deep_review.contract_strength
     name: Contract strength audit for runtime state and lifecycle surfaces
     status: claimed
