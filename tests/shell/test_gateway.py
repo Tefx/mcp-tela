@@ -1309,3 +1309,111 @@ def test_list_tools_preserves_only_annotations() -> None:
             await gateway_shutdown()
 
     asyncio.run(_scenario())
+
+
+def test_gateway_list_tools_includes_builtin() -> None:
+    """Gateway tools/list includes 'tela_list_providers' alongside downstream tools."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [{"name": "read_file", "inputSchema": {}}],
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
+            assert handler_result.is_ok
+            response = await handler_result.value(types.ListToolsRequest())
+
+            tools = response.root.tools  # type: ignore[union-attr]
+            tool_names = [t.name for t in tools]
+            assert "tela_list_providers" in tool_names
+            assert "read_file" in tool_names
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_gateway_call_tool_dispatches_builtin() -> None:
+    """Gateway tools/call dispatches 'tela_list_providers' to handle_list_providers."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [{"name": "read_file", "inputSchema": {}}],
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+            response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_providers",
+                        arguments={},
+                    )
+                )
+            )
+
+            # Should not be an error (TOOL_NOT_FOUND)
+            assert response.root.isError is False  # type: ignore[union-attr]
+
+            # Should return a valid result (list of ProviderInfo dicts)
+            assert response.root.content is not None  # type: ignore[union-attr]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
