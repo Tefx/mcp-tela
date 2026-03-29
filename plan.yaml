@@ -42306,7 +42306,7 @@ phases:
       **Commit**: da74749'
   - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     name: Route disconnect endpoint and gateway shutdown through shared cleanup authority
-    status: claimed
+    status: done
     description: 'Integrate the shared cleanup authority into:
 
       - src/tela/shell/http_routes.py
@@ -42346,6 +42346,33 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T12:51:45.833413+00:00'
+    done_at: '2026-03-29T12:55:04.955432+00:00'
+    evidence: '## Shared Cleanup Wiring
+
+      **Disconnect caller path**: `http_routes.handle_disconnect()` → `cleanup_connection_by_id(target_id)`
+      at `http_routes.py:387`
+
+      **Shutdown caller path**: `gateway.gateway_shutdown()` → loop over connection_ids
+      → `cleanup_connection_by_id(cid)` at `gateway.py:672`
+
+      **Shared authority reached**: yes ✅
+
+
+      **Idempotency result**: Both paths converge on `connection_lifecycle.py::cleanup_connection_by_id`
+      as shared authority.
+
+      - `test_cleanup_connection_by_id_is_idempotent_by_connection_id`: PASSED
+
+      - `test_handle_disconnect_uses_shared_cleanup_authority`: PASSED
+
+      - `test_gateway_shutdown_uses_shared_cleanup_authority`: PASSED
+
+      - `test_handle_disconnect_releases_captured_session`: PASSED
+
+      - `test_gateway_shutdown_releases_all_sessions`: PASSED
+
+
+      **Verification**: All tests pass ✅'
   - id: gw_remed.teardown_contracts.replace_vacuous_route_contracts
     name: Replace vacuous HTTP route contracts with falsifiable guarantees
     status: done
