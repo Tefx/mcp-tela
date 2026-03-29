@@ -41486,19 +41486,53 @@ phases:
   - tool_prefix.test
   steps:
   - id: gw_remed.lifecycle_authority.extract_status_authority
-    name: Extract shared lifecycle authority for gateway status surfaces
+    name: Extract single lifecycle/readiness authority for gateway status surfaces
     status: pending
-    description: Fill in src/tela/shell/gateway_lifecycle.py as the single lifecycle/readiness
-      authority, then replace duplicated status derivation in src/tela/shell/gateway.py::gateway_status()
-      and src/tela/shell/http_routes.py::handle_status() with calls through that authority
-      while preserving the documented GET /status schema.
-    verification: Extend shell tests so gateway_status() and handle_status() prove
-      the same lifecycle state, degraded_reason, connected_servers, and active_connections
-      semantics via the shared authority; run targeted pytest plus invar guard on
-      changed files.
-    evidence_template: Paste modified file list, exact pytest commands/results for
-      tests/shell/test_gateway.py and tests/shell/test_http_routes.py, and guard output
-      proving one shared lifecycle authority path now drives both status surfaces.
+    description: 'Fill in src/tela/shell/gateway_lifecycle.py as the only authority
+      for lifecycle/discovery/readiness facts consumed by:
+
+      - src/tela/shell/gateway.py::gateway_status()
+
+      - src/tela/shell/http_routes.py::handle_status()
+
+
+      Scope is limited to status truth extraction and consumer rewiring.
+
+      Do not change startup ordering, warmup admission, teardown cleanup, or HTTP
+      response schema in this step.
+
+
+      Required outputs:
+
+      - one authority surface for lifecycle/discovery/readiness facts
+
+      - both status consumers delegated to that surface
+
+      - documented GET /status schema preserved exactly'
+    verification: '- gateway_status() and GET /status no longer derive lifecycle/readiness
+      independently
+
+      - A single fixture can drive both consumers to the same reported facts
+
+      - Status schema remains unchanged'
+    evidence_template: '## Lifecycle Authority Extraction
+
+      **Authority surface**: <function/class>
+
+      **Consumers migrated**:
+
+      - gateway_status()
+
+      - handle_status()
+
+      **Shared fixture / state snapshot**: <name>
+
+      **Proof both consumers agree**: <assertions or output>'
+    refs:
+    - docs/DESIGN.md
+    - src/tela/shell/gateway_lifecycle.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/http_routes.py
     agent: python-senior
   - id: gw_remed.lifecycle_authority.verify_status_truth
     name: Verify lifecycle authority consistency across CLI and HTTP status
