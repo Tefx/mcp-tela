@@ -43476,3 +43476,8 @@ phases:
   status: locked
   depends_on:
   - pm.p0_verify
+- id: pm.p2_impl
+  name: P2 Description Rewriting Implementation
+  status: locked
+  depends_on:
+  - pm.p2_contract
