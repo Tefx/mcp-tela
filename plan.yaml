@@ -40194,7 +40194,7 @@ phases:
       '
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
-  status: pending
+  status: in_progress
   gate: Implement core naming semantics, shell registry/routing, reload propagation,
     and phase-level verification for the tool-prefix feature.
   depends_on:
@@ -40203,7 +40203,7 @@ phases:
   steps:
   - id: tool_prefix.runtime.implement_core_name_mapping
     name: Implement core tool-prefix name mapping and conflict semantics
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nspec_refs:\n \
       \ - user authoritative input: architecture decisions 1-6\n  - docs/INTERFACES.md#3.1\
       \ Servers\n  - docs/INTERFACES.md#7 MCP Surface\ntouch_paths:\n  - src/tela/core/models.py\n\
@@ -40257,6 +40257,8 @@ phases:
       - Proof: no core path still assumes raw_name is the only externally visible
       name once tool_prefix is present.'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T13:20:37.084675+00:00'
   - id: tool_prefix.runtime.wire_registry_and_call_routing
     name: Wire exposed-name registry and downstream raw-name routing
     status: pending
