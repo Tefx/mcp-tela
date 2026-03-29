@@ -44287,13 +44287,13 @@ phases:
       \ test expectations\n- a89967d5: fix(test): account for builtin tool in test_list_tools_handles_absent_metadata"
 - id: pm.p0_verify
   name: P0 Verification
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p0_impl
   steps:
   - id: pm.p0_verify.retest
     name: P0 green retest
-    status: pending
+    status: claimed
     description: 'Rerun P0 test suite expecting all GREEN after implementation.
 
 
@@ -44391,6 +44391,8 @@ phases:
     - tests/shell/test_builtin_tools.py
     - tests/shell/test_gateway.py
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T20:03:19.025712+00:00'
   - id: pm.p0_verify.gate
     name: P0 gate review
     status: pending
