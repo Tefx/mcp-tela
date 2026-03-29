@@ -42436,7 +42436,7 @@ phases:
       \ passed in 2.61s ✅\n- invar guard passed ✅\n\n**Commit**: 86f8e3a"
   - id: gw_remed.teardown_contracts.verify_cleanup_and_contracts
     name: Verify teardown hardening and route contract strength
-    status: claimed
+    status: done
     description: 'Independent verification for A2/A3.
 
 
@@ -42479,6 +42479,53 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T12:55:29.834782+00:00'
+    done_at: '2026-03-29T12:59:43.180021+00:00'
+    evidence: '## A2/A3 Verification Report
+
+
+      **Cleanup tests**: PASS
+
+      - `tests/repro/test_disconnect_cleanup.py` - 7 tests PASS
+
+      - `tests/shell/test_connection_lifecycle.py` - 1 test PASS (idempotency)
+
+      - `tests/shell/test_gateway_lifecycle_authority.py` - 1 test PASS
+
+      - `tests/shell/test_gateway.py::test_gateway_shutdown_uses_shared_cleanup_authority`
+      - PASS
+
+
+      **Interrupt-path result**: PASS
+
+      - `tests/shell/test_connect_cmd.py` interrupt tests - 4 PASS
+
+      - `tests/shell/test_query_commands_remote_state.py` - 2 PASS
+
+      - `tests/repro/test_hard_interrupt.py` - Tests validate interrupt handling
+
+
+      **Repeated disconnect result**: PASS
+
+      - `test_session_registry_bounded_across_connect_disconnect_cycles` - 20 cycles
+
+      - `test_cleanup_connection_by_id_is_idempotent_by_connection_id` - idempotency
+      confirmed
+
+
+      **Shutdown reuse result**: PASS
+
+      - `test_gateway_shutdown_releases_all_sessions` - all sessions released
+
+      - `test_gateway_shutdown_uses_shared_cleanup_authority` - delegates to cleanup_connection_by_id
+
+
+      **Contract audit result**: PASS
+
+      - invar guard passed with no errors
+
+      - No vacuous identity lambda in core contracts
+
+      - All route handlers have substantive @pre/@post contracts'
   - id: gw_remed.teardown_contracts.gate
     name: Gate A2/A3 teardown and contract remediation
     status: pending
