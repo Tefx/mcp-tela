@@ -42346,7 +42346,7 @@ phases:
     agent: python-executor
   - id: gw_remed.teardown_contracts.replace_vacuous_route_contracts
     name: Replace vacuous HTTP route contracts with falsifiable guarantees
-    status: pending
+    status: claimed
     description: 'Replace tautological @post contracts in src/tela/shell/http_routes.py
       with falsifiable guarantees tied to actual success/error semantics.
 
@@ -42384,6 +42384,8 @@ phases:
     depends_on:
     - gw_remed.teardown_contracts.extract_cleanup_authority
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T12:48:12.788808+00:00'
   - id: gw_remed.teardown_contracts.verify_cleanup_and_contracts
     name: Verify teardown hardening and route contract strength
     status: pending
