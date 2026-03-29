@@ -94,7 +94,9 @@ def test_handle_list_providers_includes_disconnected_server() -> None:
     # Configure 2 servers but only connect 1 via tool_lists
     tela = TelaConfig(
         servers={
-            "fs": ServerConfig(name="fs", command="cmd"),
+            "fs": ServerConfig(
+                name="fs", command="cmd", default_posture=Posture.READ_WRITE
+            ),
             "shell": ServerConfig(name="shell", command="cmd"),
         },
         profiles={
@@ -131,7 +133,7 @@ def test_handle_list_providers_includes_disconnected_server() -> None:
         assert fs_entry["tool_count"] == 1
 
         shell_entry = next(r for r in result if r["name"] == "shell")
-        assert shell_entry["status"] == "disconnected"
+        assert shell_entry["status"] == "failed"
         assert shell_entry["tool_count"] == 0
     finally:
         asyncio.run(gateway_shutdown())
