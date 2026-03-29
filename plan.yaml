@@ -44251,36 +44251,82 @@ phases:
   - id: pm.p1_contract.manifest_header
     name: Manifest header contract
     status: pending
-    description: 'Add contract for get_gateway_surface_instructions() to declare tela_list_providers
-      as built-in tool. Define manifest header format with "Connected at startup:"
-      framing.
+    description: "Add contracts for instructions manifest header and tela_list_providers\
+      \ surface declaration.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
+      \ outputs: signatures, stubs, docstrings\n\n## Deliverable 1: Manifest header\
+      \ function in src/tela/shell/surface_instructions.py\n\nAdd a new function:\n\
+      \n```python\ndef build_manifest_header(\n    servers: dict[str, \"ServerConfig\"\
+      ],\n    connected_names: set[str],\n    tools_by_server: dict[str, list[\"ResolvedTool\"\
+      ]],\n) -> str:\n    \"\"\"Build provider manifest header for instructions.\n\
+      \n    Format: \"Connected at startup: server_a (N tools), server_b (M tools)\"\
+      \n\n    Only connected servers are listed. Disconnected/failed servers are omitted\n\
+      \    from the manifest header (they are discoverable via tela_list_providers).\n\
+      \n    Examples:\n        >>> from tela.core.models import ServerConfig, ResolvedTool\n\
+      \        >>> servers = {\"fs\": ServerConfig(name=\"fs\", command=\"cmd\")}\n\
+      \        >>> connected = {\"fs\"}\n        >>> tools = {\"fs\": [ResolvedTool(name=\"\
+      read_file\", server_name=\"fs\", family=\"fs\")]}\n        >>> header = build_manifest_header(servers,\
+      \ connected, tools)\n        >>> \"Connected at startup:\" in header\n     \
+      \   True\n        >>> \"fs (1 tools)\" in header\n        True\n\n    Args:\n\
+      \        servers: Server name to config mapping from TelaConfig.\n        connected_names:\
+      \ Set of server names with active connections.\n        tools_by_server: Registry\
+      \ tool map (exposed names).\n\n    Returns:\n        Manifest header string.\n\
+      \    \"\"\"\n    raise NotImplementedError\n```\n\nThis is a Core-adjacent pure\
+      \ function (no I/O, operates on data). However, it lives in Shell zone (surface_instructions.py).\
+      \ No @pre/@post required, but doctests are mandatory.\n\n## Deliverable 2: Update\
+      \ get_gateway_surface_instructions() signature\n\nModify the existing function\
+      \ to accept optional manifest context and declare tela_list_providers:\n\n```python\n\
+      def get_gateway_surface_instructions(\n    manifest_header: str | None = None,\n\
+      ) -> Result[str, str]:\n    \"\"\"Return gateway-authoritative runtime instructions\
+      \ text.\n\n    When manifest_header is provided, prepend it to the surface text.\n\
+      \    Updates built-in MCP tools line to include tela_list_providers.\n    \"\
+      \"\"\n    raise NotImplementedError  # stub during contract phase\n```\n\nThe\
+      \ key change: line 16 currently says `\"- Built-in MCP tools: none.\\n\"` —\
+      \ the contract declares this will change to `\"- Built-in MCP tools: `tela_list_providers`.\\\
+      n\"`.\n\n## Constraints\n- build_manifest_header is a pure data function — no\
+      \ I/O, no registry access\n- get_gateway_surface_instructions gains an optional\
+      \ parameter (backward-compatible)\n- The manifest header is prepended BEFORE\
+      \ the surface contract text\n- Callers of get_gateway_surface_instructions need\
+      \ no changes if they pass no args (None default)\n- The \"Connected at startup:\"\
+      \ framing is a snapshot — it reflects startup state, not live state\n\n## Pattern\
+      \ reference\n- Current get_gateway_surface_instructions at line 8 of surface_instructions.py\n\
+      - compose_gateway_and_downstream at line 24 for how gateway text flows into\
+      \ instructions"
+    evidence_template: '## Contract Artifacts
+
+      **build_manifest_header signature** (paste):
+
+      ```
+
+      <full function signature + docstring + NotImplementedError>
+
+      ```
 
 
-      Step type: contract
+      **get_gateway_surface_instructions updated signature** (paste):
 
-      Contract purity: ENFORCED
+      ```
 
-      Contract outputs: signatures, stubs, docstrings
+      <full function signature + docstring>
+
+      ```
 
 
-      Deliverables:
+      **Verification**:
 
-      - Contract/stub for manifest header generation in surface_instructions.py
+      - [ ] build_manifest_header has doctests showing "Connected at startup:" format
 
-      - Format: "Connected at startup: server_a (N tools), server_b (M tools)"
+      - [ ] get_gateway_surface_instructions accepts optional manifest_header param
 
-      - Declaration of tela_list_providers in surface instruction text
+      - [ ] Contract declares tela_list_providers in built-in tools line
 
-      - @pre/@post contracts on new/modified functions'
-    evidence_template: '## Evidence
+      - [ ] Both functions raise NotImplementedError (stubs only)
 
-      - [ ] Manifest header contract defined
-
-      - [ ] tela_list_providers declared in surface text contract
-
-      - [ ] @pre/@post contracts present
+      - [ ] No implementation logic
 
       - [ ] invar guard passes'
+    refs:
+    - src/tela/shell/surface_instructions.py
+    - src/tela/core/models.py
     agent: python-executor
   - id: pm.p1_contract.gate
     name: P1 contract gate review
