@@ -43723,6 +43723,41 @@ phases:
   status: locked
   depends_on:
   - pm.p0_verify
+  steps:
+  - id: pm.p1_contract.manifest_header
+    name: Manifest header contract
+    status: pending
+    description: 'Add contract for get_gateway_surface_instructions() to declare tela_list_providers
+      as built-in tool. Define manifest header format with "Connected at startup:"
+      framing.
+
+
+      Step type: contract
+
+      Contract purity: ENFORCED
+
+      Contract outputs: signatures, stubs, docstrings
+
+
+      Deliverables:
+
+      - Contract/stub for manifest header generation in surface_instructions.py
+
+      - Format: "Connected at startup: server_a (N tools), server_b (M tools)"
+
+      - Declaration of tela_list_providers in surface instruction text
+
+      - @pre/@post contracts on new/modified functions'
+    evidence_template: '## Evidence
+
+      - [ ] Manifest header contract defined
+
+      - [ ] tela_list_providers declared in surface text contract
+
+      - [ ] @pre/@post contracts present
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.p1_impl
   name: P1 Instructions Manifest Implementation
   status: locked
