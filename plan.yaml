@@ -43802,6 +43802,32 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p1_impl.gate
+    name: P1 implementation gate review
+    status: pending
+    description: 'P1 gate review. Verify:
+
+      1. Manifest format matches contract spec
+
+      2. Staleness acknowledgment present (manifest is snapshot at startup)
+
+      3. Surface text accurately describes tela_list_providers
+
+      4. No regressions in existing tests'
+    evidence_template: '## Evidence
+
+      - [ ] Manifest format correct
+
+      - [ ] Staleness acknowledged
+
+      - [ ] Surface text accurate
+
+      - [ ] Tests pass
+
+      - Blockers: (list or NONE)'
+    depends_on:
+    - pm.p1_impl.manifest_and_surface
+    agent: gate-reviewer
 - id: pm.p2_contract
   name: P2 Description Rewriting Contracts
   status: locked
