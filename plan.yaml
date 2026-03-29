@@ -43504,6 +43504,49 @@ phases:
   status: locked
   depends_on:
   - pm.p0_contract
+  steps:
+  - id: pm.p0_test.builtin_tests
+    name: P0 expected-red tests for built-in tool
+    status: pending
+    description: 'Write expected-red tests for builtin tool handler and gateway integration.
+
+
+      Step type: test
+
+      Step intent: test_define_red
+
+      Expected result: red
+
+
+      Test coverage:
+
+      1. test_handle_list_providers_returns_correct_shape — handler returns list of
+      ProviderInfo dicts
+
+      2. test_handle_list_providers_filters_by_profile — profile enforcement filters
+      output
+
+      3. test_gateway_list_tools_includes_builtin — _list_tools response merges built-in
+      tools
+
+      4. test_gateway_call_tool_dispatches_builtin — _call_tool routes tela_list_providers
+      to built-in handler
+
+
+      Files: tests/shell/test_builtin_tools.py (new), tests/shell/test_gateway.py
+      (extend)
+
+      Expected: RED before implementation, these tests define the acceptance gap.'
+    evidence_template: '## Evidence
+
+      - [ ] Tests written and importable
+
+      - [ ] Tests fail with expected errors (NotImplementedError or missing function)
+
+      - [ ] No product code modified
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.p0_impl
   name: P0 Built-in Tool Implementation
   status: locked
