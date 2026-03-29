@@ -38743,7 +38743,7 @@ phases:
       **Issues Found**: 1 blocker, 2 should-fix items'
   - id: conn_v2.system_wiring.entrypoint_integration
     name: Wire connect, serve, status, and reload entrypoints to the new runtime modules
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.2.1\
       \ GET /status Response Schema\n  - docs/USAGE.md#Running tela > tela connect\n\
@@ -38789,6 +38789,8 @@ phases:
     depends_on:
     - conn_v2.ux.conformance_review
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T04:16:00.172405+00:00'
   - id: conn_v2.ux.impl_messages
     name: Implement startup, shutdown, and diagnostics messaging across host surfaces
     status: done
