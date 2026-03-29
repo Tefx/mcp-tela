@@ -40294,7 +40294,7 @@ phases:
       **Commit**: afc05f1'
   - id: tool_prefix.runtime.wire_registry_and_call_routing
     name: Wire exposed-name registry and downstream raw-name routing
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - user authoritative input: architecture decisions 1-4, 6\n  -\
       \ docs/INTERFACES.md#6.2 Per-call authorization\n  - docs/INTERFACES.md#7 MCP\
@@ -40373,6 +40373,47 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T13:24:13.405314+00:00'
+    done_at: '2026-03-29T13:28:51.943153+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```bash
+
+      uv run pytest -q tests/core/test_family.py tests/shell/test_downstream.py tests/shell/test_upstream.py
+      -k "tool_prefix or prefixed or raw_name or handle_tools_call or connect_all
+      or get_tool_server or routes_exposed_names_to_raw_downstream_names or exposes_distinct_prefixed_names
+      or matches_tool_override_on_raw_name"
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      26 passed, 93 deselected in 0.58s
+
+      ```
+
+
+      **Path exercised**: resolve_tools -> DownstreamRegistry -> upstream tools/call
+      -> downstream call_tool(raw_name)
+
+
+      **Files modified**:
+
+      - src/tela/shell/upstream.py
+
+      - src/tela/shell/upstream_utils.py
+
+      - tests/shell/test_upstream.py
+
+
+      **Verification**: 119 passed ✅
+
+      **Commit**: a82dd34'
   - id: tool_prefix.runtime.integrate_reload_prefix_updates
     name: Integrate reload handling for prefix-driven tool-surface changes
     status: pending
