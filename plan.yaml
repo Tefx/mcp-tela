@@ -41691,3 +41691,17 @@ phases:
     evidence_template: Paste ADR heading list, note the deferred-vs-current distinction,
       and cite where states, transition rules, and adoption triggers are captured.
     agent: software-architect
+  - id: gw_remed.plan_c_adr.verify_adr_alignment
+    name: Verify ADR-004 matches the approved future-direction scope
+    status: pending
+    description: Independently review ADR-004 to confirm it records Plan C as future
+      architecture only and covers all required state, authority, admission, and failure-semantics
+      topics.
+    verification: Check ADR scope completeness and ensure it does not silently redefine
+      the current implementation contract.
+    evidence_template: 'Provide a checklist against: states, adoption triggers, transition
+      rules, source-of-truth rules, connection admission rules, and interrupt/crash
+      semantics.'
+    depends_on:
+    - gw_remed.plan_c_adr.write_future_state_machine_adr
+    agent: spec-verifier
