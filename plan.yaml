@@ -43547,6 +43547,21 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p0_test.gate
+    name: P0 test gate review
+    status: pending
+    description: Gate review of P0 test definitions. Verify tests cover handler shape,
+      profile filtering, gateway list_tools merge, and gateway call_tool dispatch.
+    evidence_template: '## Evidence
+
+      - [ ] All 4 test scenarios covered
+
+      - [ ] Tests are red for correct reasons
+
+      - [ ] No product code changes in test step'
+    depends_on:
+    - pm.p0_test.builtin_tests
+    agent: gate-reviewer
 - id: pm.p0_impl
   name: P0 Built-in Tool Implementation
   status: locked
