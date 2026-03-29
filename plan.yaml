@@ -40773,3 +40773,16 @@ phases:
   gate: 'Gate passes: invar guard --all reports 0 errors, gateway.py <= 700 lines'
   depends_on:
   - conn_v2.integration_validate
+  steps:
+  - id: conn_v2.gate1_fix.remediation
+    name: Remediate gateway.py size and complexity blockers
+    status: pending
+    description: ''
+    verification: '1. `wc -l src/tela/shell/gateway.py` → must be <= 700
+
+      2. `uv run invar guard --all 2>&1` → complexity warnings must be <= 5
+
+      3. `uv run invar tools --filter shell --format concise 2>/dev/null | grep -E
+      ''shell_too_complex|file_size''` → no gateway.py or serve_cmd.py entries in
+      output'
+    agent: python-executor
