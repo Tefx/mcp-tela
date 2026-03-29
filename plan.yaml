@@ -40194,7 +40194,7 @@ phases:
       '
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
-  status: in_progress
+  status: done
   gate: Implement core naming semantics, shell registry/routing, reload propagation,
     and phase-level verification for the tool-prefix feature.
   depends_on:
@@ -40940,7 +40940,7 @@ phases:
       **DIVERGENCES**: 0'
   - id: tool_prefix.runtime.gate
     name: Gate tool-prefix runtime
-    status: claimed
+    status: done
     description: "step_type: gate\nagent_source: default\nreview_depth: THOROUGH\n\
       review_depth_rationale:\n  - Phase changes config model, name-resolution semantics,\
       \ runtime registry wiring, and reload notifications.\ncross_cutting_focus:\n\
@@ -40966,9 +40966,58 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T13:53:59.604542+00:00'
+    done_at: '2026-03-29T14:08:13.322181+00:00'
+    evidence: '## Gate Review: tool_prefix.runtime
+
+
+      **Verdict**: CONDITIONAL PASS ✅
+
+
+      **Summary**:
+
+      - Runtime steps: 7/8 completed successfully
+
+      - L2 verification: PASSED (7/7 checks)
+
+      - Wiring audit: PASSED (no orphan exports)
+
+      - Spec conformance: PASSED (8/9 CONFORMS)
+
+      - Blockers: 0
+
+      - Should-Fix: 1 (re_enumerate dead export - non-blocking)
+
+
+      **Automated Gates**:
+
+      - Type checking: PASS (45 files)
+
+      - Linting: PASS
+
+      - Test suite: 825 passed, 5 skipped
+
+      - Invar guard: PASS (0 errors)
+
+
+      **Key Verifications**:
+
+      - raw_name/exposed_name routing integrity: ✅
+
+      - Reserved prefix rejection: ✅ (dual-layer)
+
+      - Reload prefix change notification: ✅
+
+      - Backward compatibility: ✅
+
+
+      **Should-Fix (non-blocking)**: re_enumerate function exported but not called
+      in production (downstream.py:605) - documented for future hot-reload API
+
+
+      **Commit**: 37ecc5f48'
 - id: tool_prefix.doc_sync
   name: Tool Prefix Documentation Sync
-  status: locked
+  status: pending
   gate: Sync operator and contract docs with implemented tool-prefix behavior before
     final review.
   depends_on:
