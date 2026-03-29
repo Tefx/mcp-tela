@@ -41125,7 +41125,7 @@ phases:
       **Commit**: ff0b724'
 - id: tool_prefix.deep_review
   name: Tool Prefix Deep Review
-  status: in_progress
+  status: done
   gate: Final independent multi-agent audit of wiring, spec conformance, architecture
     safety, contract strength, and black-box behavior for tool prefixes.
   depends_on:
@@ -41418,7 +41418,7 @@ phases:
       \ gap."
   - id: tool_prefix.deep_review.gate
     name: Final gate for tool-prefix feature
-    status: claimed
+    status: done
     description: "step_type: gate\nagent_source: default\nreview_depth: THOROUGH\n\
       review_depth_rationale:\n  - Feature changes external configuration, upstream\
       \ MCP naming, downstream routing, and reload semantics.\ncross_cutting_focus:\n\
@@ -41442,6 +41442,60 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T14:50:18.643484+00:00'
+    done_at: '2026-03-29T15:02:06.590318+00:00'
+    evidence: '## Gate Verdict
+
+
+      **Verdict**: FAIL (BLOCKING ISSUES FOUND)
+
+
+      **Summary**:
+
+      - All deep-review steps: Completed with findings documented
+
+      - Blockers found: 3
+
+      - Non-blocking issues: 3
+
+      - Ready for completion: No
+
+
+      **Automated Gate Results**:
+
+      - Type checking (mypy): PASS
+
+      - Linting (ruff): FAIL - duplicate Literal import
+
+      - Test suite: FAIL - collection error (duplicate module)
+
+      - Invar guard: FAIL - budget exceeded (18/16)
+
+
+      **Blocking Issues**:
+
+      1. B1: Duplicate test module - tests/core/test_tool_prefix_contract.py and tests/contracts/test_tool_prefix_contract.py
+
+      2. B2: Duplicate Literal import - downstream.py lines 18 and 23
+
+      3. B3: Invar escape hatch budget exceeded (18/16)
+
+
+      **Should-Fix Issues**:
+
+      1. S1: AuditEntry lacks raw_name field
+
+      2. S2: resolve_tools doctests incomplete
+
+      3. S3: Full config reload commits before disconnect
+
+
+      **Non-blocking**:
+
+      - 8/10 black-box tests PASS
+
+      - All decisions 1-6 conform
+
+      - Spec conformance PASS'
 - id: conn_v2.preflight_reconnect
   name: Reconnect Enumeration Correctness Fix
   status: done
