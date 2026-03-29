@@ -39976,7 +39976,7 @@ phases:
   steps:
   - id: tool_prefix.test.add_regressions
     name: Add tool-prefix contract and reload regressions
-    status: claimed
+    status: done
     description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
       \ red\nagent_source: default\nspec_fixture_conformance: required\nspec_refs:\n\
       \  - user authoritative input: verification points 1-7\n  - docs/INTERFACES.md#3.1\
@@ -40015,6 +40015,70 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T09:01:57.220131+00:00'
+    done_at: '2026-03-29T09:24:21.213060+00:00'
+    evidence: 'Pre-implementation test regressions added. Result: 9 failed (expected
+      red), 4 passed.
+
+
+      **New file:** `tests/core/test_tool_prefix_contract.py` (392 lines)
+
+
+      **Expected red (9 failures — pre-implementation gaps):**
+
+      1. `test_omitted_tool_prefix_keeps_raw_name_as_exposed_name` — raw_name not
+      set
+
+      2. `test_distinct_prefixes_allow_same_raw_name_from_different_servers` — prefix
+      not applied
+
+      3. `test_same_prefix_same_raw_name_is_conflict` — prefix not applied
+
+      4. `test_tool_overrides_match_raw_names_not_prefixed_names` — prefix not applied
+
+      5. `test_resolved_tool_carries_raw_name_for_downstream_routing` — raw_name not
+      set
+
+      6. `test_resolved_tool_raw_name_none_when_prefix_omitted` — raw_name is None
+
+      7. `test_tool_prefix_change_detected_as_tool_surface_change` — prefix not applied
+
+      8. `test_tela_prefix_is_reserved_and_rejected` — validation not implemented
+
+      9. `test_tela_prefix_rejected_even_with_trailing_dot` — validation not implemented
+
+
+      **Passing tests (already satisfied by contract):**
+
+      - `test_spec_fixture_exercises_documented_server_config_shape` ✓
+
+      - `test_server_config_accepts_spec_fixture` ✓
+
+      - `test_prefixed_exposed_name_not_used_for_override_lookup` ✓
+
+      - `test_tela_config_with_prefixed_servers` ✓
+
+
+      **All 7 verification points covered.** Spec fixture conforms to docs/INTERFACES.md
+      §3.1.
+
+
+      **Downstream implementation owner:** tool_prefix.runtime.*
+
+
+      **Verification:**
+
+      ```bash
+
+      uv run pytest tests/core/test_tool_prefix_contract.py -q
+
+      # → 9 failed, 4 passed
+
+      ```
+
+
+      **Artifact:** commit on vectl/step-tool_prefix.test.add_regressions (worktree)
+
+      '
   - id: tool_prefix.test.gate
     name: Gate tool-prefix tests
     status: pending
