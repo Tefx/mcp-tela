@@ -39504,7 +39504,7 @@ phases:
     claimed_at: '2026-03-29T08:43:45.283878+00:00'
 - id: tool_prefix.contract
   name: Tool Prefix Contracts
-  status: pending
+  status: in_progress
   gate: Freeze contract and naming semantics for config-driven tool prefixes before
     tests or runtime wiring.
   depends_on:
@@ -39512,7 +39512,7 @@ phases:
   steps:
   - id: tool_prefix.contract.define_semantics
     name: Define tool-prefix contract and mapping semantics
-    status: pending
+    status: claimed
     description: "step_type: contract\nagent_source: default\ncontract_purity: ENFORCED\n\
       contract_outputs:\n  - signatures\n  - type_defs\n  - interfaces\n  - stubs\n\
       spec_refs:\n  - user authoritative input: tool_prefix feature goals + decisions\
@@ -39559,6 +39559,8 @@ phases:
 
       - No substantive implementation logic is introduced in this contract step.'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-03-29T08:43:53.042865+00:00'
   - id: tool_prefix.contract.gate
     name: Gate tool-prefix contracts
     status: pending
