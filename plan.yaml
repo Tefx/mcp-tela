@@ -42130,16 +42130,35 @@ phases:
     - docs/ADR-004-gateway-startup-state-machine.md
     agent: software-architect
   - id: gw_remed.plan_c_adr.verify_adr_alignment
-    name: Verify ADR-004 matches the approved future-direction scope
+    name: Verify ADR-004 stays within approved deferred scope
     status: pending
-    description: Independently review ADR-004 to confirm it records Plan C as future
-      architecture only and covers all required state, authority, admission, and failure-semantics
-      topics.
-    verification: Check ADR scope completeness and ensure it does not silently redefine
-      the current implementation contract.
-    evidence_template: 'Provide a checklist against: states, adoption triggers, transition
-      rules, source-of-truth rules, connection admission rules, and interrupt/crash
-      semantics.'
+    description: 'Independent spec/design review of ADR-004.
+
+
+      Reject if the ADR:
+
+      - reopens the approved architecture basis
+
+      - changes Plan A obligations
+
+      - omits required future-state topics
+
+      - fails to mark Plan C as deferred'
+    verification: '- Deferred-only scope confirmed
+
+      - Required topics confirmed
+
+      - No present-tense implementation obligations added'
+    evidence_template: '## ADR Alignment Review
+
+      **Deferred-only scope**: pass/fail
+
+      **Architecture-basis conflict**: none|found
+
+      **Missing required topics**: <list or none>'
+    refs:
+    - docs/ADR-004-gateway-startup-state-machine.md
+    - docs/DESIGN.md
     depends_on:
     - gw_remed.plan_c_adr.write_future_state_machine_adr
     agent: spec-verifier
