@@ -43976,26 +43976,111 @@ phases:
   - id: pm.p0_impl.gateway_wiring
     name: Wire built-in tools into gateway
     status: pending
-    description: "Wire built-in tools into gateway. This is the integration step that\
-      \ depends on the three parallel implementation steps.\n\nYOUR SCOPE:\n- Register\
-      \ built-in tools in gateway_prepare_startup()\n- Merge built-in tools into _list_tools\
-      \ response\n- Add dispatch branch in _call_tool before registry lookup for built-in\
-      \ tool names\n- Add L2 audit logging for built-in tool calls\n\nUPSTREAM ARTIFACTS:\n\
-      \  - src/tela/shell/gateway.py — gateway lifecycle is AUTHORITATIVE\n  - src/tela/shell/upstream.py\
-      \ — upstream MCP server is AUTHORITATIVE\n  - src/tela/shell/builtin_tools.py\
-      \ — BUILTIN_TOOLS schema and handler from contract/impl steps\n\nStep type:\
-      \ implementation (serial integration)"
-    evidence_template: '## Evidence
+    description: "Wire built-in tools into gateway startup, list_tools, and call_tool\
+      \ paths. This is the serial integration step depending on all three parallel\
+      \ implementation steps.\n\nUPSTREAM ARTIFACTS:\n  - src/tela/shell/gateway.py\
+      \ — gateway_prepare_startup, _wire_upstream_handlers are AUTHORITATIVE\n  -\
+      \ src/tela/shell/upstream.py — handle_tools_list, handle_tools_call are AUTHORITATIVE\n\
+      \  - src/tela/shell/builtin_tools.py — BUILTIN_TOOLS, BUILTIN_TOOL_NAMES, handle_list_providers\
+      \ from contract/impl\n\nYOUR SCOPE: Four wiring changes across gateway.py and\
+      \ upstream.py.\n\n## Change 1: Register built-in tools at startup (src/tela/shell/gateway.py)\n\
+      \nIn `gateway_prepare_startup()` (line 594), after `_register_profiles_resource(upstream_server)`\
+      \ (line 610), add:\n\n```python\n    from tela.shell.builtin_tools import BUILTIN_TOOLS\n\
+      \    logger.info(\"Registered %d built-in tools\", len(BUILTIN_TOOLS))\n```\n\
+      \nNo actual registration needed — built-in tools are injected at list/call time,\
+      \ not stored in the registry. The log line documents startup awareness.\n\n\
+      ## Change 2: Merge built-in tools into _list_tools (src/tela/shell/gateway.py)\n\
+      \nIn `_wire_upstream_handlers()` (line 341), inside the `_list_tools()` handler\
+      \ (line 382), BEFORE the return statement at line 396, prepend built-in tools:\n\
+      \n```python\n        from tela.shell.builtin_tools import BUILTIN_TOOLS\n  \
+      \      builtin_mcp_tools = [\n            mcp_types.Tool(\n                name=bt[\"\
+      name\"],\n                inputSchema=bt[\"inputSchema\"],\n               \
+      \ description=bt.get(\"description\", \"\"),\n            )\n            for\
+      \ bt in BUILTIN_TOOLS\n        ]\n        # Return built-in tools first, then\
+      \ downstream tools\n        return builtin_mcp_tools + [\n            mcp_types.Tool(\n\
+      \                name=tool[\"name\"],\n                ...  # existing downstream\
+      \ tool conversion\n            )\n            for tool in filtered_tools\n \
+      \       ]\n```\n\n## Change 3: Dispatch built-in tool calls (src/tela/shell/gateway.py)\n\
+      \nIn `_wire_upstream_handlers()`, inside the `_call_tool()` handler (line 408),\
+      \ BEFORE forwarding to `handle_tools_call()` (line 413), add:\n\n```python\n\
+      \        from tela.shell.builtin_tools import BUILTIN_TOOL_NAMES, handle_list_providers\n\
+      \        if tool_name in BUILTIN_TOOL_NAMES:\n            # Built-in tool: dispatch\
+      \ directly, bypass downstream routing\n            if tool_name == \"tela_list_providers\"\
+      :\n                providers = await handle_list_providers()\n             \
+      \   return mcp_types.CallToolResult(\n                    content=[mcp_types.TextContent(type=\"\
+      text\", text=json.dumps(providers))],\n                )\n            raise\
+      \ RuntimeError(f\"UNKNOWN_BUILTIN: {tool_name}\")\n```\n\n## Change 4: L2 audit\
+      \ logging for built-in calls (src/tela/shell/gateway.py)\n\nIn the built-in\
+      \ dispatch branch (Change 3), add audit logging:\n\n```python\n        from\
+      \ tela.shell.audit import build_audit_entry, audit_write\n        from tela.core.models\
+      \ import AuditLevel, EnforcementResult, EnforcementVerdict\n        # After\
+      \ getting providers:\n        entry_result = build_audit_entry(\n          \
+      \  level=AuditLevel.L2,\n            connection=connection,\n            tool_name=tool_name,\n\
+      \            server_name=\"tela\",  # built-in tools belong to \"tela\" pseudo-server\n\
+      \            result=EnforcementResult(verdict=EnforcementVerdict.ALLOW),\n \
+      \           latency_ms=<measured>,\n            arguments=arguments,\n     \
+      \   )\n        if entry_result.is_ok and entry_result.value is not None:\n \
+      \           await audit_write(entry_result.value)\n```\n\n## Key constraints\n\
+      - Built-in tools are NOT stored in DownstreamRegistry — they are injected at\
+      \ list/call time\n- _call_tool checks BUILTIN_TOOL_NAMES BEFORE registry lookup\
+      \ to prevent TOOL_NOT_FOUND\n- Built-in tools always appear in list_tools regardless\
+      \ of profile (they are gateway-owned)\n- Audit uses server_name=\"tela\" for\
+      \ built-in tool calls\n- handle_list_providers is async — use await\n\n## Pattern\
+      \ reference\n- _register_profiles_resource (line 321) for how gateway registers\
+      \ built-in surfaces\n- handle_tools_call (upstream.py line 513) for the existing\
+      \ call dispatch pattern\n- build_audit_entry (audit.py line 43) for audit entry\
+      \ construction\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION\
+      \ step. All four wiring points must be functional:\n1. Startup log acknowledges\
+      \ built-in tools\n2. _list_tools returns built-in + downstream tools\n3. _call_tool\
+      \ dispatches tela_list_providers correctly\n4. L2 audit entry recorded for built-in\
+      \ calls\n\nStep type: implementation (serial integration)\ntags: [\"integration\"\
+      ]"
+    evidence_template: '## Integration Evidence
 
-      - [ ] Built-in tools registered in gateway startup
 
-      - [ ] _list_tools merges built-in tools
+      **Command or test exercising the full path**:
 
-      - [ ] _call_tool dispatches tela_list_providers to handler
+      ```
 
-      - [ ] L2 audit logging for built-in calls
+      pytest tests/shell/test_builtin_tools.py tests/shell/test_gateway.py -v -k "builtin"
 
-      - [ ] invar guard passes'
+      ```
+
+
+      **Actual output** (paste, not "tests pass"):
+
+      ```
+
+      <stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: builtin_tools.py -> gateway.py::_list_tools -> upstream
+      mcp_types.Tool list
+
+      **Path exercised**: gateway.py::_call_tool -> builtin_tools.py::handle_list_providers
+      -> audit_write
+
+
+      **Wiring points confirmed**:
+
+      - [ ] gateway_prepare_startup logs built-in tool count
+
+      - [ ] _list_tools includes tela_list_providers in response
+
+      - [ ] _call_tool dispatches tela_list_providers before registry lookup
+
+      - [ ] Audit entry with server_name="tela" recorded at L2
+
+      - [ ] invar guard passes
+
+      - [ ] No regressions in existing test suite: pytest tests/ -x'
+    refs:
+    - src/tela/shell/gateway.py
+    - src/tela/shell/upstream.py
+    - src/tela/shell/builtin_tools.py
+    - src/tela/shell/audit.py
     depends_on:
     - pm.p0_impl.builtin_handler
     - pm.p0_impl.downstream_accessor
