@@ -89,6 +89,17 @@ class ServerConfig(BaseModel):
     - ``command`` set → stdio
     - ``url`` set (default) → Streamable HTTP (MCP 2025-03-26+)
     - ``url`` set + ``transport == "sse"`` → SSE (legacy)
+
+    Tool-prefix acceptance semantics:
+    - ``tool_prefix`` is applied during registration/resolution, never at
+      downstream call time.
+    - ``tool_overrides`` remain keyed by raw downstream tool names even when
+      ``tool_prefix`` changes the exposed upstream name.
+    - ``tool_prefix=None`` preserves backward-compatible exposed names.
+    - ``tool_prefix="tela."`` is reserved-input and must be rejected.
+    - Prefix-only changes count as tool-surface changes because upstream
+      discovery, conflict detection, reload diffs, and observability are keyed
+      to the exposed tool set.
     """
 
     name: str
@@ -98,7 +109,13 @@ class ServerConfig(BaseModel):
     transport: Literal["http", "sse"] | None = None
     env: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
+    tool_prefix: str | None = None
+    # NOTE: Acceptance contract only. Prefix is part of exposed-name resolution
+    # and must not be applied lazily at tools/call routing time.
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
+    # NOTE: Override keys remain raw downstream tool names, not prefixed
+    # exposed names, so routing and classification continue to bind to the
+    # downstream-advertised inventory.
     default_posture: Posture = Posture.NONE
     instructions: bool | str | None = None
 
@@ -268,9 +285,25 @@ class CapabilityToken(BaseModel):
 
 
 class ResolvedTool(BaseModel):
-    """A tool after family mapping and classification."""
+    """A tool after family mapping, name exposure, and classification.
+
+    Acceptance semantics for tool-prefix work:
+    - ``name`` is the final exposed upstream tool name used by tools/list,
+      tools/call lookup, conflict detection, and reload diff semantics.
+    - ``raw_name`` stores the downstream-advertised tool name before any
+      configured prefix is applied.
+    - Downstream routing continues to target ``raw_name``; callers must not
+      derive routing names by stripping ``name`` at call time.
+    - Key-path observability for this feature must preserve
+      ``server_name + raw_name + name`` together anywhere audit/status/log
+      evidence is claimed.
+    """
 
     name: str
+    raw_name: str | None = None
+    # NOTE: ``None`` preserves compatibility for pre-contract instances; the
+    # authoritative interface for prefixed resolution expects this to carry the
+    # downstream-advertised name.
     server_name: str
     family: str
     posture: Posture | None = None

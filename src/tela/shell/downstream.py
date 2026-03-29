@@ -74,6 +74,7 @@ DOWNSTREAM_CONVERGENCE_CONTRACT = DownstreamConvergenceContract(
 DOWNSTREAM_CONVERGENCE_BEHAVIORAL_NOTES: tuple[str, ...] = (
     "Downstream convergence is established by successful connect_all, reload acceptance, or reconnect payload application.",
     "Lockfile discovery proves endpoint discoverability only; it does not prove downstream sync.",
+    "Resolved-tool routing contracts must preserve server_name + raw_name + exposed_name together on the key path.",
 )
 
 
@@ -233,6 +234,10 @@ async def _handle_tools_list_changed(
 
     Contract role: event-entry adapter.
     Enumeration policy: requires_new_enumeration.
+
+    # NOTE: tools/list_changed semantics are evaluated against the exposed tool
+    # set after resolution/registration, not against a raw downstream inventory
+    # snapshot.
     """
 
     async with _registry_lock:

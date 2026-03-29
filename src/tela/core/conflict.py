@@ -86,6 +86,11 @@ def detect_conflicts(
 
     Returns:
         List of ToolConflict instances for conflicting tool names.
+
+    # NOTE: Conflict detection keys off each tool's final exposed upstream name
+    # (``ResolvedTool.name``), not the raw downstream inventory name.
+    # NOTE: Reserved-prefix rejection applies to any exposed name produced by a
+    # downstream raw name, a configured tool_prefix, or their combination.
     """
 
     tool_owners: dict[str, list[str]] = defaultdict(list)

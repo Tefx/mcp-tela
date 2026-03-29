@@ -102,6 +102,16 @@ def resolve_tools(
 
     Returns:
         List of ResolvedTools.
+
+    # NOTE: Contract semantics only. Any configured ``ServerConfig.tool_prefix``
+    # is applied here during registration/resolution, not later at tools/call
+    # routing time.
+    # NOTE: ``ResolvedTool.raw_name`` is the downstream-advertised inventory
+    # name. ``ResolvedTool.name`` is the final exposed upstream name.
+    # NOTE: ``server_config.tool_overrides`` continue to match raw downstream
+    # names even when the exposed name is prefixed.
+    # NOTE: Producing ``tela.`` through prefix + downstream name composition is
+    # reserved-prefix input and must be rejected by the resolution path.
     """
 
     resolved = []

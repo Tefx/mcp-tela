@@ -1,7 +1,9 @@
 """Upstream MCP handlers plus session capture/notification contracts.
 
 Implements initialize, tools/list, and tools/call with enforcement, and tracks
-captured sessions for tools/list_changed notifications.
+captured sessions for tools/list_changed notifications. Tool-prefix contract:
+upstream uses exposed names from the resolved registry; downstream routing stays
+bound to ``ResolvedTool.raw_name`` rather than prefix-stripping at call time.
 """
 
 from __future__ import annotations

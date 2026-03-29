@@ -14,6 +14,12 @@ class DownstreamRegistry:
 
     Provides lookup by tool name and server name. The registry is populated
     during connect_all and can be re-enumerated for hot reload.
+
+    Acceptance semantics for tool-prefix contract:
+    - Registry keys are final exposed upstream names (``ResolvedTool.name``).
+    - Registry entries must retain ``server_name``, ``raw_name``, and exposed
+      ``name`` together so downstream routing and audit/status/log evidence can
+      report the full mapping on the key path.
     """
 
     def __init__(self) -> None:
@@ -21,7 +27,12 @@ class DownstreamRegistry:
         self._tool_to_server: dict[str, str] = {}
 
     def register(self, server_name: str, tools: list[ResolvedTool]) -> None:
-        """Register resolved tools for a server, updating the flat lookup."""
+        """Register resolved tools for a server, updating the flat lookup.
+
+        # NOTE: Exposed-name registration is authoritative for upstream
+        # ``tools/list`` and ``tools/call`` lookup. Raw downstream names remain
+        # carried on each ``ResolvedTool`` for routing and observability.
+        """
         self.unregister(server_name)
         self._tools_by_server[server_name] = tools
         for tool in tools:
@@ -39,11 +50,11 @@ class DownstreamRegistry:
         return dict(self._tools_by_server)
 
     def get_tool_server(self, tool_name: str) -> str | None:
-        """Look up which server owns a given tool name."""
+        """Look up which server owns a final exposed tool name."""
         return self._tool_to_server.get(tool_name)
 
     def get_tool(self, tool_name: str) -> ResolvedTool | None:
-        """Look up a resolved tool by name."""
+        """Look up a resolved tool by final exposed upstream name."""
         server = self._tool_to_server.get(tool_name)
         if server is None:
             return None

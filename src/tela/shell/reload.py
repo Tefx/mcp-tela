@@ -135,6 +135,7 @@ RECONNECT_ENUMERATION_CONTRACT = ReconnectEnumerationContract(
 RELOAD_BEHAVIORAL_NOTES: tuple[str, ...] = (
     "Accepted reload updates downstream convergence state but do not redefine discovery truth.",
     "Reconnect payloads may already contain fresh raw_tools and therefore short-circuit duplicate enumeration.",
+    "Reload change detection and notification semantics are defined over the exposed tool set after resolution, not raw inventory snapshots.",
 )
 
 
@@ -150,7 +151,12 @@ class _RegistrySingleServerConvergenceKernel:
         *,
         trigger: ConvergenceTrigger,
     ) -> Result[SingleServerConvergenceResult, str]:
-        """Apply one server update with resolve/register/conflict/rollback semantics."""
+        """Apply one server update with resolve/register/conflict/rollback semantics.
+
+        # NOTE: Acceptance contract only. Resolve/register operates on final
+        # exposed names, while retained ``ResolvedTool.raw_name`` values remain
+        # the authoritative downstream routing names for later call dispatch.
+        """
 
         async with _registry_lock:
             registry = get_registry()
@@ -216,6 +222,12 @@ async def on_tools_changed(
     3. Re-run conflict detection against all servers
     4. No conflict: update resolved tool set, notify upstream via callback
     5. Conflict: reject change, keep previous tools, emit TOOL_CONFLICT warning
+
+    Acceptance semantics:
+    - A prefix-only exposed-name change counts as a tool-surface change even if
+      the raw downstream inventory is unchanged.
+    - Conflict checks and tools/list_changed notification semantics are keyed to
+      the exposed tool set after resolution.
 
     Active upstream connections are NOT dropped during this process.
 
