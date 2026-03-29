@@ -44789,15 +44789,45 @@ phases:
   - id: pm.p2_impl.gate
     name: P2 implementation gate review
     status: pending
-    description: 'P2 gate review. Verify:
+    description: 'P2 gate review. Independent reviewer verifies description rewriting.
 
-      1. No false positives (partial name matches, cross-server leaks)
 
-      2. Opt-in behavior preserved (default False)
+      review_depth: STANDARD
 
-      3. Core zone compliance (no I/O in rewrite logic)
 
-      4. All tests pass'
+      ## Gate criteria
+
+
+      1. **No false positives**: non-backtick-quoted tool names are NOT replaced
+
+      2. **No cross-server leaks**: backtick-quoted names from OTHER servers are NOT
+      replaced
+
+      3. **Opt-in behavior**: rewrite_descriptions=False (default) means no rewriting
+      occurs
+
+      4. **tool_prefix=None guard**: when tool_prefix is None, no rewriting even if
+      rewrite_descriptions=True
+
+      5. **Core zone compliance**: rewrite_tool_description has no I/O imports, only
+      stdlib re
+
+      6. **Contract preservation**: @pre/@post on rewrite_tool_description match contract
+      step
+
+      7. **Pydantic immutability**: ResolvedTool updated via model_copy, not direct
+      mutation
+
+      8. **All tests pass**: pytest tests/ -x, invar guard clean
+
+
+      ## Specific regression check
+
+      - Run existing resolve_tools doctests to verify no behavior change for servers
+      without rewrite_descriptions
+
+      - Verify that the existing tool_prefix "tela." rejection still works after the
+      code change'
     evidence_template: '## Evidence
 
       - [ ] No false positives
@@ -44809,6 +44839,9 @@ phases:
       - [ ] Tests pass
 
       - Blockers: (list or NONE)'
+    refs:
+    - src/tela/core/family.py
+    - src/tela/core/models.py
     depends_on:
     - pm.p2_impl.rewrite_logic
     agent: gate-reviewer
