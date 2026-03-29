@@ -39622,7 +39622,7 @@ phases:
       '
   - id: tool_prefix.contract.gate
     name: Gate tool-prefix contracts
-    status: pending
+    status: claimed
     description: "step_type: gate\nagent_source: default\nreview_depth: STANDARD\n\
       review_depth_rationale:\n  - Feature changes config contract, conflict semantics,\
       \ and runtime naming surfaces.\nVerification scope: phase-check protecting downstream\
@@ -39639,6 +39639,8 @@ phases:
     depends_on:
     - tool_prefix.contract.define_semantics
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T08:54:31.280967+00:00'
 - id: tool_prefix.test
   name: Tool Prefix Tests
   status: locked
