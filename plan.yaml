@@ -41371,7 +41371,7 @@ phases:
       **Non-blocking**: Stale xfail markers on complete tests'
   - id: tool_prefix.deep_review.black_box
     name: Black-box verification of prefixed tool behavior
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -41401,6 +41401,21 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-29T14:39:09.354654+00:00'
+    done_at: '2026-03-29T14:49:46.897057+00:00'
+    evidence: "## Black-Box Verification\n\n**Verdict**: FAIL (KNOWN GAP)\n\n**Tests\
+      \ executed**: 10 tests in tests/repro/test_tool_prefix_blackbox.py\n\n**Results**:\n\
+      - Prefix coexistence: PASS ✅\n- Prefix routing: PASS ✅  \n- Backward compatibility:\
+      \ PASS ✅\n- Reserved prefix rejection: FAIL ❌\n\n**8 PASS**:\n- Distinct prefixes\
+      \ coexist ✅\n- Same prefix produces conflict ✅\n- raw_name preserved for routing\
+      \ ✅\n- Backward compatibility ✅\n- Override keys are raw names ✅\n- Conflict\
+      \ detection keys off exposed name ✅\n- Downstream \"tela.*\" rejected at resolve_tools\
+      \ ✅\n- Prefix+tool combo producing tela.* rejected ✅\n\n**2 FAIL** (Implementation\
+      \ Gap):\n- `ServerConfig(tool_prefix=\"tela.\")` NOT rejected at config construction\
+      \ time\n- `ServerConfig(tool_prefix=\"tela\")` NOT rejected at config construction\
+      \ time\n- HOWEVER: resolve_tools() correctly rejects downstream tools named\
+      \ \"tela.*\"\n\n**Gap**: Validation happens at resolve_tools() time, not ServerConfig\
+      \ validation time. xfail tests in test_tool_prefix_contract.py document this\
+      \ gap."
   - id: tool_prefix.deep_review.gate
     name: Final gate for tool-prefix feature
     status: pending
