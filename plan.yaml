@@ -40786,3 +40786,12 @@ phases:
       ''shell_too_complex|file_size''` → no gateway.py or serve_cmd.py entries in
       output'
     agent: python-executor
+  - id: conn_v2.gate1_fix.retest
+    name: Retest after gateway.py size/complexity remediation
+    status: pending
+    description: ''
+    verification: '`uv run invar guard --all` → 0 errors. `wc -l src/tela/shell/gateway.py`
+      → <= 700.'
+    depends_on:
+    - conn_v2.gate1_fix.remediation
+    agent: integration-verifier
