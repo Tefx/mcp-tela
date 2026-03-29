@@ -127,28 +127,14 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
         with _runtime_lock:
             expected_token = _runtime.expected_bearer_token or ""
+        # handle_status computes authoritative lifecycle facts (including connected_servers)
+        # by querying the downstream registry directly, so no separate gateway_status() call needed.
         status_result = handle_status(token_result.value, expected_token)
         if status_result.is_err:
             assert status_result.error is not None
             return _as_error_response(status_result.error)
         assert status_result.value is not None
-        lifecycle_result = await gateway_status()
-        if lifecycle_result.is_err:
-            assert lifecycle_result.error is not None
-            return _as_error_response(lifecycle_result.error)
-        assert lifecycle_result.value is not None
-        lifecycle = lifecycle_result.value
-        status_payload = status_result.value.model_copy(
-            update={
-                "uptime_seconds": lifecycle.uptime_seconds,
-                "server_count": lifecycle.server_count,
-                "connected_servers": lifecycle.connected_servers,
-                "active_connections": lifecycle.active_connections,
-                "profile_count": lifecycle.profile_count,
-                "total_tool_calls": lifecycle.total_tool_calls,
-            }
-        )
-        return JSONResponse(content=status_payload.model_dump())
+        return JSONResponse(content=status_result.value.model_dump())
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:
