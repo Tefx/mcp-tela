@@ -43935,7 +43935,7 @@ phases:
     claimed_at: '2026-03-29T19:35:36.620733+00:00'
   - id: pm.p0_impl.downstream_accessor
     name: Implement downstream accessor
-    status: pending
+    status: claimed
     description: "Fill in stub body of get_connected_server_names() in src/tela/shell/downstream.py\
       \ per contract from step pm.p0_contract.downstream_accessor.\n\nUPSTREAM ARTIFACTS\
       \ (from contract step):\n  - src/tela/shell/downstream.py — get_connected_server_names\
@@ -43981,6 +43981,8 @@ phases:
     refs:
     - src/tela/shell/downstream.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T19:37:56.964365+00:00'
   - id: pm.p0_impl.config_validation
     name: Extend config validation for tela_ prefix
     status: pending
