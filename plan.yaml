@@ -38182,7 +38182,7 @@ phases:
       **Deviation records**: None'
   - id: conn_v2.bridge.interrupt_probe
     name: Probe hard-interrupt behavior from the real connect entry point
-    status: pending
+    status: claimed
     description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
       \ validate hard-interrupt semantics for tela connect.\nIndependence Level: L2\n\
       Test for:\n  - SIGINT/KeyboardInterrupt during autostart wait terminates connect\
@@ -38233,6 +38233,8 @@ phases:
     depends_on:
     - conn_v2.bridge.integrate_connect_flow
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-29T03:22:50.466347+00:00'
   - id: conn_v2.bridge.gate
     name: Gate bridge control phase
     status: pending
