@@ -43592,6 +43592,23 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p0_impl.downstream_accessor
+    name: Implement downstream accessor
+    status: pending
+    description: "Fill in stub body of get_connected_server_names() in downstream.py\
+      \ per contract from step pm.p0_contract.downstream_accessor.\n\nUPSTREAM ARTIFACTS\
+      \ (from contract step):\n  - src/tela/shell/downstream.py — get_connected_server_names\
+      \ signature is AUTHORITATIVE\n\nYOUR SCOPE: Replace NotImplementedError with\
+      \ working logic that exposes _clients keys as a set of server names.\n\nStep\
+      \ type: implementation"
+    evidence_template: '## Evidence
+
+      - [ ] get_connected_server_names returns real set of names
+
+      - [ ] No contract signature changes
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.p0_verify
   name: P0 Verification
   status: locked
