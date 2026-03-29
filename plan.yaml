@@ -41525,3 +41525,10 @@ phases:
     - gw_remed.lifecycle_authority.extract_status_authority
     - gw_remed.lifecycle_authority.verify_status_truth
     agent: gate-reviewer
+- id: gw_remed.startup_plan_a
+  name: 'Gateway remediation: A4 startup sequencing via Plan A'
+  status: locked
+  gate: Move runtime startup back to the documented bind -> publish lockfile -> converge
+    order before downstream work resumes.
+  depends_on:
+  - gw_remed.lifecycle_authority
