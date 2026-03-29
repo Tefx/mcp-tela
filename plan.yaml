@@ -41263,7 +41263,7 @@ phases:
       \ issue for full config reload scenarios."
   - id: tool_prefix.deep_review.contract_strength
     name: Contract strength audit for tool-prefix contracts
-    status: claimed
+    status: done
     description: 'step_type: review
 
       agent_source: default
@@ -41299,6 +41299,40 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T14:26:27.008402+00:00'
+    done_at: '2026-03-29T14:34:48.447849+00:00'
+    evidence: '## Contract Strength Audit
+
+
+      **Verdict**: ISSUES_FOUND
+
+
+      **Vacuous contracts**: None - @pre(lambda: True) on zero-arg functions is intentional
+
+
+      **Doctest coverage**: INCOMPLETE
+
+      - resolve_tools: Only tests default tool_prefix=None path
+
+      - Missing: tool_prefix applied, raw_name preserved, reserved prefix rejection
+
+
+      **Observability semantics**: VIOLATED
+
+      - AuditEntry lacks raw_name field
+
+      - Cannot trace exposed name back to original raw_name
+
+      - Violates claimed observability contract (models.py:287-300)
+
+
+      **Blocking issues**:
+
+      1. AuditEntry missing raw_name field
+
+      2. resolve_tools doctests incomplete for tool_prefix
+
+
+      **Non-blocking**: Stale xfail markers on complete tests'
   - id: tool_prefix.deep_review.black_box
     name: Black-box verification of prefixed tool behavior
     status: pending
