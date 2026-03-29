@@ -41247,7 +41247,7 @@ phases:
     claimed_at: '2026-03-29T14:26:13.268214+00:00'
   - id: tool_prefix.deep_review.contract_strength
     name: Contract strength audit for tool-prefix contracts
-    status: pending
+    status: claimed
     description: 'step_type: review
 
       agent_source: default
@@ -41281,6 +41281,8 @@ phases:
     depends_on:
     - tool_prefix.deep_review.wiring_audit
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T14:26:27.008402+00:00'
   - id: tool_prefix.deep_review.black_box
     name: Black-box verification of prefixed tool behavior
     status: pending
