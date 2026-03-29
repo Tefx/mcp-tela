@@ -41695,17 +41695,49 @@ phases:
   - id: gw_remed.startup_plan_a.verify_plan_a_runtime
     name: Verify Plan A startup contract end-to-end
     status: pending
-    description: 'Independently verify the documented discovery/readiness contract
-      after Plan A: lockfile equals discovery truth only, GET /status is authoritative
-      at publication time, warming blocks bridge admission, and readiness flips only
-      after convergence.'
-    verification: Run black-box and repro coverage for lockfile timing, status reachability,
-      warming rejection, and ready/degraded transitions.
-    evidence_template: Paste exact commands, raw outputs, and a four-point verdict
-      for publication timing, status availability, connect admission control, and
-      failure rollback.
+    description: 'Independent L2 verification for Plan A runtime behavior.
+
+
+      Cover both:
+
+      - nominal startup path
+
+      - highest-risk failure path: bind succeeded, publication happened, convergence
+      then fails
+
+
+      Also verify warming blocks bridge admission and readiness flips only after successful
+      convergence.'
+    verification: '- Real-path evidence for nominal Plan A startup
+
+      - Failure-path evidence for post-bind convergence rollback
+
+      - Admission rejection while warming
+
+      - Discovery truth stays separate from readiness truth'
+    evidence_template: '## Plan A Runtime Verification
+
+      **Nominal path command/test**: <exact command>
+
+      **Failure path command/test**: <exact command>
+
+      **Admission test**: <exact command>
+
+      **Actual outputs / assertions**:
+
+      - nominal: ...
+
+      - failure: ...
+
+      - warming reject: ...'
+    refs:
+    - tests/integration
+    - src/tela/commands/serve_cmd.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/http_routes.py
     depends_on:
     - gw_remed.startup_plan_a.resequence_bind_publish_converge
+    - gw_remed.startup_plan_a.harden_post_bind_failure_rollback
     - gw_remed.startup_plan_a.reject_connect_while_warming
     agent: integration-verifier
   - id: gw_remed.startup_plan_a.gate
