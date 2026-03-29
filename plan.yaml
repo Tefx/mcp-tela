@@ -41861,7 +41861,7 @@ phases:
       **Commit**: 298ef6cc'
   - id: gw_remed.startup_plan_a.reject_connect_while_warming
     name: Reject bridge admission while lifecycle state is warming
-    status: pending
+    status: claimed
     description: 'Implement the warming-state admission guard in:
 
       - src/tela/shell/http_routes.py
@@ -41901,6 +41901,8 @@ phases:
     depends_on:
     - gw_remed.startup_plan_a.resequence_bind_publish_converge
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T12:08:48.242937+00:00'
   - id: gw_remed.startup_plan_a.verify_plan_a_runtime
     name: Verify Plan A startup contract end-to-end
     status: pending
