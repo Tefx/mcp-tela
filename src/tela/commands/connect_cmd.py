@@ -14,6 +14,10 @@ Interrupt semantics and host-facing message-state contracts are declared in
 bridge wiring and does not finalize host rendering text.
 """
 
+# @invar:allow file_size: Connect lifecycle owns transport discovery/autostart,
+# bridge framing, interrupt-safe teardown, and HTTP bridge orchestration in one
+# CLI boundary module to preserve lifecycle sequencing and signal semantics.
+
 from __future__ import annotations
 
 import json
@@ -48,6 +52,7 @@ LOCKFILE_START_RACE_RETRIES = 3
 HTTP_TIMEOUT_SECONDS = 10.0
 HTTP_TRANSIENT_RETRIES = 3
 HTTP_TRANSIENT_BACKOFF_SECONDS = 0.5
+TEARDOWN_RESUME_TIMEOUT_SECONDS = 1.0
 
 
 def _emit_bridge_diagnostic(message: str, connection_id: str) -> None:
@@ -378,11 +383,13 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
             _emit_bridge_diagnostic("attach loop interrupted", connection_id)
     finally:
         teardown_interrupted = False
+        disconnect_url = f"{base_url}/disconnect"
+        disconnect_payload = {"connection_id": connection_id}
         try:
             disconnect_result = _post_json(
-                url=f"{base_url}/disconnect",
+                url=disconnect_url,
                 bearer_token=bearer_token,
-                payload={"connection_id": connection_id},
+                payload=disconnect_payload,
             )
             if disconnect_result.is_err:
                 _emit_bridge_diagnostic(
@@ -391,6 +398,31 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
         except KeyboardInterrupt:
             teardown_interrupted = True
             _emit_bridge_diagnostic("disconnect interrupted", connection_id)
+            # Bounded teardown critical section: ignore hard interrupts just long
+            # enough to issue one final disconnect attempt so connection-scoped
+            # cleanup is not orphaned by mid-teardown signals.
+            current_sigint = signal.getsignal(signal.SIGINT)
+            current_sigterm = signal.getsignal(signal.SIGTERM)
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            try:
+                resumed_disconnect_result = _post_json_once(
+                    url=disconnect_url,
+                    bearer_token=bearer_token,
+                    payload=disconnect_payload,
+                    timeout_seconds=TEARDOWN_RESUME_TIMEOUT_SECONDS,
+                )
+                if resumed_disconnect_result.is_err:
+                    _emit_bridge_diagnostic(
+                        (
+                            "disconnect resume failed: "
+                            f"{resumed_disconnect_result.error}"
+                        ),
+                        connection_id,
+                    )
+            finally:
+                signal.signal(signal.SIGINT, current_sigint)
+                signal.signal(signal.SIGTERM, current_sigterm)
         signal.signal(signal.SIGINT, previous_int)
         signal.signal(signal.SIGTERM, previous_term)
         if teardown_interrupted and bridge_error is None:
@@ -685,3 +717,35 @@ def _post_json(
             time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
 
     return Result(error=last_error)
+
+
+def _post_json_once(
+    *,
+    url: str,
+    bearer_token: str,
+    payload: dict[str, str],
+    timeout_seconds: float,
+) -> Result[None, str]:
+    """POST JSON once with a caller-supplied timeout and no retry.
+
+    Used for bounded teardown-critical-section resume attempts.
+    """
+
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib_request.Request(
+        url,
+        data=body,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib_request.urlopen(request, timeout=timeout_seconds):
+            return Result(value=None)
+    except urllib_error.HTTPError as exc:
+        return Result(error=f"HTTP_{exc.code}: {url}")
+    except urllib_error.URLError as exc:
+        return Result(error=f"HTTP_CONNECT_ERROR: {exc.reason}")

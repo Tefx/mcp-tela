@@ -716,7 +716,7 @@ def test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup(
     import signal
     from threading import Event
 
-    disconnect_calls: list[dict[str, str]] = []
+    disconnect_calls: list[dict[str, object]] = []
     forward_calls: list[None] = []
 
     def _fake_post_json(
@@ -762,7 +762,7 @@ def test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup(
     # Disconnect should have been called (best-effort cleanup)
     assert len(disconnect_calls) >= 1
     # At least one disconnect call should be for /disconnect endpoint
-    disconnect_urls = [c["url"] for c in disconnect_calls]
+    disconnect_urls = [str(c["url"]) for c in disconnect_calls]
     assert any("/disconnect" in url for url in disconnect_urls)
 
 
@@ -781,6 +781,8 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
         *, url: str, bearer_token: str, payload: dict[str, str]
     ) -> Result[None, str]:
         disconnect_calls.append({"url": url})
+        if url.endswith("/connect"):
+            return Result(value=None)
         # Simulate disconnect failing - this should NOT block exit
         return Result(error="SIMULATED_DISCONNECT_FAILURE")
 
@@ -807,4 +809,82 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
 
     # Even though disconnect failed, result should still be Ok (process can exit)
     # The disconnect failure is logged but doesn't block exit
+    assert result.is_ok
     assert len(disconnect_calls) >= 1
+
+
+def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Interrupt during teardown triggers bounded disconnect resume attempt.
+
+    This guards against orphaned connection-scoped runtime/session state when a
+    hard interrupt lands exactly in the teardown disconnect call.
+    """
+
+    connect_payloads: list[dict[str, str]] = []
+    disconnect_payloads: list[dict[str, str]] = []
+    resumed_disconnect_payloads: list[dict[str, str]] = []
+
+    def _fake_post_json(
+        *, url: str, bearer_token: str, payload: dict[str, str]
+    ) -> Result[None, str]:
+        _ = bearer_token
+        if url.endswith("/connect"):
+            connect_payloads.append(payload)
+            return Result(value=None)
+        if url.endswith("/disconnect"):
+            disconnect_payloads.append(payload)
+            raise KeyboardInterrupt("interrupt in teardown disconnect")
+        return Result(value=None)
+
+    def _fake_post_json_once(
+        *,
+        url: str,
+        bearer_token: str,
+        payload: dict[str, str],
+        timeout_seconds: float,
+    ) -> Result[None, str]:
+        _ = bearer_token
+        assert url.endswith("/disconnect")
+        assert timeout_seconds == connect_cmd.TEARDOWN_RESUME_TIMEOUT_SECONDS
+        resumed_disconnect_payloads.append(payload)
+        return Result(value=None)
+
+    def _fake_forward_stdio_http(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        bridge_connection_id: str,
+        should_stop: Callable[[], bool],
+        stdin_buffer,
+        stdout_buffer,
+    ) -> Result[None, str]:
+        _ = mcp_url, bearer_token, bridge_connection_id, should_stop
+        _ = stdin_buffer, stdout_buffer
+        return Result(value=None)
+
+    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_cmd, "_post_json_once", _fake_post_json_once)
+    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+
+    result = connect_cmd._run_bridge(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="test-token",
+    )
+
+    assert result.is_err
+    assert result.error == "INTERRUPT: bridge teardown interrupted"
+    assert len(connect_payloads) == 1
+    assert len(disconnect_payloads) == 1
+    assert len(resumed_disconnect_payloads) == 1
+
+    assert "connection_id" in connect_payloads[0]
+    assert (
+        disconnect_payloads[0]["connection_id"] == connect_payloads[0]["connection_id"]
+    )
+    assert (
+        resumed_disconnect_payloads[0]["connection_id"]
+        == connect_payloads[0]["connection_id"]
+    )
