@@ -43477,7 +43477,7 @@ phases:
     - src/tela/shell/builtin_tools.py
     - src/tela/core/models.py
     agent: python-executor
-  - id: pm.p0_contract.downstream-accessor-contract
+  - id: pm.p0_contract.downstream_accessor
     name: Downstream accessor contract
     status: pending
     description: 'Add get_connected_server_names() -> Result[set[str], str] accessor
