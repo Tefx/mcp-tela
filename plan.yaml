@@ -42794,7 +42794,7 @@ phases:
       - Non-Goals section explicitly disclaims reopening Plan A'
   - id: gw_remed.plan_c_adr.gate
     name: Gate Plan C ADR capture
-    status: pending
+    status: claimed
     description: Review ADR evidence and confirm the future-direction record is complete
       enough to defer without blocking current Plan A remediation.
     verification: Confirm the ADR is recorded, future-scoped, and sufficient as the
@@ -42805,3 +42805,5 @@ phases:
     - gw_remed.plan_c_adr.write_future_state_machine_adr
     - gw_remed.plan_c_adr.verify_adr_alignment
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T13:18:10.396564+00:00'
