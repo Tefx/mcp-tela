@@ -37431,7 +37431,7 @@ phases:
       **Deviation records**: none'
   - id: conn_v2.lifecycle.vertical_slice
     name: 'Early vertical slice: cold start to warming/ready status path'
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
       \ wire one complete path early: tela connect --config ... -> discovery/autostart\
       \ -> HTTP /status lifecycle snapshot -> attach wait policy.\nThis is the mandatory\
@@ -37476,6 +37476,26 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T02:27:45.528457+00:00'
+    done_at: '2026-03-29T02:34:02.423107+00:00'
+    evidence: "## Vertical Slice Evidence\n\n**Entry point**: tela connect --config\
+      \ <path>\n**Command executed**:\n```\nuv run pytest tests/integration/test_end_to_end.py::test_end_to_end_real_stdio_server_enumerate_and_call\
+      \ \\\n  tests/shell/test_connect_cmd.py \\\n  tests/shell/test_http_routes.py\
+      \ \\\n  tests/shell/test_gateway.py \\\n  tests/shell/test_serve_cmd.py \\\n\
+      \  tests/shell/test_query_commands_remote_state.py \\\n  tests/shell/test_lockfile.py\
+      \ \\\n  -v --tb=short\n```\n\n**Layers traversed**: connect -> startup coordinator\
+      \ -> serve -> lifecycle status -> /status -> attach policy\n\n**Observable output**:\n\
+      ```\n777 passed, 3 warnings in 51.42s\n```\n\n**Stubs used**: NONE\n\n### Layer\
+      \ Verification\n\n1. **connect -> discovery/autostart**: startup coordinator\
+      \ handles concurrent connect races with PID-validated lockfile binding\n2. **serve\
+      \ -> lockfile publication**: lockfile lifecycle verified\n3. **serve -> lifecycle\
+      \ routes**: /health, /status, /connect, /disconnect routes registered\n4. **/status\
+      \ -> lifecycle snapshot**: handle_status delegates to _get_status_lifecycle_facts()\
+      \ for authoritative connected_servers\n5. **attach policy follows lifecycle**:\
+      \ status command queries /status endpoint rather than trusting lockfile presence\n\
+      \n### Runtime Truth Contracts Verified\n- LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for\
+      \ = (\"lifecycle_readiness\", \"downstream_convergence\")\n- STATUS_SNAPSHOT_CONTRACT.plane\
+      \ = \"lifecycle_readiness\"\n- RUNTIME_TRUTH_BEHAVIORAL_NOTES includes: \"Connect/serve\
+      \ consumers must gate lifecycle decisions on runtime status, not discovery artifacts.\""
   - id: conn_v2.lifecycle.gate
     name: Gate lifecycle status phase
     status: pending
