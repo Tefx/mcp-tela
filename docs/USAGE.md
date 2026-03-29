@@ -266,12 +266,16 @@ tela connect --config tela.yaml
 This is the standard entry point. Your MCP host launches this as a child
 process. Under the hood it:
 
-1. Checks `~/.tela/gateway.lock` for a running server
+1. Discovers an existing gateway via `~/.tela/gateway.lock` (discovery only—lockfile presence does not imply downstream servers are ready)
 2. Auto-starts one if needed (random port, detached process)
-3. Bridges stdio ↔ HTTP
+3. Bridges stdio ↔ HTTP once the gateway HTTP endpoint is bound
 
 Multiple `tela connect` instances share the same server. Downstream servers
-are spawned once.
+are spawned once by the gateway process.
+
+**Note on lockfile semantics**: The lockfile provides endpoint discovery only.
+It does not indicate downstream server readiness, tool enumeration completion,
+or registry convergence. Use `tela status` to check authoritative runtime state.
 
 MCP host configuration:
 
@@ -294,7 +298,11 @@ tela serve --config tela.yaml --host 0.0.0.0 --port 8080     # LAN
 ```
 
 Use when you need explicit control over host/port. Writes a lockfile so
-`tela connect` and query commands can discover it.
+`tela connect` and query commands can discover the HTTP endpoint.
+
+**Lockfile semantics**: The lockfile is written after the HTTP server binds
+but before downstream servers are fully connected. It provides endpoint
+discovery only—not readiness or downstream convergence guarantees.
 
 Direct HTTP client configuration:
 
@@ -565,6 +573,10 @@ Check, in order:
 
 Ensure a server is running. Check `~/.tela/gateway.lock` exists and is not
 stale. Query commands need a running server to report state.
+
+**Note**: A valid lockfile only proves the gateway HTTP endpoint is discoverable.
+Use `tela status` (or `GET /status`) to check authoritative runtime state
+including downstream server convergence.
 
 ### Server won't start (port conflict)
 

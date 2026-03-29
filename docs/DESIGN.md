@@ -133,6 +133,21 @@ If no new connections arrive before the timeout, the server shuts down.
 - Configurable via `--idle-timeout` (default: 300 seconds)
 - Applies to both auto-started and manually started servers
 - Set to `0` to keep a server running indefinitely
+- Shutdown is triggered by the idle manager's timeout, not by lack of downstream activity
+
+### Hard interrupt semantics (SIGINT/SIGTERM)
+
+`tela connect` handles hard interrupts at three lifecycle stages:
+
+**Autostart wait stage**: SIGINT terminates connect immediately without retrying
+or waiting for timeout expiry. No attach or disconnect call is required.
+
+**Attach loop stage**: SIGTERM terminates the active bridge loop immediately and
+must not continue forwarding MCP frames after the stop signal. Best-effort
+disconnect is attempted exactly once after the loop stops.
+
+**Bridge teardown stage**: Hard interrupt during teardown still terminates connect
+immediately; cleanup remains best-effort and must not block process exit.
 
 ### Token override modes
 

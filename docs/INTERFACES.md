@@ -225,6 +225,17 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 | `total_tool_calls` | int | Cumulative tool calls since startup |
 | `connections` | list[ConnectionContext] | **Structural collection** of connection contexts |
 | `audit_entries` | list[AuditEntry] | Recent audit log entries (limit 100) |
+| `state` | str | Lifecycle state: `warming`, `ready`, or `degraded` |
+| `degraded_reason` | str \| null | Machine-readable reason when `state == "degraded"` |
+| `discovery_source` | str \| null | How endpoint was resolved: `lockfile`, `autostart`, `explicit_server`, `startup_follower` |
+| `config_path` | str \| null | Config path owned by running gateway |
+| `requested_config_path` | str \| null | Config path requested by this query |
+| `config_mismatch` | bool | Whether requested config differs from running gateway |
+
+**Lifecycle States**:
+- `warming`: Gateway HTTP endpoint is bound but downstream server connections are still initializing
+- `ready`: Downstream servers are connected and tool registry is converged
+- `degraded`: Gateway is reachable but not all downstream servers are connected
 
 **Count-vs-Collection Semantics**:
 - `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)
@@ -257,6 +268,7 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 - All fields in `StatusResponse` are **guaranteed present** (non-null) in successful responses
 - List fields (`connections`, `audit_entries`, `connected_servers`) are guaranteed present and may be empty (`[]`)
 - `active_connections` is guaranteed to be the integer count (never null or omitted)
+- Nullable fields (`degraded_reason`, `discovery_source`, etc.) are guaranteed present but may be `null`
 
 ### 7.3 Lockfile Contract
 
@@ -274,7 +286,20 @@ Location: `~/.tela/gateway.lock`
 }
 ```
 
-Written atomically by `tela serve` on startup. Deleted on shutdown.
+**Critical semantics**: The lockfile is **discovery truth only**, written atomically
+by `tela serve` after HTTP server bind but before downstream server startup completes.
+
+**What the lockfile means**:
+- An HTTP endpoint is bound and discoverable
+- Bearer token for HTTP auth is available
+- Config ownership is recorded (for concurrent startup coordination)
+
+**What the lockfile does NOT mean**:
+- Downstream servers are connected (check `connected_servers` in status)
+- Tool enumeration succeeded (check runtime status)
+- Registry convergence completed (check runtime status)
+- Ready to serve tool calls (check `state` field in status)
+
 Stale detection via PID liveness check.
 
 **Extra Field Handling**: Extra fields in the lockfile are **accepted** and
