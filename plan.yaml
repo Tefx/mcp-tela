@@ -37656,7 +37656,7 @@ phases:
       \ records: None"
   - id: conn_v2.convergence.integrate_reload_and_status
     name: Integrate reload and reconnect entry adapters with convergence and status
-    status: claimed
+    status: done
     description: "step_type: implementation\n\nauto_tags:\n- integration\n\nIntegrate\
       \ reload/reconnect entry adapters with the convergence kernel and status surfaces.\n\
       \nRequired scope:\n- Reload and reconnect entry points delegate consistently\
@@ -37726,6 +37726,27 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T02:43:02.688579+00:00'
+    done_at: '2026-03-29T02:50:34.600177+00:00'
+    evidence: "## Integration Evidence\n\n**Command or test exercising the full path**:\n\
+      ```\nuv run pytest tests/shell/test_reload.py tests/shell/test_gateway.py tests/integration/test_hot_reload.py\
+      \ -q\n```\n\n**Actual output**:\n```\n........................................................................\
+      \ [100%]\n72 passed in 2.41s\n```\n\n**Path exercised**: reload/reconnect entry\
+      \ adapter -> convergence kernel -> status/registry consumer\n\n### Verification\
+      \ Summary\n\n1. **Reload/reconnect entry points delegate to convergence kernel\
+      \ consistently**:\n   - `downstream._handle_reconnect()` → `reload.on_server_reconnect()`\
+      \ → `_single_server_kernel.converge()`\n   - `downstream._handle_tools_list_changed()`\
+      \ → `reload.on_tools_changed()` → `_single_server_kernel.converge()`\n   - `reload.on_config_changed()`\
+      \ → `connect_all()` / `disconnect_all()` for full reconnection\n\n2. **Status\
+      \ surfaces expose convergence results without re-deriving them**:\n   - `gateway_status()`\
+      \ uses `get_all_tools()` from downstream registry (the convergence authority)\n\
+      \   - `status_cmd.py` uses `query_remote_state()` which fetches from the gateway's\
+      \ `/status` endpoint\n   - `GatewayStatus.connected_servers` is derived from\
+      \ the registry tool keys\n\n3. **Entry adapters own notify/audit policy** (not\
+      \ the kernel):\n   - `reload.on_server_reconnect()` and `reload.on_tools_changed()`\
+      \ handle conflict audit emissions\n   - `_notify_callback` digest computation\
+      \ happens in entry adapters after kernel returns\n\n4. **No HTTP helper extraction\
+      \ or runtime accessor cleanup** - out of scope per step requirements\n\n**Deviations**:\
+      \ None"
   - id: conn_v2.convergence.seam_proof
     name: Provide seam-level proof for warming startup with background convergence
     status: pending
