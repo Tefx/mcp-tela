@@ -44095,8 +44095,7 @@ phases:
   - id: pm.p0_verify.retest
     name: P0 green retest
     status: pending
-    description: 'Rerun P0 test suite expecting all green. Verify tela_list_providers
-      returns correct data, gateway merges built-in tools, call routing works.
+    description: 'Rerun P0 test suite expecting all GREEN after implementation.
 
 
       Step type: test
@@ -44106,16 +44105,92 @@ phases:
       Expected result: green
 
 
-      Run: pytest tests/shell/test_builtin_tools.py tests/shell/test_gateway.py -v
+      ## Commands to run
 
-      All tests must pass.'
-    evidence_template: '## Evidence
 
-      - [ ] All P0 tests pass (paste output)
+      ```bash
 
-      - [ ] No test modifications needed
+      # P0-specific tests
 
-      - [ ] invar guard passes'
+      pytest tests/shell/test_builtin_tools.py -v
+
+      pytest tests/shell/test_gateway.py -v -k "builtin"
+
+
+      # Full regression (no regressions from wiring changes)
+
+      pytest tests/ -x --timeout=30
+
+
+      # Contract verification
+
+      uv run invar guard --all
+
+      ```
+
+
+      ## Expected outcomes
+
+      1. test_handle_list_providers_returns_provider_info_shape — GREEN
+
+      2. test_handle_list_providers_includes_disconnected_server — GREEN
+
+      3. test_handle_list_providers_includes_failed_server — GREEN
+
+      4. test_handle_list_providers_filters_by_profile_enforcement — GREEN
+
+      5. test_builtin_tool_names_set_contains_tela_list_providers — GREEN
+
+      6. test_gateway_list_tools_includes_builtin — GREEN
+
+      7. test_gateway_call_tool_dispatches_builtin — GREEN
+
+      8. All existing tests — no regressions
+
+      9. invar guard — clean'
+    evidence_template: '## Green Retest Evidence
+
+
+      **P0 test output**:
+
+      ```
+
+      <paste full pytest output for test_builtin_tools.py>
+
+      ```
+
+
+      **Gateway builtin test output**:
+
+      ```
+
+      <paste pytest output for test_gateway.py -k builtin>
+
+      ```
+
+
+      **Full regression output** (summary):
+
+      ```
+
+      <paste final summary line showing pass count>
+
+      ```
+
+
+      **Invar guard output**:
+
+      ```
+
+      <paste invar guard result>
+
+      ```
+
+
+      **Verdict**: ALL GREEN / ISSUES_FOUND'
+    refs:
+    - tests/shell/test_builtin_tools.py
+    - tests/shell/test_gateway.py
     agent: integration-verifier
   - id: pm.p0_verify.gate
     name: P0 gate review
