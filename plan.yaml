@@ -43948,3 +43948,49 @@ phases:
   depends_on:
   - pm.p1_impl
   - pm.p2_impl
+  steps:
+  - id: pm.final_gate.review
+    name: Final cross-priority gate review
+    status: pending
+    description: 'Final gate review across P0/P1/P2. Verify:
+
+      1. Provider discovery works end-to-end (tela_list_providers returns correct
+      data)
+
+      2. Instructions manifest is accurate and includes built-in tool declaration
+
+      3. Description rewriting is correct with no false positives
+
+      4. Config validation rejects tela_ prefix
+
+      5. All existing tests still pass (no regressions)
+
+      6. Audit logging present for built-in tool calls
+
+      7. Hot-reload compatibility maintained
+
+      8. Surface instruction contract from tela gateway preserved'
+    evidence_template: '## Evidence
+
+      - [ ] P0: tela_list_providers end-to-end verified
+
+      - [ ] P1: Manifest header correct
+
+      - [ ] P2: Description rewriting correct
+
+      - [ ] Config validation rejects tela_ prefix
+
+      - [ ] Full test suite green
+
+      - [ ] Audit logging present
+
+      - [ ] Hot-reload compatible
+
+      - [ ] Surface contract preserved
+
+      - Blockers: (list or NONE)
+
+      - Should-fix: (list or NONE)
+
+      - Suggestions: (list or NONE)'
+    agent: gate-reviewer
