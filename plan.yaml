@@ -43758,6 +43758,21 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p1_contract.gate
+    name: P1 contract gate review
+    status: pending
+    description: Gate review of P1 contracts. Verify manifest header format, tela_list_providers
+      declaration, and contract purity.
+    evidence_template: '## Evidence
+
+      - [ ] Contract purity verified (no implementation logic)
+
+      - [ ] Manifest format specified
+
+      - [ ] Blockers: (list or NONE)'
+    depends_on:
+    - pm.p1_contract.manifest_header
+    agent: gate-reviewer
 - id: pm.p1_impl
   name: P1 Instructions Manifest Implementation
   status: locked
