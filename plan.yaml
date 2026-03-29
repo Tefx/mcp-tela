@@ -39474,7 +39474,7 @@ phases:
     agent: gate-reviewer
   - id: conn_v2.deep_review.wiring_audit
     name: Full wiring audit for connect/serve runtime refactor
-    status: pending
+    status: claimed
     description: "step_type: verification\nComplete system wiring audit. Verify:\n\
       \  - every public export added for startup/lifecycle/convergence/bridge has\
       \ a runtime caller\n  - connect, serve, status, and HTTP routes are registered\
@@ -39485,6 +39485,8 @@ phases:
     depends_on:
     - conn_v2.doc_sync.update_docs
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-29T08:54:23.544189+00:00'
   - id: conn_v2.doc_sync.update_docs
     name: Update documentation for the connect/serve runtime refactor
     status: done
