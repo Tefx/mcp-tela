@@ -44331,8 +44331,27 @@ phases:
   - id: pm.p1_contract.gate
     name: P1 contract gate review
     status: pending
-    description: Gate review of P1 contracts. Verify manifest header format, tela_list_providers
-      declaration, and contract purity.
+    description: 'Gate review of P1 contracts.
+
+
+      Verify:
+
+      1. build_manifest_header signature accepts (servers, connected_names, tools_by_server)
+      and returns str
+
+      2. Doctests show "Connected at startup:" format with tool counts
+
+      3. get_gateway_surface_instructions now accepts optional manifest_header parameter
+
+      4. Contract declares tela_list_providers will replace "none" in built-in tools
+      line
+
+      5. Both functions are stubs (NotImplementedError)
+
+      6. No implementation logic leaked
+
+      7. Backward compatibility: get_gateway_surface_instructions(None) still works
+      for existing callers'
     evidence_template: '## Evidence
 
       - [ ] Contract purity verified (no implementation logic)
@@ -44340,6 +44359,8 @@ phases:
       - [ ] Manifest format specified
 
       - [ ] Blockers: (list or NONE)'
+    refs:
+    - src/tela/shell/surface_instructions.py
     depends_on:
     - pm.p1_contract.manifest_header
     agent: gate-reviewer
