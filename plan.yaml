@@ -37749,7 +37749,7 @@ phases:
       \ None"
   - id: conn_v2.convergence.seam_proof
     name: Provide seam-level proof for warming startup with background convergence
-    status: pending
+    status: claimed
     description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
       \ validate that the gateway becomes discoverable before full downstream convergence\
       \ while still reporting truthful warming/degraded state.\nIndependence Level:\
@@ -37810,6 +37810,8 @@ phases:
     depends_on:
     - conn_v2.convergence.integrate_reload_and_status
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T02:50:58.641458+00:00'
   - id: conn_v2.convergence.gate
     name: Gate background convergence phase
     status: pending
