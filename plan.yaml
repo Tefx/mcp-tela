@@ -41532,3 +41532,20 @@ phases:
     order before downstream work resumes.
   depends_on:
   - gw_remed.lifecycle_authority
+  steps:
+  - id: gw_remed.startup_plan_a.resequence_bind_publish_converge
+    name: Resequence gateway startup to bind before lockfile publish and convergence
+    status: pending
+    description: Complete Plan A startup ordering in src/tela/commands/serve_cmd.py
+      and src/tela/shell/gateway.py so runtime/status state is prepared first, HTTP
+      binds second, the lockfile is published immediately after bind, downstream convergence
+      happens after publication, and post-bind convergence failure removes the lockfile
+      and tears down the HTTP server.
+    verification: Add/adjust repro and shell coverage for lockfile publication timing,
+      status availability immediately after lockfile publication, warming state before
+      convergence, and rollback on post-bind convergence failure.
+    evidence_template: 'Paste modified file list, test commands/results, and concrete
+      proof for: bind occurred before lockfile publication, GET /status was callable
+      once the lockfile existed, and post-bind failure removed the lockfile and shut
+      down HTTP.'
+    agent: python-senior
