@@ -42735,7 +42735,7 @@ phases:
       **Commit**: 3608910fb'
   - id: gw_remed.plan_c_adr.verify_adr_alignment
     name: Verify ADR-004 stays within approved deferred scope
-    status: claimed
+    status: done
     description: 'Independent spec/design review of ADR-004.
 
 
@@ -42768,6 +42768,30 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-03-29T13:16:25.429465+00:00'
+    done_at: '2026-03-29T13:17:38.696309+00:00'
+    evidence: '## ADR Alignment Review
+
+      **Deferred-only scope**: pass
+
+      **Architecture-basis conflict**: none
+
+      **Missing required topics**: none
+
+
+      **Verification Details**:
+
+      - Lines 5-8 explicitly state: "Deferred — future architecture only..."
+
+      - ADR preserves Plan A source-of-truth split from DESIGN.md
+
+      - All 7 required states defined
+
+      - All required sections present (transitions, truth boundaries, admission rules,
+      interrupt/crash, adoption triggers)
+
+      - No present-tense implementation obligations
+
+      - Non-Goals section explicitly disclaims reopening Plan A'
   - id: gw_remed.plan_c_adr.gate
     name: Gate Plan C ADR capture
     status: pending
