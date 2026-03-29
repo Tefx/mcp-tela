@@ -41499,3 +41499,16 @@ phases:
       tests/shell/test_gateway.py and tests/shell/test_http_routes.py, and guard output
       proving one shared lifecycle authority path now drives both status surfaces.
     agent: python-senior
+  - id: gw_remed.lifecycle_authority.verify_status_truth
+    name: Verify lifecycle authority consistency across CLI and HTTP status
+    status: pending
+    description: Independently verify that lockfile discovery, gateway_status(), and
+      GET /status preserve the documented split between discovery truth and readiness
+      truth after lifecycle authority extraction.
+    verification: Run focused shell and black-box status checks and confirm no duplicated
+      lifecycle derivation remains.
+    evidence_template: 'Provide commands, raw outputs, and a short verdict for: shared-authority
+      proof, lockfile-vs-status truth split, and any remaining drift.'
+    depends_on:
+    - gw_remed.lifecycle_authority.extract_status_authority
+    agent: integration-verifier
