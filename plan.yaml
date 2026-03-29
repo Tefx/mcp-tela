@@ -42009,7 +42009,7 @@ phases:
       \ confirmed"
   - id: gw_remed.startup_plan_a.gate
     name: Gate A4 Plan A startup remediation
-    status: pending
+    status: claimed
     description: Review Plan A evidence and reject the phase if code still contradicts
       the documented startup contract.
     verification: Confirm A4 is closed under Plan A and downstream phases may assume
@@ -42021,6 +42021,8 @@ phases:
     - gw_remed.startup_plan_a.reject_connect_while_warming
     - gw_remed.startup_plan_a.verify_plan_a_runtime
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T12:29:05.114733+00:00'
   - id: gw_remed.startup_plan_a.harden_post_bind_failure_rollback
     name: Harden post-bind convergence failure rollback
     status: done
