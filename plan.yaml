@@ -39417,7 +39417,7 @@ phases:
     agent: gate-reviewer
   - id: conn_v2.deep_review.black_box
     name: Black-box verification of host-facing runtime behavior
-    status: pending
+    status: claimed
     description: "step_type: verification\nUsing only the public CLI/HTTP contracts\
       \ and documented formats:\n  - verify tela connect cold-start and attach behavior\n\
       \  - verify tela serve explicit-server behavior\n  - verify lockfile and /status\
@@ -39428,6 +39428,8 @@ phases:
     depends_on:
     - conn_v2.deep_review.spec_conformance
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-29T09:11:41.744371+00:00'
   - id: conn_v2.deep_review.spec_conformance
     name: Full spec conformance audit for runtime surfaces
     status: done
