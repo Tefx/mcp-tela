@@ -44498,7 +44498,7 @@ phases:
     agent: gate-reviewer
   - id: pm.p0_verify.audit_logging_fix
     name: Add audit logging for builtin tool calls
-    status: pending
+    status: claimed
     description: "Add L2 audit entry for builtin tool calls in gateway.py _call_tool\
       \ handler.\n\n**Root cause:** handle_list_providers and other builtin tool calls\
       \ do not emit audit entries.\n\n**Fix location:** src/tela/shell/gateway.py\
@@ -44510,6 +44510,8 @@ phases:
       \   - latency_ms from measured elapsed time\n\n**Dependencies:** pm.p0_verify.retest"
     depends_on:
     - pm.p0_verify.retest
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T20:11:14.418310+00:00'
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
   status: locked
