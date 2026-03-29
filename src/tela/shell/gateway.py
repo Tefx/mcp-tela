@@ -22,17 +22,20 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from tela.core.models import (
+    AuditLevel,
     AuthMode,
     ConnectRequest,
     ConnectionContext,
     DisconnectRequest,
+    EnforcementResult,
+    EnforcementVerdict,
     GatewayStatus,
     GatewayTransport,
     RuntimeBindingContract,
     TelaConfig,
 )
 from tela.shell.config_loader import Result, load_config
-from tela.shell.audit import audit_close, audit_init
+from tela.shell.audit import audit_close, audit_init, build_audit_entry, audit_write
 from tela.shell.builtin_tools import (
     BUILTIN_TOOLS,
     BUILTIN_TOOL_NAMES,
@@ -426,14 +429,63 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     ) -> mcp_types.CallToolResult:
         # Check if this is a builtin tool
         if tool_name in BUILTIN_TOOL_NAMES:
-            providers_result = await handle_list_providers()
-            # Convert ProviderInfo (TypedDict) to plain dict for JSON serialization
-            return mcp_types.CallToolResult(
-                content=[
-                    mcp_types.TextContent(type="text", text=str(providers_result))
-                ],
-                isError=False,
-            )
+            start_time = time.time()
+            try:
+                providers_result = await handle_list_providers()
+                latency_ms = (time.time() - start_time) * 1000
+
+                # L2 audit entry for builtin tool calls (if connection available)
+                with _runtime_lock:
+                    connections = list(_runtime.connections)
+                if connections:
+                    connection = connections[0]
+                    audit_entry_result = build_audit_entry(
+                        level=AuditLevel.L2,
+                        connection=connection,
+                        tool_name=tool_name,
+                        server_name="tela",  # builtin tools belong to "tela" pseudo-server
+                        result=EnforcementResult(verdict=EnforcementVerdict.ALLOW),
+                        latency_ms=latency_ms,
+                        arguments=dict(arguments) if arguments else None,
+                    )
+                    if (
+                        audit_entry_result.is_ok
+                        and audit_entry_result.value is not None
+                    ):
+                        await audit_write(audit_entry_result.value)
+
+                # Convert ProviderInfo (TypedDict) to plain dict for JSON serialization
+                return mcp_types.CallToolResult(
+                    content=[
+                        mcp_types.TextContent(type="text", text=str(providers_result))
+                    ],
+                    isError=False,
+                )
+            except Exception as e:
+                latency_ms = (time.time() - start_time) * 1000
+                # L2 audit entry for failed builtin tool call (if connection available)
+                with _runtime_lock:
+                    connections = list(_runtime.connections)
+                if connections:
+                    connection = connections[0]
+                    audit_entry_result = build_audit_entry(
+                        level=AuditLevel.L2,
+                        connection=connection,
+                        tool_name=tool_name,
+                        server_name="tela",
+                        result=EnforcementResult(
+                            verdict=EnforcementVerdict.DENY,
+                            reason=str(e),
+                        ),
+                        latency_ms=latency_ms,
+                        arguments=dict(arguments) if arguments else None,
+                    )
+                    if (
+                        audit_entry_result.is_ok
+                        and audit_entry_result.value is not None
+                    ):
+                        await audit_write(audit_entry_result.value)
+                raise
 
         connection = await _ensure_connection()
         result = await handle_tools_call(connection, tool_name, dict(arguments))
