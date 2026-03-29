@@ -171,6 +171,9 @@ def handle_connect(
 
     Registers a bridge connection in the gateway runtime.
 
+    Rejects registration while the gateway lifecycle is in "warming" state
+    (downstream convergence has not yet completed).
+
     Returns:
         Result with connection confirmation on success.
 
@@ -191,6 +194,21 @@ def handle_connect(
     config = get_runtime_config().value
     if config is None or not is_runtime_running().value:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+
+    lifecycle_result = get_lifecycle_status_facts()
+    if lifecycle_result.is_err:
+        return Result(error=lifecycle_result.error)
+    assert lifecycle_result.value is not None
+    facts = lifecycle_result.value
+
+    if facts.state == "warming":
+        return Result(
+            error=(
+                f"ADMISSION_REJECTED_WARMING: gateway is warming up "
+                f"(connected_servers={len(facts.connected_servers)}/{facts.server_count}); "
+                "bridge admission requires ready state"
+            )
+        )
 
     from datetime import datetime, timezone
 

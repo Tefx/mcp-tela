@@ -178,6 +178,58 @@ class TestHandleConnect:
         assert result.error is not None
         assert "GATEWAY_NOT_STARTED" in result.error
 
+    def test_handle_connect_rejects_while_warming(self) -> None:
+        """Bridge admission is rejected while lifecycle is warming."""
+        from tela.shell.gateway_runtime import set_runtime_config, set_runtime_running
+        from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
+        from unittest.mock import patch
+
+        # Configure gateway with servers but no connected downstreams (warming state)
+        tela_config = TelaConfig(
+            servers={
+                "fs": __import__(
+                    "tela.core.models", fromlist=["ServerConfig"]
+                ).ServerConfig(name="fs", command="cmd")
+            }
+        )
+        set_runtime_config(tela_config)
+        set_runtime_running(True)
+
+        try:
+            # Verify we're in warming state
+            facts_result = get_lifecycle_status_facts()
+            assert facts_result.is_ok
+            assert facts_result.value is not None
+            assert facts_result.value.state == "warming"
+
+            req = ConnectRequest(connection_id="test-conn-warming")
+            result = http_routes.handle_connect("valid", "valid", req)
+            assert result.is_err
+            assert result.error is not None
+            assert "ADMISSION_REJECTED_WARMING" in result.error
+            assert "warming" in result.error
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+
+    def test_handle_connect_accepts_when_ready(self) -> None:
+        """Bridge admission succeeds once lifecycle is ready."""
+        from tela.shell.gateway_runtime import set_runtime_config, set_runtime_running
+        from tela.shell.downstream import connect_all
+
+        # Configure with empty servers so it's immediately ready (no convergence needed)
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+
+        try:
+            # Verify we're in ready state (no servers configured)
+            req = ConnectRequest(connection_id="test-conn-ready")
+            result = http_routes.handle_connect("valid", "valid", req)
+            assert result.is_ok, f"Expected ok but got: {result.error}"
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+
     def test_handle_connect_registers_connection(self) -> None:
         set_runtime_config(TelaConfig())
         set_runtime_running(True)
