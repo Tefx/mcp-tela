@@ -42215,7 +42215,7 @@ phases:
       **Commit**: 1f00cdb3'
 - id: gw_remed.teardown_contracts
   name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
-  status: pending
+  status: in_progress
   gate: Cleanup authority, interrupt hardening, caller wiring, and route contract
     strength are all proven before unrelated runtime work resumes.
   context: Separate cleanup authority extraction from interrupt-window hardening;
@@ -42225,7 +42225,7 @@ phases:
   steps:
   - id: gw_remed.teardown_contracts.extract_cleanup_authority
     name: Extract connection_id-scoped cleanup authority
-    status: pending
+    status: claimed
     description: 'Fill in src/tela/shell/connection_lifecycle.py as the shared cleanup
       authority keyed by connection_id.
 
@@ -42265,6 +42265,8 @@ phases:
     - src/tela/shell/gateway.py
     - src/tela/shell/http_routes.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T12:36:24.812890+00:00'
   - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     name: Route disconnect endpoint and gateway shutdown through shared cleanup authority
     status: pending
