@@ -269,7 +269,7 @@ def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str
     return Result(value="\n\n".join(parts))
 
 
-# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
+# @invar:allow shell_too_complex: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 def _create_upstream_server(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
