@@ -44674,24 +44674,117 @@ phases:
     status: pending
     description: "Fill in stub bodies for description rewriting per contract from\
       \ step pm.p2_contract.rewrite_desc.\n\nUPSTREAM ARTIFACTS (from contract step):\n\
-      \  - src/tela/core/family.py — rewrite_descriptions field and rewrite contract\
-      \ are AUTHORITATIVE\n\nYOUR SCOPE: Replace stubs with working logic.\n- Implement\
-      \ backtick-quoted raw-name to prefixed-name replacement in resolve_tools() when\
-      \ rewrite_descriptions=True\n- Only replace within same server's tool descriptions\
-      \ (not cross-server)\n- Pattern: find backtick-quoted `raw_name` occurrences,\
-      \ replace with `prefixed_name`\n\nIf a contract artifact is wrong or incomplete,\
-      \ document a deviation record.\n\nStep type: implementation"
-    evidence_template: '## Evidence
+      \  - src/tela/core/family.py — rewrite_tool_description signature and @pre/@post\
+      \ are AUTHORITATIVE\n  - src/tela/core/models.py — ServerConfig.rewrite_descriptions\
+      \ field is AUTHORITATIVE\n\nYOUR SCOPE: Replace stubs with working logic in\
+      \ two locations. Use Edit tool to modify function bodies only.\n\n## Change\
+      \ 1: Implement rewrite_tool_description() in src/tela/core/family.py\n\nThe\
+      \ implementation uses regex to find backtick-quoted names and replace:\n\n```python\n\
+      import re\n\ndef rewrite_tool_description(description: str, raw_names_to_exposed:\
+      \ dict[str, str]) -> str:\n    # Find all `name` patterns and replace if name\
+      \ is in mapping\n    def _replacer(match: re.Match) -> str:\n        name =\
+      \ match.group(1)\n        if name in raw_names_to_exposed:\n            return\
+      \ f\"`{raw_names_to_exposed[name]}`\"\n        return match.group(0)  # no change\
+      \ for unknown names\n    \n    return re.sub(r\"`([^`]+)`\", _replacer, description)\n\
+      ```\n\nKey: the regex `([^`]+)` matches anything between backticks. The replacer\
+      \ only substitutes if the captured name is in raw_names_to_exposed (same-server\
+      \ scope).\n\n## Change 2: Wire rewrite into resolve_tools() in src/tela/core/family.py\n\
+      \nReplace the stub conditional block with:\n\n```python\n    if server_config.rewrite_descriptions\
+      \ and server_config.tool_prefix is not None:\n        raw_to_exposed = {rt.raw_name:\
+      \ rt.name for rt in resolved if rt.raw_name is not None}\n        for i, rt\
+      \ in enumerate(resolved):\n            if rt.description:\n                new_desc\
+      \ = rewrite_tool_description(rt.description, raw_to_exposed)\n             \
+      \   if new_desc != rt.description:\n                    # ResolvedTool is a\
+      \ Pydantic model — create updated copy\n                    resolved[i] = rt.model_copy(update={\"\
+      description\": new_desc})\n```\n\n## Key constraints\n- `import re` at the top\
+      \ of family.py (Core zone allows stdlib imports)\n- Only backtick-quoted names\
+      \ are matched: `raw_name` pattern\n- Only names present in raw_names_to_exposed\
+      \ are replaced (same-server scope enforcement)\n- Cross-server tool names that\
+      \ happen to appear in backticks are NOT replaced\n- ResolvedTool is a Pydantic\
+      \ BaseModel — use model_copy(update=...) for immutable update\n- When rewrite_descriptions=False\
+      \ (default), no rewriting occurs — opt-in only\n- When tool_prefix is None,\
+      \ no rewriting occurs (no prefix means names are unchanged)\n\n## Edge cases\
+      \ to handle\n- Empty description: skip (already handled by `if rt.description:`)\n\
+      - Backtick-quoted text that is NOT a tool name: leave unchanged\n- Multiple\
+      \ occurrences of the same name: all replaced\n- Nested backticks (e.g., `` `code\
+      \ with `name` inside` ``): regex handles greedily, unlikely in practice\n\n\
+      ## Pattern reference\n- resolve_tools existing logic at line 117-151 for the\
+      \ resolution loop\n- ResolvedTool.model_copy for Pydantic model update\n\n##\
+      \ Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\nrewrite_tool_description must perform real\
+      \ regex-based replacement.\nresolve_tools must call rewrite_tool_description\
+      \ when rewrite_descriptions=True.\n\nIf a contract artifact is wrong or incomplete,\
+      \ document a deviation record."
+    evidence_template: '## Implementation Evidence
 
-      - [ ] Rewrite logic implemented
 
-      - [ ] Only same-server scope
+      **rewrite_tool_description body** (paste):
 
-      - [ ] No false positives on partial matches
+      ```
 
-      - [ ] Opt-in behavior (default off)
+      <full function body>
 
-      - [ ] invar guard passes'
+      ```
+
+
+      **resolve_tools rewrite section** (paste):
+
+      ```
+
+      <conditional rewrite block>
+
+      ```
+
+
+      **Doctest verification**:
+
+      ```
+
+      <paste doctest output showing all 3 contract doctests pass>
+
+      ```
+
+
+      **Edge case test** (manual or pytest):
+
+      ```
+
+      # No false positives:
+
+      >>> rewrite_tool_description("Use read_file without backticks.", {"read_file":
+      "fs_read_file"})
+
+      ''Use read_file without backticks.''
+
+
+      # Cross-server name not replaced:
+
+      >>> rewrite_tool_description("Use `other_tool`.", {"read_file": "fs_read_file"})
+
+      ''Use `other_tool`.''
+
+      ```
+
+
+      **Verification**:
+
+      - [ ] rewrite_tool_description uses regex for backtick matching
+
+      - [ ] Only same-server names replaced (mapping-based)
+
+      - [ ] No false positives on non-backtick text
+
+      - [ ] resolve_tools calls rewrite when rewrite_descriptions=True and tool_prefix
+      is not None
+
+      - [ ] Contract @pre/@post preserved
+
+      - [ ] invar guard passes
+
+      - [ ] No regressions: pytest tests/ -x'
+    refs:
+    - src/tela/core/family.py
+    - src/tela/core/models.py
     agent: python-executor
   - id: pm.p2_impl.gate
     name: P2 implementation gate review
