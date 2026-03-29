@@ -42306,7 +42306,7 @@ phases:
       **Commit**: da74749'
   - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     name: Route disconnect endpoint and gateway shutdown through shared cleanup authority
-    status: pending
+    status: claimed
     description: 'Integrate the shared cleanup authority into:
 
       - src/tela/shell/http_routes.py
@@ -42344,6 +42344,8 @@ phases:
     - gw_remed.teardown_contracts.extract_cleanup_authority
     - gw_remed.teardown_contracts.harden_interrupt_teardown_window
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T12:51:45.833413+00:00'
   - id: gw_remed.teardown_contracts.replace_vacuous_route_contracts
     name: Replace vacuous HTTP route contracts with falsifiable guarantees
     status: done
