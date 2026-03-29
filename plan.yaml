@@ -39578,7 +39578,7 @@ phases:
       \ e0cf1ac\n"
 - id: tool_prefix.contract
   name: Tool Prefix Contracts
-  status: in_progress
+  status: done
   gate: Freeze contract and naming semantics for config-driven tool prefixes before
     tests or runtime wiring.
   depends_on:
@@ -39677,7 +39677,7 @@ phases:
       '
   - id: tool_prefix.contract.gate
     name: Gate tool-prefix contracts
-    status: claimed
+    status: done
     description: "step_type: gate\nagent_source: default\nreview_depth: STANDARD\n\
       review_depth_rationale:\n  - Feature changes config contract, conflict semantics,\
       \ and runtime naming surfaces.\nVerification scope: phase-check protecting downstream\
@@ -39696,9 +39696,61 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T08:54:31.280967+00:00'
+    done_at: '2026-03-29T09:01:14.642226+00:00'
+    evidence: 'Gate review PASS — tool_prefix contract phase is complete and ready
+      for implementation.
+
+
+      **Contract artifacts verified:**
+
+      - `ServerConfig.tool_prefix: str | None = None` field pinned with acceptance
+      semantics
+
+      - `ResolvedTool.raw_name` field storing downstream-advertised name before prefix
+
+      - 5 skipped acceptance stubs in `tests/contracts/test_tool_prefix_contract.py`
+
+
+      **Contract completeness check:**
+
+      ✓ Prefix applied at registration/resolution, never call time
+
+      ✓ Conflict detection keys off final exposed name
+
+      ✓ raw_name → exposed_name → routing_name mapping preserved
+
+      ✓ tool_overrides remain keyed by raw downstream tool names
+
+      ✓ `tool_prefix="tela."` rejected as reserved-prefix input
+
+      ✓ `tool_prefix=None` preserves backward-compatible exposed names
+
+      ✓ Prefix-only change counts as tool-surface change
+
+      ✓ Reload diff semantics over exposed tool set
+
+      ✓ Observability requires server_name + raw_name + exposed_name on key path
+
+
+      **Verification:**
+
+      - `uv run pytest tests/contracts/test_tool_prefix_contract.py -q` → 5 skipped
+
+      - `uv run invar guard` → passed (0 errors)
+
+      - No runtime logic introduced in contract phase
+
+
+      **Issue (non-blocking):** `gateway_connections` dead export from wiring audit
+      — not a contract issue.
+
+
+      **Artifact:** commit 6531151 (merged as 2e6c2c9)
+
+      '
 - id: tool_prefix.test
   name: Tool Prefix Tests
-  status: locked
+  status: pending
   gate: Executable acceptance boundary for tool-prefix config semantics, collision
     handling, routing, and reload behavior before implementation.
   depends_on:
