@@ -43446,6 +43446,59 @@ phases:
   status: pending
   depends_on:
   - tool_prefix.deep_review
+  steps:
+  - id: pm.p0_contract.built-in-tool-schema-and-handler-contract
+    name: Built-in tool schema and handler contract
+    status: pending
+    description: 'Define ProviderInfo model in core/models.py and tela_list_providers
+      tool schema + handler signature in new shell/builtin_tools.py. Write @pre/@post
+      contracts and doctest stubs.
+
+
+      Step type: contract
+
+      Contract purity: ENFORCED
+
+      Contract outputs: signatures, type_defs, interfaces, stubs
+
+
+      Deliverables:
+
+      - ProviderInfo TypedDict or dataclass in core/models.py with fields: name, tool_prefix,
+      tool_count, connected
+
+      - handle_list_providers() stub in shell/builtin_tools.py with @pre/@post and
+      NotImplementedError
+
+      - BUILTIN_TOOLS list with tool schema dict for tela_list_providers
+
+      - Doctest stubs showing expected return shape'
+    refs:
+    - src/tela/shell/builtin_tools.py
+    - src/tela/core/models.py
+    agent: python-executor
+  - id: pm.p0_contract.downstream-accessor-contract
+    name: Downstream accessor contract
+    status: pending
+    description: 'Add get_connected_server_names() -> Result[set[str], str] accessor
+      to downstream.py with @pre/@post contracts and doctest stub.
+
+
+      Step type: contract
+
+      Contract purity: ENFORCED
+
+      Contract outputs: signatures, stubs
+
+
+      Deliverables:
+
+      - get_connected_server_names() stub with contracts in shell/downstream.py
+
+      - Returns Result[set[str], str] following existing Shell zone patterns'
+    refs:
+    - src/tela/shell/downstream.py
+    agent: python-executor
 - id: pm.p0_test
   name: P0 Built-in Tool Tests
   status: locked
