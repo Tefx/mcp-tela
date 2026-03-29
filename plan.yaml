@@ -43783,26 +43783,76 @@ phases:
   - id: pm.p0_impl.builtin_handler
     name: Implement built-in tool handler
     status: pending
-    description: "Fill in stub bodies in shell/builtin_tools.py per the contract from\
-      \ step pm.p0_contract.builtin_tool_schema.\n\nUPSTREAM ARTIFACTS (from contract\
-      \ step):\n  - src/tela/shell/builtin_tools.py — signatures, types, docstrings\
-      \ are AUTHORITATIVE\n  - src/tela/core/models.py — ProviderInfo model is AUTHORITATIVE\n\
-      \nYOUR SCOPE: Replace NotImplementedError with working logic in handle_list_providers().\
-      \ Read from DownstreamRegistry and config, apply profile enforcement filter\
-      \ to output. Return list of ProviderInfo dicts.\n\nIf a contract artifact is\
-      \ wrong or incomplete, document a deviation record (type, what, why, impact)\
-      \ — do NOT silently rewrite.\n\nStep type: implementation\nCompletion criteria:\
-      \ stub-only completion is NOT acceptable. Handler must produce real filtered\
-      \ provider data."
-    evidence_template: '## Evidence
+    description: "Fill in stub body of handle_list_providers() in src/tela/shell/builtin_tools.py\
+      \ per the contract from step pm.p0_contract.builtin_tool_schema.\n\nUPSTREAM\
+      \ ARTIFACTS (from contract step):\n  - src/tela/shell/builtin_tools.py — handle_list_providers\
+      \ signature is AUTHORITATIVE\n  - src/tela/core/models.py — ProviderInfo TypedDict\
+      \ is AUTHORITATIVE\n\nYOUR SCOPE: Replace NotImplementedError with working logic.\
+      \ Use Edit tool to modify the function body only.\n\n## Implementation logic\n\
+      \n1. Import at runtime (inside function body to avoid circular imports):\n \
+      \  - `from tela.shell.downstream import get_registry, get_connected_server_names`\n\
+      \   - `from tela.shell.gateway_runtime import get_runtime_config`\n\n2. Get\
+      \ runtime config via `get_runtime_config()` — if None, return empty list (gateway\
+      \ not started)\n\n3. Get connected server names via `await get_connected_server_names()`\
+      \ — extract the set\n\n4. Get registry via `get_registry()`, then `get_all_tools()`\
+      \ for the per-server tool map\n\n5. For each server in `config.servers`:\n \
+      \  - Determine status:\n     - If server_name in connected_names AND in registry.get_all_tools():\
+      \ \"connected\"\n     - If server_name in connected_names but NOT in registry:\
+      \ \"failed\"  \n     - Otherwise: \"disconnected\"\n   - Get tool_names from\
+      \ registry (post-resolution exposed names, already enforcement-filtered by the\
+      \ caller)\n   - Build ProviderInfo dict with: name, status, tool_prefix (from\
+      \ server_config), tool_count, tool_names\n\n6. Return the list\n\n## Key constraints\n\
+      - tool_names should be the EXPOSED names (ResolvedTool.name), not raw_name\n\
+      - Include ALL configured servers, not just connected ones\n- Failed servers:\
+      \ connected transport but no tools registered (or connection error recorded)\n\
+      - tool_count == len(tool_names)\n\n## Pattern reference\n- Follow `get_all_tools()`\
+      \ in downstream.py line 571 for registry access pattern\n- Follow `get_runtime_config()`\
+      \ in gateway_runtime.py for config access\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nhandle_list_providers\
+      \ must produce real ProviderInfo data from live registry state.\n\nIf a contract\
+      \ artifact is wrong or incomplete, document a deviation record (type, what,\
+      \ why, impact) — do NOT silently rewrite."
+    evidence_template: '## Implementation Evidence
 
-      - [ ] handle_list_providers returns real ProviderInfo list
+      **Modified file**: src/tela/shell/builtin_tools.py
 
-      - [ ] Profile enforcement filtering applied
 
-      - [ ] No contract signature changes
+      **handle_list_providers body** (paste):
 
-      - [ ] invar guard passes'
+      ```
+
+      <full function body>
+
+      ```
+
+
+      **Verification**:
+
+      - [ ] NotImplementedError removed
+
+      - [ ] Returns list[ProviderInfo] with real data from registry
+
+      - [ ] Includes connected, disconnected, and failed status variants
+
+      - [ ] tool_names uses exposed names (ResolvedTool.name)
+
+      - [ ] Contract signature and docstring preserved exactly
+
+      - [ ] invar guard passes
+
+
+      **Deviations from contract** (if any):
+
+      ```
+
+      <deviation records or "none">
+
+      ```'
+    refs:
+    - src/tela/shell/builtin_tools.py
+    - src/tela/core/models.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/gateway_runtime.py
     agent: python-executor
   - id: pm.p0_impl.downstream_accessor
     name: Implement downstream accessor
