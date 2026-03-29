@@ -37306,7 +37306,7 @@ phases:
       - none"
   - id: conn_v2.lifecycle.integrate_status_consumers
     name: Integrate lifecycle snapshots into connect, status, and HTTP surfaces
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/INTERFACES.md#7.2.1 GET /status Response Schema\n  - docs/USAGE.md#CLI\
       \ reference > tela connect\n  - docs/USAGE.md#CLI reference > query commands\n\
@@ -37380,6 +37380,55 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T02:03:27.584276+00:00'
+    done_at: '2026-03-29T02:27:23.629409+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_http_routes.py tests/shell/test_query_commands_remote_state.py
+      tests/shell/test_connect_cmd.py tests/shell/test_gateway.py -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      108 passed in 6.54s
+
+      ```
+
+
+      **Path exercised**: lifecycle module -> /status -> remote_state/connect/status
+      consumers
+
+
+      **Key change**: handle_status() now delegates to _get_status_lifecycle_facts()
+      which queries get_all_tools() from the downstream registry for authoritative
+      connected_servers, instead of deriving from snap.config.servers.keys() (configured
+      but not necessarily connected).
+
+
+      **Sibling Search**: Found:
+
+      - gateway_status() in gateway.py uses get_all_tools() correctly for connected_servers
+
+      - handle_status() now uses _get_status_lifecycle_facts() -> get_all_tools()
+      for same purpose
+
+      - No other consumers needed modification.
+
+
+      **Tests**: All 108 tests pass
+
+      **invar guard**: passed (no errors)
+
+
+      **Deviation records**: none'
   - id: conn_v2.lifecycle.vertical_slice
     name: 'Early vertical slice: cold start to warming/ready status path'
     status: pending
