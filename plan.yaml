@@ -43441,3 +43441,8 @@ phases:
 
 
       **No unresolved Plan C ambiguity intersects current implementation work.**'
+- id: pm.p0_contract
+  name: P0 Built-in Tool Contracts
+  status: pending
+  depends_on:
+  - tool_prefix.deep_review
