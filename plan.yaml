@@ -41755,7 +41755,7 @@ phases:
       - No split truth sources remain between gateway.py and http_routes.py'
 - id: gw_remed.startup_plan_a
   name: 'Gateway remediation: A4 startup sequencing via Plan A'
-  status: in_progress
+  status: done
   gate: Nominal Plan A ordering, warming admission rejection, and post-bind failure
     rollback are all proven before downstream runtime work resumes.
   context: Split nominal startup sequencing from failure rollback so evidence is stronger
@@ -42009,7 +42009,7 @@ phases:
       \ confirmed"
   - id: gw_remed.startup_plan_a.gate
     name: Gate A4 Plan A startup remediation
-    status: claimed
+    status: done
     description: Review Plan A evidence and reject the phase if code still contradicts
       the documented startup contract.
     verification: Confirm A4 is closed under Plan A and downstream phases may assume
@@ -42023,6 +42023,79 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T12:29:05.114733+00:00'
+    done_at: '2026-03-29T12:35:56.564492+00:00'
+    evidence: '## Gate Review Summary
+
+
+      **Verdict**: PASS ✅
+
+
+      **Blockers**: 0
+
+      **Should-Fix**: 0
+
+
+      ### Startup Order Enforcement
+
+      **Code path**: `serve_cmd._run_serve_gateway` lines 159-228
+
+      **Sequence verified**:
+
+      1. gateway_prepare_startup
+
+      2. _launch_streamable_http_server
+
+      3. write_lockfile
+
+      4. gateway_converge_startup
+
+      **Matches contract**: ✅
+
+
+      ### Failure Rollback
+
+      **Code path**: `serve_cmd._rollback_after_post_bind_convergence_failure` lines
+      281-297
+
+      **Sequence**: delete_lockfile → _stop_http_server → gateway_shutdown
+
+      **Test**: test_post_bind_convergence_failure_rolls_back_discovery_and_runtime
+      ✅
+
+
+      ### Warming Rejection
+
+      **Code path**: `http_routes.handle_connect` lines 198-211
+
+      **State computation**: `gateway_lifecycle.get_lifecycle_status_facts` lines
+      57-69
+
+      **Test**: test_handle_connect_rejects_while_warming ✅
+
+
+      ### Source of Truth Split
+
+      - Discovery: lockfile (written after bind, before converge)
+
+      - Readiness: GET /status / runtime snapshot
+
+      - Contract matches DESIGN.md/INTERFACES.md ✅
+
+
+      ### Answer
+
+      **bind->publish->converge is ENFORCED. A4 is CLOSED under Plan A.**
+
+
+      Downstream phases may safely assume:
+
+      1. lockfile presence implies HTTP endpoint bound
+
+      2. lockfile presence does NOT imply downstreams ready
+
+      3. GET /status is authoritative for lifecycle state
+
+      4. bridge admission requires lifecycle state !== ''warming'''
   - id: gw_remed.startup_plan_a.harden_post_bind_failure_rollback
     name: Harden post-bind convergence failure rollback
     status: done
@@ -42142,7 +42215,7 @@ phases:
       **Commit**: 1f00cdb3'
 - id: gw_remed.teardown_contracts
   name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
-  status: locked
+  status: pending
   gate: Cleanup authority, interrupt hardening, caller wiring, and route contract
     strength are all proven before unrelated runtime work resumes.
   context: Separate cleanup authority extraction from interrupt-window hardening;
