@@ -43686,6 +43686,38 @@ phases:
 
       - [ ] invar guard passes'
     agent: integration-verifier
+  - id: pm.p0_verify.gate
+    name: P0 gate review
+    status: pending
+    description: 'P0 gate review. Verify:
+
+      1. Contracts preserved from contract step
+
+      2. Profile enforcement integration correct
+
+      3. Hot-reload compatibility (built-in tools survive reload)
+
+      4. No regressions in existing test suite
+
+      5. L2 audit logging present for built-in tool calls'
+    evidence_template: '## Evidence
+
+      - [ ] Contracts intact
+
+      - [ ] Profile enforcement verified
+
+      - [ ] Hot-reload compatible
+
+      - [ ] Full test suite green
+
+      - [ ] Audit logging present
+
+      - Blockers: (list or NONE)
+
+      - Should-fix: (list or NONE)'
+    depends_on:
+    - pm.p0_verify.retest
+    agent: gate-reviewer
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
   status: locked
