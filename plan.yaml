@@ -43567,6 +43567,31 @@ phases:
   status: locked
   depends_on:
   - pm.p0_test
+  steps:
+  - id: pm.p0_impl.builtin_handler
+    name: Implement built-in tool handler
+    status: pending
+    description: "Fill in stub bodies in shell/builtin_tools.py per the contract from\
+      \ step pm.p0_contract.builtin_tool_schema.\n\nUPSTREAM ARTIFACTS (from contract\
+      \ step):\n  - src/tela/shell/builtin_tools.py — signatures, types, docstrings\
+      \ are AUTHORITATIVE\n  - src/tela/core/models.py — ProviderInfo model is AUTHORITATIVE\n\
+      \nYOUR SCOPE: Replace NotImplementedError with working logic in handle_list_providers().\
+      \ Read from DownstreamRegistry and config, apply profile enforcement filter\
+      \ to output. Return list of ProviderInfo dicts.\n\nIf a contract artifact is\
+      \ wrong or incomplete, document a deviation record (type, what, why, impact)\
+      \ — do NOT silently rewrite.\n\nStep type: implementation\nCompletion criteria:\
+      \ stub-only completion is NOT acceptable. Handler must produce real filtered\
+      \ provider data."
+    evidence_template: '## Evidence
+
+      - [ ] handle_list_providers returns real ProviderInfo list
+
+      - [ ] Profile enforcement filtering applied
+
+      - [ ] No contract signature changes
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.p0_verify
   name: P0 Verification
   status: locked
