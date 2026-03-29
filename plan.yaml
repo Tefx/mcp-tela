@@ -43481,3 +43481,9 @@ phases:
   status: locked
   depends_on:
   - pm.p2_contract
+- id: pm.final_gate
+  name: Final Gate Review
+  status: locked
+  depends_on:
+  - pm.p1_impl
+  - pm.p2_impl
