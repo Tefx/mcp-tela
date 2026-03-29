@@ -42735,7 +42735,7 @@ phases:
       **Commit**: 3608910fb'
   - id: gw_remed.plan_c_adr.verify_adr_alignment
     name: Verify ADR-004 stays within approved deferred scope
-    status: pending
+    status: claimed
     description: 'Independent spec/design review of ADR-004.
 
 
@@ -42766,6 +42766,8 @@ phases:
     depends_on:
     - gw_remed.plan_c_adr.write_future_state_machine_adr
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-03-29T13:16:25.429465+00:00'
   - id: gw_remed.plan_c_adr.gate
     name: Gate Plan C ADR capture
     status: pending
