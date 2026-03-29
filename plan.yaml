@@ -39529,7 +39529,7 @@ phases:
   steps:
   - id: tool_prefix.contract.define_semantics
     name: Define tool-prefix contract and mapping semantics
-    status: claimed
+    status: done
     description: "step_type: contract\nagent_source: default\ncontract_purity: ENFORCED\n\
       contract_outputs:\n  - signatures\n  - type_defs\n  - interfaces\n  - stubs\n\
       spec_refs:\n  - user authoritative input: tool_prefix feature goals + decisions\
@@ -39578,6 +39578,46 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-29T08:43:53.042865+00:00'
+    done_at: '2026-03-29T08:54:10.436079+00:00'
+    evidence: 'Contract pinning for tool_prefix semantics completed across 8 files.
+
+
+      **Key contract artifacts added:**
+
+      - `src/tela/core/models.py`: Docstrings on `ServerConfig.tool_prefix` and `ResolvedTool`
+      name fields pinning the mapping semantics (raw_name → exposed_name → routing_name)
+
+      - `src/tela/core/family.py`: Contract comments on prefix resolution confirming:
+      applied at registration/resolution, not call time
+
+      - `src/tela/core/conflict.py`: Notes on conflict detection keyed to exposed
+      name
+
+      - `src/tela/shell/downstream_registry.py`: Registry contract comments on raw/exposed
+      name separation
+
+      - `src/tela/shell/reload.py`: Reload diff semantics over exposed tool set, not
+      raw inventory
+
+
+      **New test file:** `tests/contracts/test_tool_prefix_contract.py` — 5 skipped
+      acceptance stubs for reserved-prefix rejection, backward compatibility, raw-name
+      override matching, exposed-name conflict, and reload diff rules
+
+
+      **Verification:**
+
+      - `uv run pytest tests/contracts/test_tool_prefix_contract.py -q` → 5 skipped
+      (pass)
+
+      - `uv run invar guard` → passed (non-blocking warnings pre-existing)
+
+      - No runtime logic added
+
+
+      **Artifact:** commit 6531151 (merged as 2e6c2c9)
+
+      '
   - id: tool_prefix.contract.gate
     name: Gate tool-prefix contracts
     status: pending
