@@ -43857,19 +43857,50 @@ phases:
   - id: pm.p0_impl.downstream_accessor
     name: Implement downstream accessor
     status: pending
-    description: "Fill in stub body of get_connected_server_names() in downstream.py\
+    description: "Fill in stub body of get_connected_server_names() in src/tela/shell/downstream.py\
       \ per contract from step pm.p0_contract.downstream_accessor.\n\nUPSTREAM ARTIFACTS\
       \ (from contract step):\n  - src/tela/shell/downstream.py — get_connected_server_names\
       \ signature is AUTHORITATIVE\n\nYOUR SCOPE: Replace NotImplementedError with\
-      \ working logic that exposes _clients keys as a set of server names.\n\nStep\
-      \ type: implementation"
-    evidence_template: '## Evidence
+      \ working logic. Use Edit tool to modify the function body only.\n\n## Implementation\
+      \ logic\n\n```python\nasync def get_connected_server_names() -> Result[set[str],\
+      \ str]:\n    # Body to implement:\n    async with _registry_lock:\n        return\
+      \ Result(value=set(_clients.keys()))\n```\n\nThe implementation is a one-liner:\
+      \ snapshot the keys of `_clients` (line 40) under `_registry_lock` (line 37).\n\
+      \n## Key constraints\n- `_clients: dict[str, _ClientHandle]` at module scope\
+      \ (line 40) maps server_name -> handle\n- Must acquire `_registry_lock` (asyncio.Lock\
+      \ at line 37) for consistency with connect_all/disconnect_all\n- Return `set(...)`\
+      \ copy, not a view — callers should not hold references to mutable internal\
+      \ state\n\n## Pattern reference\n- Follow `get_all_tools()` at line 571 for\
+      \ the registry lock + Result return pattern\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\
+      The function must return real server names from the _clients dict.\n\nIf a contract\
+      \ artifact is wrong or incomplete, document a deviation record."
+    evidence_template: '## Implementation Evidence
 
-      - [ ] get_connected_server_names returns real set of names
+      **Modified function** (paste from downstream.py):
 
-      - [ ] No contract signature changes
+      ```
+
+      <full function body>
+
+      ```
+
+
+      **Verification**:
+
+      - [ ] NotImplementedError removed
+
+      - [ ] Returns Result[set[str], str] with _clients keys
+
+      - [ ] Acquires _registry_lock
+
+      - [ ] Returns a copy (set(...)), not a view
+
+      - [ ] Contract signature preserved
 
       - [ ] invar guard passes'
+    refs:
+    - src/tela/shell/downstream.py
     agent: python-executor
   - id: pm.p0_impl.config_validation
     name: Extend config validation for tela_ prefix
