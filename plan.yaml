@@ -43916,6 +43916,32 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p2_impl.gate
+    name: P2 implementation gate review
+    status: pending
+    description: 'P2 gate review. Verify:
+
+      1. No false positives (partial name matches, cross-server leaks)
+
+      2. Opt-in behavior preserved (default False)
+
+      3. Core zone compliance (no I/O in rewrite logic)
+
+      4. All tests pass'
+    evidence_template: '## Evidence
+
+      - [ ] No false positives
+
+      - [ ] Opt-in verified
+
+      - [ ] Core zone compliant
+
+      - [ ] Tests pass
+
+      - Blockers: (list or NONE)'
+    depends_on:
+    - pm.p2_impl.rewrite_logic
+    agent: gate-reviewer
 - id: pm.final_gate
   name: Final Gate Review
   status: locked
