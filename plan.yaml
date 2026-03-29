@@ -43637,7 +43637,7 @@ phases:
   steps:
   - id: pm.p0_test.builtin_tests
     name: P0 expected-red tests for built-in tool
-    status: claimed
+    status: done
     description: 'Write expected-red tests defining the acceptance gap for P0 built-in
       tool.
 
@@ -43789,6 +43789,15 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T18:42:45.753658+00:00'
+    done_at: '2026-03-29T18:52:57.085334+00:00'
+    evidence: '7 tests defined across tests/shell/test_builtin_tools.py (5 tests)
+      and tests/shell/test_gateway.py (2 tests). Tests cover: handle_list_providers
+      handler shape, disconnected/failed server status, profile filtering, BUILTIN_TOOL_NAMES
+      constant check, gateway list_tools merge, and gateway call_tool dispatch. RED
+      proof: 6/7 tests fail as expected (4x NotImplementedError on handle_list_providers,
+      1x AssertionError on missing tela_list_providers in list, 1x TOOL_NOT_FOUND
+      error on call). 1/7 passes (BUILTIN_TOOL_NAMES constant). No implementation
+      logic added - only test files.'
   - id: pm.p0_test.gate
     name: P0 test gate review
     status: pending
