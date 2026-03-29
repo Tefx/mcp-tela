@@ -42078,8 +42078,9 @@ phases:
 - id: gw_remed.plan_c_adr
   name: 'Gateway remediation: record Plan C future architecture ADR'
   status: locked
-  gate: Capture the deferred stronger state-machine direction as ADR-only guidance
-    before unrelated runtime work continues.
+  gate: ADR capture is complete, explicitly deferred, and non-blocking for current
+    execution once teardown/contracts remediation is gated.
+  context: Keep this phase doc-only and architecture-preserving.
   depends_on:
   - gw_remed.teardown_contracts
   steps:
