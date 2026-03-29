@@ -43609,6 +43609,24 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p0_impl.config_validation
+    name: Extend config validation for tela_ prefix
+    status: pending
+    description: "Extend config validation to reject tool_prefix starting with \"\
+      tela_\" (currently only \"tela.\" is rejected). This prevents user-defined servers\
+      \ from shadowing built-in tool names.\n\nUPSTREAM ARTIFACTS:\n  - src/tela/core/family.py\
+      \ — existing validation logic is AUTHORITATIVE\n  - src/tela/shell/config_loader.py\
+      \ — existing config loading is AUTHORITATIVE\n\nYOUR SCOPE: Add \"tela_\" to\
+      \ the rejected prefix patterns in the existing validation path. Use Edit to\
+      \ modify the condition only.\n\nStep type: implementation"
+    evidence_template: '## Evidence
+
+      - [ ] "tela_" prefix now rejected in validation
+
+      - [ ] Existing "tela." rejection preserved
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.p0_verify
   name: P0 Verification
   status: locked
