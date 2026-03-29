@@ -42528,7 +42528,7 @@ phases:
       - All route handlers have substantive @pre/@post contracts'
   - id: gw_remed.teardown_contracts.gate
     name: Gate A2/A3 teardown and contract remediation
-    status: pending
+    status: claimed
     description: Review teardown-hardening and route-contract evidence and block progression
       if orphan cleanup risk or vacuous contracts remain.
     verification: Confirm A2 and A3 are closed and no blocker-class cleanup/contract
@@ -42541,6 +42541,8 @@ phases:
     - gw_remed.teardown_contracts.replace_vacuous_route_contracts
     - gw_remed.teardown_contracts.verify_cleanup_and_contracts
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T13:00:10.744206+00:00'
   - id: gw_remed.teardown_contracts.harden_interrupt_teardown_window
     name: Harden bounded interrupt teardown window
     status: done
