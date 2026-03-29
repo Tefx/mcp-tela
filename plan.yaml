@@ -43891,6 +43891,31 @@ phases:
   status: locked
   depends_on:
   - pm.p2_contract
+  steps:
+  - id: pm.p2_impl.rewrite_logic
+    name: Implement description rewriting
+    status: pending
+    description: "Fill in stub bodies for description rewriting per contract from\
+      \ step pm.p2_contract.rewrite_desc.\n\nUPSTREAM ARTIFACTS (from contract step):\n\
+      \  - src/tela/core/family.py — rewrite_descriptions field and rewrite contract\
+      \ are AUTHORITATIVE\n\nYOUR SCOPE: Replace stubs with working logic.\n- Implement\
+      \ backtick-quoted raw-name to prefixed-name replacement in resolve_tools() when\
+      \ rewrite_descriptions=True\n- Only replace within same server's tool descriptions\
+      \ (not cross-server)\n- Pattern: find backtick-quoted `raw_name` occurrences,\
+      \ replace with `prefixed_name`\n\nIf a contract artifact is wrong or incomplete,\
+      \ document a deviation record.\n\nStep type: implementation"
+    evidence_template: '## Evidence
+
+      - [ ] Rewrite logic implemented
+
+      - [ ] Only same-server scope
+
+      - [ ] No false positives on partial matches
+
+      - [ ] Opt-in behavior (default off)
+
+      - [ ] invar guard passes'
+    agent: python-executor
 - id: pm.final_gate
   name: Final Gate Review
   status: locked
