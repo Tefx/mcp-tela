@@ -43447,7 +43447,7 @@ phases:
   depends_on:
   - tool_prefix.deep_review
   steps:
-  - id: pm.p0_contract.built-in-tool-schema-and-handler-contract
+  - id: pm.p0_contract.builtin_tool_schema
     name: Built-in tool schema and handler contract
     status: pending
     description: 'Define ProviderInfo model in core/models.py and tela_list_providers
