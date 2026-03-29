@@ -41125,7 +41125,7 @@ phases:
       **Commit**: ff0b724'
 - id: tool_prefix.deep_review
   name: Tool Prefix Deep Review
-  status: pending
+  status: in_progress
   gate: Final independent multi-agent audit of wiring, spec conformance, architecture
     safety, contract strength, and black-box behavior for tool prefixes.
   depends_on:
@@ -41133,7 +41133,7 @@ phases:
   steps:
   - id: tool_prefix.deep_review.wiring_audit
     name: Full wiring audit for tool-prefix feature
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -41149,6 +41149,8 @@ phases:
       - No exposed-name-only path bypasses raw-name routing where downstream calls
       occur.'
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-29T14:18:10.041952+00:00'
   - id: tool_prefix.deep_review.spec_conformance
     name: Full spec conformance audit for tool-prefix feature
     status: pending
