@@ -41480,8 +41480,10 @@ phases:
 - id: gw_remed.lifecycle_authority
   name: 'Gateway remediation: A1 lifecycle authority split'
   status: pending
-  gate: Unify lifecycle/readiness truth behind a single authority before any startup
-    resequencing.
+  gate: Status truth is unified behind one authority and independently proven across
+    all status consumers before startup resequencing begins.
+  context: Narrow A1 to authority extraction plus consumer-conformance proof; no startup
+    or teardown work in this phase.
   depends_on:
   - tool_prefix.test
   steps:
