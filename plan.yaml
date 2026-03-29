@@ -41705,3 +41705,16 @@ phases:
     depends_on:
     - gw_remed.plan_c_adr.write_future_state_machine_adr
     agent: spec-verifier
+  - id: gw_remed.plan_c_adr.gate
+    name: Gate Plan C ADR capture
+    status: pending
+    description: Review ADR evidence and confirm the future-direction record is complete
+      enough to defer without blocking current Plan A remediation.
+    verification: Confirm the ADR is recorded, future-scoped, and sufficient as the
+      deferred stronger direction.
+    evidence_template: State gate verdict and whether any unresolved Plan C ambiguity
+      still intersects current implementation work.
+    depends_on:
+    - gw_remed.plan_c_adr.write_future_state_machine_adr
+    - gw_remed.plan_c_adr.verify_adr_alignment
+    agent: gate-reviewer
