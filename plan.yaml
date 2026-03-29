@@ -37749,7 +37749,7 @@ phases:
       \ None"
   - id: conn_v2.convergence.seam_proof
     name: Provide seam-level proof for warming startup with background convergence
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (integration-verifier),\
       \ validate that the gateway becomes discoverable before full downstream convergence\
       \ while still reporting truthful warming/degraded state.\nIndependence Level:\
@@ -37812,6 +37812,95 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T02:50:58.641458+00:00'
+    done_at: '2026-03-29T03:01:51.649591+00:00'
+    evidence: '## Seam-Level Integration Evidence
+
+
+      **Changed seam path**: connect/serve cold start -> convergence module -> /status
+
+
+      **Exact command executed**:
+
+      ```
+
+      uv run pytest tests/repro/test_seam_convergence_proof.py -v
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      tests/repro/test_seam_convergence_proof.py::test_cold_start_lockfile_published_before_full_downstream_convergence
+      PASSED [ 14%]
+
+      tests/repro/test_seam_convergence_proof.py::test_status_exposes_convergence_progress_not_stale_snapshot
+      PASSED [ 28%]
+
+      tests/repro/test_seam_convergence_proof.py::test_reconnect_reuses_enumeration_no_double_path
+      PASSED [ 42%]
+
+      tests/repro/test_seam_convergence_proof.py::test_degraded_state_reported_not_hidden
+      PASSED [ 57%]
+
+      tests/repro/test_seam_convergence_proof.py::test_attach_succeeds_before_full_convergence_real_path
+      PASSED [ 71%]
+
+      tests/repro/test_seam_convergence_proof.py::test_convergence_kernel_respects_reconnect_enumeration_contract
+      PASSED [ 85%]
+
+      tests/repro/test_seam_convergence_proof.py::test_runtime_truth_plane_contracts_defined
+      PASSED [100%]
+
+
+      7 passed in 19.92s
+
+      ```
+
+
+      **Verification**: proves discoverable startup and truthful background convergence
+
+
+      ### Key Proofs Delivered
+
+
+      **P1: Cold Start Discovery Before Convergence** - Lockfile appears within 10s,
+      status queryable immediately
+
+      **P2: Status Exposes Convergence Progress** - GET /status returns server_count
+      from config, connected_servers from registry
+
+      **P3: Reconnect Reuses Enumeration** - RECONNECT_ENUMERATION_CONTRACT enforced,
+      no re-enumeration
+
+      **P4: Degraded State Reported, Not Hidden** - Status returns during degraded/warming
+      states
+
+      **P5: Real Attach Path During Warming** - Connect succeeds once lockfile discoverable
+
+      **P6: Convergence Kernel Contract Verification** - Contracts properly defined
+
+      **P7: Runtime Truth Plane Contracts** - LOCKFILE_DISCOVERY_CONTRACT excludes
+      lifecycle_readiness
+
+
+      ### Contract References Verified
+
+      - `DOWNSTREAM_CONVERGENCE_CONTRACT` in `src/tela/shell/downstream.py`
+
+      - `RECONNECT_ENUMERATION_CONTRACT` in `src/tela/shell/downstream.py` and `src/tela/shell/reload.py`
+
+      - `RUNTIME_TRUTH_CONTRACTS` in `src/tela/shell/gateway_runtime.py`
+
+
+      ### Test Suite Summary
+
+      - Total tests: 789 passed, 3 warnings
+
+      - Seam-level proof tests: 7 passed
+
+      - No skips, no failures'
   - id: conn_v2.convergence.gate
     name: Gate background convergence phase
     status: pending
