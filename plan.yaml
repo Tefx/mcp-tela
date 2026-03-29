@@ -37941,7 +37941,7 @@ phases:
       \ when servers fail\n\n### Invar Guard\n- ✅ PASS (0 errors)"
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
-  status: pending
+  status: in_progress
   gate: tela connect attach/detach loop, signal handling, and hard-interrupt shutdown
     are controlled by one bridge module and validated against concurrent attach behavior.
   depends_on:
@@ -37949,7 +37949,7 @@ phases:
   steps:
   - id: conn_v2.bridge.impl_module
     name: Implement bridge control module without shell convergence refactor coupling
-    status: pending
+    status: claimed
     description: "step_type: implementation\n\nauto_tags:\n- integration\n\nFill in\
       \ stub bodies for the bridge control module for attach, detach, interrupt, and\
       \ session-control flow.\n\nRequired scope:\n- Bridge module owns attach/detach\
@@ -38016,6 +38016,8 @@ phases:
       **Path exercised**: connect entrypoint -> bridge control -> lifecycle/convergence
       consumption -> shutdown/interrupt path'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T03:07:01.569437+00:00'
   - id: conn_v2.bridge.integrate_connect_flow
     name: Integrate bridge control into tela connect and gateway session tracking
     status: pending
