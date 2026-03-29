@@ -43443,13 +43443,13 @@ phases:
       **No unresolved Plan C ambiguity intersects current implementation work.**'
 - id: pm.p0_contract
   name: P0 Built-in Tool Contracts
-  status: pending
+  status: in_progress
   depends_on:
   - tool_prefix.deep_review
   steps:
   - id: pm.p0_contract.builtin_tool_schema
     name: Built-in tool schema and handler contract
-    status: pending
+    status: claimed
     description: "Define ProviderInfo model and tela_list_providers tool schema +\
       \ handler contract.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
       \ outputs: signatures, type_defs, interfaces, stubs\n\n## Deliverable 1: ProviderInfo\
@@ -43531,6 +43531,8 @@ phases:
     - src/tela/core/models.py
     - src/tela/shell/gateway.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T18:33:16.237279+00:00'
   - id: pm.p0_contract.downstream_accessor
     name: Downstream accessor contract
     status: pending
