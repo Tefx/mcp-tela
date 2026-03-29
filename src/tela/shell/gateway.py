@@ -269,7 +269,6 @@ def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str
     return Result(value="\n\n".join(parts))
 
 
-# @invar:allow shell_too_complex: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 def _create_upstream_server(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
@@ -305,16 +304,15 @@ def _create_upstream_server(
         startup_config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
         and startup_config.port is not None
     ):
-        return Result(
-            value=FastMCP(
-                "tela-gateway",
-                instructions=merged_instructions,
-                host=startup_config.host,
-                port=startup_config.port,
-            )
+        server = FastMCP(
+            "tela-gateway",
+            instructions=merged_instructions,
+            host=startup_config.host,
+            port=startup_config.port,
         )
-
-    return Result(value=FastMCP("tela-gateway", instructions=merged_instructions))
+    else:
+        server = FastMCP("tela-gateway", instructions=merged_instructions)
+    return Result(value=server)
 
 
 # @shell_orchestration: registers FastMCP resource endpoint for profile introspection.
