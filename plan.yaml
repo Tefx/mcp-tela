@@ -43456,3 +43456,8 @@ phases:
   status: locked
   depends_on:
   - pm.p0_test
+- id: pm.p0_verify
+  name: P0 Verification
+  status: locked
+  depends_on:
+  - pm.p0_impl
