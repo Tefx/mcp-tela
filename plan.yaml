@@ -39389,11 +39389,11 @@ phases:
       **Deviation Records**: None'
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
-  status: pending
+  status: locked
   gate: Compact final phase for docs alignment and final independent review after
     integrated validation succeeds.
   depends_on:
-  - conn_v2.integration_validate
+  - conn_v2.gate1_fix
   steps:
   - id: conn_v2.deep_review.gate
     name: Final gate for connect/serve runtime refactor
