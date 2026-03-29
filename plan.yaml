@@ -38632,7 +38632,7 @@ phases:
     agent: blind-tester
   - id: conn_v2.ux.conformance_review
     name: Review CLI and HTTP diagnostics for consumer-boundary conformance
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (uiux-designer),\
       \ validate that all host-facing surfaces interpret the same lifecycle facts\
       \ consistently.\nIndependence Level: L1\nTest for:\n  - tela connect, tela serve,\
@@ -38670,6 +38670,77 @@ phases:
     agent: uiux-designer
     claimed_by: uiux-designer
     claimed_at: '2026-03-29T04:11:14.554486+00:00'
+    done_at: '2026-03-29T04:15:39.712158+00:00'
+    evidence: '## Verification Report
+
+
+      **Shared fixture/status snapshot**: `tests/shell/test_query_commands_remote_state.py::_build_status_payload(state=...)`
+      for cross-surface replay, plus live `handle_status()` snapshots for authoritative
+      GET `/status` behavior.
+
+
+      | Surface | State | Output summary | Match? |
+
+      |---|---|---|---|
+
+      | tela status | warming | Human output preserved shared fact: `state: warming`
+      | yes |
+
+      | tela status | ready | Human output preserved shared fact: `state: ready` |
+      yes |
+
+      | tela status | degraded | Human output preserved shared fact: `state: degraded`
+      + `degraded_reason: upstream_server_unreachable` | yes |
+
+      | GET /status | warming | Live handler returns `state:"warming"` when configured
+      servers exist but none are connected | yes |
+
+      | GET /status | ready | Live handler returns `state:"ready"` when connected
+      server count equals configured count | yes |
+
+      | GET /status | degraded | Live handler returns `state:"degraded"` + `degraded_reason:"downstream_not_fully_converged"`
+      on partial convergence | yes |
+
+      | GET /status | config_mismatch | Live handler hardcodes `config_path:null`,
+      `requested_config_path:null`, `config_mismatch:false`; cannot express mismatch
+      | **NO** |
+
+      | tela connect | warming/startup | Only generic stderr helper exists; shared
+      lifecycle catalog not wired into runtime output | **NO** |
+
+      | tela serve | startup/shutdown | No warming/ready/degraded lifecycle phrasing
+      in stderr | **NO** |
+
+
+      ### Blocker
+
+      - `config_mismatch` in GET /status - the live handler hardcodes values, cannot
+      express mismatch
+
+      - `tela status` can represent mismatch shape that live `GET /status` cannot
+      originate
+
+
+      ### Should Fix
+
+      - `tela connect` and `tela serve` are not yet rendering the shared lifecycle
+      fact model in operator-visible messaging
+
+      - `remote_state.py` defines contracts but stubs are not consumed by runtime
+      messaging paths
+
+
+      ### Diagnostics Guidance
+
+      - Pass: degraded diagnostics point to lifecycle truth, not blind timeout tuning
+
+      - Verified by targeted tests passing
+
+
+      ### Output Examples (Warming/Ready/Degraded states are consistent across surfaces)
+
+
+      **Issues Found**: 1 blocker, 2 should-fix items'
   - id: conn_v2.system_wiring.entrypoint_integration
     name: Wire connect, serve, status, and reload entrypoints to the new runtime modules
     status: pending
