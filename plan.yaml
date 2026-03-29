@@ -41655,3 +41655,18 @@ phases:
     - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     - gw_remed.teardown_contracts.replace_vacuous_route_contracts
     agent: integration-verifier
+  - id: gw_remed.teardown_contracts.gate
+    name: Gate A2/A3 teardown and contract remediation
+    status: pending
+    description: Review teardown-hardening and route-contract evidence and block progression
+      if orphan cleanup risk or vacuous contracts remain.
+    verification: Confirm A2 and A3 are closed and no blocker-class cleanup/contract
+      debt leaks into later phases.
+    evidence_template: Summarize blockers, cite the shared cleanup authority, and
+      explicitly state whether any vacuous @post contracts remain.
+    depends_on:
+    - gw_remed.teardown_contracts.extract_cleanup_authority
+    - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
+    - gw_remed.teardown_contracts.replace_vacuous_route_contracts
+    - gw_remed.teardown_contracts.verify_cleanup_and_contracts
+    agent: gate-reviewer
