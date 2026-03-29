@@ -568,6 +568,28 @@ def get_server_instructions() -> Result[dict[str, str], str]:
     return Result(value=dict(_server_instructions))
 
 
+async def get_connected_server_names() -> Result[set[str], str]:
+    """Return names of servers with active downstream client handles.
+
+    Reads from the module-level `_clients` dict (line 40) which maps
+    server_name -> _ClientHandle for connected sessions.
+
+    This is distinct from get_all_tools() which returns the registry;
+    this accessor reports connection-level truth (which servers have
+    live transport handles), not tool-registration truth.
+
+    Examples:
+        >>> import asyncio
+        >>> r = asyncio.run(get_connected_server_names())
+        >>> isinstance(r.value, set)
+        True
+
+    Returns:
+        Result with set of server names that have active client handles.
+    """
+    raise NotImplementedError
+
+
 def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:
     """Return all resolved tools grouped by server name.
 
