@@ -42078,17 +42078,56 @@ phases:
   - gw_remed.teardown_contracts
   steps:
   - id: gw_remed.plan_c_adr.write_future_state_machine_adr
-    name: Author ADR-004 for deferred gateway startup state machine
+    name: Record Plan C gateway state-machine ADR as deferred architecture only
     status: pending
-    description: Write docs/ADR-004-gateway-startup-state-machine.md as a future-direction
-      ADR only, capturing the deferred explicit states (preparing, bound_discoverable,
-      converging, ready, degraded, shutting_down, stopped), transition rules, source-of-truth
-      boundaries, connection admission rules, interrupt/crash semantics, and adoption
-      triggers.
-    verification: Document must clearly separate current Plan A implementation from
-      deferred Plan C architecture and avoid changing current runtime contract text.
-    evidence_template: Paste ADR heading list, note the deferred-vs-current distinction,
-      and cite where states, transition rules, and adoption triggers are captured.
+    description: 'Write docs/ADR-004-gateway-startup-state-machine.md as a deferred-architecture
+      ADR only.
+
+
+      Required sections:
+
+      - explicit states: preparing, bound_discoverable, converging, ready, degraded,
+      shutting_down, stopped
+
+      - transition rules
+
+      - source-of-truth boundaries
+
+      - connection admission rules
+
+      - interrupt/crash semantics
+
+      - adoption triggers
+
+
+      This step is documentation-only architecture capture.
+
+      It must not redesign or reopen the approved current Plan A implementation shape.'
+    verification: '- ADR clearly marks Plan C as deferred/future
+
+      - ADR does not redefine current execution steps as required now
+
+      - All required sections are present'
+    evidence_template: '## ADR-004 Coverage
+
+      | Required Topic            | Present | Notes |
+
+      | ------------------------- | ------- | ----- |
+
+      | states                    | ...     | ...   |
+
+      | transitions               | ...     | ...   |
+
+      | truth boundaries          | ...     | ...   |
+
+      | admission rules           | ...     | ...   |
+
+      | interrupt/crash semantics | ...     | ...   |
+
+      | adoption triggers         | ...     | ...   |'
+    refs:
+    - docs/DESIGN.md
+    - docs/ADR-004-gateway-startup-state-machine.md
     agent: software-architect
   - id: gw_remed.plan_c_adr.verify_adr_alignment
     name: Verify ADR-004 matches the approved future-direction scope
