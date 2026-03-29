@@ -41198,7 +41198,7 @@ phases:
       - Likely transitive dependency provider'
   - id: tool_prefix.deep_review.spec_conformance
     name: Full spec conformance audit for tool-prefix feature
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -41216,6 +41216,42 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-03-29T14:26:37.146127+00:00'
+    done_at: '2026-03-29T14:38:43.727441+00:00'
+    evidence: '## Spec Conformance Report
+
+
+      **Verdict**: PASS (with one observation)
+
+
+      **Decisions 1-6**: All CONFORM
+
+      - D1: Prefix at registration/resolution ✅
+
+      - D2: tool_overrides match raw names ✅
+
+      - D3: Conflict on exposed names ✅
+
+      - D4: raw→exposed→routing preserved ✅
+
+      - D5: tela. reserved prefix rejected ✅
+
+      - D6: Backward compatibility ✅
+
+
+      **Verification Points 1-7**: 6 PASS, 1 NEEDS_RUNTIME_TEST
+
+      - VP1-VP5, VP7: PASS ✅
+
+      - VP6 (reload notification): NEEDS_RUNTIME_TEST (static analysis confirms digest
+      uses exposed names)
+
+
+      **Drift found**: No
+
+
+      **Observation**:
+
+      - AuditEntry lacks raw_name field (observability gap, not conformance issue)'
   - id: tool_prefix.deep_review.architecture_review
     name: Architecture and concurrency review for tool-prefix mapping
     status: done
