@@ -41745,6 +41745,59 @@ phases:
     - gw_remed.teardown_contracts.replace_vacuous_route_contracts
     - gw_remed.teardown_contracts.verify_cleanup_and_contracts
     agent: gate-reviewer
+  - id: gw_remed.teardown_contracts.harden_interrupt_teardown_window
+    name: Harden bounded interrupt teardown window
+    status: pending
+    description: 'Isolate the interrupt-driven teardown hardening from general cleanup
+      authority extraction.
+
+
+      Scope:
+
+      - src/tela/commands/connect_cmd.py
+
+
+      Implement the bounded critical section that protects runtime/session cleanup
+      when an interrupt lands during connect-side teardown.
+
+
+      This step owns:
+
+      - interrupt timing semantics
+
+      - bounded critical section shape
+
+      - proof that connection/session state cannot be orphaned by mid-teardown interruption
+
+
+      This step does NOT own:
+
+      - HTTP disconnect route wiring
+
+      - gateway shutdown cleanup reuse
+
+      - route contract wording'
+    verification: '- Regression covers interrupt during teardown critical section
+
+      - Evidence proves cleanup completes or safely resumes without orphaning connection_id-scoped
+      state
+
+      - No unrelated disconnect/shutdown wiring changes are required for this step
+      to pass'
+    evidence_template: '## Interrupt Teardown Evidence
+
+      **Critical section**: <function / lines>
+
+      **Interrupt point tested**: <exact point>
+
+      **State before**: <connection/session/runtime markers>
+
+      **State after**: <same markers>
+
+      **Verdict**: no orphaned state | issue found'
+    depends_on:
+    - gw_remed.teardown_contracts.extract_cleanup_authority
+    agent: python-senior
 - id: gw_remed.plan_c_adr
   name: 'Gateway remediation: record Plan C future architecture ADR'
   status: locked
