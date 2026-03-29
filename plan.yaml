@@ -41837,16 +41837,46 @@ phases:
   - gw_remed.startup_plan_a
   steps:
   - id: gw_remed.teardown_contracts.extract_cleanup_authority
-    name: Extract idempotent connection cleanup authority and bounded teardown section
+    name: Extract connection_id-scoped cleanup authority
     status: pending
-    description: Fill in src/tela/shell/connection_lifecycle.py as the shared cleanup
-      authority keyed by connection_id, then complete the bounded critical teardown
-      section in src/tela/commands/connect_cmd.py so interrupt-driven cleanup cannot
-      orphan runtime/session state.
-    verification: Extend repro coverage so repeated or interrupted cleanup paths stay
-      idempotent and do not underflow connection accounting.
-    evidence_template: List modified files and paste targeted test results proving
-      cleanup remains safe under repeated calls and interrupt timing.
+    description: 'Fill in src/tela/shell/connection_lifecycle.py as the shared cleanup
+      authority keyed by connection_id.
+
+
+      Scope is limited to:
+
+      - one reusable cleanup surface
+
+      - idempotent semantics by connection_id
+
+      - authority extraction reusable by disconnect and shutdown callers
+
+
+      Do not harden interrupt timing or wire HTTP/gateway callers in this step.'
+    verification: '- Shared cleanup authority exists and is keyed by connection_id
+
+      - Repeated cleanup for the same connection_id is idempotent
+
+      - No caller-specific branching remains embedded in disconnect/shutdown paths'
+    evidence_template: '## Cleanup Authority Extraction
+
+      **Authority**: <function/class>
+
+      **Key**: connection_id
+
+      **Idempotency proof**: <test/assertion>
+
+      **Intended callers**:
+
+      - disconnect endpoint
+
+      - gateway shutdown'
+    refs:
+    - docs/DESIGN.md
+    - src/tela/shell/connection_lifecycle.py
+    - src/tela/commands/connect_cmd.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/http_routes.py
     agent: python-senior
   - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     name: Route disconnect endpoint and gateway shutdown through the shared cleanup
