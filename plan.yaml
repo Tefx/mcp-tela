@@ -43534,22 +43534,51 @@ phases:
   - id: pm.p0_contract.downstream_accessor
     name: Downstream accessor contract
     status: pending
-    description: 'Add get_connected_server_names() -> Result[set[str], str] accessor
-      to downstream.py with @pre/@post contracts and doctest stub.
+    description: "Add get_connected_server_names() accessor to downstream.py with\
+      \ contract stub.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
+      \ outputs: signatures, stubs\n\n## Deliverable: New function in src/tela/shell/downstream.py\n\
+      \nAdd after the existing `get_server_instructions()` function (line ~554):\n\
+      \n```python\nasync def get_connected_server_names() -> Result[set[str], str]:\n\
+      \    \"\"\"Return names of servers with active downstream client handles.\n\n\
+      \    Reads from the module-level `_clients` dict (line 40) which maps\n    server_name\
+      \ -> _ClientHandle for connected sessions.\n\n    This is distinct from get_all_tools()\
+      \ which returns the registry;\n    this accessor reports connection-level truth\
+      \ (which servers have\n    live transport handles), not tool-registration truth.\n\
+      \n    Examples:\n        >>> import asyncio\n        >>> r = asyncio.run(get_connected_server_names())\n\
+      \        >>> isinstance(r.value, set)\n        True\n\n    Returns:\n      \
+      \  Result with set of server names that have active client handles.\n    \"\"\
+      \"\n    raise NotImplementedError\n```\n\n## Constraints\n- Shell zone function:\
+      \ returns Result[set[str], str] following existing pattern (see get_server_instructions,\
+      \ get_all_tools, get_tool_server)\n- Reads from `_clients: dict[str, _ClientHandle]`\
+      \ at module scope (line 40)\n- Must acquire `_registry_lock` for thread safety\
+      \ (matching connect_all pattern)\n- Do NOT add @pre/@post — this is Shell zone,\
+      \ not Core zone\n- The set[str] return distinguishes connected from configured:\
+      \ a server in config but not in _clients is disconnected or failed\n\n## Pattern\
+      \ reference\n- Follow the exact style of `get_all_tools()` at line 571 and `get_tool_server()`\
+      \ at line 585\n- Same Result wrapper pattern as all other public functions in\
+      \ this module"
+    evidence_template: '## Contract Artifact
+
+      **get_connected_server_names signature** (paste from downstream.py):
+
+      ```
+
+      <full function signature + docstring + NotImplementedError>
+
+      ```
 
 
-      Step type: contract
+      **Verification**:
 
-      Contract purity: ENFORCED
+      - [ ] Function returns Result[set[str], str]
 
-      Contract outputs: signatures, stubs
+      - [ ] Doctest stub shows isinstance check
 
+      - [ ] Function raises NotImplementedError (stub only)
 
-      Deliverables:
+      - [ ] No implementation logic
 
-      - get_connected_server_names() stub with contracts in shell/downstream.py
-
-      - Returns Result[set[str], str] following existing Shell zone patterns'
+      - [ ] invar guard passes'
     refs:
     - src/tela/shell/downstream.py
     agent: python-executor
