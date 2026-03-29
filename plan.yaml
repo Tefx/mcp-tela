@@ -44855,45 +44855,101 @@ phases:
   - id: pm.final_gate.review
     name: Final cross-priority gate review
     status: pending
-    description: 'Final gate review across P0/P1/P2. Verify:
+    description: "Final cross-priority gate review for provider_manifest feature.\n\
+      \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Feature introduces\
+      \ new runtime surface (built-in MCP tool)\n  - Touches gateway dispatch hot\
+      \ path (_list_tools, _call_tool)\n  - Modifies Core zone family.py with new\
+      \ function and resolve_tools changes\n  - Config validation extended in two\
+      \ locations\n\n## Gate criteria\n\n### P0: Built-in tool\n1. tela_list_providers\
+      \ returns correct ProviderInfo data for connected, disconnected, and failed\
+      \ servers\n2. Gateway _list_tools includes tela_list_providers alongside downstream\
+      \ tools\n3. Gateway _call_tool dispatches tela_list_providers before downstream\
+      \ registry lookup\n4. L2 audit entry recorded for built-in tool calls (server_name=\"\
+      tela\")\n5. Config validation rejects tool_prefix starting with \"tela_\" or\
+      \ \"tela.\"\n6. Hot-reload: built-in tools survive registry clear (not stored\
+      \ in DownstreamRegistry)\n\n### P1: Instructions manifest\n7. Instructions include\
+      \ \"Connected at startup: server_a (N tools), ...\" header\n8. Surface text\
+      \ declares `tela_list_providers` as built-in MCP tool\n9. Manifest reflects\
+      \ startup snapshot (acknowledged staleness)\n10. get_gateway_surface_instructions\
+      \ backward-compatible (None default)\n\n### P2: Description rewriting\n11. rewrite_descriptions=False\
+      \ by default — no behavior change for existing configs\n12. Backtick-quoted\
+      \ raw names correctly replaced with prefixed names\n13. No false positives (non-backtick\
+      \ text, cross-server names)\n14. Core zone compliance: no I/O imports in rewrite_tool_description\n\
+      \n### Cross-cutting\n15. Full test suite passes: pytest tests/ -x --timeout=30\n\
+      16. Invar guard clean: uv run invar guard --all\n17. No regressions in existing\
+      \ gateway, downstream, config, or upstream tests\n18. Surface instruction contract\
+      \ served to upstream MCP clients is accurate\n19. tela_list_providers does NOT\
+      \ appear in DownstreamRegistry\n\n## Commands to run\n```bash\npytest tests/\
+      \ -x --timeout=30\nuv run invar guard --all\n```"
+    evidence_template: '## Final Gate Evidence
 
-      1. Provider discovery works end-to-end (tela_list_providers returns correct
-      data)
 
-      2. Instructions manifest is accurate and includes built-in tool declaration
+      ### Test Suite
 
-      3. Description rewriting is correct with no false positives
+      ```
 
-      4. Config validation rejects tela_ prefix
+      <paste pytest summary>
 
-      5. All existing tests still pass (no regressions)
+      ```
 
-      6. Audit logging present for built-in tool calls
 
-      7. Hot-reload compatibility maintained
+      ### Invar Guard
 
-      8. Surface instruction contract from tela gateway preserved'
-    evidence_template: '## Evidence
+      ```
 
-      - [ ] P0: tela_list_providers end-to-end verified
+      <paste invar guard output>
 
-      - [ ] P1: Manifest header correct
+      ```
 
-      - [ ] P2: Description rewriting correct
 
-      - [ ] Config validation rejects tela_ prefix
+      ### P0 Verification
 
-      - [ ] Full test suite green
+      - [ ] tela_list_providers returns ProviderInfo list
 
-      - [ ] Audit logging present
+      - [ ] _list_tools includes built-in tools
 
-      - [ ] Hot-reload compatible
+      - [ ] _call_tool dispatches built-in before registry
 
-      - [ ] Surface contract preserved
+      - [ ] L2 audit logged for built-in calls
 
-      - Blockers: (list or NONE)
+      - [ ] Config rejects tela_ and tela. prefixes
 
-      - Should-fix: (list or NONE)
+      - [ ] Hot-reload safe
 
-      - Suggestions: (list or NONE)'
+
+      ### P1 Verification
+
+      - [ ] "Connected at startup:" in instructions
+
+      - [ ] tela_list_providers declared in surface text
+
+      - [ ] Backward compatible
+
+
+      ### P2 Verification
+
+      - [ ] Default off (rewrite_descriptions=False)
+
+      - [ ] Backtick replacement correct
+
+      - [ ] No false positives
+
+      - [ ] Core zone compliant
+
+
+      ### Verdict
+
+      - [ ] PASS: All criteria met
+
+      - [ ] BLOCKED: Issues found (list below)'
+    refs:
+    - src/tela/shell/builtin_tools.py
+    - src/tela/core/models.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/surface_instructions.py
+    - src/tela/core/family.py
+    - src/tela/core/config.py
+    - tests/shell/test_builtin_tools.py
+    - tests/shell/test_gateway.py
     agent: gate-reviewer
