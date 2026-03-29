@@ -38414,7 +38414,7 @@ phases:
     agent: gate-reviewer
   - id: conn_v2.validation.full_plan_check
     name: Run full-plan-check for integrated runtime refactor
-    status: claimed
+    status: done
     description: "step_type: verification\nverification_scope: full-plan-check\nAs\
       \ an INDEPENDENT TESTER (integration-verifier), run the nearest repo-wide validation\
       \ boundary now, before doc-sync and deep review.\nThis check protects downstream\
@@ -38456,6 +38456,72 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T06:01:16.151723+00:00'
+    done_at: '2026-03-29T06:06:28.777647+00:00'
+    evidence: '## Full-Plan Check
+
+
+      **Commands**:
+
+      ```
+
+      uvx invar-tools guard --all
+
+      uv run pytest -v --tb=short
+
+      ```
+
+
+      **Actual output**:
+
+      - **Invar Guard**: 2 ERRORS (blockers), 22 warnings
+
+      - **Pytest**: 793 passed, 1 FAILED, 3 warnings
+
+
+      ### Blocker Issues Found
+
+
+      | Issue | Location | Severity | Classification |
+
+      |-------|----------|----------|--------------|
+
+      | File size exceeds limit | `src/tela/shell/gateway.py` (703 > 700 lines) |
+      BLOCKER | must fix |
+
+      | Complexity debt exceeds threshold | 7 unaddressed warnings (> 5 limit) | BLOCKER
+      | must fix |
+
+      | Signal handling test timeout | `tests/repro/test_hard_interrupt.py` | TEST_FAILURE
+      | flaky/timing |
+
+
+      ### Invar Guard Details
+
+      - `shell_pure_logic` debt: 9 functions in shell without I/O
+
+      - `function_size` warnings: `main` (195 lines), `_register_http_routes` (107
+      lines), `_run_serve_gateway` (122 lines)
+
+      - `dead_export`: unused `re_enumerate` function
+
+      - Escape hatch budget: 12/15 used
+
+
+      ### Pytest Failure
+
+      - Failed: `test_sigint_during_active_bridge_terminates_immediately`
+
+      - Error: `subprocess.TimeoutExpired` - tela status --json timed out after 5s
+
+
+      ### Cross-Phase Impact
+
+      These blockers will affect doc_sync.gate and conn_v2.deep_review.gate if not
+      remediated.
+
+
+      **Recommendation**: Issues require remediation before proceeding to downstream
+      gates.'
   - id: conn_v2.validation.spec_conformance
     name: Verify implemented runtime behavior against authoritative specs
     status: done
