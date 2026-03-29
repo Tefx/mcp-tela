@@ -42446,7 +42446,7 @@ phases:
     agent: gate-reviewer
   - id: gw_remed.teardown_contracts.harden_interrupt_teardown_window
     name: Harden bounded interrupt teardown window
-    status: claimed
+    status: done
     description: 'Isolate the interrupt-driven teardown hardening from general cleanup
       authority extraction.
 
@@ -42499,6 +42499,46 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T12:43:38.157444+00:00'
+    done_at: '2026-03-29T12:50:52.586489+00:00'
+    evidence: '## Interrupt Teardown Evidence
+
+      **Critical section**: `src/tela/commands/connect_cmd.py::_run_bridge` finally-block
+      teardown path, with bounded resume call via `_post_json_once(..., timeout_seconds=TEARDOWN_RESUME_TIMEOUT_SECONDS)`
+      after `KeyboardInterrupt` during `/disconnect`.
+
+
+      **Interrupt point tested**: exact interrupt at teardown disconnect call (`_post_json`
+      for `/disconnect` raises `KeyboardInterrupt`) in `tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section`.
+
+
+      **State before**:
+
+      - connect registration payload captured once (`connect_payloads[0]["connection_id"]`)
+
+      - teardown disconnect attempt invoked once and interrupted (`disconnect_payloads[0]["connection_id"]`)
+
+      - resume attempt not yet run
+
+
+      **State after**:
+
+      - bounded resume disconnect invoked once (`resumed_disconnect_payloads[0]["connection_id"]`)
+
+      - `connection_id` matches across connect, interrupted disconnect, and resumed
+      disconnect payloads
+
+      - run result is `INTERRUPT: bridge teardown interrupted`
+
+
+      **Verdict**: no orphaned state ✅
+
+
+      **Files modified**: src/tela/commands/connect_cmd.py, tests/shell/test_connect_cmd.py
+
+
+      **Verification**: 28 passed in 0.61s ✅
+
+      **Commit**: 16ce2ea'
 - id: gw_remed.plan_c_adr
   name: 'Gateway remediation: record Plan C future architecture ADR'
   status: locked
