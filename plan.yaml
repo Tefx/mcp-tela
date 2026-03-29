@@ -41939,7 +41939,7 @@ phases:
       **Commit**: a169393bb'
   - id: gw_remed.startup_plan_a.verify_plan_a_runtime
     name: Verify Plan A startup contract end-to-end
-    status: pending
+    status: claimed
     description: 'Independent L2 verification for Plan A runtime behavior.
 
 
@@ -41985,6 +41985,8 @@ phases:
     - gw_remed.startup_plan_a.harden_post_bind_failure_rollback
     - gw_remed.startup_plan_a.reject_connect_while_warming
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T12:22:17.835388+00:00'
   - id: gw_remed.startup_plan_a.gate
     name: Gate A4 Plan A startup remediation
     status: pending
