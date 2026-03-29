@@ -868,3 +868,112 @@ def test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect(
     )
 
     _teardown()
+
+
+# --- Prefix-driven tool-surface change tests ---
+
+
+def test_on_tools_changed_prefix_change_updates_registry_and_notifies() -> None:
+    """on_tools_changed with prefix change updates registry and emits notification.
+
+    A prefix-only change on a single server counts as a tool-surface change
+    and must trigger tools/list_changed notification.
+    """
+    notified: list[str] = []
+
+    async def capture_notify(digest: str) -> None:
+        notified.append(digest)
+
+    set_notify_callback(capture_notify)
+
+    old_config_ref = _get_config()
+
+    # Setup: fs with no prefix
+    servers = {"fs": ServerConfig(name="fs", command="cmd")}
+    asyncio.run(
+        connect_all(
+            servers,
+            tool_lists={"fs": [{"name": "read_file", "inputSchema": {}}]},
+        )
+    )
+    _set_config(TelaConfig(servers=servers))
+
+    try:
+        # Update: same raw tools but now with prefix
+        updated_server_config = ServerConfig(
+            name="fs", command="cmd", tool_prefix="fs."
+        )
+        result = asyncio.run(
+            on_tools_changed(
+                "fs",
+                updated_server_config,
+                [{"name": "read_file", "inputSchema": {}}],
+            )
+        )
+        assert result.is_ok
+
+        # Registry updated with prefixed exposed name
+        assert get_tool_server("fs.read_file").value == "fs"
+
+        # Notification fired
+        assert len(notified) == 1
+        assert notified[0].startswith("sha256:")
+    finally:
+        set_notify_callback(None)
+        _set_config(old_config_ref)
+        _teardown()
+
+
+def test_prefix_change_produces_different_digest() -> None:
+    """Changing prefix produces a different digest from the original.
+
+    The digest keys off exposed names, so changing prefix changes digest.
+    """
+    notified: list[str] = []
+
+    async def capture_notify(digest: str) -> None:
+        notified.append(digest)
+
+    set_notify_callback(capture_notify)
+
+    old_config_ref = _get_config()
+
+    # Setup: fs with no prefix
+    servers = {"fs": ServerConfig(name="fs", command="cmd")}
+    asyncio.run(
+        connect_all(
+            servers,
+            tool_lists={"fs": [{"name": "read_file", "inputSchema": {}}]},
+        )
+    )
+    _set_config(TelaConfig(servers=servers))
+
+    # Clear notifications from initial connect
+    notified.clear()
+
+    try:
+        # Update: same raw tools but now with prefix
+        updated_server_config = ServerConfig(
+            name="fs", command="cmd", tool_prefix="fs."
+        )
+        result = asyncio.run(
+            on_tools_changed(
+                "fs",
+                updated_server_config,
+                [{"name": "read_file", "inputSchema": {}}],
+            )
+        )
+        assert result.is_ok
+        assert len(notified) == 1
+
+        # The digest is based on exposed names (fs.read_file), not raw names
+        import hashlib
+
+        tool_names = sorted(["fs.read_file"])
+        raw = ":".join(tool_names).encode()
+        expected = f"sha256:{hashlib.sha256(raw).hexdigest()}"
+        assert notified[0] == expected
+    finally:
+        set_notify_callback(None)
+        _set_config(old_config_ref)
+        _teardown()
