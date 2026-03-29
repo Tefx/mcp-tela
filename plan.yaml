@@ -41835,8 +41835,10 @@ phases:
 - id: gw_remed.teardown_contracts
   name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
   status: locked
-  gate: Harden disconnect/shutdown cleanup and replace vacuous route contracts before
-    resuming unrelated runtime work.
+  gate: Cleanup authority, interrupt hardening, caller wiring, and route contract
+    strength are all proven before unrelated runtime work resumes.
+  context: Separate cleanup authority extraction from interrupt-window hardening;
+    keep contract strengthening behavior-minimal.
   depends_on:
   - gw_remed.startup_plan_a
   steps:
