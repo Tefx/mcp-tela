@@ -39518,7 +39518,7 @@ phases:
       '
   - id: conn_v2.deep_review.contract_strength
     name: Contract strength audit for runtime state and lifecycle surfaces
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       Verify all new or changed contracts for lifecycle/state surfaces are non-vacuous
@@ -39533,6 +39533,48 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T09:01:42.684743+00:00'
+    done_at: '2026-03-29T09:10:54.761801+00:00'
+    evidence: 'Contract strength audit identified tautological post-conditions in
+      HTTP route handlers.
+
+
+      **Status: VACUOUS_CONTRACTS (non-blocking)**
+
+
+      **Vacuous contracts (should fix but not blocking):**
+
+      - `handle_status` (http_routes.py:66): `@post(lambda result: result.is_ok or
+      result.is_err)` — TAUTOLOGY, every Result is always ok or err by construction
+
+      - `handle_connect` (http_routes.py:197): same tautological post-condition
+
+      - `handle_disconnect` (http_routes.py:260): same tautological post-condition
+
+
+      **Positive findings:**
+
+      ✓ `gateway_runtime.py` correctly prevents discovery-as-readiness: `LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
+      = ("lifecycle_readiness", "downstream_convergence")`
+
+      ✓ `STATUS_SNAPSHOT_CONTRACT` defines authoritative lifecycle readiness source
+
+      ✓ `RUNTIME_TRUTH_BEHAVIORAL_NOTES` documents discovery vs readiness separation
+
+      ✓ Lifecycle state computation (ready/degraded/warming) correctly implemented
+      in both gateway.py and http_routes.py
+
+
+      **Non-blocking issues:**
+
+      - `handle_health` has vacuous `@pre(lambda: True)` — acceptable for no-param
+      function but could use better documentation
+
+      - `handle_status` missing successful-path doctest (only covers error case)
+
+
+      **Artifact:** contract audit (no file changes)
+
+      '
   - id: conn_v2.deep_review.wiring_audit
     name: Full wiring audit for connect/serve runtime refactor
     status: done
