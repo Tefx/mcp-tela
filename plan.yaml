@@ -37077,7 +37077,7 @@ phases:
       still work'
   - id: conn_v2.startup_coord.liveness_probe
     name: Probe single-instance autostart liveness from the real entry point
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
       \ validate startup coordination from the real tela connect/tela serve entrypoints.\n\
       Independence Level: L2\nspec_refs:\n  - docs/USAGE.md#Running tela > tela connect\n\
@@ -37145,6 +37145,45 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-28T21:12:42.631606+00:00'
+    done_at: '2026-03-29T01:48:14.635130+00:00'
+    evidence: "## Verification Report\n\n**Tester**: blind-tester\n**Scope**: startup\
+      \ coordination and single-instance autostart\n**Independence Level**: L2\n\n\
+      ### Test Execution\n\n- Command:\n```\nuv run pytest tests/repro/test_startup_coord_liveness.py\
+      \ -v --tb=short\n```\n\n- Actual output:\n```\n=============================\
+      \ test session starts ==============================\nplatform darwin -- Python\
+      \ 3.12.12, pytest-9.0.2, pluggy-1.6.0\ncollected 5 items\n\ntests/repro/test_startup_coord_liveness.py::test_cold_start_creates_lockfile_and_gateway\
+      \ PASSED [ 20%]\ntests/repro/test_startup_coord_liveness.py::test_exactly_one_serve_process_for_concurrent_connects\
+      \ PASSED [ 40%]\ntests/repro/test_startup_coord_liveness.py::test_follower_attaches_to_existing_gateway\
+      \ PASSED [ 60%]\ntests/repro/test_startup_coord_liveness.py::test_stale_lockfile_cleanup_diagnostics\
+      \ PASSED [ 80%]\ntests/repro/test_startup_coord_liveness.py::test_config_mismatch_diagnostics\
+      \ PASSED [100%]\n\n============================== 5 passed in 23.52s ==============================\n\
+      ```\n\n### Test Cases Verified\n\n| Test | Description | Result |\n|------|-------------|--------|\n\
+      | `test_cold_start_creates_lockfile_and_gateway` | Entry point starts from `tela\
+      \ connect` cold start, creates lockfile with valid PID and port | PASS |\n|\
+      \ `test_exactly_one_serve_process_for_concurrent_connects` | Concurrent second\
+      \ attach does NOT create a second serve process - all connects share ONE gateway\
+      \ PID | PASS |\n| `test_follower_attaches_to_existing_gateway` | Follower attach\
+      \ path waits for leader-published discovery state instead of spawning a second\
+      \ server | PASS |\n| `test_stale_lockfile_cleanup_diagnostics` | Stale lockfile\
+      \ (dead PID) is detected and handled with cleanup or clear diagnostic | PASS\
+      \ |\n| `test_config_mismatch_diagnostics` | Config path mismatch handled gracefully\
+      \ with clear behavior | PASS |\n\n### Spec Coverage\n\nPer docs/USAGE.md#Running\
+      \ tela and docs/INTERFACES.md#7.3 Lockfile Contract:\n\n1. **Cold Start Entry\
+      \ Point** ✓\n   - `tela connect` with no existing gateway auto-starts one\n\
+      \   - Lockfile appears at `~/.tela/gateway.lock`\n   - PID is alive, port is\
+      \ non-zero (ephemeral bind)\n\n2. **Single-Instance Guarantee** ✓\n   - N concurrent\
+      \ `tela connect` invocations → 1 serve process PID\n   - No duplicate gateway\
+      \ spawning\n\n3. **Follower Attach Path** ✓\n   - Pre-existing gateway detected\
+      \ via lockfile\n   - Followers register via POST /connect with existing gateway\n\
+      \   - Connection count reflects attached followers\n\n4. **Failure Path Diagnostics**\
+      \ ✓\n   - Stale lockfile (dead PID): cleaned up and gateway started successfully\n\
+      \   - Config mismatch: gateway accepts or reports diagnostic\n\n### Issues Found\n\
+      \n| Severity | Description | Location | Reproduction |\n|----------|-------------|----------|--------------|\n\
+      | N/A | No blocking issues found | - | - |\n\n### Verdict\n\n- [x] PASS\n\n\
+      All verification criteria met:\n- Entry point starts and one connect-triggered\
+      \ gateway becomes discoverable\n- Concurrent second attach does not create a\
+      \ second serve process\n- Actual command/output included above\n- Full-path\
+      \ harness tests in `tests/repro/test_startup_coord_liveness.py`"
   - id: conn_v2.startup_coord.gate
     name: Gate startup coordination phase
     status: pending
