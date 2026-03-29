@@ -43627,6 +43627,34 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p0_impl.gateway_wiring
+    name: Wire built-in tools into gateway
+    status: pending
+    description: "Wire built-in tools into gateway. This is the integration step that\
+      \ depends on the three parallel implementation steps.\n\nYOUR SCOPE:\n- Register\
+      \ built-in tools in gateway_prepare_startup()\n- Merge built-in tools into _list_tools\
+      \ response\n- Add dispatch branch in _call_tool before registry lookup for built-in\
+      \ tool names\n- Add L2 audit logging for built-in tool calls\n\nUPSTREAM ARTIFACTS:\n\
+      \  - src/tela/shell/gateway.py — gateway lifecycle is AUTHORITATIVE\n  - src/tela/shell/upstream.py\
+      \ — upstream MCP server is AUTHORITATIVE\n  - src/tela/shell/builtin_tools.py\
+      \ — BUILTIN_TOOLS schema and handler from contract/impl steps\n\nStep type:\
+      \ implementation (serial integration)"
+    evidence_template: '## Evidence
+
+      - [ ] Built-in tools registered in gateway startup
+
+      - [ ] _list_tools merges built-in tools
+
+      - [ ] _call_tool dispatches tela_list_providers to handler
+
+      - [ ] L2 audit logging for built-in calls
+
+      - [ ] invar guard passes'
+    depends_on:
+    - pm.p0_impl.builtin_handler
+    - pm.p0_impl.downstream_accessor
+    - pm.p0_impl.config_validation
+    agent: python-executor
 - id: pm.p0_verify
   name: P0 Verification
   status: locked
