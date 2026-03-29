@@ -37186,7 +37186,7 @@ phases:
       \ harness tests in `tests/repro/test_startup_coord_liveness.py`"
   - id: conn_v2.startup_coord.gate
     name: Gate startup coordination phase
-    status: pending
+    status: claimed
     description: "step_type: gate\nGate review: verify startup coordination and single-instance\
       \ autostart are correct at the runnable surface.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - phase touches startup races, lockfile ownership, and cross-process behavior\n\
@@ -37202,6 +37202,8 @@ phases:
     - conn_v2.startup_coord.integrate_autostart
     - conn_v2.startup_coord.liveness_probe
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T01:48:28.062274+00:00'
 - id: conn_v2.lifecycle
   name: Lifecycle Status and Discovery/Readiness Split
   status: locked
