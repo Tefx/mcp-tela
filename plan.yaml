@@ -43660,6 +43660,32 @@ phases:
   status: locked
   depends_on:
   - pm.p0_impl
+  steps:
+  - id: pm.p0_verify.retest
+    name: P0 green retest
+    status: pending
+    description: 'Rerun P0 test suite expecting all green. Verify tela_list_providers
+      returns correct data, gateway merges built-in tools, call routing works.
+
+
+      Step type: test
+
+      Step intent: retest_green
+
+      Expected result: green
+
+
+      Run: pytest tests/shell/test_builtin_tools.py tests/shell/test_gateway.py -v
+
+      All tests must pass.'
+    evidence_template: '## Evidence
+
+      - [ ] All P0 tests pass (paste output)
+
+      - [ ] No test modifications needed
+
+      - [ ] invar guard passes'
+    agent: integration-verifier
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
   status: locked
