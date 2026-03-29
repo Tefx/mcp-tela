@@ -41677,3 +41677,17 @@ phases:
     before unrelated runtime work continues.
   depends_on:
   - gw_remed.teardown_contracts
+  steps:
+  - id: gw_remed.plan_c_adr.write_future_state_machine_adr
+    name: Author ADR-004 for deferred gateway startup state machine
+    status: pending
+    description: Write docs/ADR-004-gateway-startup-state-machine.md as a future-direction
+      ADR only, capturing the deferred explicit states (preparing, bound_discoverable,
+      converging, ready, degraded, shutting_down, stopped), transition rules, source-of-truth
+      boundaries, connection admission rules, interrupt/crash semantics, and adoption
+      triggers.
+    verification: Document must clearly separate current Plan A implementation from
+      deferred Plan C architecture and avoid changing current runtime contract text.
+    evidence_template: Paste ADR heading list, note the deferred-vs-current distinction,
+      and cite where states, transition rules, and adoption triggers are captured.
+    agent: software-architect
