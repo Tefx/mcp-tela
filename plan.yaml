@@ -43591,7 +43591,8 @@ phases:
   - id: pm.p0_test.builtin_tests
     name: P0 expected-red tests for built-in tool
     status: pending
-    description: 'Write expected-red tests for builtin tool handler and gateway integration.
+    description: 'Write expected-red tests defining the acceptance gap for P0 built-in
+      tool.
 
 
       Step type: test
@@ -43601,34 +43602,143 @@ phases:
       Expected result: red
 
 
-      Test coverage:
+      ## Test file 1: tests/shell/test_builtin_tools.py (NEW)
 
-      1. test_handle_list_providers_returns_correct_shape — handler returns list of
-      ProviderInfo dicts
 
-      2. test_handle_list_providers_filters_by_profile — profile enforcement filters
-      output
+      Create this file with the following test cases:
 
-      3. test_gateway_list_tools_includes_builtin — _list_tools response merges built-in
+
+      ### test_handle_list_providers_returns_provider_info_shape
+
+      - Call `handle_list_providers()` after setting up a gateway with one server
+      ("fs") having 2 tools
+
+      - Assert result is a list of dicts matching ProviderInfo shape
+
+      - Assert result[0]["name"] == "fs", result[0]["status"] == "connected", result[0]["tool_count"]
+      == 2
+
+      - Assert result[0]["tool_names"] is a list of strings (the post-filter exposed
+      names)
+
+
+      ### test_handle_list_providers_includes_disconnected_server
+
+      - Configure 2 servers in TelaConfig but only connect 1 via connect_all(tool_lists=...)
+
+      - Call handle_list_providers()
+
+      - Assert the unconnected server appears with status "disconnected" and tool_count
+      0
+
+
+      ### test_handle_list_providers_includes_failed_server
+
+      - Configure a server that fails during connection (e.g., no tool_lists entry,
+      or explicitly mark as failed)
+
+      - Assert it appears with status "failed"
+
+
+      ### test_handle_list_providers_filters_by_profile_enforcement
+
+      - Set up gateway with profile that blocks one tool family (posture=NONE)
+
+      - Call handle_list_providers() — assert tool_names only includes permitted tools
+      and tool_count matches
+
+
+      ### test_builtin_tool_names_set_contains_tela_list_providers
+
+      - Assert "tela_list_providers" in BUILTIN_TOOL_NAMES
+
+
+      ## Test file 2: tests/shell/test_gateway.py (EXTEND)
+
+
+      Add at the end of the existing file:
+
+
+      ### test_gateway_list_tools_includes_builtin
+
+      - Start gateway with `gateway_start()` using TelaConfig with one server
+
+      - Call `handle_tools_list()` on a connection
+
+      - Assert "tela_list_providers" appears in the returned tool list alongside downstream
       tools
 
-      4. test_gateway_call_tool_dispatches_builtin — _call_tool routes tela_list_providers
-      to built-in handler
+
+      ### test_gateway_call_tool_dispatches_builtin
+
+      - Start gateway, then call `handle_tools_call(conn, "tela_list_providers", {})`
+
+      - Assert it returns a valid result (not TOOL_NOT_FOUND error)
 
 
-      Files: tests/shell/test_builtin_tools.py (new), tests/shell/test_gateway.py
-      (extend)
+      ## Setup patterns
 
-      Expected: RED before implementation, these tests define the acceptance gap.'
-    evidence_template: '## Evidence
+      - Use `gateway_start()` with `tool_lists={"server_name": [...]}` for test scaffolding
+      (see existing test patterns in test_gateway.py)
 
-      - [ ] Tests written and importable
+      - Use `set_runtime_config()` and `add_runtime_connection()` from `tela.shell.gateway_runtime`
 
-      - [ ] Tests fail with expected errors (NotImplementedError or missing function)
+      - Import ProviderInfo from tela.core.models, BUILTIN_TOOLS/BUILTIN_TOOL_NAMES
+      from tela.shell.builtin_tools
 
-      - [ ] No product code modified
 
-      - [ ] invar guard passes'
+      ## Expected result
+
+      All tests should FAIL (RED) before implementation because:
+
+      - handle_list_providers() raises NotImplementedError
+
+      - gateway _list_tools and _call_tool do not yet know about built-in tools'
+    evidence_template: '## Test Definitions
+
+      **New test file** (tests/shell/test_builtin_tools.py):
+
+      ```
+
+      <paste test function names and key assertions>
+
+      ```
+
+
+      **Extended test file** (tests/shell/test_gateway.py):
+
+      ```
+
+      <paste new test function names and key assertions>
+
+      ```
+
+
+      **Red proof** (run output):
+
+      ```
+
+      <paste pytest output showing expected failures>
+
+      ```
+
+
+      **Verification**:
+
+      - [ ] All 7 test functions defined
+
+      - [ ] Tests import from contract artifacts (ProviderInfo, BUILTIN_TOOLS, handle_list_providers)
+
+      - [ ] Tests are RED (NotImplementedError or missing wiring)
+
+      - [ ] No product implementation code added
+
+      - [ ] Only test files and fixtures modified'
+    refs:
+    - tests/shell/test_gateway.py
+    - src/tela/shell/builtin_tools.py
+    - src/tela/core/models.py
+    - src/tela/shell/gateway_runtime.py
     agent: python-executor
   - id: pm.p0_test.gate
     name: P0 test gate review
