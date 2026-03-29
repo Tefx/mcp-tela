@@ -44498,7 +44498,7 @@ phases:
     agent: gate-reviewer
   - id: pm.p0_verify.audit_logging_fix
     name: Add audit logging for builtin tool calls
-    status: claimed
+    status: done
     description: "Add L2 audit entry for builtin tool calls in gateway.py _call_tool\
       \ handler.\n\n**Root cause:** handle_list_providers and other builtin tool calls\
       \ do not emit audit entries.\n\n**Fix location:** src/tela/shell/gateway.py\
@@ -44512,6 +44512,26 @@ phases:
     - pm.p0_verify.retest
     claimed_by: python-executor
     claimed_at: '2026-03-29T20:11:14.418310+00:00'
+    done_at: '2026-03-29T20:15:28.832289+00:00'
+    evidence: "## Implementation Evidence\n\n**Commit:** 8b2b764f\n\n**Changes in\
+      \ src/tela/shell/gateway.py:**\n\n1. Added imports:\n```python\nfrom tela.shell.audit\
+      \ import audit_close, audit_init, build_audit_entry, audit_write\nfrom tela.core.models\
+      \ import (\n    AuditLevel,\n    EnforcementResult,\n    EnforcementVerdict,\n\
+      \    ...\n)\n```\n\n2. Modified `_call_tool` to emit L2 audit entry for builtin\
+      \ tool calls:\n```python\nif tool_name in BUILTIN_TOOL_NAMES:\n    start_time\
+      \ = time.time()\n    try:\n        providers_result = await handle_list_providers()\n\
+      \        latency_ms = (time.time() - start_time) * 1000\n        \n        #\
+      \ L2 audit entry for builtin tool calls (if connection available)\n        with\
+      \ _runtime_lock:\n            connections = list(_runtime.connections)\n   \
+      \     if connections:\n            connection = connections[0]\n           \
+      \ audit_entry_result = build_audit_entry(\n                level=AuditLevel.L2,\n\
+      \                connection=connection,\n                tool_name=tool_name,\n\
+      \                server_name=\"tela\",\n                result=EnforcementResult(verdict=EnforcementVerdict.ALLOW),\n\
+      \                latency_ms=latency_ms,\n                arguments=dict(arguments)\
+      \ if arguments else None,\n            )\n            if audit_entry_result.is_ok\
+      \ and audit_entry_result.value is not None:\n                await audit_write(audit_entry_result.value)\n\
+      \        ...\n```\n\n**Verification:**\n```\nuv run pytest tests/shell/test_builtin_tools.py\
+      \ tests/shell/test_gateway.py -v\n47 passed in 0.88s\n```"
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
   status: locked
