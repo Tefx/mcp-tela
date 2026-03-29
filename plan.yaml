@@ -44535,37 +44535,95 @@ phases:
   - id: pm.p2_contract.rewrite_desc
     name: Description rewriting contract
     status: pending
-    description: 'Add rewrite_descriptions field to ServerConfig (default False).
-      Define contract for backtick-quoted tool name replacement in resolve_tools()
-      — only within same server''s tool set.
+    description: "Add rewrite_descriptions field to ServerConfig and define contract\
+      \ for description rewriting in resolve_tools().\n\nStep type: contract\nContract\
+      \ purity: ENFORCED\nContract outputs: signatures, type_defs, stubs\n\n## Deliverable\
+      \ 1: New field on ServerConfig in src/tela/core/models.py\n\nAdd after `tool_prefix:\
+      \ str | None = None` (line 112):\n\n```python\n    rewrite_descriptions: bool\
+      \ = False\n    # NOTE: When True, backtick-quoted raw tool names in tool descriptions\n\
+      \    # are replaced with their prefixed exposed names during resolution.\n \
+      \   # Only rewrites references to tools within the SAME server's tool set.\n\
+      ```\n\n## Deliverable 2: Description rewrite helper in src/tela/core/family.py\n\
+      \nAdd a new helper function BEFORE resolve_tools():\n\n```python\n@pre(\n  \
+      \  lambda description, raw_names_to_exposed: (\n        isinstance(description,\
+      \ str)\n        and isinstance(raw_names_to_exposed, dict)\n        and all(isinstance(k,\
+      \ str) and isinstance(v, str) for k, v in raw_names_to_exposed.items())\n  \
+      \  )\n)\n@post(lambda result: isinstance(result, str))\ndef rewrite_tool_description(\n\
+      \    description: str,\n    raw_names_to_exposed: dict[str, str],\n) -> str:\n\
+      \    \"\"\"Replace backtick-quoted raw tool names with prefixed exposed names.\n\
+      \n    Only replaces exact matches within backtick pairs. Does not touch\n  \
+      \  names that are not in the raw_names_to_exposed mapping (i.e., does\n    not\
+      \ rewrite cross-server references).\n\n    Examples:\n        >>> rewrite_tool_description(\"\
+      Use `read_file` to read.\", {\"read_file\": \"fs_read_file\"})\n        'Use\
+      \ `fs_read_file` to read.'\n        >>> rewrite_tool_description(\"Use `read_file`\
+      \ and `write_file`.\", {\"read_file\": \"fs_read_file\"})\n        'Use `fs_read_file`\
+      \ and `write_file`.'\n        >>> rewrite_tool_description(\"No backticks here.\"\
+      , {\"read_file\": \"fs_read_file\"})\n        'No backticks here.'\n\n    Args:\n\
+      \        description: Tool description text.\n        raw_names_to_exposed:\
+      \ Mapping from raw downstream names to exposed prefixed names.\n\n    Returns:\n\
+      \        Description with backtick-quoted names replaced.\n    \"\"\"\n    raise\
+      \ NotImplementedError\n```\n\n## Deliverable 3: Contract stub in resolve_tools()\n\
+      \nIn resolve_tools() (line 72), after building the resolved list, add a conditional\
+      \ rewrite block:\n\n```python\n    # Description rewriting (opt-in per server)\n\
+      \    if server_config.rewrite_descriptions and server_config.tool_prefix is\
+      \ not None:\n        raw_to_exposed = {rt.raw_name: rt.name for rt in resolved\
+      \ if rt.raw_name is not None}\n        for rt in resolved:\n            rt_dict\
+      \ = rt.model_dump()  # or direct field access\n            # Will be implemented:\
+      \ rt.description = rewrite_tool_description(rt.description, raw_to_exposed)\n\
+      \            pass  # stub — actual rewrite deferred to implementation step\n\
+      ```\n\n## Key constraints\n- rewrite_descriptions defaults to False (opt-in\
+      \ only)\n- Only rewrites backtick-quoted names: `raw_name` -> `exposed_name`\n\
+      - Only within the SAME server's tool set (raw_names_to_exposed built from same\
+      \ resolve_tools call)\n- Does NOT rewrite cross-server tool references\n- rewrite_tool_description\
+      \ is Core zone: requires @pre/@post and doctests\n- The resolve_tools @pre/@post\
+      \ contracts remain unchanged\n\n## Pattern reference\n- ServerConfig field additions\
+      \ follow the tool_prefix pattern (line 112)\n- @pre/@post contracts follow resolve_family\
+      \ (line 15) pattern"
+    evidence_template: '## Contract Artifacts
+
+      **ServerConfig.rewrite_descriptions field** (paste from models.py):
+
+      ```
+
+      <exact field definition with comment>
+
+      ```
 
 
-      Step type: contract
+      **rewrite_tool_description signature** (paste from family.py):
 
-      Contract purity: ENFORCED
+      ```
 
-      Contract outputs: signatures, type_defs, stubs
+      <full function with @pre/@post, docstring, doctests, NotImplementedError>
+
+      ```
 
 
-      Deliverables:
+      **resolve_tools rewrite stub** (paste modified section):
 
-      - rewrite_descriptions: bool = False field on ServerConfig in core/family.py
+      ```
 
-      - Contract/stub for rewrite logic in resolve_tools() or helper function
+      <conditional rewrite block>
 
-      - @pre/@post contracts specifying: only backtick-quoted raw names replaced,
-      only within same server scope
+      ```
 
-      - Doctest stubs showing replacement behavior'
-    evidence_template: '## Evidence
 
-      - [ ] rewrite_descriptions field added to ServerConfig
+      **Verification**:
 
-      - [ ] Rewrite contract/stub defined with @pre/@post
+      - [ ] rewrite_descriptions: bool = False on ServerConfig
 
-      - [ ] Scope limited to same-server tool names
+      - [ ] rewrite_tool_description has @pre/@post contracts
+
+      - [ ] Doctests cover: single replacement, partial replacement, no-match case
+
+      - [ ] resolve_tools has stub conditional (not yet functional)
+
+      - [ ] No implementation logic
 
       - [ ] invar guard passes'
+    refs:
+    - src/tela/core/models.py
+    - src/tela/core/family.py
     agent: python-executor
   - id: pm.p2_contract.gate
     name: P2 contract gate review
