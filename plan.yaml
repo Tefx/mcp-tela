@@ -41476,3 +41476,10 @@ phases:
       Gate criterion met: `invar guard --all` reports 0 errors.
 
       '
+- id: gw_remed.lifecycle_authority
+  name: 'Gateway remediation: A1 lifecycle authority split'
+  status: pending
+  gate: Unify lifecycle/readiness truth behind a single authority before any startup
+    resequencing.
+  depends_on:
+  - tool_prefix.test
