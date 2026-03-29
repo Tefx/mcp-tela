@@ -1,13 +1,7 @@
-"""Upstream MCP handler for tools/list, tools/call, and open-mode initialize.
+"""Upstream MCP handlers plus session capture/notification contracts.
 
-Implements the upstream-facing MCP protocol handler interfaces. Open-mode
-initialize binding is preserved from prior implementation. tools/list filtering
-uses the enforcement chain. tools/call strips _meta and runs enforcement.
-
-Session capture and notification contracts:
-- ``SessionCapture`` defines the interface for capturing upstream MCP sessions.
-- ``notify_tools_changed`` uses captured sessions to send real notifications.
-- Sessions are captured during handler registration in gateway wiring (not here).
+Implements initialize, tools/list, and tools/call with enforcement, and tracks
+captured sessions for tools/list_changed notifications.
 """
 
 from __future__ import annotations
@@ -347,13 +341,17 @@ async def handle_initialize(
 
     bridge_connection_id = client_info.get(_BRIDGE_CONNECTION_ID_KEY)
     if bridge_connection_id is not None:
+        bridge_connection_id_str = str(bridge_connection_id)
         connections_result = get_runtime_connections_snapshot()
         if connections_result.is_err:
             return Result(error=connections_result.error)
         assert connections_result.value is not None
         for existing in connections_result.value:
-            if existing.connection_id == str(bridge_connection_id):
+            if existing.connection_id == bridge_connection_id_str:
                 return Result(value=existing)
+        return Result(
+            error=f"CONNECTION_NOT_FOUND: bridge initialize requires pre-registered connection '{bridge_connection_id_str}'"
+        )
 
     connection_id = f"conn_{uuid.uuid4().hex[:8]}"
     now_iso = datetime.now(timezone.utc).isoformat()

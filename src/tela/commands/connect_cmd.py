@@ -333,15 +333,22 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
 
     def _handle_stop(_signum: int, _frame: FrameType | None) -> None:
         stop_requested.set()
+        raise KeyboardInterrupt("bridge interrupted by signal")
 
     signal.signal(signal.SIGINT, _handle_stop)
     signal.signal(signal.SIGTERM, _handle_stop)
 
-    connect_result = _post_json(
-        url=f"{base_url}/connect",
-        bearer_token=bearer_token,
-        payload={"connection_id": connection_id},
-    )
+    try:
+        connect_result = _post_json(
+            url=f"{base_url}/connect",
+            bearer_token=bearer_token,
+            payload={"connection_id": connection_id},
+        )
+    except KeyboardInterrupt:
+        signal.signal(signal.SIGINT, previous_int)
+        signal.signal(signal.SIGTERM, previous_term)
+        _emit_bridge_diagnostic("registration interrupted", connection_id)
+        return Result(error="INTERRUPT: bridge registration interrupted")
     if connect_result.is_err:
         signal.signal(signal.SIGINT, previous_int)
         signal.signal(signal.SIGTERM, previous_term)
@@ -352,31 +359,42 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
 
     bridge_error: str | None = None
     try:
-        forward_result = _forward_stdio_http(
-            mcp_url=f"{base_url}/mcp",
-            bearer_token=bearer_token,
-            bridge_connection_id=connection_id,
-            should_stop=stop_requested.is_set,
-            stdin_buffer=sys.stdin.buffer,
-            stdout_buffer=sys.stdout.buffer,
-        )
-        if forward_result.is_err:
-            bridge_error = forward_result.error
-            _emit_bridge_diagnostic(
-                f"forwarding stopped: {bridge_error}", connection_id
+        try:
+            forward_result = _forward_stdio_http(
+                mcp_url=f"{base_url}/mcp",
+                bearer_token=bearer_token,
+                bridge_connection_id=connection_id,
+                should_stop=stop_requested.is_set,
+                stdin_buffer=sys.stdin.buffer,
+                stdout_buffer=sys.stdout.buffer,
             )
+            if forward_result.is_err:
+                bridge_error = forward_result.error
+                _emit_bridge_diagnostic(
+                    f"forwarding stopped: {bridge_error}", connection_id
+                )
+        except KeyboardInterrupt:
+            bridge_error = "INTERRUPT: bridge attach loop interrupted"
+            _emit_bridge_diagnostic("attach loop interrupted", connection_id)
     finally:
-        disconnect_result = _post_json(
-            url=f"{base_url}/disconnect",
-            bearer_token=bearer_token,
-            payload={"connection_id": connection_id},
-        )
-        if disconnect_result.is_err:
-            _emit_bridge_diagnostic(
-                f"disconnect failed: {disconnect_result.error}", connection_id
+        teardown_interrupted = False
+        try:
+            disconnect_result = _post_json(
+                url=f"{base_url}/disconnect",
+                bearer_token=bearer_token,
+                payload={"connection_id": connection_id},
             )
+            if disconnect_result.is_err:
+                _emit_bridge_diagnostic(
+                    f"disconnect failed: {disconnect_result.error}", connection_id
+                )
+        except KeyboardInterrupt:
+            teardown_interrupted = True
+            _emit_bridge_diagnostic("disconnect interrupted", connection_id)
         signal.signal(signal.SIGINT, previous_int)
         signal.signal(signal.SIGTERM, previous_term)
+        if teardown_interrupted and bridge_error is None:
+            bridge_error = "INTERRUPT: bridge teardown interrupted"
 
     if bridge_error is not None:
         return Result(error=bridge_error)
