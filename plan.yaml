@@ -44473,15 +44473,42 @@ phases:
   - id: pm.p1_impl.gate
     name: P1 implementation gate review
     status: pending
-    description: 'P1 gate review. Verify:
+    description: 'P1 gate review. Independent reviewer verifies manifest and surface
+      text.
 
-      1. Manifest format matches contract spec
 
-      2. Staleness acknowledgment present (manifest is snapshot at startup)
+      review_depth: STANDARD
 
-      3. Surface text accurately describes tela_list_providers
 
-      4. No regressions in existing tests'
+      ## Gate criteria
+
+
+      1. **Manifest format**: "Connected at startup: server_a (N tools), server_b
+      (M tools)" — matches spec exactly
+
+      2. **Staleness acknowledgment**: manifest reflects startup snapshot, not live
+      state (by design — tela_list_providers is the live query)
+
+      3. **Surface text accuracy**: "Built-in MCP tools: `tela_list_providers`" in
+      instructions
+
+      4. **Backward compatibility**: get_gateway_surface_instructions() with no args
+      still returns valid surface text
+
+      5. **No regressions**: full test suite passes, invar guard clean
+
+      6. **tela MCP server instructions updated**: the surface contract text served
+      to upstream clients via fastmcp instructions= parameter reflects the new built-in
+      tool
+
+
+      ## Cross-cutting check
+
+      - Verify the tela MCP server .tela/instructions or equivalent config source
+      reflects tela_list_providers
+
+      - Check compose_gateway_and_downstream still correctly merges gateway + downstream
+      instructions'
     evidence_template: '## Evidence
 
       - [ ] Manifest format correct
@@ -44493,6 +44520,9 @@ phases:
       - [ ] Tests pass
 
       - Blockers: (list or NONE)'
+    refs:
+    - src/tela/shell/surface_instructions.py
+    - src/tela/shell/gateway.py
     depends_on:
     - pm.p1_impl.manifest_and_surface
     agent: gate-reviewer
