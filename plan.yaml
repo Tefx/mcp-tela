@@ -41755,7 +41755,7 @@ phases:
       - No split truth sources remain between gateway.py and http_routes.py'
 - id: gw_remed.startup_plan_a
   name: 'Gateway remediation: A4 startup sequencing via Plan A'
-  status: pending
+  status: in_progress
   gate: Nominal Plan A ordering, warming admission rejection, and post-bind failure
     rollback are all proven before downstream runtime work resumes.
   context: Split nominal startup sequencing from failure rollback so evidence is stronger
@@ -41765,7 +41765,7 @@ phases:
   steps:
   - id: gw_remed.startup_plan_a.resequence_bind_publish_converge
     name: Resequence startup to bind -> publish lockfile -> converge
-    status: pending
+    status: claimed
     description: 'Implement ONLY the nominal Plan A startup sequence in:
 
       - src/tela/commands/serve_cmd.py
@@ -41816,6 +41816,8 @@ phases:
     - src/tela/shell/gateway.py
     - src/tela/shell/gateway_lifecycle.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T12:02:57.933454+00:00'
   - id: gw_remed.startup_plan_a.reject_connect_while_warming
     name: Reject bridge admission while lifecycle state is warming
     status: pending
