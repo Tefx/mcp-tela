@@ -44628,8 +44628,26 @@ phases:
   - id: pm.p2_contract.gate
     name: P2 contract gate review
     status: pending
-    description: Gate review of P2 contracts. Verify rewrite_descriptions field, scope
-      limitation, and contract purity.
+    description: 'Gate review of P2 contracts.
+
+
+      Verify:
+
+      1. rewrite_descriptions: bool = False exists on ServerConfig with explanatory
+      comment
+
+      2. rewrite_tool_description has @pre/@post contracts checking types
+
+      3. Doctests cover: exact backtick match, partial match (only known names), no-backtick
+      case
+
+      4. Scope limitation is explicit: only same-server tool set (raw_names_to_exposed)
+
+      5. resolve_tools has a conditional stub block (not functional yet)
+
+      6. No implementation logic in any deliverable
+
+      7. Existing ServerConfig doctests and resolve_tools doctests still pass'
     evidence_template: '## Evidence
 
       - [ ] Contract purity verified
@@ -44639,6 +44657,9 @@ phases:
       - [ ] Default is False (opt-in)
 
       - Blockers: (list or NONE)'
+    refs:
+    - src/tela/core/models.py
+    - src/tela/core/family.py
     depends_on:
     - pm.p2_contract.rewrite_desc
     agent: gate-reviewer
