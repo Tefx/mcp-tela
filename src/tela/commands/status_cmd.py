@@ -45,6 +45,14 @@ def _run_status_command(json_output: bool) -> Result[None, str]:
         print(status.model_dump_json(indent=2))
         return Result(value=None)
 
+    state = getattr(status, "state", None)
+    if isinstance(state, str) and state:
+        print(f"state: {state}")
+
+    degraded_reason = getattr(status, "degraded_reason", None)
+    if isinstance(degraded_reason, str) and degraded_reason:
+        print(f"degraded_reason: {degraded_reason}")
+
     print(f"uptime: {status.uptime_seconds:.1f}s")
     print(
         f"servers: {status.server_count} ({', '.join(status.connected_servers) or 'none'})"

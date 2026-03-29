@@ -40,6 +40,8 @@ from tela.shell.gateway import (
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,
     STATUS_SNAPSHOT_CONTRACT,
+    set_runtime_config,
+    set_runtime_running,
 )
 
 
@@ -301,6 +303,27 @@ def test_lockfile_discovery_does_not_imply_ready_downstreams(
     # Contract confirmation: discovery artifact lacks readiness fields
     assert "lifecycle_readiness" in LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
     assert "downstream_convergence" in LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for
+
+
+def test_gateway_status_reports_configured_servers_without_implying_readiness() -> None:
+    """Configured server discovery must not imply downstream readiness."""
+
+    set_runtime_config(
+        TelaConfig(servers={"fs": ServerConfig(name="fs", command="cmd")})
+    )
+    set_runtime_running(True)
+    try:
+        status_result = asyncio.run(gateway_status())
+        assert status_result.is_ok
+        assert status_result.value is not None
+
+        # Lifecycle truth: configured server is known, but readiness depends on
+        # connected downstreams (which may still be empty during startup/warming).
+        assert status_result.value.server_count == 1
+        assert status_result.value.connected_servers == []
+    finally:
+        set_runtime_running(False)
+        set_runtime_config(None)
 
 
 def test_status_endpoint_required_for_readiness_check(

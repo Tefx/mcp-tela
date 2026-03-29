@@ -132,7 +132,23 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
             assert status_result.error is not None
             return _as_error_response(status_result.error)
         assert status_result.value is not None
-        return JSONResponse(content=status_result.value.model_dump())
+        lifecycle_result = await gateway_status()
+        if lifecycle_result.is_err:
+            assert lifecycle_result.error is not None
+            return _as_error_response(lifecycle_result.error)
+        assert lifecycle_result.value is not None
+        lifecycle = lifecycle_result.value
+        status_payload = status_result.value.model_copy(
+            update={
+                "uptime_seconds": lifecycle.uptime_seconds,
+                "server_count": lifecycle.server_count,
+                "connected_servers": lifecycle.connected_servers,
+                "active_connections": lifecycle.active_connections,
+                "profile_count": lifecycle.profile_count,
+                "total_tool_calls": lifecycle.total_tool_calls,
+            }
+        )
+        return JSONResponse(content=status_payload.model_dump())
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:
@@ -648,50 +664,33 @@ async def gateway_shutdown() -> Result[None, str]:
 
 
 async def gateway_status() -> Result[GatewayStatus, str]:
-    """Return current gateway runtime status.
+    """Return current gateway runtime status."""
 
-    Examples:
-        >>> import asyncio
-        >>> asyncio.run(gateway_status()).value.server_count
-        0
-
-    Returns:
-        GatewayStatus with current runtime metrics.
-    """
-
-    with _runtime_lock:
-        all_tools_result = get_all_tools()
-        if all_tools_result.is_err:
-            return Result(error=all_tools_result.error)
-        assert all_tools_result.value is not None
-        all_tools = all_tools_result.value
-        uptime = time.monotonic() - _runtime.start_time if _runtime.start_time else 0.0
-        profile_count = len(_runtime.config.profiles) if _runtime.config else 0
-
-        return Result(
-            value=GatewayStatus(
-                uptime_seconds=uptime,
-                server_count=len(all_tools),
-                connected_servers=list(all_tools.keys()),
-                active_connections=len(_runtime.connections),
-                profile_count=profile_count,
-                total_tool_calls=_runtime.total_tool_calls,
-            )
+    snapshot_result = get_runtime_status_snapshot()
+    if snapshot_result.is_err:
+        return Result(error=snapshot_result.error)
+    all_tools_result = get_all_tools()
+    if all_tools_result.is_err:
+        return Result(error=all_tools_result.error)
+    assert snapshot_result.value is not None
+    assert all_tools_result.value is not None
+    snap = snapshot_result.value
+    all_tools = all_tools_result.value
+    uptime = time.monotonic() - snap.start_time if snap.start_time else 0.0
+    profile_count = len(snap.config.profiles) if snap.config else 0
+    configured_server_count = len(snap.config.servers) if snap.config else 0
+    return Result(
+        value=GatewayStatus(
+            uptime_seconds=uptime,
+            server_count=configured_server_count,
+            connected_servers=list(all_tools.keys()),
+            active_connections=len(snap.connections),
+            profile_count=profile_count,
+            total_tool_calls=snap.total_tool_calls,
         )
+    )
 
 
 async def gateway_connections() -> Result[list[ConnectionContext], str]:
-    """Return list of active upstream connections.
-
-    Delegates to ``get_runtime_connections_snapshot`` for a lock-safe,
-    deep-copied snapshot of the active connections list.
-
-    Examples:
-        >>> import asyncio
-        >>> asyncio.run(gateway_connections()).value
-        []
-
-    Returns:
-        Result with list of active ConnectionContext.
-    """
+    """Return active upstream connections via runtime snapshot accessor."""
     return get_runtime_connections_snapshot()
