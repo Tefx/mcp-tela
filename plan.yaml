@@ -40194,7 +40194,7 @@ phases:
       '
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
-  status: locked
+  status: pending
   gate: Implement core naming semantics, shell registry/routing, reload propagation,
     and phase-level verification for the tool-prefix feature.
   depends_on:
@@ -42643,7 +42643,7 @@ phases:
       **Commit**: 16ce2ea'
 - id: gw_remed.plan_c_adr
   name: 'Gateway remediation: record Plan C future architecture ADR'
-  status: in_progress
+  status: done
   gate: ADR capture is complete, explicitly deferred, and non-blocking for current
     execution once teardown/contracts remediation is gated.
   context: Keep this phase doc-only and architecture-preserving.
@@ -42794,7 +42794,7 @@ phases:
       - Non-Goals section explicitly disclaims reopening Plan A'
   - id: gw_remed.plan_c_adr.gate
     name: Gate Plan C ADR capture
-    status: claimed
+    status: done
     description: Review ADR evidence and confirm the future-direction record is complete
       enough to defer without blocking current Plan A remediation.
     verification: Confirm the ADR is recorded, future-scoped, and sufficient as the
@@ -42807,3 +42807,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T13:18:10.396564+00:00'
+    done_at: '2026-03-29T13:20:01.400332+00:00'
+    evidence: '## Gate Review: ADR-004 (Deferred Gateway Startup State Machine)
+
+
+      **Verdict**: PASS ✅
+
+
+      **Completeness**:
+
+      - Status: Deferred — future architecture only
+
+      - Context: References DESIGN.md Plan A as current authority
+
+      - Decision: Full state machine (7 states, 18 transitions) with source-of-truth
+      table
+
+      - Adoption Triggers: 5 concrete future-conditions, none currently true
+
+      - Non-Goals: Explicitly disclaims mandating Plan A changes now
+
+
+      **Scoping**:
+
+      - Does NOT change approved Plan A implementation shape
+
+      - Does NOT create ambiguity for current work
+
+      - Adoption triggers are hypothetical future conditions
+
+      - DESIGN.md remains authoritative for current implementation
+
+
+      **Source-of-Truth Alignment**:
+
+      - Correctly preserves discovery/readiness/convergence split from DESIGN.md
+
+      - No code references to ADR-004-specific states
+
+
+      **No unresolved Plan C ambiguity intersects current implementation work.**'
