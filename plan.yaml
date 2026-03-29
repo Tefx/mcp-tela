@@ -38388,7 +38388,7 @@ phases:
   - conn_v2.doc_sync
 - id: conn_v2.integration_validate
   name: Integrated UX, Wiring, and Runtime Validation
-  status: pending
+  status: in_progress
   gate: One compact late-stage phase for host-facing diagnostics, entrypoint wiring,
     and integrated runtime validation after the core A+B+C+D runtime seams are implemented.
   depends_on:
@@ -38718,7 +38718,7 @@ phases:
     agent: python-senior
   - id: conn_v2.ux.impl_messages
     name: Implement startup, shutdown, and diagnostics messaging across host surfaces
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
       \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
@@ -38794,6 +38794,8 @@ phases:
 
       **Path exercised**: lifecycle status -> CLI/HTTP diagnostics'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T03:31:59.378720+00:00'
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
   status: locked
