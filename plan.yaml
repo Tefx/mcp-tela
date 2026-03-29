@@ -37232,7 +37232,7 @@ phases:
       All gate criteria satisfied. Phase conn_v2.startup_coord is COMPLETE."
 - id: conn_v2.lifecycle
   name: Lifecycle Status and Discovery/Readiness Split
-  status: in_progress
+  status: done
   gate: Lockfile and status contracts are split cleanly, status snapshots expose runtime
     lifecycle truth, and connect/query consumers stop treating discovery as downstream
     readiness.
@@ -37498,7 +37498,7 @@ phases:
       \ consumers must gate lifecycle decisions on runtime status, not discovery artifacts.\""
   - id: conn_v2.lifecycle.gate
     name: Gate lifecycle status phase
-    status: claimed
+    status: done
     description: "step_type: gate\nGate review: verify discovery/readiness split and\
       \ lifecycle status ownership are correct.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - phase redefines status truth consumed by multiple runtime surfaces\ncross_cutting_focus:\n\
@@ -37517,9 +37517,74 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T02:34:22.578878+00:00'
+    done_at: '2026-03-29T02:38:27.696812+00:00'
+    evidence: '## Gate Review: conn_v2.lifecycle
+
+
+      **Verdict**: PASS
+
+
+      ### lockfile != readiness Split ✅
+
+      - `LOCKFILE_DISCOVERY_CONTRACT.not_authoritative_for` correctly excludes `lifecycle_readiness`
+      and `downstream_convergence`
+
+      - `LockfileData` model has only discovery fields (pid, host, port, token, started_at,
+      config_path, version)
+
+      - No `connected_servers` or `running` fields in lockfile
+
+
+      ### Status as Authoritative Lifecycle Source ✅
+
+      - `STATUS_SNAPSHOT_CONTRACT.plane = "lifecycle_readiness"`
+
+      - `_get_status_lifecycle_facts()` derives `connected_servers` from `get_all_tools()`
+      (downstream registry)
+
+      - `handle_status()` delegates to lifecycle facts helper
+
+
+      ### Consumer Integration ✅
+
+      - `gateway_status()` uses `get_all_tools()` for server connectivity
+
+      - `handle_status()` uses `_get_status_lifecycle_facts()` → `get_all_tools()`
+
+      - No duplicate derivations
+
+
+      ### Tests: All 139 Pass ✅
+
+      - `test_lockfile_discovery_does_not_imply_ready_downstreams`
+
+      - `test_lockfile_discovery_does_not_prove_downstream_ready`
+
+      - `test_gateway_status_reports_configured_servers_without_implying_readiness`
+
+
+      ### Implementation Evidence
+
+      - impl_module: Contracts in `gateway_runtime.py`, `downstream.py`
+
+      - integrate_status_consumers: `_get_status_lifecycle_facts()` integration complete
+
+      - vertical_slice: 139 integration tests pass
+
+
+      ### Invar Guard ✅
+
+      - 0 errors, 0 warnings
+
+
+      ### Cross-Cutting Pattern Scan ✅
+
+      - `connected_servers` always from `get_all_tools()` (registry)
+
+      - No consumers derive readiness from lockfile'
 - id: conn_v2.convergence
   name: Background Downstream Convergence
-  status: locked
+  status: pending
   gate: Gateway startup reaches discoverable lifecycle without serial downstream blocking,
     while convergence/re-enumeration state remains visible and consistent.
   depends_on:
