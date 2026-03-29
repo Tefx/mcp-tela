@@ -43,6 +43,7 @@ from tela.shell.surface_instructions import (
     compose_gateway_and_downstream,
     get_gateway_surface_instructions,
 )
+from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
 from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
     _runtime,
@@ -655,47 +656,25 @@ async def gateway_shutdown() -> Result[None, str]:
 async def gateway_status() -> Result[GatewayStatus, str]:
     """Return current gateway runtime status."""
 
-    snapshot_result = get_runtime_status_snapshot()
-    if snapshot_result.is_err:
-        return Result(error=snapshot_result.error)
-    all_tools_result = get_all_tools()
-    if all_tools_result.is_err:
-        return Result(error=all_tools_result.error)
-    assert snapshot_result.value is not None
-    assert all_tools_result.value is not None
-    snap = snapshot_result.value
-    all_tools = all_tools_result.value
-    uptime = time.monotonic() - snap.start_time if snap.start_time else 0.0
-    profile_count = len(snap.config.profiles) if snap.config else 0
-    configured_server_count = len(snap.config.servers) if snap.config else 0
-    connected_servers_list = list(all_tools.keys())
+    lifecycle_result = get_lifecycle_status_facts()
+    if lifecycle_result.is_err:
+        return Result(error=lifecycle_result.error)
+    assert lifecycle_result.value is not None
+    facts = lifecycle_result.value
 
-    # Compute lifecycle state based on downstream convergence
-    if connected_servers_list:
-        if len(connected_servers_list) < configured_server_count:
-            state = "degraded"
-            degraded_reason = "downstream_not_fully_converged"
-        else:
-            state = "ready"
-            degraded_reason = None
-    else:
-        if configured_server_count > 0:
-            state = "warming"
-            degraded_reason = None
-        else:
-            state = "ready"
-            degraded_reason = None
+    snap = facts.snapshot
+    uptime = time.monotonic() - snap.start_time if snap.start_time else 0.0
 
     return Result(
         value=GatewayStatus(
             uptime_seconds=uptime,
-            server_count=configured_server_count,
-            connected_servers=connected_servers_list,
-            active_connections=len(snap.connections),
-            profile_count=profile_count,
-            total_tool_calls=snap.total_tool_calls,
-            state=state,
-            degraded_reason=degraded_reason,
+            server_count=facts.server_count,
+            connected_servers=list(facts.connected_servers),
+            active_connections=facts.active_connections,
+            profile_count=facts.profile_count,
+            total_tool_calls=facts.total_tool_calls,
+            state=facts.state,
+            degraded_reason=facts.degraded_reason,
         )
     )
 

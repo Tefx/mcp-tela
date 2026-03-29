@@ -19,17 +19,16 @@ from tela.core.models import (
 from tela.core.contracts import post, pre
 from tela.shell.config_loader import Result
 from tela.shell.audit import audit_query, get_audit_entries  # noqa: F401 — audit_query wired for dead_export
+from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,  # noqa: F401 — used in doctests
     get_runtime_config,
-    get_runtime_status_snapshot,
     is_runtime_running,
     remove_runtime_connection,
     set_runtime_config,  # noqa: F401 — used in doctests
     set_runtime_running,  # noqa: F401 — used in doctests
 )
-from tela.shell.downstream import get_all_tools
 from tela.shell.http_auth import validate_bearer_token
 from tela.shell.upstream import release_session
 
@@ -84,7 +83,7 @@ def handle_status(
         consumed by ``tela status`` and host-facing bridge messaging. HTTP and
         CLI surfaces must align to the same resolved facts instead of deriving
         parallel state labels independently. This handler delegates to
-        ``_get_status_lifecycle_facts()`` for the authoritative lifecycle
+        ``get_lifecycle_status_facts()`` for the authoritative lifecycle
         snapshot rather than re-deriving readiness or connectivity independently.
 
     Examples:
@@ -98,18 +97,15 @@ def handle_status(
     if auth_result.is_err:
         return Result(error=auth_result.error)
 
-    # Capture all runtime fields atomically via locked snapshot.
-    snap = get_runtime_status_snapshot().value
-    assert snap is not None
+    lifecycle_result = get_lifecycle_status_facts()
+    if lifecycle_result.is_err:
+        return Result(error=lifecycle_result.error)
+    assert lifecycle_result.value is not None
+    facts = lifecycle_result.value
+
+    snap = facts.snapshot
     if snap.config is None or not snap.running:
         return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
-
-    # Delegate to the lifecycle facts helper for authoritative connected_servers
-    # and other runtime status derived from the downstream registry.
-    lifecycle_facts = _get_status_lifecycle_facts()
-    if lifecycle_facts.is_err:
-        return Result(error=lifecycle_facts.error)
-    assert lifecycle_facts.value is not None
 
     start_time = snap.start_time if snap.start_time else 0.0
     uptime = 0.0
@@ -118,30 +114,14 @@ def handle_status(
 
         uptime = time.monotonic() - start_time
 
-    profile_count = len(snap.config.profiles)
+    profile_count = facts.profile_count
 
     audit_entries_result = get_audit_entries()
     if audit_entries_result.is_err:
         return Result(error=f"AUDIT_QUERY_ERROR: {audit_entries_result.error}")
     assert audit_entries_result.value is not None
 
-    # Compute lifecycle state based on downstream convergence
-    configured_servers = len(snap.config.servers)
-    connected_servers_list = list(lifecycle_facts.value)
-    if connected_servers_list:
-        if len(connected_servers_list) < configured_servers:
-            state = "degraded"
-            degraded_reason = "downstream_not_fully_converged"
-        else:
-            state = "ready"
-            degraded_reason = None
-    else:
-        if configured_servers > 0:
-            state = "warming"
-            degraded_reason = None
-        else:
-            state = "ready"
-            degraded_reason = None
+    connected_servers_list = list(facts.connected_servers)
 
     # config_path is not stored in TelaConfig; it's in the lockfile.
     # For HTTP status, we don't have the requested config path context,
@@ -151,40 +131,21 @@ def handle_status(
     return Result(
         value=StatusResponse(
             uptime_seconds=uptime,
-            server_count=len(snap.config.servers),
+            server_count=facts.server_count,
             connected_servers=connected_servers_list,
-            active_connections=len(snap.connections),
+            active_connections=facts.active_connections,
             profile_count=profile_count,
-            total_tool_calls=snap.total_tool_calls,
+            total_tool_calls=facts.total_tool_calls,
             connections=list(snap.connections),
             audit_entries=audit_entries_result.value,
-            state=state,
-            degraded_reason=degraded_reason,
+            state=facts.state,
+            degraded_reason=facts.degraded_reason,
             config_path=config_path,
             discovery_source=None,
             requested_config_path=None,
             config_mismatch=False,
         )
     )
-
-
-def _get_status_lifecycle_facts() -> Result[tuple[str, ...], str]:
-    """Compute authoritative lifecycle facts from runtime status snapshot.
-
-    This helper encapsulates the logic for determining connected_servers and
-    other lifecycle-derived facts by querying the downstream registry directly
-    (bypassing the need for async gateway_status in sync context).
-
-    Returns:
-        Result with tuple of connected server names.
-    """
-    # Query the downstream registry for actually-connected servers.
-    # This mirrors what gateway_status() does via get_all_tools().
-    tools_result = get_all_tools()
-    if tools_result.is_err:
-        return Result(error=f"DOWNSTREAM_TOOLS_ERROR: {tools_result.error}")
-    connected_servers = list(tools_result.value.keys())
-    return Result(value=tuple(connected_servers))
 
 
 @pre(
