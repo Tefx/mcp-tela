@@ -43631,7 +43631,7 @@ phases:
       \ NotImplementedError stub\n- Commit: d8856a5 on branch main"
 - id: pm.p0_test
   name: P0 Built-in Tool Tests
-  status: in_progress
+  status: done
   depends_on:
   - pm.p0_contract
   steps:
@@ -43800,7 +43800,7 @@ phases:
       logic added - only test files.'
   - id: pm.p0_test.gate
     name: P0 test gate review
-    status: claimed
+    status: done
     description: 'Gate review of P0 test definitions.
 
 
@@ -43834,9 +43834,26 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T19:31:13.756131+00:00'
+    done_at: '2026-03-29T19:35:08.428001+00:00'
+    evidence: '## Gate Review: APPROVED
+
+
+      **Verification:**
+
+      - All 7 test functions present across test_builtin_tools.py (234 lines) and
+      test_gateway.py (+106 lines)
+
+      - Pytest result: 6 failed, 1 passed - CORRECT RED behavior
+
+      - No implementation leakage in test files
+
+      - ProviderInfo shape assertions match TypedDict definition
+
+
+      **Should-fix note:** tool_prefix field assertion missing in one test (non-blocking)'
 - id: pm.p0_impl
   name: P0 Built-in Tool Implementation
-  status: locked
+  status: pending
   depends_on:
   - pm.p0_test
   steps:
