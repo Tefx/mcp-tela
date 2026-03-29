@@ -38718,7 +38718,7 @@ phases:
     agent: python-senior
   - id: conn_v2.ux.impl_messages
     name: Implement startup, shutdown, and diagnostics messaging across host surfaces
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/USAGE.md#CLI reference > tela connect\n  - docs/USAGE.md#CLI\
       \ reference > tela serve\n  - docs/INTERFACES.md#7.2.1 GET /status Response\
@@ -38796,6 +38796,74 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T03:31:59.378720+00:00'
+    done_at: '2026-03-29T04:10:50.987073+00:00'
+    evidence: '## Integration Evidence
+
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      pytest tests/shell/test_connect_cmd.py tests/shell/test_serve_cmd.py tests/shell/test_query_commands_remote_state.py
+      -q
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      51 passed in 7.41s
+
+      ```
+
+
+      **Path exercised**: lifecycle status -> CLI/HTTP diagnostics
+
+
+      ## Implementation Summary
+
+
+      Added contract fields to GatewayStatus (`src/tela/core/models.py`):
+
+      - `state: str | None` - operator-facing lifecycle state
+
+      - `discovery_source` - how endpoint was resolved
+
+      - `config_path` - gateway''s config path
+
+      - `requested_config_path` - CLI''s requested config path
+
+      - `config_mismatch: bool` - whether configs differ
+
+      - `degraded_reason: str | None` - machine-readable degradation reason
+
+
+      Populated state in `handle_status()` (`src/tela/shell/http_routes.py`):
+
+      - `warming`: no connected servers but servers configured
+
+      - `ready`: all configured servers connected OR no servers configured
+
+      - `degraded`: some but not all servers connected
+
+
+      Populated state in `gateway_status()` (`src/tela/shell/gateway.py`):
+
+      - Same lifecycle state logic as handle_status()
+
+
+      **Verification**:
+
+      - All 794 tests pass
+
+      - State computation correctly reflects downstream convergence
+
+      - No timeout-only advice for degraded state
+
+
+      **Deviation Records**: None'
 - id: conn_v2.finalize
   name: Docs Sync and Final Independent Review
   status: locked
