@@ -41627,3 +41627,16 @@ phases:
     depends_on:
     - gw_remed.teardown_contracts.extract_cleanup_authority
     agent: python-executor
+  - id: gw_remed.teardown_contracts.replace_vacuous_route_contracts
+    name: Replace vacuous route contracts with falsifiable guarantees and doctests
+    status: pending
+    description: Replace tautological @post contracts in src/tela/shell/http_routes.py
+      with falsifiable guarantees tied to actual success/error semantics, add doctests
+      where required, and tighten any supporting model constraints needed in src/tela/core/models.py.
+    verification: Run route-level pytest plus invar guard and confirm vacuous success/error
+      contracts are gone.
+    evidence_template: Paste the old vs new contract summary, doctest/pytest commands,
+      and guard output demonstrating the route contracts are now falsifiable.
+    depends_on:
+    - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
+    agent: python-senior
