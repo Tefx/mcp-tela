@@ -39474,7 +39474,7 @@ phases:
     agent: gate-reviewer
   - id: conn_v2.deep_review.wiring_audit
     name: Full wiring audit for connect/serve runtime refactor
-    status: claimed
+    status: done
     description: "step_type: verification\nComplete system wiring audit. Verify:\n\
       \  - every public export added for startup/lifecycle/convergence/bridge has\
       \ a runtime caller\n  - connect, serve, status, and HTTP routes are registered\
@@ -39487,6 +39487,61 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-29T08:54:23.544189+00:00'
+    done_at: '2026-03-29T09:00:59.682241+00:00'
+    evidence: 'Wiring audit PASS — full system wiring verified across 14 protocols.
+
+
+      **W13 (Entry-to-Effect):** 9 EFFECTFUL entries — all CLI commands and HTTP routes
+      traced to real I/O. 0 STUB.
+
+
+      **W1 (Dead Exports):** 1 DEAD (`gateway_connections` — only test callers), 1
+      TEST-ONLY (`start_command` deprecated). 14 LIVE.
+
+
+      **W2 (Schema Fields):** 3 WRITE-ONLY by design (`discovery_source`, `requested_config_path`,
+      `config_mismatch` — HTTP endpoint lacks lockfile context; CLI status command
+      populates these). Correctly documented.
+
+
+      **W3 (CLI Param):** 17 params all COVERED — all serve/connect/status/profile/connection/audit
+      params have runtime wiring.
+
+
+      **W4 (CLI Registration):** 1 ORPHAN (`start.py` deprecated command not registered).
+      6 LIVE commands registered.
+
+
+      **W5-W11:** All PASS — contracts STRONG, config consumed, escapes LEGITIMATE,
+      dependencies LIVE, 0 protocol-shadow, 0 type-fraud.
+
+
+      **Key verification:**
+
+      - `tela connect` → `connect_command()` → `_run_bridge()` ✓
+
+      - `tela serve` → `serve_command()` → `_run_serve_gateway()` → `gateway_start()`
+      ✓
+
+      - `tela status` → `status_command()` → `query_remote_state()` ✓
+
+      - HTTP routes (`/health`, `/status`, `/connect`, `/disconnect`) via `@upstream_server.custom_route()`
+      ✓
+
+      - `gateway_connections` dead export: noted, low severity, only test usage
+
+
+      **Minor findings (non-blocking):**
+
+      - `gateway_connections` unused at runtime — diagnostic helper only
+
+      - `start.py` deprecated module orphaned from CLI (retained for `bind_gateway_startup`
+      compat)
+
+
+      **Artifact:** wiring audit report (no file changes)
+
+      '
   - id: conn_v2.doc_sync.update_docs
     name: Update documentation for the connect/serve runtime refactor
     status: done
