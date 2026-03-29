@@ -41073,7 +41073,7 @@ phases:
       **Commit**: 888e80f'
   - id: tool_prefix.doc_sync.gate
     name: Gate tool-prefix doc sync
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: default
@@ -41090,6 +41090,8 @@ phases:
     depends_on:
     - tool_prefix.doc_sync.update_docs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T14:14:52.225191+00:00'
 - id: tool_prefix.deep_review
   name: Tool Prefix Deep Review
   status: locked
