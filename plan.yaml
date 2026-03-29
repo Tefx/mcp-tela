@@ -37241,7 +37241,7 @@ phases:
   steps:
   - id: conn_v2.lifecycle.impl_module
     name: Implement lifecycle snapshot core and readiness policy
-    status: claimed
+    status: done
     description: "step_type: implementation\n\nFill in stub bodies for lifecycle snapshot\
       \ ownership and readiness policy using the approved conn_v2 contracts.\n\nRequired\
       \ scope:\n- Lifecycle module owns readiness and phase truth.\n- Discovery-only\
@@ -37286,6 +37286,24 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T01:56:41.642900+00:00'
+    done_at: '2026-03-29T02:03:10.779982+00:00'
+    evidence: "Artifact:\n- commit: 3854b68\n\nVerification:\n- Run: uv run pytest\
+      \ tests/shell/test_gateway.py tests/shell/test_lockfile.py tests/shell/test_query_commands_remote_state.py\
+      \ -q -> 75 passed in 6.30s\n- Run: uv run invar guard -> status=passed (errors=0,\
+      \ warnings=3, infos=4)\n\nSpec link:\n- docs/DESIGN.md#runtime-architecture\
+      \ (Discovery and readiness split)\n- docs/DESIGN.md#discovery-and-readiness\
+      \ (runtime status snapshot is lifecycle/readiness truth)\n- Upstream authoritative\
+      \ artifacts followed:\n  - src/tela/shell/gateway_runtime.py\n  - src/tela/shell/reload.py\n\
+      \  - tests/shell/test_gateway.py\n  - tests/shell/test_lockfile.py\n  - tests/shell/test_query_commands_remote_state.py\n\
+      \nFiles Modified:\n- src/tela/shell/gateway.py\n  - /status route now overlays\
+      \ lifecycle fields from gateway_status() so HTTP status uses runtime lifecycle\
+      \ truth\n  - gateway_status() now derives lifecycle metrics from get_runtime_status_snapshot()\
+      \ and downstream connected servers from registry, keeping configured server\
+      \ count separate from readiness\n- src/tela/commands/status_cmd.py\n  - Human\
+      \ status output now renders optional shared lifecycle facts (state, degraded_reason)\
+      \ when present\n- tests/shell/test_gateway.py\n  - Added focused regression:\
+      \ lockfile/config discovery does not imply readiness\n\nDeviation records:\n\
+      - none"
   - id: conn_v2.lifecycle.integrate_status_consumers
     name: Integrate lifecycle snapshots into connect, status, and HTTP surfaces
     status: pending
