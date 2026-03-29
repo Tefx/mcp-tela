@@ -40194,11 +40194,12 @@ phases:
       '
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
-  status: pending
+  status: locked
   gate: Implement core naming semantics, shell registry/routing, reload propagation,
     and phase-level verification for the tool-prefix feature.
   depends_on:
   - tool_prefix.test
+  - gw_remed.plan_c_adr
   steps:
   - id: tool_prefix.runtime.implement_core_name_mapping
     name: Implement core tool-prefix name mapping and conflict semantics
