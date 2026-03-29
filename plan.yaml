@@ -41593,3 +41593,10 @@ phases:
     - gw_remed.startup_plan_a.reject_connect_while_warming
     - gw_remed.startup_plan_a.verify_plan_a_runtime
     agent: gate-reviewer
+- id: gw_remed.teardown_contracts
+  name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
+  status: locked
+  gate: Harden disconnect/shutdown cleanup and replace vacuous route contracts before
+    resuming unrelated runtime work.
+  depends_on:
+  - gw_remed.startup_plan_a
