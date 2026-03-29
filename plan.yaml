@@ -40767,3 +40767,9 @@ phases:
       \ (all test_reload.py)\n- 4 dedicated reconnect enumeration regression tests\n\
       - Monkeypatch-based detection of duplicate enumeration calls\n\n### Gate Decision\n\
       **OPEN** ✅"
+- id: conn_v2.gate1_fix
+  name: conn_v2.gate1_fix
+  status: pending
+  gate: 'Gate passes: invar guard --all reports 0 errors, gateway.py <= 700 lines'
+  depends_on:
+  - conn_v2.integration_validate
