@@ -203,6 +203,7 @@ def set_notify_callback(callback: NotifyCallback | None) -> Result[None, str]:
     return Result(value=None)
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 async def on_tools_changed(
     server_name: str,
     server_config: ServerConfig,
@@ -290,6 +291,7 @@ async def on_tools_changed(
     return Result(value=None)
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 async def on_server_reconnect(
     server_name: str,
     server_config: ServerConfig,

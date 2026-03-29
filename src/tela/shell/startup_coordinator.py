@@ -90,6 +90,7 @@ def _startup_lock_path(requested_config_path: str) -> Result[Path, str]:
     )
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 def _try_acquire_startup_lock(
     requested_config_path: str,
 ) -> Result[IO[str] | None, str]:

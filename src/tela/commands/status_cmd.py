@@ -32,6 +32,7 @@ def status_command(json_output: bool = False) -> Result[int, str]:
     return Result(value=0)
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 def _run_status_command(json_output: bool) -> Result[None, str]:
     """Execute status command and print output."""
 

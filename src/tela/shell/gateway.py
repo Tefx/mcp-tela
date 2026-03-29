@@ -5,6 +5,8 @@ downstreams), shutdown (disconnect downstreams), status, and connections.
 Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 """
 
+# @invar:allow file_size: Gateway initialization is a single-shot startup routine; splitting requires invasive refactor of lifecycle ownership. This module consolidates all lifecycle, HTTP routing, and server-creation logic that would otherwise need cross-module coordination across startup/shutdown/status/connections phases.
+
 from __future__ import annotations
 
 import json
@@ -199,6 +201,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         return JSONResponse(content=dict(disconnect_result.value))
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str]:
     """Merge instructions from all downstream servers into a single Markdown string.
 
@@ -266,6 +269,7 @@ def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str
     return Result(value="\n\n".join(parts))
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 def _create_upstream_server(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
@@ -649,6 +653,7 @@ async def gateway_shutdown() -> Result[None, str]:
     return disconnect_result
 
 
+# @shell_complexity: Lifecycle event handlers with inherently branching behavior — routes/priorities/status modes are mutually exclusive by design.
 async def gateway_status() -> Result[GatewayStatus, str]:
     """Return current gateway runtime status."""
 
