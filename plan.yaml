@@ -39397,7 +39397,7 @@ phases:
   steps:
   - id: conn_v2.deep_review.gate
     name: Final gate for connect/serve runtime refactor
-    status: pending
+    status: claimed
     description: "step_type: gate\nFinal gate: verify the A+B+C+D refactor is complete,\
       \ stable, and aligned with the authoritative architecture basis after docs sync\
       \ and final independent review.\nreview_depth: THOROUGH\ncross_cutting_focus:\n\
@@ -39415,6 +39415,8 @@ phases:
     - conn_v2.deep_review.black_box
     - conn_v2.doc_sync.update_docs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T09:25:09.493253+00:00'
   - id: conn_v2.deep_review.black_box
     name: Black-box verification of host-facing runtime behavior
     status: done
