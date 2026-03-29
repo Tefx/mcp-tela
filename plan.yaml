@@ -41594,7 +41594,7 @@ phases:
       **Commit**: 7c5f6c1'
   - id: gw_remed.lifecycle_authority.verify_status_truth
     name: Verify lifecycle authority consistency across status consumers
-    status: claimed
+    status: done
     description: 'Independent consumer-boundary verification for lifecycle truth.
 
 
@@ -41636,6 +41636,57 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-29T11:52:47.870053+00:00'
+    done_at: '2026-03-29T11:57:24.872065+00:00'
+    evidence: '## Status Truth Verification
+
+      | Surface          | Discovery Truth                                                |
+      Readiness Truth                                                                                                    |
+      Matches Authority                     |
+
+      | ---------------- | --------------------------------------------------------------
+      | ------------------------------------------------------------------------------------------------------------------
+      | ------------------------------------- |
+
+      | lockfile         | YES (pid, host, port, token, config_path, started_at, version)
+      | n/a (not present)                                                                                                  |
+      YES (per LOCKFILE_DISCOVERY_CONTRACT) |
+
+      | gateway_status() | n/a (not source)                                               |
+      YES (server_count, connected_servers, state, degraded_reason, total_tool_calls,
+      active_connections, profile_count) | YES (via get_lifecycle_status_facts)  |
+
+      | GET /status      | n/a (not source)                                               |
+      YES (all readiness fields plus connections, audit_entries)                                                         |
+      YES (via get_lifecycle_status_facts)  |
+
+
+      **Test file**: tests/shell/test_status_truth_verification.py
+
+      **Tests**: 11 passed
+
+      **Combined test run**: 12 passed in 0.53s
+
+
+      **Consumer agreement proofs**:
+
+      - gateway_status() and handle_status() report identical readiness facts (server_count=3,
+      connected_servers=["alpha","beta"], active_connections=2, state="degraded")
+
+      - Both surfaces derive from get_lifecycle_status_facts()
+
+
+      **Truth separation proofs**:
+
+      - Lockfile contains discovery fields only (pid, host, port, token, config_path,
+      started_at, version)
+
+      - Status response contains readiness fields only (server_count, connected_servers,
+      state, degraded_reason)
+
+      - The two truths remain distinct and are NOT collapsed
+
+
+      **Commit**: 27584b7'
   - id: gw_remed.lifecycle_authority.gate
     name: Gate A1 lifecycle authority extraction
     status: pending
