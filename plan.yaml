@@ -41563,3 +41563,19 @@ phases:
     depends_on:
     - gw_remed.startup_plan_a.resequence_bind_publish_converge
     agent: python-executor
+  - id: gw_remed.startup_plan_a.verify_plan_a_runtime
+    name: Verify Plan A startup contract end-to-end
+    status: pending
+    description: 'Independently verify the documented discovery/readiness contract
+      after Plan A: lockfile equals discovery truth only, GET /status is authoritative
+      at publication time, warming blocks bridge admission, and readiness flips only
+      after convergence.'
+    verification: Run black-box and repro coverage for lockfile timing, status reachability,
+      warming rejection, and ready/degraded transitions.
+    evidence_template: Paste exact commands, raw outputs, and a four-point verdict
+      for publication timing, status availability, connect admission control, and
+      failure rollback.
+    depends_on:
+    - gw_remed.startup_plan_a.resequence_bind_publish_converge
+    - gw_remed.startup_plan_a.reject_connect_while_warming
+    agent: integration-verifier
