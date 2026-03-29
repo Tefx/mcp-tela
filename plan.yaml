@@ -43859,7 +43859,7 @@ phases:
   steps:
   - id: pm.p0_impl.builtin_handler
     name: Implement built-in tool handler
-    status: claimed
+    status: done
     description: "Fill in stub body of handle_list_providers() in src/tela/shell/builtin_tools.py\
       \ per the contract from step pm.p0_contract.builtin_tool_schema.\n\nUPSTREAM\
       \ ARTIFACTS (from contract step):\n  - src/tela/shell/builtin_tools.py — handle_list_providers\
@@ -43933,6 +43933,23 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T19:35:36.620733+00:00'
+    done_at: '2026-03-29T19:50:32.939042+00:00'
+    evidence: "## Implementation Evidence\n\n**handle_list_providers implementation**\
+      \ (src/tela/shell/builtin_tools.py):\n\n```python\nasync def handle_list_providers()\
+      \ -> list[\"ProviderInfo\"]:\n    # Get runtime config to find all configured\
+      \ servers\n    config_result = get_runtime_config()\n    if config_result.is_err\
+      \ or config_result.value is None:\n        return []\n    config = config_result.value\n\
+      \n    # Get successful servers (those that connected successfully)\n    successful\
+      \ = get_successful_servers()\n\n    # Get attempted servers (those that were\
+      \ part of a connection attempt)\n    attempted = get_attempted_servers()\n\n\
+      \    # Get all tools from registry\n    all_tools_result = get_all_tools()\n\
+      \    ...\n    \n    # For each server: determine status (connected/failed/disconnected)\n\
+      \    # Apply profile enforcement filtering to tool_names\n    # Return list[ProviderInfo]\n\
+      ```\n\n**Verification:**\n- [x] NotImplementedError removed\n- [x] Returns list[ProviderInfo]\
+      \ with real data from registry\n- [x] Includes connected, disconnected, and\
+      \ failed status variants\n- [x] tool_names uses exposed names (ResolvedTool.name)\n\
+      - [x] Contract signature and docstring preserved\n- [x] Additional helpers added:\
+      \ get_attempted_servers(), get_successful_servers()\n\n**Commit:** faf81ca7"
   - id: pm.p0_impl.downstream_accessor
     name: Implement downstream accessor
     status: done
