@@ -38182,7 +38182,7 @@ phases:
       **Deviation records**: None'
   - id: conn_v2.bridge.interrupt_probe
     name: Probe hard-interrupt behavior from the real connect entry point
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
       \ validate hard-interrupt semantics for tela connect.\nIndependence Level: L2\n\
       Test for:\n  - SIGINT/KeyboardInterrupt during autostart wait terminates connect\
@@ -38235,6 +38235,25 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-29T03:22:50.466347+00:00'
+    done_at: '2026-03-29T03:28:55.166637+00:00'
+    evidence: "## Verification Report\n\n**Tester**: blind-tester\n**Scope**: tela\
+      \ connect hard-interrupt semantics\n**Independence Level**: L2\n\n### Test Execution\n\
+      \n**Command**:\n```\nuv run pytest tests/repro/test_hard_interrupt.py -v --tb=short\n\
+      ```\n\n**Actual output**:\n```\n5 passed in 21.80s\n```\n\n### Test Cases Verified\n\
+      \n1. **SIGINT during autostart wait terminates immediately** - PASS\n   - Process\
+      \ terminated after 0.13s on SIGINT (exit code -2)\n   - Within acceptable time\
+      \ threshold (< 3s)\n\n2. **SIGINT during autostart leaves no stale connection**\
+      \ - PASS\n   - No gateway auto-started, no stale connection\n\n3. **SIGINT during\
+      \ active bridge terminates immediately** - PASS\n   - Process terminated after\
+      \ 0.23s on SIGINT during active bridge\n\n4. **SIGINT during active bridge leaves\
+      \ no stuck connection** - PASS\n   - Connection count recovered: baseline=0\
+      \ -> during=1 -> after=0\n\n5. **Idle timer starts after interrupt disconnect**\
+      \ - PASS\n   - Gateway remained responsive after interrupt disconnect\n   -\
+      \ active_connections=0 (recovered)\n   - Gateway shut down after idle timeout\n\
+      \n### Failure Path Evidence\n\n**Highest-risk path: Connection count recovery\
+      \ after SIGINT**\n- Before: active_connections=0 (baseline)\n- During: active_connections=1\
+      \ (connect registered)\n- After SIGINT: active_connections=0 (recovered)\n\n\
+      **No issues found** - all hard-interrupt paths work correctly"
   - id: conn_v2.bridge.gate
     name: Gate bridge control phase
     status: pending
