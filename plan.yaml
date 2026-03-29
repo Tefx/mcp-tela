@@ -43446,3 +43446,8 @@ phases:
   status: pending
   depends_on:
   - tool_prefix.deep_review
+- id: pm.p0_test
+  name: P0 Built-in Tool Tests
+  status: locked
+  depends_on:
+  - pm.p0_contract
