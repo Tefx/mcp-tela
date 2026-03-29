@@ -41594,7 +41594,7 @@ phases:
       **Commit**: 7c5f6c1'
   - id: gw_remed.lifecycle_authority.verify_status_truth
     name: Verify lifecycle authority consistency across status consumers
-    status: pending
+    status: claimed
     description: 'Independent consumer-boundary verification for lifecycle truth.
 
 
@@ -41634,6 +41634,8 @@ phases:
     depends_on:
     - gw_remed.lifecycle_authority.extract_status_authority
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-29T11:52:47.870053+00:00'
   - id: gw_remed.lifecycle_authority.gate
     name: Gate A1 lifecycle authority extraction
     status: pending
