@@ -40027,7 +40027,7 @@ phases:
       '
 - id: tool_prefix.test
   name: Tool Prefix Tests
-  status: in_progress
+  status: done
   gate: Executable acceptance boundary for tool-prefix config semantics, collision
     handling, routing, and reload behavior before implementation.
   depends_on:
@@ -40140,7 +40140,7 @@ phases:
       '
   - id: tool_prefix.test.gate
     name: Gate tool-prefix tests
-    status: claimed
+    status: done
     description: "step_type: gate\nagent_source: default\nreview_depth: QUICK\nreview_depth_rationale:\n\
       \  - Single feature test boundary, but spans core semantics plus shell reload\
       \ behavior.\nAs an INDEPENDENT REVIEWER (gate-reviewer), confirm the test boundary\
@@ -40154,9 +40154,47 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T09:25:17.109830+00:00'
+    done_at: '2026-03-29T09:30:47.288667+00:00'
+    evidence: '**Gate verdict: PASS**
+
+
+      Test harness verified complete and ready for implementation.
+
+
+      **Coverage:** 13 tests (9 expected-red, 4 passing) covering all 7 verification
+      points.
+
+
+      **Spec fixture:** CONFORMS to INTERFACES.md §3.1 — uses only documented fields,
+      omits tool_prefix (not in §3.1), contains required transport field.
+
+
+      **VP coverage:**
+
+      - VP1-VP7: All covered with specific assertions
+
+      - VP5 (raw_name routing): Enforces strict separation — any impl that conflates
+      exposed/raw will fail
+
+      - VP6 (reload surface change): Tests prerequisite (name change) correctly
+
+
+      **Suggestions (non-blocking):**
+
+      - VP3 conflict test: documents condition, delegates rejection to runtime (acceptable
+      for contract phase)
+
+      - VP6 notification: tests prerequisite, emission tested elsewhere
+
+      - Header comment accuracy: direct FAIL behavior (not xfail)
+
+
+      **Artifact:** gate review (no file changes)
+
+      '
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
-  status: locked
+  status: pending
   gate: Implement core naming semantics, shell registry/routing, reload propagation,
     and phase-level verification for the tool-prefix feature.
   depends_on:
