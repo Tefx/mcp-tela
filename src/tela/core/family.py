@@ -116,10 +116,18 @@ def resolve_tools(
 
     resolved = []
     for raw_tool in tool_list:
-        name = raw_tool["name"]
-        family = resolve_family(name, server_config)
+        raw_name = raw_tool["name"]
+        tool_prefix = server_config.tool_prefix
+        if tool_prefix == "tela.":
+            raise ValueError("ServerConfig.tool_prefix 'tela.' is reserved")
+
+        exposed_name = raw_name if tool_prefix is None else f"{tool_prefix}{raw_name}"
+        if exposed_name.startswith("tela."):
+            raise ValueError("Resolved tool name enters reserved 'tela.' namespace")
+
+        family = resolve_family(raw_name, server_config)
         annotations = raw_tool.get("annotations")
-        posture = classify_tool(name, server_config, annotations)
+        posture = classify_tool(raw_name, server_config, annotations)
         schema = raw_tool.get("inputSchema", {})
         description = raw_tool.get("description", "")
         title = raw_tool.get("title")
@@ -127,7 +135,8 @@ def resolve_tools(
 
         resolved.append(
             ResolvedTool(
-                name=name,
+                name=exposed_name,
+                raw_name=raw_name,
                 server_name=server_name,
                 family=family,
                 posture=posture,
