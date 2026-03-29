@@ -27,8 +27,9 @@ from tela.core.models import AuthMode, GatewayTransport, LockfileData, TelaConfi
 from tela.shell.config_loader import Result, load_config
 from tela.shell.gateway import (
     GatewayStartupConfig,
+    gateway_converge_startup,
+    gateway_prepare_startup,
     gateway_shutdown,
-    gateway_start,
 )
 from tela.shell.gateway_runtime import (
     get_expected_bearer_token,
@@ -155,13 +156,13 @@ async def _run_serve_gateway(
     """Run HTTP gateway lifecycle with lockfile and background watchers."""
     stop_event = asyncio.Event()
 
-    startup_result = await gateway_start(
+    prepare_result = await gateway_prepare_startup(
         startup_config,
         tela_config=tela_config,
         expected_bearer_token=bearer_token,
     )
-    if startup_result.is_err:
-        return Result(error=startup_result.error)
+    if prepare_result.is_err:
+        return Result(error=prepare_result.error)
 
     started_at_result = _utc_now_iso()
     if started_at_result.is_err:
@@ -224,6 +225,14 @@ async def _run_serve_gateway(
         await gateway_shutdown()
         return Result(error=lockfile_result.error)
 
+    converge_result = await gateway_converge_startup()
+    if converge_result.is_err:
+        rollback_result = await _rollback_after_post_bind_convergence_failure(
+            http_server=http_server,
+            convergence_error=converge_result.error,
+        )
+        return rollback_result
+
     _install_signal_handlers(stop_event)
     watcher_task = asyncio.create_task(
         _watch_config_changes(
@@ -267,6 +276,25 @@ async def _run_serve_gateway(
     if error is not None:
         return Result(error=error)
     return Result(value=None)
+
+
+async def _rollback_after_post_bind_convergence_failure(
+    *,
+    http_server: _HttpServerHandle,
+    convergence_error: str | None,
+) -> Result[None, str]:
+    """Rollback explicit post-bind failure path.
+
+    Sequence:
+    1) remove lockfile discovery artifact,
+    2) tear down bound HTTP server,
+    3) clear lifecycle runtime state via gateway shutdown.
+    """
+
+    delete_lockfile()
+    await _stop_http_server(http_server)
+    await gateway_shutdown()
+    return Result(error=convergence_error or "STARTUP_CONVERGENCE_FAILED")
 
 
 # @shell_complexity: startup requires observing uvicorn socket bind before lockfile publication.

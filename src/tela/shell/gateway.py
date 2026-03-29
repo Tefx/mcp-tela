@@ -574,29 +574,41 @@ async def gateway_start(
         Result[None, str] on success, or error string on failure.
     """
 
+    prepare_result = await gateway_prepare_startup(
+        config,
+        tela_config=tela_config,
+        expected_bearer_token=expected_bearer_token,
+    )
+    if prepare_result.is_err:
+        return Result(error=prepare_result.error)
+
+    converge_result = await gateway_converge_startup(tool_lists=tool_lists)
+    if converge_result.is_err:
+        await gateway_shutdown()
+        return Result(error=converge_result.error)
+
+    return Result(value=None)
+
+
+async def gateway_prepare_startup(
+    config: GatewayStartupConfig,
+    tela_config: TelaConfig | None = None,
+    expected_bearer_token: str | None = None,
+) -> Result[None, str]:
+    """Prepare runtime state and upstream server before downstream convergence."""
+
     effective_config = tela_config or TelaConfig()
-
-    # Connect downstream servers
-    connect_result = await connect_all(effective_config.servers, tool_lists=tool_lists)
-    if connect_result.is_err:
-        return Result(error=connect_result.error)
-
-    # Initialize audit subsystem from config
-    audit_result = await audit_init(effective_config.audit)
-    if audit_result.is_err:
-        return Result(error=audit_result.error)
-
     upstream_server_result = _create_upstream_server(config, effective_config)
     if upstream_server_result.is_err:
         return Result(error=upstream_server_result.error)
     assert upstream_server_result.value is not None
     upstream_server = upstream_server_result.value
+
     _wire_upstream_handlers(upstream_server)
     _register_http_routes(upstream_server)
     _register_profiles_resource(upstream_server)
     _wire_reload_notifications()
 
-    # Store runtime state
     with _runtime_lock:
         _runtime.total_tool_calls = 0
         _runtime.config = effective_config
@@ -609,6 +621,27 @@ async def gateway_start(
 
     _ = await gateway_status()
     _ = await gateway_connections()
+    return Result(value=None)
+
+
+async def gateway_converge_startup(
+    tool_lists: dict[str, list[dict]] | None = None,
+) -> Result[None, str]:
+    """Converge downstream registry after startup preparation."""
+
+    with _runtime_lock:
+        runtime_config = _runtime.config
+
+    if runtime_config is None:
+        return Result(error="STARTUP_NOT_PREPARED: runtime config unavailable")
+
+    connect_result = await connect_all(runtime_config.servers, tool_lists=tool_lists)
+    if connect_result.is_err:
+        return Result(error=connect_result.error)
+
+    audit_result = await audit_init(runtime_config.audit)
+    if audit_result.is_err:
+        return Result(error=audit_result.error)
 
     return Result(value=None)
 

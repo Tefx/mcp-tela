@@ -13,7 +13,12 @@ from tela.core.models import AuthConfig, AuthMode, TelaConfig
 from tela.shell.config_loader import Result
 from starlette.applications import Starlette
 
-from tela.shell.gateway import clear_runtime_connections, set_runtime_running, set_upstream_server
+from tela.shell.gateway import (
+    clear_runtime_connections,
+    is_runtime_running,
+    set_runtime_running,
+    set_upstream_server,
+)
 
 
 def test_serve_subcommand_exists() -> None:
@@ -66,11 +71,16 @@ def test_serve_lockfile_written_then_deleted(
             )
         )
 
-    async def _fake_gateway_start(*args, **kwargs) -> Result[None, str]:
+    async def _fake_gateway_prepare_startup(*args, **kwargs) -> Result[None, str]:
         _ = args
         _ = kwargs
         set_upstream_server(object())  # type: ignore[arg-type]  # test fake: not a real FastMCP
         set_runtime_running(True)
+        return Result(value=None)
+
+    async def _fake_gateway_converge_startup(*args, **kwargs) -> Result[None, str]:
+        _ = args
+        _ = kwargs
         return Result(value=None)
 
     async def _fake_launch_streamable_http_server(
@@ -92,6 +102,7 @@ def test_serve_lockfile_written_then_deleted(
         set_upstream_server(None)
         set_runtime_running(False)
         from tela.shell.gateway import clear_runtime_connections
+
         clear_runtime_connections()
         return Result(value=None)
 
@@ -138,7 +149,16 @@ def test_serve_lockfile_written_then_deleted(
         serve_cmd, "get_upstream_log_level", lambda: Result(value="info")
     )
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
-    monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
+    monkeypatch.setattr(
+        serve_cmd,
+        "gateway_prepare_startup",
+        _fake_gateway_prepare_startup,
+    )
+    monkeypatch.setattr(
+        serve_cmd,
+        "gateway_converge_startup",
+        _fake_gateway_converge_startup,
+    )
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
     monkeypatch.setattr(
         serve_cmd,
@@ -187,17 +207,23 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
             )
         )
 
-    async def _fake_gateway_start(*args, **kwargs) -> Result[None, str]:
+    async def _fake_gateway_prepare_startup(*args, **kwargs) -> Result[None, str]:
         _ = args
         _ = kwargs
         set_upstream_server(object())  # type: ignore[arg-type]  # test fake: not a real FastMCP
         set_runtime_running(True)
         return Result(value=None)
 
+    async def _fake_gateway_converge_startup(*args, **kwargs) -> Result[None, str]:
+        _ = args
+        _ = kwargs
+        return Result(value=None)
+
     async def _fake_gateway_shutdown() -> Result[None, str]:
         set_upstream_server(None)
         set_runtime_running(False)
         from tela.shell.gateway import clear_runtime_connections
+
         clear_runtime_connections()
         return Result(value=None)
 
@@ -256,7 +282,16 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
         serve_cmd, "get_upstream_log_level", lambda: Result(value="info")
     )
     monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
-    monkeypatch.setattr(serve_cmd, "gateway_start", _fake_gateway_start)
+    monkeypatch.setattr(
+        serve_cmd,
+        "gateway_prepare_startup",
+        _fake_gateway_prepare_startup,
+    )
+    monkeypatch.setattr(
+        serve_cmd,
+        "gateway_converge_startup",
+        _fake_gateway_converge_startup,
+    )
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
     monkeypatch.setattr(
         serve_cmd,
@@ -298,3 +333,130 @@ def test_idle_shutdown_sets_stop_event_when_connections_stay_idle() -> None:
         return stop_event.is_set()
 
     assert asyncio.run(_scenario()) is True
+
+
+def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Convergence failure after lockfile publish removes discovery and tears down HTTP."""
+
+    observed: list[str] = []
+    discovery = {"published": False}
+
+    def _fake_load_config(path: Path | None = None, default_profile: str | None = None):
+        _ = path
+        _ = default_profile
+        return Result(
+            value=TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+            )
+        )
+
+    async def _fake_gateway_prepare_startup(*args, **kwargs) -> Result[None, str]:
+        _ = args
+        _ = kwargs
+        set_runtime_running(True)
+        observed.append("prepare")
+        return Result(value=None)
+
+    async def _fake_launch_streamable_http_server(
+        *, upstream_app: object, upstream_log_level: str, host: str, requested_port: int
+    ) -> Result[serve_cmd._HttpServerHandle, str]:
+        _ = upstream_app
+        _ = upstream_log_level
+        _ = host
+        _ = requested_port
+        observed.append("bind")
+        task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
+        return Result(
+            value=serve_cmd._HttpServerHandle(
+                task=task,
+                bound_port=8123,
+                request_shutdown=lambda: None,
+            )
+        )
+
+    def _fake_write_lockfile(data: object) -> Result[None, str]:
+        _ = data
+        observed.append("publish_lockfile")
+        discovery["published"] = True
+        return Result(value=None)
+
+    async def _fake_gateway_converge_startup(*args, **kwargs) -> Result[None, str]:
+        _ = args
+        _ = kwargs
+        observed.append("convergence_failed")
+        return Result(error="CONVERGENCE_FAILED: injected")
+
+    def _fake_delete_lockfile() -> Result[None, str]:
+        observed.append("remove_lockfile")
+        discovery["published"] = False
+        return Result(value=None)
+
+    async def _fake_stop_http_server(server: serve_cmd._HttpServerHandle) -> None:
+        _ = server
+        observed.append("teardown_http")
+
+    async def _fake_gateway_shutdown() -> Result[None, str]:
+        observed.append("shutdown_runtime")
+        set_runtime_running(False)
+        return Result(value=None)
+
+    monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
+    monkeypatch.setattr(
+        serve_cmd,
+        "gateway_prepare_startup",
+        _fake_gateway_prepare_startup,
+    )
+    monkeypatch.setattr(
+        serve_cmd,
+        "_launch_streamable_http_server",
+        _fake_launch_streamable_http_server,
+    )
+    monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
+    monkeypatch.setattr(
+        serve_cmd,
+        "gateway_converge_startup",
+        _fake_gateway_converge_startup,
+    )
+    monkeypatch.setattr(serve_cmd, "delete_lockfile", _fake_delete_lockfile)
+    monkeypatch.setattr(serve_cmd, "_stop_http_server", _fake_stop_http_server)
+    monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
+    monkeypatch.setattr(
+        serve_cmd,
+        "is_upstream_server_initialized",
+        lambda: Result(value=True),
+    )
+    monkeypatch.setattr(
+        serve_cmd, "get_upstream_http_app", lambda: Result(value=Starlette())
+    )
+    monkeypatch.setattr(
+        serve_cmd, "get_upstream_log_level", lambda: Result(value="info")
+    )
+    monkeypatch.setattr(serve_cmd, "_package_version", lambda: Result(value="0.1.0"))
+
+    result = serve_cmd.serve_command(
+        config_path=str(tmp_path / "tela.yaml"),
+        port=8123,
+        host="127.0.0.1",
+        default_profile="dev",
+        idle_timeout=0,
+        token="cli-token",
+    )
+
+    assert result.is_err
+    assert result.error == "CONVERGENCE_FAILED: injected"
+    assert observed == [
+        "prepare",
+        "bind",
+        "publish_lockfile",
+        "convergence_failed",
+        "remove_lockfile",
+        "teardown_http",
+        "shutdown_runtime",
+    ]
+    assert discovery["published"] is False
+    runtime_state_result = is_runtime_running()
+    assert runtime_state_result.is_ok
+    assert runtime_state_result.value is False
