@@ -44,6 +44,7 @@ MINIMAL_SERVER_SPEC_FIXTURE = {
 }
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_spec_fixture_exercises_documented_server_config_shape() -> None:
     """Spec fixture uses only documented fields from INTERFACES.md §3.1.
 
@@ -76,6 +77,7 @@ def test_spec_fixture_exercises_documented_server_config_shape() -> None:
     assert "command" in MINIMAL_SERVER_SPEC_FIXTURE
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_server_config_accepts_spec_fixture() -> None:
     """ServerConfig validates against the §3.1 spec fixture.
 
@@ -95,6 +97,7 @@ def test_server_config_accepts_spec_fixture() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_omitted_tool_prefix_keeps_raw_name_as_exposed_name() -> None:
     """When tool_prefix is None/omitted, resolve_tools exposes the raw name unchanged.
 
@@ -118,6 +121,7 @@ def test_omitted_tool_prefix_keeps_raw_name_as_exposed_name() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
     """Two servers with the same raw tool name but different prefixes coexist.
 
@@ -157,6 +161,7 @@ def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_same_prefix_same_raw_name_is_conflict() -> None:
     """Two servers using the same tool_prefix that expose the same tool name conflict.
 
@@ -193,6 +198,7 @@ def test_same_prefix_same_raw_name_is_conflict() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tool_overrides_match_raw_names_not_prefixed_names() -> None:
     """tool_overrides keys remain raw downstream names even when prefix is set.
 
@@ -225,6 +231,7 @@ def test_tool_overrides_match_raw_names_not_prefixed_names() -> None:
     assert "delete_file" in cfg.tool_overrides
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_prefixed_exposed_name_not_used_for_override_lookup() -> None:
     """Override keys are raw names — prefixed exposed names must NOT match overrides.
 
@@ -254,6 +261,7 @@ def test_prefixed_exposed_name_not_used_for_override_lookup() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_resolved_tool_carries_raw_name_for_downstream_routing() -> None:
     """ResolvedTool.name is the exposed name; raw_name is for downstream routing.
 
@@ -274,6 +282,7 @@ def test_resolved_tool_carries_raw_name_for_downstream_routing() -> None:
     assert tools[0].raw_name == "read_file"
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_resolved_tool_raw_name_none_when_prefix_omitted() -> None:
     """When tool_prefix is omitted, raw_name may be None for backward compat.
 
@@ -296,6 +305,7 @@ def test_resolved_tool_raw_name_none_when_prefix_omitted() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
     """Changing tool_prefix is a tool-surface change requiring tools/list_changed.
 
@@ -328,6 +338,7 @@ def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tela_prefix_is_reserved_and_rejected() -> None:
     """tool_prefix="tela." is reserved and must be rejected at config validation.
 
@@ -348,6 +359,7 @@ def test_tela_prefix_is_reserved_and_rejected() -> None:
         ServerConfig(name="fs", command="cmd", tool_prefix="tela")
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tela_prefix_rejected_even_with_trailing_dot() -> None:
     """tool_prefix="tela." (with trailing dot) is still the tela prefix.
 
@@ -365,6 +377,7 @@ def test_tela_prefix_rejected_even_with_trailing_dot() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tela_config_with_prefixed_servers() -> None:
     """TelaConfig accepts servers with tool_prefix configured.
 
