@@ -44287,7 +44287,7 @@ phases:
       \ test expectations\n- a89967d5: fix(test): account for builtin tool in test_list_tools_handles_absent_metadata"
 - id: pm.p0_verify
   name: P0 Verification
-  status: in_progress
+  status: done
   depends_on:
   - pm.p0_impl
   steps:
@@ -44448,7 +44448,7 @@ phases:
       **Verdict**: ALL GREEN - All 7 P0 tests pass, gateway tests pass, no new regressions'
   - id: pm.p0_verify.gate
     name: P0 gate review
-    status: claimed
+    status: done
     description: "P0 gate review. Independent reviewer verifies P0 deliverables.\n\
       \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Phase introduces new\
       \ runtime surface (built-in tool in gateway)\n  - Integration-tagged step (gateway_wiring)\
@@ -44498,6 +44498,32 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T20:15:47.729236+00:00'
+    done_at: '2026-03-29T20:16:32.635285+00:00'
+    evidence: "## Gate Review Evidence\n\n**Gate criteria verification:**\n\n1. **Contract\
+      \ preservation**: PASS\n   - ProviderInfo TypedDict matches contract (name,\
+      \ status, tool_prefix, tool_count, tool_names)\n   - handle_list_providers signature\
+      \ matches contract (async def -> list[ProviderInfo])\n\n2. **Profile enforcement**:\
+      \ PASS\n   - handle_list_providers filters via filter_tools_for_profile\n  \
+      \ - Test test_handle_list_providers_filters_by_profile_enforcement verifies\n\
+      \n3. **Hot-reload compatibility**: PASS (SHOULD_FIX for test)\n   - BUILTIN_TOOLS\
+      \ not stored in DownstreamRegistry\n   - Builtins injected at list/call time,\
+      \ survive registry clear\n   - Recommendation: Add hot-reload test for builtin\
+      \ preservation\n\n4. **Status semantics**: PASS\n   - connected/disconnected/failed\
+      \ correctly derived from _successful_servers, _attempted_servers, registry\n\
+      \n5. **Config validation**: PASS\n   - validate_config rejects \"tela_\" and\
+      \ \"tela.\" prefixes (lines 248-255)\n   - resolve_tools raises ValueError for\
+      \ reserved namespace composition (lines 121-131)\n\n6. **resolve_tools hardening**:\
+      \ PASS\n   - Raises ValueError for tool_prefix starting with \"tela_\" or \"\
+      tela.\"\n   - Raises ValueError for exposed_name starting with \"tela_\" or\
+      \ \"tela.\"\n\n7. **Audit logging**: PASS (FIXED)\n   - L2 audit entry now recorded\
+      \ for builtin tool calls\n   - build_audit_entry with level=AuditLevel.L2\n\
+      \   - server_name=\"tela\" for builtin tools\n   - latency_ms measured, arguments\
+      \ included\n\n8. **No regressions**: PASS\n   - 47 tests pass in test_builtin_tools.py\
+      \ + test_gateway.py\n\n9. **Wiring completeness**: PASS\n   - BUILTIN_TOOLS\
+      \ checked BEFORE registry lookup in _call_tool (line 431)\n\n**Test results:**\n\
+      ```\n47 passed in 0.89s\n```\n\n**Blockers:** NONE\n\n**Should-fix:**\n- S1:\
+      \ Add test verifying builtin tools survive disconnect_all + connect_all cycle\n\
+      - S2: models.py exceeds 500 lines (pre-existing)"
   - id: pm.p0_verify.audit_logging_fix
     name: Add audit logging for builtin tool calls
     status: done
@@ -44536,7 +44562,7 @@ phases:
       \ tests/shell/test_gateway.py -v\n47 passed in 0.88s\n```"
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
-  status: locked
+  status: pending
   depends_on:
   - pm.p0_verify
   steps:
@@ -44820,7 +44846,7 @@ phases:
     agent: gate-reviewer
 - id: pm.p2_contract
   name: P2 Description Rewriting Contracts
-  status: locked
+  status: pending
   depends_on:
   - pm.p0_verify
   steps:
