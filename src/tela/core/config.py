@@ -245,6 +245,15 @@ def validate_config(
                 f"SERVER_AMBIGUOUS_TRANSPORT: server '{name}' must define either 'command' or 'url', not both."
             )
 
+        if server.tool_prefix is not None and (
+            server.tool_prefix.startswith("tela_")
+            or server.tool_prefix.startswith("tela.")
+        ):
+            errors.append(
+                f"SERVER_RESERVED_PREFIX: server '{name}' tool_prefix '{server.tool_prefix}' "
+                "uses reserved 'tela_' or 'tela.' namespace."
+            )
+
     return errors
 
 

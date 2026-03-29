@@ -1,0 +1,565 @@
+# =============================================================================
+# tela Configuration Example
+# =============================================================================
+# This file demonstrates all configuration options for tela, the MCP
+# (Model Context Protocol) aggregation gateway.
+#
+# Copy this file to 'tela.yaml' and customize for your deployment.
+#
+# Quick Start:
+#   cp tela.yaml.example tela.yaml
+#   tela connect --config tela.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Section: servers
+# -----------------------------------------------------------------------------
+# Defines downstream MCP servers that tela will connect to and aggregate.
+# Each server entry defines HOW to connect (command or url) and HOW to
+# classify its tools (family, posture, overrides).
+#
+# Key rules:
+#   - Use EITHER 'command' (stdio) OR 'url' (remote), NOT both
+#   - When using 'url', transport defaults to Streamable HTTP (MCP 2025-03-26+)
+#   - Set 'transport: sse' alongside 'url' for legacy SSE servers
+#   - The YAML key is the server name (e.g., 'fs', 'github')
+#   - 'family' is optional and overrides auto-detection
+#   - 'default_posture' sets the baseline for all tools from this server
+#   - 'tool_overrides' allow per-tool fine-tuning
+#
+servers:
+  # ===========================================================================
+  # Example: Local stdio-based MCP server (filesystem)
+  # ===========================================================================
+  fs:
+    # REQUIRED: Command to spawn the MCP server (stdio transport)
+    command: "mcp-filesystem"
+    
+    # OPTIONAL: Arguments passed to the command
+    args: ["--root", "/workspace", "--readonly"]
+    
+    # OPTIONAL: Environment variables passed to the server process
+    # Supports ${VAR} and $VAR expansion from parse-time environment
+    env:
+      LOG_LEVEL: "debug"
+      # Use environment variables for secrets:
+      # API_KEY: "${MCP_API_KEY}"
+    
+    # OPTIONAL: Tool family classification
+    # Defaults to server name (server-is-family convention) if omitted.
+    # Example: server named 'github' would default to family 'github'.
+    # Use explicit 'family' to group multiple servers under same family.
+    family: "filesystem"
+    
+    # OPTIONAL: Default posture for all tools from this server
+    # Values: none | read_only | read_write | destructive
+    # Default: none (no access until explicitly granted in profile)
+    default_posture: "read_only"
+    
+    # OPTIONAL: Per-tool overrides (fine-grained control)
+    tool_overrides:
+      write_file:
+        # Reassign this tool to a different family
+        family: "filesystem"
+        # Override posture for this specific tool
+        posture: "read_write"
+      delete_file:
+        posture: "destructive"
+    
+    # OPTIONAL: Instructions control for downstream server
+    # Controls how this server's instructions appear in the merged output.
+    # Values:
+    #   - null/omitted: Passthrough mode - include downstream instructions as-is
+    #   - false:        Suppress mode - exclude this server's instructions entirely
+    #   - "string":     Override mode - use the provided string instead of downstream
+    #
+    # Example: Passthrough (default when omitted)
+    #   # instructions: null  # Same as omitting - uses downstream instructions
+    #
+    # Example: Suppress (hide this server's instructions)
+    #   instructions: false
+    #
+    # Example: Override (custom instructions)
+    #   instructions: |
+    #     This is a sandboxed filesystem with limited write access.
+    #     Available tools: read_file, list_directory, write_file (restricted)
+    #
+    # Default: null (passthrough)
+
+  # ===========================================================================
+  # Example: Remote Streamable HTTP server (default)
+  # ===========================================================================
+  github:
+    # REQUIRED: URL endpoint (HTTP/HTTPS)
+    # Use 'url' for remote transport, 'command' for stdio transport
+    # Streamable HTTP is the default when 'transport' is omitted
+    url: "http://localhost:3001/mcp"
+
+    # OPTIONAL: Tool family
+    family: "git"
+
+    # DEFAULT: No explicit posture (inherit from profile)
+    default_posture: "none"
+
+    # OPTIONAL: Suppress instructions from this remote server
+    # Remote servers may return lengthy instructions; suppress to keep output clean
+    # instructions: false
+
+  # ===========================================================================
+  # Example: Remote SSE-based MCP server (legacy)
+  # ===========================================================================
+  # github_sse:
+  #   url: "http://localhost:3001/sse"
+  #   transport: sse           # SSE (legacy MCP transport)
+  #   family: "git"
+  #   default_posture: "none"
+
+  # ===========================================================================
+  # Example: Execution server with override instructions (code/execution)
+  # ===========================================================================
+  # NOTE: Built-in profiles use 'execution' family. If you define a custom
+  # family (e.g., 'shell'), it won't be covered by built-in profiles.
+  execution:
+    command: "mcp-exec"
+    args: ["--sandbox", "/sandbox"]
+    family: "execution"
+    # Execution tools are powerful - default to no access
+    default_posture: "none"
+    
+    # Override downstream instructions with custom guidance
+    instructions: |
+      Secure code execution environment with sandboxed filesystem access.
+      Use caution with shell commands - they run in an isolated container.
+      
+      Available tools:
+      - run_code: Execute Python/JavaScript code
+      - run_shell: Run shell commands in sandbox
+    
+    # Server-level tool_overrides map directly by tool name.
+    # Each tool can override family and/or posture.
+    tool_overrides:
+      run_code:
+        posture: "read_write"
+      run_shell:
+        posture: "destructive"
+
+  # ===========================================================================
+  # Example: Orchestration server (process management)
+  # ===========================================================================
+  orchestration:
+    command: "mcp-orchestration"
+    family: "orchestration"
+    default_posture: "none"
+
+  # ===========================================================================
+  # Example: Network/fetch server
+  # ===========================================================================
+  network:
+    command: "mcp-fetch"
+    family: "network"
+    default_posture: "read_only"
+
+# -----------------------------------------------------------------------------
+# Section: profiles
+# -----------------------------------------------------------------------------
+# Profiles define access control rules for connected clients.
+# Each profile specifies:
+#   - Which tool families are accessible (capabilities)
+#   - Maximum posture level per family
+#   - Per-tool allow/deny overrides
+#
+# When auth.mode is "open", one profile MUST have default: true
+#
+# Built-in profiles available (from tela.core.catalog):
+#   - read_only      : Filesystem read only
+#   - fetch_external : Filesystem + Network read only
+#   - modify_local   : Filesystem read/write
+#   - send_external  : Filesystem read + Network read/write
+#   - orchestrate    : Read-only fs + network, orchestration read/write
+#   - execute_safe   : Full access except destructive ops
+#   - execute_full   : Destructive access to all tool families
+#
+# You can:
+#   1. Use built-in profiles (provide empty profiles: {})
+#   2. Override built-in profiles by same name
+#   3. Define entirely new profiles
+#
+profiles:
+  # ===========================================================================
+  # Built-in Profile: read_only (shown with defaults)
+  # ===========================================================================
+  # Purpose: Safely read files from filesystem. No network access.
+  # Use case: Code review, documentation browsing
+  #
+  read_only:
+    # REQUIRED: Family -> posture ceiling mapping
+    # Postures: none < read_only < read_write < destructive
+    # The client can only use tools at or below the specified posture
+    capabilities:
+      filesystem: "read_only"
+    
+    # OPTIONAL: Mark as default for open mode
+    # At most ONE profile can have default: true
+    # Used when client connects without specifying a profile
+    default: false
+
+  # ===========================================================================
+  # Built-in Profile: fetch_external (shown with defaults)
+  # ===========================================================================
+  # Purpose: Read from filesystem and network. No writes.
+  # Use case: Research, web scraping, documentation lookup
+  #
+  fetch_external:
+    capabilities:
+      filesystem: "read_only"
+      network: "read_only"
+    default: false
+
+  # ===========================================================================
+  # Built-in Profile: modify_local (shown with defaults)
+  # ===========================================================================
+  # Purpose: Read and write filesystem. No network.
+  # Use case: Local development, code modification
+  #
+  modify_local:
+    capabilities:
+      filesystem: "read_write"
+    default: false
+
+  # ===========================================================================
+  # Built-in Profile: send_external (shown with defaults)
+  # ===========================================================================
+  # Purpose: Read filesystem, read/write network. Limited local access.
+  # Use case: CI/CD, deployment, API integration
+  #
+  send_external:
+    capabilities:
+      filesystem: "read_only"
+      network: "read_write"
+    default: false
+
+  # ===========================================================================
+  # Built-in Profile: orchestrate (shown with defaults)
+  # ===========================================================================
+  # Purpose: Process orchestration with read-only external access.
+  # Use case: Job scheduling, workflow management
+  #
+  orchestrate:
+    capabilities:
+      filesystem: "read_only"
+      network: "read_only"
+      orchestration: "read_write"
+    default: false
+
+  # ===========================================================================
+  # Built-in Profile: execute_safe (shown with defaults)
+  # ===========================================================================
+  # Purpose: Full tool access except destructive operations.
+  # Use case: Development workstations, trusted automation
+  #
+  execute_safe:
+    capabilities:
+      filesystem: "read_write"
+      network: "read_write"
+      orchestration: "read_write"
+      execution: "read_write"
+    default: false
+
+  # ===========================================================================
+  # Built-in Profile: execute_full (shown with defaults)
+  # ===========================================================================
+  # Purpose: Destructive access to all tool families. Use with caution.
+  # Use case: Admin operations, trusted automation with full access
+  #
+  execute_full:
+    capabilities:
+      filesystem: "destructive"
+      network: "destructive"
+      orchestration: "destructive"
+      execution: "destructive"
+    default: false
+
+  # ===========================================================================
+  # Custom Profile Example: developer
+  # ===========================================================================
+  # This example shows a custom profile that extends concepts from built-in
+  # profiles with additional restrictions and tool overrides.
+  #
+  # NOTE: 'git' is a custom family - not covered by built-in profiles.
+  # Define it when connecting git-related MCP servers.
+  #
+  developer:
+    capabilities:
+      filesystem: "read_write"
+      network: "read_only"
+      git: "read_write"
+      # NOTE: tela.status, tela.connections, and tela.audit are operator-only
+      # CLI/HTTP surfaces, not MCP tools/resources.
+      # tela.profiles is available via the MCP resource interface (not a capability key).
+
+    # Per-tool fine control within family posture ceiling
+    # NOTE: The structure requires 'overrides' nesting:
+    #   tool_overrides:
+    #     <family_name>:
+    #       overrides:
+    #         <tool_name>: "allow" | "deny"
+    tool_overrides:
+      filesystem:
+        overrides:
+          # Explicitly deny specific dangerous tools even though family
+          # posture allows read_write
+          delete_file: "deny"
+          rm_rf: "deny"
+      git:
+        overrides:
+          # Allow all git operations
+          force_push: "allow"
+    
+    # Make this the default profile for open mode connections
+    default: true
+
+  # ===========================================================================
+  # Custom Profile Example: ci_runner
+  # ===========================================================================
+  # CI/CD pipeline profile with network write and limited local access
+  #
+  ci_runner:
+    capabilities:
+      filesystem: "read_only"
+      network: "read_write"
+      orchestration: "read_write"
+    
+    tool_overrides:
+      filesystem:
+        overrides:
+          # Allow writing to specific CI directories
+          write_ci_artifacts: "allow"
+    default: false
+
+  # ===========================================================================
+  # Custom Profile Example: auditor
+  # ===========================================================================
+  # Read-only audit access - no modifications allowed
+  #
+  auditor:
+    capabilities:
+      filesystem: "read_only"
+      network: "read_only"
+      orchestration: "read_only"
+    default: false
+
+# -----------------------------------------------------------------------------
+# Section: auth
+# -----------------------------------------------------------------------------
+# Authentication configuration for the gateway.
+#
+# Modes:
+#   - "open"  : No authentication. Clients connect without tokens.
+#               WARNING: Only use in trusted environments!
+#   - "token" : HMAC-SHA256 token authentication with TTL.
+#               Recommended for production deployments.
+#
+auth:
+  # REQUIRED: Authentication mode
+  # Values: "token" | "open"
+  # Default: "token"
+  mode: "token"
+  
+  # CONDITIONAL: Required when mode="token"
+  # List of HMAC secrets for token signing and validation.
+  # Supports environment variable expansion with ${VAR} or $VAR syntax.
+  # 
+  # First secret: Used for signing NEW tokens and validating existing
+  # Second secret: Used ONLY for validation (rotation support)
+  #
+  # Recommendation: Use environment variables, never hardcode secrets!
+  #   export TELA_SECRET="your-256-bit-secret-here"
+  #   export TELA_SECRET_PREVIOUS="previous-secret-for-rotation"
+  #
+  secrets:
+    - "${TELA_SECRET}"
+    - "${TELA_SECRET_PREVIOUS}"  # Optional: for secret rotation
+
+  # Example: Hardcoded secrets (NOT recommended for production)
+  # secrets:
+  #   - "development-secret-do-not-use-in-prod"
+
+# -----------------------------------------------------------------------------
+# Section: auth (Open Mode Example)
+# -----------------------------------------------------------------------------
+# Uncomment to use open mode without authentication.
+# WARNING: Open mode allows ANY client to connect. Only use in development
+# or behind secured network boundaries.
+#
+# auth:
+#   mode: "open"
+
+# -----------------------------------------------------------------------------
+# Section: audit
+# -----------------------------------------------------------------------------
+# Audit logging configuration.
+# All operations are logged to a JSONL file for security review and debugging.
+#
+audit:
+  # REQUIRED: Audit level (L1, L2, or L3)
+  #
+  # L1: Basic - Log tool invocations only
+  #     - Tool name, profile, timestamp
+  #     - Minimal overhead, suitable for high-traffic
+  #
+  # L2: Standard (RECOMMENDED) - Log tool invocations with parameter hash
+  #     - L1 fields plus param_hash and connection context
+  #     - Good balance of detail and performance
+  #
+  # L3: Verbose - Full request/response content
+  #     - All L2 fields plus full request/response bodies
+  #     - Higher overhead, use for debugging
+  #
+  level: "L2"
+  
+  # REQUIRED: Path to audit log file
+  # Supports:
+  #   - Absolute paths: "/var/log/tela/audit.jsonl"
+  #   - Relative paths: "./logs/audit.jsonl"
+  #   - Home expansion: "~/.tela/audit.jsonl"
+  #   - Environment variables: "${TELA_STATE}/audit.jsonl"
+  #
+  # Format: JSONL (JSON Lines) - one audit entry per line
+  output: "${TELA_STATE}/audit.jsonl"
+
+# =============================================================================
+# POSTURE AND FAMILY REFERENCE
+# =============================================================================
+#
+# Posture Hierarchy (from least to most permissive):
+#   1. "none"        - No access, tool is blocked
+#   2. "read_only"   - Read-only access, no modifications
+#   3. "read_write"  - Read and write access, no destructive ops
+#   4. "destructive" - Full access including destructive operations
+#
+# Tool Families:
+#   Built-in families (used in catalog.py built-in profiles):
+#   - "filesystem"   : File read/write/delete operations
+#   - "network"      : HTTP requests, web scraping
+#   - "orchestration": Process/job management
+#   - "execution"    : Code execution environments
+#
+#   Example custom families (you can define your own):
+#   - "git"          : Version control operations
+#   - "shell"        : Shell command execution
+#   - "docker"       : Container operations
+#
+#   NOTE: If you assign a server to a custom family (e.g., "git"), that
+#   family won't be covered by any built-in profile. You must define a
+#   custom profile that includes that family.
+#
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+#
+# tela supports environment variable expansion in configuration:
+#
+#   ${VAR}          - Required: Error if not set
+#   $VAR            - Required: Error if not set
+#
+# Common variables:
+#
+#   TELA_SECRET          - Primary HMAC secret (token mode)
+#   TELA_SECRET_PREVIOUS - Secondary secret for rotation
+#   TELA_BEARER_TOKEN    - Fixed bearer token for tela serve / tela connect
+#   TELA_STATE           - State directory for audit logs
+#   HOME                 - User home directory
+#
+# Example:
+#   secrets:
+#     - "${TELA_SECRET}"
+#   audit:
+#     output: "${TELA_STATE}/audit.jsonl"
+#
+# =============================================================================
+# CLI USAGE
+# =============================================================================
+#
+# Start the gateway:
+#   tela connect --config tela.yaml                                # auto-discover/auto-start
+#   tela serve --config tela.yaml --port 8080                      # explicit server
+#   tela serve --config tela.yaml --host 0.0.0.0 --port 8080      # LAN deployment
+#
+# Inspect state:
+#   tela status [--json]
+#   tela profiles [--json]
+#   tela connections [--json]
+#
+# Query audit log:
+#   tela audit --since "2026-01-01T00:00:00Z" --limit 50
+#
+# =============================================================================
+# EXAMPLE CONFIGURATIONS
+# =============================================================================
+#
+# --- Development Setup (Open Mode, Local Filesystem) ---
+#
+# servers:
+#   fs:
+#     command: "mcp-filesystem"
+#     args: ["--root", "${HOME}/projects"]
+#     family: "filesystem"
+# 
+# profiles:
+#   modify_local:
+#     default: true
+# 
+# auth:
+#   mode: "open"
+#
+# ---
+#
+# --- Production Setup (Token Auth, Multiple Servers) ---
+#
+# servers:
+#   fs:
+#     command: "mcp-filesystem"
+#     args: ["--root", "/data"]
+#     family: "filesystem"
+#     default_posture: "read_only"
+#   
+#   github:
+#     url: "https://mcp-github.example.com/sse"
+#     family: "git"
+#   
+#   ci:
+#     command: "mcp-ci"
+#     family: "orchestration"
+# 
+# profiles:
+#   developer:
+#     capabilities:
+#       filesystem: "read_write"
+#       git: "read_write"
+#       orchestration: "read_write"
+#     default: true
+#   
+#   bot:
+#     capabilities:
+#       orchestration: "read_write"
+# 
+# auth:
+#   mode: "token"
+#   secrets:
+#     - "${TELA_SECRET}"
+#
+# audit:
+#   level: "L3"
+#   output: "/var/log/tela/audit.jsonl"
+#
+# =============================================================================
+# SEE ALSO
+# =============================================================================
+#
+# Operator Guide:    docs/USAGE.md
+# Interface Spec:    docs/INTERFACES.md
+# Architecture:      docs/DESIGN.md
+# CLI Reference:     tela --help
+# Built-in Profiles: src/tela/core/catalog.py
+#
+# =============================================================================

@@ -118,12 +118,18 @@ def resolve_tools(
     for raw_tool in tool_list:
         raw_name = raw_tool["name"]
         tool_prefix = server_config.tool_prefix
-        if tool_prefix == "tela.":
-            raise ValueError("ServerConfig.tool_prefix 'tela.' is reserved")
+        if tool_prefix is not None and (
+            tool_prefix.startswith("tela.") or tool_prefix.startswith("tela_")
+        ):
+            raise ValueError(
+                f"ServerConfig.tool_prefix '{tool_prefix}' uses reserved namespace"
+            )
 
         exposed_name = raw_name if tool_prefix is None else f"{tool_prefix}{raw_name}"
-        if exposed_name.startswith("tela."):
-            raise ValueError("Resolved tool name enters reserved 'tela.' namespace")
+        if exposed_name.startswith("tela.") or exposed_name.startswith("tela_"):
+            raise ValueError(
+                f"Resolved tool name '{exposed_name}' enters reserved namespace"
+            )
 
         family = resolve_family(raw_name, server_config)
         annotations = raw_tool.get("annotations")
