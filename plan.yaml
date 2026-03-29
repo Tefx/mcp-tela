@@ -44165,6 +44165,38 @@ phases:
     - pm.p0_impl.downstream_accessor
     - pm.p0_impl.config_validation
     agent: python-executor
+  - id: pm.p0_impl.builtin_tool_fix_tests
+    name: Builtin tool test compatibility fix
+    status: pending
+    description: "Fix builtin-tool-related test failures after tela_list_providers\
+      \ integration.\n\nScope:\n- Update tests/shell/test_gateway.py expectations\
+      \ and fixtures so gateway tool-list assertions account for the builtin tela_list_providers\
+      \ tool alongside downstream tools.\n- Fix the fixture/setup defect in tests/shell/test_builtin_tools.py::test_handle_list_providers_includes_disconnected_server\
+      \ so disconnected-server behavior is asserted against the intended builtin-tool\
+      \ path.\n\nKnown risk:\n- These gateway tests are metadata-preservation regressions;\
+      \ preserve their metadata assertions while making tool-count/tool-selection\
+      \ expectations explicit.\n- Search for sibling assumptions in test_gateway.py\
+      \ that still hard-code a single downstream tool and normalize them consistently.\n\
+      \nOut-of-scope guardrail:\n- Do not change production behavior to hide the builtin\
+      \ tool from the gateway unless test evidence proves the contract requires that.\n\
+      - Do not weaken metadata-preservation coverage.\n\nVerification focus:\n- tests/shell/test_builtin_tools.py::test_handle_list_providers_includes_disconnected_server\
+      \ passes.\n- A focused pytest run for the affected test_gateway.py cases passes\
+      \ with builtin tool presence handled explicitly.\n- Evidence should show that\
+      \ downstream-tool metadata assertions still target read_file (or the intended\
+      \ downstream tool) rather than relying on len(tools) == 1.\n\nstep_type: implementation\n\
+      upstream_artifacts:\n  - path: tests/shell/test_builtin_tools.py\n    from_step:\
+      \ pm.p0_test\n    tier: test\n  - path: tests/shell/test_gateway.py\n    from_step:\
+      \ pm.p0_test\n    tier: test"
+    verification: '- Run focused pytest for tests/shell/test_builtin_tools.py::test_handle_list_providers_includes_disconnected_server
+
+      - Run focused pytest for the affected tests/shell/test_gateway.py metadata/listing
+      cases
+
+      - Confirm assertions still validate downstream tool metadata while explicitly
+      accommodating builtin tela_list_providers presence'
+    depends_on:
+    - pm.p0_impl.gateway_wiring
+    agent: python-executor
 - id: pm.p0_verify
   name: P0 Verification
   status: locked
