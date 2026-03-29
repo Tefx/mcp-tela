@@ -38743,7 +38743,7 @@ phases:
       **Issues Found**: 1 blocker, 2 should-fix items'
   - id: conn_v2.system_wiring.entrypoint_integration
     name: Wire connect, serve, status, and reload entrypoints to the new runtime modules
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\ntags:\n  - integration\n\
       spec_refs:\n  - docs/INTERFACES.md#2. CLI Surface\n  - docs/INTERFACES.md#7.2.1\
       \ GET /status Response Schema\n  - docs/USAGE.md#Running tela > tela connect\n\
@@ -38791,6 +38791,43 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T04:16:00.172405+00:00'
+    done_at: '2026-03-29T04:22:13.414313+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 83b0abc
+
+
+      Verification:
+
+      - Run: uv run pytest -q tests/shell/test_cli_wiring.py tests/integration/test_end_to_end.py
+      tests/integration/test_hot_reload.py -> 23 passed in 2.45s
+
+      - Run: uv run invar guard -> status: passed (errors: 0, warnings: 0)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md#2-cli-surface
+
+      - docs/INTERFACES.md#7-2-1-get-status-response-schema
+
+      - docs/USAGE.md#running-tela > tela connect
+
+      - docs/USAGE.md#running-tela > tela serve
+
+
+      Delivered:
+
+      - Updated src/tela/shell/http_routes.py to remove ad hoc inline lifecycle branching
+      in `handle_status` by routing through `_derive_lifecycle_state(...)` helper.
+
+      - Hardened runtime/status coordination path with explicit Result checks for
+      `get_runtime_status_snapshot()` and `get_all_tools()` before consuming values.
+
+      - Preserved existing signatures and protected tests unchanged.
+
+
+      Deviation records: None'
   - id: conn_v2.ux.impl_messages
     name: Implement startup, shutdown, and diagnostics messaging across host surfaces
     status: done
