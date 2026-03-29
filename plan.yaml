@@ -41689,7 +41689,7 @@ phases:
       **Commit**: 27584b7'
   - id: gw_remed.lifecycle_authority.gate
     name: Gate A1 lifecycle authority extraction
-    status: pending
+    status: claimed
     description: Review A1 evidence and block progression if lifecycle/readiness truth
       is still split across gateway.py and http_routes.py.
     verification: Confirm the phase closes A1 and leaves a single authority for downstream
@@ -41700,6 +41700,8 @@ phases:
     - gw_remed.lifecycle_authority.extract_status_authority
     - gw_remed.lifecycle_authority.verify_status_truth
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-29T11:57:38.540041+00:00'
 - id: gw_remed.startup_plan_a
   name: 'Gateway remediation: A4 startup sequencing via Plan A'
   status: locked
