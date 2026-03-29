@@ -40744,7 +40744,7 @@ phases:
     claimed_at: '2026-03-29T13:40:31.109482+00:00'
   - id: tool_prefix.runtime.spec_conformance
     name: Spec conformance audit for tool-prefix behavior
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -40814,6 +40814,43 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-03-29T13:39:47.733441+00:00'
+    done_at: '2026-03-29T13:44:32.787221+00:00'
+    evidence: '## Spec Conformance Report
+
+
+      **HEAD**: 37ecc5f48edf17c5958bbf7917e091efd60a3800
+
+
+      **Summary**: 8/9 CONFORMS, 1 NEEDS_TEST (R8 reload semantics - runtime test
+      needed)
+
+
+      | Requirement | Implementation | Verdict |
+
+      |------------|----------------|---------|
+
+      | R1: ServerConfig.tool_prefix field | models.py:112 `tool_prefix: str \| None
+      = None` | CONFORMS |
+
+      | R2: Prefix at registration time | family.py:117-127 | CONFORMS |
+
+      | R3: raw_name preserved | family.py:139, models.py:293-303 | CONFORMS |
+
+      | R4: tool_overrides match raw names | family.py:128 | CONFORMS |
+
+      | R5: Conflict on exposed names | conflict.py:90-100 | CONFORMS |
+
+      | R6: Backward compatibility | family.py:124 | CONFORMS |
+
+      | R7: tela. prefix rejected | family.py:121-122, conflict.py:104-114 | CONFORMS
+      |
+
+      | R8: Prefix changes = surface changes | reload.py:296-300 | NEEDS_TEST |
+
+      | R9: Observability path | downstream_registry.py:18-64 | CONFORMS |
+
+
+      **DIVERGENCES**: 0'
   - id: tool_prefix.runtime.gate
     name: Gate tool-prefix runtime
     status: pending
