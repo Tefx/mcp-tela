@@ -44107,7 +44107,7 @@ phases:
       **Commit:** faf81ca7'
   - id: pm.p0_impl.gateway_wiring
     name: Wire built-in tools into gateway
-    status: pending
+    status: claimed
     description: "Wire built-in tools into gateway startup, list_tools, and call_tool\
       \ paths. This is the serial integration step depending on all three parallel\
       \ implementation steps.\n\nUPSTREAM ARTIFACTS:\n  - src/tela/shell/gateway.py\
@@ -44218,6 +44218,8 @@ phases:
     - pm.p0_impl.downstream_accessor
     - pm.p0_impl.config_validation
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T19:50:59.180931+00:00'
   - id: pm.p0_impl.builtin_tool_fix_tests
     name: Builtin tool test compatibility fix
     status: pending
