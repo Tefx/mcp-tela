@@ -411,7 +411,7 @@ class LockfileData(BaseModel):
 class HealthResponse(BaseModel):
     """Liveness response for `GET /health`."""
 
-    status: str = "ok"
+    status: Literal["ok"] = "ok"
     pid: int
 
 

@@ -33,8 +33,65 @@ from tela.shell.http_auth import validate_bearer_token
 from tela.shell.upstream import release_session
 
 
+def _is_auth_error(result: Result[object, str]) -> bool:
+    """Return True when route failure is an auth-token validation failure."""
+
+    return (
+        result.is_err
+        and isinstance(result.error, str)
+        and result.error.startswith("AUTH_INVALID_TOKEN")
+    )
+
+
+def _is_gateway_not_started_error(result: Result[object, str]) -> bool:
+    """Return True when route failure reports gateway-not-started semantics."""
+
+    return (
+        result.is_err
+        and isinstance(result.error, str)
+        and result.error.startswith("GATEWAY_NOT_STARTED")
+    )
+
+
+def _is_connection_not_found_error(result: Result[object, str]) -> bool:
+    """Return True when disconnect failure reports unknown connection_id."""
+
+    return (
+        result.is_err
+        and isinstance(result.error, str)
+        and result.error.startswith("CONNECTION_NOT_FOUND")
+    )
+
+
+def _is_admission_warming_error(result: Result[object, str]) -> bool:
+    """Return True when connect failure reports warming admission rejection."""
+
+    return (
+        result.is_err
+        and isinstance(result.error, str)
+        and result.error.startswith("ADMISSION_REJECTED_WARMING")
+    )
+
+
+def _is_audit_query_error(result: Result[object, str]) -> bool:
+    """Return True when status failure reports audit query failure."""
+
+    return (
+        result.is_err
+        and isinstance(result.error, str)
+        and result.error.startswith("AUDIT_QUERY_ERROR")
+    )
+
+
 @pre(lambda: True)
-@post(lambda result: result.is_ok and result.value.status == "ok")
+@post(
+    lambda result: (
+        result.is_ok
+        and result.value is not None
+        and result.value.status == "ok"
+        and result.value.pid > 0
+    )
+)
 def handle_health() -> Result[HealthResponse, str]:
     """HTTP handler for `GET /health`.
 
@@ -62,7 +119,19 @@ def handle_health() -> Result[HealthResponse, str]:
         isinstance(request_token, str) and isinstance(expected_token, str)
     )
 )
-@post(lambda result: result.is_ok or result.is_err)
+@post(
+    lambda result: (
+        (
+            result.is_ok
+            and result.value is not None
+            and result.value.active_connections == len(result.value.connections)
+            and isinstance(result.value.connected_servers, list)
+        )
+        or _is_auth_error(result)
+        or _is_gateway_not_started_error(result)
+        or _is_audit_query_error(result)
+    )
+)
 # @shell_complexity: status handler branches on auth/config/uptime/server-list patterns
 def handle_status(
     request_token: str, expected_token: str
@@ -90,6 +159,8 @@ def handle_status(
         >>> set_runtime_config(None)  # Gateway not started
         >>> result = handle_status("valid-token", "valid-token")
         >>> result.is_err
+        True
+        >>> result.error.startswith("GATEWAY_NOT_STARTED")
         True
     """
 
@@ -155,7 +226,20 @@ def handle_status(
         and isinstance(expected_token, str)
     )
 )
-@post(lambda result: result.is_ok or result.is_err)
+@post(
+    lambda result: (
+        (
+            result.is_ok
+            and result.value is not None
+            and result.value.get("status") == "connected"
+            and isinstance(result.value.get("connection_id"), str)
+            and isinstance(result.value.get("profile_name"), str)
+        )
+        or _is_auth_error(result)
+        or _is_gateway_not_started_error(result)
+        or _is_admission_warming_error(result)
+    )
+)
 def handle_connect(
     request_token: str,
     expected_token: str,
@@ -236,7 +320,19 @@ def handle_connect(
         and isinstance(expected_token, str)
     )
 )
-@post(lambda result: result.is_ok or result.is_err)
+@post(
+    lambda result: (
+        (
+            result.is_ok
+            and result.value is not None
+            and result.value.get("status") == "disconnected"
+            and isinstance(result.value.get("connection_id"), str)
+        )
+        or _is_auth_error(result)
+        or _is_gateway_not_started_error(result)
+        or _is_connection_not_found_error(result)
+    )
+)
 def handle_disconnect(
     request_token: str,
     expected_token: str,
@@ -269,6 +365,15 @@ def handle_disconnect(
         >>> req = DisconnectRequest(connection_id="test-disconnect-1")
         >>> result = handle_disconnect("valid-token", "valid-token", req)
         >>> result.is_ok
+        True
+        >>> missing = handle_disconnect(
+        ...     "valid-token",
+        ...     "valid-token",
+        ...     DisconnectRequest(connection_id="does-not-exist"),
+        ... )
+        >>> missing.is_err
+        True
+        >>> missing.error.startswith("CONNECTION_NOT_FOUND")
         True
     """
 
