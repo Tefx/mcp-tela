@@ -41489,7 +41489,7 @@ phases:
   steps:
   - id: gw_remed.lifecycle_authority.extract_status_authority
     name: Extract single lifecycle/readiness authority for gateway status surfaces
-    status: claimed
+    status: done
     description: 'Fill in src/tela/shell/gateway_lifecycle.py as the only authority
       for lifecycle/discovery/readiness facts consumed by:
 
@@ -41538,6 +41538,60 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T11:46:18.035997+00:00'
+    done_at: '2026-03-29T11:52:01.127389+00:00'
+    evidence: '## Lifecycle Authority Extraction
+
+      **Authority surface**: `tela.shell.gateway_lifecycle.get_lifecycle_status_facts()`
+      returning `LifecycleStatusFacts`
+
+      **Consumers migrated**:
+
+      - gateway_status()
+
+      - handle_status()
+
+      **Shared fixture / state snapshot**: `status_authority_snapshot` (tests/shell/test_gateway_lifecycle_authority.py)
+
+      **Proof both consumers agree**: `test_gateway_and_http_status_share_lifecycle_authority`
+      asserts both surfaces report identical:
+
+      - `server_count == 2`
+
+      - `connected_servers == ["fs"]`
+
+      - `active_connections == 1`
+
+      - `profile_count == 1`
+
+      - `total_tool_calls == 7`
+
+      - `state == "degraded"`
+
+      - `degraded_reason == "downstream_not_fully_converged"`
+
+
+      **Files modified**:
+
+      - src/tela/shell/gateway_lifecycle.py
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/http_routes.py
+
+      - tests/shell/test_gateway_lifecycle_authority.py
+
+
+      **Verification**:
+
+      - `uv run pytest tests/shell/test_gateway_lifecycle_authority.py tests/shell/test_http_routes.py
+      tests/shell/test_gateway.py` → 63 passed
+
+      - `uv run ruff check` → All checks passed
+
+      - `invar guard` → status=passed; errors=0
+
+
+      **Commit**: 7c5f6c1'
   - id: gw_remed.lifecycle_authority.verify_status_truth
     name: Verify lifecycle authority consistency across status consumers
     status: pending
