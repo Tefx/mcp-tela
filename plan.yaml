@@ -41549,3 +41549,17 @@ phases:
       once the lockfile existed, and post-bind failure removed the lockfile and shut
       down HTTP.'
     agent: python-senior
+  - id: gw_remed.startup_plan_a.reject_connect_while_warming
+    name: Reject bridge admission while gateway is warming
+    status: pending
+    description: Complete the warmup admission path in src/tela/shell/http_routes.py,
+      src/tela/commands/connect_cmd.py, and src/tela/commands/remote_state.py so /connect
+      refuses bridge registration while lifecycle state is warming and connect-side
+      diagnostics rely on status truth rather than lockfile presence alone.
+    verification: Extend command/route tests so warming rejects /connect with a falsifiable
+      error path and ready state admits it.
+    evidence_template: Provide commands/results for route + connect tests and quote
+      the exact warming rejection behavior observed before readiness.
+    depends_on:
+    - gw_remed.startup_plan_a.resequence_bind_publish_converge
+    agent: python-executor
