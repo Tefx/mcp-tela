@@ -41133,7 +41133,7 @@ phases:
   steps:
   - id: tool_prefix.deep_review.wiring_audit
     name: Full wiring audit for tool-prefix feature
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: default
@@ -41151,6 +41151,51 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-29T14:18:10.041952+00:00'
+    done_at: '2026-03-29T14:25:33.391817+00:00'
+    evidence: '## Wiring Audit Report
+
+
+      **Verdict**: ISSUES_FOUND (W8 phantom dependency - non-blocking)
+
+
+      **Summary**:
+
+      - W1-W7, W9-W12: All PASS
+
+      - W8: PHANTOM dependency found (`fastmcp>=2.0.0` declared but zero direct imports)
+
+      - W8b: 4 transitive imports (likely from fastmcp)
+
+      - Tool_prefix wiring: All PASS ✅
+
+
+      **Unconsumed config fields**: None
+
+      **Unread mapping fields**: None
+
+      **Exposed-name bypass**: Not found
+
+
+      **Tool Prefix Wiring Verified**:
+
+      - Config field: `ServerConfig.tool_prefix` consumed by `resolve_tools()`
+
+      - Resolution: `exposed_name = raw_name if prefix is None else f"{prefix}{raw_name}"`
+
+      - Raw_name population: `raw_name=raw_name` in ResolvedTool
+
+      - Downstream routing: `routing_name = tool.raw_name or tool.name` ✅
+
+      - Registry stores exposed name ✅
+
+      - Conflict detection uses exposed names ✅
+
+
+      **Issue (non-blocking)**:
+
+      - `fastmcp>=2.0.0` declared in pyproject.toml but not directly imported
+
+      - Likely transitive dependency provider'
   - id: tool_prefix.deep_review.spec_conformance
     name: Full spec conformance audit for tool-prefix feature
     status: pending
