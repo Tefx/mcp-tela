@@ -41598,20 +41598,57 @@ phases:
   - gw_remed.lifecycle_authority
   steps:
   - id: gw_remed.startup_plan_a.resequence_bind_publish_converge
-    name: Resequence gateway startup to bind before lockfile publish and convergence
+    name: Resequence startup to bind -> publish lockfile -> converge
     status: pending
-    description: Complete Plan A startup ordering in src/tela/commands/serve_cmd.py
-      and src/tela/shell/gateway.py so runtime/status state is prepared first, HTTP
-      binds second, the lockfile is published immediately after bind, downstream convergence
-      happens after publication, and post-bind convergence failure removes the lockfile
-      and tears down the HTTP server.
-    verification: Add/adjust repro and shell coverage for lockfile publication timing,
-      status availability immediately after lockfile publication, warming state before
-      convergence, and rollback on post-bind convergence failure.
-    evidence_template: 'Paste modified file list, test commands/results, and concrete
-      proof for: bind occurred before lockfile publication, GET /status was callable
-      once the lockfile existed, and post-bind failure removed the lockfile and shut
-      down HTTP.'
+    description: 'Implement ONLY the nominal Plan A startup sequence in:
+
+      - src/tela/commands/serve_cmd.py
+
+      - src/tela/shell/gateway.py
+
+
+      Required steady-state order:
+
+      1. prepare runtime/status state
+
+      2. bind HTTP server
+
+      3. publish lockfile
+
+      4. begin downstream convergence
+
+      5. become ready only after convergence succeeds
+
+
+      This step does NOT own post-bind rollback, connect admission rejection, or connect-side
+      diagnostics.'
+    verification: '- Nominal startup test proves the required order
+
+      - Ready state is not published before convergence success
+
+      - Lockfile publication occurs after bind, not before'
+    evidence_template: '## Plan A Nominal Startup Evidence
+
+      **Command/test**: <exact command or test>
+
+      **Observed order**:
+
+      1. prepare
+
+      2. bind
+
+      3. publish lockfile
+
+      4. converge
+
+      5. ready
+
+      **Proof source**: <assertions / logs>'
+    refs:
+    - docs/DESIGN.md
+    - src/tela/commands/serve_cmd.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/gateway_lifecycle.py
     agent: python-senior
   - id: gw_remed.startup_plan_a.reject_connect_while_warming
     name: Reject bridge admission while gateway is warming
