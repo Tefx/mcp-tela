@@ -38593,7 +38593,7 @@ phases:
     claimed_at: '2026-03-29T04:22:39.749633+00:00'
   - id: conn_v2.system_wiring.liveness_probe
     name: Probe integrated runtime liveness for connect and serve
-    status: claimed
+    status: done
     description: "step_type: verification\nAs an INDEPENDENT TESTER (blind-tester),\
       \ actually run the integrated entry points.\nIndependence Level: L2\nVerification\
       \ criteria:\n  - tela serve starts and stays alive long enough to answer /health\
@@ -38636,6 +38636,85 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-29T04:22:29.438653+00:00'
+    done_at: '2026-03-29T04:28:08.502546+00:00'
+    evidence: '## Liveness Probe
+
+
+      **Serve command**:
+
+      ```
+
+      uv run tela serve --config /tmp/tela-liveness-probe/tela.yaml --port 0
+
+      ```
+
+
+      **Connect command**:
+
+      ```
+
+      uv run tela connect --config /tmp/tela-liveness-probe/tela.yaml
+
+      ```
+
+
+      **Observed output**:
+
+
+      ### 1. Serve liveness probe (tela serve)
+
+      - Process started and stayed alive (STEADY_STATE achieved)
+
+      - Lockfile written with valid structure including pid, host, port, token
+
+      - `/health` endpoint responds: `{"status": "ok", "pid": N}`
+
+      - `/status` endpoint responds with bearer token and lifecycle state
+
+
+      ### 2. Connect end-to-end probe (tela connect)
+
+      - Connect process auto-discovers gateway via lockfile
+
+      - Connect process stays alive and registers with gateway
+
+      - `active_connections` increments from 0 to 1 after connect
+
+      - MCP `initialize` and `tools/list` requests through stdio bridge succeed
+
+      - After disconnect, `active_connections` decrements
+
+
+      ### 3. Test suite verification
+
+      ```
+
+      6 passed in 29.10s
+
+      ```
+
+
+      ### 4. Status surfaces verification
+
+      - `/health`: Returns `{"status":"ok","pid":N}` - ALIVE
+
+      - `/status`: Returns full runtime state with bearer auth - ALIVE
+
+      - CLI `tela status --json`: Works when `TELA_BEARER_TOKEN` is set - ALIVE
+
+
+      ### Verdict
+
+      - **tela serve**: ALIVE - Process stays alive, binds to port, writes lockfile,
+      answers /health and /status
+
+      - **tela connect**: ALIVE - Discovers via lockfile, registers with gateway,
+      proxies MCP operations
+
+      - **Status surfaces**: ALIVE - Answer during warming and after convergence
+
+      - **End-to-end MCP**: OPERATIONAL - initialize and tools/list complete through
+      stdio bridge'
   - id: conn_v2.ux.conformance_review
     name: Review CLI and HTTP diagnostics for consumer-boundary conformance
     status: done
