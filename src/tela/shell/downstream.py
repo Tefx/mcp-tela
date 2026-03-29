@@ -15,8 +15,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Literal
-
 from mcp import types as mcp_types
 from mcp.client.session import MessageHandlerFnT
 from mcp.shared.session import RequestResponder
