@@ -44237,7 +44237,7 @@ phases:
       \ implementation fix.\n\n**Commit:** faf81ca7"
   - id: pm.p0_impl.builtin_tool_fix_tests
     name: Builtin tool test compatibility fix
-    status: pending
+    status: claimed
     description: "Fix builtin-tool-related test failures after tela_list_providers\
       \ integration.\n\nScope:\n- Update tests/shell/test_gateway.py expectations\
       \ and fixtures so gateway tool-list assertions account for the builtin tela_list_providers\
@@ -44267,6 +44267,8 @@ phases:
     depends_on:
     - pm.p0_impl.gateway_wiring
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-29T19:52:58.277554+00:00'
 - id: pm.p0_verify
   name: P0 Verification
   status: locked
