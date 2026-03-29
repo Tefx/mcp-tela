@@ -37584,7 +37584,7 @@ phases:
       - No consumers derive readiness from lockfile'
 - id: conn_v2.convergence
   name: Background Downstream Convergence
-  status: pending
+  status: in_progress
   gate: Gateway startup reaches discoverable lifecycle without serial downstream blocking,
     while convergence/re-enumeration state remains visible and consistent.
   depends_on:
@@ -37592,7 +37592,7 @@ phases:
   steps:
   - id: conn_v2.convergence.impl_module
     name: Implement single-server convergence kernel
-    status: pending
+    status: claimed
     description: "step_type: implementation\n\nFill in stub bodies for the single-server\
       \ convergence kernel described by conn_v2 contracts.\n\nRequired scope:\n- Kernel\
       \ owns resolve/register/conflict/rollback semantics.\n- Kernel returns structured\
@@ -37636,6 +37636,8 @@ phases:
 
       - Protects conn_v2.convergence gate'
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-29T02:38:44.283466+00:00'
   - id: conn_v2.convergence.integrate_reload_and_status
     name: Integrate reload and reconnect entry adapters with convergence and status
     status: pending
