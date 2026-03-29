@@ -492,3 +492,358 @@ _clients: dict[str, ClientSession]
   context in `details`.
 - `connect_all` rejects tool-name conflicts across servers and tears down opened
   sessions before returning conflict error.
+
+### 9.5 Retry and Reconnection Semantics
+
+#### Startup: downstream connect failure
+
+`connect_all` uses `asyncio.gather` to connect all configured servers
+concurrently. If **any** server fails to connect or enumerate tools:
+
+- All already-opened client handles are closed (best-effort).
+- The downstream registry is cleared.
+- `connect_all` returns an error immediately.
+- **No retry or backoff is attempted.** Startup is fail-fast.
+
+There is no partial-success mode at startup: either all servers connect and
+enumerate successfully, or the entire downstream layer remains unconnected.
+
+#### Steady state: auto-reconnect on disconnect
+
+When a connected downstream server disconnects (the MCP client session raises
+an `Exception` in the message handler), the gateway automatically attempts
+reconnection via `_handle_reconnect`:
+
+1. Opens a new client session to the same server (`_open_client_for_server`).
+2. On success: swaps the new client handle into `_clients` and closes the old
+   handle best-effort.
+3. Re-enumerates tools from the new session.
+4. Routes the fresh tool list through the single-server convergence kernel
+   (`on_server_reconnect`) which resolves, registers, and checks for conflicts.
+5. On conflict: the previous tool list is preserved (rollback), a
+   `TOOL_CONFLICT` audit warning is written, and the reconnect update is rejected.
+6. On success: the registry is updated, and upstream clients are notified via
+   `tools/list_changed`.
+
+**No backoff or retry limit.** If the reconnect attempt fails (connection or
+enumeration), a warning is logged and no further automatic retry is scheduled.
+The server remains disconnected until the next event triggers reconnection
+(e.g., another disconnect exception, config reload, or manual re-enumeration).
+
+#### Hot reload: reconnect behavior on config change
+
+When `on_config_changed` detects server additions, removals, or configuration
+changes:
+
+1. Computes the diff between old and new server sets (added, removed, changed).
+2. If any servers were removed or changed: calls `disconnect_all()` followed by
+   `connect_all(new_config.servers)` — a full reconnect cycle.
+3. No per-server incremental reconnect is supported. The full
+   `disconnect_all` + `connect_all` path is the safe path that preserves
+   conflict-detection invariants across the entire server set.
+
+**No retry on reload failure.** If `connect_all` fails during reload, the error
+is returned to the caller. The previous server connections are already torn down.
+
+#### Manual reconnect
+
+There is no dedicated manual reconnect CLI command or HTTP endpoint. Operators
+can trigger reconnection by:
+
+- Restarting `tela serve`.
+- Modifying the config file (if a file watcher is configured).
+- Calling `gateway_reload_config_from_disk` programmatically.
+
+## 10. Operational Limits and Constraints
+
+### 10.1 Audit
+
+| Limit | Value | Enforced | Source |
+|-------|-------|----------|--------|
+| In-memory buffer max entries | 10,000 | Yes — `deque(maxlen=10000)` | `shell/audit.py` |
+| Query result limit (default) | 100 | Yes — `audit_query(limit=100)` | `shell/audit.py` |
+| Query result limit (max) | No limit enforced | — | Caller may pass any `limit` value |
+| Status endpoint audit entries | 100 (most recent) | Yes — uses `get_audit_entries()` then `[-100:]` in status | `shell/http_routes.py` |
+
+### 10.2 Configuration
+
+| Limit | Value | Enforced | Source |
+|-------|-------|----------|--------|
+| Max servers | No limit enforced | — | Pydantic `dict` with no max size |
+| Max profiles | No limit enforced | — | Pydantic `dict` with no max size |
+| Server name length | No limit enforced | — | YAML dict key, no validation |
+| Profile name length | No limit enforced | — | YAML dict key, no validation |
+| Tool override count per server | No limit enforced | — | Pydantic `dict` with no max size |
+| Env vars per server | No limit enforced | — | Pydantic `dict` with no max size |
+
+### 10.3 Runtime
+
+| Limit | Value | Enforced | Source |
+|-------|-------|----------|--------|
+| Max upstream connections | No limit enforced | — | `_runtime.connections` is an unbounded `list` |
+| Idle timeout range | `[0, ∞)` float seconds | `0` disables auto-shutdown | `shell/idle_shutdown.py` |
+| Idle timeout default | 300 seconds | Yes — CLI `--idle-timeout` default | `cli.py` |
+| Max tool calls counter | No limit enforced | — | `_runtime.total_tool_calls` is an unbounded `int` |
+
+### 10.4 Tool Registry
+
+| Limit | Value | Enforced | Source |
+|-------|-------|----------|--------|
+| Max tools per server | No limit enforced | — | `_tools_by_server` is an unbounded `list` |
+| Total tools across servers | No limit enforced | — | `_tool_to_server` is an unbounded `dict` |
+| Tool name length | No limit enforced | — | String key, no validation |
+| Tool enumeration timeout | No limit enforced | — | Relies on MCP client session timeout |
+| Tool enumeration pagination | Automatic | Yes — follows `nextCursor` until `None` | `downstream_clients.py` |
+
+### 10.5 HTTP / Transport
+
+| Limit | Value | Enforced | Source |
+|-------|-------|----------|--------|
+| Request body max size | No limit enforced | — | Starlette/uvicorn defaults apply |
+| Bearer token length | ≥43 chars (generated) | Post-condition enforced on generation | `shell/lockfile.py` |
+| Bearer token entropy | 32 bytes (`secrets.token_urlsafe(32)`) | Yes | `shell/lockfile.py` |
+| Startup leadership retries | 3 | Yes — `START_RACE_RETRIES` | `shell/startup_coordinator.py` |
+| Follower poll interval | 0.1 seconds | Yes — `FOLLOWER_WAIT_POLL_SECONDS` | `shell/startup_coordinator.py` |
+| Race wait window | 0.3 seconds | Yes — `RACE_WAIT_SECONDS` | `shell/startup_coordinator.py` |
+
+### 10.6 Lockfile
+
+| Limit | Value | Enforced | Source |
+|-------|-------|----------|--------|
+| Lockfile directory permissions | `0o700` | Yes | `shell/lockfile.py` |
+| Lockfile file permissions | `0o600` | Yes | `shell/lockfile.py` |
+| Stale detection | PID liveness via `os.kill(pid, 0)` | Yes | `shell/lockfile.py` |
+
+## 6.3 Error Response Semantics
+
+### Authorization denial (MCP enforcement chain)
+
+When the 3-step enforcement chain denies a tool call, the error is returned
+as a `TelaError` via MCP error semantics:
+
+| Denial reason | `denied_by` | `error_code` | Message template |
+|--------------|-------------|--------------|------------------|
+| Family not in profile capabilities | `family_admission` | `AUTHZ_DENY` | `"Family '{family}' is not admitted by profile '{profile_name}'"` |
+| Tool explicitly denied by override | `tool_override` | `AUTHZ_DENY` | `"Tool '{tool_name}' explicitly denied by profile override"` |
+| Posture exceeds family ceiling | `posture_ceiling` | `AUTHZ_DENY` | `"Tool posture {posture} exceeds ceiling {ceiling}"` |
+| Unclassified tool with `default_posture=none` | `posture_ceiling` | `TOOL_UNCLASSIFIED` | `"Tool is unclassified and server default_posture is NONE"` |
+
+The enforcement result is wrapped in a `TelaError(code=..., message=...)` and
+raised as a `RuntimeError` by the upstream MCP handler. The MCP framework
+serializes this as a standard MCP error response.
+
+### Missing/invalid bearer token (HTTP)
+
+| Condition | HTTP status | Response body |
+|-----------|-------------|---------------|
+| Missing `Authorization` header | 401 | `{"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}` |
+| `Authorization` header without `Bearer ` prefix | 401 | `{"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}` |
+| Empty token after `Bearer ` prefix | 401 | `{"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}` |
+| Token mismatch (constant-time comparison) | 401 | `{"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}` |
+| Token unavailable during startup race | 401 | `{"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}` |
+
+The `BearerAuthMiddleware` (raw ASGI) handles auth for all HTTP routes except
+`GET /health`. It uses `hmac.compare_digest` for constant-time comparison.
+
+### Other HTTP error codes
+
+| Condition | HTTP status | Error prefix |
+|-----------|-------------|--------------|
+| Invalid request payload (JSON parse / validation) | 400 | `INVALID_REQUEST:` |
+| Connection not found on disconnect | 404 | `CONNECTION_NOT_FOUND:` |
+| Gateway not started | 503 | `GATEWAY_NOT_STARTED:` |
+
+### Connection limits
+
+No connection limit is enforced. The `_runtime.connections` list is unbounded.
+Any number of upstream bridge connections may register concurrently.
+
+### 7.5 Tool Enumeration Failure Modes
+
+#### Startup enumeration failure
+
+During `connect_all`, tool enumeration is attempted for every configured server
+after transport connection succeeds. If enumeration fails for any server:
+
+- The client handle for that server is closed (best-effort via `aclose()`).
+- All other already-opened handles are also closed.
+- The downstream registry is cleared.
+- `connect_all` returns `DOWNSTREAM_CONNECT_FAILED` error.
+
+**No partial registry.** Startup is all-or-nothing. Either all servers connect
+and enumerate successfully, or the gateway starts with an empty tool registry
+and reports `warming` lifecycle state.
+
+#### Runtime `tools/list_changed` handling
+
+When a downstream server sends `notifications/tools/list_changed`:
+
+1. The event-entry adapter (`_handle_tools_list_changed`) re-enumerates the
+   server's tools via `_enumerate_client_tools`.
+2. If re-enumeration fails: a warning is logged; the previous tool list for
+   that server is preserved. No registry mutation occurs.
+3. If re-enumeration succeeds: the fresh tool list is routed through the
+   single-server convergence kernel (`on_tools_changed`).
+4. **Conflict detection:** The kernel tentatively registers the new tools, then
+   runs `detect_conflicts` against the full registry (all servers).
+   - On conflict: registry is rolled back to the pre-update snapshot (atomic
+     rollback via `snapshot()`/`restore()`). A `TOOL_CONFLICT` audit warning
+     is written. The update is rejected. Previous tools remain.
+   - On no conflict: registry is updated. Upstream clients are notified.
+5. **Atomic swap:** Registration uses `unregister(server_name)` then
+   `register(server_name, new_tools)` within the `_registry_lock`. This is
+   effectively an atomic replace for one server's tool set.
+
+#### Unclassified tool behavior
+
+Tools that cannot be classified (no explicit override, no MCP annotations, and
+`default_posture = none`) receive `posture = None` in the `ResolvedTool`. At
+enforcement time:
+
+- **Posture:** The enforcement chain uses `default_posture` as fallback. If
+  `default_posture` is `none`, the tool is denied with error code
+  `TOOL_UNCLASSIFIED`.
+- **Visibility:** Unclassified tools **are** registered in the downstream
+  registry and **are** visible in the full tool list. However, they are
+  filtered out of `tools/list` responses by `filter_tools_for_profile` when
+  the enforcement check returns `DENY`.
+- **Audit:** Denied unclassified tool calls produce audit entries with
+  `denied_by="posture_ceiling"` and `error_code="TOOL_UNCLASSIFIED"`.
+
+## 3.4a Audit Entry Value Enumerations
+
+### `verdict`
+
+| Value | Meaning |
+|-------|---------|
+| `allow` | Tool call was authorized and forwarded to downstream |
+| `deny` | Tool call was rejected by the enforcement chain |
+
+Type: `EnforcementVerdict` enum (`str`). Exactly two values.
+
+### `denied_by`
+
+Populated only when `verdict == "deny"`. Identifies which enforcement step
+rejected the call:
+
+| Value | Enforcement step | Description |
+|-------|-----------------|-------------|
+| `family_admission` | Step 1 | Tool's family is not in the profile's `capabilities` map |
+| `tool_override` | Step 2 | Profile has an explicit `deny` override for this tool |
+| `posture_ceiling` | Step 3 | Tool's posture exceeds the profile's family ceiling, or tool is unclassified with `default_posture=none` |
+| `tool_conflict` | System | Used in audit warnings for tool-name conflicts during reload/reconnect (not a per-call denial) |
+
+When `verdict == "allow"`, `denied_by` is `null`.
+
+### `error_code`
+
+Populated only when `verdict == "deny"`. Machine-readable error classification:
+
+| Value | Meaning | Used by |
+|-------|---------|---------|
+| `AUTHZ_DENY` | Authorization denied by policy | `family_admission`, `tool_override`, `posture_ceiling` |
+| `TOOL_UNCLASSIFIED` | Tool has no posture and server `default_posture` is `none` | `posture_ceiling` |
+| `TOOL_CONFLICT` | Tool name conflict across servers | Reload/reconnect conflict warnings |
+
+When `verdict == "allow"`, `error_code` is `null`.
+
+### Additional error codes (non-audit, MCP/HTTP surface)
+
+| Error code | Surface | Condition |
+|------------|---------|-----------|
+| `GATEWAY_NOT_STARTED` | MCP + HTTP | Gateway runtime not initialized |
+| `TOOL_NOT_FOUND` | MCP | Tool name not in downstream registry |
+| `PROFILE_NOT_FOUND` | MCP | Bound profile not in runtime config |
+| `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected or call failed |
+| `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
+| `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
+| `INITIALIZE_REJECTED` | MCP | Token validation failed or no default profile |
+| `AUTH_INVALID_TOKEN` | HTTP | Bearer token validation failed |
+| `CONNECTION_NOT_FOUND` | HTTP | Disconnect for unknown connection_id |
+| `INTERNAL_ERROR` | MCP | Unexpected internal failure |
+| `SESSION_ALREADY_BOUND` | Internal | Session capture attempted on already-bound connection |
+| `SESSION_NOT_FOUND` | Internal | No captured session for connection_id |
+| `SESSION_NOT_REGISTERED` | Internal | Reverse lookup failed for session |
+| `NOTIFICATION_SEND_FAILED` | Internal | Failed to send `tools/list_changed` to upstream |
+| `CONFIG_FILE_MISSING` | Startup | Config file not found at path |
+| `CONFIG_FILE_READ_ERROR` | Startup | OS error reading config file |
+| `CONFIG_PARSE_ERROR` | Startup | YAML parse or Pydantic validation error |
+| `CONFIG_ENV_UNSET` | Startup | `${VAR}` placeholder references unset env var |
+| `PROFILE_NOT_FOUND` | Startup | CLI `--default-profile` names unknown profile |
+| `OPEN_MODE_DEFAULT_PROFILE_MISSING` | Startup | Open mode with no default profile |
+| `OPEN_MODE_DEFAULT_PROFILE_AMBIGUOUS` | Startup | Multiple profiles marked `default: true` |
+| `TOKEN_INVALID` | MCP | CapabilityToken HMAC validation failed |
+| `TOKEN_EXPIRED` | MCP | CapabilityToken past expiry |
+| `LOCKFILE_READ_ERROR` | Discovery | Lockfile missing or unreadable |
+| `LOCKFILE_STALE` | Discovery | Lockfile PID not alive |
+| `LOCKFILE_PARSE_ERROR` | Discovery | Lockfile JSON invalid |
+| `LOCKFILE_WAIT_TIMEOUT` | Discovery | Timed out waiting for lockfile |
+| `DISCOVERY_FAILED` | Discovery | Could not discover or auto-start server |
+| `IDLE_MANAGER_ALREADY_INITIALIZED` | Startup | `init_idle_manager` called twice |
+| `CONNECTION_COUNT_UNDERFLOW` | Internal | Disconnect without matching connect |
+| `AUDIT_INIT_ERROR` | Startup | Cannot create audit log directory |
+| `AUDIT_WRITE_ERROR` | Runtime | Cannot write to audit JSONL file |
+| `AUDIT_QUERY_ERROR` | Runtime | Invalid timestamp format in query |
+
+## 3.1a Config Loading Edge Cases
+
+### ENV placeholder expansion
+
+`${VAR}` placeholders in server `env` values are expanded at parse time using
+the process environment (`os.environ`):
+
+- **Syntax:** `${VAR_NAME}` and `$VAR_NAME` are both supported.
+- **Unset variables:** Unresolved placeholders raise
+  `ConfigContractError(code="CONFIG_ENV_UNSET")` — they are **not** silently
+  ignored or left as literal strings. This is a hard startup error.
+- **Special characters:** Variable names follow standard shell naming
+  (`[A-Za-z_][A-Za-z0-9_]*`). The expansion uses regex matching, so variable
+  names with special characters in braces are matched greedily.
+- **Nested expansion:** Not supported. `${${VAR}}` is not valid.
+- **Empty value:** If the env var is set but empty (`VAR=""`), the empty string
+  is substituted. This is not an error.
+- **Recursive expansion in env values:** Expansion is applied recursively to
+  all string values in the YAML object graph, not just `env` fields. Any
+  string value in the config containing `${VAR}` will be expanded.
+
+### File-not-found behavior
+
+- **Missing config file:** Returns `Result(error="CONFIG_FILE_MISSING: configuration file not found at {path}")`.
+- **Default path:** When no `--config` is specified, defaults to `tela.yaml`
+  in the current working directory.
+- **OS read errors:** Returns `Result(error="CONFIG_FILE_READ_ERROR: {exc}")`.
+
+### YAML parse errors
+
+- **Invalid YAML:** Returns `Result(error="CONFIG_PARSE_ERROR: invalid YAML: {exc}")`.
+- **Non-mapping top level:** Returns `Result(error="CONFIG_PARSE_ERROR: top-level YAML document must be a mapping")`.
+- **Empty file:** `yaml.safe_load` returns `None`, which is treated as `{}`
+  (empty config). This produces a valid `TelaConfig` with defaults.
+
+### Unknown field handling
+
+Unknown fields in the YAML config are handled by Pydantic's default behavior:
+
+- **`TelaConfig`:** Unknown top-level keys are silently ignored (Pydantic
+  default `extra="ignore"`).
+- **`ServerConfig`:** Unknown server fields are silently ignored.
+- **`ProfileConfig`:** Unknown profile fields are silently ignored.
+- **`AuthConfig`:** Unknown auth fields are silently ignored.
+- **`AuditConfig`:** Unknown audit fields are silently ignored.
+
+No warning is emitted for unknown fields. This is by design for forward
+compatibility — newer config versions may add fields that older `tela`
+versions should ignore.
+
+### Config reload trigger conditions
+
+Config reload (`on_config_changed`) is triggered by:
+
+1. `gateway_reload_config_from_disk` — the production runtime callback for
+   file-watcher integrations.
+2. Programmatic calls to `on_config_changed(new_config)` with a new
+   `TelaConfig` object.
+
+Config reload **does not** watch the filesystem automatically. A file-watcher
+must be configured externally to call the reload callback. There is no polling
+mechanism built into `tela serve`.

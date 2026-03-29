@@ -360,3 +360,444 @@ Available tools:
   built-in tela MCP surface (resource)
 - each server instance stamps audit entries with a unique `instance_id`
 - tool metadata (`annotations`, `title`, `output_schema`) is preserved from downstream through upstream
+
+## Shell Module Responsibilities
+
+### `result.py`
+
+**Responsibility:** Canonical `Result[T, E]` type for all shell I/O boundaries.
+
+**Public API:**
+- `Result(Generic[T, E])` — frozen dataclass with `.value`, `.error`, `.is_ok`, `.is_err`
+
+**Ownership:** Stateless; defines a type only.
+
+**Dependencies:** None (stdlib only).
+
+**Concurrency:** Immutable (frozen dataclass); inherently thread-safe.
+
+---
+
+### `config_loader.py`
+
+**Responsibility:** Shell-level config file I/O — reads YAML from disk, delegates parsing/validation to `core.config`, and returns a runtime-ready `TelaConfig`.
+
+**Public API:**
+- `load_config(path: Path | None = None, default_profile: str | None = None) -> Result[TelaConfig, str]`
+
+**Ownership:**
+- Reads: filesystem (`tela.yaml`), `os.environ` (for `${VAR}` expansion).
+- Mutates: nothing. Returns a fresh `TelaConfig` on each call.
+
+**Dependencies:**
+- Upstream (reads from): `yaml`, `os.environ`, filesystem.
+- Downstream (delegates to): `tela.core.config.parse_config`, `validate_config`, `resolve_open_mode_default_profile`.
+- Re-exports: `Result` from `tela.shell.result`.
+
+**Concurrency:** Stateless function; safe to call from any thread. File reads are not locked — concurrent calls reading the same file are safe (read-only).
+
+---
+
+### `gateway_runtime.py`
+
+**Responsibility:** Locked mutable runtime state for the gateway process. All public accessors follow a strict boundary policy: DATA READ returns deep-copied snapshots, OPERATION acquires the lock and performs work on the live service without leaking references, WRITE acquires the lock for the full mutation.
+
+**Public API:**
+
+| Function | Signature | Kind |
+|----------|-----------|------|
+| `get_runtime_config` | `() -> Result[TelaConfig \| None, str]` | DATA READ |
+| `set_runtime_config` | `(config: TelaConfig \| None) -> None` | WRITE |
+| `is_runtime_running` | `() -> Result[bool, str]` | DATA READ |
+| `get_runtime_connections_snapshot` | `() -> Result[list[ConnectionContext], str]` | DATA READ |
+| `add_runtime_connection` | `(ctx: ConnectionContext) -> None` | WRITE |
+| `remove_runtime_connection` | `(connection_id: str) -> Result[bool, str]` | WRITE |
+| `clear_runtime_connections` | `() -> None` | WRITE |
+| `set_runtime_running` | `(running: bool) -> None` | WRITE |
+| `increment_tool_calls` | `() -> None` | WRITE |
+| `get_runtime_secrets` | `() -> Result[list[str], str]` | DATA READ |
+| `set_runtime_secrets` | `(secrets: list[str]) -> None` | WRITE |
+| `set_runtime_total_tool_calls` | `(count: int) -> None` | WRITE |
+| `get_runtime_status_snapshot` | `() -> Result[RuntimeStatusSnapshot, str]` | SNAPSHOT |
+| `get_expected_bearer_token` | `() -> Result[str \| None, str]` | DATA READ |
+| `is_upstream_server_initialized` | `() -> Result[bool, str]` | OPERATION |
+| `get_upstream_http_app` | `() -> Result[Starlette, str]` | OPERATION |
+| `get_upstream_log_level` | `() -> Result[str, str]` | OPERATION |
+| `with_upstream_server` | `(fn: Callable[[FastMCP], T]) -> Result[T, str]` | OPERATION (test-only) |
+| `set_upstream_server` | `(server: FastMCP \| None) -> None` | WRITE |
+| `get_upstream_server` | `() -> None` | Removed (raises RuntimeError) |
+
+**Types:**
+- `GatewayRuntime` — mutable dataclass holding all runtime fields.
+- `RuntimeStatusSnapshot` — frozen dataclass for atomic status reads.
+- `RuntimeTruthContract`, `RuntimeTruthPlane` — declarative source-of-truth contracts.
+
+**Ownership:**
+- Mutates: `_runtime` (module-level `GatewayRuntime` singleton).
+- Reads: `_runtime` fields under `_runtime_lock`.
+
+**Dependencies:**
+- Upstream: `tela.core.models` (ConnectionContext, TelaConfig), `mcp.server.fastmcp` (FastMCP), `starlette` (Starlette).
+- Downstream: consumed by `gateway.py`, `http_routes.py`, `upstream.py`, `reload.py`.
+
+**Concurrency:** All public accessors acquire `_runtime_lock` (`threading.RLock`). The lock is reentrant. Returned snapshots share no mutable state with the runtime. The `FastMCP` reference never escapes the lock — only operation results are returned.
+
+---
+
+### `gateway.py`
+
+**Responsibility:** Gateway lifecycle orchestration — start (load config, connect downstreams, create upstream MCP server, wire handlers), shutdown (disconnect downstreams, release sessions), and runtime status/connections queries.
+
+**Public API:**
+- `GatewayStartupConfig` — frozen dataclass: `transport`, `port`, `auth_mode`, `default_profile`, `host`.
+- `bind_gateway_startup(runtime: RuntimeBindingContract, config: TelaConfig | None = None) -> Result[GatewayStartupConfig, str]`
+- `gateway_start(config: GatewayStartupConfig, tela_config: TelaConfig | None = None, tool_lists: dict | None = None, expected_bearer_token: str | None = None) -> Result[None, str]`
+- `gateway_shutdown() -> Result[None, str]`
+- `gateway_status() -> Result[GatewayStatus, str]`
+- `gateway_connections() -> Result[list[ConnectionContext], str]`
+- `gateway_reload_config_from_disk(config_path: Path, default_profile: str | None) -> Result[None, str]`
+
+**Ownership:**
+- Mutates: `_runtime` (via `gateway_runtime` accessors) during start/shutdown.
+- Reads: `_runtime` for status queries; downstream registry for tool/connection state.
+- Wires: upstream MCP handlers (`_wire_upstream_handlers`), HTTP routes (`_register_http_routes`), profiles resource (`_register_profiles_resource`), reload notifications (`_wire_reload_notifications`).
+
+**Dependencies:**
+- Upstream: `tela.core.models`, `mcp.server.fastmcp`, `starlette`.
+- Downstream (delegates to): `downstream.connect_all/disconnect_all`, `upstream.handle_*`, `http_routes.handle_*`, `audit.audit_init/audit_close`, `config_loader.load_config`, `surface_instructions.*`, `reload.set_notify_callback`.
+- Re-exports: all `gateway_runtime` public symbols for backward compatibility.
+
+**Concurrency:** Startup and shutdown are single-threaded (called once from CLI entry). HTTP route handlers run in the Starlette/uvicorn event loop and acquire `_runtime_lock` for state access. The `_ensure_connection` callback runs per-request under the MCP server's handler context.
+
+---
+
+### `downstream.py`
+
+**Responsibility:** Downstream server management — connect/disconnect lifecycle, tool call forwarding, event-entry adapters for reconnect and `tools/list_changed` notifications, and module-level client/registry ownership.
+
+**Public API:**
+- `connect_all(servers: dict[str, ServerConfig], tool_lists: dict | None = None) -> Result[None, str]`
+- `disconnect_all() -> Result[None, str]`
+- `call_tool(server_name: str, tool_name: str, arguments: dict) -> Result[dict, TelaError]`
+- `get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]`
+- `get_tool_server(tool_name: str) -> Result[str | None, str]`
+- `get_server_instructions() -> Result[dict[str, str], str]`
+- `re_enumerate(server_name: str) -> Result[list[ResolvedTool], str]`
+- `get_registry() -> DownstreamRegistry`
+
+**Ownership:**
+- Mutates: `_clients` (dict of connected client handles), `_server_instructions` (dict of server instructions), `_registry` (DownstreamRegistry singleton).
+- All mutations guarded by `_registry_lock` (`asyncio.Lock`).
+
+**Dependencies:**
+- Upstream: `tela.core.conflict.detect_conflicts`, `tela.core.family.resolve_tools`, `tela.core.models`.
+- Downstream (delegates to): `downstream_clients._open_client_for_server`, `downstream_clients._enumerate_tools`, `downstream_registry.DownstreamRegistry`.
+- Cross-module: `reload.on_tools_changed`, `reload.on_server_reconnect` (lazy imports to avoid cycles).
+
+**Concurrency:** `_registry_lock` is an `asyncio.Lock` protecting `_clients`, `_registry`, and `_server_instructions`. All connect/disconnect/re-enumerate operations acquire this lock. `call_tool` acquires the lock briefly to look up the client handle, then releases before the downstream RPC call. Event-entry adapters (`_handle_reconnect`, `_handle_tools_list_changed`) also acquire the lock.
+
+---
+
+### `downstream_clients.py`
+
+**Responsibility:** Transport-level client lifecycle primitives — opening stdio/SSE/Streamable HTTP sessions, transport mode validation, and tool enumeration via MCP `tools/list`.
+
+**Public API:**
+- `_ClientHandle` — dataclass: `session: ClientSession`, `stack: AsyncExitStack`, `instructions: str | None`.
+- `_validate_transport_mode(server_name: str, server_config: ServerConfig) -> Result[None, str]`
+- `_open_client_for_server(server_name: str, server_config: ServerConfig, message_handler: MessageHandlerFnT | None = None) -> Result[_ClientHandle, str]`
+- `_enumerate_tools(session: ClientSession) -> Result[list[dict], str]`
+
+**Ownership:** Stateless — creates and returns client handles. Does not own module-level state.
+
+**Dependencies:**
+- Upstream: `mcp.client.session`, `mcp.client.stdio`, `mcp.client.sse`, `mcp.client.streamable_http`.
+- Downstream: none. Consumed by `downstream.py`.
+
+**Concurrency:** Stateless functions; each call creates its own `AsyncExitStack`. Safe to call concurrently (e.g., `asyncio.gather` in `connect_all`).
+
+---
+
+### `downstream_registry.py`
+
+**Responsibility:** In-memory registry of resolved tools from downstream servers. Provides lookup by tool name and server name, snapshot/restore for atomic rollback during convergence.
+
+**Public API:**
+- `DownstreamRegistry` class:
+  - `register(server_name: str, tools: list[ResolvedTool]) -> None`
+  - `unregister(server_name: str) -> None`
+  - `get_all_tools() -> dict[str, list[ResolvedTool]]`
+  - `get_tool_server(tool_name: str) -> str | None`
+  - `get_tool(tool_name: str) -> ResolvedTool | None`
+  - `snapshot() -> tuple[dict[str, list[ResolvedTool]], dict[str, str]]`
+  - `restore(snap: ...) -> None`
+  - `clear() -> None`
+
+**Ownership:**
+- Mutates: `_tools_by_server` (server→tools mapping), `_tool_to_server` (tool→server flat lookup).
+- Registry keys are final exposed upstream names (`ResolvedTool.name`).
+
+**Dependencies:**
+- Upstream: `tela.core.models.ResolvedTool`.
+- Downstream: none. Consumed by `downstream.py` and `reload.py`.
+
+**Concurrency:** Not internally synchronized. All access is externally guarded by `downstream._registry_lock` (`asyncio.Lock`).
+
+---
+
+### `reload.py`
+
+**Responsibility:** Hot reload orchestration — single-server convergence kernel (resolve/register/conflict/rollback), config-change handling (`on_config_changed`), and upstream notification dispatch after successful updates.
+
+**Public API:**
+- `set_notify_callback(callback: NotifyCallback | None) -> Result[None, str]`
+- `on_tools_changed(server_name: str, server_config: ServerConfig, new_tool_list: list[dict]) -> Result[None, str]`
+- `on_server_reconnect(server_name: str, server_config: ServerConfig, tool_list: list[dict]) -> Result[None, str]`
+- `on_config_changed(new_config: TelaConfig) -> Result[None, str]`
+
+**Types:**
+- `SingleServerConvergenceResult` — frozen dataclass with `disposition`, `trigger`, `server_name`, `rollback_applied`, `resolved_tool_names`, `conflicts`.
+- `ConvergenceConflictNote` — frozen dataclass with `tool_name`, `servers`.
+- `ConvergenceTrigger` — literal type: `reconnect | reload | watcher | manual_reenumeration`.
+- `SingleServerConvergenceKernel`, `ConvergencePolicyConsumer` — protocol types.
+
+**Ownership:**
+- Mutates: downstream registry (via convergence kernel), runtime config (via `set_runtime_config`).
+- Owns: `_notify_callback` (module-level callback reference), `_single_server_kernel` (registry-backed convergence kernel).
+
+**Dependencies:**
+- Upstream: `tela.core.conflict`, `tela.core.family`, `tela.core.models`.
+- Cross-module: `downstream._registry_lock`, `downstream.get_registry`, `downstream.connect_all/disconnect_all`, `gateway_runtime.get_runtime_config/set_runtime_config`, `audit.audit_write/build_audit_entry`.
+
+**Concurrency:** Convergence kernel acquires `downstream._registry_lock` for the full resolve/register/conflict/rollback cycle. `_notify_callback` is a module-level reference set once during startup and cleared during shutdown — no lock protects it (single-writer pattern).
+
+---
+
+### `upstream.py`
+
+**Responsibility:** Upstream MCP handlers (initialize, tools/list, tools/call) with enforcement, session capture/notification for `tools/list_changed`, and profile listing.
+
+**Public API:**
+- `handle_initialize(client_info: dict) -> Result[ConnectionContext, str]`
+- `handle_tools_list(connection: ConnectionContext) -> Result[list[dict], str]`
+- `handle_tools_call(connection: ConnectionContext, tool_name: str, arguments: dict) -> Result[dict, TelaError]`
+- `handle_profiles_list() -> Result[list[dict], str]`
+- `capture_session(connection_id: str, session: UpstreamSession) -> Result[None, str]`
+- `release_session(connection_id: str) -> Result[None, str]`
+- `get_captured_session(connection_id: str) -> Result[UpstreamSession, str]`
+- `get_connection_id_for_session(session: UpstreamSession) -> Result[str, str]`
+- `find_connection_for_session(session: UpstreamSession, connections: list[ConnectionContext]) -> Result[ConnectionContext, str]`
+- `notify_tools_changed(connection: ConnectionContext, tools_digest: str) -> Result[None, str]`
+- `resolve_initialize_profile_binding(...) -> Result[InitializeProfileBinding, str]`
+
+**Types:**
+- `UpstreamSession` — runtime-checkable protocol with `send_tool_list_changed()`.
+- `InitializeContext` — frozen dataclass with `connection_metadata`.
+
+**Ownership:**
+- Mutates: `_session_registry` (module-level `dict[str, UpstreamSession]`), runtime connections (via `add_runtime_connection`), tool call counter (via `increment_tool_calls`).
+- Reads: runtime config, runtime secrets, downstream registry.
+
+**Dependencies:**
+- Upstream: `tela.core.models`, `tela.core.token.resolve_token_init_binding`.
+- Cross-module: `downstream.call_tool/get_all_tools/get_registry`, `gateway_runtime.*`, `upstream_utils.*`, `idle_shutdown.get_idle_manager`.
+
+**Concurrency:** `_session_registry` protected by `_session_registry_lock` (`threading.Lock`). Session capture uses first-binding semantics — re-capture of the same session is idempotent; a different session on an already-bound connection_id is rejected. All runtime state access goes through locked `gateway_runtime` accessors.
+
+---
+
+### `upstream_utils.py`
+
+**Responsibility:** Pure/synchronous helpers for upstream tool filtering, `_meta` stripping, and enforcement bridging. Extracted from `upstream.py` to stay under DX line-count thresholds.
+
+**Public API:**
+- `filter_tools_for_profile(all_tools: dict[str, list[ResolvedTool]], profile: ProfileConfig, server_default_postures: dict[str, Posture]) -> Result[list[ResolvedTool], str]`
+- `strip_meta(arguments: dict) -> Result[tuple[dict, dict | None], str]`
+- `enforce_tool_call(tool_name: str, tool: ResolvedTool, profile: ProfileConfig, default_posture: Posture) -> Result[EnforcementResult, str]`
+
+**Ownership:** Stateless; no module-level state.
+
+**Dependencies:**
+- Upstream: `tela.core.enforcement.enforce`, `tela.core.models`.
+- Downstream: none. Consumed by `upstream.py`.
+
+**Concurrency:** Pure functions; inherently thread-safe.
+
+---
+
+### `http_routes.py`
+
+**Responsibility:** HTTP route handler implementations for all gateway HTTP endpoints (`/health`, `/status`, `/connect`, `/disconnect`). Separated from route mounting (which lives in `gateway.py`).
+
+**Public API:**
+- `handle_health() -> Result[HealthResponse, str]`
+- `handle_status(request_token: str, expected_token: str) -> Result[StatusResponse, str]`
+- `handle_connect(request_token: str, expected_token: str, payload: ConnectRequest) -> Result[Mapping[str, object], str]`
+- `handle_disconnect(request_token: str, expected_token: str, payload: DisconnectRequest) -> Result[Mapping[str, object], str]`
+
+**Ownership:**
+- Mutates: runtime connections (via `add_runtime_connection`, `remove_runtime_connection`).
+- Reads: runtime config, runtime status snapshot, downstream tools, audit entries.
+
+**Dependencies:**
+- Upstream: `tela.core.models`, `tela.core.contracts`.
+- Cross-module: `gateway_runtime.*`, `downstream.get_all_tools`, `http_auth.validate_bearer_token`, `upstream.release_session`, `audit.get_audit_entries`.
+
+**Concurrency:** Handler functions are synchronous (called from Starlette route adapters in `gateway.py`). All runtime state access goes through locked `gateway_runtime` accessors.
+
+---
+
+### `http_auth.py`
+
+**Responsibility:** HTTP bearer token authentication — constant-time token validation and raw ASGI middleware that enforces bearer auth on all routes except `GET /health`.
+
+**Public API:**
+- `validate_bearer_token(request_token: str, expected_token: str) -> Result[None, str]`
+- `BearerAuthMiddleware(app: ASGIApp, get_expected_token: Callable[[], str | None])` — raw ASGI middleware class.
+
+**Ownership:** Stateless (middleware instance holds references to app and token getter but no mutable state).
+
+**Dependencies:**
+- Upstream: `hmac` (stdlib), `tela.shell.result.Result`.
+- Downstream: none. Consumed by `serve_cmd.py` (middleware wrapping) and `http_routes.py` (direct validation).
+
+**Concurrency:** `validate_bearer_token` is a pure function. `BearerAuthMiddleware` is stateless per-request — safe for concurrent ASGI invocation. `get_expected_token` callback must be thread-safe (satisfied by `gateway_runtime.get_expected_bearer_token`).
+
+---
+
+### `gateway_http_auth.py`
+
+**Responsibility:** Starlette-level bearer token extraction from HTTP `Authorization` headers. Thin adapter between Starlette `Request` and the shell auth contract.
+
+**Public API:**
+- `extract_bearer_token(request: Request) -> Result[str, str]`
+
+**Ownership:** Stateless.
+
+**Dependencies:**
+- Upstream: `starlette.requests.Request`, `tela.shell.result.Result`.
+- Downstream: none. Consumed by `gateway.py` route adapters.
+
+**Concurrency:** Pure function; inherently thread-safe.
+
+---
+
+### `idle_shutdown.py`
+
+**Responsibility:** Connection-count tracking and idle-timer-based graceful shutdown for the HTTP gateway. Triggers a shutdown callback when all connections close and the idle timeout expires.
+
+**Public API:**
+- `IdleShutdownManager` class:
+  - `increment() -> Result[None, str]` — new connection arrived; cancel idle timer.
+  - `decrement() -> Result[None, str]` — connection closed; start idle timer if count reaches 0.
+  - `reset() -> Result[None, str]` — cancel timer, reset count (used during shutdown).
+  - Properties: `timeout_seconds`, `connection_count`, `is_shutdown_disabled`.
+- `init_idle_manager(timeout_seconds: float, shutdown_callback: Callable) -> Result[IdleShutdownManager, str]`
+- `shutdown_idle_manager() -> Result[None, str]`
+- `get_idle_manager() -> IdleShutdownManager | None`
+
+**Ownership:**
+- Mutates: `_manager` (module-level singleton), `_connection_count`, `_idle_handle` (asyncio task).
+- Module-level singleton pattern with exactly-once initialization guard.
+
+**Dependencies:**
+- Upstream: `asyncio`, `tela.shell.result.Result`.
+- Downstream: none. Consumed by `gateway.py` (connect/disconnect routes) and `serve_cmd.py` (initialization).
+
+**Concurrency:** All mutable state protected by `asyncio.Lock` (not `threading.Lock` — this is asyncio-only). The idle timer is an `asyncio.Task` that sleeps and fires the shutdown callback on expiry; new connections cancel the task.
+
+---
+
+### `startup_coordinator.py`
+
+**Responsibility:** Race-sensitive startup arbitration for `tela connect` — lockfile discovery with config ownership matching, single-leader autostart locking (per resolved config path via `fcntl.flock`), and follower wait/attach behavior.
+
+**Public API:**
+- `discover_or_autostart(*, config_path: str, default_profile: str | None, read_lockfile: ReadLockfile, wait_for_live_lockfile: WaitForLiveLockfile, autostart_serve: AutostartServe, lockfile_wait_timeout_seconds: float) -> Result[LockfileData, str]`
+
+**Constants:**
+- `STARTUP_LOCK_DIR` = `~/.tela`
+- `FOLLOWER_WAIT_POLL_SECONDS` = `0.1`
+- `RACE_WAIT_SECONDS` = `0.3`
+- `START_RACE_RETRIES` = `3`
+
+**Ownership:**
+- Mutates: filesystem (startup lock files in `~/.tela/startup.<hash>.lock`), stale lockfile cleanup.
+- Reads: lockfile via injected `read_lockfile` callback.
+
+**Dependencies:**
+- Upstream: `fcntl`, `hashlib`, `tela.core.models.LockfileData`, `tela.shell.lockfile.delete_lockfile`.
+- Downstream: none. Consumed by `connect_cmd.py`.
+
+**Concurrency:** Uses OS-level `fcntl.flock(LOCK_EX | LOCK_NB)` for non-blocking startup leadership arbitration. Only one process per config path can hold the startup lock. Followers poll with `FOLLOWER_WAIT_POLL_SECONDS` intervals. The coordinator is synchronous (blocking) — it runs before the asyncio event loop starts.
+
+---
+
+### `lockfile.py`
+
+**Responsibility:** Shell-level lockfile and bearer token contracts — atomic lockfile write/read/delete at `~/.tela/gateway.lock`, stale PID detection, and bearer token generation.
+
+**Public API:**
+- `write_lockfile(data: LockfileData) -> Result[None, str]`
+- `read_lockfile() -> Result[LockfileData, str]`
+- `delete_lockfile() -> Result[None, str]`
+- `generate_bearer_token() -> Result[str, str]`
+- `is_stale(lockfile: LockfileData) -> bool`
+
+**Constants:**
+- `LOCKFILE_PATH` = `~/.tela/gateway.lock`
+- `LOCKFILE_DIRECTORY_MODE` = `0o700`
+- `LOCKFILE_FILE_MODE` = `0o600`
+
+**Ownership:**
+- Mutates: filesystem (`~/.tela/gateway.lock`).
+- Reads: filesystem, PID liveness (`os.kill(pid, 0)`).
+
+**Dependencies:**
+- Upstream: `secrets`, `os`, `tela.core.models.LockfileData`, `tela.core.contracts`.
+- Downstream: none. Consumed by `startup_coordinator.py`, `serve_cmd.py`.
+
+**Concurrency:** Atomic writes via temp-file + `os.rename`. No module-level mutable state. PID liveness checks are safe for concurrent calls. No internal locking — external coordination (e.g., `fcntl.flock` in `startup_coordinator.py`) prevents concurrent writes.
+
+---
+
+### `audit.py`
+
+**Responsibility:** Audit log writer and reader — entry construction with level-based field filtering, in-memory FIFO storage (bounded deque), optional JSONL file persistence, and query/read functionality.
+
+**Public API:**
+- `build_audit_entry(level: AuditLevel, connection: ConnectionContext, tool_name: str, server_name: str, result: EnforcementResult, ...) -> Result[AuditEntry, str]`
+- `audit_init(config: AuditConfig) -> Result[None, str]`
+- `audit_write(entry: AuditEntry) -> Result[None, str]`
+- `audit_close() -> Result[None, str]`
+- `audit_query(since: str | None = None, limit: int = 100) -> Result[list[AuditEntry], str]`
+- `get_audit_entries() -> Result[list[AuditEntry], str]`
+- `clear_audit_entries() -> None`
+
+**Ownership:**
+- Mutates: `_audit_entries` (module-level `deque[AuditEntry]`, maxlen=10000), `_audit_log_path` (optional JSONL path).
+- Reads: `_audit_entries` for query.
+
+**Dependencies:**
+- Upstream: `tela.core.models` (AuditEntry, AuditLevel, AuditConfig, ConnectionContext, EnforcementResult, MetaField).
+- Downstream: none. Consumed by `upstream.py` (tool call audit), `reload.py` (conflict warnings), `http_routes.py` (status query).
+
+**Concurrency:** `_audit_lock` is an `asyncio.Lock` protecting `_audit_entries` and `_audit_log_path`. `build_audit_entry` is a pure function (no lock needed). `get_audit_entries` and `clear_audit_entries` are synchronous and access the deque directly — safe only when called from the same event loop or when no concurrent writes are in progress.
+
+---
+
+### `surface_instructions.py`
+
+**Responsibility:** Authoritative runtime instruction text for tela-owned surfaces, and composition of gateway + downstream instruction sections.
+
+**Public API:**
+- `get_gateway_surface_instructions() -> Result[str, str]`
+- `compose_gateway_and_downstream(gateway_instructions: str, downstream_instructions: str | None) -> Result[str, str]`
+
+**Ownership:** Stateless; returns constant or composed text.
+
+**Dependencies:**
+- Upstream: `tela.shell.result.Result`.
+- Downstream: none. Consumed by `gateway.py` during upstream server creation.
+
+**Concurrency:** Pure functions; inherently thread-safe.
