@@ -342,6 +342,15 @@ class GatewayStatus(BaseModel):
     active_connections: int
     profile_count: int
     total_tool_calls: int
+    # Lifecycle and diagnostic fact fields from BRIDGE_STATUS_FACT_FIELDS contract
+    state: str | None = None
+    discovery_source: (
+        Literal["lockfile", "autostart", "explicit_server", "startup_follower"] | None
+    ) = None
+    config_path: str | None = None
+    requested_config_path: str | None = None
+    config_mismatch: bool = False
+    degraded_reason: str | None = None
 
 
 class LockfileData(BaseModel):

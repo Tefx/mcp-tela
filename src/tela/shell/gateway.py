@@ -665,14 +665,34 @@ async def gateway_status() -> Result[GatewayStatus, str]:
     uptime = time.monotonic() - snap.start_time if snap.start_time else 0.0
     profile_count = len(snap.config.profiles) if snap.config else 0
     configured_server_count = len(snap.config.servers) if snap.config else 0
+    connected_servers_list = list(all_tools.keys())
+
+    # Compute lifecycle state based on downstream convergence
+    if connected_servers_list:
+        if len(connected_servers_list) < configured_server_count:
+            state = "degraded"
+            degraded_reason = "downstream_not_fully_converged"
+        else:
+            state = "ready"
+            degraded_reason = None
+    else:
+        if configured_server_count > 0:
+            state = "warming"
+            degraded_reason = None
+        else:
+            state = "ready"
+            degraded_reason = None
+
     return Result(
         value=GatewayStatus(
             uptime_seconds=uptime,
             server_count=configured_server_count,
-            connected_servers=list(all_tools.keys()),
+            connected_servers=connected_servers_list,
             active_connections=len(snap.connections),
             profile_count=profile_count,
             total_tool_calls=snap.total_tool_calls,
+            state=state,
+            degraded_reason=degraded_reason,
         )
     )
 

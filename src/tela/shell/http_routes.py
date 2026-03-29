@@ -125,16 +125,45 @@ def handle_status(
         return Result(error=f"AUDIT_QUERY_ERROR: {audit_entries_result.error}")
     assert audit_entries_result.value is not None
 
+    # Compute lifecycle state based on downstream convergence
+    configured_servers = len(snap.config.servers)
+    connected_servers_list = list(lifecycle_facts.value)
+    if connected_servers_list:
+        if len(connected_servers_list) < configured_servers:
+            state = "degraded"
+            degraded_reason = "downstream_not_fully_converged"
+        else:
+            state = "ready"
+            degraded_reason = None
+    else:
+        if configured_servers > 0:
+            state = "warming"
+            degraded_reason = None
+        else:
+            state = "ready"
+            degraded_reason = None
+
+    # config_path is not stored in TelaConfig; it's in the lockfile.
+    # For HTTP status, we don't have the requested config path context,
+    # so we set these to None and let CLI status command handle mismatch detection.
+    config_path: str | None = None
+
     return Result(
         value=StatusResponse(
             uptime_seconds=uptime,
             server_count=len(snap.config.servers),
-            connected_servers=list(lifecycle_facts.value),
+            connected_servers=connected_servers_list,
             active_connections=len(snap.connections),
             profile_count=profile_count,
             total_tool_calls=snap.total_tool_calls,
             connections=list(snap.connections),
             audit_entries=audit_entries_result.value,
+            state=state,
+            degraded_reason=degraded_reason,
+            config_path=config_path,
+            discovery_source=None,
+            requested_config_path=None,
+            config_mismatch=False,
         )
     )
 
