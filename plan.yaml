@@ -41483,3 +41483,19 @@ phases:
     resequencing.
   depends_on:
   - tool_prefix.test
+  steps:
+  - id: gw_remed.lifecycle_authority.extract_status_authority
+    name: Extract shared lifecycle authority for gateway status surfaces
+    status: pending
+    description: Fill in src/tela/shell/gateway_lifecycle.py as the single lifecycle/readiness
+      authority, then replace duplicated status derivation in src/tela/shell/gateway.py::gateway_status()
+      and src/tela/shell/http_routes.py::handle_status() with calls through that authority
+      while preserving the documented GET /status schema.
+    verification: Extend shell tests so gateway_status() and handle_status() prove
+      the same lifecycle state, degraded_reason, connected_servers, and active_connections
+      semantics via the shared authority; run targeted pytest plus invar guard on
+      changed files.
+    evidence_template: Paste modified file list, exact pytest commands/results for
+      tests/shell/test_gateway.py and tests/shell/test_http_routes.py, and guard output
+      proving one shared lifecycle authority path now drives both status surfaces.
+    agent: python-senior
