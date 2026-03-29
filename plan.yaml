@@ -41613,3 +41613,17 @@ phases:
     evidence_template: List modified files and paste targeted test results proving
       cleanup remains safe under repeated calls and interrupt timing.
     agent: python-senior
+  - id: gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
+    name: Route disconnect endpoint and gateway shutdown through the shared cleanup
+      path
+    status: pending
+    description: Complete the integration wiring in src/tela/shell/http_routes.py
+      and src/tela/shell/gateway.py so handle_disconnect() and gateway shutdown both
+      use the same cleanup authority and preserve idempotent behavior by connection_id.
+    verification: Update shell/repro coverage for shared cleanup routing across disconnect
+      and shutdown paths.
+    evidence_template: Provide command outputs and a short matrix showing disconnect
+      path, shutdown path, repeated disconnect, and missing-connection cleanup results.
+    depends_on:
+    - gw_remed.teardown_contracts.extract_cleanup_authority
+    agent: python-executor
