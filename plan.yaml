@@ -40677,7 +40677,7 @@ phases:
     claimed_at: '2026-03-29T13:39:55.577419+00:00'
   - id: tool_prefix.runtime.wiring_audit
     name: Wiring audit for tool-prefix runtime
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: default
@@ -40740,6 +40740,8 @@ phases:
     depends_on:
     - tool_prefix.runtime.integrate_reload_prefix_updates
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-29T13:40:31.109482+00:00'
   - id: tool_prefix.runtime.spec_conformance
     name: Spec conformance audit for tool-prefix behavior
     status: claimed
