@@ -39487,7 +39487,7 @@ phases:
     agent: wiring-auditor
   - id: conn_v2.doc_sync.update_docs
     name: Update documentation for the connect/serve runtime refactor
-    status: claimed
+    status: done
     description: "step_type: review\nspec_refs:\n  - docs/USAGE.md\n  - docs/INTERFACES.md\n\
       \  - docs/DESIGN.md\nTasks:\n  - Sync docs with implemented discovery/readiness\
       \ split, lockfile meaning, status schema, startup_generation semantics, background\
@@ -39502,6 +39502,23 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-29T08:43:45.283878+00:00'
+    done_at: '2026-03-29T08:53:57.851180+00:00'
+    evidence: "Docs sync completed across USAGE.md, INTERFACES.md, and DESIGN.md.\n\
+      \n**docs/USAGE.md changes:**\n- Updated `tela connect` section: lockfile = discovery\
+      \ only, not readiness\n- Added lockfile semantics note: endpoint discovery,\
+      \ not downstream readiness\n- Updated `tela serve` section: lockfile written\
+      \ after HTTP bind, before downstream fully connected\n- Enhanced `tela status`\
+      \ troubleshooting: valid lockfile only proves HTTP endpoint discoverable\n\n\
+      **docs/INTERFACES.md changes:**\n- Updated GET /status Response Schema with\
+      \ new lifecycle fields:\n  - `state` (warming/ready/degraded)\n  - `degraded_reason`,\
+      \ `discovery_source`, `config_path`, `requested_config_path`, `config_mismatch`\n\
+      - Added Lifecycle States section\n- Updated Lockfile Contract: what it means\
+      \ and does NOT mean\n\n**docs/DESIGN.md changes:**\n- Added Hard interrupt semantics\
+      \ section (SIGINT/SIGTERM at three lifecycle stages)\n\n**Verification:**\n\
+      - No docs claim lockfile implies ready or final registry ✓\n- All connect/serve/status\
+      \ references match implementation ✓\n- No timeout-only workaround language remains\
+      \ ✓\n- No serial downstream-ready startup implications ✓\n\n**Artifact:** commit\
+      \ e0cf1ac\n"
 - id: tool_prefix.contract
   name: Tool Prefix Contracts
   status: in_progress
