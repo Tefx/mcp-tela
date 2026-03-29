@@ -44373,25 +44373,102 @@ phases:
   - id: pm.p1_impl.manifest_and_surface
     name: Implement manifest header and surface text
     status: pending
-    description: "Fill in stub bodies in surface_instructions.py per contract from\
-      \ step pm.p1_contract.manifest_header.\n\nUPSTREAM ARTIFACTS (from contract\
-      \ step):\n  - src/tela/shell/surface_instructions.py — signatures, docstrings\
-      \ are AUTHORITATIVE\n\nYOUR SCOPE: Replace stubs with working logic.\n- Implement\
-      \ manifest header in _merge_downstream_instructions() prepending gateway-level\
-      \ provider list\n- Update surface_instructions.py to declare tela_list_providers\n\
-      - Use \"Connected at startup:\" framing with tool counts\n- May also touch gateway.py\
-      \ if wiring the manifest into the instruction merge pipeline\n\nIf a contract\
-      \ artifact is wrong or incomplete, document a deviation record.\n\nStep type:\
-      \ implementation"
-    evidence_template: '## Evidence
+    description: "Fill in stub bodies for manifest header and surface text per contract\
+      \ from step pm.p1_contract.manifest_header.\n\nUPSTREAM ARTIFACTS (from contract\
+      \ step):\n  - src/tela/shell/surface_instructions.py — build_manifest_header\
+      \ and get_gateway_surface_instructions signatures are AUTHORITATIVE\n\nYOUR\
+      \ SCOPE: Replace stubs with working logic. Use Edit tool to modify function\
+      \ bodies only.\n\n## Change 1: Implement build_manifest_header()\n\n```python\n\
+      def build_manifest_header(servers, connected_names, tools_by_server) -> str:\n\
+      \    parts = []\n    for server_name in sorted(servers.keys()):\n        if\
+      \ server_name in connected_names:\n            tool_count = len(tools_by_server.get(server_name,\
+      \ []))\n            parts.append(f\"{server_name} ({tool_count} tools)\")\n\
+      \    if not parts:\n        return \"Connected at startup: (none)\"\n    return\
+      \ \"Connected at startup: \" + \", \".join(parts)\n```\n\n## Change 2: Implement\
+      \ get_gateway_surface_instructions()\n\nReplace the current return value (lines\
+      \ 11-20) to:\n1. Change `\"- Built-in MCP tools: none.\\n\"` to `\"- Built-in\
+      \ MCP tools: \\\\`tela_list_providers\\\\`.\\n\"`\n2. If manifest_header is\
+      \ provided (not None), prepend it before the surface text with a blank line\
+      \ separator\n\n## Change 3: Wire manifest into _create_upstream_server (src/tela/shell/gateway.py)\n\
+      \nIn `_create_upstream_server()` (line 274), the function currently calls `_merge_downstream_instructions()`\
+      \ (line 288). Before calling `get_gateway_surface_instructions()`, build the\
+      \ manifest header:\n\n```python\nfrom tela.shell.surface_instructions import\
+      \ build_manifest_header\nfrom tela.shell.downstream import get_registry, get_connected_server_names\n\
+      \nconnected_result = await get_connected_server_names()\nconnected_names = connected_result.value\
+      \ if connected_result.is_ok else set()\ntools_by_server = get_registry().get_all_tools()\n\
+      manifest = build_manifest_header(tela_config.servers, connected_names, tools_by_server)\n\
+      ```\n\nNOTE: _create_upstream_server is NOT async currently. If calling get_connected_server_names()\
+      \ requires making it async, the manifest building should happen in gateway_prepare_startup()\
+      \ instead and be passed through. Check the call chain before deciding placement.\
+      \ The manifest can also be built synchronously by reading _clients directly\
+      \ if the async accessor is inconvenient here.\n\nAlternative (simpler): build\
+      \ the manifest in gateway_prepare_startup() where we already have the config,\
+      \ and pass it to _create_upstream_server via a parameter or module-level state.\n\
+      \n## Key constraints\n- \"Connected at startup:\" is a snapshot — reflects state\
+      \ at gateway_prepare_startup time\n- Manifest comes BEFORE the surface contract\
+      \ text in the final instructions\n- get_gateway_surface_instructions(None) must\
+      \ still work (backward compatible)\n- The tela gateway surface contract in .tela\
+      \ instructions must now say `tela_list_providers` instead of \"none\"\n\n##\
+      \ Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Both\
+      \ functions must produce real output.\nThe instructions seen by upstream clients\
+      \ must include the manifest header and tela_list_providers declaration.\n\n\
+      If a contract artifact is wrong or incomplete, document a deviation record."
+    evidence_template: '## Implementation Evidence
 
-      - [ ] Manifest header generates correct "Connected at startup:" text
 
-      - [ ] tela_list_providers declared in surface instructions
+      **build_manifest_header body** (paste):
 
-      - [ ] Tool counts accurate
+      ```
 
-      - [ ] invar guard passes'
+      <full function body>
+
+      ```
+
+
+      **get_gateway_surface_instructions body** (paste):
+
+      ```
+
+      <full function body>
+
+      ```
+
+
+      **Gateway wiring** (where manifest is built and passed):
+
+      ```
+
+      <paste the modified section>
+
+      ```
+
+
+      **Output sample** (call get_gateway_surface_instructions with a manifest):
+
+      ```
+
+      <paste actual output string>
+
+      ```
+
+
+      **Verification**:
+
+      - [ ] "Connected at startup:" header appears in instructions
+
+      - [ ] "Built-in MCP tools: `tela_list_providers`" replaces "none"
+
+      - [ ] get_gateway_surface_instructions(None) still works (backward compat)
+
+      - [ ] Doctests pass
+
+      - [ ] invar guard passes
+
+      - [ ] No regressions: pytest tests/ -x'
+    refs:
+    - src/tela/shell/surface_instructions.py
+    - src/tela/shell/gateway.py
+    - src/tela/shell/downstream.py
     agent: python-executor
   - id: pm.p1_impl.gate
     name: P1 implementation gate review
