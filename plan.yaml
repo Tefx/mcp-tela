@@ -41967,7 +41967,7 @@ phases:
     agent: gate-reviewer
   - id: gw_remed.startup_plan_a.harden_post_bind_failure_rollback
     name: Harden post-bind convergence failure rollback
-    status: claimed
+    status: done
     description: 'Isolate the Plan A failure-path work after startup resequencing.
 
 
@@ -42041,6 +42041,47 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-29T12:08:41.422225+00:00'
+    done_at: '2026-03-29T12:21:30.439034+00:00'
+    evidence: '## Failure-Path Rollback Evidence
+
+      **Failure injected at**: convergence step (gateway_converge_startup monkeypatched
+      to return `Result(error="CONVERGENCE_FAILED: injected")`)
+
+
+      **Observed sequence**:
+
+      1. bind succeeded
+
+      2. lockfile published
+
+      3. convergence failed
+
+      4. lockfile removed
+
+      5. HTTP server torn down
+
+
+      **Proof**:
+
+      - Test: `tests/shell/test_serve_cmd.py::test_post_bind_convergence_failure_rolls_back_discovery_and_runtime`
+
+      - Ordered events assertion: `["prepare","bind","publish_lockfile","convergence_failed","remove_lockfile","teardown_http","shutdown_runtime"]`
+
+      - `result.is_err` and `result.error == "CONVERGENCE_FAILED: injected"`
+
+      - `discovery["published"] is False` (no lockfile artifact left)
+
+      - `is_runtime_running().value is False` (readiness/lifecycle not ready after
+      rollback)
+
+
+      **Files modified**: src/tela/commands/serve_cmd.py, src/tela/shell/gateway.py,
+      tests/shell/test_serve_cmd.py
+
+
+      **Verification**: 4 passed in 3.31s ✅
+
+      **Commit**: 1f00cdb3'
 - id: gw_remed.teardown_contracts
   name: 'Gateway remediation: A2 teardown hardening and A3 route contracts'
   status: locked
