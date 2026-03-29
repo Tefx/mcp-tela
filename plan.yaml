@@ -43935,7 +43935,7 @@ phases:
     claimed_at: '2026-03-29T19:35:36.620733+00:00'
   - id: pm.p0_impl.downstream_accessor
     name: Implement downstream accessor
-    status: claimed
+    status: done
     description: "Fill in stub body of get_connected_server_names() in src/tela/shell/downstream.py\
       \ per contract from step pm.p0_contract.downstream_accessor.\n\nUPSTREAM ARTIFACTS\
       \ (from contract step):\n  - src/tela/shell/downstream.py — get_connected_server_names\
@@ -43983,6 +43983,16 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T19:37:56.964365+00:00'
+    done_at: '2026-03-29T19:38:18.035910+00:00'
+    evidence: "## Implementation Evidence\n\n**Modified function** (from src/tela/shell/downstream.py):\n\
+      ```python\nasync def get_connected_server_names() -> Result[set[str], str]:\n\
+      \    \"\"\"Return names of servers with active downstream client handles.\"\"\
+      \"\n    async with _registry_lock:\n        return Result(value=set(_clients.keys()))\n\
+      ```\n\n**Verification:**\n- [x] NotImplementedError removed\n- [x] Returns Result[set[str],\
+      \ str] with _clients keys\n- [x] Acquires _registry_lock\n- [x] Returns a copy\
+      \ (set(...)), not a view\n- [x] Contract signature preserved\n- [x] Additional\
+      \ helpers added: get_attempted_servers(), get_successful_servers()\n\n**Commit:**\
+      \ faf81ca7"
   - id: pm.p0_impl.config_validation
     name: Extend config validation for tela_ prefix
     status: pending
