@@ -41512,3 +41512,16 @@ phases:
     depends_on:
     - gw_remed.lifecycle_authority.extract_status_authority
     agent: integration-verifier
+  - id: gw_remed.lifecycle_authority.gate
+    name: Gate A1 lifecycle authority extraction
+    status: pending
+    description: Review A1 evidence and block progression if lifecycle/readiness truth
+      is still split across gateway.py and http_routes.py.
+    verification: Confirm the phase closes A1 and leaves a single authority for downstream
+      startup sequencing.
+    evidence_template: Summarize blocker/should_fix findings, cite the single authority
+      module, and state whether A4 can safely consume it.
+    depends_on:
+    - gw_remed.lifecycle_authority.extract_status_authority
+    - gw_remed.lifecycle_authority.verify_status_truth
+    agent: gate-reviewer
