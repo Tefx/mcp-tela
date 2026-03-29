@@ -41218,7 +41218,7 @@ phases:
     claimed_at: '2026-03-29T14:26:37.146127+00:00'
   - id: tool_prefix.deep_review.architecture_review
     name: Architecture and concurrency review for tool-prefix mapping
-    status: claimed
+    status: done
     description: 'step_type: review
 
       agent_source: default
@@ -41247,6 +41247,20 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-03-29T14:26:13.268214+00:00'
+    done_at: '2026-03-29T14:28:13.489716+00:00'
+    evidence: "## Architecture Review\n\n**Verdict**: ISSUES_FOUND\n\n**Ownership\
+      \ boundaries**: CONFIRMED - core/shell split correct\n**Rollback safety**: VIOLATED\
+      \ for full-config reload\n**Mutable state hazards**: FOUND\n\n**Findings**:\n\
+      1. ✅ Core owns name-resolution semantics correctly\n2. ✅ Shell owns registry\
+      \ and downstream routing correctly  \n3. ✅ Single-server reload rollback implemented\
+      \ correctly\n4. ❌ Full config reload breaks rollback: `on_config_changed` calls\
+      \ `set_runtime_config(new_config)` BEFORE disconnect/reconnect succeeds\n5.\
+      \ ⚠️ Mutable state hazard: `get_registry()` returns live mutable object, shallow\
+      \ copy in snapshot/restore\n\n**Open Questions**:\n- Should `on_config_changed`\
+      \ stage candidate config and commit only after `connect_all` succeeds?\n- Should\
+      \ registry reads return detached snapshots?\n- Should `get_registry()` remain\
+      \ public?\n\n**Severity**: Non-blocking for single-server prefix changes; potential\
+      \ issue for full config reload scenarios."
   - id: tool_prefix.deep_review.contract_strength
     name: Contract strength audit for tool-prefix contracts
     status: claimed
