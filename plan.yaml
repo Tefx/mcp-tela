@@ -43449,7 +43449,7 @@ phases:
   steps:
   - id: pm.p0_contract.builtin_tool_schema
     name: Built-in tool schema and handler contract
-    status: claimed
+    status: done
     description: "Define ProviderInfo model and tela_list_providers tool schema +\
       \ handler contract.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
       \ outputs: signatures, type_defs, interfaces, stubs\n\n## Deliverable 1: ProviderInfo\
@@ -43533,6 +43533,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-29T18:33:16.237279+00:00'
+    done_at: '2026-03-29T18:37:52.223890+00:00'
+    evidence: "## Contract Artifacts\n\n**ProviderInfo model** (from src/tela/core/models.py):\n\
+      ```python\nclass ProviderInfo(TypedDict):\n    \"\"\"Per-provider summary returned\
+      \ by tela_list_providers.\"\"\"\n    name: str\n    status: str  # \"connected\"\
+      \ | \"disconnected\" | \"failed\"\n    tool_prefix: str | None\n    tool_count:\
+      \ int\n    tool_names: list[str]  # post-enforcement-filter exposed names\n\
+      ```\n\n**BUILTIN_TOOLS schema** (from src/tela/shell/builtin_tools.py):\n```python\n\
+      BUILTIN_TOOLS: list[dict] = [\n    {\n        \"name\": \"tela_list_providers\"\
+      ,\n        \"description\": \"List connected downstream providers with their\
+      \ status and tool counts.\",\n        \"inputSchema\": {\"type\": \"object\"\
+      , \"properties\": {}, \"required\": []},\n    },\n]\n```\n\n**BUILTIN_TOOL_NAMES**:\n\
+      ```python\nBUILTIN_TOOL_NAMES: set[str] = {t[\"name\"] for t in BUILTIN_TOOLS}\n\
+      ```\n\n**handle_list_providers signature**:\n```python\nasync def handle_list_providers(\n\
+      \    # No parameters needed — reads live from DownstreamRegistry\n) -> list[\"\
+      ProviderInfo\"]:\n    \"\"\"Return per-provider summary from live DownstreamRegistry.\"\
+      \"\"\n    raise NotImplementedError\n```\n\n## Verification\n- [x] ProviderInfo\
+      \ is TypedDict with fields: name, status, tool_prefix, tool_count, tool_names\n\
+      - [x] BUILTIN_TOOL_NAMES set exists for dispatch lookup\n- [x] handle_list_providers\
+      \ raises NotImplementedError (stub only)\n- [x] No implementation logic in any\
+      \ deliverable\n- [x] invar guard passes (pre-existing file_size warning acceptable)\n\
+      - [x] escape hatches documented: shell_result (FastMCP pattern), shell_orchestration\
+      \ (runtime registry read)\n\n## Notes\n- file_size warning in models.py is pre-existing\
+      \ (507 lines > 500 limit)\n- dead_export warning expected for contract stub\
+      \ not yet wired to _call_tool dispatch\n- Commit: 1f37aefa on branch vectl/step-pm.p0_contract.downstream_accessor"
   - id: pm.p0_contract.downstream_accessor
     name: Downstream accessor contract
     status: pending
