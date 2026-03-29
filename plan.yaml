@@ -43869,6 +43869,23 @@ phases:
 
       - [ ] invar guard passes'
     agent: python-executor
+  - id: pm.p2_contract.gate
+    name: P2 contract gate review
+    status: pending
+    description: Gate review of P2 contracts. Verify rewrite_descriptions field, scope
+      limitation, and contract purity.
+    evidence_template: '## Evidence
+
+      - [ ] Contract purity verified
+
+      - [ ] Scope correctly limited to same-server
+
+      - [ ] Default is False (opt-in)
+
+      - Blockers: (list or NONE)'
+    depends_on:
+    - pm.p2_contract.rewrite_desc
+    agent: gate-reviewer
 - id: pm.p2_impl
   name: P2 Description Rewriting Implementation
   status: locked
