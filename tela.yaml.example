@@ -56,7 +56,16 @@ servers:
     # Default: none (no access until explicitly granted in profile)
     default_posture: "read_only"
     
+    # OPTIONAL: Tool prefix for namespacing
+    # All tools from this server are exposed upstream with this prefix.
+    # Example: tool_prefix: "prod." exposes "read_file" as "prod.read_file"
+    # Default: null (no prefix, backward-compatible behavior)
+    # Constraint: "tela." is reserved and will be rejected
+    # tool_prefix: "prod."
+
     # OPTIONAL: Per-tool overrides (fine-grained control)
+    # NOTE: Keys are RAW downstream tool names, NOT prefixed names.
+    # Even with tool_prefix="prod.", override "read_file" (not "prod.read_file")
     tool_overrides:
       write_file:
         # Reassign this tool to a different family
@@ -158,6 +167,33 @@ servers:
     command: "mcp-fetch"
     family: "network"
     default_posture: "read_only"
+
+  # ===========================================================================
+  # Example: Two servers with same raw tool names, distinct prefixes
+  # ===========================================================================
+  # This pattern is useful when connecting multiple instances of the same
+  # MCP server (e.g., production vs staging, or work vs personal accounts).
+  # The tool_prefix ensures exposed names don't conflict.
+  #
+  # Example: Two GitHub MCP servers with different credentials
+  github-work:
+    command: "mcp-github"
+    env:
+      GITHUB_TOKEN: "${WORK_GITHUB_TOKEN}"
+    family: "git"
+    default_posture: "read_only"
+    tool_prefix: "work."
+    # Upstream sees: work.search_repos, work.create_issue, etc.
+
+  github-personal:
+    command: "mcp-github"
+    env:
+      GITHUB_TOKEN: "${PERSONAL_GITHUB_TOKEN}"
+    family: "git"
+    default_posture: "read_only"
+    tool_prefix: "personal."
+    # Upstream sees: personal.search_repos, personal.create_issue, etc.
+    # Both servers export raw "search_repos" tool - prefix prevents conflict.
 
 # -----------------------------------------------------------------------------
 # Section: profiles

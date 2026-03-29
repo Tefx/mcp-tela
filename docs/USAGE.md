@@ -95,12 +95,64 @@ servers:
     family: "other"
 ```
 
+#### Tool Prefix Configuration
+
+The `tool_prefix` field configures a namespace prefix for all tools from a server:
+
+```yaml
+servers:
+  fs-prod:
+    command: "mcp-filesystem"
+    args: ["--root", "/prod"]
+    family: "filesystem"
+    tool_prefix: "prod."
+  fs-staging:
+    command: "mcp-filesystem"
+    args: ["--root", "/staging"]
+    family: "filesystem"
+    tool_prefix: "staging."
+```
+
+With this configuration:
+- Both servers export `read_file`, `write_file`, etc.
+- Upstream sees `prod.read_file` and `staging.read_file` (no conflict)
+- `tool_overrides` in profiles still reference raw downstream names (`read_file`, not `prod.read_file`)
+
+**Important semantics:**
+
+- `tool_overrides` keys remain raw downstream tool names, not prefixed names
+- Final exposed names (after prefix) are used for conflict detection
+- `tool_prefix: null` (or omitted) preserves backward-compatible behavior (raw names exposed unchanged)
+- `tool_prefix: "tela."` is reserved and rejected at config validation
+- Changing `tool_prefix` counts as a tool-surface change and triggers `tools/list_changed`
+
+Example with two same-raw-name tools exposed with different prefixes:
+
+```yaml
+servers:
+  git-work:
+    command: "mcp-github"
+    env:
+      GITHUB_TOKEN: "${WORK_GITHUB_TOKEN}"
+    family: "git"
+    tool_prefix: "work."
+  git-personal:
+    command: "mcp-github"
+    env:
+      GITHUB_TOKEN: "${PERSONAL_GITHUB_TOKEN}"
+    family: "git"
+    tool_prefix: "personal."
+```
+
+Upstream clients see `work.search_repos` and `personal.search_repos` — both from the same downstream tool, but exposed with distinct prefixes.
+
 Important notes:
 
 - the YAML key is the server name
 - if `family` is omitted, tela uses the server name as the family by convention
 - `default_posture` sets the baseline posture for tools from that server
 - `tool_overrides` can adjust family or posture for specific tools
+- `tool_prefix` prefixes exposed tool names (see below)
 - `instructions` controls how server instructions are merged (see below)
 
 #### Instructions configuration

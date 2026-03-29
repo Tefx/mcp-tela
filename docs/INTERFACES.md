@@ -53,7 +53,17 @@ Optional gateway controls:
 - `family`
 - `default_posture`
 - `tool_overrides`
+- `tool_prefix`
 - `env`
+
+#### `tool_prefix` contract:
+- type is `str | None` (default: `None`)
+- when set, all tools from this server are exposed upstream with the prefix prepended
+- `tool_overrides` remain keyed by raw downstream tool names, not prefixed names
+- conflict detection uses final exposed names (after prefix is applied)
+- `tool_prefix="tela."` is reserved and rejected at validation
+- omitted `tool_prefix` preserves backward-compatible behavior (raw names unchanged)
+- prefix-only changes count as tool-surface changes (trigger reload/re-enumeration)
 
 `env` contract:
 - type is `dict[str, str]` (`VAR_NAME -> value`)
