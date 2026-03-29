@@ -41640,3 +41640,18 @@ phases:
     depends_on:
     - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
     agent: python-senior
+  - id: gw_remed.teardown_contracts.verify_cleanup_and_contracts
+    name: Verify teardown hardening and route contract strength
+    status: pending
+    description: Independently verify A2/A3 by exercising interrupt cleanup, repeated
+      disconnect, shutdown cleanup reuse, and route contract enforcement together.
+    verification: Run focused repro + shell suites and confirm cleanup authority reuse
+      plus non-vacuous contracts.
+    evidence_template: Provide exact commands, raw outputs, and a pass/fail note for
+      interrupt cleanup, endpoint cleanup reuse, contract falsifiability, and guard
+      status.
+    depends_on:
+    - gw_remed.teardown_contracts.extract_cleanup_authority
+    - gw_remed.teardown_contracts.wire_disconnect_shutdown_cleanup
+    - gw_remed.teardown_contracts.replace_vacuous_route_contracts
+    agent: integration-verifier
