@@ -43743,8 +43743,24 @@ phases:
   - id: pm.p0_test.gate
     name: P0 test gate review
     status: pending
-    description: Gate review of P0 test definitions. Verify tests cover handler shape,
-      profile filtering, gateway list_tools merge, and gateway call_tool dispatch.
+    description: 'Gate review of P0 test definitions.
+
+
+      Verify:
+
+      1. All 7 test functions exist across test_builtin_tools.py and test_gateway.py
+
+      2. Tests cover: handler shape, disconnected/failed status, profile filtering,
+      BUILTIN_TOOL_NAMES set, gateway list_tools merge, gateway call_tool dispatch
+
+      3. Tests are properly RED (NotImplementedError expected)
+
+      4. No implementation logic leaked into test files
+
+      5. Test fixtures use documented patterns (tool_lists scaffolding, gateway_runtime
+      helpers)
+
+      6. ProviderInfo shape assertions match the contract from pm.p0_contract.builtin_tool_schema'
     evidence_template: '## Evidence
 
       - [ ] All 4 test scenarios covered
@@ -43752,6 +43768,9 @@ phases:
       - [ ] Tests are red for correct reasons
 
       - [ ] No product code changes in test step'
+    refs:
+    - tests/shell/test_builtin_tools.py
+    - tests/shell/test_gateway.py
     depends_on:
     - pm.p0_test.builtin_tests
     agent: gate-reviewer
