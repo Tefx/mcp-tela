@@ -37941,7 +37941,7 @@ phases:
       \ when servers fail\n\n### Invar Guard\n- ✅ PASS (0 errors)"
 - id: conn_v2.bridge
   name: Bridge Control and Hard-Interrupt Exit
-  status: in_progress
+  status: done
   gate: tela connect attach/detach loop, signal handling, and hard-interrupt shutdown
     are controlled by one bridge module and validated against concurrent attach behavior.
   depends_on:
@@ -38256,7 +38256,7 @@ phases:
       **No issues found** - all hard-interrupt paths work correctly"
   - id: conn_v2.bridge.gate
     name: Gate bridge control phase
-    status: claimed
+    status: done
     description: "step_type: gate\nGate review: verify bridge control and hard-interrupt\
       \ exit behavior are correct.\nreview_depth: THOROUGH\nreview_depth_rationale:\n\
       \  - phase touches signal handling, connection accounting, and host-observed\
@@ -38274,6 +38274,83 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-29T03:29:22.008581+00:00'
+    done_at: '2026-03-29T03:31:42.113745+00:00'
+    evidence: '## Gate Review: conn_v2.bridge
+
+
+      **Verdict**: PASS
+
+
+      ### Summary
+
+      - **Tests**: 44/44 PASSED
+
+      - **Blocking Issues**: 0
+
+      - **Should-Fix Issues**: 0
+
+      - **Type Errors**: 0
+
+      - **Invar Errors**: 0
+
+
+      ### Automated Gates
+
+
+      | Gate | Status |
+
+      |------|--------|
+
+      | Tests (44) | PASSED |
+
+      | Invar Guard | PASSED (0 errors) |
+
+      | Type Checking (mypy) | PASSED |
+
+
+      ### Key Verifications
+
+
+      **1. Immediate Interrupt Exit** - ✅
+
+      - SIGINT during autostart terminates within 3s
+
+      - SIGINT during active bridge terminates within 3s
+
+      - SIGINT during teardown does not block exit
+
+      - All use subprocess with explicit timeout
+
+
+      **2. Exact Attach/Detach Counting** - ✅
+
+      - `active_connections` is `int`, `connections` is `list[ConnectionContext]`
+
+      - Registry bounded across connect/disconnect cycles
+
+      - Concurrent connections properly tracked
+
+
+      **3. No Host-Specific Hang Paths** - ✅
+
+      - Real signal delivery via subprocess
+
+      - 3-second timeout enforced
+
+      - Process termination verified
+
+
+      **4. Idle Shutdown Sees Authoritative State** - ✅
+
+      - Session registry releases on disconnect
+
+      - Gateway idle shutdown works correctly
+
+
+      ### Confidence: HIGH
+
+      All automated gates pass. Expert reviewed 100% of CRITICAL files. Integration
+      tests use real subprocesses with signal delivery.'
 - id: conn_v2.ux
   name: Host-Facing UX and Diagnostics
   status: done
@@ -38311,7 +38388,7 @@ phases:
   - conn_v2.doc_sync
 - id: conn_v2.integration_validate
   name: Integrated UX, Wiring, and Runtime Validation
-  status: locked
+  status: pending
   gate: One compact late-stage phase for host-facing diagnostics, entrypoint wiring,
     and integrated runtime validation after the core A+B+C+D runtime seams are implemented.
   depends_on:
