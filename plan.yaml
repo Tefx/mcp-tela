@@ -45865,6 +45865,58 @@ phases:
     depends_on:
     - pm_fix.blockers.b1_mypy
     agent: gate-reviewer
+  - id: pm_fix.blockers.verifier_remediation
+    name: Remediate residual ruff E402 and mypy import/stub blockers
+    status: pending
+    description: 'After `pm_fix.blockers.b1_mypy` lands the three intended code fixes,
+      clear the residual verifier blockers that prevent the strict seam commands from
+      passing.
+
+
+      Scope:
+
+      - remediate pre-existing `ruff` E402 issues affecting `src/tela/shell/gateway.py`
+      and/or `src/tela/shell/builtin_tools.py`
+
+      - remediate `mypy` import/stub blockers affecting those same seam checks where
+      the failures are not part of the three primary code fixes
+
+      - keep work limited to the blockers necessary for the exact seam verification
+      commands to pass cleanly
+
+
+      Non-goal:
+
+      - do not re-own or re-implement the three intended code fixes from `pm_fix.blockers.b1_mypy`
+      except as minimally necessary to rebase/merge around them'
+    verification: 'Run exactly these commands unless the plan is later edited to allow
+      alternatives:
+
+      1. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      2. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      3. `uv run invar guard`
+
+
+      Pass criteria:
+
+      - the seam-specific `ruff check` command passes with no E402 or other errors
+
+      - the seam-specific `mypy` command passes with no import/stub/type errors
+
+      - `uv run invar guard` passes after the remediation'
+    evidence_template: "Provide evidence in exactly this structure:\n1. Residual blockers\
+      \ addressed:\n   - list each remaining `ruff` E402 and `mypy` import/stub blocker\
+      \ taken from the prior step evidence\n2. Files changed:\n   - list exact files\
+      \ edited for remediation\n3. Exact command transcript:\n   - `ruff check src/tela/shell/gateway.py\
+      \ src/tela/shell/builtin_tools.py`\n   - `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`\n\
+      \   - `uv run invar guard`\n4. Outcome summary:\n   - confirm both seam commands\
+      \ now pass exactly as written\n   - confirm guard status\nDo not substitute\
+      \ flags or alternate commands."
+    depends_on:
+    - pm_fix.blockers.b1_mypy
+    agent: python-executor
 - id: pm_fix.conventions
   name: 'PM Fix: Convention Fixes (S4, S5, S6)'
   status: locked
