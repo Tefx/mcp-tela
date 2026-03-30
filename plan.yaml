@@ -46210,7 +46210,7 @@ phases:
     agent: gate-reviewer
   - id: pm_fix.conventions.s6_invar_remediation
     name: 'S6 follow-up: resolve invar blockers in downstream seam'
-    status: claimed
+    status: done
     description: "Fix ALL invar blockers reported after `pm_fix.conventions.s6_result`\
       \ for `src/tela/shell/downstream.py`.\n\nsymbolic_testing: true\nstep_type:\
       \ implementation\nverification_scope: local-check\nprotects_gates:\n  - pm_fix.conventions.gate\n\
@@ -46259,6 +46259,14 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-30T18:32:08.192735+00:00'
+    done_at: '2026-03-30T18:37:11.996606+00:00'
+    evidence: 'Resolved targeted downstream invar blockers for S6 seam by remediation
+      across downstream.py/builtin_tools.py/reload.py: closed dead_export on re_enumerate
+      via real runtime seam reference, reduced size pressure and removed blocker-state
+      for downstream module, preserved Result-wrapper seam. Verification: `uv run
+      invar guard` passed with errors=0 (warnings only), `uv run mypy src/tela/shell/downstream.py
+      src/tela/shell/builtin_tools.py` passed, `uv run pytest tests/shell/ -x` passed
+      (443). Commit: 2edcfd2.'
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
   status: done
