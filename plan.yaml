@@ -46115,3 +46115,57 @@ phases:
   depends_on:
   - pm_fix.conventions
   - pm_fix.refactor
+  steps:
+  - id: pm_fix.docs.s1s2_update
+    name: 'S1+S2: Update docs to acknowledge tela_list_providers'
+    status: pending
+    description: 'Multiple doc files incorrectly state "No built-in tela.* MCP tools".
+
+
+      Files to update:
+
+      1. docs/DESIGN.md:211 — says "No built-in tela.* MCP tools are currently implemented"
+
+      2. docs/AGENT_INTERFACE.md:104 — says "No built-in tela.* MCP tools are currently
+      supported"
+
+      3. docs/AGENT_INTERFACE.md:42 — check for related claims
+
+      4. docs/USAGE.md:236 — check for related claims
+
+      5. docs/CONFIRMED-SURFACE-CONTRACT.md:51 — check for related claims
+
+
+      Grep hint: `grep -rn ''No.*built-in.*tela.*MCP tool'' docs/`
+
+      Also check: `grep -rn ''tela_list_providers'' docs/` to see if it is documented
+      anywhere.
+
+
+      Fix: Update each location to acknowledge tela_list_providers exists. Document:
+
+      - Tool name: tela_list_providers
+
+      - Purpose: List connected downstream providers with status and tool counts
+
+      - Input: none (empty object)
+
+      - Output: list of ProviderInfo (server name, status, tool count, posture)
+
+
+      Reference implementation: src/tela/shell/builtin_tools.py for exact behavior.
+
+
+      ## Verification
+
+      - `grep -rn ''No.*built-in.*tela.*MCP tool'' docs/` returns 0 results
+
+      - tela_list_providers is mentioned in relevant doc sections
+
+      - Tool purpose, input, and output shape are documented'
+    verification: '- No docs claim ''no built-in tela.* MCP tools''
+
+      - tela_list_providers documented with purpose, input schema, output shape
+
+      - Documentation is consistent across all doc files'
+    agent: python-executor
