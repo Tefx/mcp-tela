@@ -7,6 +7,8 @@ overrides. Does NOT enumerate tools from servers.
 from __future__ import annotations
 
 
+import re
+
 from tela.core.contracts import pre, post
 from tela.core.models import ResolvedTool, ServerConfig
 from tela.core.classification import classify_tool
@@ -96,7 +98,14 @@ def rewrite_tool_description(
     Returns:
         Description with backtick-quoted names replaced.
     """
-    raise NotImplementedError
+
+    def _replacer(match: re.Match) -> str:
+        name = match.group(1)
+        if name in raw_names_to_exposed:
+            return f"`{raw_names_to_exposed[name]}`"
+        return match.group(0)
+
+    return re.sub(r"`([^`]+)`", _replacer, description)
 
 
 @pre(
@@ -198,8 +207,10 @@ def resolve_tools(
         raw_to_exposed = {
             rt.raw_name: rt.name for rt in resolved if rt.raw_name is not None
         }
-        for rt in resolved:
-            # Will be implemented: rt.description = rewrite_tool_description(rt.description, raw_to_exposed)
-            pass  # stub — actual rewrite deferred to implementation step
+        for i, rt in enumerate(resolved):
+            if rt.description:
+                new_desc = rewrite_tool_description(rt.description, raw_to_exposed)
+                if new_desc != rt.description:
+                    resolved[i] = rt.model_copy(update={"description": new_desc})
 
     return resolved
