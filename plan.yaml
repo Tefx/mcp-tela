@@ -44792,7 +44792,7 @@ phases:
       ### Invar Guard: PASSED (0 errors)'
 - id: pm.p1_impl
   name: P1 Instructions Manifest Implementation
-  status: in_progress
+  status: done
   depends_on:
   - pm.p1_contract
   steps:
@@ -44923,7 +44923,7 @@ phases:
       \ with contract implementation)"
   - id: pm.p1_impl.gate
     name: P1 implementation gate review
-    status: claimed
+    status: done
     description: 'P1 gate review. Independent reviewer verifies manifest and surface
       text.
 
@@ -44979,6 +44979,76 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T01:37:42.858268+00:00'
+    done_at: '2026-03-30T01:41:28.493353+00:00'
+    evidence: '## Evidence
+
+
+      ### Automated Gate Results
+
+
+      **Test Suite**: ALL PASS
+
+      - tests/shell/test_surface_contract.py: 30/30 passed
+
+      - tests/shell/test_gateway.py: 42/42 passed
+
+      - tests/shell/test_builtin_tools.py: 5/5 passed
+
+
+      **Invar Guard**: Pre-existing issues in unrelated files only
+
+
+      ### Manifest Format Verification
+
+
+      - [x] Format matches spec exactly: `"Connected at startup: server_a (N tools),
+      server_b (M tools)"`
+
+      - [x] Empty case handled: `"Connected at startup: (none)"`
+
+      - [x] Only connected servers listed (disconnected/failed omitted)
+
+      - [x] Servers sorted alphabetically for deterministic output
+
+
+      ### Staleness Acknowledgment
+
+
+      - [x] Docstring explicitly states staleness tradeoff
+
+      - [x] `_startup_manifest` captured at `gateway_prepare_startup()` time (snapshot)
+
+      - [x] Live state available via `tela_list_providers` MCP tool
+
+
+      ### Surface Text Accuracy
+
+
+      - [x] `"Built-in MCP tools: \`tela_list_providers\`."` present in base instructions
+
+      - [x] Operator surfaces documented correctly
+
+
+      ### Backward Compatibility
+
+
+      - [x] `get_gateway_surface_instructions()` with no args returns valid surface
+      text
+
+      - [x] Runtime test verified: `result.is_ok == True`
+
+
+      ### Composition Verification
+
+
+      - [x] `compose_gateway_and_downstream` correctly merges gateway + downstream
+
+      - [x] tela MCP server instructions properly updated via FastMCP
+
+
+      - Blockers: NONE
+
+      - SHOULD_FIX: Update docs to document `tela_list_providers` (post-implementation)'
 - id: pm.p2_contract
   name: P2 Description Rewriting Contracts
   status: done
