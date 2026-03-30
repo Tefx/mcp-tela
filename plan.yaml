@@ -45975,3 +45975,40 @@ phases:
 
       - existing tests pass'
     agent: python-executor
+  - id: pm_fix.conventions.gate
+    name: 'Gate: verify convention fixes'
+    status: pending
+    description: 'Gate review: Verify S4, S5, S6 are resolved.
+
+
+      review_depth: STANDARD
+
+
+      Check:
+
+      1. S4: No unused imports in tests/shell/test_builtin_tools.py (ruff F401 clean)
+
+      2. S5: builtin_tools.py error path raises instead of returning []
+
+      3. S5: Escape hatch budget assessed (ideally reduced)
+
+      4. S6: get_attempted_servers and get_successful_servers return Result[set[str],
+      str]
+
+      5. S6: All callers properly unwrap Result
+
+      6. mypy and invar guard pass
+
+      7. All tests pass'
+    verification: '- All three convention issues resolved
+
+      - mypy clean on affected files
+
+      - invar guard passes
+
+      - test suite passes'
+    depends_on:
+    - pm_fix.conventions.s4_imports
+    - pm_fix.conventions.s5_error
+    - pm_fix.conventions.s6_result
+    agent: gate-reviewer
