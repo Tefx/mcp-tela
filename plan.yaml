@@ -46405,7 +46405,15 @@ phases:
 
       - `ruff check src/tela/shell/gateway.py`
 
-      - `mypy src/tela/shell/gateway.py`
+      - Type seam check: use EITHER `mypy src/tela/shell/gateway.py` OR `uv run mypy
+      src/tela/shell/gateway.py`
+
+      - Evidence must paste the exact mypy command variant used and its full output
+
+      - Acceptance requires no local type errors in `src/tela/shell/gateway.py`; if
+      bare `mypy` is blocked by pre-existing external missing stubs/import-not-found
+      for `mcp`, `starlette`, or `yaml`, the `uv run mypy ...` variant is allowed
+      instead
 
       - `uv run invar guard`
 
