@@ -113,6 +113,10 @@ class ServerConfig(BaseModel):
     # NOTE: Acceptance contract only. Prefix is part of exposed-name resolution
     # and must not be applied lazily at tools/call routing time.
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
+    rewrite_descriptions: bool = False
+    # NOTE: When True, backtick-quoted raw tool names in tool descriptions
+    # are replaced with their prefixed exposed names during resolution.
+    # Only rewrites references to tools within the SAME server's tool set.
     # NOTE: Override keys remain raw downstream tool names, not prefixed
     # exposed names, so routing and classification continue to bind to the
     # downstream-advertised inventory.

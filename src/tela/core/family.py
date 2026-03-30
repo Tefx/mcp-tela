@@ -61,6 +61,45 @@ def resolve_family(
 
 
 @pre(
+    lambda description, raw_names_to_exposed: (
+        isinstance(description, str)
+        and isinstance(raw_names_to_exposed, dict)
+        and all(
+            isinstance(k, str) and isinstance(v, str)
+            for k, v in raw_names_to_exposed.items()
+        )
+    )
+)
+@post(lambda result: isinstance(result, str))
+def rewrite_tool_description(
+    description: str,
+    raw_names_to_exposed: dict[str, str],
+) -> str:
+    """Replace backtick-quoted raw tool names with prefixed exposed names.
+
+    Only replaces exact matches within backtick pairs. Does not touch
+    names that are not in the raw_names_to_exposed mapping (i.e., does
+    not rewrite cross-server references).
+
+    Examples:
+        >>> rewrite_tool_description("Use `read_file` to read.", {"read_file": "fs_read_file"})
+        'Use `fs_read_file` to read.'
+        >>> rewrite_tool_description("Use `read_file` and `write_file`.", {"read_file": "fs_read_file"})
+        'Use `fs_read_file` and `write_file`.'
+        >>> rewrite_tool_description("No backticks here.", {"read_file": "fs_read_file"})
+        'No backticks here.'
+
+    Args:
+        description: Tool description text.
+        raw_names_to_exposed: Mapping from raw downstream names to exposed prefixed names.
+
+    Returns:
+        Description with backtick-quoted names replaced.
+    """
+    raise NotImplementedError
+
+
+@pre(
     lambda server_name, server_config, tool_list: (
         isinstance(server_name, str)
         and len(server_name) > 0
@@ -153,5 +192,14 @@ def resolve_tools(
                 output_schema=output_schema,
             )
         )
+
+    # Description rewriting (opt-in per server)
+    if server_config.rewrite_descriptions and server_config.tool_prefix is not None:
+        raw_to_exposed = {
+            rt.raw_name: rt.name for rt in resolved if rt.raw_name is not None
+        }
+        for rt in resolved:
+            # Will be implemented: rt.description = rewrite_tool_description(rt.description, raw_to_exposed)
+            pass  # stub — actual rewrite deferred to implementation step
 
     return resolved
