@@ -46017,3 +46017,60 @@ phases:
   status: locked
   depends_on:
   - pm_fix.blockers
+  steps:
+  - id: pm_fix.refactor.s3_extract
+    name: 'S3: Extract _handle_builtin_call helper'
+    status: pending
+    description: 'File: src/tela/shell/gateway.py:437-494
+
+      Issue: 57-line inline branch with near-identical audit blocks in success (444-468)
+      and error (471-494) paths.
+
+
+      Fix: Extract to an `async def _handle_builtin_call(tool_name, arguments, profile,
+      ...)` helper that encapsulates the try/except, audit logging for both success
+      and error paths, and returns the result. This matches the downstream delegation
+      pattern used elsewhere in _call_tool.
+
+
+      IMPORTANT: This step depends on pm_fix.blockers completing first, because B1
+      fixes the EnforcementResult kwargs in the same code region. Do not reintroduce
+      the `reason=` kwarg.
+
+
+      Pattern reference: Look at how downstream tool calls are delegated in the same
+      method for the extraction pattern.
+
+
+      Grep hint: `grep -n ''BUILTIN_TOOL_NAMES'' src/tela/shell/gateway.py`
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. The extracted helper must contain the full audit
+      and dispatch logic, not a stub.
+
+
+      ## Verification
+
+      - The inline branch at ~437-494 is replaced by a call to _handle_builtin_call
+
+      - Success and error audit paths are unified in the helper
+
+      - No behavioral change (same audit entries produced)
+
+      - `ruff check src/tela/shell/gateway.py`
+
+      - `mypy src/tela/shell/gateway.py`
+
+      - `uv run invar guard`
+
+      - `uv run pytest tests/shell/ -x`'
+    verification: '- Inline branch replaced by helper call
+
+      - Audit behavior preserved (same entries for success and error)
+
+      - ruff, mypy, invar guard all pass
+
+      - existing tests pass'
+    agent: python-executor
