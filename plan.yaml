@@ -44562,7 +44562,7 @@ phases:
       \ tests/shell/test_gateway.py -v\n47 passed in 0.88s\n```"
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
-  status: in_progress
+  status: done
   depends_on:
   - pm.p0_verify
   steps:
@@ -44671,7 +44671,7 @@ phases:
       \ hatches for contract-phase stubs)\n\n**Commit:** dc01626"
   - id: pm.p1_contract.gate
     name: P1 contract gate review
-    status: claimed
+    status: done
     description: 'Gate review of P1 contracts.
 
 
@@ -44707,9 +44707,92 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T01:11:10.579470+00:00'
+    done_at: '2026-03-30T01:16:17.809323+00:00'
+    evidence: '## Evidence
+
+
+      ### Checklist Verification
+
+
+      - [x] Contract purity verified (no implementation logic)
+
+      - [x] Manifest format specified
+
+      - [x] Blockers: NONE
+
+
+      ### Detailed Findings
+
+
+      **1. build_manifest_header signature verification** ✅
+
+
+      Signature: `(servers: dict[str, "ServerConfig"], connected_names: set[str],
+      tools_by_server: dict[str, list["ResolvedTool"]]) -> str`
+
+      - Accepts all three parameters correctly
+
+      - Returns `str` (Shell zone with `@invar:allow shell_result`)
+
+      - Imports types from `tela.core.models`
+
+
+      **2. Doctests show "Connected at startup:" format with tool counts** ✅
+
+
+      Lines 22-30 define doctest examples showing format contract. Docstring specifies
+      format: `"Connected at startup: server_a (N tools), server_b (M tools)"`
+
+
+      **3. get_gateway_surface_instructions accepts optional manifest_header parameter**
+      ✅
+
+
+      `def get_gateway_surface_instructions(manifest_header: str | None = None) ->
+      Result[str, str]`
+
+
+      **4. Contract declares tela_list_providers will replace "none" in built-in tools
+      line** ✅
+
+
+      Docstring confirms: "Updates built-in MCP tools line to include tela_list_providers"
+
+
+      **5. Both functions are stubs (NotImplementedError)** ✅
+
+
+      Both raise `NotImplementedError` as expected for contract phase.
+
+
+      **6. No implementation logic leaked** ✅
+
+
+      Stub bodies contain ONLY `raise NotImplementedError`
+
+
+      **7. Backward compatibility verified** ✅
+
+
+      `gateway.py:300` calls `get_gateway_surface_instructions()` with no args - compatible.
+
+
+      ### Escape Hatch Audit
+
+
+      3 escape hatches, all justified for contract phase:
+
+      - `@invar:allow shell_result` - pure data function
+
+      - `@invar:allow dead_param` - contract phase stub (x2)
+
+      - `@invar:allow dead_export` - contract phase stub
+
+
+      ### Invar Guard: PASSED (0 errors)'
 - id: pm.p1_impl
   name: P1 Instructions Manifest Implementation
-  status: locked
+  status: pending
   depends_on:
   - pm.p1_contract
   steps:
