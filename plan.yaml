@@ -45081,7 +45081,7 @@ phases:
       \ work. Commit verified in src/tela/core/models.py and src/tela/core/family.py."
   - id: pm.p2_contract.gate
     name: P2 contract gate review
-    status: pending
+    status: claimed
     description: 'Gate review of P2 contracts.
 
 
@@ -45117,6 +45117,8 @@ phases:
     depends_on:
     - pm.p2_contract.rewrite_desc
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T01:16:22.439426+00:00'
 - id: pm.p2_impl
   name: P2 Description Rewriting Implementation
   status: locked
