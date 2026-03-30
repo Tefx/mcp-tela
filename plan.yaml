@@ -46848,6 +46848,8 @@ phases:
       - escape hatch budget assessed
 
       - no regressions introduced'
+    depends_on:
+    - pm_fix.gate.fix_surface_contract_test
     agent: gate-reviewer
   - id: pm_fix.gate.fix_surface_contract_test
     name: Align surface contract test with approved provider docs
