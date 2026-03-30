@@ -46853,7 +46853,7 @@ phases:
     agent: gate-reviewer
   - id: pm_fix.gate.fix_surface_contract_test
     name: Align surface contract test with approved provider docs
-    status: claimed
+    status: done
     description: 'Update the failing assertion(s) in `tests/shell/test_surface_contract.py`
       so they align with the current approved documentation semantics acknowledging
       `tela_list_providers`, while preserving the original policy intent against stale
@@ -46892,3 +46892,9 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T19:34:30.818560+00:00'
+    done_at: '2026-03-30T19:37:01.587264+00:00'
+    evidence: 'Updated stale test wording in tests/shell/test_surface_contract.py
+      (docstring and blocker assertion) to align with approved semantics acknowledging
+      built-in `tela_list_providers`, while preserving anti-stale-contract policy
+      intent. Targeted verification: `uv run pytest tests/shell/test_surface_contract.py
+      -v --tb=short` => 30 passed. Commit: 1042a1e.'
