@@ -46779,7 +46779,7 @@ phases:
       tela_list_providers mentions present. Commit: 292a86cf94d68a0aa7daf87c1021f6c8cd523fd4.'
   - id: pm_fix.docs.gate
     name: 'Gate: verify documentation fixes'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify documentation drift is resolved.
 
 
@@ -46805,6 +46805,8 @@ phases:
     depends_on:
     - pm_fix.docs.s1s2_update
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T19:02:35.093384+00:00'
 - id: pm_fix.gate
   name: 'PM Fix: Final Gate Review'
   status: locked
