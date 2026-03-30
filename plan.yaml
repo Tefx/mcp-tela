@@ -46114,7 +46114,7 @@ phases:
       -x` passed (5/5).
   - id: pm_fix.conventions.s6_result
     name: 'S6: Wrap get_attempted/successful_servers in Result'
-    status: claimed
+    status: done
     description: 'Files: src/tela/shell/downstream.py:614,628
 
       Issue: `get_attempted_servers()` and `get_successful_servers()` return bare
@@ -46150,6 +46150,13 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T18:27:12.583783+00:00'
+    done_at: '2026-03-30T18:31:47.179164+00:00'
+    evidence: 'S6 seam completed: `get_attempted_servers()` and `get_successful_servers()`
+      now return `Result[set[str], str]` in downstream.py and callers in builtin_tools.py
+      safely unwrap `.value` with fallback. Verification: `uv run mypy src/tela/shell/downstream.py
+      src/tela/shell/builtin_tools.py` passed and `uv run pytest tests/shell/ -x`
+      passed. Residual invar blockers (`file_size`, `dead_export`) are explicitly
+      owned by new step `pm_fix.conventions.s6_invar_remediation`.'
   - id: pm_fix.conventions.gate
     name: 'Gate: verify convention fixes'
     status: pending
