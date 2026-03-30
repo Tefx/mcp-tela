@@ -45863,3 +45863,30 @@ phases:
   status: locked
   depends_on:
   - pm_fix.blockers
+  steps:
+  - id: pm_fix.conventions.s4_imports
+    name: 'S4: Remove unused imports in test_builtin_tools.py'
+    status: pending
+    description: 'File: tests/shell/test_builtin_tools.py
+
+      Issue: 10 unused imports (lines 6-37)
+
+
+      Fix: Run `ruff check --fix tests/shell/test_builtin_tools.py` to auto-remove
+      unused imports, then verify manually that no needed imports were removed.
+
+
+      Grep hint: `ruff check tests/shell/test_builtin_tools.py --select F401`
+
+
+      ## Verification
+
+      - `ruff check tests/shell/test_builtin_tools.py` passes with no F401 warnings
+
+      - `uv run pytest tests/shell/test_builtin_tools.py -x` still passes'
+    verification: '- ruff check passes with no F401 (unused import) warnings
+
+      - existing tests still pass
+
+      - no needed imports accidentally removed'
+    agent: python-executor
