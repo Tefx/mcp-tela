@@ -46172,6 +46172,55 @@ phases:
     - pm_fix.conventions.s5_error
     - pm_fix.conventions.s6_result
     agent: gate-reviewer
+  - id: pm_fix.conventions.s6_invar_remediation
+    name: 'S6 follow-up: resolve invar blockers in downstream seam'
+    status: pending
+    description: "Fix ALL invar blockers reported after `pm_fix.conventions.s6_result`\
+      \ for `src/tela/shell/downstream.py`.\n\nsymbolic_testing: true\nstep_type:\
+      \ implementation\nverification_scope: local-check\nprotects_gates:\n  - pm_fix.conventions.gate\n\
+      \n## Blockers to Fix (ALL of these, not just the first):\n\n## Root Cause vs\
+      \ Symptom\n- Root cause: the S6 seam now intersects pre-existing structural\
+      \ invar debt in the same shell module, specifically file-size pressure and an\
+      \ unused exported surface that will continue to fail the phase gate unless explicitly\
+      \ owned.\n- Symptom: `uv run invar guard` reports `file_size` on `src/tela/shell/downstream.py`\
+      \ (728 > 700) and `dead_export` on `re_enumerate` in the same module.\n- Why\
+      \ this fix is not surface-level: remediation must reduce or isolate the oversized\
+      \ shell surface and remove or justify the dead exported symbol in a way that\
+      \ preserves the Result-wrapper seam from `pm_fix.conventions.s6_result`.\n\n\
+      ### B1: file_size blocker on src/tela/shell/downstream.py\nLocations: src/tela/shell/downstream.py\n\
+      Remediation: reduce the file below the invar threshold using a boundary-preserving\
+      \ refactor (extract or relocate internal logic without changing the documented\
+      \ shell contract or Result-wrapper behavior added in S6).\nGrep hint: rg -n\
+      \ \"get_attempted_servers|get_successful_servers|re_enumerate|class |def \"\
+      \ src/tela/shell/downstream.py\nIMPORTANT: search for sibling extraction candidates\
+      \ beyond the edited seam so the module falls under the size gate without reintroducing\
+      \ split-truth or caller drift.\n\n### B2: dead_export blocker on re_enumerate\n\
+      Locations: src/tela/shell/downstream.py\nRemediation: remove, privatize, relocate,\
+      \ or explicitly justify `re_enumerate` so `dead_export` no longer fires, while\
+      \ preserving any real consumers if they exist.\nGrep hint: rg -n \"re_enumerate\"\
+      \ src tests\nIMPORTANT: search for sibling references beyond the reported location\
+      \ before deleting or narrowing the export.\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach\
+      \ deliverable MUST contain substantive logic or structural cleanup that closes\
+      \ the blocker family. Documentation-only notes or escape-hatch churn without\
+      \ addressing the underlying seam do not satisfy this step.\n\n## Regression\
+      \ requirements\n- Preserve the `Result[set[str], str]` contract established\
+      \ by `pm_fix.conventions.s6_result`\n- Do not widen shell/public interfaces\
+      \ while shrinking the module\n- If an escape hatch is retained for `dead_export`,\
+      \ evidence must justify why the blocker does not intersect remaining gates"
+    verification: "- Use the exact command family `uv run invar guard`; do not substitute\
+      \ `uvx` or bare `invar`\n- `uv run invar guard` no longer reports the targeted\
+      \ blockers for `src/tela/shell/downstream.py` (`file_size`, `dead_export` on\
+      \ `re_enumerate`)\n- Regression checks prove the S6 seam still type-checks with\
+      \ one exact command:\n  - `uv run mypy src/tela/shell/downstream.py src/tela/shell/builtin_tools.py`\n\
+      - Regression checks prove caller behavior still passes with targeted shell tests\
+      \ (for example `uv run pytest tests/shell/ -x` or a narrower equivalent that\
+      \ covers the accessor seam)\n- Evidence includes the exact commands used, pasted\
+      \ output, and a short root-cause note explaining why the remediation closes\
+      \ the blocker family rather than masking symptoms"
+    depends_on:
+    - pm_fix.conventions.s6_result
+    agent: python-senior
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
   status: done
