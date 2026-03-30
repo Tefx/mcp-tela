@@ -46115,33 +46115,38 @@ phases:
   - id: pm_fix.conventions.s6_result
     name: 'S6: Wrap get_attempted/successful_servers in Result'
     status: claimed
-    description: "Files: src/tela/shell/downstream.py:614,628\nIssue: `get_attempted_servers()`\
-      \ and `get_successful_servers()` return bare `set[str]` instead of `Result[set[str],\
-      \ str]`, violating the Shell return convention used by all other public accessors\
-      \ in the same module.\n\nFix: Wrap return values in `Result(value=...)` to match\
-      \ `get_server_instructions`, `get_all_tools`, etc.\n\nIMPORTANT: After changing\
-      \ the return type, update ALL callers:\n- `grep -rn 'get_attempted_servers\\\
-      |get_successful_servers' src/`\n- Each caller must now unwrap `.value` from\
-      \ the Result\n- src/tela/shell/builtin_tools.py uses both functions (lines 53,\
-      \ 56)\n\n## Verification\n- Both functions return `Result[set[str], str]`\n\
-      - All callers updated to handle Result wrapper\n- Local type correctness on\
-      \ the target seam MUST be proven with ONE of these exact commands:\n  - `mypy\
-      \ src/tela/shell/downstream.py src/tela/shell/builtin_tools.py`\n  - `uv run\
-      \ mypy src/tela/shell/downstream.py src/tela/shell/builtin_tools.py`\n- Paste\
-      \ the exact mypy variant used and its output in evidence\n- `uv run invar guard`\n\
-      - `uv run pytest tests/shell/ -x`"
-    verification: '- Both functions return Result[set[str], str]
+    description: 'Files: src/tela/shell/downstream.py:614,628
 
-      - All callers properly unwrap the Result
+      Issue: `get_attempted_servers()` and `get_successful_servers()` return bare
+      `set[str]` instead of `Result[set[str], str]`, violating the Shell return convention
+      used by all other public accessors in the same module.
 
-      - Local type correctness passes for downstream.py and builtin_tools.py using
-      either bare mypy or `uv run mypy`
 
-      - Evidence includes the exact mypy command variant used plus its output
+      Fix: Wrap return values in `Result(value=...)` to match `get_server_instructions`,
+      `get_all_tools`, etc.
 
-      - invar guard passes
 
-      - existing tests pass'
+      IMPORTANT: After changing the return type, update ALL callers:
+
+      - `grep -rn ''get_attempted_servers\|get_successful_servers'' src/''
+
+      - Each caller must now unwrap `.value` from the Result
+
+      - src/tela/shell/builtin_tools.py uses both functions (lines 53, 56)
+
+
+      Scope boundary:
+
+      - Keep this step focused on the Result-wrapper conversion and direct caller
+      updates only
+
+      - Ownership for invar blockers in `src/tela/shell/downstream.py` is moved to
+      `pm_fix.conventions.s6_invar_remediation`'
+    verification: "- Both functions return `Result[set[str], str]`\n- All callers\
+      \ updated to handle Result wrapper\n- Local type correctness on the target seam\
+      \ MUST be proven with this exact command:\n  - `uv run mypy src/tela/shell/downstream.py\
+      \ src/tela/shell/builtin_tools.py`\n- Paste the exact command and its output\
+      \ in evidence\n- Targeted shell tests covering the accessor seam pass"
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T18:27:12.583783+00:00'
