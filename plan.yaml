@@ -46270,7 +46270,7 @@ phases:
       (443). Commit: 2edcfd2.'
   - id: pm_fix.conventions.s5_repair_raise
     name: 'S5 repair: enforce RuntimeError on builtin tool config failure'
-    status: claimed
+    status: done
     description: 'Fix ALL blocker behavior for the missing S5 artifact in `src/tela/shell/builtin_tools.py`.
 
 
@@ -46400,6 +46400,13 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T18:45:26.069305+00:00'
+    done_at: '2026-03-30T18:50:31.722705+00:00'
+    evidence: 'Implemented concrete S5 repair in src/tela/shell/builtin_tools.py:
+      config-failure path now raises RuntimeError (no silent `[]` fallback). Added
+      targeted regression `test_handle_list_providers_raises_on_missing_runtime_config`
+      in tests/shell/test_builtin_tools.py. Verification: `uv run pytest tests/shell/test_builtin_tools.py
+      -v` passed (6), `uv run invar guard` passed (errors=0), sibling fallback scan
+      found no remaining silent fallback in this seam. Commit: 29ae7606f9baac5a891bf3413cb90005d0b6bca4.'
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
   status: done
