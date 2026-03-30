@@ -44568,7 +44568,7 @@ phases:
   steps:
   - id: pm.p1_contract.manifest_header
     name: Manifest header contract
-    status: claimed
+    status: done
     description: "Add contracts for instructions manifest header and tela_list_providers\
       \ surface declaration.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
       \ outputs: signatures, stubs, docstrings\n\n## Deliverable 1: Manifest header\
@@ -44648,6 +44648,27 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T01:00:03.531253+00:00'
+    done_at: '2026-03-30T01:04:44.419912+00:00'
+    evidence: "## Contract Artifacts\n\n**build_manifest_header signature** (from\
+      \ src/tela/shell/surface_instructions.py):\n```python\ndef build_manifest_header(\n\
+      \    servers: dict[str, \"ServerConfig\"],\n    connected_names: set[str],\n\
+      \    tools_by_server: dict[str, list[\"ResolvedTool\"]],\n) -> str:\n    \"\"\
+      \"Build provider manifest header for instructions.\n\n    Format: \"Connected\
+      \ at startup: server_a (N tools), server_b (M tools)\"\n\n    Only connected\
+      \ servers are listed. Disconnected/failed servers are omitted\n    from the\
+      \ manifest header (they are discoverable via tela_list_providers).\n    \"\"\
+      \"\n    raise NotImplementedError\n```\n\n**get_gateway_surface_instructions\
+      \ updated signature** (from src/tela/shell/surface_instructions.py):\n```python\n\
+      def get_gateway_surface_instructions(\n    manifest_header: str | None = None,\n\
+      ) -> Result[str, str]:\n    \"\"\"Return gateway-authoritative runtime instructions\
+      \ text.\n\n    When manifest_header is provided, prepend it to the surface text.\n\
+      \    Updates built-in MCP tools line to include tela_list_providers.\n    \"\
+      \"\"\n    raise NotImplementedError\n```\n\n**Verification:**\n- [x] build_manifest_header\
+      \ has doctests showing \"Connected at startup:\" format\n- [x] get_gateway_surface_instructions\
+      \ accepts optional manifest_header param\n- [x] Contract declares tela_list_providers\
+      \ in built-in tools line\n- [x] Both functions raise NotImplementedError (stubs\
+      \ only)\n- [x] No implementation logic\n- [x] invar guard passes (with escape\
+      \ hatches for contract-phase stubs)\n\n**Commit:** dc01626"
   - id: pm.p1_contract.gate
     name: P1 contract gate review
     status: pending
