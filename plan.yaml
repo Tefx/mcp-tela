@@ -45770,62 +45770,69 @@ phases:
   - id: pm_fix.blockers.b1_mypy
     name: Fix B1 invalid kwarg + mypy type errors
     status: pending
-    description: 'Fix ALL three issues in this single step (they share the same two
-      files).
+    description: 'Fix exactly these three code changes in this step; do not absorb
+      residual verifier remediation into this step.
 
 
-      ## B1: EnforcementResult invalid kwarg
+      1) B1 invalid kwarg in `src/tela/shell/gateway.py` near the EnforcementResult
+      construction:
 
-      File: src/tela/shell/gateway.py:484
+      - replace `reason=str(e)` with `error_message=str(e)`
 
-      Change: `reason=str(e)` -> `error_message=str(e)`, add `denied_by="builtin_tool_error"`
-      and `error_code="BUILTIN_TOOL_ERROR"`
+      - add `denied_by="builtin_tool_error"`
 
-      Grep hint: `grep -rn ''reason='' src/tela/shell/gateway.py`
-
-
-      Verify the correct field names by checking the EnforcementResult model:
-
-      `grep -n ''class EnforcementResult'' src/tela/core/models.py`
+      - add `error_code="BUILTIN_TOOL_ERROR"`
 
 
-      ## Mypy error 1: builtin_tools.py:64
+      2) Mypy narrowing in `src/tela/shell/builtin_tools.py`:
 
-      File: src/tela/shell/builtin_tools.py:64
-
-      Issue: `all_tools_result.value` can be `None` but assigned to `dict[str, list]`
-
-      Fix: Add narrowing check, e.g. `all_tools = all_tools_result.value or {}`
+      - where `all_tools_result.value` feeds a `dict[str, list]` path, add an explicit
+      fallback/narrowing so the assigned value is never `None` (for example `all_tools_result.value
+      or {}` if consistent with surrounding types)
 
 
-      ## Mypy error 2: gateway.py:694
+      3) Mypy narrowing in `src/tela/shell/gateway.py`:
 
-      File: src/tela/shell/gateway.py:694
-
-      Issue: `connected_names` can be `set[str] | None`
-
-      Fix: Add `or set()` fallback after `.value`
+      - where `connected_names` receives `.value`, add an explicit `or set()` fallback
+      so the local value is never `None`
 
 
-      Grep hint: `grep -n ''connected_names'' src/tela/shell/gateway.py`
+      Scope rule: this step owns only the three code fixes above. If `ruff check src/tela/shell/gateway.py
+      src/tela/shell/builtin_tools.py` or `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+      still fail because of pre-existing E402/import/stub blockers outside those three
+      fixes, leave those residual blockers for the dedicated remediation step.'
+    verification: 'Run exactly these commands unless the plan is later edited to allow
+      alternatives:
+
+      1. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      2. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      3. `uv run invar guard`
 
 
-      ## Verification
+      Pass criteria for this step:
 
-      - `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+      - the three intended code fixes are present in the specified seams
 
-      - `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+      - command output is captured exactly as run, even if residual pre-existing blockers
+      remain
 
-      - `uv run invar guard`'
-    verification: '- mypy passes on both files with no errors
-
-      - ruff passes on both files
-
-      - invar guard passes
-
-      - grep for ''reason='' in gateway.py shows no invalid EnforcementResult kwargs
-
-      - grep for ''all_tools_result.value'' in builtin_tools.py shows proper narrowing'
+      - any remaining failures from those first two commands are identified as residual
+      verifier blockers for follow-up remediation, not silently fixed under this step'
+    evidence_template: "Provide evidence in exactly this structure:\n1. Files changed:\
+      \ list the exact edited files.\n2. Code-fix confirmation:\n   - `src/tela/shell/gateway.py`:\
+      \ confirm EnforcementResult now uses `error_message`, `denied_by=\"builtin_tool_error\"\
+      `, and `error_code=\"BUILTIN_TOOL_ERROR\"`.\n   - `src/tela/shell/builtin_tools.py`:\
+      \ confirm the `all_tools_result.value` path is explicitly narrowed/fallbacked.\n\
+      \   - `src/tela/shell/gateway.py`: confirm the `connected_names` assignment\
+      \ now has `or set()` (or equivalent explicit non-None narrowing).\n3. Exact\
+      \ command transcript:\n   - `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`\n\
+      \   - `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`\n   -\
+      \ `uv run invar guard`\n4. Residual blocker note:\n   - if either ruff/mypy\
+      \ command still fails, paste the exact remaining diagnostics and explicitly\
+      \ label them as handoff inputs for `pm_fix.blockers.verifier_remediation`.\n\
+      Do not substitute flags or alternate commands."
     agent: python-executor
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
