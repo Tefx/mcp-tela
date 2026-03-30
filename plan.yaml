@@ -44562,13 +44562,13 @@ phases:
       \ tests/shell/test_gateway.py -v\n47 passed in 0.88s\n```"
 - id: pm.p1_contract
   name: P1 Instructions Manifest Contracts
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p0_verify
   steps:
   - id: pm.p1_contract.manifest_header
     name: Manifest header contract
-    status: pending
+    status: claimed
     description: "Add contracts for instructions manifest header and tela_list_providers\
       \ surface declaration.\n\nStep type: contract\nContract purity: ENFORCED\nContract\
       \ outputs: signatures, stubs, docstrings\n\n## Deliverable 1: Manifest header\
@@ -44646,6 +44646,8 @@ phases:
     - src/tela/shell/surface_instructions.py
     - src/tela/core/models.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T01:00:03.531253+00:00'
   - id: pm.p1_contract.gate
     name: P1 contract gate review
     status: pending
