@@ -24,6 +24,7 @@ SurfaceContract := {
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
 | `tela.profiles` | `resource` | MCP resource read of `tela://profiles` / `tela.profiles` | Confirmed supported MCP built-in surface. |
+| `tela_list_providers` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}`. |
 | `tela.status` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 | `tela.connections` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 | `tela.audit` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
@@ -48,7 +49,12 @@ SurfaceContract := {
 
 - A surface is a `tool` only if it is callable through MCP `tools/call` as an
   explicitly supported built-in tela surface.
-- This contract confirms **no current built-in `tela.*` MCP tools**.
+- This contract confirms **one current built-in `tela.*` MCP tool**:
+  `tela_list_providers`.
+- Input: empty object `{}`
+- Output: list of `ProviderInfo` objects, each containing `name` (server name),
+  `status` (`"connected"` | `"disconnected"` | `"failed"`), `tool_count` (int),
+  and `tool_names` (list of post-enforcement-filter exposed tool names).
 - Therefore docs, tests, and runtime work must not claim that `tela.status`,
   `tela.connections`, `tela.audit`, or `tela.profiles` are current MCP tools.
 

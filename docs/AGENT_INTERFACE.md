@@ -39,7 +39,17 @@ MCP resources are read via the MCP protocol's resource read mechanism, not via `
 
 ### 3.2 MCP Tools
 
-tela does not currently expose any built-in MCP tools under the `tela.*` namespace. The `tela.` prefix is reserved for future built-in surfaces.
+tela exposes one built-in MCP tool under the `tela.*` namespace:
+
+- `tela_list_providers` — returns a list of configured servers and their runtime status
+  - **Input:** empty object `{}`
+  - **Output:** list of `ProviderInfo` objects, each containing:
+    - `name` (string): server name as configured in `servers`
+    - `status` (string): one of `"connected"`, `"disconnected"`, `"failed"`
+    - `tool_count` (int): number of tools exposed by this server after posture filtering
+    - `tool_names` (list[str]): post-enforcement-filter exposed tool names
+
+The `tela.` prefix is reserved for built-in surfaces.
 
 ## 4. Profile Capability Model
 
@@ -101,7 +111,7 @@ Instruction composition is ordered and non-commutative:
 ## 7. Invariants
 
 - `tela.profiles` is a **resource read**, not a tool call
-- No built-in `tela.*` MCP tools are currently supported
+- `tela_list_providers` is the only built-in `tela.*` MCP tool
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
 - Gateway instructions are emitted first; downstream sections are append-only
-- The `tela.` prefix is reserved for future built-in surfaces
+- The `tela.` prefix is reserved for built-in surfaces

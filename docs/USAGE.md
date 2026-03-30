@@ -232,8 +232,8 @@ profiles:
 
 Built-in surfaces:
 - `tela.profiles` is exposed as an MCP resource (read via resource read, not `tools/call`)
+- `tela_list_providers` is a built-in MCP tool returning server status, tool counts, and tool names
 - `tela profiles`, `tela status`, `tela connections`, and `tela audit` are operator-only surfaces accessible via CLI/HTTP
-- No `tela.*` built-in MCP tools are currently supported
 
 Important notes:
 
