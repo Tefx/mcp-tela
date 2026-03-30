@@ -45942,16 +45942,25 @@ phases:
 
       1. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
 
-      2. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+      2. EITHER `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` OR
+      `uv run mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
 
       3. `uv run invar guard`
+
+
+      Evidence requirements:
+
+      - paste the exact mypy command variant used
+
+      - paste the command output for ruff, mypy, and invar
 
 
       Pass criteria:
 
       - the seam-specific `ruff check` command passes with no E402 or other errors
 
-      - the seam-specific `mypy` command passes with no import/stub/type errors
+      - the seam-specific mypy seam check passes with no import/stub/type errors regardless
+      of whether bare `mypy` or `uv run mypy` is used
 
       - `uv run invar guard` passes after the remediation'
     evidence_template: "Provide evidence in exactly this structure:\n1. Residual blockers\
