@@ -46300,6 +46300,132 @@ phases:
     depends_on:
     - pm_fix.refactor.s3_extract
     agent: gate-reviewer
+  - id: pm_fix.refactor.s3_repair_extract
+    name: 'S3 repair: perform builtin helper extraction concretely'
+    status: pending
+    description: 'Fill in the missing extraction in `src/tela/shell/gateway.py` per
+      the contract from completed step `pm_fix.refactor.s3_extract`.
+
+
+      UPSTREAM ARTIFACTS (authoritative intent):
+
+      - `src/tela/shell/gateway.py` — the `_call_tool` builtin branch must be reduced
+      to a single helper call
+
+      - `pm_fix.refactor.s3_extract` evidence/verification — `_handle_builtin_call`
+      must exist and preserve success/error audit behavior and B1 field usage
+
+
+      YOUR SCOPE: Replace the remaining inline builtin-call block in `_call_tool`
+      with a call to an extracted `async def _handle_builtin_call(...)` helper. Use
+      Edit tool to modify bodies only; do not redesign the public surface.
+
+
+      STRICT REPAIR REQUIREMENTS:
+
+      - `_handle_builtin_call` must be present in `src/tela/shell/gateway.py` as substantive
+      logic, not a stub
+
+      - The helper must encapsulate both success and error audit paths
+
+      - The former inline builtin branch in `_call_tool` must be replaced by a single
+      helper call
+
+      - Preserve the B1 field contract: do not reintroduce `reason=`; preserve `denied_by`,
+      `error_code`, and `error_message`
+
+      - Remove duplicate inline audit handling from `_call_tool` for this branch
+
+
+      ## Known Risks
+
+      - Refactor integrity drift: prior completion evidence claimed extraction landed,
+      but the helper is absent. Treat this as missing artifact repair, not a cosmetic
+      cleanup.
+
+      - Behavioral preservation: audit success/error entries must remain equivalent
+      after extraction.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      The helper must contain substantive logic that processes inputs, performs builtin
+      dispatch, handles exceptions, emits audit entries, and returns real results.
+
+      '
+    verification: '- Proof artifact 1: grep or symbol evidence shows `_handle_builtin_call`
+      exists in `src/tela/shell/gateway.py`
+
+      - Proof artifact 2: code evidence shows `_call_tool` now delegates the builtin
+      branch via a single helper call
+
+      - Proof artifact 3: code evidence shows the prior inline builtin audit block
+      was removed/replaced
+
+      - Proof artifact 4: evidence explicitly states B1 fields (`denied_by`, `error_code`,
+      `error_message`) remain preserved and `reason=` is absent
+
+      - `ruff check src/tela/shell/gateway.py`
+
+      - `mypy src/tela/shell/gateway.py`
+
+      - `uv run invar guard`
+
+      - `uv run pytest tests/shell/ -x`
+
+      - Evidence must paste the helper signature location and the delegating call
+      site location'
+    evidence_template: '## Refactor Repair Evidence
+
+
+      **Helper location**: `<file:line>`
+
+      **Delegating call site**: `<file:line>`
+
+
+      ### Artifact Proof
+
+      - Helper definition snippet showing `_handle_builtin_call(...)`
+
+      - `_call_tool` snippet showing single-call delegation
+
+      - Confirmation that the prior inline builtin audit block was removed
+
+
+      ### Behavioral Preservation
+
+      - Success audit path preserved: `<how verified>`
+
+      - Error audit path preserved: `<how verified>`
+
+      - B1 fields preserved: `denied_by`, `error_code`, `error_message`
+
+      - Forbidden field absent: `reason=`
+
+
+      ### Commands
+
+      ```bash
+
+      ruff check src/tela/shell/gateway.py
+
+      mypy src/tela/shell/gateway.py
+
+      uv run invar guard
+
+      uv run pytest tests/shell/ -x
+
+      ```
+
+
+      ### Actual Output
+
+      <paste command output>'
+    depends_on:
+    - pm_fix.refactor.s3_extract
+    agent: python-executor
 - id: pm_fix.docs
   name: 'PM Fix: Documentation Drift (S1, S2)'
   status: locked
