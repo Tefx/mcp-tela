@@ -45238,13 +45238,13 @@ phases:
       - Correctly scoped to same-server tool set'
 - id: pm.p2_impl
   name: P2 Description Rewriting Implementation
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p2_contract
   steps:
   - id: pm.p2_impl.rewrite_logic
     name: Implement description rewriting
-    status: pending
+    status: claimed
     description: "Fill in stub bodies for description rewriting per contract from\
       \ step pm.p2_contract.rewrite_desc.\n\nUPSTREAM ARTIFACTS (from contract step):\n\
       \  - src/tela/core/family.py — rewrite_tool_description signature and @pre/@post\
@@ -45359,6 +45359,8 @@ phases:
     - src/tela/core/family.py
     - src/tela/core/models.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T01:33:38.156852+00:00'
   - id: pm.p2_impl.gate
     name: P2 implementation gate review
     status: pending
