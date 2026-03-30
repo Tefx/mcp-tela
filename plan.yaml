@@ -45763,13 +45763,13 @@ phases:
       All gate criteria met. Invar errors are pre-existing architectural debt.'
 - id: pm_fix.blockers
   name: 'PM Fix: Blockers (B1 + mypy type errors)'
-  status: pending
+  status: in_progress
   depends_on:
   - pm.final_gate
   steps:
   - id: pm_fix.blockers.b1_mypy
     name: Fix B1 invalid kwarg + mypy type errors
-    status: pending
+    status: claimed
     description: 'Fix ALL three issues in this single step (they share the same two
       files).
 
@@ -45827,6 +45827,8 @@ phases:
 
       - grep for ''all_tools_result.value'' in builtin_tools.py shows proper narrowing'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T17:07:12.528465+00:00'
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
     status: pending
