@@ -44954,7 +44954,7 @@ phases:
     agent: gate-reviewer
 - id: pm.p2_contract
   name: P2 Description Rewriting Contracts
-  status: in_progress
+  status: done
   depends_on:
   - pm.p0_verify
   steps:
@@ -45081,7 +45081,7 @@ phases:
       \ work. Commit verified in src/tela/core/models.py and src/tela/core/family.py."
   - id: pm.p2_contract.gate
     name: P2 contract gate review
-    status: claimed
+    status: done
     description: 'Gate review of P2 contracts.
 
 
@@ -45119,9 +45119,101 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T01:16:22.439426+00:00'
+    done_at: '2026-03-30T01:19:29.209511+00:00'
+    evidence: '## Evidence
+
+
+      ### Checklist Verification
+
+
+      - [x] Contract purity verified
+
+      - [x] Scope correctly limited to same-server
+
+      - [x] Default is False (opt-in)
+
+      - Blockers: NONE
+
+
+      ### Detailed Findings
+
+
+      **1. rewrite_descriptions field on ServerConfig** ✅
+
+      - `models.py:116`: `rewrite_descriptions: bool = False`
+
+      - Lines 117-122: Explanatory comment about scope (same-server) and override
+      key semantics
+
+      - Opt-in semantics (default=False)
+
+
+      **2. @pre/@post contracts on rewrite_tool_description** ✅
+
+      - `@pre` (lines 63-70): Type checks for `description: str`, `raw_names_to_exposed:
+      dict[str, str]`
+
+      - `@post` (line 73): `isinstance(result, str)` — valid type check
+
+      - Neither contract is vacuous or identity
+
+
+      **3. Doctests cover all three cases** ✅
+
+      - Exact backtick match: `"Use \`read_file\` to read." → `"Use \`fs_read_file\`
+      to read."`
+
+      - Partial match: `"Use \`read_file\` and \`write_file\`." → only `read_file`
+      rewritten
+
+      - No-backtick case: `"No backticks here."` → unchanged
+
+      - Doctest execution fails with NotImplementedError — **CORRECT** for contract
+      phase
+
+
+      **4. Scope limitation explicit** ✅
+
+      - Docstring (lines 80-82): "Does not touch names not in raw_names_to_exposed"
+
+      - Parameter `raw_names_to_exposed` semantically scoped to same-server
+
+      - Line 199 builds mapping from `resolved` list (same-server only)
+
+
+      **5. resolve_tools has conditional stub block** ✅
+
+      - Lines 97-101: Conditional check + `pass` stub
+
+      - No actual rewrite implementation
+
+
+      **6. No implementation logic** ✅
+
+      - `rewrite_tool_description` body: `raise NotImplementedError`
+
+      - `resolve_tools` stub: `pass` statement only
+
+
+      **7. Existing doctests still pass** ✅
+
+      - `models.py` doctests: PASS (51 tests)
+
+      - `resolve_tools` doctests: PASS
+
+      - `rewrite_tool_description` doctests: Expected FAIL (stub)
+
+
+      ### Contract Purity
+
+      - No I/O imports or side effects
+
+      - No hidden implementation
+
+      - Correctly scoped to same-server tool set'
 - id: pm.p2_impl
   name: P2 Description Rewriting Implementation
-  status: locked
+  status: pending
   depends_on:
   - pm.p2_contract
   steps:
