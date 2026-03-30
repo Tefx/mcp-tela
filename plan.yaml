@@ -46814,13 +46814,13 @@ phases:
       consistency with builtin_tools implementation verified.'
 - id: pm_fix.gate
   name: 'PM Fix: Final Gate Review'
-  status: in_progress
+  status: done
   depends_on:
   - pm_fix.docs
   steps:
   - id: pm_fix.gate.final
     name: 'Final gate: all PM fix issues resolved'
-    status: claimed
+    status: done
     description: "Final consolidated gate review for all Provider Manifest gate remediation.\n\
       \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Touches audit trail\
       \ correctness (B1 — data loss risk)\n  - Shell convention changes affect callers\
@@ -46853,6 +46853,13 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T19:37:19.903727+00:00'
+    done_at: '2026-03-30T19:42:53.302034+00:00'
+    evidence: 'Final PM fix gate review passed: B1 and S1-S6 verified resolved; `mypy
+      src/tela/shell/gateway.py src/tela/shell/builtin_tools.py src/tela/shell/downstream.py`
+      passed; `uv run invar guard` passed (errors=0); full regression run green with
+      scoped documented exclusions for pre-existing environmental repro tests; grep
+      audits clean for invalid `reason=` kwarg, stale no-built-in doc claims, and
+      silent `return []` in builtin_tools.'
   - id: pm_fix.gate.fix_surface_contract_test
     name: Align surface contract test with approved provider docs
     status: done
