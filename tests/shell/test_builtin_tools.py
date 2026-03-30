@@ -3,37 +3,25 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
-import pytest
 
 from tela.core.models import (
     AuthConfig,
     AuthMode,
-    ConnectionContext,
     GatewayTransport,
     Posture,
     ProfileConfig,
-    ProviderInfo,
     ServerConfig,
     TelaConfig,
 )
 from tela.shell.builtin_tools import (
     BUILTIN_TOOL_NAMES,
-    BUILTIN_TOOLS,
     handle_list_providers,
 )
 from tela.shell.gateway import (
     GatewayStartupConfig,
-    add_runtime_connection,
-    clear_runtime_connections,
     gateway_shutdown,
     gateway_start,
-    set_runtime_config,
-    set_runtime_running,
-)
-from tela.shell.gateway_runtime import (
-    add_runtime_connection as runtime_add_runtime_connection,
 )
 
 
