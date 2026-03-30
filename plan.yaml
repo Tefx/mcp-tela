@@ -46034,7 +46034,7 @@ phases:
   steps:
   - id: pm_fix.conventions.s4_imports
     name: 'S4: Remove unused imports in test_builtin_tools.py'
-    status: pending
+    status: claimed
     description: 'File: tests/shell/test_builtin_tools.py
 
       Issue: 10 unused imports (lines 6-37)
@@ -46058,6 +46058,8 @@ phases:
 
       - no needed imports accidentally removed'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T17:38:14.520584+00:00'
   - id: pm_fix.conventions.s5_error
     name: 'S5: Replace silent error swallowing with RuntimeError'
     status: pending
