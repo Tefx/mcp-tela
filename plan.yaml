@@ -45310,7 +45310,7 @@ phases:
       - Correctly scoped to same-server tool set'
 - id: pm.p2_impl
   name: P2 Description Rewriting Implementation
-  status: in_progress
+  status: done
   depends_on:
   - pm.p2_contract
   steps:
@@ -45457,7 +45457,7 @@ phases:
       \ invar guard passes\n- [x] No regressions: 186 tests passed in tests/core/"
   - id: pm.p2_impl.gate
     name: P2 implementation gate review
-    status: claimed
+    status: done
     description: 'P2 gate review. Independent reviewer verifies description rewriting.
 
 
@@ -45516,9 +45516,65 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T01:41:34.441196+00:00'
+    done_at: '2026-03-30T01:41:40.001027+00:00'
+    evidence: '## Evidence
+
+
+      - [x] No false positives - Non-backtick-quoted names NOT replaced
+
+      - [x] No cross-server leaks - Names not in mapping dict preserved as-is
+
+      - [x] Opt-in behavior verified - `rewrite_descriptions=False` by default
+
+      - [x] tool_prefix=None guard - Prevents rewriting even with `rewrite_descriptions=True`
+
+      - [x] Core zone compliance - Only stdlib `re` import in family.py
+
+      - [x] Contract preserved - All @pre/@post contracts preserved with non-vacuous
+      conditions
+
+      - [x] Pydantic immutability - Uses `rt.model_copy(update={"description": new_desc})`
+
+      - [x] Tests pass - 51 passed, doctests pass, 11 XPASS tests confirm feature
+      implementation
+
+
+      ### Detailed Findings
+
+
+      **Phase 0: Automated Gates**
+
+      - invar guard: 1 error in unrelated file (not in scope)
+
+      - Doctests: All 9 doctests pass for family.py
+
+      - Contract audit: All contracts reference parameters with real comparisons
+
+      - Pattern scan: No pass stubs, type ignores, or TODO markers
+
+
+      **Specific Regression Checks**
+
+      - resolve_tools doctests: All pass
+
+      - tela. prefix rejection: Works correctly after code change
+
+      - XPASS tests: 11 previously failing tests now pass
+
+
+      **Core Zone Compliance**
+
+      - Only stdlib `re` import
+
+      - No I/O imports
+
+      - No module-level mutable state
+
+
+      - Blockers: NONE'
 - id: pm.final_gate
   name: Final Gate Review
-  status: locked
+  status: pending
   depends_on:
   - pm.p1_impl
   - pm.p2_impl
