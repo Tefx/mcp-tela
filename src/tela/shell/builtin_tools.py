@@ -61,7 +61,7 @@ async def handle_list_providers() -> list["ProviderInfo"]:
     if all_tools_result.is_err:
         all_tools = {}
     else:
-        all_tools = all_tools_result.value
+        all_tools = all_tools_result.value or {}
 
     # Build server default postures map
     server_default_postures: dict[str, Posture] = {}

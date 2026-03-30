@@ -481,7 +481,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                         server_name="tela",
                         result=EnforcementResult(
                             verdict=EnforcementVerdict.DENY,
-                            reason=str(e),
+                            denied_by="builtin_tool_error",
+                            error_code="BUILTIN_TOOL_ERROR",
+                            error_message=str(e),
                         ),
                         latency_ms=latency_ms,
                         arguments=dict(arguments) if arguments else None,
@@ -688,7 +690,7 @@ async def gateway_prepare_startup(
 
     # Build manifest snapshot before connecting (reflects config-defined servers only)
     connected_result = await get_connected_server_names()
-    connected_names = connected_result.value if connected_result.is_ok else set()
+    connected_names = connected_result.value or set()
     tools_by_server = get_registry().get_all_tools()
     _startup_manifest = build_manifest_header(
         effective_config.servers, connected_names, tools_by_server
