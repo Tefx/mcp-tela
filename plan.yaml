@@ -45860,7 +45860,7 @@ phases:
     status: pending
     description: 'Gate review: verify both the primary blocker-fix step and the residual
       verifier-remediation step are complete, and verify the strict seam commands
-      succeed exactly as specified.
+      succeed with the allowed mypy invocation forms.
 
 
       Review depth: STANDARD
@@ -45879,17 +45879,26 @@ phases:
       4. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` passes
       exactly as written
 
-      5. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` passes exactly
-      as written
+      5. EITHER `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` OR
+      `uv run mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` passes
+      with no import/stub/type errors
 
       6. `uv run invar guard` passes'
     verification: 'Gate reviewer must verify using exactly these commands:
 
       1. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
 
-      2. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+      2. EITHER `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` OR
+      `uv run mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
 
       3. `uv run invar guard`
+
+
+      Evidence requirements:
+
+      - paste the exact mypy command variant used
+
+      - paste the command output for ruff, mypy, and invar
 
 
       Pass criteria:
@@ -45898,7 +45907,10 @@ phases:
 
       - all three target code fixes are present
 
-      - the seam-specific `ruff` and `mypy` commands pass exactly as written
+      - the seam-specific `ruff` command passes exactly as written
+
+      - the seam-specific mypy seam check passes with no import/stub/type errors regardless
+      of whether bare `mypy` or `uv run mypy` is used
 
       - `uv run invar guard` passes'
     evidence_template: "Provide evidence in exactly this structure:\n1. Prerequisite\
