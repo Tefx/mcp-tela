@@ -46169,3 +46169,31 @@ phases:
 
       - Documentation is consistent across all doc files'
     agent: python-executor
+  - id: pm_fix.docs.gate
+    name: 'Gate: verify documentation fixes'
+    status: pending
+    description: 'Gate review: Verify documentation drift is resolved.
+
+
+      review_depth: STANDARD
+
+
+      Check:
+
+      1. No doc file claims ''no built-in tela.* MCP tools''
+
+      2. tela_list_providers is documented in DESIGN.md, AGENT_INTERFACE.md
+
+      3. Tool documentation includes purpose, input, and output shape
+
+      4. Documentation is consistent with actual implementation in builtin_tools.py
+
+      5. CONFIRMED-SURFACE-CONTRACT.md updated if it had related claims'
+    verification: '- Documentation drift resolved across all files
+
+      - tela_list_providers properly documented
+
+      - Consistency with implementation verified'
+    depends_on:
+    - pm_fix.docs.s1s2_update
+    agent: gate-reviewer
