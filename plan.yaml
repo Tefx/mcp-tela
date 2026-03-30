@@ -45769,7 +45769,7 @@ phases:
   steps:
   - id: pm_fix.blockers.b1_mypy
     name: Fix B1 invalid kwarg + mypy type errors
-    status: pending
+    status: claimed
     description: 'Fix exactly these three code changes in this step; do not absorb
       residual verifier remediation into this step.
 
@@ -45834,6 +45834,8 @@ phases:
       \ label them as handoff inputs for `pm_fix.blockers.verifier_remediation`.\n\
       Do not substitute flags or alternate commands."
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T17:18:29.079671+00:00'
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
     status: pending
