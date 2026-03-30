@@ -44798,7 +44798,7 @@ phases:
   steps:
   - id: pm.p1_impl.manifest_and_surface
     name: Implement manifest header and surface text
-    status: claimed
+    status: done
     description: "Fill in stub bodies for manifest header and surface text per contract\
       \ from step pm.p1_contract.manifest_header.\n\nUPSTREAM ARTIFACTS (from contract\
       \ step):\n  - src/tela/shell/surface_instructions.py — build_manifest_header\
@@ -44898,6 +44898,29 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T01:19:46.691244+00:00'
+    done_at: '2026-03-30T01:33:31.218887+00:00'
+    evidence: "## Implementation Evidence\n\n**build_manifest_header body** (lines\
+      \ 40-48):\n```python\n  # @invar:allow shell_result: pure data transformation,\
+      \ no I/O - per pm.p1 contract\n  parts = []\n  for server_name in sorted(servers.keys()):\n\
+      \      if server_name in connected_names:\n          tool_count = len(tools_by_server.get(server_name,\
+      \ []))\n          parts.append(f\"{server_name} ({tool_count} tools)\")\n  if\
+      \ not parts:\n      return \"Connected at startup: (none)\"\n  return \"Connected\
+      \ at startup: \" + \", \".join(parts)\n```\n\n**get_gateway_surface_instructions\
+      \ body** (lines 58-76):\n```python\n  base_instructions = \"\"\"# tela gateway\
+      \ surface contract\n...\n- Built-in MCP tools: `tela_list_providers`.\n...\n\
+      \"\"\"\n  if manifest_header is None:\n      return Result(value=base_instructions)\n\
+      \  return Result(value=f\"{manifest_header}\\n\\n{base_instructions}\")\n```\n\
+      \n**Gateway wiring** - manifest built in `gateway_prepare_startup()`:\n- Connected\
+      \ server names fetched via `get_connected_server_names()`\n- Tools by server\
+      \ from `get_registry().get_all_tools()`\n- Manifest stored in `_startup_manifest`\
+      \ module-level variable\n- Passed to `get_gateway_surface_instructions(_startup_manifest)`\n\
+      \n**Verification**:\n- [x] \"Connected at startup:\" header appears in instructions\n\
+      - [x] \"Built-in MCP tools: `tela_list_providers`\" replaces \"none\"\n- [x]\
+      \ get_gateway_surface_instructions(None) still works (backward compat)\n- [x]\
+      \ Doctests pass\n- [x] invar guard passes\n- [x] No regressions: 443 shell tests\
+      \ passed\n\n**Deviation Records**:\n- Test assertions updated from \"none\"\
+      \ to \"`tela_list_providers`\" to match new surface text (test_error type, consistent\
+      \ with contract implementation)"
   - id: pm.p1_impl.gate
     name: P1 implementation gate review
     status: pending
