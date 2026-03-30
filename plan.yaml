@@ -46188,13 +46188,13 @@ phases:
     agent: gate-reviewer
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
-  status: pending
+  status: in_progress
   depends_on:
   - pm_fix.blockers
   steps:
   - id: pm_fix.refactor.s3_extract
     name: 'S3: Extract _handle_builtin_call helper'
-    status: pending
+    status: claimed
     description: 'File: src/tela/shell/gateway.py:437-494
 
       Issue: 57-line inline branch with near-identical audit blocks in success (444-468)
@@ -46248,6 +46248,8 @@ phases:
 
       - existing tests pass'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T17:38:28.761711+00:00'
   - id: pm_fix.refactor.gate
     name: 'Gate: verify refactor'
     status: pending
