@@ -45857,7 +45857,7 @@ phases:
       Residual blockers explicitly handed off to pm_fix.blockers.verifier_remediation.'
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
-    status: pending
+    status: claimed
     description: 'Gate review: verify both the primary blocker-fix step and the residual
       verifier-remediation step are complete, and verify the strict seam commands
       succeed with the allowed mypy invocation forms.
@@ -45925,6 +45925,8 @@ phases:
     - pm_fix.blockers.b1_mypy
     - pm_fix.blockers.verifier_remediation
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T17:31:13.238469+00:00'
   - id: pm_fix.blockers.verifier_remediation
     name: Remediate residual ruff E402 and mypy import/stub blockers
     status: done
