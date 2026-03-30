@@ -219,6 +219,22 @@ def test_handle_list_providers_filters_by_profile_enforcement() -> None:
         asyncio.run(gateway_shutdown())
 
 
+def test_handle_list_providers_raises_on_missing_runtime_config() -> None:
+    """handle_list_providers raises RuntimeError when no runtime config is available.
+
+    This tests the failure path where get_runtime_config() returns an error
+    (e.g., gateway not started, no config file found).
+    The function should raise RuntimeError, not silently return [].
+    """
+    # Don't start gateway - simulate missing runtime config state
+    import pytest
+
+    with pytest.raises(
+        RuntimeError, match="handle_list_providers requires a valid runtime config"
+    ):
+        asyncio.run(handle_list_providers())
+
+
 def test_builtin_tool_names_set_contains_tela_list_providers() -> None:
     """BUILTIN_TOOL_NAMES includes 'tela_list_providers'."""
     assert "tela_list_providers" in BUILTIN_TOOL_NAMES

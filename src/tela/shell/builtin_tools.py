@@ -34,11 +34,8 @@ async def handle_list_providers() -> list["ProviderInfo"]:
     Reads connected servers, their tool counts (post-enforcement-filter),
     and connection status. Includes failed servers with status "failed".
 
-    Examples:
-        >>> import asyncio
-        >>> result = asyncio.run(handle_list_providers())
-        >>> isinstance(result, list)
-        True
+    Raises:
+        RuntimeError: if runtime config is not available (gateway not started).
 
     Returns:
         List of ProviderInfo dicts, one per configured server.
@@ -46,7 +43,10 @@ async def handle_list_providers() -> list["ProviderInfo"]:
     # Get runtime config to find all configured servers
     config_result = get_runtime_config()
     if config_result.is_err or config_result.value is None:
-        return []
+        raise RuntimeError(
+            f"handle_list_providers requires a valid runtime config: "
+            f"{config_result.error!r}"
+        )
     config = config_result.value
 
     # Get successful servers (those that connected successfully)
