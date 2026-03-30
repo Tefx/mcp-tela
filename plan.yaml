@@ -46109,3 +46109,9 @@ phases:
     depends_on:
     - pm_fix.refactor.s3_extract
     agent: gate-reviewer
+- id: pm_fix.docs
+  name: 'PM Fix: Documentation Drift (S1, S2)'
+  status: locked
+  depends_on:
+  - pm_fix.conventions
+  - pm_fix.refactor
