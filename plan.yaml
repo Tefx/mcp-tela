@@ -45769,7 +45769,7 @@ phases:
   steps:
   - id: pm_fix.blockers.b1_mypy
     name: Fix B1 invalid kwarg + mypy type errors
-    status: claimed
+    status: pending
     description: 'Fix ALL three issues in this single step (they share the same two
       files).
 
@@ -45827,8 +45827,6 @@ phases:
 
       - grep for ''all_tools_result.value'' in builtin_tools.py shows proper narrowing'
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-30T17:11:00.715626+00:00'
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
     status: pending
