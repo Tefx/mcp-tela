@@ -45769,7 +45769,7 @@ phases:
   steps:
   - id: pm_fix.blockers.b1_mypy
     name: Fix B1 invalid kwarg + mypy type errors
-    status: claimed
+    status: done
     description: 'Fix exactly these three code changes in this step; do not absorb
       residual verifier remediation into this step.
 
@@ -45836,6 +45836,25 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T17:18:29.079671+00:00'
+    done_at: '2026-03-30T17:23:06.682384+00:00'
+    evidence: 'Files changed: src/tela/shell/gateway.py, src/tela/shell/builtin_tools.py.
+
+      Code-fix confirmation: (1) EnforcementResult call now uses denied_by="builtin_tool_error",
+      error_code="BUILTIN_TOOL_ERROR", error_message=str(e) instead of reason=. (2)
+      all_tools_result.value narrowed via `or {}` in builtin_tools.py. (3) connected_names
+      narrowed via `or set()` in gateway.py.
+
+      Verification transcript captured:
+
+      - `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` =>
+      residual pre-existing E402 at gateway.py lines 61-63.
+
+      - `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` => residual
+      import/stub errors (mcp/starlette/yaml), no targeted narrowing errors.
+
+      - `uv run invar guard` => passed.
+
+      Residual blockers explicitly handed off to pm_fix.blockers.verifier_remediation.'
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
     status: pending
