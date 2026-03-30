@@ -44671,7 +44671,7 @@ phases:
       \ hatches for contract-phase stubs)\n\n**Commit:** dc01626"
   - id: pm.p1_contract.gate
     name: P1 contract gate review
-    status: pending
+    status: claimed
     description: 'Gate review of P1 contracts.
 
 
@@ -44705,6 +44705,8 @@ phases:
     depends_on:
     - pm.p1_contract.manifest_header
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T01:11:10.579470+00:00'
 - id: pm.p1_impl
   name: P1 Instructions Manifest Implementation
   status: locked
