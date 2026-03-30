@@ -575,9 +575,11 @@ class TestInstructionConflictHandling:
         assert composed_result.value is not None
 
         composed = composed_result.value
-        assert "Built-in MCP tools: none." in composed
+        assert "Built-in MCP tools: `tela_list_providers`." in composed
         assert "Built-in MCP tools: use tela.status from tools/call." in composed
-        assert composed.index("Built-in MCP tools: none.") < composed.index("## fs")
+        assert composed.index(
+            "Built-in MCP tools: `tela_list_providers`."
+        ) < composed.index("## fs")
 
 
 # =============================================================================
@@ -692,7 +694,7 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         assert "These do not belong to a `tela_admin`" in design_text
         assert gateway_summary.is_ok
         assert gateway_summary.value is not None
-        assert "Built-in MCP tools: none." in gateway_summary.value
+        assert "Built-in MCP tools: `tela_list_providers`." in gateway_summary.value
 
     def test_tela_admin_not_approved_for_tela_connections(self) -> None:
         """tela_admin MUST NOT be used as current enforcement wording for

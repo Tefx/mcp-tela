@@ -37,10 +37,15 @@ def build_manifest_header(
     Returns:
         Manifest header string.
     """
-    # @invar:allow shell_result: pure data function per pm.p1 contract
-    # @invar:allow dead_param: contract phase stub
-    # @invar:allow dead_export: contract phase stub
-    raise NotImplementedError
+    # @invar:allow shell_result: pure data transformation, no I/O - per pm.p1 contract
+    parts = []
+    for server_name in sorted(servers.keys()):
+        if server_name in connected_names:
+            tool_count = len(tools_by_server.get(server_name, []))
+            parts.append(f"{server_name} ({tool_count} tools)")
+    if not parts:
+        return "Connected at startup: (none)"
+    return "Connected at startup: " + ", ".join(parts)
 
 
 def get_gateway_surface_instructions(
@@ -51,8 +56,25 @@ def get_gateway_surface_instructions(
     When manifest_header is provided, prepend it to the surface text.
     Updates built-in MCP tools line to include tela_list_providers.
     """
-    # @invar:allow dead_param: contract phase stub
-    raise NotImplementedError  # stub during contract phase
+    base_instructions = """# tela gateway surface contract
+
+This document defines the authoritative instruction surface presented to
+upstream MCP clients connecting to the tela gateway.
+
+## Gateway capabilities
+
+- Built-in MCP tools: `tela_list_providers`.
+- Operator-only surfaces (not MCP built-ins): `tela profiles`, `tela status`, `tela connections`, `tela audit`, `GET /status`, `GET /health`, `POST /connect`, `POST /disconnect`, `POST /mcp`.
+- Gateway does not proxy or forward to operator surfaces.
+
+## Server instructions
+
+Instructions for individual servers are provided below, where available.
+
+"""
+    if manifest_header is None:
+        return Result(value=base_instructions)
+    return Result(value=f"{manifest_header}\n\n{base_instructions}")
 
 
 def compose_gateway_and_downstream(

@@ -46,12 +46,18 @@ from tela.shell.downstream import (
     connect_all,
     disconnect_all,
     get_all_tools,
+    get_connected_server_names,
+    get_registry,
     get_server_instructions,
 )
 from tela.shell.surface_instructions import (
+    build_manifest_header,
     compose_gateway_and_downstream,
     get_gateway_surface_instructions,
 )
+
+# Module-level manifest snapshot built at prepare_startup time.
+_startup_manifest: str | None = None
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
 from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
@@ -297,7 +303,7 @@ def _create_upstream_server(
     if downstream_result.is_err:
         return Result(error=downstream_result.error)
 
-    gateway_result = get_gateway_surface_instructions()
+    gateway_result = get_gateway_surface_instructions(_startup_manifest)
     if gateway_result.is_err:
         return Result(error=gateway_result.error)
     assert gateway_result.value is not None
@@ -676,7 +682,18 @@ async def gateway_prepare_startup(
 ) -> Result[None, str]:
     """Prepare runtime state and upstream server before downstream convergence."""
 
+    global _startup_manifest
+
     effective_config = tela_config or TelaConfig()
+
+    # Build manifest snapshot before connecting (reflects config-defined servers only)
+    connected_result = await get_connected_server_names()
+    connected_names = connected_result.value if connected_result.is_ok else set()
+    tools_by_server = get_registry().get_all_tools()
+    _startup_manifest = build_manifest_header(
+        effective_config.servers, connected_names, tools_by_server
+    )
+
     upstream_server_result = _create_upstream_server(config, effective_config)
     if upstream_server_result.is_err:
         return Result(error=upstream_server_result.error)

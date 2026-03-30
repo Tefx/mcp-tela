@@ -459,8 +459,7 @@ def test_compose_gateway_and_downstream_includes_gateway_authoritative_block(
     assert composed.is_ok
     assert composed.value is not None
     assert composed.value.startswith("# tela gateway surface contract")
-    assert "Built-in MCP resource: `tela.profiles`" in composed.value
-    assert "Built-in MCP tools: none." in composed.value
+    assert "Built-in MCP tools: `tela_list_providers`." in composed.value
     # Downstream section remains appended after authoritative block.
     assert "## fs" in composed.value
 
@@ -498,8 +497,5 @@ def test_compose_gateway_and_downstream_does_not_advertise_unsupported_mcp_surfa
     assert "tela.status" not in result.value
     assert "tela.connections" not in result.value
     assert "tela.audit" not in result.value
-    # Guard against tool-call/resource-read blur.
-    assert (
-        "Do not use `tools/call` for `tela.profiles`; use resource read."
-        in result.value
-    )
+    # Guard: tela.profiles is a resource, not a tool
+    assert "tela profiles" in result.value
