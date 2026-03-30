@@ -45858,3 +45858,8 @@ phases:
     depends_on:
     - pm_fix.blockers.b1_mypy
     agent: gate-reviewer
+- id: pm_fix.conventions
+  name: 'PM Fix: Convention Fixes (S4, S5, S6)'
+  status: locked
+  depends_on:
+  - pm_fix.blockers
