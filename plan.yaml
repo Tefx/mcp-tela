@@ -46849,3 +46849,42 @@ phases:
 
       - no regressions introduced'
     agent: gate-reviewer
+  - id: pm_fix.gate.fix_surface_contract_test
+    name: Align surface contract test with approved provider docs
+    status: pending
+    description: 'Update the failing assertion(s) in `tests/shell/test_surface_contract.py`
+      so they align with the current approved documentation semantics acknowledging
+      `tela_list_providers`, while preserving the original policy intent against stale
+      or misleading provider-surface wording.
+
+
+      Required scope:
+
+      - Touch only the stale assertion text and any tightly-coupled expected wording
+      in `tests/shell/test_surface_contract.py`
+
+      - Keep the policy intent: the test must still reject stale pre-S2 wording and
+      still enforce that docs and surface-contract expectations stay synchronized
+
+      - Do not reopen completed implementation or docs steps; this is targeted regression
+      maintenance for the final gate blocker
+
+
+      Verification obligations:
+
+      - Run the targeted regression covering `tests/shell/test_surface_contract.py`
+
+      - Evidence must show the updated assertion language and explain how the original
+      policy intent remains enforced'
+    verification: Targeted regression for `tests/shell/test_surface_contract.py` passes,
+      and the updated assertion language is shown to match the approved docs semantics
+      without weakening the original surface-contract policy intent.
+    evidence_template: '## Surface Contract Test Remediation
+
+      - Updated assertion lines in `tests/shell/test_surface_contract.py`
+
+      - Targeted test command and actual result
+
+      - Brief note explaining how stale pre-S2 wording is no longer asserted and how
+      policy intent remains preserved'
+    agent: python-executor
