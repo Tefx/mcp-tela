@@ -44792,13 +44792,13 @@ phases:
       ### Invar Guard: PASSED (0 errors)'
 - id: pm.p1_impl
   name: P1 Instructions Manifest Implementation
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p1_contract
   steps:
   - id: pm.p1_impl.manifest_and_surface
     name: Implement manifest header and surface text
-    status: pending
+    status: claimed
     description: "Fill in stub bodies for manifest header and surface text per contract\
       \ from step pm.p1_contract.manifest_header.\n\nUPSTREAM ARTIFACTS (from contract\
       \ step):\n  - src/tela/shell/surface_instructions.py — build_manifest_header\
@@ -44896,6 +44896,8 @@ phases:
     - src/tela/shell/gateway.py
     - src/tela/shell/downstream.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T01:19:46.691244+00:00'
   - id: pm.p1_impl.gate
     name: P1 implementation gate review
     status: pending
