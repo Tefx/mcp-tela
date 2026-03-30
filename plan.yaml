@@ -45766,3 +45766,64 @@ phases:
   status: pending
   depends_on:
   - pm.final_gate
+  steps:
+  - id: pm_fix.blockers.b1_mypy
+    name: Fix B1 invalid kwarg + mypy type errors
+    status: pending
+    description: 'Fix ALL three issues in this single step (they share the same two
+      files).
+
+
+      ## B1: EnforcementResult invalid kwarg
+
+      File: src/tela/shell/gateway.py:484
+
+      Change: `reason=str(e)` -> `error_message=str(e)`, add `denied_by="builtin_tool_error"`
+      and `error_code="BUILTIN_TOOL_ERROR"`
+
+      Grep hint: `grep -rn ''reason='' src/tela/shell/gateway.py`
+
+
+      Verify the correct field names by checking the EnforcementResult model:
+
+      `grep -n ''class EnforcementResult'' src/tela/core/models.py`
+
+
+      ## Mypy error 1: builtin_tools.py:64
+
+      File: src/tela/shell/builtin_tools.py:64
+
+      Issue: `all_tools_result.value` can be `None` but assigned to `dict[str, list]`
+
+      Fix: Add narrowing check, e.g. `all_tools = all_tools_result.value or {}`
+
+
+      ## Mypy error 2: gateway.py:694
+
+      File: src/tela/shell/gateway.py:694
+
+      Issue: `connected_names` can be `set[str] | None`
+
+      Fix: Add `or set()` fallback after `.value`
+
+
+      Grep hint: `grep -n ''connected_names'' src/tela/shell/gateway.py`
+
+
+      ## Verification
+
+      - `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      - `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      - `uv run invar guard`'
+    verification: '- mypy passes on both files with no errors
+
+      - ruff passes on both files
+
+      - invar guard passes
+
+      - grep for ''reason='' in gateway.py shows no invalid EnforcementResult kwargs
+
+      - grep for ''all_tools_result.value'' in builtin_tools.py shows proper narrowing'
+    agent: python-executor
