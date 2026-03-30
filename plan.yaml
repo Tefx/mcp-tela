@@ -46159,7 +46159,7 @@ phases:
       owned by new step `pm_fix.conventions.s6_invar_remediation`.'
   - id: pm_fix.conventions.gate
     name: 'Gate: verify convention fixes'
-    status: claimed
+    status: pending
     description: 'Gate review: Verify S4, S5, S6, and the downstream invar remediation
       are resolved.
 
@@ -46208,8 +46208,6 @@ phases:
     - pm_fix.conventions.s6_result
     - pm_fix.conventions.s6_invar_remediation
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-30T18:37:31.762595+00:00'
   - id: pm_fix.conventions.s6_invar_remediation
     name: 'S6 follow-up: resolve invar blockers in downstream seam'
     status: done
