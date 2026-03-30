@@ -46197,3 +46197,8 @@ phases:
     depends_on:
     - pm_fix.docs.s1s2_update
     agent: gate-reviewer
+- id: pm_fix.gate
+  name: 'PM Fix: Final Gate Review'
+  status: locked
+  depends_on:
+  - pm_fix.docs
