@@ -46203,7 +46203,7 @@ phases:
   steps:
   - id: pm_fix.refactor.s3_extract
     name: 'S3: Extract _handle_builtin_call helper'
-    status: claimed
+    status: done
     description: 'File: src/tela/shell/gateway.py:437-494
 
       Issue: 57-line inline branch with near-identical audit blocks in success (444-468)
@@ -46259,6 +46259,12 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T17:38:28.761711+00:00'
+    done_at: '2026-03-30T17:42:23.533909+00:00'
+    evidence: 'Refactored src/tela/shell/gateway.py: extracted inline builtin dispatch
+      branch into async helper `_handle_builtin_call(tool_name, arguments)` preserving
+      success/error audit behavior and B1 field usage (`denied_by`, `error_code`,
+      `error_message`); verification: ruff check gateway.py pass, mypy gateway.py
+      pass, uv run invar guard pass, uv run pytest tests/shell/ -x pass.'
   - id: pm_fix.refactor.gate
     name: 'Gate: verify refactor'
     status: pending
