@@ -45837,33 +45837,60 @@ phases:
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
     status: pending
-    description: 'Gate review: Verify B1 and mypy type errors are resolved.
+    description: 'Gate review: verify both the primary blocker-fix step and the residual
+      verifier-remediation step are complete, and verify the strict seam commands
+      succeed exactly as specified.
 
 
-      review_depth: STANDARD
+      Review depth: STANDARD
 
 
       Check:
 
-      1. EnforcementResult at gateway.py:~484 uses valid field names (error_message,
-      denied_by, error_code)
+      1. EnforcementResult in `src/tela/shell/gateway.py` uses valid fields: `error_message`,
+      `denied_by`, `error_code`
 
-      2. builtin_tools.py:64 has proper None narrowing for all_tools_result.value
+      2. `src/tela/shell/builtin_tools.py` contains explicit non-None narrowing for
+      `all_tools_result.value`
 
-      3. gateway.py:694 has proper None narrowing for connected_names
+      3. `src/tela/shell/gateway.py` contains explicit non-None narrowing for `connected_names`
 
-      4. mypy clean on both files
+      4. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` passes
+      exactly as written
 
-      5. invar guard clean'
-    verification: '- All three issues resolved
+      5. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` passes exactly
+      as written
 
-      - mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py passes
+      6. `uv run invar guard` passes'
+    verification: 'Gate reviewer must verify using exactly these commands:
 
-      - uv run invar guard passes
+      1. `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
 
-      - No regressions in existing tests'
+      2. `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`
+
+      3. `uv run invar guard`
+
+
+      Pass criteria:
+
+      - both prerequisite steps are complete
+
+      - all three target code fixes are present
+
+      - the seam-specific `ruff` and `mypy` commands pass exactly as written
+
+      - `uv run invar guard` passes'
+    evidence_template: "Provide evidence in exactly this structure:\n1. Prerequisite\
+      \ confirmation:\n   - `pm_fix.blockers.b1_mypy` complete\n   - `pm_fix.blockers.verifier_remediation`\
+      \ complete\n2. Code review confirmation:\n   - note where each of the three\
+      \ intended fixes is present\n3. Exact command transcript:\n   - `ruff check\
+      \ src/tela/shell/gateway.py src/tela/shell/builtin_tools.py`\n   - `mypy src/tela/shell/gateway.py\
+      \ src/tela/shell/builtin_tools.py`\n   - `uv run invar guard`\n4. Gate result:\n\
+      \   - pass/fail with any remaining blockers pasted verbatim\nDo not substitute\
+      \ flags or alternate commands."
     depends_on:
     - pm_fix.blockers.b1_mypy
+    - pm_fix.blockers.verifier_remediation
     agent: gate-reviewer
   - id: pm_fix.blockers.verifier_remediation
     name: Remediate residual ruff E402 and mypy import/stub blockers
