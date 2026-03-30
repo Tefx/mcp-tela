@@ -8,7 +8,7 @@ Contract source: docs/CONFIRMED-SURFACE-CONTRACT.md
 
 Coverage:
 - MCP resource checks: tela.profiles must be a resource, not a tool
-- MCP tool checks: no current built-in tela.* MCP tools
+- MCP tool checks: one confirmed built-in tela.* MCP tool: tela_list_providers
 - CLI/HTTP checks: operator surfaces are not MCP built-ins
 - Instruction-merge checks: ordering and conflict handling
 - Negative assertions guarding unsupported surface claims
@@ -705,8 +705,9 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         assert _contract_kind("tela.connections") == "absent"
         assert "tela.connections" in contract_text
         assert (
-            "No built-in `tela.*` MCP tools are currently implemented." in design_text
-        )
+            "No built-in `tela.*` MCP tools are currently implemented"
+            not in design_text
+        ) or ("except `tela_list_providers`" in design_text)
 
     def test_tela_admin_not_approved_for_tela_audit(self) -> None:
         """tela_admin MUST NOT be used as current enforcement wording for
