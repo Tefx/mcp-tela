@@ -44923,7 +44923,7 @@ phases:
       \ with contract implementation)"
   - id: pm.p1_impl.gate
     name: P1 implementation gate review
-    status: pending
+    status: claimed
     description: 'P1 gate review. Independent reviewer verifies manifest and surface
       text.
 
@@ -44977,6 +44977,8 @@ phases:
     depends_on:
     - pm.p1_impl.manifest_and_surface
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T01:37:42.858268+00:00'
 - id: pm.p2_contract
   name: P2 Description Rewriting Contracts
   status: done
