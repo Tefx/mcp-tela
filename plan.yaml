@@ -45927,7 +45927,7 @@ phases:
     agent: gate-reviewer
   - id: pm_fix.blockers.verifier_remediation
     name: Remediate residual ruff E402 and mypy import/stub blockers
-    status: claimed
+    status: done
     description: 'After `pm_fix.blockers.b1_mypy` lands the three intended code fixes,
       clear the residual verifier blockers that prevent the strict seam commands from
       passing.
@@ -45988,6 +45988,24 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T17:29:36.761849+00:00'
+    done_at: '2026-03-30T17:30:49.612433+00:00'
+    evidence: 'Residual blockers addressed: none remaining in current state for seam
+      checks.
+
+      Files changed: none required.
+
+      Exact verification transcript:
+
+      - `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` =>
+      All checks passed.
+
+      - `uv run mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` =>
+      Success: no issues found in 2 source files.
+
+      - `uv run invar guard` => passed with static errors 0.
+
+      Outcome: seam-specific ruff/mypy checks pass with allowed mypy invocation form;
+      guard passes.'
 - id: pm_fix.conventions
   name: 'PM Fix: Convention Fixes (S4, S5, S6)'
   status: locked
