@@ -45761,3 +45761,8 @@ phases:
       ### Verdict
 
       All gate criteria met. Invar errors are pre-existing architectural debt.'
+- id: pm_fix.blockers
+  name: 'PM Fix: Blockers (B1 + mypy type errors)'
+  status: pending
+  depends_on:
+  - pm.final_gate
