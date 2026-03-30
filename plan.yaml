@@ -46338,7 +46338,7 @@ phases:
     agent: gate-reviewer
   - id: pm_fix.refactor.s3_repair_extract
     name: 'S3 repair: perform builtin helper extraction concretely'
-    status: claimed
+    status: done
     description: 'Fill in the missing extraction in `src/tela/shell/gateway.py` per
       the contract from completed step `pm_fix.refactor.s3_extract`.
 
@@ -46472,6 +46472,14 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T18:08:18.356285+00:00'
+    done_at: '2026-03-30T18:09:37.386710+00:00'
+    evidence: 'Implemented and validated A-strategy repair in src/tela/shell/gateway.py:
+      `_handle_builtin_call` helper exists (line ~455), `_call_tool` delegates via
+      single call (line ~440), scoped `@invar:allow shell_result` added with MCP callback
+      boundary rationale, B1 fields preserved (`denied_by`, `error_code`, `error_message`)
+      with `reason=` absent. Verification: `ruff check src/tela/shell/gateway.py`
+      pass; `uv run mypy src/tela/shell/gateway.py` pass; `uv run invar guard` pass;
+      `uv run pytest tests/shell/ -x` pass. Commit: e4abca93f4d7d084fd0ee1d39277d80a753e5579.'
 - id: pm_fix.docs
   name: 'PM Fix: Documentation Drift (S1, S2)'
   status: locked
