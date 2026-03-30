@@ -46814,13 +46814,13 @@ phases:
       consistency with builtin_tools implementation verified.'
 - id: pm_fix.gate
   name: 'PM Fix: Final Gate Review'
-  status: pending
+  status: in_progress
   depends_on:
   - pm_fix.docs
   steps:
   - id: pm_fix.gate.final
     name: 'Final gate: all PM fix issues resolved'
-    status: pending
+    status: claimed
     description: "Final consolidated gate review for all Provider Manifest gate remediation.\n\
       \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Touches audit trail\
       \ correctness (B1 — data loss risk)\n  - Shell convention changes affect callers\
@@ -46849,3 +46849,5 @@ phases:
 
       - no regressions introduced'
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T19:08:28.522299+00:00'
