@@ -46153,25 +46153,48 @@ phases:
   - id: pm_fix.conventions.gate
     name: 'Gate: verify convention fixes'
     status: pending
-    description: "Gate review: Verify S4, S5, S6 are resolved.\n\nreview_depth: STANDARD\n\
-      \nCheck:\n1. S4: No unused imports in tests/shell/test_builtin_tools.py (ruff\
-      \ F401 clean)\n2. S5: builtin_tools.py error path raises instead of returning\
-      \ []\n3. S5: Escape hatch budget assessed (ideally reduced)\n4. S6: get_attempted_servers\
-      \ and get_successful_servers return Result[set[str], str]\n5. S6: All callers\
-      \ properly unwrap Result\n6. Local type correctness for the S6 seam is proven\
-      \ with ONE of these exact commands:\n   - `mypy src/tela/shell/downstream.py\
-      \ src/tela/shell/builtin_tools.py`\n   - `uv run mypy src/tela/shell/downstream.py\
-      \ src/tela/shell/builtin_tools.py`\n7. Gate evidence pastes the exact mypy variant\
-      \ used and its output\n8. invar guard passes\n9. All tests pass"
-    verification: '- All three convention issues resolved
+    description: 'Gate review: Verify S4, S5, S6, and the downstream invar remediation
+      are resolved.
 
-      - Local mypy clean on affected S6 files using either bare mypy or `uv run mypy`
 
-      - Evidence includes the exact mypy command variant used plus its output
+      review_depth: STANDARD
 
-      - invar guard passes
 
-      - test suite passes'
+      Check:
+
+      1. S4: No unused imports in tests/shell/test_builtin_tools.py (ruff F401 clean)
+
+      2. S5: builtin_tools.py error path raises instead of returning []
+
+      3. S5: Escape hatch budget assessed (ideally reduced)
+
+      4. S6: get_attempted_servers and get_successful_servers return Result[set[str],
+      str]
+
+      5. S6: All callers properly unwrap Result
+
+      6. S6 local seam type correctness is proven with the exact command `uv run mypy
+      src/tela/shell/downstream.py src/tela/shell/builtin_tools.py`
+
+      7. S6 remediation owner closed the downstream invar blockers (`file_size`, `dead_export`
+      on `re_enumerate`) via `uv run invar guard`
+
+      8. Gate evidence pastes exact command outputs for mypy, invar guard, and targeted
+      regression tests
+
+      9. No unresolved blocker-class debt from the S6 seam intersects this phase gate'
+    verification: '- All convention issues resolved or explicitly remediated
+
+      - `uv run mypy src/tela/shell/downstream.py src/tela/shell/builtin_tools.py`
+      passes
+
+      - `uv run invar guard` no longer reports the targeted downstream blockers
+
+      - Regression tests covering the accessor seam pass
+
+      - Evidence includes exact command outputs'
+    refs:
+    - pm_fix.conventions.s6_invar_remediation
     depends_on:
     - pm_fix.conventions.s4_imports
     - pm_fix.conventions.s5_error
