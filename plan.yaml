@@ -46197,7 +46197,7 @@ phases:
     agent: gate-reviewer
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
-  status: in_progress
+  status: done
   depends_on:
   - pm_fix.blockers
   steps:
@@ -46267,7 +46267,7 @@ phases:
       pass, uv run invar guard pass, uv run pytest tests/shell/ -x pass.'
   - id: pm_fix.refactor.gate
     name: 'Gate: verify refactor'
-    status: claimed
+    status: done
     description: 'Gate review: Verify refactor after remediation.
 
 
@@ -46338,6 +46338,13 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T18:19:24.579357+00:00'
+    done_at: '2026-03-30T18:23:29.768984+00:00'
+    evidence: 'Gate verification on fresh branch passed: `_handle_builtin_call` exists
+      with substantive success/error logic; `_call_tool` delegates builtin branch
+      via single helper call; no duplicate inline builtin audit block remains; B1
+      fields preserved and `reason=` absent. Verification passed with `ruff check
+      src/tela/shell/gateway.py`, `uv run mypy src/tela/shell/gateway.py`, `uv run
+      invar guard`, `uv run pytest tests/shell/ -x`.'
   - id: pm_fix.refactor.s3_repair_extract
     name: 'S3 repair: perform builtin helper extraction concretely'
     status: done
