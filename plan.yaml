@@ -46718,7 +46718,7 @@ phases:
   steps:
   - id: pm_fix.docs.s1s2_update
     name: 'S1+S2: Update docs to acknowledge tela_list_providers'
-    status: claimed
+    status: done
     description: 'Multiple doc files incorrectly state "No built-in tela.* MCP tools".
 
 
@@ -46771,6 +46771,12 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T18:54:02.566065+00:00'
+    done_at: '2026-03-30T19:02:03.204048+00:00'
+    evidence: 'Updated docs across DESIGN.md, AGENT_INTERFACE.md, USAGE.md, and CONFIRMED-SURFACE-CONTRACT.md
+      to acknowledge `tela_list_providers`; removed ''no built-in tela.* MCP tools''
+      claims; added purpose/input/output-shape details aligned with builtin_tools
+      implementation. Verification greps: no residual no-built-in claims and expected
+      tela_list_providers mentions present. Commit: 292a86cf94d68a0aa7daf87c1021f6c8cd523fd4.'
   - id: pm_fix.docs.gate
     name: 'Gate: verify documentation fixes'
     status: pending
