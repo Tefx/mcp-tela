@@ -46205,6 +46205,7 @@ phases:
     depends_on:
     - pm_fix.conventions.s4_imports
     - pm_fix.conventions.s5_error
+    - pm_fix.conventions.s5_repair_raise
     - pm_fix.conventions.s6_result
     - pm_fix.conventions.s6_invar_remediation
     agent: gate-reviewer
