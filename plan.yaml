@@ -46028,7 +46028,7 @@ phases:
       guard passes.'
 - id: pm_fix.conventions
   name: 'PM Fix: Convention Fixes (S4, S5, S6)'
-  status: in_progress
+  status: done
   depends_on:
   - pm_fix.blockers
   steps:
@@ -46159,7 +46159,7 @@ phases:
       owned by new step `pm_fix.conventions.s6_invar_remediation`.'
   - id: pm_fix.conventions.gate
     name: 'Gate: verify convention fixes'
-    status: claimed
+    status: done
     description: 'Gate review: Verify S4, S5, S6, and the downstream invar remediation
       are resolved.
 
@@ -46211,6 +46211,12 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T18:50:53.352538+00:00'
+    done_at: '2026-03-30T18:53:15.849377+00:00'
+    evidence: 'Gate passed: S4 imports clean, S5 now raises RuntimeError on config
+      failure (no [] fallback), S6 Result-wrapper seam and caller unwrapping verified.
+      Verification outputs: `uv run mypy src/tela/shell/downstream.py src/tela/shell/builtin_tools.py`
+      passed, `uv run invar guard` passed with static errors=0, `uv run pytest tests/shell/
+      -x` passed (444).'
   - id: pm_fix.conventions.s6_invar_remediation
     name: 'S6 follow-up: resolve invar blockers in downstream seam'
     status: done
@@ -46705,7 +46711,7 @@ phases:
       `uv run pytest tests/shell/ -x` pass. Commit: e4abca93f4d7d084fd0ee1d39277d80a753e5579.'
 - id: pm_fix.docs
   name: 'PM Fix: Documentation Drift (S1, S2)'
-  status: locked
+  status: pending
   depends_on:
   - pm_fix.conventions
   - pm_fix.refactor
