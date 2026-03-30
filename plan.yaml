@@ -45890,3 +45890,44 @@ phases:
 
       - no needed imports accidentally removed'
     agent: python-executor
+  - id: pm_fix.conventions.s5_error
+    name: 'S5: Replace silent error swallowing with RuntimeError'
+    status: pending
+    description: 'File: src/tela/shell/builtin_tools.py:47-49
+
+      Issue: `return []` when `get_runtime_config()` fails silently masks config errors.
+
+
+      Fix: Replace `return []` with `raise RuntimeError("Failed to load runtime config")`
+      (or similar) so the _call_tool error handler in gateway.py can catch and audit
+      it properly.
+
+
+      After this fix, the escape hatch at line 29 (`@invar:allow shell_result`) may
+      no longer be needed since the function will raise on error instead of returning
+      a bare value. Check whether removing it brings the escape hatch budget closer
+      to the 19-hatch limit.
+
+
+      Grep hint: `grep -n ''return \[\]'' src/tela/shell/builtin_tools.py`
+
+      Grep hint: `grep -n ''@invar:allow'' src/tela/shell/builtin_tools.py`
+
+
+      ## Verification
+
+      - The error path now raises instead of silently returning []
+
+      - The _call_tool handler in gateway.py already catches exceptions in its try/except
+
+      - If escape hatch removed: `uv run invar guard` passes and hatch count is reduced
+
+      - `uv run pytest tests/shell/test_builtin_tools.py -x` passes'
+    verification: '- Error path raises RuntimeError instead of returning []
+
+      - Escape hatch budget assessed (removed if no longer needed)
+
+      - invar guard passes
+
+      - existing tests pass'
+    agent: python-executor
