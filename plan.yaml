@@ -46820,7 +46820,7 @@ phases:
   steps:
   - id: pm_fix.gate.final
     name: 'Final gate: all PM fix issues resolved'
-    status: pending
+    status: claimed
     description: "Final consolidated gate review for all Provider Manifest gate remediation.\n\
       \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Touches audit trail\
       \ correctness (B1 — data loss risk)\n  - Shell convention changes affect callers\
@@ -46851,6 +46851,8 @@ phases:
     depends_on:
     - pm_fix.gate.fix_surface_contract_test
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T19:37:19.903727+00:00'
   - id: pm_fix.gate.fix_surface_contract_test
     name: Align surface contract test with approved provider docs
     status: done
