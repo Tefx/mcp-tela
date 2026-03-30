@@ -46267,7 +46267,7 @@ phases:
       pass, uv run invar guard pass, uv run pytest tests/shell/ -x pass.'
   - id: pm_fix.refactor.gate
     name: 'Gate: verify refactor'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify refactor after remediation.
 
 
@@ -46336,6 +46336,8 @@ phases:
     - pm_fix.refactor.s3_extract
     - pm_fix.refactor.s3_repair_extract
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-30T18:19:24.579357+00:00'
   - id: pm_fix.refactor.s3_repair_extract
     name: 'S3 repair: perform builtin helper extraction concretely'
     status: done
