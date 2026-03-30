@@ -46297,8 +46297,15 @@ phases:
 
       6. Evidence includes exact helper location and delegating call-site location
 
-      7. `ruff`, `mypy`, `uv run invar guard`, and `uv run pytest tests/shell/ -x`
-      all pass'
+      7. `ruff`, gateway type correctness, `uv run invar guard`, and `uv run pytest
+      tests/shell/ -x` all pass
+
+      8. Gateway type check may use EITHER `mypy src/tela/shell/gateway.py` OR `uv
+      run mypy src/tela/shell/gateway.py`; if bare `mypy` is blocked only by pre-existing
+      external missing stubs/import-not-found for `mcp`, `starlette`, or `yaml`, the
+      `uv run` variant is the accepted environment-correct seam check
+
+      9. Evidence must paste the exact mypy variant used and its output'
     verification: '- Helper exists in `src/tela/shell/gateway.py` and is non-stub
       logic
 
@@ -46310,7 +46317,21 @@ phases:
 
       - Evidence includes helper and call-site file:line locations
 
-      - ruff, mypy, invar guard, and shell tests pass'
+      - `ruff check src/tela/shell/gateway.py` passes
+
+      - Gateway type check uses EITHER `mypy src/tela/shell/gateway.py` OR `uv run
+      mypy src/tela/shell/gateway.py`
+
+      - Evidence pastes the exact mypy command variant used and its output
+
+      - Acceptance requires no local type errors in `src/tela/shell/gateway.py`; if
+      bare `mypy` is blocked by pre-existing external missing stubs/import-not-found
+      for `mcp`, `starlette`, or `yaml`, the `uv run mypy ...` variant is allowed
+      instead
+
+      - `uv run invar guard` passes
+
+      - `uv run pytest tests/shell/ -x` passes'
     depends_on:
     - pm_fix.refactor.s3_extract
     - pm_fix.refactor.s3_repair_extract
