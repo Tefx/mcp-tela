@@ -46711,7 +46711,7 @@ phases:
       `uv run pytest tests/shell/ -x` pass. Commit: e4abca93f4d7d084fd0ee1d39277d80a753e5579.'
 - id: pm_fix.docs
   name: 'PM Fix: Documentation Drift (S1, S2)'
-  status: in_progress
+  status: done
   depends_on:
   - pm_fix.conventions
   - pm_fix.refactor
@@ -46779,7 +46779,7 @@ phases:
       tela_list_providers mentions present. Commit: 292a86cf94d68a0aa7daf87c1021f6c8cd523fd4.'
   - id: pm_fix.docs.gate
     name: 'Gate: verify documentation fixes'
-    status: claimed
+    status: done
     description: 'Gate review: Verify documentation drift is resolved.
 
 
@@ -46807,9 +46807,14 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T19:02:35.093384+00:00'
+    done_at: '2026-03-30T19:07:42.318287+00:00'
+    evidence: 'Documentation gate passed: removed residual ''no built-in tela.* MCP
+      tools'' claims; documented tela_list_providers across DESIGN.md, AGENT_INTERFACE.md,
+      USAGE.md, and CONFIRMED-SURFACE-CONTRACT.md with purpose/input/output shape;
+      consistency with builtin_tools implementation verified.'
 - id: pm_fix.gate
   name: 'PM Fix: Final Gate Review'
-  status: locked
+  status: pending
   depends_on:
   - pm_fix.docs
   steps:
