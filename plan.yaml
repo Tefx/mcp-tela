@@ -46267,7 +46267,7 @@ phases:
       pass, uv run invar guard pass, uv run pytest tests/shell/ -x pass.'
   - id: pm_fix.refactor.gate
     name: 'Gate: verify refactor'
-    status: claimed
+    status: pending
     description: 'Gate review: Verify S3 extraction is correct.
 
 
@@ -46300,8 +46300,6 @@ phases:
     depends_on:
     - pm_fix.refactor.s3_extract
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-03-30T17:43:26.384856+00:00'
 - id: pm_fix.docs
   name: 'PM Fix: Documentation Drift (S1, S2)'
   status: locked
