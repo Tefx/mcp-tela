@@ -45927,7 +45927,7 @@ phases:
     agent: gate-reviewer
   - id: pm_fix.blockers.verifier_remediation
     name: Remediate residual ruff E402 and mypy import/stub blockers
-    status: pending
+    status: claimed
     description: 'After `pm_fix.blockers.b1_mypy` lands the three intended code fixes,
       clear the residual verifier blockers that prevent the strict seam commands from
       passing.
@@ -45986,6 +45986,8 @@ phases:
     depends_on:
     - pm_fix.blockers.b1_mypy
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T17:29:36.761849+00:00'
 - id: pm_fix.conventions
   name: 'PM Fix: Convention Fixes (S4, S5, S6)'
   status: locked
