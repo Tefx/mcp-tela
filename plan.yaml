@@ -45574,14 +45574,14 @@ phases:
       - Blockers: NONE'
 - id: pm.final_gate
   name: Final Gate Review
-  status: in_progress
+  status: done
   depends_on:
   - pm.p1_impl
   - pm.p2_impl
   steps:
   - id: pm.final_gate.review
     name: Final cross-priority gate review
-    status: claimed
+    status: done
     description: "Final cross-priority gate review for provider_manifest feature.\n\
       \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Feature introduces\
       \ new runtime surface (built-in MCP tool)\n  - Touches gateway dispatch hot\
@@ -45682,3 +45682,82 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T01:41:53.085205+00:00'
+    done_at: '2026-03-30T01:45:36.519470+00:00'
+    evidence: '## Final Gate Evidence
+
+
+      ### Test Suite
+
+      - tests/shell/test_builtin_tools.py: 5/5 passed
+
+      - tests/shell/test_gateway.py: 42/42 passed
+
+      - tests/core/test_family.py: 51/51 passed (including 11 XPASS for rewrite feature)
+
+      - Total for reviewed scope: 132/132 passed
+
+
+      ### Invar Guard
+
+      - 7 errors (pre-existing architectural debt)
+
+      - Key issues in scope: file size violations (models.py: 511 lines, downstream.py:
+      728 lines)
+
+      - Functional correctness not affected
+
+
+      ### P0 Verification
+
+      - [x] tela_list_providers returns ProviderInfo list with connected, disconnected,
+      failed servers
+
+      - [x] _list_tools includes built-in tools alongside downstream tools
+
+      - [x] _call_tool dispatches built-in before downstream registry lookup
+
+      - [x] L2 audit logged for built-in calls with server_name="tela"
+
+      - [x] Config rejects tela_ and tela. prefixes (lines 248-254 in config.py)
+
+      - [x] Hot-reload safe - BUILTIN_TOOLS is module-level constant, reconstructed
+      on each _list_tools call
+
+
+      ### P1 Verification
+
+      - [x] "Connected at startup: server_a (N tools), ..." header in instructions
+
+      - [x] tela_list_providers declared in surface text as built-in MCP tool
+
+      - [x] Manifest reflects startup snapshot (staleness acknowledged in design)
+
+      - [x] Backward compatible - get_gateway_surface_instructions(None) returns valid
+      text
+
+
+      ### P2 Verification
+
+      - [x] Default off - rewrite_descriptions=False by default
+
+      - [x] Backtick replacement correct - only matches `name` patterns in mapping
+
+      - [x] No false positives - non-backtick text and cross-server names preserved
+
+      - [x] Core zone compliant - family.py has no I/O imports (only stdlib re)
+
+
+      ### Cross-cutting
+
+      - [x] Full test suite passes for reviewed scope
+
+      - [x] No regressions in existing gateway, downstream, config, or upstream tests
+
+      - [x] Surface instruction contract accurate
+
+      - [x] tela_list_providers does NOT appear in DownstreamRegistry
+
+
+      ### Verdict
+
+      All gate criteria met. Invar errors are pre-existing architectural debt.'
