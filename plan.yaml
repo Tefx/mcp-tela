@@ -46202,3 +46202,35 @@ phases:
   status: locked
   depends_on:
   - pm_fix.docs
+  steps:
+  - id: pm_fix.gate.final
+    name: 'Final gate: all PM fix issues resolved'
+    status: pending
+    description: "Final consolidated gate review for all Provider Manifest gate remediation.\n\
+      \nreview_depth: THOROUGH\nreview_depth_rationale: |\n  - Touches audit trail\
+      \ correctness (B1 — data loss risk)\n  - Shell convention changes affect callers\
+      \ across modules (S6)\n  - Refactor in high-traffic gateway code path (S3)\n\
+      \n## All issues from original gate review:\n- B1: EnforcementResult invalid\
+      \ kwarg (BLOCKER)\n- S1+S2: Documentation drift (SHOULD_FIX)\n- S3: Duplicated\
+      \ audit wiring (SHOULD_FIX)\n- S4: Unused imports (SHOULD_FIX)\n- S5: Silent\
+      \ error swallowing (SHOULD_FIX)\n- S6: Shell return convention violation (SHOULD_FIX)\n\
+      - Mypy type errors in builtin_tools.py and gateway.py\n\n## Verification Protocol\n\
+      1. Run full verification suite:\n   - `ruff check src/tela/shell/ tests/shell/`\n\
+      \   - `mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py src/tela/shell/downstream.py`\n\
+      \   - `uv run invar guard`\n   - `uv run pytest tests/ -x`\n2. Grep audits:\n\
+      \   - `grep -rn 'reason=' src/tela/shell/gateway.py` — no invalid EnforcementResult\
+      \ kwargs\n   - `grep -rn 'No.*built-in.*tela.*MCP tool' docs/` — no stale doc\
+      \ claims\n   - `grep -rn 'return \\[\\]' src/tela/shell/builtin_tools.py` —\
+      \ no silent error swallowing\n3. Check escape hatch budget: `grep -c '@invar:allow'\
+      \ src/tela/shell/builtin_tools.py`\n4. Verify behavioral preservation of S3\
+      \ refactor"
+    verification: '- ALL 7 issues (B1, S1-S6) confirmed resolved
+
+      - ruff, mypy, invar guard all pass
+
+      - full test suite passes
+
+      - escape hatch budget assessed
+
+      - no regressions introduced'
+    agent: gate-reviewer
