@@ -46128,7 +46128,7 @@ phases:
 
       IMPORTANT: After changing the return type, update ALL callers:
 
-      - `grep -rn ''get_attempted_servers\|get_successful_servers'' src/''
+      - `grep -rn ''get_attempted_servers\|get_successful_servers'' src/`
 
       - Each caller must now unwrap `.value` from the Result
 
