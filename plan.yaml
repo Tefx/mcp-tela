@@ -46267,6 +46267,136 @@ phases:
       invar guard` passed with errors=0 (warnings only), `uv run mypy src/tela/shell/downstream.py
       src/tela/shell/builtin_tools.py` passed, `uv run pytest tests/shell/ -x` passed
       (443). Commit: 2edcfd2.'
+  - id: pm_fix.conventions.s5_repair_raise
+    name: 'S5 repair: enforce RuntimeError on builtin tool config failure'
+    status: pending
+    description: 'Fix ALL blocker behavior for the missing S5 artifact in `src/tela/shell/builtin_tools.py`.
+
+
+      This step exists because `pm_fix.conventions.s5_error` was marked complete but
+      the required artifact is absent: the config-failure path still returns `[]`
+      instead of raising `RuntimeError`.
+
+
+      File: `src/tela/shell/builtin_tools.py`
+
+      Primary touch path: `src/tela/shell/builtin_tools.py`
+
+      Likely harness refs: `tests/shell/test_builtin_tools.py`, any targeted builtin-tools
+      regression tests covering config-load failure paths
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: the documented S5 error-handling contract was not actually applied
+      at the config-failure branch in builtin tool loading
+
+      - Symptom: callers observe silent empty-list fallback (`[]`) instead of the
+      required raised `RuntimeError`
+
+      - Why this fix is not surface-level: it must replace the fallback behavior at
+      the real failing branch and prove the branch with targeted regression coverage,
+      not just adjust comments or gate evidence
+
+
+      ## Required behavior
+
+      - Replace the `[]` fallback on config failure with a concrete `RuntimeError`
+      raise at the real failure path
+
+      - Preserve non-error success behavior unless a targeted regression shows the
+      contract requires otherwise
+
+      - Search for sibling silent-fallback paths in this builtin-tools error seam
+      and either align them or document why they are out of scope for this S5 repair
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Verification obligations
+
+      - Add or update targeted regression tests proving the config-failure path raises
+      `RuntimeError`
+
+      - Provide exact targeted test command(s) for builtin-tools failure-path coverage
+
+      - Run `uv run invar guard` and include exact output relevant to this seam
+
+      - Evidence must show both the main path and the highest-risk failure path for
+      the repaired branch
+
+      '
+    verification: '- Targeted builtin-tools regression tests covering config failure
+      pass and demonstrate `RuntimeError` is raised instead of returning `[]`
+
+      - Exact command output is pasted for the targeted tests
+
+      - `uv run invar guard` is run and exact output pasted
+
+      - Evidence confirms the repaired branch in `src/tela/shell/builtin_tools.py`
+      no longer silently falls back to `[]` on config failure'
+    evidence_template: '## S5 Repair Evidence
+
+
+      **Target file**: `src/tela/shell/builtin_tools.py`
+
+      **Original missing artifact**: config-failure branch still returned `[]`
+
+
+      ### Commands executed
+
+      ```bash
+
+      <targeted test command(s)>
+
+      uv run invar guard
+
+      ```
+
+
+      ### Targeted test output
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Invar output
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Failure-path proof
+
+      - Config-failure trigger: <how exercised>
+
+      - Observed result: `RuntimeError` raised
+
+      - Prior silent fallback removed: yes|no
+
+
+      ### Sibling search
+
+      - Additional silent-fallback paths checked: <list>
+
+      - Remaining out-of-scope paths: <list or none>
+
+      '
+    depends_on:
+    - pm_fix.conventions.s5_error
+    agent: python-executor
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
   status: done
