@@ -46034,7 +46034,7 @@ phases:
   steps:
   - id: pm_fix.conventions.s4_imports
     name: 'S4: Remove unused imports in test_builtin_tools.py'
-    status: claimed
+    status: done
     description: 'File: tests/shell/test_builtin_tools.py
 
       Issue: 10 unused imports (lines 6-37)
@@ -46060,6 +46060,10 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T17:38:14.520584+00:00'
+    done_at: '2026-03-30T17:41:59.790538+00:00'
+    evidence: Removed 10 unused imports from tests/shell/test_builtin_tools.py via
+      ruff fix; verified `ruff check tests/shell/test_builtin_tools.py` passes and
+      `uv run pytest tests/shell/test_builtin_tools.py -x` passes (5/5).
   - id: pm_fix.conventions.s5_error
     name: 'S5: Replace silent error swallowing with RuntimeError'
     status: claimed
