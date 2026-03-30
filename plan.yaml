@@ -45244,7 +45244,7 @@ phases:
   steps:
   - id: pm.p2_impl.rewrite_logic
     name: Implement description rewriting
-    status: claimed
+    status: done
     description: "Fill in stub bodies for description rewriting per contract from\
       \ step pm.p2_contract.rewrite_desc.\n\nUPSTREAM ARTIFACTS (from contract step):\n\
       \  - src/tela/core/family.py — rewrite_tool_description signature and @pre/@post\
@@ -45361,6 +45361,28 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-30T01:33:38.156852+00:00'
+    done_at: '2026-03-30T01:37:28.538919+00:00'
+    evidence: "## Implementation Evidence\n\n**rewrite_tool_description body**:\n\
+      ```python\ndef _replacer(match: re.Match) -> str:\n    name = match.group(1)\n\
+      \    if name in raw_names_to_exposed:\n        return f\"`{raw_names_to_exposed[name]}`\"\
+      \n    return match.group(0)\n\nreturn re.sub(r\"`([^`]+)`\", _replacer, description)\n\
+      ```\n\n**resolve_tools rewrite section**:\n```python\n# Description rewriting\
+      \ (opt-in per server)\nif server_config.rewrite_descriptions and server_config.tool_prefix\
+      \ is not None:\n    raw_to_exposed = {rt.raw_name: rt.name for rt in resolved\
+      \ if rt.raw_name is not None}\n    for i, rt in enumerate(resolved):\n     \
+      \   if rt.description:\n            new_desc = rewrite_tool_description(rt.description,\
+      \ raw_to_exposed)\n            if new_desc != rt.description:\n            \
+      \    resolved[i] = rt.model_copy(update={\"description\": new_desc})\n\nreturn\
+      \ resolved\n```\n\n**Doctest verification**: All 3 doctests pass\n- resolve_family\
+      \ PASSED\n- resolve_tools PASSED\n- rewrite_tool_description PASSED\n\n**Edge\
+      \ cases verified**:\n- No false positives on non-backtick text\n- Cross-server\
+      \ name not replaced (only names in mapping)\n- Multiple occurrences replaced\n\
+      - Mixed: known replaced, unknown left unchanged\n\n**Verification**:\n- [x]\
+      \ rewrite_tool_description uses regex for backtick matching\n- [x] Only same-server\
+      \ names replaced (mapping-based)\n- [x] No false positives on non-backtick text\n\
+      - [x] resolve_tools calls rewrite when rewrite_descriptions=True and tool_prefix\
+      \ is not None\n- [x] Contract @pre/@post preserved\n- [x] Doctests pass\n- [x]\
+      \ invar guard passes\n- [x] No regressions: 186 tests passed in tests/core/"
   - id: pm.p2_impl.gate
     name: P2 implementation gate review
     status: pending
