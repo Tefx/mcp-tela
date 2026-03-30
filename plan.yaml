@@ -46114,7 +46114,7 @@ phases:
       -x` passed (5/5).
   - id: pm_fix.conventions.s6_result
     name: 'S6: Wrap get_attempted/successful_servers in Result'
-    status: claimed
+    status: pending
     description: "Files: src/tela/shell/downstream.py:614,628\nIssue: `get_attempted_servers()`\
       \ and `get_successful_servers()` return bare `set[str]` instead of `Result[set[str],\
       \ str]`, violating the Shell return convention used by all other public accessors\
@@ -46143,8 +46143,6 @@ phases:
 
       - existing tests pass'
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-03-30T18:25:09.804693+00:00'
   - id: pm_fix.conventions.gate
     name: 'Gate: verify convention fixes'
     status: pending
