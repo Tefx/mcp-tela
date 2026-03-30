@@ -1,14 +1,4 @@
-"""Downstream server management.
-
-Contract boundary notes:
-- Startup coordination stays here: transport open/close, session swaps,
-  connect_all, and full-registry bootstrap.
-- Event-entry adapters stay here: downstream disconnect/reconnect signals,
-  tools/list_changed notifications, watcher-driven reload hooks, and manual
-  re-enumeration entrypoints.
-- The single-server convergence kernel lives behind reload contracts and must
-  not absorb connect_all or notify/audit policy.
-"""
+"""Downstream server management and runtime coordination boundaries."""
 
 from __future__ import annotations
 
@@ -366,36 +356,7 @@ async def connect_all(
     servers: dict[str, ServerConfig],
     tool_lists: dict[str, list[dict]] | None = None,
 ) -> Result[None, str]:
-    """Connect to all configured downstream servers and build tool registry.
-
-    Enumerates tools, resolves families and posture, and runs conflict detection.
-    Fails fast on tool name conflicts.
-
-    Contract role: startup coordinator, not part of the single-server
-    convergence kernel.
-
-    When ``tool_lists`` is provided, it is treated as test-only scaffolding and
-    bypasses transport/session setup. Production runtime leaves ``tool_lists``
-    unset and enumerates tools from real downstream MCP sessions.
-
-    Examples:
-        >>> import asyncio
-        >>> from tela.core.models import ServerConfig
-        >>> cfg = {"fs": ServerConfig(name="fs", command="cmd")}
-        >>> tools = {"fs": [{"name": "read_file", "inputSchema": {}}]}
-        >>> r = asyncio.run(connect_all(cfg, tool_lists=tools))
-        >>> r.is_ok
-        True
-        >>> get_registry().get_tool_server("read_file")
-        'fs'
-
-    Args:
-        servers: Server name to configuration mapping.
-        tool_lists: Optional pre-enumerated tool lists for test scaffolding.
-
-    Returns:
-        ``Result[None, str]`` on success, or error string if conflicts detected.
-    """
+    """Connect all servers, register resolved tools, and fail on conflicts."""
 
     async with _registry_lock:
         await _close_all_clients_locked()
@@ -418,7 +379,6 @@ async def connect_all(
         if tool_lists is not None:
             for server_name in servers:
                 _attempted_servers.add(server_name)
-                # tool_lists provided - server is successful only if it has tool_lists entry
                 if server_name in tool_lists:
                     _successful_servers.add(server_name)
                 connected[server_name] = _ConnectedServerData(
@@ -436,7 +396,6 @@ async def connect_all(
             server_names_list = list(servers.keys())
             for idx, startup_result in enumerate(startup_results):
                 if startup_result.is_err:
-                    # Server was attempted but failed - mark as attempted before aborting
                     _attempted_servers.add(server_names_list[idx])
                     await _close_client_handles(temporary_handles)
                     _registry.clear()
@@ -458,7 +417,6 @@ async def connect_all(
             all_resolved[server_name] = resolved
             _registry.register(server_name, resolved)
 
-        # In non-tool_lists mode, all servers that reached this point connected successfully
         if tool_lists is None:
             for server_name in servers:
                 _successful_servers.add(server_name)
@@ -476,19 +434,7 @@ async def connect_all(
 
 
 async def disconnect_all() -> Result[None, str]:
-    """Disconnect all downstream servers and clear the registry.
-
-    Examples:
-        >>> import asyncio
-        >>> r = asyncio.run(disconnect_all())
-        >>> r.is_ok
-        True
-        >>> get_registry().get_all_tools()
-        {}
-
-    Returns:
-        ``Result[None, str]`` always succeeds.
-    """
+    """Disconnect all servers and clear registry and connection tracking."""
 
     async with _registry_lock:
         await _close_all_clients_locked()
@@ -503,24 +449,7 @@ async def call_tool(
     tool_name: str,
     arguments: dict,
 ) -> Result[dict, TelaError]:
-    """Forward a tool call to a specific downstream server.
-
-    Uses a connected downstream MCP client session for the target server.
-
-    Examples:
-        >>> import asyncio
-        >>> r = asyncio.run(call_tool("srv", "tool", {}))
-        >>> isinstance(r.is_ok, bool)
-        True
-
-    Args:
-        server_name: Target downstream server name.
-        tool_name: Tool to invoke.
-        arguments: Tool arguments (with _meta already stripped).
-
-    Returns:
-        ``Result[dict, TelaError]`` with downstream call payload or TelaError.
-    """
+    """Call one downstream tool on a connected server session."""
 
     async with _registry_lock:
         client = _clients.get(server_name)
@@ -572,95 +501,35 @@ async def call_tool(
 
 
 def get_server_instructions() -> Result[dict[str, str], str]:
-    """Return collected server instructions from downstream MCP servers.
-
-    Each key is the server name, each value is the instructions string
-    returned by the server during MCP initialize.
-
-    Examples:
-        >>> get_server_instructions().value
-        {}
-
-    Returns:
-        Result with server name to instructions mapping (only servers that provided instructions).
-    """
+    """Return MCP initialize instructions keyed by server name."""
 
     return Result(value=dict(_server_instructions))
 
 
 async def get_connected_server_names() -> Result[set[str], str]:
-    """Return names of servers with active downstream client handles.
-
-    Reads from the module-level `_clients` dict (line 40) which maps
-    server_name -> _ClientHandle for connected sessions.
-
-    This is distinct from get_all_tools() which returns the registry;
-    this accessor reports connection-level truth (which servers have
-    live transport handles), not tool-registration truth.
-
-    Examples:
-        >>> import asyncio
-        >>> r = asyncio.run(get_connected_server_names())
-        >>> isinstance(r.value, set)
-        True
-
-    Returns:
-        Result with set of server names that have active client handles.
-    """
+    """Return names of servers that currently have active client handles."""
     async with _registry_lock:
         return Result(value=set(_clients.keys()))
 
 
-def get_attempted_servers() -> set[str]:
-    """Return names of servers that were attempted during connection.
-
-    This set tracks which servers were part of a connection attempt,
-    regardless of whether they succeeded or failed. Used to distinguish
-    between "disconnected" (never attempted) and "failed" (attempted but
-    did not succeed) server states.
-
-    Returns:
-        Set of server names that were attempted during connection.
-    """
-    return set(_attempted_servers)
+def get_attempted_servers() -> Result[set[str], str]:
+    """Return server names included in the most recent connect attempt."""
+    return Result(value=set(_attempted_servers))
 
 
-def get_successful_servers() -> set[str]:
-    """Return names of servers that successfully connected.
-
-    Returns:
-        Set of server names that successfully connected.
-    """
-    return set(_successful_servers)
+def get_successful_servers() -> Result[set[str], str]:
+    """Return server names that connected successfully."""
+    return Result(value=set(_successful_servers))
 
 
 def get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:
-    """Return all resolved tools grouped by server name.
-
-    Examples:
-        >>> get_all_tools().value
-        {}
-
-    Returns:
-        Server name to resolved tool list mapping.
-    """
+    """Return resolved tools grouped by server name."""
 
     return Result(value=_registry.get_all_tools())
 
 
 def get_tool_server(tool_name: str) -> Result[str | None, str]:
-    """Look up which server owns a given tool name.
-
-    Examples:
-        >>> get_tool_server("nonexistent").value is None
-        True
-
-    Args:
-        tool_name: Tool to look up.
-
-    Returns:
-        Server name or None if not found.
-    """
+    """Return the owning server name for an exposed tool, if present."""
 
     return Result(value=_registry.get_tool_server(tool_name))
 
@@ -669,23 +538,7 @@ def get_tool_server(tool_name: str) -> Result[str | None, str]:
 async def re_enumerate(
     server_name: str,
 ) -> Result[list[ResolvedTool], str]:
-    """Re-enumerate tools for a specific server (hot reload).
-
-    Re-lists tools over the connected downstream session and refreshes the
-    resolved tool registry for that server.
-
-    Examples:
-        >>> import asyncio
-        >>> r = asyncio.run(re_enumerate("srv"))
-        >>> isinstance(r.is_ok, bool)
-        True
-
-    Args:
-        server_name: Server to re-enumerate.
-
-    Returns:
-        ``Result[list[ResolvedTool], str]`` with updated resolved tool list.
-    """
+    """Re-enumerate and re-register tools for a single connected server."""
 
     from tela.shell.gateway_runtime import get_runtime_config
 

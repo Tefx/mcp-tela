@@ -50,10 +50,14 @@ async def handle_list_providers() -> list["ProviderInfo"]:
     config = config_result.value
 
     # Get successful servers (those that connected successfully)
-    successful = get_successful_servers()
+    successful_result = get_successful_servers()
+    successful = (
+        successful_result.value if successful_result.is_ok else set()
+    ) or set()
 
     # Get attempted servers (those that were part of a connection attempt)
-    attempted = get_attempted_servers()
+    attempted_result = get_attempted_servers()
+    attempted = (attempted_result.value if attempted_result.is_ok else set()) or set()
 
     # Get all tools from registry
     all_tools_result = get_all_tools()

@@ -36,6 +36,7 @@ from tela.shell.downstream import (
     connect_all,
     disconnect_all,
     get_registry,
+    re_enumerate,
 )
 
 
@@ -108,6 +109,8 @@ CONVERGENCE_BEHAVIORAL_NOTES: tuple[str, ...] = (
 NotifyCallback = Callable[[str], Awaitable[None]]  # tools_digest -> None
 
 _notify_callback: NotifyCallback | None = None
+# Manual re-enumeration entrypoint consumed by watcher/runtime adapters.
+_manual_reenumerate_adapter = re_enumerate
 
 
 @dataclass(frozen=True)
