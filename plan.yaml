@@ -45763,7 +45763,7 @@ phases:
       All gate criteria met. Invar errors are pre-existing architectural debt.'
 - id: pm_fix.blockers
   name: 'PM Fix: Blockers (B1 + mypy type errors)'
-  status: in_progress
+  status: done
   depends_on:
   - pm.final_gate
   steps:
@@ -45857,7 +45857,7 @@ phases:
       Residual blockers explicitly handed off to pm_fix.blockers.verifier_remediation.'
   - id: pm_fix.blockers.gate
     name: 'Gate: verify blockers fixed'
-    status: claimed
+    status: done
     description: 'Gate review: verify both the primary blocker-fix step and the residual
       verifier-remediation step are complete, and verify the strict seam commands
       succeed with the allowed mypy invocation forms.
@@ -45927,6 +45927,24 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-30T17:31:13.238469+00:00'
+    done_at: '2026-03-30T17:36:56.857264+00:00'
+    evidence: 'step_intent: gate_verify; expected_result: green; observed_result:
+      green; failure_alignment: none.
+
+      Prerequisites confirmed complete: pm_fix.blockers.b1_mypy and pm_fix.blockers.verifier_remediation.
+
+      Code checks: EnforcementResult fields fixed in gateway.py; all_tools_result
+      narrowing in builtin_tools.py; connected_names narrowing in gateway.py.
+
+      Verification outputs captured:
+
+      - `ruff check src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` =>
+      All checks passed.
+
+      - `uv run mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py` =>
+      Success: no issues found in 2 source files (allowed variant).
+
+      - `uv run invar guard` => passed.'
   - id: pm_fix.blockers.verifier_remediation
     name: Remediate residual ruff E402 and mypy import/stub blockers
     status: done
@@ -46010,7 +46028,7 @@ phases:
       guard passes.'
 - id: pm_fix.conventions
   name: 'PM Fix: Convention Fixes (S4, S5, S6)'
-  status: locked
+  status: pending
   depends_on:
   - pm_fix.blockers
   steps:
@@ -46164,7 +46182,7 @@ phases:
     agent: gate-reviewer
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
-  status: locked
+  status: pending
   depends_on:
   - pm_fix.blockers
   steps:
