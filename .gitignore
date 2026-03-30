@@ -39,7 +39,6 @@ htmlcov/
 # State directory (local development)
 .tela/
 
-.agents/
 .gemini/
 .claude/
 .opencode/
