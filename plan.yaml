@@ -44869,13 +44869,13 @@ phases:
     agent: gate-reviewer
 - id: pm.p2_contract
   name: P2 Description Rewriting Contracts
-  status: pending
+  status: in_progress
   depends_on:
   - pm.p0_verify
   steps:
   - id: pm.p2_contract.rewrite_desc
     name: Description rewriting contract
-    status: pending
+    status: claimed
     description: "Add rewrite_descriptions field to ServerConfig and define contract\
       \ for description rewriting in resolve_tools().\n\nStep type: contract\nContract\
       \ purity: ENFORCED\nContract outputs: signatures, type_defs, stubs\n\n## Deliverable\
@@ -44966,6 +44966,8 @@ phases:
     - src/tela/core/models.py
     - src/tela/core/family.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T01:05:15.223982+00:00'
   - id: pm.p2_contract.gate
     name: P2 contract gate review
     status: pending
