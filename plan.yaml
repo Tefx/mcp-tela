@@ -46210,7 +46210,7 @@ phases:
     agent: gate-reviewer
   - id: pm_fix.conventions.s6_invar_remediation
     name: 'S6 follow-up: resolve invar blockers in downstream seam'
-    status: pending
+    status: claimed
     description: "Fix ALL invar blockers reported after `pm_fix.conventions.s6_result`\
       \ for `src/tela/shell/downstream.py`.\n\nsymbolic_testing: true\nstep_type:\
       \ implementation\nverification_scope: local-check\nprotects_gates:\n  - pm_fix.conventions.gate\n\
@@ -46257,6 +46257,8 @@ phases:
     depends_on:
     - pm_fix.conventions.s6_result
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-30T18:32:08.192735+00:00'
 - id: pm_fix.refactor
   name: 'PM Fix: Extract _handle_builtin_call (S3)'
   status: done
