@@ -56,8 +56,6 @@ from tela.shell.surface_instructions import (
     get_gateway_surface_instructions,
 )
 
-# Module-level manifest snapshot built at prepare_startup time.
-_startup_manifest: str | None = None
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
 from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
@@ -85,6 +83,9 @@ from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backwar
     set_upstream_server,
     with_upstream_server,
 )
+
+# Module-level manifest snapshot built at prepare_startup time.
+_startup_manifest: str | None = None
 
 
 @dataclass(frozen=True)
