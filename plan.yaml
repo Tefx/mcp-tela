@@ -45827,3 +45827,34 @@ phases:
 
       - grep for ''all_tools_result.value'' in builtin_tools.py shows proper narrowing'
     agent: python-executor
+  - id: pm_fix.blockers.gate
+    name: 'Gate: verify blockers fixed'
+    status: pending
+    description: 'Gate review: Verify B1 and mypy type errors are resolved.
+
+
+      review_depth: STANDARD
+
+
+      Check:
+
+      1. EnforcementResult at gateway.py:~484 uses valid field names (error_message,
+      denied_by, error_code)
+
+      2. builtin_tools.py:64 has proper None narrowing for all_tools_result.value
+
+      3. gateway.py:694 has proper None narrowing for connected_names
+
+      4. mypy clean on both files
+
+      5. invar guard clean'
+    verification: '- All three issues resolved
+
+      - mypy src/tela/shell/gateway.py src/tela/shell/builtin_tools.py passes
+
+      - uv run invar guard passes
+
+      - No regressions in existing tests'
+    depends_on:
+    - pm_fix.blockers.b1_mypy
+    agent: gate-reviewer
