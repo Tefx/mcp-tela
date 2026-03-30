@@ -46711,14 +46711,14 @@ phases:
       `uv run pytest tests/shell/ -x` pass. Commit: e4abca93f4d7d084fd0ee1d39277d80a753e5579.'
 - id: pm_fix.docs
   name: 'PM Fix: Documentation Drift (S1, S2)'
-  status: pending
+  status: in_progress
   depends_on:
   - pm_fix.conventions
   - pm_fix.refactor
   steps:
   - id: pm_fix.docs.s1s2_update
     name: 'S1+S2: Update docs to acknowledge tela_list_providers'
-    status: pending
+    status: claimed
     description: 'Multiple doc files incorrectly state "No built-in tela.* MCP tools".
 
 
@@ -46769,6 +46769,8 @@ phases:
 
       - Documentation is consistent across all doc files'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-30T18:54:02.566065+00:00'
   - id: pm_fix.docs.gate
     name: 'Gate: verify documentation fixes'
     status: pending
