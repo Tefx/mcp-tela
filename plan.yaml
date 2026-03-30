@@ -46268,37 +46268,52 @@ phases:
   - id: pm_fix.refactor.gate
     name: 'Gate: verify refactor'
     status: pending
-    description: 'Gate review: Verify S3 extraction is correct.
+    description: 'Gate review: Verify refactor after remediation.
 
 
-      review_depth: STANDARD
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Prior implementation step was marked complete without the expected helper
+      artifact
+
+      - This gate must verify concrete refactor integrity, not just command pass/fail
 
 
       Check:
 
-      1. _handle_builtin_call helper exists and handles both success and error paths
+      1. `_handle_builtin_call` helper exists and handles both success and error paths
 
-      2. The inline branch in _call_tool is replaced by a single call
+      2. The inline builtin branch in `_call_tool` is replaced by a single helper
+      call
 
-      3. Audit entries are identical before and after (behavioral preservation)
+      3. Audit entries are behaviorally preserved before vs after extraction
 
-      4. No duplicate audit code remains
+      4. No duplicate inline builtin audit code remains
 
-      5. The B1 fix (error_message, denied_by, error_code) is preserved in the extracted
-      helper
+      5. The B1 fix (`error_message`, `denied_by`, `error_code`) is preserved in the
+      helper and `reason=` is absent
 
-      6. ruff, mypy, invar guard all pass'
-    verification: '- Helper extracted, no behavioral change
+      6. Evidence includes exact helper location and delegating call-site location
 
-      - Audit entries preserved
+      7. `ruff`, `mypy`, `uv run invar guard`, and `uv run pytest tests/shell/ -x`
+      all pass'
+    verification: '- Helper exists in `src/tela/shell/gateway.py` and is non-stub
+      logic
 
-      - B1 fix preserved in helper
+      - `_call_tool` delegates builtin handling via a single helper call
 
-      - ruff, mypy, invar guard pass
+      - Prior inline builtin block is replaced; no duplicate builtin audit block remains
 
-      - tests pass'
+      - B1 fields preserved; `reason=` absent
+
+      - Evidence includes helper and call-site file:line locations
+
+      - ruff, mypy, invar guard, and shell tests pass'
     depends_on:
     - pm_fix.refactor.s3_extract
+    - pm_fix.refactor.s3_repair_extract
     agent: gate-reviewer
   - id: pm_fix.refactor.s3_repair_extract
     name: 'S3 repair: perform builtin helper extraction concretely'
