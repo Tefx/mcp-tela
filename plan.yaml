@@ -47890,13 +47890,13 @@ phases:
       Ready for documentation sync.'
 - id: cl.doc_sync
   name: Connection Lifecycle Documentation Sync
-  status: pending
+  status: in_progress
   depends_on:
   - cl.retest
   steps:
   - id: cl.doc_sync.update
     name: Update docs for connection lifecycle and reaper
-    status: pending
+    status: claimed
     description: 'Sync project documentation with the implemented connection lifecycle
       and reaper features.
 
@@ -47932,6 +47932,8 @@ phases:
 
       - Documentation matches actual implementation'
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-03-31T14:25:15.797989+00:00'
   - id: cl.doc_sync.gate
     name: 'Gate: documentation sync complete'
     status: pending
