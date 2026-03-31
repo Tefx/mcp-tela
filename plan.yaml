@@ -47752,7 +47752,7 @@ phases:
       - src/tela/shell/gateway.py (11 lines added)'
 - id: cl.retest
   name: Connection Lifecycle Retest (Must Green)
-  status: in_progress
+  status: done
   depends_on:
   - cl.wiring
   steps:
@@ -47841,7 +47841,7 @@ phases:
       \ STANDARD"
   - id: cl.retest.gate
     name: 'Gate: retest phase complete'
-    status: claimed
+    status: done
     description: 'Gate review: Verify all post-implementation retests passed.
 
 
@@ -47871,9 +47871,26 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-31T14:24:51.209121+00:00'
+    done_at: '2026-03-31T14:25:04.316393+00:00'
+    evidence: 'Gate verdict: PASS
+
+
+      Independent verification:
+
+      - pytest test_connection_reaper + test_connection_lifecycle -> 10/10 passed
+      (0.24s)
+
+      - invar guard -> passed (0 errors, 0 warnings)
+
+      - All previously-red tests now green
+
+      - No regressions detected
+
+
+      Ready for documentation sync.'
 - id: cl.doc_sync
   name: Connection Lifecycle Documentation Sync
-  status: locked
+  status: pending
   depends_on:
   - cl.retest
   steps:
