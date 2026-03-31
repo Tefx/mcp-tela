@@ -6,6 +6,8 @@ upstream uses exposed names from the resolved registry; downstream routing stays
 bound to ``ResolvedTool.raw_name`` rather than prefix-stripping at call time.
 """
 
+# @invar:allow file_size: touch_connection_activity wiring adds fire-and-forget calls to handle_tools_list and handle_tools_call; splitting these handlers into separate modules would break cohesion of the upstream MCP handler group.
+
 from __future__ import annotations
 
 import logging
@@ -39,6 +41,7 @@ from tela.shell.gateway_runtime import (
     get_runtime_secrets,
     increment_tool_calls,
     set_runtime_config,  # noqa: F401 — used in doctests
+    touch_connection_activity,
 )
 from tela.shell.idle_shutdown import get_idle_manager
 from tela.shell.upstream_utils import (
@@ -474,6 +477,10 @@ async def handle_tools_list(
             error=f"PROFILE_NOT_FOUND: profile '{connection.profile_name}' not found"
         )
 
+    touch_r = touch_connection_activity(connection.connection_id, datetime.now(timezone.utc).isoformat())
+    if touch_r.is_err:
+        logger.warning("Failed to touch connection activity for %s: %s", connection.connection_id, touch_r.error)
+
     all_tools_result = get_all_tools()
     if all_tools_result.is_err:
         return Result(error=all_tools_result.error)
@@ -576,6 +583,10 @@ async def handle_tools_call(
                 message=f"Profile '{connection.profile_name}' not found",
             )
         )
+
+    touch_r = touch_connection_activity(connection.connection_id, datetime.now(timezone.utc).isoformat())
+    if touch_r.is_err:
+        logger.warning("Failed to touch connection activity for %s: %s", connection.connection_id, touch_r.error)
 
     server_config = config.servers.get(tool.server_name)
     default_posture = server_config.default_posture if server_config else Posture.NONE

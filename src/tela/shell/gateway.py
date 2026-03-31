@@ -10,8 +10,10 @@ Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Awaitable, Callable
 
@@ -81,8 +83,11 @@ from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backwar
     set_runtime_secrets,
     set_runtime_total_tool_calls,
     set_upstream_server,
+    touch_connection_activity,
     with_upstream_server,
 )
+
+logger = logging.getLogger(__name__)
 
 # Module-level manifest snapshot built at prepare_startup time.
 _startup_manifest: str | None = None
@@ -376,6 +381,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 request_ctx.get().session, connections_snapshot
             )
             if conn_r.is_ok and conn_r.value is not None:
+                touch_r = touch_connection_activity(conn_r.value.connection_id, datetime.now(timezone.utc).isoformat())
+                if touch_r.is_err:
+                    logger.warning("Failed to touch connection activity for %s: %s", conn_r.value.connection_id, touch_r.error)
                 return conn_r.value
         except LookupError:
             pass
@@ -383,6 +391,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         if init_result.is_err:
             raise RuntimeError(init_result.error or "INITIALIZE_REJECTED")
         assert init_result.value is not None
+        touch_r = touch_connection_activity(init_result.value.connection_id, datetime.now(timezone.utc).isoformat())
+        if touch_r.is_err:
+            logger.warning("Failed to touch connection activity for %s: %s", init_result.value.connection_id, touch_r.error)
         return init_result.value
 
     def _build_tool_annotations(

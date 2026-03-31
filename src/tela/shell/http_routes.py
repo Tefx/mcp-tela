@@ -6,6 +6,7 @@ section 7.2 with explicit auth requirements.
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Mapping
 
@@ -28,8 +29,11 @@ from tela.shell.gateway_runtime import (
     is_runtime_running,
     set_runtime_config,  # noqa: F401 — used in doctests
     set_runtime_running,  # noqa: F401 — used in doctests
+    touch_connection_activity,
 )
 from tela.shell.http_auth import validate_bearer_token
+
+logger = logging.getLogger(__name__)
 
 
 def _is_auth_error(result: Result[object, str]) -> bool:
@@ -295,13 +299,18 @@ def handle_connect(
 
     from datetime import datetime, timezone
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     connection_context = ConnectionContext(
         connection_id=payload.connection_id,
         profile_name=config.resolved_default_profile or "default",
-        connected_at=datetime.now(timezone.utc).isoformat(),
+        connected_at=now_iso,
     )
 
     add_runtime_connection(connection_context)
+
+    touch_r = touch_connection_activity(payload.connection_id, now_iso)
+    if touch_r.is_err:
+        logger.warning("Failed to touch connection activity for %s: %s", payload.connection_id, touch_r.error)
 
     return Result(
         value={
