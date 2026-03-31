@@ -46917,3 +46917,8 @@ phases:
   status: locked
   depends_on:
   - cl.contract
+- id: cl.impl
+  name: Connection Lifecycle Implementation
+  status: locked
+  depends_on:
+  - cl.test
