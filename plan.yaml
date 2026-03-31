@@ -47178,7 +47178,7 @@ phases:
       Downstream implementation owner: cl.impl phase'
   - id: cl.test.gate
     name: 'Gate: test definitions complete'
-    status: pending
+    status: claimed
     description: 'Gate review: Verify that test definitions are complete and properly
       structured.
 
@@ -47213,6 +47213,8 @@ phases:
     depends_on:
     - cl.test.reaper
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-31T14:08:10.159969+00:00'
 - id: cl.impl
   name: Connection Lifecycle Implementation
   status: locked
