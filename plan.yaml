@@ -47143,37 +47143,37 @@ phases:
     - src/tela/core/models.py
     agent: python-executor
   - id: cl.impl.runtime_accessor
-    name: Implement runtime connection registry accessor
+    name: Implement touch_connection_activity accessor
     status: pending
-    description: "Fill in stub bodies for the connection registry accessor that the\
-      \ gateway runtime uses to track active connections.\n\nUPSTREAM ARTIFACTS (from\
-      \ contract step):\n  - src/tela/core/lifecycle.py — ConnectionRecord, ConnectionState\
-      \ are AUTHORITATIVE\n\nYOUR SCOPE:\n- Add a ConnectionRegistry class (or extend\
-      \ existing gateway state) that stores ConnectionRecord instances keyed by server_name\n\
-      - Methods: get(server_name), set(server_name, record), remove(server_name),\
-      \ all() -> dict, stale(threshold_s) -> list[str]\n- The registry is a thin dict\
-      \ wrapper with no I/O — it belongs in core\n- Thread/coroutine safety: use a\
-      \ simple dict (single-event-loop assumption per DESIGN.md)\n- Add @pre/@post\
-      \ contracts and doctests on every public method\n\n## Completion Criteria (stub\
-      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\
-      \n## Module-Level Mutable State (hardened acceptance)\nThis step introduces\
-      \ a mutable registry. Address:\n1. Concurrent access: single event loop assumption\
-      \ — document this\n2. Cleanup/reset: provide a clear() method for test isolation\n\
-      3. Bounded growth: bounded by number of configured servers (small, finite)\n\
-      4. Isolation: each gateway instance has its own registry\n\nstep_type: implementation\n\
-      upstream_artifacts:\n  - path: src/tela/core/lifecycle.py\n    from_step: cl.contract.model\n\
-      \    tier: contract\n\nspec_refs: DESIGN.md#connection-lifecycle\ntouch_paths:\
-      \ src/tela/core/lifecycle.py"
-    verification: '- ConnectionRegistry class exists with get/set/remove/all/stale/clear
-      methods
+    description: "Fill in the stub body for touch_connection_activity() in src/tela/shell/gateway_runtime.py\
+      \ per the contract from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from\
+      \ contract step):\n  - src/tela/shell/gateway_runtime.py — touch_connection_activity\
+      \ signature is AUTHORITATIVE\n  - src/tela/core/models.py — ConnectionContext.last_activity\
+      \ field is AUTHORITATIVE\n\nYOUR SCOPE:\n- Replace the touch_connection_activity\
+      \ stub with working logic\n- Function: touch_connection_activity(connection_id:\
+      \ str, timestamp: str) -> Result[bool, str]\n- Acquire _runtime_lock before\
+      \ modifying state\n- Look up the connection by connection_id in the runtime's\
+      \ connection registry\n- Update the ConnectionContext.last_activity field with\
+      \ the provided timestamp\n- Return Ok(True) on success, Err(\"connection not\
+      \ found\") or similar on failure\n- Shell zone: returns Result[T, E]\n\nUse\
+      \ Edit tool to modify bodies only. Do NOT add new public symbols beyond what\
+      \ the contract defines.\n\n## Completion Criteria (stub exclusion)\nThis is\
+      \ an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nThe function\
+      \ MUST acquire the lock, look up the connection, update last_activity, and return\
+      \ a Result.\n\nstep_type: implementation\nupstream_artifacts:\n  - path: src/tela/shell/gateway_runtime.py\n\
+      \    from_step: cl.contract.reaper\n    tier: contract\n\nspec_refs: architecture\
+      \ ADR connection-lifecycle section\ntouch_paths: src/tela/shell/gateway_runtime.py"
+    verification: '- touch_connection_activity has real logic (not a stub)
 
-      - All methods have @pre/@post contracts and doctests
+      - Acquires _runtime_lock before state mutation
 
-      - Doctests pass
+      - Returns Ok(True) on success, Err on unknown connection_id
 
-      - invar guard passes on this file
+      - Updates ConnectionContext.last_activity correctly
 
-      - No I/O imports in core module'
+      - invar guard passes on this file'
+    refs:
+    - src/tela/shell/gateway_runtime.py
     depends_on:
     - cl.impl.model
     agent: python-executor
