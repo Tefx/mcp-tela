@@ -47047,6 +47047,40 @@ phases:
 
       - Test fixtures cite spec sections'
     agent: python-executor
+  - id: cl.test.gate
+    name: 'Gate: test definitions complete'
+    status: pending
+    description: 'Gate review: Verify that test definitions are complete and properly
+      structured.
+
+
+      Review criteria:
+
+      1. All test functions exist and are properly named
+
+      2. Tests import from the contract module (src/tela/core/lifecycle.py)
+
+      3. Tests cover: state transitions, record creation, touch/last_seen, reaper
+      config validation, reap logic, grace period
+
+      4. No product implementation code was modified
+
+      5. Tests are expected-red (stubs raise NotImplementedError)
+
+      6. Spec-fixture conformance: at least one fixture uses exact DESIGN.md format
+
+
+      Independence: reviewer MUST NOT be python-executor.'
+    verification: '- All test definitions reviewed
+
+      - Coverage of contracted behaviors confirmed
+
+      - No implementation leakage into test phase
+
+      - Spec-fixture conformance verified'
+    depends_on:
+    - cl.test.reaper
+    agent: gate-reviewer
 - id: cl.impl
   name: Connection Lifecycle Implementation
   status: locked
