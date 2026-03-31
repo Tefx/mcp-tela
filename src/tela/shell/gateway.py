@@ -44,6 +44,7 @@ from tela.shell.builtin_tools import (
     handle_list_providers,
 )
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
+from tela.shell.connection_reaper import ConnectionReaper, ReaperConfig
 from tela.shell.downstream import (
     connect_all,
     disconnect_all,
@@ -91,6 +92,7 @@ logger = logging.getLogger(__name__)
 
 # Module-level manifest snapshot built at prepare_startup time.
 _startup_manifest: str | None = None
+_reaper: ConnectionReaper | None = None
 
 
 @dataclass(frozen=True)
@@ -699,6 +701,10 @@ async def gateway_start(
         await gateway_shutdown()
         return Result(error=converge_result.error)
 
+    global _reaper
+    _reaper = ConnectionReaper(ReaperConfig())
+    await _reaper.start()
+
     return Result(value=None)
 
 
@@ -781,6 +787,11 @@ async def gateway_shutdown() -> Result[None, str]:
     Returns:
         Result[None, str] always succeeds.
     """
+
+    global _reaper
+    if _reaper is not None:
+        await _reaper.stop()
+        _reaper = None
 
     disconnect_result = await disconnect_all()
     audit_close_result = await audit_close()
