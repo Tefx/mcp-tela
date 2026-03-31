@@ -46914,34 +46914,35 @@ phases:
   - pm_fix.gate
   steps:
   - id: cl.contract.model
-    name: ConnectionRecord model and lifecycle enum contracts
+    name: Add last_activity field to ConnectionContext contract
     status: pending
-    description: "Define the ConnectionRecord dataclass and ConnectionState enum in\
-      \ core.\n\nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
-      \  - signatures\n  - type_defs\n  - stubs\n\nAuthoritative interface (from DESIGN.md\
-      \ connection lifecycle section + INTERFACES.md):\n\n```python\nclass ConnectionState(Enum):\n\
-      \    CONNECTING = \"connecting\"\n    CONNECTED = \"connected\"\n    DEGRADED\
-      \ = \"degraded\"\n    DISCONNECTING = \"disconnecting\"\n    DISCONNECTED =\
-      \ \"disconnected\"\n\n@dataclass\nclass ConnectionRecord:\n    server_name:\
-      \ str\n    state: ConnectionState\n    connected_at: datetime | None\n    last_seen:\
-      \ datetime | None\n    error: str | None\n```\n\nScope:\n- File: src/tela/core/lifecycle.py\
-      \ (new file)\n- Define ConnectionState enum with @pre/@post contracts and doctests\
-      \ per INVAR rules\n- Define ConnectionRecord frozen dataclass with factory and\
-      \ transition contracts\n- All method bodies MUST be stubs (raise NotImplementedError\
-      \ or pass)\n- Write @pre/@post on every public function including __init__ validation\n\
-      - Include at least one doctest per contracted function\n\nDo NOT implement any\
-      \ logic. Contract step only.\n\nauthoritative_interface: ConnectionState enum\
-      \ + ConnectionRecord dataclass per DESIGN.md\nspec_refs: DESIGN.md#connection-lifecycle,\
-      \ INTERFACES.md#connection-state\ntouch_paths: src/tela/core/lifecycle.py"
-    verification: '- src/tela/core/lifecycle.py exists with ConnectionState and ConnectionRecord
+    description: "Add `last_activity` field to the EXISTING ConnectionContext model\
+      \ in src/tela/core/models.py.\n\nstep_type: contract\ncontract_purity: ENFORCED\n\
+      contract_outputs:\n  - type_defs\n  - field_addition\n\nAuthoritative interface\
+      \ (from architecture ADR — connection lifecycle):\n\nConnectionContext already\
+      \ exists as a Pydantic BaseModel with fields:\n  connection_id, profile_name,\
+      \ connected_at, tool_call_count\n\nAdd ONE new field:\n```python\nlast_activity:\
+      \ str = \"\"\n```\n\nScope:\n- File: src/tela/core/models.py (EXISTING file\
+      \ — do NOT create new files)\n- Add `last_activity: str = \"\"` to the existing\
+      \ ConnectionContext class\n- If adding any new public validator or accessor\
+      \ functions for last_activity, they need @pre/@post contracts and doctests per\
+      \ INVAR rules\n- Core zone: no I/O imports\n\nDo NOT create ConnectionRecord,\
+      \ ConnectionState enum, or src/tela/core/lifecycle.py. These do NOT exist in\
+      \ the architecture.\nDo NOT implement any logic beyond the field addition. Contract\
+      \ step only.\n\nauthoritative_interface: ConnectionContext.last_activity field\
+      \ per architecture ADR\nspec_refs: architecture ADR connection-lifecycle section\n\
+      touch_paths: src/tela/core/models.py"
+    verification: '- src/tela/core/models.py has last_activity: str = "" on ConnectionContext
 
-      - All public methods have @pre/@post contracts
+      - No new files created (no lifecycle.py)
 
-      - At least one doctest per contracted function
+      - If any new public functions added, they have @pre/@post + doctest
 
-      - No implementation logic (stubs only)
+      - invar sig src/tela/core/models.py shows the updated ConnectionContext
 
-      - invar sig src/tela/core/lifecycle.py shows contracts'
+      - No ConnectionRecord or ConnectionState enum exists'
+    refs:
+    - src/tela/core/models.py
     agent: python-executor
   - id: cl.contract.reaper
     name: ReaperService protocol and configuration contracts
