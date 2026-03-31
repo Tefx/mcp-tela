@@ -47657,7 +47657,7 @@ phases:
       - upstream.py now 707 lines (over 700 shell limit), @invar:allow file_size added'
   - id: cl.wiring.lifecycle
     name: Wire reaper start/stop into gateway lifecycle
-    status: pending
+    status: claimed
     description: "Wire ConnectionReaper lifecycle into the gateway's startup and shutdown\
       \ sequence.\n\ntags: [\"integration\"]\n\nYOUR SCOPE:\n- In src/tela/shell/gateway.py:\n\
       \  - After gateway_converge_startup completes: instantiate ConnectionReaper\
@@ -47721,6 +47721,8 @@ phases:
     depends_on:
     - cl.wiring.touch_points
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-31T14:21:53.038502+00:00'
 - id: cl.retest
   name: Connection Lifecycle Retest (Must Green)
   status: locked
