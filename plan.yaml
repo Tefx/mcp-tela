@@ -47345,6 +47345,45 @@ phases:
   status: locked
   depends_on:
   - cl.wiring
+  steps:
+  - id: cl.retest.green
+    name: 'Retest: all lifecycle tests must pass (green)'
+    status: pending
+    description: 'Post-implementation retest: verify that all tests defined in cl.test
+      phase now pass.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Run the full lifecycle test suite and verify all tests pass:
+
+      - pytest tests/core/test_lifecycle.py -v
+
+      - All tests that were expected-red in cl.test phase must now be green
+
+      - If any test fails, document the failure and the implementation gap
+
+
+      This step verifies the implementation satisfies the contract defined in cl.contract
+      and tested in cl.test.
+
+
+      spec_refs: DESIGN.md#connection-lifecycle, DESIGN.md#reaper
+
+      touch_paths: tests/core/test_lifecycle.py (read-only verification)'
+    verification: '- pytest tests/core/test_lifecycle.py -v passes all tests
+
+      - No test failures or errors
+
+      - All previously-red tests now green
+
+      - Evidence includes actual test output (not summary)'
+    agent: integration-verifier
 - id: cl.doc_sync
   name: Connection Lifecycle Documentation Sync
   status: locked
