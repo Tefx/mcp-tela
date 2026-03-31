@@ -368,6 +368,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     from tela.shell.upstream import (
         capture_session,
         find_connection_for_session,
+        get_captured_session,
         handle_initialize,
         handle_tools_call,
         handle_tools_list,
@@ -387,6 +388,26 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 if touch_r.is_err:
                     logger.warning("Failed to touch connection activity for %s: %s", conn_r.value.connection_id, touch_r.error)
                 return conn_r.value
+        except LookupError:
+            pass
+        # Adopt unbound bridge connection before creating a spurious conn_*.
+        # Bridge connections are pre-registered via POST /connect but their
+        # MCP session is not captured until the first list_tools/call_tool.
+        try:
+            current_session = request_ctx.get().session
+            with _runtime_lock:
+                candidates = list(_runtime.connections)
+            for candidate in candidates:
+                if not candidate.connection_id.startswith("bridge_"):
+                    continue
+                probe = get_captured_session(candidate.connection_id)
+                if probe.is_err:
+                    # Unbound bridge — adopt it for this session
+                    capture_session(candidate.connection_id, current_session)
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    touch_connection_activity(candidate.connection_id, now_iso)
+                    logger.debug("Adopted unbound bridge %s for session", candidate.connection_id)
+                    return candidate
         except LookupError:
             pass
         init_result = await handle_initialize({})
