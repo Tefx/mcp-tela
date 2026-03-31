@@ -288,15 +288,6 @@ def handle_connect(
     assert lifecycle_result.value is not None
     facts = lifecycle_result.value
 
-    if facts.state == "warming":
-        return Result(
-            error=(
-                f"ADMISSION_REJECTED_WARMING: gateway is warming up "
-                f"(connected_servers={len(facts.connected_servers)}/{facts.server_count}); "
-                "bridge admission requires ready state"
-            )
-        )
-
     from datetime import datetime, timezone
 
     now_iso = datetime.now(timezone.utc).isoformat()

@@ -796,6 +796,17 @@ async def gateway_converge_startup(
     _reaper = ConnectionReaper(ReaperConfig())
     await _reaper.start()
 
+    # Notify bridges that connected during warming — tools are now available.
+    from tela.shell.upstream import notify_tools_changed
+    from tela.shell.gateway_runtime import get_runtime_connections_snapshot
+    from tela.shell.downstream import get_registry
+    snap = get_runtime_connections_snapshot()
+    if snap.is_ok and snap.value:
+        registry = get_registry()
+        digest = str(sorted(t.name for ts in registry.get_all_tools().values() for t in ts))
+        for conn in snap.value:
+            await notify_tools_changed(conn, digest)
+
     return Result(value=None)
 
 
