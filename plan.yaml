@@ -47248,7 +47248,7 @@ phases:
   steps:
   - id: cl.impl.model
     name: Implement last_activity field on ConnectionContext
-    status: claimed
+    status: done
     description: "Fill in the last_activity field addition on ConnectionContext per\
       \ the contract from step cl.contract.model.\n\nUPSTREAM ARTIFACTS (from contract\
       \ step):\n  - src/tela/core/models.py — ConnectionContext with last_activity\
@@ -47278,6 +47278,36 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-31T14:09:44.691783+00:00'
+    done_at: '2026-03-31T14:10:07.891776+00:00'
+    evidence: 'Artifact:
+
+      - Commit: ae560ac (field already added in cl.contract.model — Pydantic field
+      with default is the complete implementation)
+
+
+      Verification:
+
+      - ConnectionContext() with default last_activity="" works
+
+      - ConnectionContext(last_activity=''2024-06-01T00:00:00'') works
+
+      - No additional code changes needed — field addition IS the implementation
+
+
+      Files changed:
+
+      - src/tela/core/models.py (no additional changes — contract step was complete)
+
+
+      Spec link:
+
+      - Architecture ADR: ConnectionContext.last_activity field
+
+
+      Gaps/Notes:
+
+      - This was a trivial step since the Pydantic field with default value is both
+      the contract and the implementation'
   - id: cl.impl.runtime_accessor
     name: Implement touch_connection_activity accessor
     status: pending
