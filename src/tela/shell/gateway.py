@@ -701,9 +701,6 @@ async def gateway_start(
         await gateway_shutdown()
         return Result(error=converge_result.error)
 
-    global _reaper
-    _reaper = ConnectionReaper(ReaperConfig())
-    await _reaper.start()
 
     return Result(value=None)
 
@@ -771,6 +768,10 @@ async def gateway_converge_startup(
     audit_result = await audit_init(runtime_config.audit)
     if audit_result.is_err:
         return Result(error=audit_result.error)
+
+    global _reaper
+    _reaper = ConnectionReaper(ReaperConfig())
+    await _reaper.start()
 
     return Result(value=None)
 
