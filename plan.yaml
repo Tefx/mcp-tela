@@ -47532,3 +47532,69 @@ phases:
   status: locked
   depends_on:
   - cl.doc_sync
+  steps:
+  - id: cl.deep_review.wiring_audit
+    name: Full wiring audit for lifecycle module
+    status: pending
+    description: "Complete wiring audit for the connection lifecycle feature.\n\n\
+      verification_scope: full-plan-check (for lifecycle-related surfaces)\n\nREQUIRED\
+      \ CHECKS:\n1. Export reachability: every symbol exported from core/lifecycle.py\
+      \ has at least one import outside its own package\n2. ConnectionRegistry is\
+      \ used by gateway (not orphaned)\n3. ReaperService is instantiated and started\
+      \ in gateway lifecycle\n4. ReaperConfig is sourced from configuration (not hardcoded\
+      \ orphan)\n5. No NotImplementedError stubs remain in lifecycle.py or reaper.py\n\
+      6. No write-only fields (fields set but never read)\n7. ConnectionState transitions\
+      \ are enforced at every state-change call site\n\nUse grep/import-trace output\
+      \ as evidence, not assertions.\n\nevidence_template: |\n  ## Wiring Audit Report\n\
+      \  **Orphan exports** (symbols exported but never imported outside own package):\n\
+      \  ```\n  (grep output or \"none found\")\n  ```\n  **Unregistered lifecycle\
+      \ components** (reaper not in startup, registry not in gateway):\n  ```\n  (grep\
+      \ output or \"none found\")\n  ```\n  **Unconsumed config fields** (ReaperConfig\
+      \ parsed but never read):\n  ```\n  (grep output or \"none found\")\n  ```\n\
+      \  **Stub remnants** (NotImplementedError in non-test code):\n  ```\n  (grep\
+      \ output or \"none found\")\n  ```\n  **Verdict**: PASS (all wired) | ISSUES_FOUND\
+      \ (list above)"
+    verification: '- All lifecycle symbols have consumers
+
+      - No orphan exports
+
+      - No stub remnants
+
+      - Wiring audit report complete with grep evidence'
+    evidence_template: '## Wiring Audit Report
+
+      **Orphan exports** (symbols exported but never imported outside own package):
+
+      ```
+
+      (grep output or "none found")
+
+      ```
+
+      **Unregistered lifecycle components** (reaper not in startup, registry not in
+      gateway):
+
+      ```
+
+      (grep output or "none found")
+
+      ```
+
+      **Unconsumed config fields** (ReaperConfig parsed but never read):
+
+      ```
+
+      (grep output or "none found")
+
+      ```
+
+      **Stub remnants** (NotImplementedError in non-test code):
+
+      ```
+
+      (grep output or "none found")
+
+      ```
+
+      **Verdict**: PASS (all wired) | ISSUES_FOUND (list above)'
+    agent: wiring-auditor
