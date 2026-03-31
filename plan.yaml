@@ -47063,7 +47063,7 @@ phases:
   - id: cl.test.reaper
     name: Tests for ConnectionReaper sweep and touch_connection_activity (expected
       red)
-    status: claimed
+    status: done
     description: 'Define pre-implementation tests for ConnectionReaper sweep logic
       and touch_connection_activity behavior.
 
@@ -47139,6 +47139,43 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-31T14:04:36.486105+00:00'
+    done_at: '2026-03-31T14:07:58.255923+00:00'
+    evidence: 'EXPECTED_RED_ACCEPTED: Pre-implementation tests for ConnectionReaper
+
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      observed_result: red (5 NotImplementedError failures, 4 passed dataclass tests)
+
+      failure_alignment: matches — stubs not yet implemented
+
+      product_files_modified: none
+
+
+      Artifact:
+
+      - Commit: ba1beab (squash merge of 94ccc06)
+
+
+      Verification:
+
+      - pytest tests/shell/test_connection_reaper.py -> 5 failed (NotImplementedError),
+      4 passed
+
+      - Failed: touch_activity_updates, touch_activity_unknown, sweep_session_gone,
+      sweep_stale, sweep_idle_decrement
+
+      - Passed: config_defaults, config_frozen, outcome_fields, outcome_values
+
+
+      Files changed:
+
+      - tests/shell/test_connection_reaper.py (NEW, 253 lines, 9 test functions)
+
+
+      Downstream implementation owner: cl.impl phase'
   - id: cl.test.gate
     name: 'Gate: test definitions complete'
     status: pending
