@@ -47752,13 +47752,13 @@ phases:
       - src/tela/shell/gateway.py (11 lines added)'
 - id: cl.retest
   name: Connection Lifecycle Retest (Must Green)
-  status: pending
+  status: in_progress
   depends_on:
   - cl.wiring
   steps:
   - id: cl.retest.green
     name: 'Retest: all reaper + connection tests must pass green'
-    status: pending
+    status: claimed
     description: 'Post-implementation retest: verify that all tests defined in cl.test
       phase now pass.
 
@@ -47797,6 +47797,8 @@ phases:
     refs:
     - tests/shell/test_connection_reaper.py
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-03-31T14:24:10.657442+00:00'
   - id: cl.retest.invar
     name: Invar guard must pass after lifecycle changes
     status: pending
