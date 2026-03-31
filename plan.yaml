@@ -47441,41 +47441,28 @@ phases:
     - tests/shell/test_connection_reaper.py
     agent: integration-verifier
   - id: cl.retest.invar
-    name: Invar guard full scan
+    name: Invar guard must pass after lifecycle changes
     status: pending
-    description: 'Run invar guard --all to verify no contract, architecture, or doctest
-      violations across the entire codebase after lifecycle changes.
-
-
-      step_type: test
-
-      step_intent: retest_green
-
-      expected_result: green
-
-
-      Run: invar guard (via invar_guard MCP tool)
-
-      - All contracts must pass
-
-      - All doctests must pass
-
-      - No architecture violations (core/shell boundary)
-
-      - No dead exports or missing references
-
-
-      If any failures, document them with file:line and exact error message.
-
-
-      touch_paths: (read-only, full codebase scan)'
+    description: "Run invar guard to verify no contract, architecture, or doctest\
+      \ violations across the entire codebase after connection lifecycle changes.\n\
+      \nstep_type: test\nstep_intent: retest_green\nexpected_result: green\n\nRun:\
+      \ invar guard (via invar_guard MCP tool)\n- All contracts must pass\n- All doctests\
+      \ must pass\n- No architecture violations (core/shell boundary)\n- No dead exports\
+      \ or missing references\n- Specifically verify:\n  - src/tela/core/models.py\
+      \ (last_activity field)\n  - src/tela/shell/connection_reaper.py (new file)\n\
+      \  - src/tela/shell/gateway_runtime.py (touch_connection_activity)\n  - src/tela/shell/gateway.py\
+      \ (reaper wiring)\n  - src/tela/shell/upstream.py (touch wiring)\n  - src/tela/shell/http_routes.py\
+      \ (touch wiring)\n\nIf any failures, document them with file:line and exact\
+      \ error message.\n\ntouch_paths: (read-only, full codebase scan)"
     verification: '- invar guard passes clean (0 violations)
 
       - Evidence includes actual invar guard output
 
       - No new architecture boundary violations
 
-      - No contract regressions'
+      - No contract regressions
+
+      - New shell files (connection_reaper.py) pass shell zone rules'
     depends_on:
     - cl.retest.green
     agent: integration-verifier
