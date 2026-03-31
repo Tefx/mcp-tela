@@ -46937,3 +46937,8 @@ phases:
   status: locked
   depends_on:
   - cl.retest
+- id: cl.deep_review
+  name: Connection Lifecycle Deep Review
+  status: locked
+  depends_on:
+  - cl.doc_sync
