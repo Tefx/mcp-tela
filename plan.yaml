@@ -46996,10 +46996,11 @@ phases:
   - cl.contract
   steps:
   - id: cl.test.reaper
-    name: Reaper and ConnectionRecord tests (expected red)
+    name: Tests for ConnectionReaper sweep and touch_connection_activity (expected
+      red)
     status: pending
-    description: 'Define pre-implementation tests for ConnectionRecord lifecycle transitions
-      and ReaperService behavior.
+    description: 'Define pre-implementation tests for ConnectionReaper sweep logic
+      and touch_connection_activity behavior.
 
 
       step_type: test
@@ -47011,23 +47012,27 @@ phases:
 
       Scope:
 
-      - File: tests/core/test_lifecycle.py (new file)
+      - File: tests/shell/test_connection_reaper.py (NEW file)
 
-      - Test ConnectionState transitions: valid transitions succeed, invalid raise
+      - Test touch_connection_activity updates last_activity on the correct ConnectionContext
 
-      - Test ConnectionRecord creation with required fields
+      - Test touch_connection_activity returns Err for unknown connection_id
 
-      - Test ConnectionRecord.touch() updates last_seen
+      - Test touch_connection_activity acquires _runtime_lock (thread safety)
 
-      - Test ReaperConfig validation: interval > 0, threshold > interval
+      - Test ConnectionReaper.sweep() detects session-gone connections (conn_* probe)
 
-      - Test reap_stale_connections: returns names of connections past threshold
+      - Test ConnectionReaper.sweep() detects stale connections past idle TTL
 
-      - Test reap_stale_connections: skips connections in CONNECTING state (grace
-      period)
+      - Test ConnectionReaper.sweep() calls idle_manager.decrement() for reaped connections
 
-      - All tests should import from src/tela/core/lifecycle and call the contracted
-      stubs
+      - Test ReaperConfig defaults: sweep_interval_seconds=30, native_idle_ttl_seconds=300,
+      bridge_idle_ttl_seconds=120
+
+      - Test ReaperSweepOutcome fields: checked, reaped_session_gone, reaped_stale,
+      errors
+
+      - All tests should import from tela.shell.connection_reaper and tela.shell.gateway_runtime
 
 
       These tests WILL FAIL (red) because implementation does not exist yet. That
@@ -47045,23 +47050,27 @@ phases:
 
       ## Spec-Fixture Conformance (MANDATORY)
 
-      At least one test fixture MUST use the EXACT documented format from DESIGN.md.
+      At least one test fixture MUST use the EXACT documented format from the architecture
+      ADR.
 
-      Cite the spec section the fixture was derived from.
+      Cite the ADR section the fixture was derived from.
 
 
-      spec_refs: DESIGN.md#connection-lifecycle, DESIGN.md#reaper
+      spec_refs: architecture ADR reaper section, architecture ADR connection-lifecycle
+      section
 
-      touch_paths: tests/core/test_lifecycle.py'
-    verification: '- tests/core/test_lifecycle.py exists with >= 6 test functions
+      touch_paths: tests/shell/test_connection_reaper.py'
+    verification: '- tests/shell/test_connection_reaper.py exists with >= 6 test functions
 
-      - Tests import from tela.core.lifecycle
+      - Tests import from tela.shell.connection_reaper and tela.shell.gateway_runtime
 
       - Tests run but FAIL (expected red) because stubs raise NotImplementedError
 
       - No product implementation code modified
 
-      - Test fixtures cite spec sections'
+      - Test fixtures cite ADR sections'
+    refs:
+    - tests/shell/test_connection_reaper.py
     agent: python-executor
   - id: cl.test.gate
     name: 'Gate: test definitions complete'
