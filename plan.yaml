@@ -47890,7 +47890,7 @@ phases:
       Ready for documentation sync.'
 - id: cl.doc_sync
   name: Connection Lifecycle Documentation Sync
-  status: in_progress
+  status: done
   depends_on:
   - cl.retest
   steps:
@@ -47960,7 +47960,7 @@ phases:
       No forbidden types referenced (no ConnectionRecord/ConnectionState/ReaperProtocol/lifecycle.py)'
   - id: cl.doc_sync.gate
     name: 'Gate: documentation sync complete'
-    status: claimed
+    status: done
     description: 'Gate review: Verify documentation accurately reflects implemented
       behavior.
 
@@ -47990,9 +47990,27 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-31T14:29:29.339105+00:00'
+    done_at: '2026-03-31T14:29:43.665224+00:00'
+    evidence: 'Gate verdict: PASS
+
+
+      Verification:
+
+      - DESIGN.md: connection reaper section with correct behavior, defaults, lifecycle
+      wiring
+
+      - INTERFACES.md: §9.6 with correct public types (ReaperConfig, ReaperSweepOutcome,
+      ConnectionReaper), activity tracking, runtime limits
+
+      - No forbidden types (ConnectionRecord/ConnectionState/ReaperProtocol/lifecycle.py)
+      found
+
+      - ReaperConfig defaults documented correctly (30.0, 120.0, 300.0)
+
+      - All docs match actual implementation'
 - id: cl.deep_review
   name: Connection Lifecycle Deep Review
-  status: locked
+  status: pending
   depends_on:
   - cl.doc_sync
   steps:
