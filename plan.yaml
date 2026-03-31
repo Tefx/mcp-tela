@@ -48016,7 +48016,7 @@ phases:
   steps:
   - id: cl.deep_review.wiring_audit
     name: Full wiring audit for lifecycle module
-    status: claimed
+    status: done
     description: "Complete wiring audit for the connection lifecycle feature.\n\n\
       verification_scope: full-plan-check (for lifecycle-related surfaces)\n\nREQUIRED\
       \ CHECKS:\n1. Export reachability: every symbol exported from core/lifecycle.py\
@@ -48081,6 +48081,30 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-03-31T14:29:54.165043+00:00'
+    done_at: '2026-03-31T14:33:33.485562+00:00'
+    evidence: 'Wiring Audit: PASS (14/14 protocols)
+
+
+      Key findings:
+
+      - W1: 0 dead exports (4/4 LIVE)
+
+      - W2: 0 write-only fields (9/9 LIVE)
+
+      - W5: 0 stub remnants in non-test code
+
+      - W6: All 3 ReaperConfig fields consumed in sweep logic
+
+      - W9: All exports reachable from real entry point (tela.cli:main)
+
+      - touch_connection_activity wired at 5 sites (gateway x2, upstream x2, http_routes
+      x1)
+
+      - last_activity both written (gateway_runtime:284) and read (connection_reaper:200)
+
+      - idle_manager.decrement() called in both session-gone and stale paths
+
+      - Zero cast() calls, zero type:ignore annotations'
   - id: cl.deep_review.spec_conformance
     name: 'Spec conformance: lifecycle vs DESIGN.md'
     status: pending
