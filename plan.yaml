@@ -47242,7 +47242,7 @@ phases:
       Suggestions: none'
 - id: cl.impl
   name: Connection Lifecycle Implementation
-  status: in_progress
+  status: done
   depends_on:
   - cl.test
   steps:
@@ -47464,7 +47464,7 @@ phases:
       (pre-existing test design, test file PROTECTED)'
   - id: cl.impl.gate
     name: 'Gate: implementation phase complete'
-    status: claimed
+    status: done
     description: "Gate review: Verify implementation phase completion and quality.\n\
       \nreview_depth: STANDARD\nreview_depth_rationale: |\n  - Phase adds field to\
       \ existing Core model + new Shell service\n  - Asyncio lifecycle requires careful\
@@ -47497,9 +47497,48 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-31T14:15:30.908188+00:00'
+    done_at: '2026-03-31T14:17:31.817621+00:00'
+    evidence: 'Gate verdict: CONDITIONAL PASS
+
+
+      Checklist:
+
+      1. No stubs: PASS
+
+      2. last_activity field: PASS
+
+      3. touch_connection_activity: PASS
+
+      4. ConnectionReaper.sweep(): PASS
+
+      5. Asyncio lifecycle: PASS
+
+      6. Core zone: PASS
+
+      7. Architecture alignment: PASS
+
+      8. Shell convention: PASS
+
+      9. invar guard: CONDITIONAL (models.py 512 > 500, pre-existing)
+
+      10. Tests pass: PASS (9/9)
+
+
+      Blockers: none
+
+      Should-fix:
+
+      - S1: test mock_idle_mgr not injected (test file PROTECTED, will address in
+      wiring or retest)
+
+      - S2: dead_export on touch_connection_activity (resolved when wired in cl.wiring)
+
+      Suggestions:
+
+      - models.py 12 lines over core limit (pre-existing, out of scope)'
 - id: cl.wiring
   name: Connection Lifecycle Wiring
-  status: locked
+  status: pending
   depends_on:
   - cl.impl
   steps:
