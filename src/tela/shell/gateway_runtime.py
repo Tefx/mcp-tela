@@ -266,8 +266,24 @@ def touch_connection_activity(connection_id: str, timestamp: str) -> Result[bool
         True
         >>> r.value
         False
+
+        >>> from tela.core.models import ConnectionContext
+        >>> add_runtime_connection(ConnectionContext(connection_id="doc1", profile_name="p", connected_at="t"))
+        >>> r = touch_connection_activity("doc1", "2026-03-31T12:00:00Z")
+        >>> r.value
+        True
+        >>> snap = get_runtime_connections_snapshot()
+        >>> [c for c in snap.value if c.connection_id == "doc1"][0].last_activity
+        '2026-03-31T12:00:00Z'
+        >>> remove_runtime_connection("doc1").value
+        True
     """
-    raise NotImplementedError
+    with _runtime_lock:
+        for conn in _runtime.connections:
+            if conn.connection_id == connection_id:
+                conn.last_activity = timestamp
+                return Result(value=True)
+        return Result(value=False)
 
 
 def set_runtime_running(running: bool) -> None:
