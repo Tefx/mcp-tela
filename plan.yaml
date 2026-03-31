@@ -48107,7 +48107,7 @@ phases:
       - Zero cast() calls, zero type:ignore annotations'
   - id: cl.deep_review.spec_conformance
     name: 'Spec conformance: lifecycle vs DESIGN.md'
-    status: pending
+    status: claimed
     description: "Spec conformance verification via adversarial divergence hunting.\n\
       Agent: spec-verifier (dedicated, read-only, independent).\n\nThis is NOT \"\
       do tests pass\" — it is \"does the implementation match what the spec says.\"\
@@ -48165,6 +48165,8 @@ phases:
     depends_on:
     - cl.deep_review.wiring_audit
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-03-31T14:33:42.649079+00:00'
   - id: cl.deep_review.black_box
     name: Black-box verification of lifecycle behavior
     status: pending
