@@ -258,9 +258,14 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
   "connection_id": "bridge_abc123",
   "profile_name": "developer",
   "connected_at": "2026-03-25T12:00:00Z",
-  "tool_call_count": 5
+  "tool_call_count": 5,
+  "last_activity": "2026-03-25T12:05:00Z"
 }
 ```
+
+`last_activity` is an ISO-8601 UTC timestamp updated on each client interaction
+(tool calls, tool list requests, connection registration). Empty string when no
+activity has been recorded since connection establishment.
 
 **AuditEntry** (structural):
 ```json
@@ -564,6 +569,45 @@ can trigger reconnection by:
 - Modifying the config file (if a file watcher is configured).
 - Calling `gateway_reload_config_from_disk` programmatically.
 
+### 9.6 Connection Reaper
+
+The connection reaper is a background async task that periodically removes
+orphaned and idle upstream connections.
+
+**Public types (`shell/connection_reaper.py`):**
+
+| Type | Kind | Fields |
+|------|------|--------|
+| `ReaperConfig` | frozen dataclass | `sweep_interval_seconds: float = 30.0`, `native_idle_ttl_seconds: float = 120.0`, `bridge_idle_ttl_seconds: float = 300.0` |
+| `ReaperSweepOutcome` | frozen dataclass | `checked: int`, `reaped_session_gone: list[str]`, `reaped_stale: list[str]`, `errors: list[str]` |
+| `ConnectionReaper` | class | `start()`, `stop()`, `sweep()` — all return `Result` |
+
+**Activity tracking (`shell/gateway_runtime.py`):**
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `touch_connection_activity` | `(connection_id: str, timestamp: str) -> Result[bool, str]` | Update `last_activity` for a connection under `_runtime_lock` |
+
+**Model field (`core/models.py`):**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ConnectionContext.last_activity` | `str` | `""` | ISO-8601 UTC timestamp of last client interaction |
+
+**Sweep behavior:**
+
+1. Session probe (`conn_*` only): if the upstream session is no longer in the
+   session registry, the connection is reaped.
+2. Staleness check (all types): if `last_activity` (or `connected_at` fallback)
+   exceeds the connection-type TTL, the connection is reaped.
+3. After each reap, `idle_manager.decrement()` is called to maintain the
+   connection count for idle shutdown.
+
+**Lifecycle:**
+
+- Starts after `gateway_converge_startup` succeeds.
+- Stops before `gateway_shutdown` tears down downstreams.
+
 ## 10. Operational Limits and Constraints
 
 ### 10.1 Audit
@@ -594,6 +638,9 @@ can trigger reconnection by:
 | Idle timeout range | `[0, ∞)` float seconds | `0` disables auto-shutdown | `shell/idle_shutdown.py` |
 | Idle timeout default | 300 seconds | Yes — CLI `--idle-timeout` default | `cli.py` |
 | Max tool calls counter | No limit enforced | — | `_runtime.total_tool_calls` is an unbounded `int` |
+| Reaper sweep interval | 30.0 seconds | Yes — `ReaperConfig.sweep_interval_seconds` | `shell/connection_reaper.py` |
+| Native idle TTL | 120.0 seconds | Yes — `ReaperConfig.native_idle_ttl_seconds` | `shell/connection_reaper.py` |
+| Bridge idle TTL | 300.0 seconds (0 = disabled) | Yes — `ReaperConfig.bridge_idle_ttl_seconds` | `shell/connection_reaper.py` |
 
 ### 10.4 Tool Registry
 

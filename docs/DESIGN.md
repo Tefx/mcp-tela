@@ -135,6 +135,54 @@ If no new connections arrive before the timeout, the server shuts down.
 - Set to `0` to keep a server running indefinitely
 - Shutdown is triggered by the idle manager's timeout, not by lack of downstream activity
 
+### Connection reaper
+
+Connections can leak when a client disconnects without sending `POST /disconnect`
+(e.g., crash, network drop, or killed process). The connection reaper is a
+background async task that periodically sweeps all runtime connections and removes
+orphaned or idle entries.
+
+**Activity tracking:**
+
+Each `ConnectionContext` carries a `last_activity` field (ISO-8601 UTC string,
+initially empty). The field is updated on every client interaction via
+`touch_connection_activity()` — a thread-safe accessor in `gateway_runtime.py`.
+
+Touch points:
+- `_ensure_connection` (gateway.py) — on MCP session initialization
+- `handle_tools_call` (upstream.py) — on every tool call
+- `handle_tools_list` (upstream.py) — on every tools/list request
+- `handle_connect` (http_routes.py) — on bridge connection registration
+
+**Sweep behavior:**
+
+The reaper runs a sweep cycle every `sweep_interval_seconds` (default: 30s).
+Each sweep inspects all runtime connections:
+
+1. **Session probe** (`conn_*` connections only): checks whether the upstream
+   session is still registered. If the session is gone, the connection is reaped
+   immediately via `cleanup_connection_by_id`.
+2. **Staleness check** (all connection types): compares `last_activity` (or
+   `connected_at` as fallback) against the connection-type-specific idle TTL.
+   Connections that exceed the TTL are reaped.
+
+After each reap, `idle_manager.decrement()` is called so the idle shutdown
+timer can start when no connections remain.
+
+**Configuration defaults (`ReaperConfig`):**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `sweep_interval_seconds` | 30.0 | How often the reaper runs |
+| `native_idle_ttl_seconds` | 120.0 | Idle TTL for native (non-bridge) connections |
+| `bridge_idle_ttl_seconds` | 300.0 | Idle TTL for bridge connections (0 = disabled) |
+
+**Lifecycle wiring:**
+
+- The reaper starts after `gateway_converge_startup` completes successfully.
+- The reaper stops before `gateway_shutdown` tears down downstreams.
+- Both `start()` and `stop()` are idempotent.
+
 ### Hard interrupt semantics (SIGINT/SIGTERM)
 
 `tela connect` handles hard interrupts at three lifecycle stages:
@@ -232,6 +280,7 @@ I/O and process edges:
 - reload orchestration
 - lockfile management
 - connection tracking
+- connection reaping (idle/orphan cleanup)
 - HTTP route handlers
 - stdio-HTTP bridge
 
@@ -424,6 +473,7 @@ Available tools:
 | `get_upstream_log_level` | `() -> Result[str, str]` | OPERATION |
 | `with_upstream_server` | `(fn: Callable[[FastMCP], T]) -> Result[T, str]` | OPERATION (test-only) |
 | `set_upstream_server` | `(server: FastMCP \| None) -> None` | WRITE |
+| `touch_connection_activity` | `(connection_id: str, timestamp: str) -> Result[bool, str]` | WRITE |
 | `get_upstream_server` | `() -> None` | Removed (raises RuntimeError) |
 
 **Types:**
@@ -437,7 +487,7 @@ Available tools:
 
 **Dependencies:**
 - Upstream: `tela.core.models` (ConnectionContext, TelaConfig), `mcp.server.fastmcp` (FastMCP), `starlette` (Starlette).
-- Downstream: consumed by `gateway.py`, `http_routes.py`, `upstream.py`, `reload.py`.
+- Downstream: consumed by `gateway.py`, `http_routes.py`, `upstream.py`, `reload.py`, `connection_reaper.py`.
 
 **Concurrency:** All public accessors acquire `_runtime_lock` (`threading.RLock`). The lock is reentrant. Returned snapshots share no mutable state with the runtime. The `FastMCP` reference never escapes the lock — only operation results are returned.
 
@@ -704,6 +754,30 @@ Available tools:
 - Downstream: none. Consumed by `gateway.py` (connect/disconnect routes) and `serve_cmd.py` (initialization).
 
 **Concurrency:** All mutable state protected by `asyncio.Lock` (not `threading.Lock` — this is asyncio-only). The idle timer is an `asyncio.Task` that sleeps and fires the shutdown callback on expiry; new connections cancel the task.
+
+---
+
+### `connection_reaper.py`
+
+**Responsibility:** Background sweep of idle and orphaned upstream connections. Periodically inspects all runtime connections and removes those whose upstream session is gone or whose idle TTL has been exceeded.
+
+**Public API:**
+- `ReaperConfig` — frozen dataclass: `sweep_interval_seconds`, `native_idle_ttl_seconds`, `bridge_idle_ttl_seconds`.
+- `ReaperSweepOutcome` — frozen dataclass: `checked`, `reaped_session_gone`, `reaped_stale`, `errors`.
+- `ConnectionReaper` class:
+  - `start() -> Result[None, str]` — start background sweep task (idempotent).
+  - `stop() -> Result[None, str]` — stop background sweep task (idempotent).
+  - `sweep() -> Result[ReaperSweepOutcome, str]` — execute a single sweep cycle.
+
+**Ownership:**
+- Reads: runtime connections (via `get_runtime_connections_snapshot`), session registry (via `get_captured_session`).
+- Mutates: runtime connections (via `cleanup_connection_by_id`), idle manager count (via `idle_manager.decrement`).
+
+**Dependencies:**
+- Upstream: `asyncio`, `tela.shell.gateway_runtime`, `tela.shell.upstream`, `tela.shell.idle_shutdown`, `tela.shell.connection_lifecycle`.
+- Downstream: none. Consumed by `gateway.py` (lifecycle wiring).
+
+**Concurrency:** The sweep loop is a single `asyncio.Task`. All runtime state access goes through locked gateway_runtime accessors. The reaper does not hold any long-lived locks across sweep iterations.
 
 ---
 
