@@ -48010,13 +48010,13 @@ phases:
       - All docs match actual implementation'
 - id: cl.deep_review
   name: Connection Lifecycle Deep Review
-  status: pending
+  status: in_progress
   depends_on:
   - cl.doc_sync
   steps:
   - id: cl.deep_review.wiring_audit
     name: Full wiring audit for lifecycle module
-    status: pending
+    status: claimed
     description: "Complete wiring audit for the connection lifecycle feature.\n\n\
       verification_scope: full-plan-check (for lifecycle-related surfaces)\n\nREQUIRED\
       \ CHECKS:\n1. Export reachability: every symbol exported from core/lifecycle.py\
@@ -48079,6 +48079,8 @@ phases:
 
       **Verdict**: PASS (all wired) | ISSUES_FOUND (list above)'
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-03-31T14:29:54.165043+00:00'
   - id: cl.deep_review.spec_conformance
     name: 'Spec conformance: lifecycle vs DESIGN.md'
     status: pending
