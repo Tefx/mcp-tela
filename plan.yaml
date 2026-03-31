@@ -47423,6 +47423,36 @@ phases:
     depends_on:
     - cl.retest.green
     agent: integration-verifier
+  - id: cl.retest.gate
+    name: 'Gate: retest phase complete'
+    status: pending
+    description: 'Gate review: Verify all post-implementation retests passed.
+
+
+      review_depth: STANDARD
+
+
+      Review criteria:
+
+      1. All lifecycle tests pass (green)
+
+      2. invar guard clean
+
+      3. No regressions in existing test suite
+
+      4. Evidence quality: actual command output present (not summaries)
+
+
+      Independence: reviewer MUST NOT be integration-verifier.'
+    verification: '- All retest evidence reviewed and verified
+
+      - No open failures
+
+      - Ready for documentation sync'
+    depends_on:
+    - cl.retest.green
+    - cl.retest.invar
+    agent: gate-reviewer
 - id: cl.doc_sync
   name: Connection Lifecycle Documentation Sync
   status: locked
