@@ -47464,7 +47464,7 @@ phases:
       (pre-existing test design, test file PROTECTED)'
   - id: cl.impl.gate
     name: 'Gate: implementation phase complete'
-    status: pending
+    status: claimed
     description: "Gate review: Verify implementation phase completion and quality.\n\
       \nreview_depth: STANDARD\nreview_depth_rationale: |\n  - Phase adds field to\
       \ existing Core model + new Shell service\n  - Asyncio lifecycle requires careful\
@@ -47495,6 +47495,8 @@ phases:
     - cl.impl.runtime_accessor
     - cl.impl.reaper
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-03-31T14:15:30.908188+00:00'
 - id: cl.wiring
   name: Connection Lifecycle Wiring
   status: locked
