@@ -47152,6 +47152,45 @@ phases:
     depends_on:
     - cl.impl.model
     agent: python-executor
+  - id: cl.impl.reaper
+    name: Implement ReaperService with asyncio task loop
+    status: pending
+    description: "Fill in stub bodies for ReaperService in shell layer per the contract\
+      \ from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from contract steps):\n\
+      \  - src/tela/core/lifecycle.py — ReaperProtocol, ReaperConfig, reap_stale_connections,\
+      \ ConnectionRegistry are AUTHORITATIVE\n  - tests/core/test_lifecycle.py — test\
+      \ cases are PROTECTED\n\nYOUR SCOPE:\n- File: src/tela/shell/reaper.py (new\
+      \ file in shell — it does I/O via asyncio)\n- Implement ReaperService class\
+      \ that satisfies ReaperProtocol\n- start(): creates an asyncio.Task that calls\
+      \ check_now() every config.check_interval_s\n- stop(): cancels the task, awaits\
+      \ cleanup\n- check_now(): calls reap_stale_connections(registry, threshold)\
+      \ from core, then for each stale server calls the disconnect callback\n- The\
+      \ disconnect callback is injected at construction (not hardcoded to gateway)\n\
+      - Use asyncio.sleep for the interval loop with proper cancellation handling\n\
+      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
+      \ completion is NOT acceptable.\nEach deliverable MUST contain substantive logic\
+      \ that processes its inputs and produces outputs that vary based on those inputs.\
+      \ Private stub classes (_Runtime*, _Stub*, _Placeholder*) do not satisfy this\
+      \ requirement.\n\n## Known Risks (from project history)\n- asyncio task cleanup:\
+      \ ensure stop() properly cancels and awaits the background task to avoid 'task\
+      \ was destroyed but it is pending' warnings\n- Pattern: follow existing asyncio\
+      \ patterns in src/tela/shell/ (check gateway.py for task lifecycle)\n\nstep_type:\
+      \ implementation\nupstream_artifacts:\n  - path: src/tela/core/lifecycle.py\n\
+      \    from_step: cl.contract.reaper\n    tier: contract\n  - path: tests/core/test_lifecycle.py\n\
+      \    from_step: cl.test.reaper\n    tier: test\n\nspec_refs: DESIGN.md#reaper\n\
+      touch_paths: src/tela/shell/reaper.py"
+    verification: '- src/tela/shell/reaper.py exists with ReaperService class
+
+      - ReaperService satisfies ReaperProtocol
+
+      - start/stop/check_now have real logic (not stubs)
+
+      - asyncio task lifecycle handles cancellation cleanly
+
+      - invar guard passes on this file'
+    depends_on:
+    - cl.impl.runtime_accessor
+    agent: python-executor
 - id: cl.wiring
   name: Connection Lifecycle Wiring
   status: locked
