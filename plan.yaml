@@ -46978,6 +46978,75 @@ phases:
   status: locked
   depends_on:
   - cl.contract
+  steps:
+  - id: cl.test.reaper
+    name: Reaper and ConnectionRecord tests (expected red)
+    status: pending
+    description: 'Define pre-implementation tests for ConnectionRecord lifecycle transitions
+      and ReaperService behavior.
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+
+      Scope:
+
+      - File: tests/core/test_lifecycle.py (new file)
+
+      - Test ConnectionState transitions: valid transitions succeed, invalid raise
+
+      - Test ConnectionRecord creation with required fields
+
+      - Test ConnectionRecord.touch() updates last_seen
+
+      - Test ReaperConfig validation: interval > 0, threshold > interval
+
+      - Test reap_stale_connections: returns names of connections past threshold
+
+      - Test reap_stale_connections: skips connections in CONNECTING state (grace
+      period)
+
+      - All tests should import from src/tela/core/lifecycle and call the contracted
+      stubs
+
+
+      These tests WILL FAIL (red) because implementation does not exist yet. That
+      is expected and correct.
+
+
+      Evidence requirements:
+
+      - modified files limited to tests/ plus fixtures/helpers
+
+      - expected_failures or exposed_gaps documented
+
+      - downstream implementation owner: cl.impl phase
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one test fixture MUST use the EXACT documented format from DESIGN.md.
+
+      Cite the spec section the fixture was derived from.
+
+
+      spec_refs: DESIGN.md#connection-lifecycle, DESIGN.md#reaper
+
+      touch_paths: tests/core/test_lifecycle.py'
+    verification: '- tests/core/test_lifecycle.py exists with >= 6 test functions
+
+      - Tests import from tela.core.lifecycle
+
+      - Tests run but FAIL (expected red) because stubs raise NotImplementedError
+
+      - No product implementation code modified
+
+      - Test fixtures cite spec sections'
+    agent: python-executor
 - id: cl.impl
   name: Connection Lifecycle Implementation
   status: locked
