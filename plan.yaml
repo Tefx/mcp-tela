@@ -47598,3 +47598,63 @@ phases:
 
       **Verdict**: PASS (all wired) | ISSUES_FOUND (list above)'
     agent: wiring-auditor
+  - id: cl.deep_review.spec_conformance
+    name: 'Spec conformance: lifecycle vs DESIGN.md'
+    status: pending
+    description: "Spec conformance verification via adversarial divergence hunting.\n\
+      Agent: spec-verifier (dedicated, read-only, independent).\n\nThis is NOT \"\
+      do tests pass\" — it is \"does the implementation match what the spec says.\"\
+      \n\nSCOPE: Only DESIGN.md and INTERFACES.md sections related to connection lifecycle\
+      \ and reaper.\n\nFOCUS AREAS (high-drift-risk):\n- ConnectionState enum values\
+      \ match DESIGN.md exactly (character-exact)\n- ConnectionRecord fields match\
+      \ documented schema exactly\n- ReaperConfig defaults match documented defaults\
+      \ (numeric-exact)\n- State transition rules match documented state machine\n\
+      - Reaper behavior matches documented check/reap/disconnect flow\n- Omission\
+      \ drift: any MUST requirement in spec with no corresponding implementation\n\
+      \nFor EACH requirement, cite the spec section AND implementation file:line.\n\
+      \nBehavioral precedence claims (execution order, conditional logic) MUST be\
+      \ flagged as NEEDS_TEST with a concrete test suggestion, not asserted as CONFORMS.\n\
+      \nevidence_template: |\n  ## Spec Conformance Report\n  **Phase**: cl (connection\
+      \ lifecycle)\n  **Spec source**: DESIGN.md, INTERFACES.md\n\n  ## Evidence Table\n\
+      \  | R# | Spec Section | Requirement | Implementation | Verdict | Notes |\n\
+      \  Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC\n\
+      \n  ## Coverage Summary\n  - Total requirements: N\n  - CONFORMS: N | DIVERGES:\
+      \ N | PARTIAL: N\n  - NEEDS_TEST: N | NOT_FOUND: N | AMBIGUOUS_SPEC: N\n\n \
+      \ ## Top Risks\n  [DIVERGES items ranked by severity]"
+    verification: '- Spec conformance report complete with evidence table
+
+      - All DIVERGES items flagged with severity
+
+      - No unaddressed DIVERGES of blocker severity
+
+      - Coverage summary shows all lifecycle requirements checked'
+    evidence_template: '## Spec Conformance Report
+
+      **Phase**: cl (connection lifecycle)
+
+      **Spec source**: DESIGN.md, INTERFACES.md
+
+
+      ## Evidence Table
+
+      | R# | Spec Section | Requirement | Implementation | Verdict | Notes |
+
+
+      Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
+
+
+      ## Coverage Summary
+
+      - Total requirements: N
+
+      - CONFORMS: N | DIVERGES: N | PARTIAL: N
+
+      - NEEDS_TEST: N | NOT_FOUND: N | AMBIGUOUS_SPEC: N
+
+
+      ## Top Risks
+
+      [DIVERGES items ranked by severity]'
+    depends_on:
+    - cl.deep_review.wiring_audit
+    agent: spec-verifier
