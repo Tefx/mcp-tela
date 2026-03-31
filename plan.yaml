@@ -47458,6 +47458,45 @@ phases:
   status: locked
   depends_on:
   - cl.retest
+  steps:
+  - id: cl.doc_sync.update
+    name: Update docs for connection lifecycle and reaper
+    status: pending
+    description: 'Sync project documentation with the implemented connection lifecycle
+      and reaper features.
+
+
+      REQUIRED CHECKS:
+
+      - DESIGN.md: add/update connection lifecycle section with ConnectionState machine,
+      ConnectionRecord fields, ReaperService behavior
+
+      - INTERFACES.md: add ConnectionRecord, ConnectionState, ReaperConfig, ReaperProtocol
+      to interface catalog
+
+      - INTERFACES.md: add ConnectionRegistry public API
+
+      - CLAUDE.md: if any new verification commands or architectural rules apply,
+      add them
+
+      - Remove references to unimplemented lifecycle features (if any stale references
+      exist)
+
+      - Add reaper configuration documentation (ReaperConfig defaults, how to disable)
+
+
+      Do NOT add features not implemented. Only document what exists.
+
+
+      touch_paths: DESIGN.md, INTERFACES.md, CLAUDE.md'
+    verification: '- DESIGN.md has connection lifecycle section with state machine
+
+      - INTERFACES.md catalogs all new public types
+
+      - No stale references to unimplemented features
+
+      - Documentation matches actual implementation'
+    agent: doc-reviewer
 - id: cl.deep_review
   name: Connection Lifecycle Deep Review
   status: locked
