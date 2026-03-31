@@ -47400,7 +47400,7 @@ phases:
   - cl.wiring
   steps:
   - id: cl.retest.green
-    name: 'Retest: all lifecycle tests must pass (green)'
+    name: 'Retest: all reaper + connection tests must pass green'
     status: pending
     description: 'Post-implementation retest: verify that all tests defined in cl.test
       phase now pass.
@@ -47413,9 +47413,9 @@ phases:
       expected_result: green
 
 
-      Run the full lifecycle test suite and verify all tests pass:
+      Run the full connection lifecycle test suite and verify all tests pass:
 
-      - pytest tests/core/test_lifecycle.py -v
+      - pytest tests/shell/test_connection_reaper.py -v
 
       - All tests that were expected-red in cl.test phase must now be green
 
@@ -47426,16 +47426,19 @@ phases:
       and tested in cl.test.
 
 
-      spec_refs: DESIGN.md#connection-lifecycle, DESIGN.md#reaper
+      spec_refs: architecture ADR connection-lifecycle section, architecture ADR reaper
+      section
 
-      touch_paths: tests/core/test_lifecycle.py (read-only verification)'
-    verification: '- pytest tests/core/test_lifecycle.py -v passes all tests
+      touch_paths: tests/shell/test_connection_reaper.py (read-only verification)'
+    verification: '- pytest tests/shell/test_connection_reaper.py -v passes all tests
 
       - No test failures or errors
 
       - All previously-red tests now green
 
       - Evidence includes actual test output (not summary)'
+    refs:
+    - tests/shell/test_connection_reaper.py
     agent: integration-verifier
   - id: cl.retest.invar
     name: Invar guard full scan
