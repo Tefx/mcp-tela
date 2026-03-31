@@ -133,6 +133,8 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
             status_code = 404
         elif error.startswith("GATEWAY_NOT_STARTED"):
             status_code = 503
+        elif error.startswith("ADMISSION_REJECTED_WARMING"):
+            status_code = 503
         return JSONResponse(status_code=status_code, content={"error": error})
 
     @upstream_server.custom_route("/health", methods=["GET"])

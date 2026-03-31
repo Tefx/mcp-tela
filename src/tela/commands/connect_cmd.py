@@ -706,6 +706,9 @@ def _post_json(
             with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS):
                 return Result(value=None)
         except urllib_error.HTTPError as exc:
+            if exc.code == 503 and attempt < HTTP_TRANSIENT_RETRIES:
+                time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+                continue
             return Result(error=f"HTTP_{exc.code}: {url}")
         except urllib_error.URLError as exc:
             last_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
