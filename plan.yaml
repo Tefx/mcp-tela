@@ -47373,7 +47373,7 @@ phases:
       - dead_export warning expected — reaper will wire it in subsequent step'
   - id: cl.impl.reaper
     name: Implement ConnectionReaper sweep logic
-    status: claimed
+    status: done
     description: "Fill in stub bodies for ConnectionReaper in src/tela/shell/connection_reaper.py\
       \ per the contract from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from\
       \ contract steps):\n  - src/tela/shell/connection_reaper.py — ConnectionReaper,\
@@ -47421,6 +47421,47 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-03-31T14:12:20.632692+00:00'
+    done_at: '2026-03-31T14:15:19.278027+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 47d7d2e (squash merge of b95dc24)
+
+
+      Verification:
+
+      - pytest tests/shell/test_connection_reaper.py -> 9 passed, 0 failed
+
+      - invar guard -> passed (0 errors)
+
+
+      Files changed:
+
+      - src/tela/shell/connection_reaper.py (185 lines added)
+
+
+      Implementation:
+
+      - start(): creates asyncio.Task sweep loop, idempotent
+
+      - stop(): cancels task with CancelledError handling, idempotent
+
+      - sweep(): session probe for conn_*, staleness check for all, idle_manager.decrement()
+      on reap
+
+      - _sweep_loop(): background loop with interval sleep + cancellation
+
+      - _decrement_idle_manager(): static helper for idle manager integration
+
+
+      Spec link:
+
+      - Architecture ADR: ConnectionReaper module spec
+
+
+      Gaps/Notes:
+
+      - test_sweep_calls_idle_manager_decrement passes but doesn''t assert mock injection
+      (pre-existing test design, test file PROTECTED)'
   - id: cl.impl.gate
     name: 'Gate: implementation phase complete'
     status: pending
