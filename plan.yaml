@@ -47328,41 +47328,45 @@ phases:
     - src/tela/shell/http_routes.py
     agent: python-executor
   - id: cl.wiring.lifecycle
-    name: Wire ReaperService into gateway startup/shutdown
+    name: Wire reaper start/stop into gateway lifecycle
     status: pending
-    description: "Wire the ReaperService into the gateway's startup and shutdown lifecycle.\n\
-      \ntags: [\"integration\"]\n\nYOUR SCOPE:\n- In gateway startup (serve command\
-      \ or gateway init): instantiate ReaperService with ReaperConfig and ConnectionRegistry,\
-      \ call reaper.start()\n- In gateway shutdown: call reaper.stop() before closing\
-      \ connections\n- ReaperConfig values should come from tela configuration (add\
-      \ reaper section to config if needed) or use defaults\n- The reaper's disconnect\
-      \ callback should call the gateway's existing disconnect logic\n\n## Gate Preview\
-      \ (what the gate WILL reject)\n1. Reaper not started on gateway startup\n2.\
-      \ Reaper not stopped on gateway shutdown\n3. Reaper disconnect callback not\
-      \ wired to actual disconnect logic\n4. ReaperConfig not configurable (hardcoded\
-      \ values without config source)\n\n## Known Risks (from project history)\n-\
-      \ Startup sequencing matters: reaper must start AFTER downstream connections\
-      \ are established\n- Shutdown ordering: reaper must stop BEFORE connections\
-      \ are torn down\n- Pattern: check existing startup/shutdown sequence in gateway.py\n\
-      \nstep_type: implementation\nupstream_artifacts:\n  - path: src/tela/shell/reaper.py\n\
+    description: "Wire ConnectionReaper lifecycle into the gateway's startup and shutdown\
+      \ sequence.\n\ntags: [\"integration\"]\n\nYOUR SCOPE:\n- In src/tela/shell/gateway.py:\n\
+      \  - After gateway_converge_startup completes: instantiate ConnectionReaper\
+      \ with ReaperConfig and the gateway runtime, call reaper.start()\n  - In gateway_shutdown:\
+      \ call reaper.stop() BEFORE tearing down connections\n- ReaperConfig should\
+      \ use default values (sweep_interval_seconds=30, native_idle_ttl_seconds=300,\
+      \ bridge_idle_ttl_seconds=120) unless config source is available\n- Import ConnectionReaper,\
+      \ ReaperConfig from tela.shell.connection_reaper\n\n## Gate Preview (what the\
+      \ gate WILL reject)\n1. Reaper not started after gateway_converge_startup\n\
+      2. Reaper not stopped in gateway_shutdown\n3. Wrong ordering: reaper must start\
+      \ AFTER startup converge, stop BEFORE connection teardown\n4. ReaperConfig not\
+      \ using correct defaults\n\n## Known Risks (from project history)\n- Startup\
+      \ sequencing matters: reaper must start AFTER downstream connections are established\n\
+      - Shutdown ordering: reaper must stop BEFORE connections are torn down\n- Pattern:\
+      \ check existing startup/shutdown sequence in gateway.py\n- grep hint: grep\
+      \ -n 'gateway_converge_startup\\|gateway_shutdown\\|async def serve' src/tela/shell/gateway.py\n\
+      \nstep_type: implementation\nupstream_artifacts:\n  - path: src/tela/shell/connection_reaper.py\n\
       \    from_step: cl.impl.reaper\n    tier: implementation\n  - path: src/tela/shell/gateway.py\n\
       \    from_step: cl.wiring.touch_points\n    tier: implementation\n\nspec_refs:\
-      \ DESIGN.md#reaper, DESIGN.md#gateway-lifecycle\ntouch_paths: src/tela/shell/gateway.py,\
-      \ src/tela/shell/reaper.py\n\nevidence_template: |\n  ## Integration Evidence\n\
-      \  **Command or test exercising the full path**:\n  ```\n  (exact command that\
-      \ starts gateway and shows reaper lifecycle)\n  ```\n  **Actual output**:\n\
-      \  ```\n  (stdout/stderr showing reaper start/stop in gateway lifecycle)\n \
-      \ ```\n  **Path exercised**: gateway.startup -> ReaperService.start -> periodic\
-      \ check -> gateway.shutdown -> ReaperService.stop"
-    verification: '- ReaperService instantiated and started in gateway startup
+      \ architecture ADR reaper section, architecture ADR gateway-lifecycle\ntouch_paths:\
+      \ src/tela/shell/gateway.py\n\nevidence_template: |\n  ## Integration Evidence\n\
+      \  **Command or test exercising the full path**:\n  ```\n  <exact command showing\
+      \ reaper starts/stops with gateway>\n  ```\n  **Actual output**:\n  ```\n  <stdout/stderr\
+      \ showing reaper lifecycle in gateway startup/shutdown>\n  ```\n  **Path exercised**:\
+      \ gateway_converge_startup -> ConnectionReaper.start -> ... -> gateway_shutdown\
+      \ -> ConnectionReaper.stop"
+    verification: '- ConnectionReaper instantiated and started after gateway_converge_startup
 
-      - ReaperService stopped in gateway shutdown
-
-      - Disconnect callback wired to actual disconnect logic
+      - ConnectionReaper stopped in gateway_shutdown before connection teardown
 
       - Startup/shutdown ordering correct
 
-      - invar guard clean on touched files'
+      - ReaperConfig uses correct defaults
+
+      - invar guard clean on gateway.py
+
+      - Integration evidence shows reaper lifecycle'
     evidence_template: '## Integration Evidence
 
       **Command or test exercising the full path**:
@@ -47383,6 +47387,9 @@ phases:
 
       **Path exercised**: gateway.startup -> ReaperService.start -> periodic check
       -> gateway.shutdown -> ReaperService.stop'
+    refs:
+    - src/tela/shell/gateway.py
+    - src/tela/shell/connection_reaper.py
     depends_on:
     - cl.wiring.touch_points
     agent: python-executor
