@@ -47191,6 +47191,33 @@ phases:
     depends_on:
     - cl.impl.runtime_accessor
     agent: python-executor
+  - id: cl.impl.gate
+    name: 'Gate: implementation phase complete'
+    status: pending
+    description: "Gate review: Verify implementation phase completion and quality.\n\
+      \nreview_depth: STANDARD\nreview_depth_rationale: |\n  - Phase introduces new\
+      \ core model + shell service\n  - Asyncio lifecycle requires careful review\n\
+      \  - Module-level mutable state (ConnectionRegistry) needs concurrency audit\n\
+      \nReview criteria:\n1. All stub bodies filled with substantive logic\n2. No\
+      \ NotImplementedError remains in non-test code\n3. @pre/@post contracts preserved\
+      \ from contract phase\n4. Doctests pass for all contracted functions\n5. invar\
+      \ guard clean on touched files\n6. ConnectionRegistry concurrency assumption\
+      \ documented\n7. ReaperService asyncio task lifecycle handles cancellation\n\
+      8. No I/O imports in core/ module\n\nIndependence: reviewer MUST NOT be python-executor."
+    verification: '- All implementation steps reviewed
+
+      - Stub-exclusion criteria met for every step
+
+      - Contract preservation confirmed
+
+      - invar guard clean
+
+      - Asyncio lifecycle patterns sound'
+    depends_on:
+    - cl.impl.model
+    - cl.impl.runtime_accessor
+    - cl.impl.reaper
+    agent: gate-reviewer
 - id: cl.wiring
   name: Connection Lifecycle Wiring
   status: locked
