@@ -48196,7 +48196,7 @@ phases:
       Top risks: none (0 DIVERGES)'
   - id: cl.deep_review.black_box
     name: Black-box verification of lifecycle behavior
-    status: pending
+    status: claimed
     description: "Black-box spec verification using ONLY the spec and public API signatures\
       \ (no implementation source reading).\n\nIndependence Level: L3 (black-box)\n\
       \nUsing ONLY DESIGN.md, INTERFACES.md, and public API signatures:\n1. Create\
@@ -48251,6 +48251,8 @@ phases:
     depends_on:
     - cl.deep_review.spec_conformance
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-03-31T14:36:03.959433+00:00'
   - id: cl.deep_review.gate
     name: Final deep review gate
     status: pending
