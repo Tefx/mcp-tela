@@ -46922,3 +46922,8 @@ phases:
   status: locked
   depends_on:
   - cl.test
+- id: cl.wiring
+  name: Connection Lifecycle Wiring
+  status: locked
+  depends_on:
+  - cl.impl
