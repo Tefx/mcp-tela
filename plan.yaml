@@ -46945,32 +46945,47 @@ phases:
     - src/tela/core/models.py
     agent: python-executor
   - id: cl.contract.reaper
-    name: ReaperService protocol and configuration contracts
+    name: ConnectionReaper + ReaperConfig + touch_connection_activity stubs
     status: pending
-    description: "Define the ReaperService protocol and ReaperConfig in core.\n\n\
-      step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - signatures\n\
-      \  - type_defs\n  - interfaces\n  - stubs\n\nAuthoritative interface (from DESIGN.md\
-      \ reaper section):\n\n```python\n@dataclass\nclass ReaperConfig:\n    check_interval_s:\
-      \ float  # default 30.0\n    stale_threshold_s: float  # default 90.0\n    enabled:\
-      \ bool  # default True\n\nclass ReaperProtocol(Protocol):\n    async def start(self)\
-      \ -> None: ...\n    async def stop(self) -> None: ...\n    async def check_now(self)\
-      \ -> list[str]: ...  # returns reaped server names\n```\n\nScope:\n- File: src/tela/core/lifecycle.py\
-      \ (extend from contract.model step)\n- Define ReaperConfig with @pre contracts\
-      \ on bounds (interval > 0, threshold > interval)\n- Define ReaperProtocol as\
-      \ a Protocol class\n- Define reap_stale_connections pure function signature\
-      \ with @pre/@post and doctest\n- All bodies MUST be stubs\n\nDo NOT implement\
-      \ any logic. Contract step only.\n\nauthoritative_interface: ReaperProtocol\
-      \ + ReaperConfig per DESIGN.md\nspec_refs: DESIGN.md#reaper, INTERFACES.md#reaper-config\n\
-      touch_paths: src/tela/core/lifecycle.py"
-    verification: '- ReaperConfig and ReaperProtocol defined in src/tela/core/lifecycle.py
+    description: "Define ConnectionReaper class stubs, ReaperConfig, ReaperSweepOutcome,\
+      \ and touch_connection_activity() stub.\n\nstep_type: contract\ncontract_purity:\
+      \ ENFORCED\ncontract_outputs:\n  - signatures\n  - type_defs\n  - stubs\n\n\
+      Authoritative interface (from architecture ADR):\n\n1. NEW file src/tela/shell/connection_reaper.py:\n\
+      ```python\n@dataclass\nclass ReaperConfig:\n    sweep_interval_seconds: float\
+      \  # default 30.0\n    native_idle_ttl_seconds: float  # default 300.0\n   \
+      \ bridge_idle_ttl_seconds: float  # default 120.0\n\n@dataclass\nclass ReaperSweepOutcome:\n\
+      \    checked: int\n    reaped_session_gone: int\n    reaped_stale: int\n   \
+      \ errors: list[str]\n\nclass ConnectionReaper:\n    def __init__(self, config:\
+      \ ReaperConfig, runtime: GatewayRuntime): ...\n    async def start(self) ->\
+      \ None: ...\n    async def stop(self) -> None: ...\n    async def sweep(self)\
+      \ -> ReaperSweepOutcome: ...\n```\n\n2. EXISTING file src/tela/shell/gateway_runtime.py\
+      \ — add stub:\n```python\ndef touch_connection_activity(connection_id: str,\
+      \ timestamp: str) -> Result[bool, str]: ...\n```\n\nScope:\n- src/tela/shell/connection_reaper.py\
+      \ (NEW file in Shell zone)\n- src/tela/shell/gateway_runtime.py (add touch_connection_activity\
+      \ stub)\n- Shell zone: all functions return Result[T, E]\n- All method bodies\
+      \ MUST be stubs (raise NotImplementedError or pass)\n- NO ReaperProtocol in\
+      \ Core zone — the reaper is entirely Shell zone\n\nDo NOT create src/tela/core/lifecycle.py\
+      \ or any Core zone reaper abstractions.\nDo NOT implement any logic. Contract\
+      \ step only.\n\nauthoritative_interface: ConnectionReaper + ReaperConfig + ReaperSweepOutcome\
+      \ + touch_connection_activity per architecture ADR\nspec_refs: architecture\
+      \ ADR reaper section\ntouch_paths: src/tela/shell/connection_reaper.py, src/tela/shell/gateway_runtime.py"
+    verification: '- src/tela/shell/connection_reaper.py exists with ConnectionReaper,
+      ReaperConfig, ReaperSweepOutcome
 
-      - @pre on ReaperConfig bounds (interval > 0, threshold > interval)
+      - src/tela/shell/gateway_runtime.py has touch_connection_activity stub
 
-      - reap_stale_connections has @pre/@post + doctest
+      - All method bodies are stubs (NotImplementedError or pass)
 
-      - No implementation logic
+      - No src/tela/core/lifecycle.py created
 
-      - invar sig src/tela/core/lifecycle.py shows all contracts'
+      - No ReaperProtocol in Core zone
+
+      - Shell zone: functions return Result[T, E]
+
+      - invar sig on both files shows the new signatures'
+    refs:
+    - src/tela/shell/connection_reaper.py
+    - src/tela/shell/gateway_runtime.py
     depends_on:
     - cl.contract.model
     agent: python-executor
