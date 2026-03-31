@@ -47223,6 +47223,64 @@ phases:
   status: locked
   depends_on:
   - cl.impl
+  steps:
+  - id: cl.wiring.touch_points
+    name: Wire ConnectionRecord into connect/disconnect paths
+    status: pending
+    description: "Wire ConnectionRecord creation and state updates into the existing\
+      \ connect/disconnect code paths in the gateway.\n\ntags: [\"integration\"]\n\
+      \nYOUR SCOPE:\n- In src/tela/shell/gateway.py (or relevant connect handler):\n\
+      \  - On connect: create ConnectionRecord(server_name, CONNECTING), register\
+      \ in ConnectionRegistry, update to CONNECTED on success or DISCONNECTED on failure\n\
+      \  - On disconnect: transition record to DISCONNECTING, perform disconnect,\
+      \ transition to DISCONNECTED\n  - On downstream error/timeout: transition to\
+      \ DEGRADED\n- Import ConnectionRecord, ConnectionState, ConnectionRegistry from\
+      \ tela.core.lifecycle\n- Do NOT restructure gateway; use Edit to add record-keeping\
+      \ at existing connect/disconnect points\n\n## Gate Preview (what the gate WILL\
+      \ reject)\n1. ConnectionRecord not created on connect path\n2. State not transitioned\
+      \ to DISCONNECTED on disconnect\n3. Error path missing DEGRADED transition\n\
+      4. Registry not updated atomically with connect/disconnect\n\n## Known Risks\
+      \ (from project history)\n- Gateway has been refactored multiple times — check\
+      \ current structure before editing\n- grep hint: grep -n 'async def connect\\\
+      |async def disconnect\\|async def _connect' src/tela/shell/gateway.py\n\nstep_type:\
+      \ implementation\nupstream_artifacts:\n  - path: src/tela/core/lifecycle.py\n\
+      \    from_step: cl.impl.model\n    tier: contract\n  - path: src/tela/shell/reaper.py\n\
+      \    from_step: cl.impl.reaper\n    tier: implementation\n\nspec_refs: DESIGN.md#connection-lifecycle\n\
+      touch_paths: src/tela/shell/gateway.py, src/tela/core/lifecycle.py\n\nevidence_template:\
+      \ |\n  ## Integration Evidence\n  **Command or test exercising the full path**:\n\
+      \  ```\n  <exact command or test name that invokes connect through registry\
+      \ update>\n  ```\n  **Actual output** (paste, not \"tests pass\"):\n  ```\n\
+      \  <stdout/stderr or test runner output>\n  ```\n  **Path exercised**: gateway.connect\
+      \ -> ConnectionRecord -> ConnectionRegistry"
+    verification: '- Connect path creates ConnectionRecord and registers it
+
+      - Disconnect path transitions to DISCONNECTED
+
+      - Error path transitions to DEGRADED
+
+      - invar guard clean on gateway.py
+
+      - Integration evidence shows full connect->record->registry path'
+    evidence_template: '## Integration Evidence
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      (exact command or test name that invokes connect through registry update)
+
+      ```
+
+      **Actual output** (paste, not "tests pass"):
+
+      ```
+
+      (stdout/stderr or test runner output)
+
+      ```
+
+      **Path exercised**: gateway.connect -> ConnectionRecord -> ConnectionRegistry'
+    agent: python-executor
 - id: cl.retest
   name: Connection Lifecycle Retest (Must Green)
   status: locked
