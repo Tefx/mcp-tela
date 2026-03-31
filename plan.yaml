@@ -47259,42 +47259,50 @@ phases:
   - cl.impl
   steps:
   - id: cl.wiring.touch_points
-    name: Wire ConnectionRecord into connect/disconnect paths
+    name: Wire touch_connection_activity into 4 call sites
     status: pending
-    description: "Wire ConnectionRecord creation and state updates into the existing\
-      \ connect/disconnect code paths in the gateway.\n\ntags: [\"integration\"]\n\
-      \nYOUR SCOPE:\n- In src/tela/shell/gateway.py (or relevant connect handler):\n\
-      \  - On connect: create ConnectionRecord(server_name, CONNECTING), register\
-      \ in ConnectionRegistry, update to CONNECTED on success or DISCONNECTED on failure\n\
-      \  - On disconnect: transition record to DISCONNECTING, perform disconnect,\
-      \ transition to DISCONNECTED\n  - On downstream error/timeout: transition to\
-      \ DEGRADED\n- Import ConnectionRecord, ConnectionState, ConnectionRegistry from\
-      \ tela.core.lifecycle\n- Do NOT restructure gateway; use Edit to add record-keeping\
-      \ at existing connect/disconnect points\n\n## Gate Preview (what the gate WILL\
-      \ reject)\n1. ConnectionRecord not created on connect path\n2. State not transitioned\
-      \ to DISCONNECTED on disconnect\n3. Error path missing DEGRADED transition\n\
-      4. Registry not updated atomically with connect/disconnect\n\n## Known Risks\
-      \ (from project history)\n- Gateway has been refactored multiple times — check\
-      \ current structure before editing\n- grep hint: grep -n 'async def connect\\\
-      |async def disconnect\\|async def _connect' src/tela/shell/gateway.py\n\nstep_type:\
-      \ implementation\nupstream_artifacts:\n  - path: src/tela/core/lifecycle.py\n\
-      \    from_step: cl.impl.model\n    tier: contract\n  - path: src/tela/shell/reaper.py\n\
-      \    from_step: cl.impl.reaper\n    tier: implementation\n\nspec_refs: DESIGN.md#connection-lifecycle\n\
-      touch_paths: src/tela/shell/gateway.py, src/tela/core/lifecycle.py\n\nevidence_template:\
+    description: "Wire touch_connection_activity() calls into the 4 specified call\
+      \ sites per the architecture ADR.\n\ntags: [\"integration\"]\n\nYOUR SCOPE —\
+      \ add touch_connection_activity(connection_id, timestamp) calls at exactly these\
+      \ 4 locations:\n1. _ensure_connection() in src/tela/shell/gateway.py — touch\
+      \ on successful connection ensure\n2. handle_tools_call() in src/tela/shell/upstream.py\
+      \ — touch on every tool call\n3. handle_tools_list() in src/tela/shell/upstream.py\
+      \ — touch on every tools/list\n4. handle_connect() in src/tela/shell/http_routes.py\
+      \ — touch on HTTP connect\n\n- Import touch_connection_activity from tela.shell.gateway_runtime\n\
+      - Generate timestamp as ISO 8601 string at call time\n- Do NOT restructure any\
+      \ of these files; use Edit to add the touch call at the right point\n- The touch\
+      \ call is fire-and-forget (log warning on Err, do not fail the operation)\n\n\
+      ## Gate Preview (what the gate WILL reject)\n1. Missing any of the 4 specified\
+      \ call sites\n2. touch_connection_activity imported but never called\n3. Timestamp\
+      \ not in ISO 8601 format\n4. Touch failure causing the parent operation to fail\
+      \ (should be fire-and-forget)\n\n## Known Risks (from project history)\n- Gateway\
+      \ has been refactored multiple times — check current structure before editing\n\
+      - grep hint: grep -n '_ensure_connection\\|handle_tools_call\\|handle_tools_list\\\
+      |handle_connect' src/tela/shell/gateway.py src/tela/shell/upstream.py src/tela/shell/http_routes.py\n\
+      \nstep_type: implementation\nupstream_artifacts:\n  - path: src/tela/shell/gateway_runtime.py\n\
+      \    from_step: cl.impl.runtime_accessor\n    tier: implementation\n\nspec_refs:\
+      \ architecture ADR connection-lifecycle wiring section\ntouch_paths: src/tela/shell/gateway.py,\
+      \ src/tela/shell/upstream.py, src/tela/shell/http_routes.py\n\nevidence_template:\
       \ |\n  ## Integration Evidence\n  **Command or test exercising the full path**:\n\
-      \  ```\n  <exact command or test name that invokes connect through registry\
-      \ update>\n  ```\n  **Actual output** (paste, not \"tests pass\"):\n  ```\n\
-      \  <stdout/stderr or test runner output>\n  ```\n  **Path exercised**: gateway.connect\
-      \ -> ConnectionRecord -> ConnectionRegistry"
-    verification: '- Connect path creates ConnectionRecord and registers it
+      \  ```\n  <exact command or test name showing touch_connection_activity is called>\n\
+      \  ```\n  **Actual output** (paste, not \"tests pass\"):\n  ```\n  <stdout/stderr\
+      \ or test runner output>\n  ```\n  **Call sites wired** (grep proof):\n  ```\n\
+      \  <grep output showing touch_connection_activity at all 4 locations>\n  ```"
+    verification: '- touch_connection_activity called in _ensure_connection() in gateway.py
 
-      - Disconnect path transitions to DISCONNECTED
+      - touch_connection_activity called in handle_tools_call() in upstream.py
 
-      - Error path transitions to DEGRADED
+      - touch_connection_activity called in handle_tools_list() in upstream.py
 
-      - invar guard clean on gateway.py
+      - touch_connection_activity called in handle_connect() in http_routes.py
 
-      - Integration evidence shows full connect->record->registry path'
+      - All 4 call sites use ISO 8601 timestamps
+
+      - Touch failures are fire-and-forget (logged, not raised)
+
+      - invar guard clean on all 3 files
+
+      - grep evidence shows all 4 call sites'
     evidence_template: '## Integration Evidence
 
       **Command or test exercising the full path**:
@@ -47314,6 +47322,10 @@ phases:
       ```
 
       **Path exercised**: gateway.connect -> ConnectionRecord -> ConnectionRegistry'
+    refs:
+    - src/tela/shell/gateway.py
+    - src/tela/shell/upstream.py
+    - src/tela/shell/http_routes.py
     agent: python-executor
   - id: cl.wiring.lifecycle
     name: Wire ReaperService into gateway startup/shutdown
