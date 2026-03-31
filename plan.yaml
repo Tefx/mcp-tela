@@ -47896,7 +47896,7 @@ phases:
   steps:
   - id: cl.doc_sync.update
     name: Update docs for connection lifecycle and reaper
-    status: claimed
+    status: done
     description: 'Sync project documentation with the implemented connection lifecycle
       and reaper features.
 
@@ -47934,6 +47934,30 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-03-31T14:25:15.797989+00:00'
+    done_at: '2026-03-31T14:29:18.435479+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 846e430 (squash merge of 61b3ac7)
+
+
+      Files changed:
+
+      - docs/DESIGN.md (76 lines added — reaper section, activity tracking, config,
+      lifecycle)
+
+      - docs/INTERFACES.md (49 lines added — §9.6 Connection Reaper, ConnectionContext.last_activity)
+
+
+      Sections added/updated:
+
+      - DESIGN.md: Connection reaper subsection, touch_connection_activity in API
+      table, module responsibilities
+
+      - INTERFACES.md: §9.6 Connection Reaper, ConnectionContext example with last_activity,
+      runtime limits
+
+
+      No forbidden types referenced (no ConnectionRecord/ConnectionState/ReaperProtocol/lifecycle.py)'
   - id: cl.doc_sync.gate
     name: 'Gate: documentation sync complete'
     status: pending
