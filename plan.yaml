@@ -47056,14 +47056,14 @@ phases:
       step'
 - id: cl.test
   name: Connection Lifecycle Tests (Expected Red)
-  status: pending
+  status: in_progress
   depends_on:
   - cl.contract
   steps:
   - id: cl.test.reaper
     name: Tests for ConnectionReaper sweep and touch_connection_activity (expected
       red)
-    status: pending
+    status: claimed
     description: 'Define pre-implementation tests for ConnectionReaper sweep logic
       and touch_connection_activity behavior.
 
@@ -47137,6 +47137,8 @@ phases:
     refs:
     - tests/shell/test_connection_reaper.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-31T14:04:36.486105+00:00'
   - id: cl.test.gate
     name: 'Gate: test definitions complete'
     status: pending
