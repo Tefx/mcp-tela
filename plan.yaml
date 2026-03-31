@@ -46943,6 +46943,36 @@ phases:
 
       - invar sig src/tela/core/lifecycle.py shows contracts'
     agent: python-executor
+  - id: cl.contract.reaper
+    name: ReaperService protocol and configuration contracts
+    status: pending
+    description: "Define the ReaperService protocol and ReaperConfig in core.\n\n\
+      step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n  - signatures\n\
+      \  - type_defs\n  - interfaces\n  - stubs\n\nAuthoritative interface (from DESIGN.md\
+      \ reaper section):\n\n```python\n@dataclass\nclass ReaperConfig:\n    check_interval_s:\
+      \ float  # default 30.0\n    stale_threshold_s: float  # default 90.0\n    enabled:\
+      \ bool  # default True\n\nclass ReaperProtocol(Protocol):\n    async def start(self)\
+      \ -> None: ...\n    async def stop(self) -> None: ...\n    async def check_now(self)\
+      \ -> list[str]: ...  # returns reaped server names\n```\n\nScope:\n- File: src/tela/core/lifecycle.py\
+      \ (extend from contract.model step)\n- Define ReaperConfig with @pre contracts\
+      \ on bounds (interval > 0, threshold > interval)\n- Define ReaperProtocol as\
+      \ a Protocol class\n- Define reap_stale_connections pure function signature\
+      \ with @pre/@post and doctest\n- All bodies MUST be stubs\n\nDo NOT implement\
+      \ any logic. Contract step only.\n\nauthoritative_interface: ReaperProtocol\
+      \ + ReaperConfig per DESIGN.md\nspec_refs: DESIGN.md#reaper, INTERFACES.md#reaper-config\n\
+      touch_paths: src/tela/core/lifecycle.py"
+    verification: '- ReaperConfig and ReaperProtocol defined in src/tela/core/lifecycle.py
+
+      - @pre on ReaperConfig bounds (interval > 0, threshold > interval)
+
+      - reap_stale_connections has @pre/@post + doctest
+
+      - No implementation logic
+
+      - invar sig src/tela/core/lifecycle.py shows all contracts'
+    depends_on:
+    - cl.contract.model
+    agent: python-executor
 - id: cl.test
   name: Connection Lifecycle Tests (Expected Red)
   status: locked
