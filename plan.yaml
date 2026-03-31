@@ -47497,6 +47497,36 @@ phases:
 
       - Documentation matches actual implementation'
     agent: doc-reviewer
+  - id: cl.doc_sync.gate
+    name: 'Gate: documentation sync complete'
+    status: pending
+    description: 'Gate review: Verify documentation accurately reflects implemented
+      behavior.
+
+
+      review_depth: QUICK
+
+
+      Review criteria:
+
+      1. DESIGN.md connection lifecycle section matches implementation
+
+      2. INTERFACES.md lists all new public types with correct signatures
+
+      3. No documentation for unimplemented features
+
+      4. ReaperConfig documentation includes defaults and disable option
+
+
+      Independence: reviewer MUST NOT be doc-reviewer.'
+    verification: '- Documentation reviewed for accuracy
+
+      - No drift between docs and implementation
+
+      - Ready for deep review'
+    depends_on:
+    - cl.doc_sync.update
+    agent: gate-reviewer
 - id: cl.deep_review
   name: Connection Lifecycle Deep Review
   status: locked
