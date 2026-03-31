@@ -47117,6 +47117,41 @@ phases:
 
       - invar guard passes on this file'
     agent: python-executor
+  - id: cl.impl.runtime_accessor
+    name: Implement runtime connection registry accessor
+    status: pending
+    description: "Fill in stub bodies for the connection registry accessor that the\
+      \ gateway runtime uses to track active connections.\n\nUPSTREAM ARTIFACTS (from\
+      \ contract step):\n  - src/tela/core/lifecycle.py — ConnectionRecord, ConnectionState\
+      \ are AUTHORITATIVE\n\nYOUR SCOPE:\n- Add a ConnectionRegistry class (or extend\
+      \ existing gateway state) that stores ConnectionRecord instances keyed by server_name\n\
+      - Methods: get(server_name), set(server_name, record), remove(server_name),\
+      \ all() -> dict, stale(threshold_s) -> list[str]\n- The registry is a thin dict\
+      \ wrapper with no I/O — it belongs in core\n- Thread/coroutine safety: use a\
+      \ simple dict (single-event-loop assumption per DESIGN.md)\n- Add @pre/@post\
+      \ contracts and doctests on every public method\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\n\
+      \n## Module-Level Mutable State (hardened acceptance)\nThis step introduces\
+      \ a mutable registry. Address:\n1. Concurrent access: single event loop assumption\
+      \ — document this\n2. Cleanup/reset: provide a clear() method for test isolation\n\
+      3. Bounded growth: bounded by number of configured servers (small, finite)\n\
+      4. Isolation: each gateway instance has its own registry\n\nstep_type: implementation\n\
+      upstream_artifacts:\n  - path: src/tela/core/lifecycle.py\n    from_step: cl.contract.model\n\
+      \    tier: contract\n\nspec_refs: DESIGN.md#connection-lifecycle\ntouch_paths:\
+      \ src/tela/core/lifecycle.py"
+    verification: '- ConnectionRegistry class exists with get/set/remove/all/stale/clear
+      methods
+
+      - All methods have @pre/@post contracts and doctests
+
+      - Doctests pass
+
+      - invar guard passes on this file
+
+      - No I/O imports in core module'
+    depends_on:
+    - cl.impl.model
+    agent: python-executor
 - id: cl.wiring
   name: Connection Lifecycle Wiring
   status: locked
