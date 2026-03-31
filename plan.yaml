@@ -47310,7 +47310,7 @@ phases:
       the contract and the implementation'
   - id: cl.impl.runtime_accessor
     name: Implement touch_connection_activity accessor
-    status: claimed
+    status: done
     description: "Fill in the stub body for touch_connection_activity() in src/tela/shell/gateway_runtime.py\
       \ per the contract from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from\
       \ contract step):\n  - src/tela/shell/gateway_runtime.py — touch_connection_activity\
@@ -47345,6 +47345,32 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-31T14:10:24.567888+00:00'
+    done_at: '2026-03-31T14:12:08.838465+00:00'
+    evidence: 'Artifact:
+
+      - Commit: c2da4f9 (squash merge of 0dea436)
+
+
+      Verification:
+
+      - pytest TestTouchConnectionActivity -> 2 passed (updates_last_activity, returns_false_for_unknown)
+
+      - invar guard -> passed (0 errors)
+
+
+      Files changed:
+
+      - src/tela/shell/gateway_runtime.py (17 lines added)
+
+
+      Spec link:
+
+      - Architecture ADR: touch_connection_activity accessor
+
+
+      Gaps/Notes:
+
+      - dead_export warning expected — reaper will wire it in subsequent step'
   - id: cl.impl.reaper
     name: Implement ConnectionReaper sweep logic
     status: pending
