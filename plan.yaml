@@ -46907,3 +46907,8 @@ phases:
       built-in `tela_list_providers`, while preserving anti-stale-contract policy
       intent. Targeted verification: `uv run pytest tests/shell/test_surface_contract.py
       -v --tb=short` => 30 passed. Commit: 1042a1e.'
+- id: cl.contract
+  name: Connection Lifecycle Contracts
+  status: pending
+  depends_on:
+  - pm_fix.gate
