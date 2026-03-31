@@ -47538,13 +47538,13 @@ phases:
       - models.py 12 lines over core limit (pre-existing, out of scope)'
 - id: cl.wiring
   name: Connection Lifecycle Wiring
-  status: pending
+  status: in_progress
   depends_on:
   - cl.impl
   steps:
   - id: cl.wiring.touch_points
     name: Wire touch_connection_activity into 4 call sites
-    status: pending
+    status: claimed
     description: "Wire touch_connection_activity() calls into the 4 specified call\
       \ sites per the architecture ADR.\n\ntags: [\"integration\"]\n\nYOUR SCOPE —\
       \ add touch_connection_activity(connection_id, timestamp) calls at exactly these\
@@ -47611,6 +47611,8 @@ phases:
     - src/tela/shell/upstream.py
     - src/tela/shell/http_routes.py
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-31T14:17:42.195485+00:00'
   - id: cl.wiring.lifecycle
     name: Wire reaper start/stop into gateway lifecycle
     status: pending
