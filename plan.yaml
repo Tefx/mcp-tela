@@ -48107,7 +48107,7 @@ phases:
       - Zero cast() calls, zero type:ignore annotations'
   - id: cl.deep_review.spec_conformance
     name: 'Spec conformance: lifecycle vs DESIGN.md'
-    status: claimed
+    status: done
     description: "Spec conformance verification via adversarial divergence hunting.\n\
       Agent: spec-verifier (dedicated, read-only, independent).\n\nThis is NOT \"\
       do tests pass\" — it is \"does the implementation match what the spec says.\"\
@@ -48167,6 +48167,33 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-03-31T14:33:42.649079+00:00'
+    done_at: '2026-03-31T14:35:53.208730+00:00'
+    evidence: 'Spec Conformance: 19/20 CONFORMS, 0 DIVERGES, 1 NEEDS_TEST
+
+
+      All requirements verified against DESIGN.md and INTERFACES.md:
+
+      - R1: ReaperConfig defaults 30.0/120.0/300.0 — CONFORMS
+
+      - R2-R3: last_activity field + touch_connection_activity — CONFORMS
+
+      - R4-R7: All 4 activity touch points — CONFORMS
+
+      - R8: Session probe behavior — NEEDS_TEST (runtime verification needed)
+
+      - R9-R10: Staleness check + idle_manager.decrement — CONFORMS
+
+      - R11-R12: Lifecycle ordering (start after converge, stop before teardown) —
+      CONFORMS
+
+      - R13: Idempotent start/stop — CONFORMS
+
+      - R14-R16: Public types match spec exactly — CONFORMS
+
+      - R20: bridge_idle_ttl=0 disables reaping — CONFORMS
+
+
+      Top risks: none (0 DIVERGES)'
   - id: cl.deep_review.black_box
     name: Black-box verification of lifecycle behavior
     status: pending
