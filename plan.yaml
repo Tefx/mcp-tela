@@ -47658,3 +47658,60 @@ phases:
     depends_on:
     - cl.deep_review.wiring_audit
     agent: spec-verifier
+  - id: cl.deep_review.black_box
+    name: Black-box verification of lifecycle behavior
+    status: pending
+    description: "Black-box spec verification using ONLY the spec and public API signatures\
+      \ (no implementation source reading).\n\nIndependence Level: L3 (black-box)\n\
+      \nUsing ONLY DESIGN.md, INTERFACES.md, and public API signatures:\n1. Create\
+      \ test fixtures from documented ConnectionRecord format\n2. Verify ConnectionState\
+      \ transitions match documented state machine\n3. Verify ReaperConfig validation\
+      \ rejects invalid bounds\n4. Verify reap_stale_connections returns correct server\
+      \ names for stale connections\n5. Verify grace period for CONNECTING state\n\
+      \nDo NOT read implementation source code. Use only:\n- Documented interfaces\
+      \ from INTERFACES.md\n- Public API signatures from invar sig\n- Behavioral expectations\
+      \ from DESIGN.md\n\nevidence_template: |\n  ## Black-Box Verification Report\n\
+      \  **Tester**: blind-tester (L3 independence — no implementation source read)\n\
+      \  **Scope**: Connection lifecycle public API\n\n  ### Tests Executed\n  | Test\
+      \ | Input | Expected | Actual | Verdict |\n  \n  ### Coverage\n  - State transitions\
+      \ tested: N/M\n  - Config validation tested: yes/no\n  - Reap logic tested:\
+      \ yes/no\n  - Grace period tested: yes/no\n  \n  ### Verdict\n  PASS | ISSUES_FOUND\
+      \ | INCOMPLETE"
+    verification: '- Black-box tests executed without reading implementation source
+
+      - State machine transitions verified against spec
+
+      - ReaperConfig bounds validated
+
+      - Grace period behavior verified
+
+      - Evidence includes actual test I/O'
+    evidence_template: '## Black-Box Verification Report
+
+      **Tester**: blind-tester (L3 independence — no implementation source read)
+
+      **Scope**: Connection lifecycle public API
+
+
+      ### Tests Executed
+
+      | Test | Input | Expected | Actual | Verdict |
+
+
+      ### Coverage
+
+      - State transitions tested: N/M
+
+      - Config validation tested: yes/no
+
+      - Reap logic tested: yes/no
+
+      - Grace period tested: yes/no
+
+
+      ### Verdict
+
+      PASS | ISSUES_FOUND | INCOMPLETE'
+    depends_on:
+    - cl.deep_review.spec_conformance
+    agent: blind-tester
