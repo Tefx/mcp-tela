@@ -47083,16 +47083,17 @@ phases:
 
       1. All test functions exist and are properly named
 
-      2. Tests import from the contract module (src/tela/core/lifecycle.py)
+      2. Tests import from tela.shell.connection_reaper and tela.shell.gateway_runtime
 
-      3. Tests cover: state transitions, record creation, touch/last_seen, reaper
-      config validation, reap logic, grace period
+      3. Tests cover: touch_connection_activity, sweep session-gone, sweep staleness,
+      idle_manager.decrement, ReaperConfig defaults, ReaperSweepOutcome fields
 
       4. No product implementation code was modified
 
       5. Tests are expected-red (stubs raise NotImplementedError)
 
-      6. Spec-fixture conformance: at least one fixture uses exact DESIGN.md format
+      6. Spec-fixture conformance: at least one fixture uses exact architecture ADR
+      format
 
 
       Independence: reviewer MUST NOT be python-executor.'
@@ -47102,7 +47103,9 @@ phases:
 
       - No implementation leakage into test phase
 
-      - Spec-fixture conformance verified'
+      - Spec-fixture conformance verified
+
+      - Tests reference correct modules (shell, not core/lifecycle)'
     depends_on:
     - cl.test.reaper
     agent: gate-reviewer
