@@ -46909,7 +46909,7 @@ phases:
       -v --tb=short` => 30 passed. Commit: 1042a1e.'
 - id: cl.contract
   name: Connection Lifecycle Contracts
-  status: in_progress
+  status: done
   depends_on:
   - pm_fix.gate
   steps:
@@ -46976,7 +46976,7 @@ phases:
       change), out-of-scope'
   - id: cl.contract.reaper
     name: ConnectionReaper + ReaperConfig + touch_connection_activity stubs
-    status: claimed
+    status: done
     description: "Define ConnectionReaper class stubs, ReaperConfig, ReaperSweepOutcome,\
       \ and touch_connection_activity() stub.\n\nstep_type: contract\ncontract_purity:\
       \ ENFORCED\ncontract_outputs:\n  - signatures\n  - type_defs\n  - stubs\n\n\
@@ -47021,9 +47021,42 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-31T14:02:16.937747+00:00'
+    done_at: '2026-03-31T14:04:24.484832+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 537547e (squash merge of 8b123fa)
+
+
+      Verification:
+
+      - invar sig connection_reaper.py -> ConnectionReaper, ReaperConfig, ReaperSweepOutcome
+
+      - invar sig gateway_runtime.py -> touch_connection_activity(connection_id, timestamp)
+      -> Result[bool, str]
+
+      - invar guard -> passed (0 errors)
+
+
+      Files changed:
+
+      - src/tela/shell/connection_reaper.py (NEW, 88 lines)
+
+      - src/tela/shell/gateway_runtime.py (23 lines added)
+
+
+      Spec link:
+
+      - Architecture ADR: ConnectionReaper module spec + touch_connection_activity
+      accessor
+
+
+      Gaps/Notes:
+
+      - All method bodies are stubs (raise NotImplementedError) as required for contract
+      step'
 - id: cl.test
   name: Connection Lifecycle Tests (Expected Red)
-  status: locked
+  status: pending
   depends_on:
   - cl.contract
   steps:
