@@ -47113,34 +47113,34 @@ phases:
   - cl.test
   steps:
   - id: cl.impl.model
-    name: Fill in ConnectionRecord and ConnectionState stub bodies
+    name: Implement last_activity field on ConnectionContext
     status: pending
-    description: "Fill in stub bodies in src/tela/core/lifecycle.py per the contract\
-      \ from step cl.contract.model.\n\nUPSTREAM ARTIFACTS (from contract step):\n\
-      \  - src/tela/core/lifecycle.py — signatures, types, docstrings are AUTHORITATIVE\n\
-      \nYOUR SCOPE: Replace stub markers (NotImplementedError / pass / ...) with working\
-      \ logic for:\n- ConnectionState enum (already complete as enum, verify transitions)\n\
-      - ConnectionRecord factory method(s)\n- ConnectionRecord.touch() — updates last_seen\
-      \ to current UTC time\n- ConnectionRecord state transition method — validates\
-      \ allowed transitions per state machine\n\nUse Edit tool to modify bodies only.\
-      \ Do NOT add new public symbols beyond what the contract defines.\n\nIf a contract\
-      \ artifact is wrong or incomplete, document a deviation record (type, what,\
-      \ why, impact) — do NOT silently rewrite.\n\n## Completion Criteria (stub exclusion)\n\
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach\
-      \ deliverable MUST contain substantive logic that processes its inputs and produces\
-      \ outputs that vary based on those inputs.\n\nstep_type: implementation\nupstream_artifacts:\n\
-      \  - path: src/tela/core/lifecycle.py\n    from_step: cl.contract.model\n  \
-      \  tier: contract\n\nspec_refs: DESIGN.md#connection-lifecycle\ntouch_paths:\
-      \ src/tela/core/lifecycle.py"
-    verification: '- ConnectionState transitions enforced
+    description: "Fill in the last_activity field addition on ConnectionContext per\
+      \ the contract from step cl.contract.model.\n\nUPSTREAM ARTIFACTS (from contract\
+      \ step):\n  - src/tela/core/models.py — ConnectionContext with last_activity\
+      \ field is AUTHORITATIVE\n\nYOUR SCOPE:\n- This is trivial: the field addition\
+      \ `last_activity: str = \"\"` with a default value is the entire implementation\n\
+      - Verify the field is properly typed and has the correct default\n- If the contract\
+      \ step already fully defined the field (Pydantic field with default), this step\
+      \ confirms it works correctly\n- Run doctests if any were added for validation\n\
+      \nUse Edit tool to modify bodies only. Do NOT add new public symbols beyond\
+      \ what the contract defines.\n\n## Completion Criteria (stub exclusion)\nThis\
+      \ is an IMPLEMENTATION step. The field must be a real Pydantic field with a\
+      \ default value, not a stub.\n\nstep_type: implementation\nupstream_artifacts:\n\
+      \  - path: src/tela/core/models.py\n    from_step: cl.contract.model\n    tier:\
+      \ contract\n\nspec_refs: architecture ADR connection-lifecycle section\ntouch_paths:\
+      \ src/tela/core/models.py"
+    verification: '- ConnectionContext has last_activity: str = "" as a real field
 
-      - ConnectionRecord.touch() updates last_seen
+      - ConnectionContext() can be instantiated with and without last_activity
 
-      - ConnectionRecord factory creates valid records
+      - Doctests pass if any: uv run python -m doctest src/tela/core/models.py
 
-      - Doctests pass: uv run python -m doctest src/tela/core/lifecycle.py
+      - invar guard passes on this file
 
-      - invar guard passes on this file'
+      - No new files created'
+    refs:
+    - src/tela/core/models.py
     agent: python-executor
   - id: cl.impl.runtime_accessor
     name: Implement runtime connection registry accessor
