@@ -47056,7 +47056,7 @@ phases:
       step'
 - id: cl.test
   name: Connection Lifecycle Tests (Expected Red)
-  status: in_progress
+  status: done
   depends_on:
   - cl.contract
   steps:
@@ -47178,7 +47178,7 @@ phases:
       Downstream implementation owner: cl.impl phase'
   - id: cl.test.gate
     name: 'Gate: test definitions complete'
-    status: claimed
+    status: done
     description: 'Gate review: Verify that test definitions are complete and properly
       structured.
 
@@ -47215,9 +47215,34 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-03-31T14:08:10.159969+00:00'
+    done_at: '2026-03-31T14:09:28.853709+00:00'
+    evidence: 'Gate verdict: CONDITIONAL PASS
+
+
+      Checklist:
+
+      1. Test existence: PASS — 9 test functions, all properly named
+
+      2. Correct imports: PASS — imports from tela.shell.connection_reaper and gateway_runtime
+
+      3. Coverage completeness: PASS — all required behaviors covered
+
+      4. No implementation leakage: PASS — zero src/ files changed
+
+      5. Expected red: PASS — 5 NotImplementedError failures, 4 passed dataclass tests
+
+      6. Spec-fixture conformance: PASS — ADR citation in reaper_config fixture
+
+
+      Blockers: none
+
+      Should-fix: S1 — test_sweep_calls_idle_manager_decrement creates mock but never
+      injects into ConnectionReaper. Will fix at impl step when constructor exists.
+
+      Suggestions: none'
 - id: cl.impl
   name: Connection Lifecycle Implementation
-  status: locked
+  status: pending
   depends_on:
   - cl.test
   steps:
