@@ -46912,3 +46912,8 @@ phases:
   status: pending
   depends_on:
   - pm_fix.gate
+- id: cl.test
+  name: Connection Lifecycle Tests (Expected Red)
+  status: locked
+  depends_on:
+  - cl.contract
