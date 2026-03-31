@@ -46976,7 +46976,7 @@ phases:
       change), out-of-scope'
   - id: cl.contract.reaper
     name: ConnectionReaper + ReaperConfig + touch_connection_activity stubs
-    status: pending
+    status: claimed
     description: "Define ConnectionReaper class stubs, ReaperConfig, ReaperSweepOutcome,\
       \ and touch_connection_activity() stub.\n\nstep_type: contract\ncontract_purity:\
       \ ENFORCED\ncontract_outputs:\n  - signatures\n  - type_defs\n  - stubs\n\n\
@@ -47019,6 +47019,8 @@ phases:
     depends_on:
     - cl.contract.model
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-03-31T14:02:16.937747+00:00'
 - id: cl.test
   name: Connection Lifecycle Tests (Expected Red)
   status: locked
