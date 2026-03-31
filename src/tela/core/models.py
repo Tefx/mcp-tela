@@ -335,6 +335,7 @@ class ConnectionContext(BaseModel):
     profile_name: str
     connected_at: str
     tool_call_count: int = 0
+    last_activity: str = ""
 
 
 class EnforcementResult(BaseModel):
