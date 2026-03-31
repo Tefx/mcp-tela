@@ -46912,6 +46912,37 @@ phases:
   status: pending
   depends_on:
   - pm_fix.gate
+  steps:
+  - id: cl.contract.model
+    name: ConnectionRecord model and lifecycle enum contracts
+    status: pending
+    description: "Define the ConnectionRecord dataclass and ConnectionState enum in\
+      \ core.\n\nstep_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - stubs\n\nAuthoritative interface (from DESIGN.md\
+      \ connection lifecycle section + INTERFACES.md):\n\n```python\nclass ConnectionState(Enum):\n\
+      \    CONNECTING = \"connecting\"\n    CONNECTED = \"connected\"\n    DEGRADED\
+      \ = \"degraded\"\n    DISCONNECTING = \"disconnecting\"\n    DISCONNECTED =\
+      \ \"disconnected\"\n\n@dataclass\nclass ConnectionRecord:\n    server_name:\
+      \ str\n    state: ConnectionState\n    connected_at: datetime | None\n    last_seen:\
+      \ datetime | None\n    error: str | None\n```\n\nScope:\n- File: src/tela/core/lifecycle.py\
+      \ (new file)\n- Define ConnectionState enum with @pre/@post contracts and doctests\
+      \ per INVAR rules\n- Define ConnectionRecord frozen dataclass with factory and\
+      \ transition contracts\n- All method bodies MUST be stubs (raise NotImplementedError\
+      \ or pass)\n- Write @pre/@post on every public function including __init__ validation\n\
+      - Include at least one doctest per contracted function\n\nDo NOT implement any\
+      \ logic. Contract step only.\n\nauthoritative_interface: ConnectionState enum\
+      \ + ConnectionRecord dataclass per DESIGN.md\nspec_refs: DESIGN.md#connection-lifecycle,\
+      \ INTERFACES.md#connection-state\ntouch_paths: src/tela/core/lifecycle.py"
+    verification: '- src/tela/core/lifecycle.py exists with ConnectionState and ConnectionRecord
+
+      - All public methods have @pre/@post contracts
+
+      - At least one doctest per contracted function
+
+      - No implementation logic (stubs only)
+
+      - invar sig src/tela/core/lifecycle.py shows contracts'
+    agent: python-executor
 - id: cl.test
   name: Connection Lifecycle Tests (Expected Red)
   status: locked
