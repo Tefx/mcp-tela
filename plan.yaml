@@ -47715,3 +47715,30 @@ phases:
     depends_on:
     - cl.deep_review.spec_conformance
     agent: blind-tester
+  - id: cl.deep_review.gate
+    name: Final deep review gate
+    status: pending
+    description: "Final gate review for the connection lifecycle feature.\n\nreview_depth:\
+      \ THOROUGH\nreview_depth_rationale: |\n  - New core model with state machine\
+      \ semantics\n  - Module-level mutable state (ConnectionRegistry)\n  - Asyncio\
+      \ lifecycle (ReaperService)\n  - Integration across core/shell boundary\n\n\
+      Review criteria:\n1. Wiring audit passed — no orphan symbols\n2. Spec conformance\
+      \ — no DIVERGES of blocker severity\n3. Black-box verification — all state transitions\
+      \ correct\n4. All prior gates passed\n5. Documentation matches implementation\n\
+      6. No security concerns (connection state leakage, unbounded growth)\n\nGate\
+      \ decision: OPEN only if all sub-reviews pass.\n\nIndependence: reviewer MUST\
+      \ NOT be any implementation agent from cl.* phases."
+    verification: '- All deep review sub-steps passed
+
+      - No unresolved DIVERGES
+
+      - No orphan symbols
+
+      - Black-box tests green
+
+      - Feature ready for production use'
+    depends_on:
+    - cl.deep_review.wiring_audit
+    - cl.deep_review.spec_conformance
+    - cl.deep_review.black_box
+    agent: gate-reviewer
