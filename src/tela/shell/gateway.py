@@ -10,6 +10,7 @@ Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 from __future__ import annotations
 
 import json
+import asyncio
 import logging
 import time
 from dataclasses import dataclass
@@ -93,6 +94,7 @@ logger = logging.getLogger(__name__)
 # Module-level manifest snapshot built at prepare_startup time.
 _startup_manifest: str | None = None
 _reaper: ConnectionReaper | None = None
+_converge_event: asyncio.Event | None = None
 
 
 @dataclass(frozen=True)
@@ -432,6 +434,11 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     @upstream_server._mcp_server.list_tools()
     async def _list_tools() -> list[mcp_types.Tool]:
         connection = await _ensure_connection()
+        # Wait for downstream convergence before listing tools.
+        # Without this, bridges connecting during warming get an empty tool list
+        # and the bridge transport cannot receive tools/list_changed push.
+        if _converge_event is not None:
+            await _converge_event.wait()
 
         # Capture upstream MCP session for notification delivery.
         try:
@@ -476,6 +483,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             return await _handle_builtin_call(tool_name, arguments)
 
         connection = await _ensure_connection()
+        # Wait for convergence before calling downstream tools.
+        if _converge_event is not None:
+            await _converge_event.wait()
         result = await handle_tools_call(connection, tool_name, dict(arguments))
         if result.is_err:
             assert result.error is not None
@@ -735,7 +745,8 @@ async def gateway_prepare_startup(
 ) -> Result[None, str]:
     """Prepare runtime state and upstream server before downstream convergence."""
 
-    global _startup_manifest
+    global _startup_manifest, _converge_event
+    _converge_event = asyncio.Event()
 
     effective_config = tela_config or TelaConfig()
 
@@ -807,6 +818,10 @@ async def gateway_converge_startup(
         for conn in snap.value:
             await notify_tools_changed(conn, digest)
 
+
+    # Signal that downstream convergence is complete — tools are available.
+    if _converge_event is not None:
+        _converge_event.set()
     return Result(value=None)
 
 
@@ -823,11 +838,12 @@ async def gateway_shutdown() -> Result[None, str]:
         Result[None, str] always succeeds.
     """
 
-    global _reaper
+    global _reaper, _converge_event
     if _reaper is not None:
         await _reaper.stop()
         _reaper = None
 
+    _converge_event = None
     disconnect_result = await disconnect_all()
     audit_close_result = await audit_close()
     if audit_close_result.is_err:
