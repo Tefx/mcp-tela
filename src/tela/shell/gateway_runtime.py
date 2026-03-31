@@ -247,6 +247,29 @@ def remove_runtime_connection(connection_id: str) -> Result[bool, str]:
         return Result(value=len(_runtime.connections) != original)
 
 
+def touch_connection_activity(connection_id: str, timestamp: str) -> Result[bool, str]:
+    """Update last_activity for a connection. Returns True if connection found.
+
+    Thread-safe: acquires _runtime_lock.
+
+    Args:
+        connection_id: The connection identifier to update.
+        timestamp: ISO-8601 timestamp to record as the last activity time.
+
+    Returns:
+        Result with True if the connection was found and updated,
+        False if no connection with the given ID exists.
+
+    Examples:
+        >>> r = touch_connection_activity("nonexistent", "2026-01-01T00:00:00Z")
+        >>> r.is_ok
+        True
+        >>> r.value
+        False
+    """
+    raise NotImplementedError
+
+
 def set_runtime_running(running: bool) -> None:
     """Set the runtime running flag under lock.
 
