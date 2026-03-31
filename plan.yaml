@@ -46915,7 +46915,7 @@ phases:
   steps:
   - id: cl.contract.model
     name: Add last_activity field to ConnectionContext contract
-    status: claimed
+    status: done
     description: "Add `last_activity` field to the EXISTING ConnectionContext model\
       \ in src/tela/core/models.py.\n\nstep_type: contract\ncontract_purity: ENFORCED\n\
       contract_outputs:\n  - type_defs\n  - field_addition\n\nAuthoritative interface\
@@ -46946,6 +46946,34 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-31T14:00:05.486784+00:00'
+    done_at: '2026-03-31T14:02:03.090541+00:00'
+    evidence: 'Artifact:
+
+      - Commit: ae560ac (squash merge of eb65c8f)
+
+
+      Verification:
+
+      - invar sig src/tela/core/models.py -> ConnectionContext shows last_activity
+      field at line 338
+
+      - grep confirms: `last_activity: str = ""`
+
+
+      Files changed:
+
+      - src/tela/core/models.py (1 insertion)
+
+
+      Spec link:
+
+      - Architecture ADR: ConnectionContext.last_activity field addition
+
+
+      Gaps/Notes:
+
+      - models.py exceeds 500-line core limit (512 lines) — pre-existing (511 before
+      change), out-of-scope'
   - id: cl.contract.reaper
     name: ConnectionReaper + ReaperConfig + touch_connection_activity stubs
     status: pending
