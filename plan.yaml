@@ -47232,15 +47232,19 @@ phases:
     name: 'Gate: implementation phase complete'
     status: pending
     description: "Gate review: Verify implementation phase completion and quality.\n\
-      \nreview_depth: STANDARD\nreview_depth_rationale: |\n  - Phase introduces new\
-      \ core model + shell service\n  - Asyncio lifecycle requires careful review\n\
-      \  - Module-level mutable state (ConnectionRegistry) needs concurrency audit\n\
+      \nreview_depth: STANDARD\nreview_depth_rationale: |\n  - Phase adds field to\
+      \ existing Core model + new Shell service\n  - Asyncio lifecycle requires careful\
+      \ review\n  - Thread-safe accessor (_runtime_lock) needs concurrency audit\n\
       \nReview criteria:\n1. All stub bodies filled with substantive logic\n2. No\
-      \ NotImplementedError remains in non-test code\n3. @pre/@post contracts preserved\
-      \ from contract phase\n4. Doctests pass for all contracted functions\n5. invar\
-      \ guard clean on touched files\n6. ConnectionRegistry concurrency assumption\
-      \ documented\n7. ReaperService asyncio task lifecycle handles cancellation\n\
-      8. No I/O imports in core/ module\n\nIndependence: reviewer MUST NOT be python-executor."
+      \ NotImplementedError remains in non-test code\n3. last_activity field properly\
+      \ added to ConnectionContext in src/tela/core/models.py\n4. touch_connection_activity\
+      \ in gateway_runtime.py acquires _runtime_lock and returns Result\n5. ConnectionReaper\
+      \ in connection_reaper.py has real sweep logic with session probe + staleness\
+      \ check\n6. Doctests pass for all contracted functions\n7. invar guard clean\
+      \ on touched files\n8. ReaperService asyncio task lifecycle handles cancellation\n\
+      9. No I/O imports in core/ module\n10. No ConnectionRecord, ConnectionState,\
+      \ or lifecycle.py file exists\n\nIndependence: reviewer MUST NOT be python-executor\
+      \ or python-senior."
     verification: '- All implementation steps reviewed
 
       - Stub-exclusion criteria met for every step
@@ -47249,7 +47253,9 @@ phases:
 
       - invar guard clean
 
-      - Asyncio lifecycle patterns sound'
+      - Asyncio lifecycle patterns sound
+
+      - Architecture alignment: no lifecycle.py, no ConnectionRecord, no ConnectionState'
     depends_on:
     - cl.impl.model
     - cl.impl.runtime_accessor
