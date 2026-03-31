@@ -47538,7 +47538,7 @@ phases:
       - models.py 12 lines over core limit (pre-existing, out of scope)'
 - id: cl.wiring
   name: Connection Lifecycle Wiring
-  status: in_progress
+  status: done
   depends_on:
   - cl.impl
   steps:
@@ -47657,7 +47657,7 @@ phases:
       - upstream.py now 707 lines (over 700 shell limit), @invar:allow file_size added'
   - id: cl.wiring.lifecycle
     name: Wire reaper start/stop into gateway lifecycle
-    status: claimed
+    status: done
     description: "Wire ConnectionReaper lifecycle into the gateway's startup and shutdown\
       \ sequence.\n\ntags: [\"integration\"]\n\nYOUR SCOPE:\n- In src/tela/shell/gateway.py:\n\
       \  - After gateway_converge_startup completes: instantiate ConnectionReaper\
@@ -47723,9 +47723,36 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-03-31T14:21:53.038502+00:00'
+    done_at: '2026-03-31T14:23:56.461965+00:00'
+    evidence: '## Integration Evidence
+
+      Wiring proof:
+
+      - gateway.py:704-706 — reaper start after gateway_converge_startup
+
+      - gateway.py:791-794 — reaper stop before disconnect_all/cleanup in shutdown
+
+
+      Artifact:
+
+      - Commit: 53a2694 (squash merge of f74fbde)
+
+
+      Verification:
+
+      - grep confirms start/stop ordering correct
+
+      - pytest test_connection_reaper -> 9 passed
+
+      - invar guard -> passed
+
+
+      Files changed:
+
+      - src/tela/shell/gateway.py (11 lines added)'
 - id: cl.retest
   name: Connection Lifecycle Retest (Must Green)
-  status: locked
+  status: pending
   depends_on:
   - cl.wiring
   steps:
