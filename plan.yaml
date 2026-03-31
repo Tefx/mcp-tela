@@ -47758,7 +47758,7 @@ phases:
   steps:
   - id: cl.retest.green
     name: 'Retest: all reaper + connection tests must pass green'
-    status: claimed
+    status: done
     description: 'Post-implementation retest: verify that all tests defined in cl.test
       phase now pass.
 
@@ -47799,6 +47799,13 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-31T14:24:10.657442+00:00'
+    done_at: '2026-03-31T14:24:25.749882+00:00'
+    evidence: "Verification:\n- pytest tests/shell/test_connection_reaper.py -v ->\
+      \ 9 passed in 0.69s\n  - TestTouchConnectionActivity: 2/2 passed (updates_last_activity,\
+      \ returns_false_for_unknown)\n  - TestReaperConfig: 2/2 passed (defaults, frozen)\n\
+      \  - TestReaperSweepOutcome: 2/2 passed (fields, with_values)\n  - TestConnectionReaperSweep:\
+      \ 3/3 passed (session_gone, stale, idle_decrement)\n- pytest tests/shell/test_connection_lifecycle.py\
+      \ -v -> 1 passed in 0.62s\n\nAll previously-red tests now green. No failures."
   - id: cl.retest.invar
     name: Invar guard must pass after lifecycle changes
     status: pending
