@@ -46932,3 +46932,8 @@ phases:
   status: locked
   depends_on:
   - cl.wiring
+- id: cl.doc_sync
+  name: Connection Lifecycle Documentation Sync
+  status: locked
+  depends_on:
+  - cl.retest
