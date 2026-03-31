@@ -46927,3 +46927,8 @@ phases:
   status: locked
   depends_on:
   - cl.impl
+- id: cl.retest
+  name: Connection Lifecycle Retest (Must Green)
+  status: locked
+  depends_on:
+  - cl.wiring
