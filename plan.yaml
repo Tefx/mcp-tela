@@ -48196,7 +48196,7 @@ phases:
       Top risks: none (0 DIVERGES)'
   - id: cl.deep_review.black_box
     name: Black-box verification of lifecycle behavior
-    status: claimed
+    status: done
     description: "Black-box spec verification using ONLY the spec and public API signatures\
       \ (no implementation source reading).\n\nIndependence Level: L3 (black-box)\n\
       \nUsing ONLY DESIGN.md, INTERFACES.md, and public API signatures:\n1. Create\
@@ -48253,6 +48253,17 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-03-31T14:36:03.959433+00:00'
+    done_at: '2026-03-31T14:39:12.697059+00:00'
+    evidence: 'Black-Box Verification: PASS (14/14)
+
+
+      Tests: ReaperConfig defaults, frozen immutability, start/stop idempotency, empty
+      sweep, touch nonexistent, session-gone detection, bridge TTL=0 disable
+
+
+      Artifact: e5960d5 (squash merge of 74fb01c)
+
+      Files: tests/black_box/test_reaper_black_box.py (333 lines, 14 test functions)'
   - id: cl.deep_review.gate
     name: Final deep review gate
     status: pending
