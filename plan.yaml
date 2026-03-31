@@ -47373,7 +47373,7 @@ phases:
       - dead_export warning expected — reaper will wire it in subsequent step'
   - id: cl.impl.reaper
     name: Implement ConnectionReaper sweep logic
-    status: pending
+    status: claimed
     description: "Fill in stub bodies for ConnectionReaper in src/tela/shell/connection_reaper.py\
       \ per the contract from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from\
       \ contract steps):\n  - src/tela/shell/connection_reaper.py — ConnectionReaper,\
@@ -47419,6 +47419,8 @@ phases:
     depends_on:
     - cl.impl.runtime_accessor
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-03-31T14:12:20.632692+00:00'
   - id: cl.impl.gate
     name: 'Gate: implementation phase complete'
     status: pending
