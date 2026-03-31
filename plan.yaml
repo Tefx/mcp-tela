@@ -47384,6 +47384,45 @@ phases:
 
       - Evidence includes actual test output (not summary)'
     agent: integration-verifier
+  - id: cl.retest.invar
+    name: Invar guard full scan
+    status: pending
+    description: 'Run invar guard --all to verify no contract, architecture, or doctest
+      violations across the entire codebase after lifecycle changes.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Run: invar guard (via invar_guard MCP tool)
+
+      - All contracts must pass
+
+      - All doctests must pass
+
+      - No architecture violations (core/shell boundary)
+
+      - No dead exports or missing references
+
+
+      If any failures, document them with file:line and exact error message.
+
+
+      touch_paths: (read-only, full codebase scan)'
+    verification: '- invar guard passes clean (0 violations)
+
+      - Evidence includes actual invar guard output
+
+      - No new architecture boundary violations
+
+      - No contract regressions'
+    depends_on:
+    - cl.retest.green
+    agent: integration-verifier
 - id: cl.doc_sync
   name: Connection Lifecycle Documentation Sync
   status: locked
