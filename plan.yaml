@@ -47808,7 +47808,7 @@ phases:
       \ -v -> 1 passed in 0.62s\n\nAll previously-red tests now green. No failures."
   - id: cl.retest.invar
     name: Invar guard must pass after lifecycle changes
-    status: claimed
+    status: done
     description: "Run invar guard to verify no contract, architecture, or doctest\
       \ violations across the entire codebase after connection lifecycle changes.\n\
       \nstep_type: test\nstep_intent: retest_green\nexpected_result: green\n\nRun:\
@@ -47834,6 +47834,11 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-03-31T14:24:30.564709+00:00'
+    done_at: '2026-03-31T14:24:40.872745+00:00'
+    evidence: "Verification:\n- uv run invar guard -> status: passed\n  - static:\
+      \ 0 errors, 0 warnings\n  - doctest: passed\n  - crosshair: skipped (no changed\
+      \ files)\n  - property_tests: skipped (no changed files)\n- verification_level:\
+      \ STANDARD"
   - id: cl.retest.gate
     name: 'Gate: retest phase complete'
     status: pending
