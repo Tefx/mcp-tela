@@ -47178,44 +47178,53 @@ phases:
     - cl.impl.model
     agent: python-executor
   - id: cl.impl.reaper
-    name: Implement ReaperService with asyncio task loop
+    name: Implement ConnectionReaper sweep logic
     status: pending
-    description: "Fill in stub bodies for ReaperService in shell layer per the contract\
-      \ from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from contract steps):\n\
-      \  - src/tela/core/lifecycle.py — ReaperProtocol, ReaperConfig, reap_stale_connections,\
-      \ ConnectionRegistry are AUTHORITATIVE\n  - tests/core/test_lifecycle.py — test\
-      \ cases are PROTECTED\n\nYOUR SCOPE:\n- File: src/tela/shell/reaper.py (new\
-      \ file in shell — it does I/O via asyncio)\n- Implement ReaperService class\
-      \ that satisfies ReaperProtocol\n- start(): creates an asyncio.Task that calls\
-      \ check_now() every config.check_interval_s\n- stop(): cancels the task, awaits\
-      \ cleanup\n- check_now(): calls reap_stale_connections(registry, threshold)\
-      \ from core, then for each stale server calls the disconnect callback\n- The\
-      \ disconnect callback is injected at construction (not hardcoded to gateway)\n\
-      - Use asyncio.sleep for the interval loop with proper cancellation handling\n\
-      \n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only\
-      \ completion is NOT acceptable.\nEach deliverable MUST contain substantive logic\
-      \ that processes its inputs and produces outputs that vary based on those inputs.\
-      \ Private stub classes (_Runtime*, _Stub*, _Placeholder*) do not satisfy this\
-      \ requirement.\n\n## Known Risks (from project history)\n- asyncio task cleanup:\
-      \ ensure stop() properly cancels and awaits the background task to avoid 'task\
-      \ was destroyed but it is pending' warnings\n- Pattern: follow existing asyncio\
-      \ patterns in src/tela/shell/ (check gateway.py for task lifecycle)\n\nstep_type:\
-      \ implementation\nupstream_artifacts:\n  - path: src/tela/core/lifecycle.py\n\
-      \    from_step: cl.contract.reaper\n    tier: contract\n  - path: tests/core/test_lifecycle.py\n\
-      \    from_step: cl.test.reaper\n    tier: test\n\nspec_refs: DESIGN.md#reaper\n\
-      touch_paths: src/tela/shell/reaper.py"
-    verification: '- src/tela/shell/reaper.py exists with ReaperService class
+    description: "Fill in stub bodies for ConnectionReaper in src/tela/shell/connection_reaper.py\
+      \ per the contract from step cl.contract.reaper.\n\nUPSTREAM ARTIFACTS (from\
+      \ contract steps):\n  - src/tela/shell/connection_reaper.py — ConnectionReaper,\
+      \ ReaperConfig, ReaperSweepOutcome signatures are AUTHORITATIVE\n  - src/tela/shell/gateway_runtime.py\
+      \ — touch_connection_activity is available\n  - tests/shell/test_connection_reaper.py\
+      \ — test cases are PROTECTED\n\nYOUR SCOPE:\n- File: src/tela/shell/connection_reaper.py\
+      \ (Shell zone — it does I/O via asyncio)\n- Implement ConnectionReaper class\
+      \ methods:\n  - start(): creates an asyncio.Task that calls sweep() every config.sweep_interval_seconds\n\
+      \  - stop(): cancels the task, awaits cleanup\n  - sweep(): performs the full\
+      \ sweep cycle:\n    1. Session probe for conn_* connections (check if session\
+      \ still alive)\n    2. Staleness check for all connections using last_activity\
+      \ vs idle TTL\n    3. Distinguish native_idle_ttl_seconds vs bridge_idle_ttl_seconds\
+      \ based on connection type\n    4. Call idle_manager.decrement() for reaped\
+      \ connections\n    5. Return ReaperSweepOutcome with counts\n- Use asyncio.sleep\
+      \ for the interval loop with proper cancellation handling\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\nEach deliverable MUST contain substantive logic that processes\
+      \ its inputs and produces outputs that vary based on those inputs.\n\n## Known\
+      \ Risks (from project history)\n- asyncio task cleanup: ensure stop() properly\
+      \ cancels and awaits the background task to avoid 'task was destroyed but it\
+      \ is pending' warnings\n- Pattern: follow existing asyncio patterns in src/tela/shell/\
+      \ (check gateway.py for task lifecycle)\n\nstep_type: implementation\nupstream_artifacts:\n\
+      \  - path: src/tela/shell/connection_reaper.py\n    from_step: cl.contract.reaper\n\
+      \    tier: contract\n  - path: tests/shell/test_connection_reaper.py\n    from_step:\
+      \ cl.test.reaper\n    tier: test\n\nspec_refs: architecture ADR reaper section\n\
+      touch_paths: src/tela/shell/connection_reaper.py"
+    verification: '- src/tela/shell/connection_reaper.py has real sweep logic (not
+      stubs)
 
-      - ReaperService satisfies ReaperProtocol
-
-      - start/stop/check_now have real logic (not stubs)
+      - start/stop/sweep have substantive implementations
 
       - asyncio task lifecycle handles cancellation cleanly
 
+      - sweep distinguishes native vs bridge idle TTLs
+
+      - sweep calls idle_manager.decrement() for reaped connections
+
+      - Returns ReaperSweepOutcome with accurate counts
+
       - invar guard passes on this file'
+    refs:
+    - src/tela/shell/connection_reaper.py
     depends_on:
     - cl.impl.runtime_accessor
-    agent: python-executor
+    agent: python-senior
   - id: cl.impl.gate
     name: 'Gate: implementation phase complete'
     status: pending
