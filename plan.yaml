@@ -48355,7 +48355,7 @@ phases:
     agent: software-architect
   - id: meta.full_b_contract.freeze_readiness_authority
     name: Freeze readiness authority boundary
-    status: claimed
+    status: done
     description: 'Planning contract freeze.
 
 
@@ -48378,6 +48378,23 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T10:03:07.678675+00:00'
+    done_at: '2026-04-03T10:06:13.288597+00:00'
+    evidence: "Artifact:\n- PR: 3893a11 (commit hash)\n\nVerification:\n- Run: `git\
+      \ show --stat --oneline --name-only HEAD` -> commit `3893a11 freeze gateway\
+      \ readiness authority boundary` includes `README.md`, `docs/ADR-005-readiness-authority-boundary.md`,\
+      \ `docs/AGENT_INTERFACE.md`, `docs/CONFIRMED-SURFACE-CONTRACT.md`, `docs/DESIGN.md`,\
+      \ `docs/INTERFACES.md`, and `docs/USAGE.md`\n- Run: `git status --short` ->\
+      \ clean working tree\n- Run: `grep -REn \"sole readiness authority|must not\
+      \ create or own readiness state|local lifecycle labels|discovery-only\" README.md\
+      \ docs/*.md` -> confirms downstream-facing docs now pin:\n  - gateway runtime\
+      \ lifecycle plus `GET /status` as sole readiness authority\n  - bridge / `tela\
+      \ connect` must not create or own readiness state, cached readiness truth, or\
+      \ local lifecycle labels\n  - lockfile remains discovery-only, not readiness\
+      \ truth\n\nSpec link:\n- `docs/ADR-005-readiness-authority-boundary.md`\n- `docs/DESIGN.md`\
+      \ -> `Discovery and readiness` / `Authoritative freeze for downstream work`\n\
+      - `docs/INTERFACES.md` -> `7.2 HTTP Endpoints` / `7.2.1 GET /status Response\
+      \ Schema`\n- `docs/CONFIRMED-SURFACE-CONTRACT.md` -> `1.1 Admission boundary\
+      \ freeze`"
   - id: meta.full_b_contract.freeze_admission_boundary
     name: Freeze admission boundary
     status: done
