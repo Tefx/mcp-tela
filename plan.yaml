@@ -49119,6 +49119,17 @@ phases:
 
       - Verdict'
     agent: wiring-auditor
+  - id: deep_review.full_b.architecture_review
+    name: Review Full-B readiness architecture
+    status: pending
+    description: Independent architecture review of the readiness authority, admission
+      boundary, and discovery/readiness split after implementation.
+    verification: '- Gateway `/status` remains sole readiness authority
+
+      - `/connect` remains lifecycle plumbing only
+
+      - No `shutting_down` scope creep was introduced'
+    agent: software-architect
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
   status: locked
