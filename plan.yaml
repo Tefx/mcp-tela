@@ -49941,7 +49941,7 @@ phases:
     agent: gate-reviewer
   - id: connect_bridge_readiness.fix_gate_blocker_teardown_tests
     name: Fix gate blocker teardown readiness tests
-    status: claimed
+    status: done
     description: 'Fix ALL gate-review teardown readiness blockers together in `tests/shell/test_connect_cmd.py`.
 
 
@@ -50008,6 +50008,19 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-03T14:45:02.055924+00:00'
+    done_at: '2026-04-03T14:48:04.047004+00:00'
+    evidence: 'Commit: b60787967a69afd4acc383bf89297a37edee392e; File changed: tests/shell/test_connect_cmd.py;
+      Blocker tests fixed: test_bridge_teardown_interrupt_does_not_block_process_exit
+      and test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section; Shared
+      readiness mock wiring added via _mock_gateway_status_ready(monkeypatch) to consistently
+      patch _get_gateway_status and assert ready-state polling in both teardown tests;
+      Sibling normalization: teardown-interrupt sibling coverage in this file was
+      checked and omissions normalized for the two blocker tests; Verification commands/results:
+      1) uv run pytest -v tests/shell/test_connect_cmd.py -k "bridge_teardown_interrupt_does_not_block_process_exit
+      or bridge_teardown_interrupt_resumes_cleanup_in_bounded_section" -> 2 passed,
+      30 deselected; 2) uv run pytest -v tests/shell/test_connect_cmd.py -k "active_bridge_interrupt_triggers_immediate_exit_and_cleanup
+      or bridge_teardown" -> 3 passed, 29 deselected; 3) invar_guard(changed=true)
+      -> status=passed, static errors=0, warnings=0.'
   - id: connect_bridge_readiness.retest_gate_blocker_teardown_tests
     name: Retest gate blocker teardown readiness tests
     status: pending
