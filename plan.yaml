@@ -48628,6 +48628,58 @@ phases:
     - mcp_readiness_gate.contract
     - mcp_readiness_gate.tests_red
     agent: python-senior
+  - id: mcp_readiness_gate.bounded_transient_503_proof
+    name: Prove bounded transient 503 behavior
+    status: pending
+    description: 'Verification step.
+
+
+      As an INDEPENDENT TESTER, prove the `/mcp` gate behaves as a transient readiness
+      barrier rather than a permanent failure or a guessed delay.
+
+
+      Scope:
+
+      - not-ready `/mcp` returns the machine-readable transient 503 shape
+
+      - readiness convergence removes the 503 without client-side fixed sleep heuristics
+
+      - the proof covers the real HTTP admission seam, not only mocked units'
+    verification: '- Real HTTP proof for transient 503 while non-ready
+
+      - Real HTTP proof for successful `/mcp` admission after readiness convergence
+
+      - Evidence shows bounded transition rather than unbounded retry'
+    evidence_template: '## Bounded transient 503 proof
+
+      **Command/test**:
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+      **Observed non-ready output**:
+
+      ```
+
+      <paste 503 response>
+
+      ```
+
+      **Observed ready output**:
+
+      ```
+
+      <paste success response>
+
+      ```
+
+      **Why this is bounded**: <explain the readiness transition that clears the gate>'
+    depends_on:
+    - mcp_readiness_gate.impl
+    agent: integration-verifier
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
