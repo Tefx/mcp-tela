@@ -49071,6 +49071,24 @@ phases:
 
       - Bound observed'
     agent: blind-tester
+  - id: cold_start_compat.gate
+    name: Gate cold-start compatibility phase
+    status: pending
+    description: 'Gate review: verify cold-start behavior preserves discovery/readiness
+      separation and bounded bridge behavior.'
+    verification: '- Lockfile can exist before readiness
+
+      - `/status` remains authoritative during the early window
+
+      - Early forward does not break host behavior
+
+      - Eventual success comes from readiness convergence, not fixed delay'
+    depends_on:
+    - cold_start_compat.opencode_cold_start
+    - cold_start_compat.discovery_before_readiness_proof
+    - cold_start_compat.transient_503_and_retry
+    - cold_start_compat.degraded_mode
+    agent: gate-reviewer
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
