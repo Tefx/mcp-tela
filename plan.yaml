@@ -50406,7 +50406,7 @@ phases:
       \ worktree"
   - id: cold_start_compat.degraded_mode
     name: Verify degraded-mode negative path
-    status: claimed
+    status: done
     description: 'Verification step.
 
 
@@ -50429,6 +50429,42 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-04-03T15:05:33.143847+00:00'
+    done_at: '2026-04-03T15:09:28.521058+00:00'
+    evidence: "## Degraded-Mode Bounded Exit Verification\n\n### Fixture/Scenario\n\
+      \n**Test file**: `tests/repro/test_degraded_mode_bounded_exit.py`\n\nThree black-box\
+      \ scenarios testing that persistent non-ready gateway state causes clean bounded\
+      \ exit:\n\n1. **Persistent warming state** (test_degraded_mode_bounded_exit):\n\
+      \   - Gateway prepared but not converged (servers configured but never connected)\n\
+      \   - Status polling returns persistent `state: \"warming\"`\n   - Verifies\
+      \ bounded exit after max polls, not indefinite hang\n\n2. **Immediate degraded\
+      \ exit** (test_degraded_mode_exits_on_degraded_state):\n   - Gateway queried\
+      \ for status\n   - Status returns `state: \"degraded\"` with reason\n   - Verifies\
+      \ immediate exit (single poll, no retry)\n\n3. **Authority poll requirement**\
+      \ (test_readiness_wait_without_status_poll_fails):\n   - Gateway in warming\
+      \ state\n   - Verifies readiness wait MUST call GET /status\n   - Cannot skip\
+      \ authority consult per ADR-005\n\n### Exact Test Command\n\n```bash\ncd /Users/tefx/Projects/mcp-tela/.vectl/worktrees/cold_start_compat.degraded_mode\n\
+      uv run pytest tests/repro/test_degraded_mode_bounded_exit.py -v\n```\n\n###\
+      \ Exit/Output\n\n```\ntests/repro/test_degraded_mode_bounded_exit.py::test_degraded_mode_bounded_exit\
+      \ PASSED [ 33%]\ntests/repro/test_degraded_mode_bounded_exit.py::test_degraded_mode_exits_on_degraded_state\
+      \ PASSED [ 66%]\ntests/repro/test_degraded_mode_bounded_exit.py::test_readiness_wait_without_status_poll_fails\
+      \ PASSED [100%]\n\n============================== 3 passed in 6.31s ===============================\n\
+      ```\n\n### Bound Observed\n\n**Warming state bounded exit**:\n- ✅ Polls status\
+      \ authority: 4 times (BRIDGE_READINESS_MAX_POLLS = 4)\n- ✅ Bounded polling:\
+      \ 4 <= 4\n- ✅ Bounded time: ~2.0s (HTTP_TRANSIENT_BACKOFF_SECONDS * polls *\
+      \ 2)\n- ✅ Clean error exit: `\"BRIDGE_NOT_READY: bounded readiness wait exhausted\
+      \ state=warming polls=4\"`\n- ✅ Operator-visible message mentions readiness\
+      \ state\n\n**Degraded state immediate exit**:\n- ✅ Single poll (no retry): 1\n\
+      - ✅ Immediate exit: <0.5s\n- ✅ Error mentions degraded: `\"BRIDGE_NOT_READY:\
+      \ state=degraded degraded_reason=downstream_connection_failed:server2\"`\n\n\
+      **Authority poll verification**:\n- ✅ Authority consults: >= 1 (must poll /status)\n\
+      \n### Contract Compliance\n\nPer ADR-005, INTERFACES.md §7.2, and CONFIRMED-SURFACE-CONTRACT.md:\n\
+      \n1. ✅ Gateway runtime (GET /status) is sole readiness authority\n2. ✅ Discovery\
+      \ (lockfile) does NOT imply readiness - verified via persistent warming test\n\
+      3. ✅ Persistent degraded/non-ready causes clean bounded exit\n4. ✅ No early\
+      \ forward through just because discovery succeeded\n5. ✅ Error messages are\
+      \ clean and operator-visible\n6. ✅ Readiness wait consults /status (not fixed\
+      \ sleep intervals)\n7. ✅ Degraded state does NOT authorize retry (immediate\
+      \ exit)"
   - id: cold_start_compat.gate
     name: Gate cold-start compatibility phase
     status: pending
