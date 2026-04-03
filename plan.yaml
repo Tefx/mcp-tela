@@ -49189,6 +49189,72 @@ phases:
     depends_on:
     - mcp_readiness_gate.gate
     agent: python-senior
+  - id: mcp_readiness_gate.retest_gate_contract_drift
+    name: Retest /connect readiness contract boundary after batched fix
+    status: pending
+    description: 'Independent retest after `mcp_readiness_gate.fix_gate_contract_drift`.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: local-check
+
+
+      As an INDEPENDENT TESTER (`integration-verifier`), validate that the `/connect`
+      boundary no longer has contract/doc drift and that the phase still protects
+      the `/mcp` readiness gate.
+
+
+      Test for:
+
+      - `/connect` boundary stays outside readiness gating
+
+      - readiness gate behavior remains centered on `/mcp`
+
+      - targeted tests and assertions covering the connect/readiness boundary remain
+      green
+
+
+      Finding issues is a successful retest outcome; if drift remains, report the
+      exact location and failing expectation.'
+    verification: '- Run targeted tests covering `/mcp` readiness gating and the `/connect`
+      boundary
+
+      - Confirm relevant readiness-gate tests are green after the fix
+
+      - Confirm no contract/doc drift remains around `handle_connect`
+
+      - Protects downstream gate: `mcp_readiness_gate.gate`'
+    evidence_template: '## Retest evidence
+
+      **Commands executed**:
+
+      ```
+
+      <paste targeted test command(s)>
+
+      ```
+
+
+      **Coverage**:
+
+      - `/mcp` readiness gate path: <test names>
+
+      - `/connect` boundary path: <test names>
+
+
+      **Results**:
+
+      - Green/remaining failures with exact output
+
+      - Drift status for `handle_connect`: resolved|still present'
+    depends_on:
+    - mcp_readiness_gate.fix_gate_contract_drift
+    agent: integration-verifier
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
