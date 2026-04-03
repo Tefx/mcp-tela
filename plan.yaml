@@ -49487,7 +49487,7 @@ phases:
       \  outcome: clean"
   - id: connect_bridge_readiness.tests_red
     name: Add expected-red connect readiness consumer tests
-    status: claimed
+    status: done
     description: 'Test step.
 
 
@@ -49517,6 +49517,25 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-03T13:36:24.692368+00:00'
+    done_at: '2026-04-03T13:53:26.939445+00:00'
+    evidence: "step_intent: test_define_red\nexpected_result: red\n\nCommands run:\n\
+      \  uv run pytest tests/shell/test_connect_bridge_readiness_gaps_red.py -v --tb=line\n\
+      \nTest results: 4 failed, 6 passed in 7.59s\n\nFailing tests (expected - exposing\
+      \ gaps):\n  1. test_bridge_must_call_status_before_forwarding_mcp\n     AssertionError:\
+      \ Bridge must poll GET /status before forwarding MCP frames. No /status call\
+      \ was detected. Calls made: [].\n\n  2. test_post_json_retries_on_503_but_bridge_needs_status_polling\n\
+      \     AssertionError: Expected 4 calls (bounded retry on 503) but got 1. _post_json\
+      \ does retry on 503, but this is not based on the readiness contract from /status.\n\
+      \n  3. test_readiness_authority_belongs_to_status_endpoint\n     AssertionError:\
+      \ Bridge must use GET /status as the readiness authority. No /status calls detected.\n\
+      \n  4. test_transient_warming_requires_status_poll_to_classify\n     AssertionError:\
+      \ Bridge must poll GET /status to classify transient vs persistent. No /status\
+      \ calls detected.\n\nCoverage mapping:\n  - connect polls /status before forwarding:\
+      \ EXPOSED (test fails)\n  - transient 503 permits bounded retry: EXPOSED (test\
+      \ fails)\n  - persistent non-ready/degraded exits boundedly: EXPOSED (test fails)\n\
+      \  - bridge does not invent local lifecycle labels: EXPOSED (test fails)\n\n\
+      Committed to branch: vectl/step-connect_bridge_readiness.tests_red\ncommit_hash:\
+      \ ce6d1d575b93b4fd98fefdb28b8a4ce4e79b5a02"
   - id: connect_bridge_readiness.impl
     name: Implement bridge readiness consumption
     status: pending
