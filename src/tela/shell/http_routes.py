@@ -66,16 +66,6 @@ def _is_connection_not_found_error(result: Result[object, str]) -> bool:
     )
 
 
-def _is_admission_warming_error(result: Result[object, str]) -> bool:
-    """Return True when connect failure reports warming admission rejection."""
-
-    return (
-        result.is_err
-        and isinstance(result.error, str)
-        and result.error.startswith("ADMISSION_REJECTED_WARMING")
-    )
-
-
 def _is_audit_query_error(result: Result[object, str]) -> bool:
     """Return True when status failure reports audit query failure."""
 
@@ -240,7 +230,6 @@ def handle_status(
         )
         or _is_auth_error(result)
         or _is_gateway_not_started_error(result)
-        or _is_admission_warming_error(result)
     )
 )
 def handle_connect(
@@ -258,8 +247,10 @@ def handle_connect(
 
     Registers a bridge connection in the gateway runtime.
 
-    Rejects registration while the gateway lifecycle is in "warming" state
-    (downstream convergence has not yet completed).
+    This endpoint is lifecycle plumbing only and is not a readiness-gated
+    admission surface for MCP traffic. Readiness-gated admission is enforced
+    by ``POST /mcp``, while lifecycle readiness authority remains the gateway
+    runtime snapshot exposed by ``GET /status``.
 
     Returns:
         Result with connection confirmation on success.
@@ -301,7 +292,11 @@ def handle_connect(
 
     touch_r = touch_connection_activity(payload.connection_id, now_iso)
     if touch_r.is_err:
-        logger.warning("Failed to touch connection activity for %s: %s", payload.connection_id, touch_r.error)
+        logger.warning(
+            "Failed to touch connection activity for %s: %s",
+            payload.connection_id,
+            touch_r.error,
+        )
 
     return Result(
         value={
