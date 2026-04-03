@@ -50566,7 +50566,7 @@ phases:
       \ --short\n  -> clean (no output)"
   - id: cold_start_compat.retest_obsolete_expected_red_tests
     name: Retest bridge readiness expectations after obsolete expected-red cleanup
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier), re-run the bridge-readiness
       verification path after obsolete expected-red test cleanup.
 
@@ -50645,6 +50645,8 @@ phases:
     depends_on:
     - cold_start_compat.fix_obsolete_expected_red_tests
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T15:21:42.620399+00:00'
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
