@@ -48487,6 +48487,50 @@ phases:
   status: locked
   depends_on:
   - meta.full_b_contract
+  steps:
+  - id: mcp_readiness_gate.contract
+    name: Define /mcp readiness gate contract
+    status: pending
+    description: 'Contract step.
+
+
+      step_type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs:
+
+      - signatures
+
+      - type_defs
+
+      - interfaces
+
+      - stubs
+
+
+      Pin the exact `/mcp` admission contract for the Full-B slice.
+
+
+      Authoritative interface obligations:
+
+      - gateway readiness is consumed from runtime status owned by gateway lifecycle
+
+      - `/mcp` returns machine-readable transient 503 semantics while convergence
+      is incomplete
+
+      - no new public `shutting_down` state is added
+
+      - `/connect` is not reused as readiness truth
+
+
+      Touch only acceptance-defining surfaces for the HTTP/MCP admission contract;
+      do not implement request handling logic here.'
+    verification: '- The `/mcp` not-ready path is explicit, machine-readable, and
+      bounded
+
+      - Contract preserves gateway-only readiness authority'
+    agent: software-architect
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
