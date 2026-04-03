@@ -50797,7 +50797,7 @@ phases:
   steps:
   - id: deep_review.full_b.wiring_audit
     name: Run Full-B wiring audit
-    status: pending
+    status: claimed
     description: 'Full wiring audit for the Full-B readiness slice.
 
 
@@ -50819,6 +50819,8 @@ phases:
 
       - Verdict'
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-04-03T15:29:16.669918+00:00'
   - id: deep_review.full_b.architecture_review
     name: Review Full-B readiness architecture
     status: claimed
