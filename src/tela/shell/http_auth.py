@@ -9,6 +9,8 @@ import hmac
 import json
 from typing import Any, Callable
 
+from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
+from tela.shell.mcp_admission_contract import McpAdmissionTransient503
 from tela.shell.result import Result
 
 # ASGI type aliases for readability.
@@ -36,6 +38,19 @@ _validate_bearer_token = validate_bearer_token
 _AUTH_ERROR_BODY: bytes = json.dumps(
     {"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}
 ).encode("utf-8")
+
+_MCP_WARMING_ERROR_PAYLOAD: McpAdmissionTransient503 = {
+    "error": "ADMISSION_REJECTED_WARMING: gateway not ready for MCP admission",
+    "code": "ADMISSION_REJECTED_WARMING",
+    "transient": True,
+    "retry": {
+        "authorized": True,
+        "basis": "gateway_signal",
+        "expectation": "bounded",
+    },
+    "gateway_state": "warming",
+}
+_MCP_WARMING_ERROR_BODY: bytes = json.dumps(_MCP_WARMING_ERROR_PAYLOAD).encode("utf-8")
 
 
 class BearerAuthMiddleware:
@@ -85,6 +100,16 @@ class BearerAuthMiddleware:
             await self._send_401(send)
             return
 
+        if scope.get("method") == "POST" and scope.get("path") == "/mcp":
+            lifecycle_result = get_lifecycle_status_facts()
+            if (
+                lifecycle_result.is_ok
+                and lifecycle_result.value is not None
+                and lifecycle_result.value.state == "warming"
+            ):
+                await self._send_503_mcp_warming(send)
+                return
+
         await self.app(scope, receive, send)
 
     @staticmethod
@@ -95,7 +120,7 @@ class BearerAuthMiddleware:
             if name == b"authorization":
                 decoded = value.decode("latin-1")
                 if decoded.startswith("Bearer "):
-                    token = decoded[len("Bearer "):].strip()
+                    token = decoded[len("Bearer ") :].strip()
                     if token:
                         return token
                 return None
@@ -118,5 +143,28 @@ class BearerAuthMiddleware:
             {
                 "type": "http.response.body",
                 "body": _AUTH_ERROR_BODY,
+            }
+        )
+
+    @staticmethod
+    async def _send_503_mcp_warming(send: Send) -> None:
+        """Send machine-readable transient warming 503 for POST /mcp."""
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 503,
+                "headers": [
+                    [b"content-type", b"application/json"],
+                    [
+                        b"content-length",
+                        str(len(_MCP_WARMING_ERROR_BODY)).encode("ascii"),
+                    ],
+                ],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": _MCP_WARMING_ERROR_BODY,
             }
         )
