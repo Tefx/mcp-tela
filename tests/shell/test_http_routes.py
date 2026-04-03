@@ -180,8 +180,8 @@ class TestHandleConnect:
         assert result.error is not None
         assert "GATEWAY_NOT_STARTED" in result.error
 
-    def test_handle_connect_rejects_while_warming(self) -> None:
-        """Bridge admission is rejected while lifecycle is warming."""
+    def test_handle_connect_is_not_readiness_gated_while_warming(self) -> None:
+        """POST /connect remains outside readiness gating during warming."""
         from tela.shell.gateway_runtime import set_runtime_config, set_runtime_running
         from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 
@@ -205,13 +205,16 @@ class TestHandleConnect:
 
             req = ConnectRequest(connection_id="test-conn-warming")
             result = http_routes.handle_connect("valid", "valid", req)
-            assert result.is_err
-            assert result.error is not None
-            assert "ADMISSION_REJECTED_WARMING" in result.error
-            assert "warming" in result.error
+            assert result.is_ok, (
+                f"/connect must remain available during warming; got: {result.error}"
+            )
+            assert result.value is not None
+            assert result.value["connection_id"] == "test-conn-warming"
+            assert result.value["status"] == "connected"
         finally:
             set_runtime_config(None)
             set_runtime_running(False)
+            clear_runtime_connections()
 
     def test_handle_connect_accepts_when_ready(self) -> None:
         """Bridge admission succeeds once lifecycle is ready."""
