@@ -1056,6 +1056,40 @@ def test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup(
     assert any("/disconnect" in url for url in disconnect_urls)
 
 
+def _mock_gateway_status_ready(
+    monkeypatch: pytest.MonkeyPatch,
+) -> list[dict[str, object]]:
+    """Wire `_get_gateway_status` to a consistent ready snapshot for teardown tests."""
+
+    readiness_snapshots: list[dict[str, object]] = []
+
+    def _fake_get_gateway_status(
+        *, status_url: str, bearer_token: str
+    ) -> Result[StatusResponse, str]:
+        _ = status_url, bearer_token
+        status = StatusResponse(
+            uptime_seconds=1.0,
+            server_count=1,
+            connected_servers=["fs"],
+            active_connections=1,
+            profile_count=1,
+            total_tool_calls=0,
+            state="ready",
+            discovery_source="lockfile",
+            config_path="/tmp/tela.yaml",
+            requested_config_path="/tmp/tela.yaml",
+            config_mismatch=False,
+            degraded_reason=None,
+            connections=[],
+            audit_entries=[],
+        )
+        readiness_snapshots.append(status.model_dump())
+        return Result(value=status)
+
+    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
+    return readiness_snapshots
+
+
 def test_bridge_teardown_interrupt_does_not_block_process_exit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1088,6 +1122,7 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
         # Forward completes normally
         return Result(value=None)
 
+    readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
 
@@ -1101,6 +1136,7 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
     # The disconnect failure is logged but doesn't block exit
     assert result.is_ok
     assert len(disconnect_calls) >= 1
+    assert [snapshot["state"] for snapshot in readiness_snapshots] == ["ready"]
 
 
 def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
@@ -1154,6 +1190,7 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         _ = stdin_buffer, stdout_buffer
         return Result(value=None)
 
+    readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
     monkeypatch.setattr(connect_cmd, "_post_json_once", _fake_post_json_once)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
@@ -1169,6 +1206,7 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
     assert len(connect_payloads) == 1
     assert len(disconnect_payloads) == 1
     assert len(resumed_disconnect_payloads) == 1
+    assert [snapshot["state"] for snapshot in readiness_snapshots] == ["ready"]
 
     assert "connection_id" in connect_payloads[0]
     assert (
