@@ -48324,3 +48324,8 @@ phases:
   status: pending
   depends_on:
   - cl.deep_review
+- id: mcp_readiness_gate
+  name: MCP Readiness Gate
+  status: locked
+  depends_on:
+  - meta.full_b_contract
