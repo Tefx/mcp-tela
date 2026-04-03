@@ -49651,7 +49651,7 @@ phases:
     claimed_at: '2026-04-03T14:22:37.753706+00:00'
   - id: connect_bridge_readiness.status_polling_proof
     name: Prove status-driven polling behavior
-    status: pending
+    status: claimed
     description: 'Verification step.
 
 
@@ -49673,6 +49673,8 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-04-03T14:22:49.835814+00:00'
   - id: connect_bridge_readiness.bounded_retry_negative_proof
     name: Prove bounded retry negative path
     status: claimed
