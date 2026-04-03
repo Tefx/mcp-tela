@@ -48453,7 +48453,7 @@ phases:
       - `docs/ADR-004-gateway-startup-state-machine.md` guardrail text'
   - id: meta.full_b_contract.freeze_transient_503_contract
     name: Freeze transient 503 contract
-    status: claimed
+    status: done
     description: 'Contract step.
 
 
@@ -48495,6 +48495,52 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T10:06:43.169211+00:00'
+    done_at: '2026-04-03T10:11:06.473988+00:00'
+    evidence: 'Artifact:
+
+      - PR: N/A
+
+      - Commit hash: 41755fc (includes prior contract commit b951301)
+
+
+      Verification:
+
+      - Run: invar_guard(changed=true) -> passed; 0 errors, 0 warnings
+
+      - Run: python3 -c "import json, importlib.util, pathlib; json.load(open(''contracts/mcp_admission_transient_503.schema.json''));
+      spec = importlib.util.spec_from_file_location(''mcp_admission_contract'', pathlib.Path(''src/tela/shell/mcp_admission_contract.py''));
+      module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module);
+      print(''ok'')" -> ok
+
+      - Run: git status --short --branch && git log -2 --oneline -> clean branch on
+      vectl/step-meta.full_b_contract.freeze_transient_503_contract; latest commits
+      41755fc and b951301
+
+
+      Spec link:
+
+      - docs/INTERFACES.md:215-246,760-762
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md:55-62
+
+      - contracts/mcp_admission_transient_503.schema.json:1-57
+
+      - src/tela/shell/mcp_admission_contract.py:1-45
+
+
+      Delivered:
+
+      - Added machine-readable `/mcp` transient 503 schema with stable code `ADMISSION_REJECTED_WARMING`,
+      `transient: true`, gateway-authored retry authorization, and bounded retry expectation.
+
+      - Pinned retry authorization to gateway signal (`retry.basis = "gateway_signal"`)
+      rather than bare client inference from HTTP 503.
+
+      - Kept lifecycle vocabulary frozen to existing state `warming`; no new public
+      readiness state added.
+
+      - Added Python type stubs for downstream implementation/bridge consumption and
+      aligned interface docs.'
   - id: meta.full_b_contract.exclude_shutting_down_expansion
     name: Exclude shutting_down expansion
     status: done
