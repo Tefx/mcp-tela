@@ -247,6 +247,11 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 - `ready`: Downstream servers are connected and tool registry is converged
 - `degraded`: Gateway is reachable but not all downstream servers are connected
 
+**Current-slice exclusion**:
+- this contract does **not** add a public `shutting_down` value to `GET /status`
+- bridge retry/admission behavior in the current slice must be keyed from the existing runtime snapshot semantics above, not from a new teardown state label
+- any future teardown-state expansion must be planned as a separate architecture slice before this schema changes
+
 **Count-vs-Collection Semantics**:
 - `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)
 - `connections` is a **list** of `ConnectionContext` objects for structural inspection

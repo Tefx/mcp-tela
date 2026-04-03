@@ -7,6 +7,12 @@ later redesign. It does **not** change the approved current Plan A implementatio
 shape described in `docs/DESIGN.md`, and it must not be treated as a required
 implementation step now.
 
+Guardrail: the current Full-B contract/readiness slice explicitly excludes any new
+public `shutting_down` runtime state, bridge retry logic keyed off
+`shutting_down`, or broader teardown-state redesign. If shutdown-state expansion
+becomes necessary, it must be planned and approved as a separate future
+architecture slice.
+
 ## Context
 
 `docs/DESIGN.md` establishes the current source-of-truth split:

@@ -90,6 +90,9 @@ Implications:
 - downstream sync state remains separate from lockfile discovery
 - a discovered endpoint may still be starting, degraded, or disconnected from downstreams
 - reconnect handling may already hold fresh authoritative `raw_tools`; when that payload is present, downstream consumers MUST reuse it and MUST NOT blindly trigger a second enumeration
+- this approved slice does **not** introduce a new public `shutting_down` lifecycle state in `/status`
+- this approved slice does **not** add bridge retry or reconnect policy keyed off a `shutting_down` state label
+- if teardown-state vocabulary becomes necessary later, it must be planned as a separate future architecture slice rather than folded into the current readiness/convergence work
 
 ### Startup coordination
 
