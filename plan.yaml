@@ -49706,7 +49706,7 @@ phases:
     claimed_at: '2026-04-03T14:22:28.502223+00:00'
   - id: connect_bridge_readiness.spec_conformance
     name: Verify bridge readiness spec conformance
-    status: pending
+    status: claimed
     description: Spec conformance verification via adversarial divergence hunting
       for `tela connect` readiness consumption only.
     verification: '- CLI and bridge behavior conforms to gateway-authoritative readiness
@@ -49725,6 +49725,8 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-04-03T14:22:43.036516+00:00'
   - id: connect_bridge_readiness.gate
     name: Gate bridge readiness consumer phase
     status: pending
