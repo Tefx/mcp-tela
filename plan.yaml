@@ -51328,7 +51328,7 @@ phases:
       product_implementation_files_modified: false'
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
-  status: in_progress
+  status: done
   depends_on:
   - deep_review.full_b
   steps:
@@ -51413,7 +51413,7 @@ phases:
       - src/tela/shell/mcp_admission_contract.py'
   - id: doc_sync.full_b.gate
     name: Gate Full-B documentation sync
-    status: claimed
+    status: done
     description: 'Gate review: verify Full-B docs match the revised readiness architecture
       and post-review implementation reality.'
     verification: '- Docs match gateway-authoritative readiness semantics
@@ -51426,3 +51426,59 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-03T15:52:22.023827+00:00'
+    done_at: '2026-04-03T15:56:19.596443+00:00'
+    evidence: 'Gate verdict: PASS.
+
+
+      Verification against gate criteria:
+
+      1) Docs match gateway-authoritative readiness semantics:
+
+      - Readiness docs consistently state gateway runtime lifecycle + `GET /status`
+      as sole readiness authority.
+
+      2) Docs do not imply bridge-owned readiness truth:
+
+      - Updated docs explicitly keep bridge as consumer/poller of readiness, not authority/cache
+      owner.
+
+      3) Docs do not introduce `shutting_down` into this slice:
+
+      - Docs explicitly mark `shutting_down` expansion as deferred/non-goal for Full-B.
+
+
+      Additional checks from auditor evidence:
+
+      - Implementation grep for `shutting_down` in `src/` and `tests/` showed no introduced
+      scope creep for this slice.
+
+      - Documentation-only posture maintained; no product implementation files modified.
+
+
+      Artifact:
+
+      - Review-only gate step; no code/doc commit required for acceptance.
+
+
+      Spec links:
+
+      - docs/ADR-004-gateway-startup-state-machine.md
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - docs/AGENT_INTERFACE.md
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md
+
+
+      step_intent: gate verification
+
+      expected_result: green
+
+      observed_result: green
+
+      failure_alignment: n/a
+
+      product_implementation_files_modified: false'
