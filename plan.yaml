@@ -48453,7 +48453,7 @@ phases:
       - `docs/ADR-004-gateway-startup-state-machine.md` guardrail text'
   - id: meta.full_b_contract.freeze_transient_503_contract
     name: Freeze transient 503 contract
-    status: pending
+    status: claimed
     description: 'Contract step.
 
 
@@ -48493,6 +48493,8 @@ phases:
 
       - Retry authorization is tied to gateway signal, not client guesswork'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-03T10:06:43.169211+00:00'
   - id: meta.full_b_contract.exclude_shutting_down_expansion
     name: Exclude shutting_down expansion
     status: done
