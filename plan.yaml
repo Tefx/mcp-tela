@@ -48569,6 +48569,65 @@ phases:
 
       - Exposed gaps are recorded for the implementation step'
     agent: python-executor
+  - id: mcp_readiness_gate.impl
+    name: Implement /mcp readiness admission gate
+    status: pending
+    description: 'step_type: implementation
+
+
+      Fill in stub bodies in the gateway HTTP/MCP admission path per the contract
+      from step `mcp_readiness_gate.contract`.
+
+
+      UPSTREAM ARTIFACTS (from contract/test steps):
+
+      - docs/INTERFACES.md — external HTTP and status contract is AUTHORITATIVE
+
+      - tests added by `mcp_readiness_gate.tests_red` — test cases are PROTECTED
+
+
+      YOUR SCOPE: Replace stub markers and incomplete branching in the existing `/mcp`
+      admission path so readiness gating is driven only by gateway lifecycle/runtime
+      status.
+
+
+      Required semantics:
+
+      - gate `/mcp` during convergence
+
+      - emit machine-readable transient 503 for not-ready-yet
+
+      - preserve `/connect` as registration/lifecycle plumbing only
+
+      - do not introduce new bridge-owned readiness state or `shutting_down`
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes readiness inputs
+      and varies outputs accordingly.'
+    verification: '- Main path: `/mcp` admits only once gateway status is ready
+
+      - Failure path: not-ready requests return the machine-readable transient 503
+      contract
+
+      - `/connect` semantics remain registration-only'
+    evidence_template: '## MCP readiness gate evidence
+
+      - HTTP command/test exercising not-ready `/mcp` path
+
+      - Actual 503 payload showing machine-readable transient marker
+
+      - HTTP command/test exercising ready `/mcp` path
+
+      - Proof that `/connect` still registers lifecycle state without becoming readiness
+      truth'
+    depends_on:
+    - mcp_readiness_gate.contract
+    - mcp_readiness_gate.tests_red
+    agent: python-senior
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
