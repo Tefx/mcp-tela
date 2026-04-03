@@ -201,9 +201,14 @@ as conflicts.
 |----------|------|---------|
 | `GET /health` | None | Liveness check: `{"status":"ok","pid":N}` |
 | `GET /status` | Bearer token | Full runtime status |
-| `POST /connect` | Bearer token | Register bridge connection |
+| `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
-| `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint |
+| `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |
+
+Current-slice admission boundary:
+- `POST /mcp` is the only new readiness-gated HTTP admission surface in this slice
+- `POST /connect` remains registration/lifecycle plumbing and must not be treated as readiness truth
+- `POST /connect` must not be used as a readiness cache or admission proof for ordinary MCP traffic
 
 ### 7.2.2 Tool Metadata Passthrough
 

@@ -77,6 +77,12 @@ Runtime lifecycle/readiness truth comes from the in-process runtime status snaps
 (and operator surfaces derived from it, such as `GET /status`), not from the
 lockfile.
 
+Admission boundary in this slice:
+
+- `POST /mcp` is the readiness-gated HTTP admission surface during convergence
+- `POST /connect` remains registration/lifecycle plumbing for bridge presence only
+- `POST /connect` must not become readiness truth, a readiness cache, or admission proof for ordinary MCP traffic
+
 Source-of-truth split:
 
 | Concern | Authoritative source | Explicitly not authoritative |

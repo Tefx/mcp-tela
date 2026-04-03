@@ -104,14 +104,16 @@ Instruction composition is ordered and non-commutative:
 |----------|------|---------|
 | `GET /health` | None | Liveness check |
 | `GET /status` | Bearer token | Full runtime status (operator) |
-| `POST /connect` | Bearer token | Register bridge connection |
+| `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
-| `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint |
+| `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |
 
 ## 7. Invariants
 
 - `tela.profiles` is a **resource read**, not a tool call
 - `tela_list_providers` is the only built-in `tela.*` MCP tool
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
+- `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice
+- `POST /connect` is registration/lifecycle plumbing only and must not become readiness truth, readiness cache, or MCP admission proof
 - Gateway instructions are emitted first; downstream sections are append-only
 - The `tela.` prefix is reserved for built-in surfaces

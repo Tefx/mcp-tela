@@ -39,9 +39,15 @@ SurfaceContract := {
 | `tela audit` | `CLI` | Local/operator audit query. |
 | `GET /status` | `HTTP` | Runtime status endpoint consumed by operator/CLI flows. |
 | `GET /health` | `HTTP` | Liveness endpoint. |
-| `POST /connect` | `HTTP` | Bridge registration endpoint. |
+| `POST /connect` | `HTTP` | Bridge registration endpoint; non-readiness lifecycle plumbing only. |
 | `POST /disconnect` | `HTTP` | Bridge deregistration endpoint. |
-| `POST /mcp` | `HTTP` | Streamable HTTP MCP transport endpoint. |
+| `POST /mcp` | `HTTP` | Streamable HTTP MCP transport endpoint and readiness-gated admission surface. |
+
+### 1.1 Admission boundary freeze
+
+- `POST /mcp` is the only readiness-gated HTTP admission surface in this contract slice.
+- `POST /connect` remains connection registration and lifecycle plumbing only.
+- `POST /connect` must not be described as readiness truth, a readiness cache, or admission proof for ordinary MCP traffic.
 
 ## 2. Tool vs resource rules
 

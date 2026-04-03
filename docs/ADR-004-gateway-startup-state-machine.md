@@ -9,9 +9,11 @@ implementation step now.
 
 Guardrail: the current Full-B contract/readiness slice explicitly excludes any new
 public `shutting_down` runtime state, bridge retry logic keyed off
-`shutting_down`, or broader teardown-state redesign. If shutdown-state expansion
-becomes necessary, it must be planned and approved as a separate future
-architecture slice.
+`shutting_down`, or broader teardown-state redesign. It also freezes the
+admission boundary so `POST /mcp` remains the readiness-gated admission surface
+while `POST /connect` remains registration/lifecycle plumbing only. If
+shutdown-state expansion becomes necessary, it must be planned and approved as a
+separate future architecture slice.
 
 ## Context
 
@@ -135,7 +137,8 @@ If Plan C is adopted, admission policy should be state-dependent.
 | `stopped` | no admission possible |
 
 Rationale: admission must follow authoritative runtime state rather than lockfile
-discoverability. This keeps discovery and readiness separate.
+discoverability. This keeps discovery and readiness separate and avoids letting
+connection registration become de facto admission proof.
 
 ## Interrupt / Crash Semantics
 
