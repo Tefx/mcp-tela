@@ -49935,6 +49935,73 @@ phases:
     - connect_bridge_readiness.bounded_retry_negative_proof
     - connect_bridge_readiness.spec_conformance
     agent: gate-reviewer
+  - id: connect_bridge_readiness.fix_gate_blocker_teardown_tests
+    name: Fix gate blocker teardown readiness tests
+    status: pending
+    description: 'Fix ALL gate-review teardown readiness blockers together in `tests/shell/test_connect_cmd.py`.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      - `test_bridge_teardown_interrupt_does_not_block_process_exit`
+
+      - `test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section`
+
+
+      Root cause from gate review: the readiness-polling refactor introduced a new
+      `_get_gateway_status` dependency, but these teardown-path test setups do not
+      mock it, so the tests no longer model the real bounded cleanup path.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: teardown-focused tests still use pre-refactor setup and omit `_get_gateway_status`
+      readiness wiring.
+
+      - Symptom: gate reruns fail in teardown interrupt scenarios even though the
+      readiness consumer implementation is otherwise present.
+
+      - Why this fix is not surface-level: update the shared teardown-path test setup
+      so both interrupt cases exercise the post-refactor readiness contract consistently
+      instead of patching assertions independently.
+
+
+      ## Remediation Requirements
+
+      - Add the missing `_get_gateway_status` readiness mock/stub in the relevant
+      teardown test setup/shared helper path.
+
+      - Search sibling teardown/cleanup readiness tests in `tests/shell/test_connect_cmd.py`
+      for the same pre-refactor setup pattern and normalize them together.
+
+      - Keep scope limited to test/harness updates unless the test review proves production
+      teardown behavior is actually wrong.
+
+
+      Grep hint: search `tests/shell/test_connect_cmd.py` for `_get_gateway_status`,
+      `teardown_interrupt`, and bounded cleanup setup paths.
+
+
+      ## Completion Criteria
+
+      - Both listed blocker tests are updated against the readiness-polling contract
+
+      - Sibling teardown readiness setups are checked for the same omission
+
+      - No production behavior is changed unless required by reproduced evidence'
+    verification: '- Reproduced blocker is addressed at the shared teardown-path test
+      setup
+
+      - Both gate blocker tests pass locally
+
+      - Sibling teardown readiness test setups have been checked for the same missing
+      `_get_gateway_status` mock
+
+      - Scope remains test-side unless evidence shows a production teardown defect'
+    depends_on:
+    - connect_bridge_readiness.impl
+    - connect_bridge_readiness.bounded_retry_negative_proof
+    agent: python-senior
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
