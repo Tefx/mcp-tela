@@ -48321,7 +48321,7 @@ phases:
       Feature ready for production use.'
 - id: meta.full_b_contract
   name: Full-B Readiness Contract Freeze
-  status: pending
+  status: in_progress
   depends_on:
   - cl.deep_review
   steps:
@@ -48443,7 +48443,7 @@ phases:
     agent: software-architect
   - id: meta.full_b_contract.exclude_shutting_down_expansion
     name: Exclude shutting_down expansion
-    status: pending
+    status: claimed
     description: 'Planning guardrail.
 
 
@@ -48461,6 +48461,8 @@ phases:
     verification: '- No downstream step introduces `shutting_down` as a required deliverable
       or verification target'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-03T09:56:36.322328+00:00'
   - id: meta.full_b_contract.gate
     name: Gate Full-B contract freeze
     status: pending
