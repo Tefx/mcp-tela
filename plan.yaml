@@ -51176,7 +51176,7 @@ phases:
       docs/INTERFACES.md:309-313. No blocking architecture drift found.'
   - id: deep_review.full_b.black_box_verification
     name: Run black-box Full-B readiness verification
-    status: claimed
+    status: done
     description: 'Using only the public CLI/HTTP contract, verify the Full-B readiness
       behavior black-box.
 
@@ -51204,6 +51204,38 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-04-03T15:28:57.762804+00:00'
+    done_at: '2026-04-03T15:36:22.199481+00:00'
+    evidence: "## Black-Box Readiness Verification Complete\n\n**Status**: PASSED\
+      \ (5/5 checks)\n\n### Tests Executed\n\nAll tests in `tests/repro/test_full_b_readiness_blackbox.py`:\n\
+      \n1. **test_status_returns_lifecycle_state** ✅ PASSED\n   - `/status` returns\
+      \ JSON with `state` field\n   - Valid states: `warming`, `ready`, `degraded`\n\
+      \n2. **test_mcp_returns_503_during_warming** ✅ PASSED\n   - POST /mcp returns\
+      \ HTTP 503 when gateway in warming state\n   - Response includes machine-readable\
+      \ contract per INTERFACES.md 7.2.1:\n     - `code = \"ADMISSION_REJECTED_WARMING\"\
+      `\n     - `transient = true`\n     - `retry.authorized = true`\n     - `gateway_state\
+      \ = \"warming\"`\n\n3. **test_connect_waits_for_readiness** ✅ PASSED\n   - connect\
+      \ process remains alive during gateway startup\n   - connect registers with\
+      \ gateway when state in {ready, degraded}\n   - `active_connections >= 1` after\
+      \ stabilization\n\n4. **test_connect_exits_cleanly_on_persistent_degraded**\
+      \ ✅ PASSED\n   - connect exits within 10s on persistent non-ready state\n  \
+      \ - No indefinite retry loop\n   - Clean exit (no hang, no zombie process)\n\
+      \n5. **test_status_shows_ready_after_convergence** ✅ PASSED\n   - Gateway transitions\
+      \ from warming to ready\n   - Required fields present: uptime_seconds, server_count,\
+      \ active_connections, state\n\n### Readiness Authority Verification\n\n- `/status`\
+      \ is sole readiness truth ✅\n- Lockfile is discovery-only (contract verified)\
+      \ ✅\n\n### Negative Path Behavior\n\n- POST /mcp rejects with 503 during warming\
+      \ ✅\n- 503 includes machine-readable contract ✅\n- tela connect exits boundedly\
+      \ on persistent non-ready ✅\n\n### Black-Box Constraints Honored\n\n- Used ONLY\
+      \ public CLI (`tela serve`, `tela connect`) and HTTP endpoints (`/status`, `/mcp`)\n\
+      - No source code inspection\n- No internal API calls\n- All verification via\
+      \ documented interfaces in INTERFACES.md and DESIGN.md\n\n### Test Output\n\n\
+      ```\ntests/repro/test_full_b_readiness_blackbox.py::test_status_returns_lifecycle_state\
+      \ PASSED [ 20%]\ntests/repro/test_full_b_readiness_blackbox.py::test_mcp_returns_503_during_warming\
+      \ PASSED [ 40%]\ntests/repro/test_full_b_readiness_blackbox.py::test_connect_waits_for_readiness\
+      \ PASSED [ 60%]\ntests/repro/test_full_b_readiness_blackbox.py::test_connect_exits_cleanly_on_persistent_degraded\
+      \ PASSED [ 80%]\ntests/repro/test_full_b_readiness_blackbox.py::test_status_shows_ready_after_convergence\
+      \ PASSED [100%]\n\n============================== 5 passed in 8.41s ===============================\n\
+      ```"
   - id: deep_review.full_b.gate
     name: Gate Full-B deep review
     status: pending
