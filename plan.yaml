@@ -48344,3 +48344,8 @@ phases:
   status: locked
   depends_on:
   - cold_start_compat
+- id: doc_sync.full_b
+  name: Full-B Documentation Sync
+  status: locked
+  depends_on:
+  - deep_review.full_b
