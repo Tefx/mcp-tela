@@ -48795,6 +48795,60 @@ phases:
 
       - Exposed gaps are recorded for bridge implementation work'
     agent: python-executor
+  - id: connect_bridge_readiness.impl
+    name: Implement bridge readiness consumption
+    status: pending
+    description: 'step_type: implementation
+
+
+      Fill in stub bodies in the bridge/connect readiness path per the contract from
+      step `connect_bridge_readiness.status_authority_contract`.
+
+
+      UPSTREAM ARTIFACTS (from contract/test steps):
+
+      - docs/INTERFACES.md and docs/DESIGN.md — external readiness and bridge semantics
+      are AUTHORITATIVE
+
+      - tests added by `connect_bridge_readiness.tests_red` — test cases are PROTECTED
+
+
+      YOUR SCOPE: Replace fixed sleeps and guessed readiness with `/status`-driven
+      polling and bounded retry/exit behavior.
+
+
+      Required semantics:
+
+      - `tela connect` waits off `/status`
+
+      - retries only on gateway-signaled transient non-ready condition
+
+      - persistent degraded/non-ready exits cleanly and boundedly
+
+      - bridge remains a consumer, not a readiness owner
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    verification: '- Main path: bridge polls `/status` and forwards only after ready
+
+      - Failure path: persistent degraded/non-ready exits boundedly and cleanly
+
+      - No fixed cold-start sleep remains as readiness truth'
+    evidence_template: '## Bridge readiness consumer evidence
+
+      - Exact command/test for bridge wait-then-forward path
+
+      - Exact command/test for persistent degraded exit path
+
+      - Actual `/status` snapshots used in each case
+
+      - Statement of removed fixed-delay assumption'
+    depends_on:
+    - connect_bridge_readiness.status_authority_contract
+    - connect_bridge_readiness.tests_red
+    agent: python-senior
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
