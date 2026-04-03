@@ -49618,7 +49618,7 @@ phases:
       \ (errors=0, warnings=1, infos=3)"
   - id: connect_bridge_readiness.seam_integration_proof
     name: Prove bridge readiness seam integration
-    status: pending
+    status: claimed
     description: 'Integration companion: provide seam-level real path evidence for
       the bridge readiness flow from `tela connect` through `/status` to MCP forwarding.'
     verification: '- Real command exercises connect -> status polling -> MCP forward
@@ -49647,6 +49647,8 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T14:22:37.753706+00:00'
   - id: connect_bridge_readiness.status_polling_proof
     name: Prove status-driven polling behavior
     status: pending
