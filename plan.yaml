@@ -48680,6 +48680,29 @@ phases:
     depends_on:
     - mcp_readiness_gate.impl
     agent: integration-verifier
+  - id: mcp_readiness_gate.spec_conformance
+    name: Verify /mcp readiness spec conformance
+    status: pending
+    description: Spec conformance verification via adversarial divergence hunting
+      for the `/mcp` readiness gate and transient 503 contract only.
+    verification: '- External `/mcp` readiness behavior matches the frozen contract
+
+      - Any divergence is classified explicitly as CONFORMS, DIVERGES, PARTIAL, or
+      NEEDS_TEST'
+    evidence_template: '## Spec Conformance Report
+
+      Scope: Full-B `/mcp` readiness gate
+
+      - Spec sections cited
+
+      - Implementation file:line cited
+
+      - Verdict per requirement
+
+      - Top risks ranked'
+    depends_on:
+    - mcp_readiness_gate.impl
+    agent: spec-verifier
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
