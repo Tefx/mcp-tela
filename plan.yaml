@@ -49677,7 +49677,7 @@ phases:
     claimed_at: '2026-04-03T14:22:49.835814+00:00'
   - id: connect_bridge_readiness.bounded_retry_negative_proof
     name: Prove bounded retry negative path
-    status: claimed
+    status: done
     description: 'Verification step.
 
 
@@ -49706,6 +49706,49 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-03T14:22:28.502223+00:00'
+    done_at: '2026-04-03T14:26:55.658699+00:00'
+    evidence: "## Bounded Retry Negative Path Proof\n\n**Date**: 2026-04-03\n**Verifier**:\
+      \ Integration Verifier\n**Scope**: Prove bridge exits boundedly on persistent\
+      \ non-ready/degraded status\n\n### Evidence\n\n| Check | Result | Evidence |\n\
+      |-------|--------|----------|\n| Non-ready fixture used | PASS | `StatusResponse(state=\"\
+      degraded\", degraded_reason=\"DOWNSTREAM_CONNECT_FAILED\")` |\n| Exact command/test\
+      \ | PASS | `uv run pytest tests/shell/test_connect_cmd.py::test_run_bridge_exits_boundedly_on_persistent_degraded_status\
+      \ -v` |\n| Elapsed wait bound observed | PASS | `max_polls=4` (HTTP_TRANSIENT_RETRIES\
+      \ + 1), single poll on degraded (no retry) |\n| Exit/output captured | PASS\
+      \ | `result.is_err`, `result.error=\"BRIDGE_NOT_READY: state=degraded degraded_reason=DOWNSTREAM_CONNECT_FAILED\"\
+      ` |\n| Proof MCP forward did not occur | PASS | `forwarded == []` (empty list)\
+      \ |\n\n### Test Execution Output\n\n```\ntests/shell/test_connect_cmd.py::test_run_bridge_exits_boundedly_on_persistent_degraded_status\
+      \ PASSED [100%]\n============================== 1 passed in 0.25s ===============================\n\
+      ```\n\n### Negative Path Contract Verified\n\n1. **Fixture**: Gateway returns\
+      \ `state=\"degraded\"` with `degraded_reason=\"DOWNSTREAM_CONNECT_FAILED\"`\n\
+      2. **Bridge behavior**: \n   - Calls `GET /status` once (no retry on degraded)\n\
+      \   - Returns `Result(error=\"BRIDGE_NOT_READY: state=degraded degraded_reason=DOWNSTREAM_CONNECT_FAILED\"\
+      )`\n   - Calls `POST /disconnect` for cleanup\n   - Does NOT call `_forward_stdio_http`\
+      \ (forwarded == [])\n3. **Bound**: Immediate exit on degraded (poll_index 0,\
+      \ no sleep, no retry)\n4. **Exit code**: Error result propagated to caller\n\
+      \n### Code Path\n\n```python\n# src/tela/commands/connect_cmd.py:799-806\nif\
+      \ status.state == \"degraded\":\n    degraded_reason = status.degraded_reason\
+      \ or \"unknown\"\n    return Result(\n        error=(\n            \"BRIDGE_NOT_READY:\
+      \ state=degraded \"\n            f\"degraded_reason={degraded_reason}\"\n  \
+      \      )\n    )\n```\n\n### Test Code\n\n```python\n# tests/shell/test_connect_cmd.py:375-449\n\
+      def test_run_bridge_exits_boundedly_on_persistent_degraded_status(\n    monkeypatch:\
+      \ pytest.MonkeyPatch,\n) -> None:\n    \"\"\"Bridge must exit cleanly on persistent\
+      \ degraded readiness authority.\"\"\"\n    \n    degraded_status = StatusResponse(\n\
+      \        # ... \n        state=\"degraded\",\n        degraded_reason=\"DOWNSTREAM_CONNECT_FAILED\"\
+      ,\n        # ...\n    )\n    \n    # Mock _get_gateway_status to return degraded\
+      \ immediately\n    # Verify: result.is_err, \"BRIDGE_NOT_READY\" in error, forwarded\
+      \ == []\n    # Verify: endpoint_calls == [\"/connect\", \"/disconnect\"] (no\
+      \ /mcp)\n```\n\n### Related Protocol Checks\n\n- **P1 (Empty Room)**: PASS -\
+      \ 1 collected, 1 passed, 0 skipped\n- **P2 (Fake Seam)**: N/A - Test uses monkeypatch\
+      \ on internal functions, not Mock at I/O boundary\n- **P6 (Mock Island)**: PASS\
+      \ - Integration test companion exists for unit tests\n\n### Status/YAML\n\n\
+      ```yaml\nstatus: PASS\nevidence:\n  - test: test_run_bridge_exits_boundedly_on_persistent_degraded_status\n\
+      \  - fixture:\n      state: degraded\n      degraded_reason: DOWNSTREAM_CONNECT_FAILED\n\
+      \  - command: uv run pytest tests/shell/test_connect_cmd.py::test_run_bridge_exits_boundedly_on_persistent_degraded_status\
+      \ -v\n  - exit:\n      result: err\n      error: \"BRIDGE_NOT_READY: state=degraded\
+      \ degraded_reason=DOWNSTREAM_CONNECT_FAILED\"\n  - forward_called: false\n \
+      \ - bound:\n      max_polls: 4\n      actual_polls: 1\n      sleep_invocations:\
+      \ 0\n  - cleanup:\n      disconnect_called: true\nerror: null\n```"
   - id: connect_bridge_readiness.spec_conformance
     name: Verify bridge readiness spec conformance
     status: claimed
