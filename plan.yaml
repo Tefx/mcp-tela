@@ -49200,3 +49200,16 @@ phases:
     verification: '- All readiness-facing docs align with implemented behavior and
       non-goals'
     agent: doc-reviewer
+  - id: doc_sync.full_b.gate
+    name: Gate Full-B documentation sync
+    status: pending
+    description: 'Gate review: verify Full-B docs match the revised readiness architecture
+      and post-review implementation reality.'
+    verification: '- Docs match gateway-authoritative readiness semantics
+
+      - Docs do not imply bridge-owned readiness truth
+
+      - Docs do not introduce `shutting_down` into this slice'
+    depends_on:
+    - doc_sync.full_b.update_readiness_docs
+    agent: gate-reviewer
