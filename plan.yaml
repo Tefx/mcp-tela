@@ -49179,3 +49179,24 @@ phases:
   status: locked
   depends_on:
   - deep_review.full_b
+  steps:
+  - id: doc_sync.full_b.update_readiness_docs
+    name: Update readiness documentation
+    status: pending
+    description: 'Documentation sync for the Full-B readiness slice after deep review.
+
+
+      Update only the docs needed to reflect the final implemented behavior:
+
+      - `/status` as sole readiness authority
+
+      - `/mcp` transient not-ready 503 contract
+
+      - `tela connect` status-driven polling and bounded retry/exit behavior
+
+      - discovery-before-readiness cold-start semantics
+
+      - explicit non-goal: no `shutting_down` expansion in this slice'
+    verification: '- All readiness-facing docs align with implemented behavior and
+      non-goals'
+    agent: doc-reviewer
