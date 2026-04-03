@@ -49294,6 +49294,56 @@ phases:
     depends_on:
     - mcp_readiness_gate.fix_gate_contract_drift
     agent: integration-verifier
+  - id: mcp_readiness_gate.fix_stale_connect_warming_test
+    name: Update stale /connect warming tests to current contract
+    status: pending
+    description: 'Update stale `/connect` warming expectation tests to match the current
+      readiness contract.
+
+
+      Files/scope:
+
+      - `tests/shell/test_http_routes.py`
+
+      - any sibling `/connect` warming expectation tests in the same phase scope
+
+
+      Contract to preserve:
+
+      - `/connect` remains outside readiness gating during warming
+
+      - `ADMISSION_REJECTED_WARMING` applies to readiness-gated `/mcp` paths, not
+      `/connect`
+
+
+      Remediation requirements:
+
+      - replace stale assertions that expect `/connect` warming rejection
+
+      - align test names/assertions/fixtures with the current contract boundary
+
+      - search for sibling stale warming expectations beyond the reported test
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs
+
+      and produces outputs that vary based on those inputs.
+
+      '
+    verification: '- Update targeted `/connect` warming tests to assert the current
+      contract
+
+      - Confirm stale expectation coverage is limited to tests/fixtures, not product
+      behavior changes
+
+      - Protects downstream retest: `mcp_readiness_gate.retest_gate_contract_drift`'
+    depends_on:
+    - mcp_readiness_gate.fix_gate_contract_drift
+    agent: python-senior
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
