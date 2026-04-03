@@ -49538,7 +49538,7 @@ phases:
       \ ce6d1d575b93b4fd98fefdb28b8a4ce4e79b5a02"
   - id: connect_bridge_readiness.impl
     name: Implement bridge readiness consumption
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
 
@@ -49590,6 +49590,8 @@ phases:
     - connect_bridge_readiness.status_authority_contract
     - connect_bridge_readiness.tests_red
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-03T13:53:54.083281+00:00'
   - id: connect_bridge_readiness.seam_integration_proof
     name: Prove bridge readiness seam integration
     status: pending
