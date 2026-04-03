@@ -48980,6 +48980,29 @@ phases:
   status: locked
   depends_on:
   - connect_bridge_readiness
+  steps:
+  - id: cold_start_compat.opencode_cold_start
+    name: Verify OpenCode cold-start behavior
+    status: pending
+    description: 'Verification step for the actual cold-start host path.
+
+
+      Prove the host-facing flow does not fail during the window between early discovery
+      and eventual readiness convergence.'
+    verification: '- OpenCode/host path can attach during cold start without premature
+      MCP failure
+
+      - Eventual success comes from readiness convergence, not a fixed client delay'
+    evidence_template: '## OpenCode cold-start proof
+
+      - Exact command/host invocation
+
+      - Observed early discovery state
+
+      - Observed readiness progression
+
+      - Final success evidence'
+    agent: blind-tester
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
