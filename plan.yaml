@@ -48703,6 +48703,25 @@ phases:
     depends_on:
     - mcp_readiness_gate.impl
     agent: spec-verifier
+  - id: mcp_readiness_gate.gate
+    name: Gate /mcp readiness gate phase
+    status: pending
+    description: 'Gate review: verify `/mcp` readiness gating is complete, bounded,
+      and still gateway-authoritative.'
+    verification: '- `/mcp` is gated during convergence
+
+      - Transient 503 contract is machine-readable and bounded
+
+      - `/connect` was not repurposed into readiness truth
+
+      - No `shutting_down` expansion leaked into the phase'
+    depends_on:
+    - mcp_readiness_gate.contract
+    - mcp_readiness_gate.tests_red
+    - mcp_readiness_gate.impl
+    - mcp_readiness_gate.bounded_transient_503_proof
+    - mcp_readiness_gate.spec_conformance
+    agent: gate-reviewer
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
