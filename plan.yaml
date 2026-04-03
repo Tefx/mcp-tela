@@ -48399,6 +48399,48 @@ phases:
 
       - `/connect` remains a non-readiness registration path in downstream plan text'
     agent: software-architect
+  - id: meta.full_b_contract.freeze_transient_503_contract
+    name: Freeze transient 503 contract
+    status: pending
+    description: 'Contract step.
+
+
+      step_type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs:
+
+      - interfaces
+
+      - type_defs
+
+      - docstrings
+
+      - stubs
+
+
+      Pin the external not-ready-yet `/mcp` behavior as a machine-readable transient
+      503 contract that downstream implementation and bridge retry logic must consume
+      consistently.
+
+
+      The contract must define:
+
+      - HTTP 503 while gateway is not yet ready for MCP admission
+
+      - a machine-readable transient marker and error code suitable for bridge retry
+      decisions
+
+      - bounded retry expectations for consumers
+
+      - no expansion into new public lifecycle states beyond the existing readiness
+      vocabulary for this slice.'
+    verification: '- Contract text makes the transient 503 semantics explicit and
+      machine-readable
+
+      - Retry authorization is tied to gateway signal, not client guesswork'
+    agent: software-architect
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
