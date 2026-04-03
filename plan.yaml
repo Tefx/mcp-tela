@@ -48329,3 +48329,8 @@ phases:
   status: locked
   depends_on:
   - meta.full_b_contract
+- id: connect_bridge_readiness
+  name: Connect Bridge Readiness Consumer
+  status: locked
+  depends_on:
+  - mcp_readiness_gate
