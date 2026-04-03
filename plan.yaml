@@ -48324,6 +48324,35 @@ phases:
   status: pending
   depends_on:
   - cl.deep_review
+  steps:
+  - id: meta.full_b_contract.resolve_open_questions
+    name: Resolve Full-B readiness open questions
+    status: pending
+    description: 'Planning step.
+
+
+      Resolve only the remaining plan-shaping questions for Full-B readiness using
+      the architect review as authoritative input.
+
+
+      Required outputs:
+
+      - confirm that gateway `/status` is the sole readiness authority
+
+      - confirm `/connect` remains registration/lifecycle plumbing only
+
+      - confirm this slice excludes any new public `shutting_down` state
+
+      - confirm the transient not-ready `/mcp` contract is required and machine-readable
+
+
+      If any unresolved conflict remains between docs and the architect review, record
+      the exact conflict and the controlling source. Do not invent new lifecycle labels.'
+    verification: '- Architect review requirements are mapped to concrete downstream
+      contract and verification obligations
+
+      - Any surviving ambiguity is explicitly enumerated rather than guessed'
+    agent: software-architect
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
