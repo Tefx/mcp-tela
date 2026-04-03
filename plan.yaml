@@ -51238,7 +51238,7 @@ phases:
       ```"
   - id: deep_review.full_b.gate
     name: Gate Full-B deep review
-    status: pending
+    status: claimed
     description: 'Gate review: final independent audit for the Full-B readiness slice,
       with duplicate late-phase verification trimmed to wiring/architecture/black-box
       coverage only.'
@@ -51252,6 +51252,8 @@ phases:
     - deep_review.full_b.architecture_review
     - deep_review.full_b.black_box_verification
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T15:38:51.701575+00:00'
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
   status: locked
