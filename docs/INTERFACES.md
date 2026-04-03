@@ -214,10 +214,19 @@ Current-slice admission boundary:
 
 ### 7.2.1 `POST /mcp` transient 503 contract
 
-When the gateway is reachable but still in the existing `warming` lifecycle state,
-`POST /mcp` must reject ordinary MCP admission with HTTP `503` and the
-machine-readable contract defined in
+When the gateway is reachable but still in the existing `warming` lifecycle state
+during convergence, `POST /mcp` must reject ordinary MCP admission with HTTP
+`503` and the machine-readable contract defined in
 `contracts/mcp_admission_transient_503.schema.json`.
+
+Required machine-readable fields for downstream consumers:
+
+- `code = "ADMISSION_REJECTED_WARMING"`
+- `transient = true`
+- `retry.authorized = true`
+- `retry.basis = "gateway_signal"`
+- `retry.expectation = "bounded"`
+- `gateway_state = "warming"`
 
 Normative response shape:
 
@@ -239,6 +248,9 @@ Normative consumer rules:
 
 - bridge and downstream retry logic **must** key retry eligibility from the
   gateway-authored fields `code`, `transient`, and `retry.authorized`
+- bridge and downstream retry logic **must not** authorize retry from bare
+  client inference over HTTP `503`, connection timing, or prior `/connect`
+  success
 - HTTP `503` alone is **not** sufficient authorization to retry
 - bounded retry is authorized only for this gateway-authored transient warming
   signal; the contract does not authorize indefinite retry loops
@@ -246,6 +258,8 @@ Normative consumer rules:
   existing readiness vocabulary; `gateway_state` remains `warming`
 - `GET /status` remains the readiness authority; this `/mcp` error is an
   admission-time projection of that authority, not a second source of truth
+- `POST /connect` remains registration plumbing only and must not become
+  bridge-owned readiness truth for MCP admission decisions
 
 ### 7.2.2 Tool Metadata Passthrough
 

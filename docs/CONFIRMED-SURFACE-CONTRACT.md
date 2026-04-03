@@ -54,10 +54,15 @@ SurfaceContract := {
 
 ### 1.2 `POST /mcp` transient warming rejection
 
-- When the gateway is still `warming`, `POST /mcp` must return HTTP `503`.
+- When the gateway is still `warming` during convergence, `POST /mcp` must
+  return HTTP `503`.
 - The rejection must use error code `ADMISSION_REJECTED_WARMING`.
 - The rejection must carry a machine-readable transient marker so retry logic can
   key from gateway signal rather than from bare HTTP status.
+- Required machine-readable fields: `code`, `transient`, `retry.authorized`,
+  `retry.basis`, `retry.expectation`, and `gateway_state`.
+- Retry authorization must not be inferred from bare client guesswork,
+  connection timing, or prior `/connect` success.
 - The canonical machine-readable schema for that rejection is
   `contracts/mcp_admission_transient_503.schema.json`.
 - Retry expectation is `bounded`; this contract does not authorize indefinite
