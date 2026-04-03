@@ -51413,7 +51413,7 @@ phases:
       - src/tela/shell/mcp_admission_contract.py'
   - id: doc_sync.full_b.gate
     name: Gate Full-B documentation sync
-    status: pending
+    status: claimed
     description: 'Gate review: verify Full-B docs match the revised readiness architecture
       and post-review implementation reality.'
     verification: '- Docs match gateway-authoritative readiness semantics
@@ -51424,3 +51424,5 @@ phases:
     depends_on:
     - doc_sync.full_b.update_readiness_docs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T15:52:22.023827+00:00'
