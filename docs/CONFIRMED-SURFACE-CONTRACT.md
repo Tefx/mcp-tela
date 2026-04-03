@@ -48,6 +48,9 @@ SurfaceContract := {
 - `POST /mcp` is the only readiness-gated HTTP admission surface in this contract slice.
 - `POST /connect` remains connection registration and lifecycle plumbing only.
 - `POST /connect` must not be described as readiness truth, a readiness cache, or admission proof for ordinary MCP traffic.
+- gateway runtime lifecycle plus `GET /status` is the sole readiness authority.
+- the bridge must not create or own readiness state, cached readiness truth, or local lifecycle labels.
+- lockfile discovery is explicitly not readiness truth.
 
 ## 2. Tool vs resource rules
 

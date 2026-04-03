@@ -95,10 +95,21 @@ Implications:
 - readiness/lifecycle checks must read runtime status, not infer from discovery artifacts
 - downstream sync state remains separate from lockfile discovery
 - a discovered endpoint may still be starting, degraded, or disconnected from downstreams
+- `tela connect` is a bridge/transport client and must not create or own readiness state, cached readiness truth, or local lifecycle labels
+- bridge-side observations may trigger a runtime status query, but they must not become a second readiness authority
 - reconnect handling may already hold fresh authoritative `raw_tools`; when that payload is present, downstream consumers MUST reuse it and MUST NOT blindly trigger a second enumeration
 - this approved slice does **not** introduce a new public `shutting_down` lifecycle state in `/status`
 - this approved slice does **not** add bridge retry or reconnect policy keyed off a `shutting_down` state label
 - if teardown-state vocabulary becomes necessary later, it must be planned as a separate future architecture slice rather than folded into the current readiness/convergence work
+
+Authoritative freeze for downstream work:
+
+- gateway runtime lifecycle plus `GET /status` is the sole readiness authority
+- the bridge must not create or own readiness state
+- the bridge must not cache readiness truth as its own source of authority
+- the bridge must not invent local lifecycle labels that compete with runtime status
+- the lockfile remains discovery-only and is explicitly not readiness truth
+- any future change to these ownership rules requires a separate architecture slice / ADR
 
 ### Startup coordination
 

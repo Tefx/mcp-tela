@@ -56,6 +56,11 @@ What it does:
 2. If not, auto-starts one in the background
 3. Bridges stdio ↔ HTTP so your MCP host sees a normal stdio server
 
+Readiness boundary:
+- the lockfile is discovery-only, not readiness truth
+- gateway runtime lifecycle plus `GET /status` is the sole readiness authority
+- `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels
+
 ### `tela serve` (explicit server)
 
 ```bash

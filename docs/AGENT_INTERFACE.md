@@ -115,5 +115,8 @@ Instruction composition is ordered and non-commutative:
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
 - `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice
 - `POST /connect` is registration/lifecycle plumbing only and must not become readiness truth, readiness cache, or MCP admission proof
+- gateway runtime lifecycle plus `GET /status` is the sole readiness authority for agents and bridge flows
+- `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels
+- lockfile discovery is not readiness truth
 - Gateway instructions are emitted first; downstream sections are append-only
 - The `tela.` prefix is reserved for built-in surfaces

@@ -328,6 +328,8 @@ are spawned once by the gateway process.
 **Note on lockfile semantics**: The lockfile provides endpoint discovery only.
 It does not indicate downstream server readiness, tool enumeration completion,
 or registry convergence. Use `tela status` to check authoritative runtime state.
+`tela connect` must not treat its own local bridge progress as readiness truth;
+gateway runtime lifecycle plus `GET /status` remains the sole readiness authority.
 
 MCP host configuration:
 
@@ -355,6 +357,8 @@ Use when you need explicit control over host/port. Writes a lockfile so
 **Lockfile semantics**: The lockfile is written after the HTTP server binds
 but before downstream servers are fully connected. It provides endpoint
 discovery only—not readiness or downstream convergence guarantees.
+Bridge registration via `POST /connect` also remains non-authoritative for
+readiness; only gateway runtime status is authoritative.
 
 Direct HTTP client configuration:
 

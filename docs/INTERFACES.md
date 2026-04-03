@@ -209,6 +209,8 @@ Current-slice admission boundary:
 - `POST /mcp` is the only new readiness-gated HTTP admission surface in this slice
 - `POST /connect` remains registration/lifecycle plumbing and must not be treated as readiness truth
 - `POST /connect` must not be used as a readiness cache or admission proof for ordinary MCP traffic
+- gateway runtime lifecycle plus `GET /status` is the sole readiness authority for bridge and operator consumers
+- `tela connect` may query or relay runtime readiness facts but must not create local readiness state, cached readiness truth, or competing lifecycle labels
 
 ### 7.2.2 Tool Metadata Passthrough
 
@@ -256,6 +258,7 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 - this contract does **not** add a public `shutting_down` value to `GET /status`
 - bridge retry/admission behavior in the current slice must be keyed from the existing runtime snapshot semantics above, not from a new teardown state label
 - any future teardown-state expansion must be planned as a separate architecture slice before this schema changes
+- bridge-local state or lockfile discovery must not be documented as a substitute authority for the `state` field
 
 **Count-vs-Collection Semantics**:
 - `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)
