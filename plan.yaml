@@ -50482,6 +50482,7 @@ phases:
     - cold_start_compat.discovery_before_readiness_proof
     - cold_start_compat.transient_503_and_retry
     - cold_start_compat.degraded_mode
+    - cold_start_compat.retest_obsolete_expected_red_tests
     agent: gate-reviewer
   - id: cold_start_compat.fix_obsolete_expected_red_tests
     name: Fix obsolete expected-red readiness tests
