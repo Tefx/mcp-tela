@@ -50823,7 +50823,7 @@ phases:
     claimed_at: '2026-04-03T15:29:16.669918+00:00'
   - id: deep_review.full_b.architecture_review
     name: Review Full-B readiness architecture
-    status: claimed
+    status: done
     description: Independent architecture review of the readiness authority, admission
       boundary, and discovery/readiness split after implementation.
     verification: '- Gateway `/status` remains sole readiness authority
@@ -50834,6 +50834,20 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T15:28:33.699028+00:00'
+    done_at: '2026-04-03T15:31:09.615783+00:00'
+    evidence: 'Architecture review PASS. Verified single readiness authority is preserved
+      in docs and implementation: docs/ADR-005-readiness-authority-boundary.md:61-74,
+      docs/DESIGN.md:76-112, docs/INTERFACES.md:208-216, src/tela/shell/gateway_runtime.py:67-102,
+      src/tela/shell/gateway_lifecycle.py:33-82, src/tela/shell/http_routes.py:143-149
+      and 250-253, src/tela/shell/http_auth.py:103-113. Confirmed /connect remains
+      lifecycle plumbing only and is not readiness-gated: docs/CONFIRMED-SURFACE-CONTRACT.md:48-53,
+      src/tela/shell/http_routes.py:248-253. Confirmed /mcp is sole readiness-gated
+      admission surface with machine-readable bounded retry contract: docs/INTERFACES.md:218-265,
+      contracts/mcp_admission_transient_503.schema.json:1-57, src/tela/shell/mcp_admission_contract.py:8-16
+      and 42-55, src/tela/shell/http_auth.py:42-53 and 103-111, src/tela/commands/connect_cmd.py:646-697
+      and 776-819. Confirmed no current-slice shutting_down scope creep in runtime
+      code (no src matches) and docs explicitly exclude it: docs/DESIGN.md:101-103,
+      docs/INTERFACES.md:309-313. No blocking architecture drift found.'
   - id: deep_review.full_b.black_box_verification
     name: Run black-box Full-B readiness verification
     status: claimed
