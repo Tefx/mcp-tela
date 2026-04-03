@@ -48443,7 +48443,7 @@ phases:
     agent: software-architect
   - id: meta.full_b_contract.exclude_shutting_down_expansion
     name: Exclude shutting_down expansion
-    status: claimed
+    status: done
     description: 'Planning guardrail.
 
 
@@ -48463,6 +48463,36 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T09:56:36.322328+00:00'
+    done_at: '2026-04-03T09:59:12.498772+00:00'
+    evidence: 'Artifact:
+
+      - PR: 45dc27f (commit hash)
+
+
+      Verification:
+
+      - Run: `git show --stat --oneline --no-patch HEAD` -> `45dc27f docs: exclude
+      shutting_down from full-b slice`
+
+      - Run: `rg -n ''Lifecycle state: `warming`, `ready`, or `degraded`|Current-slice
+      exclusion|Guardrail:|does **not** add bridge retry|does **not** introduce a
+      new public `shutting_down`'' docs/DESIGN.md docs/INTERFACES.md docs/ADR-004-gateway-startup-state-machine.md`
+      -> confirmed current `/status` contract remains `warming|ready|degraded`, plus
+      explicit guardrails excluding public `shutting_down`, bridge retry keyed off
+      `shutting_down`, and teardown-state redesign in this slice
+
+      - Run: `git status --short --branch` -> clean branch state on `vectl/step-meta.full_b_contract.exclude_shutting_down_expansion`
+
+
+      Spec link:
+
+      - `docs/INTERFACES.md:223-253` (`GET /status` response schema + current-slice
+      exclusion)
+
+      - `docs/DESIGN.md:80-95` (source-of-truth implications + Full-B exclusion guardrail)
+
+      - `docs/ADR-004-gateway-startup-state-machine.md:1-15` (future-slice-only guardrail
+      for any `shutting_down` expansion)'
   - id: meta.full_b_contract.gate
     name: Gate Full-B contract freeze
     status: pending
