@@ -49916,7 +49916,7 @@ phases:
       with consumer-only contract.'
   - id: connect_bridge_readiness.gate
     name: Gate bridge readiness consumer phase
-    status: pending
+    status: claimed
     description: 'Gate review: verify `tela connect` is a readiness consumer only
       and that bounded negative-path behavior is proven, including teardown interrupt
       regressions after the readiness-polling refactor.'
@@ -49939,6 +49939,8 @@ phases:
     - connect_bridge_readiness.spec_conformance
     - connect_bridge_readiness.retest_gate_blocker_teardown_tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T14:49:36.393494+00:00'
   - id: connect_bridge_readiness.fix_gate_blocker_teardown_tests
     name: Fix gate blocker teardown readiness tests
     status: done
