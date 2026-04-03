@@ -49941,7 +49941,7 @@ phases:
     agent: gate-reviewer
   - id: connect_bridge_readiness.fix_gate_blocker_teardown_tests
     name: Fix gate blocker teardown readiness tests
-    status: pending
+    status: claimed
     description: 'Fix ALL gate-review teardown readiness blockers together in `tests/shell/test_connect_cmd.py`.
 
 
@@ -50006,6 +50006,8 @@ phases:
     - connect_bridge_readiness.impl
     - connect_bridge_readiness.bounded_retry_negative_proof
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-03T14:45:02.055924+00:00'
   - id: connect_bridge_readiness.retest_gate_blocker_teardown_tests
     name: Retest gate blocker teardown readiness tests
     status: pending
