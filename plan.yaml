@@ -48378,7 +48378,7 @@ phases:
     agent: software-architect
   - id: meta.full_b_contract.freeze_admission_boundary
     name: Freeze admission boundary
-    status: claimed
+    status: done
     description: 'Planning contract freeze.
 
 
@@ -48401,6 +48401,37 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T09:59:56.305082+00:00'
+    done_at: '2026-04-03T10:02:32.548151+00:00'
+    evidence: 'Artifact:
+
+      - PR: 2427bc883fcccf05de51f3c044bac89cd2e0e46c
+
+
+      Verification:
+
+      - Run: `git show --stat --format=short HEAD` -> commit `2427bc8 docs: freeze
+      mcp admission boundary` recorded on branch `vectl/step-meta.full_b_contract.freeze_admission_boundary`;
+      touched `docs/DESIGN.md`, `docs/INTERFACES.md`, `docs/AGENT_INTERFACE.md`, `docs/CONFIRMED-SURFACE-CONTRACT.md`,
+      and `docs/ADR-004-gateway-startup-state-machine.md`
+
+      - Run: `grep -RInE ''POST /mcp.*readiness-gated|POST /connect.*non-readiness|must
+      not.*admission proof|only readiness-gated HTTP admission surface'' docs` ->
+      confirmed downstream contract text now states `/mcp` is the readiness-gated
+      admission surface and `/connect` remains non-readiness registration/lifecycle
+      plumbing
+
+      - Run: `git status --short` -> clean working tree after commit
+
+
+      Spec link:
+
+      - `docs/DESIGN.md` section `Discovery and readiness`
+
+      - `docs/INTERFACES.md` section `7.2 HTTP Endpoints`
+
+      - `docs/CONFIRMED-SURFACE-CONTRACT.md` section `1.1 Admission boundary freeze`
+
+      - `docs/ADR-004-gateway-startup-state-machine.md` guardrail text'
   - id: meta.full_b_contract.freeze_transient_503_contract
     name: Freeze transient 503 contract
     status: pending
