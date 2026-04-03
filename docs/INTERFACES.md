@@ -212,6 +212,41 @@ Current-slice admission boundary:
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for bridge and operator consumers
 - `tela connect` may query or relay runtime readiness facts but must not create local readiness state, cached readiness truth, or competing lifecycle labels
 
+### 7.2.1 `POST /mcp` transient 503 contract
+
+When the gateway is reachable but still in the existing `warming` lifecycle state,
+`POST /mcp` must reject ordinary MCP admission with HTTP `503` and the
+machine-readable contract defined in
+`contracts/mcp_admission_transient_503.schema.json`.
+
+Normative response shape:
+
+```json
+{
+  "error": "ADMISSION_REJECTED_WARMING: gateway not ready for MCP admission",
+  "code": "ADMISSION_REJECTED_WARMING",
+  "transient": true,
+  "retry": {
+    "authorized": true,
+    "basis": "gateway_signal",
+    "expectation": "bounded"
+  },
+  "gateway_state": "warming"
+}
+```
+
+Normative consumer rules:
+
+- bridge and downstream retry logic **must** key retry eligibility from the
+  gateway-authored fields `code`, `transient`, and `retry.authorized`
+- HTTP `503` alone is **not** sufficient authorization to retry
+- bounded retry is authorized only for this gateway-authored transient warming
+  signal; the contract does not authorize indefinite retry loops
+- this slice does **not** introduce any new public lifecycle value beyond the
+  existing readiness vocabulary; `gateway_state` remains `warming`
+- `GET /status` remains the readiness authority; this `/mcp` error is an
+  admission-time projection of that authority, not a second source of truth
+
 ### 7.2.2 Tool Metadata Passthrough
 
 The `tools/list` response includes metadata fields preserved from downstream servers:
@@ -227,7 +262,7 @@ These fields are passed through unmodified from the downstream server and used f
 - Tool display (title)
 - Client-side validation (outputSchema)
 
-### 7.2.1 `GET /status` Response Schema
+### 7.2.2 `GET /status` Response Schema
 
 The status endpoint returns a `StatusResponse` containing gateway runtime state. Response fields have the following guarantees:
 
@@ -722,6 +757,11 @@ The `BearerAuthMiddleware` (raw ASGI) handles auth for all HTTP routes except
 | Invalid request payload (JSON parse / validation) | 400 | `INVALID_REQUEST:` |
 | Connection not found on disconnect | 404 | `CONNECTION_NOT_FOUND:` |
 | Gateway not started | 503 | `GATEWAY_NOT_STARTED:` |
+| MCP admission rejected while warming | 503 | `ADMISSION_REJECTED_WARMING:` |
+
+For `POST /mcp`, a `503` with `ADMISSION_REJECTED_WARMING` is the only
+current-slice gateway-authored transient admission signal. Consumers must not
+invent retry semantics for other `503` responses without a separate contract.
 
 ### Connection limits
 

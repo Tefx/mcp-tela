@@ -52,6 +52,17 @@ SurfaceContract := {
 - the bridge must not create or own readiness state, cached readiness truth, or local lifecycle labels.
 - lockfile discovery is explicitly not readiness truth.
 
+### 1.2 `POST /mcp` transient warming rejection
+
+- When the gateway is still `warming`, `POST /mcp` must return HTTP `503`.
+- The rejection must use error code `ADMISSION_REJECTED_WARMING`.
+- The rejection must carry a machine-readable transient marker so retry logic can
+  key from gateway signal rather than from bare HTTP status.
+- The canonical machine-readable schema for that rejection is
+  `contracts/mcp_admission_transient_503.schema.json`.
+- Retry expectation is `bounded`; this contract does not authorize indefinite
+  retry and does not add any new public lifecycle label beyond `warming`.
+
 ## 2. Tool vs resource rules
 
 ### 2.1 MCP tools

@@ -108,12 +108,31 @@ Instruction composition is ordered and non-commutative:
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |
 
+### 6.1 `POST /mcp` transient 503 contract
+
+When the gateway is still `warming`, `POST /mcp` rejects ordinary MCP
+admission with HTTP `503` and the machine-readable contract frozen in
+`contracts/mcp_admission_transient_503.schema.json`.
+
+Required machine-readable fields:
+
+- `code = "ADMISSION_REJECTED_WARMING"`
+- `transient = true`
+- `retry.authorized = true`
+- `retry.basis = "gateway_signal"`
+- `retry.expectation = "bounded"`
+- `gateway_state = "warming"`
+
+Consumer rule: retry only when the gateway emits this contract. Do not retry on
+bare `503` status alone.
+
 ## 7. Invariants
 
 - `tela.profiles` is a **resource read**, not a tool call
 - `tela_list_providers` is the only built-in `tela.*` MCP tool
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
 - `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice
+- `POST /mcp` warming rejection uses `ADMISSION_REJECTED_WARMING` plus explicit machine-readable transient retry authorization
 - `POST /connect` is registration/lifecycle plumbing only and must not become readiness truth, readiness cache, or MCP admission proof
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for agents and bridge flows
 - `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels

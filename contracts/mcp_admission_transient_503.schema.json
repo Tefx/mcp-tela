@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/mcp_admission_transient_503.schema.json",
+  "title": "MCP admission transient 503 contract",
+  "description": "Machine-readable gateway signal for POST /mcp requests rejected while the gateway is still warming and not yet ready for MCP admission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "error",
+    "code",
+    "transient",
+    "retry",
+    "gateway_state"
+  ],
+  "properties": {
+    "error": {
+      "type": "string",
+      "description": "Human-readable error string. Must keep the ADMISSION_REJECTED_WARMING prefix for compatibility.",
+      "pattern": "^ADMISSION_REJECTED_WARMING:"
+    },
+    "code": {
+      "const": "ADMISSION_REJECTED_WARMING",
+      "description": "Stable machine-readable error code for warming-state admission rejection."
+    },
+    "transient": {
+      "const": true,
+      "description": "Gateway-authored marker that this response is transient and therefore retryable within a bounded client retry budget."
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorized",
+        "basis",
+        "expectation"
+      ],
+      "properties": {
+        "authorized": {
+          "const": true,
+          "description": "Retry is explicitly authorized by the gateway signal."
+        },
+        "basis": {
+          "const": "gateway_signal",
+          "description": "Consumers may retry because the gateway emitted this contract, not because the client guessed from HTTP 503 alone."
+        },
+        "expectation": {
+          "const": "bounded",
+          "description": "Consumers must apply a bounded retry loop rather than retrying indefinitely."
+        }
+      }
+    },
+    "gateway_state": {
+      "const": "warming",
+      "description": "Existing readiness vocabulary value associated with this transient admission rejection. No new public lifecycle state is introduced by this contract."
+    }
+  }
+}
