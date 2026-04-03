@@ -49439,7 +49439,7 @@ phases:
   steps:
   - id: connect_bridge_readiness.status_authority_contract
     name: Freeze bridge status-authority-only contract
-    status: claimed
+    status: done
     description: 'Contract step.
 
 
@@ -49476,6 +49476,15 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T13:31:35.560167+00:00'
+    done_at: '2026-04-03T13:36:12.427646+00:00'
+    evidence: "commit: d1ce62538fad50bb1454c4c08af5278af1a05c9f\nfiles changed:\n\
+      \  - README.md\n  - docs/ADR-005-readiness-authority-boundary.md\n  - docs/AGENT_INTERFACE.md\n\
+      \  - docs/CONFIRMED-SURFACE-CONTRACT.md\n  - docs/INTERFACES.md\n  - docs/USAGE.md\n\
+      \  - tests/shell/test_connect_bridge_readiness_contract_freeze.py\nverification\
+      \ commands and outcomes:\n  - uv run pytest tests/shell/test_connect_bridge_readiness_contract_freeze.py\
+      \ tests/shell/test_mcp_admission_contract_freeze.py\n    outcome: 8 passed\n\
+      \  - invar guard --changed\n    outcome: passed\n  - git status --short\n  \
+      \  outcome: clean"
   - id: connect_bridge_readiness.tests_red
     name: Add expected-red connect readiness consumer tests
     status: pending
