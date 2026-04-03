@@ -48461,6 +48461,27 @@ phases:
     verification: '- No downstream step introduces `shutting_down` as a required deliverable
       or verification target'
     agent: software-architect
+  - id: meta.full_b_contract.gate
+    name: Gate Full-B contract freeze
+    status: pending
+    description: 'Gate review: verify the Full-B readiness planning basis is frozen
+      before implementation phases begin.'
+    verification: '- Readiness authority is frozen at gateway `/status`
+
+      - Admission boundary is frozen (`/mcp` gated, `/connect` plumbing only)
+
+      - Transient 503 contract is frozen
+
+      - `shutting_down` expansion is explicitly excluded
+
+      - Ready for implementation phases'
+    depends_on:
+    - meta.full_b_contract.resolve_open_questions
+    - meta.full_b_contract.freeze_readiness_authority
+    - meta.full_b_contract.freeze_admission_boundary
+    - meta.full_b_contract.freeze_transient_503_contract
+    - meta.full_b_contract.exclude_shutting_down_expansion
+    agent: gate-reviewer
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
