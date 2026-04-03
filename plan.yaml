@@ -48689,7 +48689,7 @@ phases:
       - Surface contract: docs/CONFIRMED-SURFACE-CONTRACT.md'
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
-  status: in_progress
+  status: done
   depends_on:
   - meta.full_b_contract
   steps:
@@ -49079,7 +49079,7 @@ phases:
       \ /mcp readiness gate implementation."
   - id: mcp_readiness_gate.gate
     name: Gate /mcp readiness gate phase
-    status: claimed
+    status: done
     description: 'Gate review: verify `/mcp` readiness gating is complete, bounded,
       and still gateway-authoritative.'
     verification: '- `/mcp` is gated during convergence
@@ -49099,6 +49099,48 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-03T12:50:12.575033+00:00'
+    done_at: '2026-04-03T12:54:27.314768+00:00'
+    evidence: 'Artifact:
+
+      - Gate review task: ses_2ac9ad242ffehrSUsqfkjUS4bU
+
+
+      Verification:
+
+      - Run: `.venv/bin/python -m pytest tests/shell/test_mcp_readiness_gate.py tests/shell/test_http_routes.py
+      -v` -> 34 passed, 0 failed
+
+      - Run: schema/implementation conformance checks -> all required machine-readable
+      fields match (`error`, `code`, `transient`, `retry`, `gateway_state`)
+
+      - Verified `/mcp` readiness gate in `src/tela/shell/http_auth.py` lines 103-111
+
+      - Verified `/connect` non-gated boundary in `src/tela/shell/http_routes.py`
+      handle_connect + tests
+
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2 / §7.2.1
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md §1.1 / §1.2
+
+      - contracts/mcp_admission_transient_503.schema.json
+
+      - src/tela/shell/mcp_admission_contract.py
+
+
+      Gate verdict:
+
+      - PASS (HIGH confidence)
+
+      - `/mcp` is readiness-gated with transient machine-readable 503 during warming
+
+      - `/connect` remains lifecycle plumbing and is not readiness-gated
+
+      - stale handle_connect contract/doc drift resolved
+
+      - no new lifecycle expansion leaked'
   - id: mcp_readiness_gate.fix_gate_contract_drift
     name: Fix batched /connect contract and doc drift from gate findings
     status: done
@@ -49391,7 +49433,7 @@ phases:
       - No edits to .git/vectl/claims.json\n- No orchestrator state modifications"
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
-  status: locked
+  status: pending
   depends_on:
   - mcp_readiness_gate
   steps:
