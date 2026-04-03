@@ -49230,7 +49230,7 @@ phases:
       - No orchestrator state files modified; no vectl CLI commands used."
   - id: mcp_readiness_gate.retest_gate_contract_drift
     name: Retest /connect readiness contract boundary after batched fix
-    status: pending
+    status: claimed
     description: 'Independent retest after `mcp_readiness_gate.fix_gate_contract_drift`.
 
 
@@ -49294,6 +49294,8 @@ phases:
     depends_on:
     - mcp_readiness_gate.fix_gate_contract_drift
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T12:38:42.611642+00:00'
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
