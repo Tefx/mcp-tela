@@ -50797,7 +50797,7 @@ phases:
   steps:
   - id: deep_review.full_b.wiring_audit
     name: Run Full-B wiring audit
-    status: claimed
+    status: done
     description: 'Full wiring audit for the Full-B readiness slice.
 
 
@@ -50821,6 +50821,332 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-03T15:29:16.669918+00:00'
+    done_at: '2026-04-03T15:32:34.331229+00:00'
+    evidence: '## W13: Entry-to-Effect Trace
+
+
+      | Component | Lifecycle Method | Declared Effect | I/O Primitive Found | Verdict
+      |
+
+      |-----------|-----------------|-----------------|--------------------:|---------|
+
+      | `ConnectionReaper` | `.start()` | Background sweep task | `asyncio.create_task(self._sweep_loop())`
+      | EFFECTFUL |
+
+      | `uvicorn.Server` | `.serve()` | HTTP server bind | `asyncio.create_task(server.serve())`
+      | EFFECTFUL |
+
+      | `gateway_prepare_startup()` | Function call | MCP server init | `_create_upstream_server()`,
+      `_wire_upstream_handlers()`, `_register_http_routes()` | EFFECTFUL |
+
+      | `gateway_converge_startup()` | Function call | Downstream connect + reaper
+      | `await connect_all()`, `await _reaper.start()` | EFFECTFUL |
+
+      | `DownstreamRegistry.register()` | Method call | Registry insertion | `self._tools_by_server[server_name]
+      = tools` | EFFECTFUL |
+
+      | `discover_or_autostart()` | Function call | File lock acquisition | `fcntl.flock(lock_handle.fileno(),
+      fcntl.LOCK_EX)` | EFFECTFUL |
+
+
+      **Summary**: 6 EFFECTFUL, 0 SCAFFOLD, 0 HOLLOW, 0 STUB-METHOD, 0 UNCERTAIN-EFFECT
+
+
+      ## W1: Dead Exports
+
+
+      All public shell functions have runtime callers. No DEAD exports found.
+
+
+      | Function | Location | Callers (runtime) | Callers (test) | Verdict |
+
+      |----------|----------|--------------------|----------------|---------|
+
+      | `gateway_start` | shell/gateway.py:690 | serve_cmd, gateway.py (gateway_start)
+      | tests | LIVE |
+
+      | `discover_or_autostart` | shell/startup_coordinator.py:177 | connect_cmd |
+      tests | LIVE |
+
+      | `handle_health/status/connect/disconnect` | shell/http_routes.py | gateway.py
+      (_register_http_routes) | tests | LIVE |
+
+      | `validate_bearer_token` | shell/http_auth.py:23 | http_auth middleware, http_routes
+      | tests | LIVE |
+
+
+      **Summary**: 0 DEAD, 0 TEST-ONLY out of all public shell functions.
+
+
+      ## W2: Schema Fields
+
+
+      All TelaConfig, LockfileData, ConnectionContext fields are written and read
+      in production code.
+
+
+      ## W4: CLI Command Registration
+
+
+      | Command Module | Entrypoint Import | Registration | Verdict |
+
+      |---------------|-------------------|--------------|---------|
+
+      | `commands/serve_cmd.py` | Yes (cli.py:16) | `serve_parser = subparsers.add_parser("serve")`
+      | LIVE |
+
+      | `commands/connect_cmd.py` | Yes (cli.py:13) | `connect_parser = subparsers.add_parser("connect")`
+      | LIVE |
+
+      | `commands/status_cmd.py` | Yes (cli.py:17) | `status_parser = subparsers.add_parser("status")`
+      | LIVE |
+
+      | `commands/profiles_cmd.py` | Yes (cli.py:15) | `profiles_parser = subparsers.add_parser("profiles")`
+      | LIVE |
+
+      | `commands/connections_cmd.py` | Yes (cli.py:14) | `connections_parser = subparsers.add_parser("connections")`
+      | LIVE |
+
+      | `commands/audit_cmd.py` | Yes (cli.py:12) | `audit_parser = subparsers.add_parser("audit")`
+      | LIVE |
+
+
+      **Summary**: 0 UNREGISTERED, 0 ORPHAN out of 6 command modules.
+
+
+      ## W5: Contract Strength
+
+
+      | Function | Decorator | Lambda Body | Doctest Failure Case | Verdict |
+
+      |----------|-----------|-------------|---------------------|---------|
+
+      | `handle_health` | `@post` | `result.value.status == "ok" and result.value.pid
+      > 0` | N/A | STRONG |
+
+      | `handle_status` | `@pre/@post` | Token validation + snapshot checks | Yes
+      (GATEWAY_NOT_STARTED) | STRONG |
+
+      | `handle_connect` | `@pre/@post` | Payload validation + auth check | Yes |
+      STRONG |
+
+      | `handle_disconnect` | `@pre/@post` | Payload validation + auth check | Yes
+      | STRONG |
+
+
+      **Summary**: 0 VACUOUS, 0 SUSPICIOUS, 0 UNDERTESTED out of all contracts.
+
+
+      ## W6: Config Field Consumption
+
+
+      All `TelaConfig` fields consumed in `gateway_prepare_startup`, `load_config`,
+      and downstream routing.
+
+
+      ## W7: Escape Hatch Concentration
+
+
+      | File | `dead_export` | `shell_result` | Other | Substantive Logic | Verdict
+      |
+
+      |------|---------------|----------------|-------|-------------------|---------|
+
+      | `shell/gateway.py` | 0 | 2 | 1 (file_size) | Yes | LEGITIMATE |
+
+      | `shell/upstream.py` | 0 | 0 | 1 (file_size) | Yes | LEGITIMATE |
+
+      | `shell/downstream.py` | 0 | 1 | 0 | Yes | LEGITIMATE |
+
+      | `shell/builtin_tools.py` | 0 | 1 | 0 | Yes | LEGITIMATE |
+
+      | `commands/connect_cmd.py` | 0 | 0 | 1 (file_size) | Yes | LEGITIMATE |
+
+      | `cli.py` | 0 | 1 | 0 | Yes | LEGITIMATE |
+
+
+      **Summary**: 0 STUB_MODULE, 0 PARTIAL_STUB, 0 STALE_HATCH, 10 LEGITIMATE.
+
+
+      ## W8: Dependency-Import Alignment
+
+
+      | Dependency | Declared In | Import Sites | Verdict |
+
+      |------------|-------------|--------------|---------|
+
+      | `fastmcp>=2.0.0` | pyproject.toml | gateway.py, gateway_runtime.py | LIVE
+      |
+
+      | `pydantic>=2.0` | pyproject.toml | core/models, core/config | LIVE |
+
+      | `pyyaml>=6.0` | pyproject.toml | config_loader.py | LIVE |
+
+      | `starlette` (transitive) | (via fastmcp) | gateway.py, http_* | LIVE |
+
+      | `uvicorn` (dev) | pyproject.toml | serve_cmd.py | LIVE |
+
+
+      **Summary**: 0 PHANTOM, all LIVE.
+
+
+      ## W9: Transitive Entry-Point Reachability
+
+
+      | Export | Direct Caller | Caller Chain | Terminates At | Verdict |
+
+      |--------|--------------|-------------|---------------|---------|
+
+      | `gateway_start` | `serve_command` | serve_cmd → main() | Real entry point
+      | LIVE |
+
+      | `discover_or_autostart` | `_discover_or_autostart` | `_discover_or_autostart`
+      → connect_command → main() | Real entry point | LIVE |
+
+      | `handle_health/status/connect/disconnect` | `_register_http_routes` | gateway_prepare_startup
+      → serve_cmd → main() | Real entry point | LIVE |
+
+
+      **Summary**: 0 STUB-REACHABLE, all LIVE (confirmed).
+
+
+      ## W10: Protocol Shadow Detection
+
+
+      | Protocol | Real Implementation | Stub Implementation | Wired Into Runtime
+      | Verdict |
+
+      |----------|-------------------|--------------------|--------------------|---------|
+
+      | `SingleServerConvergenceKernel` | `reload.py:_SingleServerConvergenceKernelImpl`
+      | N/A | N/A | CORRECT |
+
+      | `UpstreamSession` | `upstream.py:_McpUpstreamSession` | N/A | N/A | CORRECT
+      |
+
+
+      **Summary**: 0 PROTOCOL-SHADOW, 0 UNIMPLEMENTED-PROTOCOL.
+
+
+      ## W11: Type Cast Authenticity
+
+
+      No `cast()` calls found in entry points or wiring modules.
+
+
+      **Summary**: 0 CAST-FRAUD, 0 TYPE-SUPPRESSION, CLEAN.
+
+
+      ## W12: Frontend Route-Render Integrity
+
+
+      N/A -- no frontend files in scope.
+
+
+      ## Duplicate Readiness Owners
+
+
+      | Function | Module | Line | Consumers | Verdict |
+
+      |----------|--------|------|-----------|---------|
+
+      | `get_lifecycle_status_facts()` | gateway_lifecycle.py | 33 | http_routes (status/connect/disconnect),
+      http_auth (admission gate) | SINGLE AUTHORITY |
+
+      | `get_runtime_status_snapshot()` | gateway_runtime.py | 524 | gateway_lifecycle.py
+      (delegates to facts) | DELEGATES |
+
+      | `is_runtime_running()` | gateway_runtime.py | 176 | http_routes (gate state
+      check) | AUXILIARY |
+
+
+      **Verdict**: Correctly consolidated to `get_lifecycle_status_facts()` as the
+      single authority. No duplicate ownership.
+
+
+      ## Wrongly Wired Admission Paths
+
+
+      | Path | Auth Check | Readiness Gate | Owner | Verdict |
+
+      |------|------------|----------------|-------|---------|
+
+      | `GET /health` | None (exempted) | None | N/A (health-only) | CORRECT |
+
+      | `GET /status` | Bearer token | None (but checks GATEWAY_NOT_STARTED) | get_lifecycle_status_facts()
+      | CORRECT |
+
+      | `POST /connect` | Bearer token | None (documented as "lifecycle plumbing only")
+      | add_runtime_connection() | CORRECT |
+
+      | `POST /mcp` | Bearer token | **YES** (state == "warming" → 503) | get_lifecycle_status_facts()
+      | CORRECT |
+
+
+      **Verdict**: Admission paths correctly wired. MCP endpoint is readiness-gated.
+      Connect endpoint is NOT (by design).
+
+
+      ## Leftover Fixed-Delay Heuristics
+
+
+      | Location | Constant | Value | Purpose | Verdict |
+
+      |----------|----------|-------|---------|---------|
+
+      | startup_coordinator.py:29 | `FOLLOWER_WAIT_POLL_SECONDS` | 0.1 | Lockfile
+      polling (bounded) | LEGITIMATE TIMEOUT |
+
+      | startup_coordinator.py:30 | `RACE_WAIT_SECONDS` | 0.3 | Race condition mitigation
+      (bounded) | LEGITIMATE TIMEOUT |
+
+      | connect_cmd.py:54 | `HTTP_TRANSIENT_BACKOFF_SECONDS` | 0.5 | HTTP retry backoff
+      (bounded) | LEGITIMATE TIMEOUT |
+
+      | serve_cmd.py:45 | `HTTP_SERVER_BIND_TIMEOUT_SECONDS` | 5.0 | Port bind deadline
+      (bounded) | LEGITIMATE TIMEOUT |
+
+      | serve_cmd.py:373 | `asyncio.sleep(0.01)` | | Port availability poll (bounded
+      loop) | LEGITIMATE POLL |
+
+
+      **Verdict**: All are **bounded timeouts** with event-driven alternatives (`_converge_event.wait()`),
+      NOT "fixed-delay heuristics" that bypass readiness signals.
+
+
+      ## Gate Summary
+
+
+      | Protocol | Total | Issues | Verdict |
+
+      |----------|-------|--------|---------|
+
+      | W13 | 6 | 0 | PASS |
+
+      | W1 | All | 0 | PASS |
+
+      | W2 | All | 0 | PASS |
+
+      | W4 | 6 | 0 | PASS |
+
+      | W5 | 4 | 0 | PASS |
+
+      | W6 | All | 0 | PASS |
+
+      | W7 | 10 | 0 | PASS |
+
+      | W8 | All | 0 | PASS |
+
+      | W9 | 3 | 0 | PASS |
+
+      | W10 | 2 | 0 | PASS |
+
+      | W11 | 0 | 0 | PASS |
+
+      | W12 | N/A | 0 | PASS |
+
+
+      **Overall**: PASS'
   - id: deep_review.full_b.architecture_review
     name: Review Full-B readiness architecture
     status: done
