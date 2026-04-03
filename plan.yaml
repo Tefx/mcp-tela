@@ -49048,6 +49048,29 @@ phases:
 
       - Final success output'
     agent: integration-verifier
+  - id: cold_start_compat.degraded_mode
+    name: Verify degraded-mode negative path
+    status: pending
+    description: 'Verification step.
+
+
+      Prove that when readiness never converges and gateway remains degraded or non-ready,
+      the client path exits cleanly and boundedly without treating discovery as success.'
+    verification: '- Persistent degraded/non-ready path is bounded
+
+      - No early forward slips through because discovery existed
+
+      - Failure mode is clean and operator-visible'
+    evidence_template: '## Degraded-mode proof
+
+      - Fixture or scenario
+
+      - Exact command/test
+
+      - Exit/output
+
+      - Bound observed'
+    agent: blind-tester
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
