@@ -48751,7 +48751,7 @@ phases:
       - `contracts/mcp_admission_transient_503.schema.json`"
   - id: mcp_readiness_gate.tests_red
     name: Add expected-red /mcp readiness gate tests
-    status: claimed
+    status: done
     description: 'Test step.
 
 
@@ -48789,6 +48789,71 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-03T10:26:02.067584+00:00'
+    done_at: '2026-04-03T10:46:10.449310+00:00'
+    evidence: 'Artifact:
+
+      - PR: 9f35f1f313ca8d578778ffaff8c2ba6e52848799 (commit on isolated worktree
+      branch)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_mcp_readiness_gate.py -v --tb=short ->
+      1 failed (expected-red), 7 passed
+
+
+      Test Results:
+
+      - test_post_mcp_returns_transient_503_when_warming: FAILED (expected-red - readiness
+      gate not implemented)
+
+      - test_post_mcp_does_not_return_503_when_ready: PASSED
+
+      - test_connect_does_not_return_transient_503_when_warming: PASSED
+
+      - test_mcp_transient_503_matches_schema: PASSED
+
+      - test_gateway_lifecycle_state_is_warming_with_servers_not_connected: PASSED
+
+      - test_gateway_lifecycle_state_is_ready_with_no_servers: PASSED
+
+      - test_mcp_endpoint_requires_auth: PASSED
+
+      - test_readiness_gate_is_on_mcp_not_connect: PASSED
+
+
+      Failure Analysis:
+
+      - test_post_mcp_returns_transient_503_when_warming fails with 421 (Misdirected
+      Request)
+
+      - Root cause: Request passes through auth middleware and reaches MCP without
+      readiness check
+
+      - MCP''s Host header validation returns 421 before readiness gate can intercept
+
+      - This confirms readiness gate is NOT implemented - test is correctly red
+
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      observed_result: red (1 intentional failure for missing readiness gate)
+
+      failure_alignment: aligned with intended gap; failure demonstrates missing readiness
+      admission check on /mcp path
+
+      product_files_modified: no (tests only)
+
+
+      Spec link:
+
+      - docs/INTERFACES.md §7.2.1 POST /mcp transient 503 contract
+
+      - src/tela/shell/mcp_admission_contract.py
+
+      - contracts/mcp_admission_transient_503.schema.json'
   - id: mcp_readiness_gate.impl
     name: Implement /mcp readiness admission gate
     status: pending
