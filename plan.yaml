@@ -50791,7 +50791,7 @@ phases:
       now align with implemented behavior and frozen contracts.'
 - id: deep_review.full_b
   name: Full-B Deep Review
-  status: in_progress
+  status: done
   depends_on:
   - cold_start_compat
   steps:
@@ -51238,7 +51238,7 @@ phases:
       ```"
   - id: deep_review.full_b.gate
     name: Gate Full-B deep review
-    status: claimed
+    status: done
     description: 'Gate review: final independent audit for the Full-B readiness slice,
       with duplicate late-phase verification trimmed to wiring/architecture/black-box
       coverage only.'
@@ -51254,9 +51254,81 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-03T15:38:51.701575+00:00'
+    done_at: '2026-04-03T15:45:52.925472+00:00'
+    evidence: 'Gate verdict: PASS after independent dual-auditor evidence.
+
+
+      Primary gate reviewer evidence:
+
+      - Architecture boundary intact (single readiness authority: runtime lifecycle
+      + /status; /connect remains plumbing; /mcp admission-gated).
+
+      - Wiring audit passed (no blocking dead wiring in this slice; CLI registrations
+      and effect traces validated).
+
+      - Black-box readiness behavior aligned with revised Full-B design.
+
+      - Scope creep check passed: no `shutting_down` introduction in `src/` for this
+      slice.
+
+
+      Supplemental mandatory runnable-surface liveness (blind-tester Mode D):
+
+      - Started server via public CLI and confirmed listener alive.
+
+      - `/status` externally probed (401 without token; 200 with bearer token; documented
+      fields present).
+
+      - `/mcp` during warming returned machine-readable transient 503 contract (`ADMISSION_REJECTED_WARMING`,
+      `transient=true`, retry basis/expectation bounded).
+
+      - Bounded behavior verified: 503 only while warming; request path no longer
+      503 once ready/pass-through condition reached.
+
+      - Lockfile treated as discovery-only; readiness authority remained `/status`
+      runtime state.
+
+      - No product implementation files modified during gate verification.
+
+
+      Verification commands (from worker evidence):
+
+      - `uv run pytest tests/repro/test_gate_blocker_regressions.py -q` -> passed
+      (15)
+
+      - `uv run pytest tests/repro/test_liveness.py -q` -> passed (4)
+
+      - External probes: `curl` to `/health`, `/status`, `/mcp` with/without auth
+      -> behavior matched contract
+
+      - `python test_bounded_503.py` -> demonstrated bounded transient 503 semantics
+
+
+      Spec links:
+
+      - `docs/ADR-005-readiness-authority-boundary.md`
+
+      - `docs/CONFIRMED-SURFACE-CONTRACT.md`
+
+      - `docs/INTERFACES.md`
+
+      - `docs/DESIGN.md`
+
+      - `contracts/mcp_admission_transient_503.schema.json`
+
+
+      step_intent: gate verification
+
+      expected_result: green
+
+      observed_result: green
+
+      failure_alignment: n/a
+
+      product_implementation_files_modified: false'
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
-  status: locked
+  status: pending
   depends_on:
   - deep_review.full_b
   steps:
