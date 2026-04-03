@@ -50023,7 +50023,7 @@ phases:
       -> status=passed, static errors=0, warnings=0.'
   - id: connect_bridge_readiness.retest_gate_blocker_teardown_tests
     name: Retest gate blocker teardown readiness tests
-    status: pending
+    status: claimed
     description: 'Test step.
 
 
@@ -50086,6 +50086,8 @@ phases:
     depends_on:
     - connect_bridge_readiness.fix_gate_blocker_teardown_tests
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T14:48:19.740842+00:00'
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
