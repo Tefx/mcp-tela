@@ -331,9 +331,15 @@ or registry convergence. Use `tela status` to check authoritative runtime state.
 `tela connect` must not treat its own local bridge progress as readiness truth;
 gateway runtime lifecycle plus `GET /status` remains the sole readiness authority.
 When `tela connect` needs to wait on readiness, it must do so by consulting
-`GET /status`, not by relying on fixed sleep delays. Retry is allowed only when
+`GET /status` with status-driven polling (not fixed sleep delays). Retry is allowed only when
 the gateway emits the transient non-ready contract for `POST /mcp`; persistent
 degraded/non-ready status must end in a clean bounded exit.
+
+**Discovery-before-readiness cold-start**: After `tela connect` discovers the
+endpoint via lockfile, the bridge registers via `POST /connect` and then polls
+`GET /status` for readiness. The polling is bounded (default 4 attempts); if the
+gateway remains non-ready, the bridge exits cleanly rather than retrying
+indefinitely.
 
 MCP host configuration:
 

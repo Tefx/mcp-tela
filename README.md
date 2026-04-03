@@ -60,9 +60,10 @@ Readiness boundary:
 - the lockfile is discovery-only, not readiness truth
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority
 - `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels
-- readiness waiting must consult `GET /status`, not fixed sleep delays
+- readiness waiting must consult `GET /status` with bounded polling (not fixed sleep delays)
 - retry is allowed only when the gateway emits a transient non-ready contract signal
 - persistent degraded/non-ready authority must end in a clean bounded exit
+- discovery-before-readiness: lockfile may exist before downstream convergence completes
 
 ### `tela serve` (explicit server)
 

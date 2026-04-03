@@ -70,16 +70,18 @@ SurfaceContract := {
 
 ### 1.3 Bridge consumer-only readiness freeze
 
-- `tela connect` waits for readiness by consulting `GET /status`; fixed sleep
-  delays are not an acceptable readiness authority.
+- `tela connect` waits for readiness by consulting `GET /status` with status-driven
+polling; fixed sleep delays are not an acceptable readiness authority.
 - The bridge remains a consumer of readiness truth only and must not create,
-  cache, or relabel readiness state locally.
+cache, or relabel readiness state locally.
 - Retry is allowed only when the gateway emits the transient non-ready contract
-  for `POST /mcp`; other degraded/non-ready observations do not self-authorize
-  retry.
+for `POST /mcp`; other degraded/non-ready observations do not self-authorize
+retry.
 - If authoritative `GET /status` facts remain degraded or otherwise non-ready
-  through the bounded wait policy, `tela connect` must exit cleanly and
-  boundedly.
+through the bounded wait policy, `tela connect` must exit cleanly and
+boundedly (bounded retry/exit behavior).
+- Discovery-before-readiness: lockfile may be written before downstream convergence
+completes; endpoint discoverability does not imply readiness.
 
 ## 2. Tool vs resource rules
 

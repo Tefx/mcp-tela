@@ -136,9 +136,10 @@ bare `503` status alone.
 - `POST /connect` is registration/lifecycle plumbing only and must not become readiness truth, readiness cache, or MCP admission proof
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for agents and bridge flows
 - `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels
-- `tela connect` readiness waiting must consult `GET /status`, not fixed sleep intervals
+- `tela connect` readiness waiting must consult `GET /status` with status-driven polling (not fixed sleep intervals)
 - retry is authorized only when the gateway emits the transient non-ready contract for `POST /mcp`
 - persistent degraded/non-ready authority from `GET /status` must cause a clean bounded exit rather than an unbounded retry loop
+- explicit non-goal: no `shutting_down` expansion in this slice
 - lockfile discovery is not readiness truth
 - Gateway instructions are emitted first; downstream sections are append-only
 - The `tela.` prefix is reserved for built-in surfaces

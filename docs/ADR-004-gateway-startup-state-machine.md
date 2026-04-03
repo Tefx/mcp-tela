@@ -194,3 +194,14 @@ Trade-offs if adopted later:
 - redefining the approved current Plan A execution steps as mandatory now
 - making lockfile discovery authoritative for readiness
 - collapsing convergence truth into a single startup artifact
+- expanding `shutting_down` state handling in the current Full-B slice (this ADR is deferred; `shutting_down` is not a current runtime value)
+
+## Relation to Full-B Slice
+
+This ADR records a **deferred** Plan C architecture. The Full-B readiness slice:
+- **Explicitly excludes** any new public `shutting_down` runtime state in `/status`
+- **Explicitly excludes** bridge retry logic keyed off `shutting_down`
+- **Explicitly excludes** broader teardown-state redesign
+- Must operate with the existing `warming`/`ready`/`degraded` vocabulary only
+
+If teardown-state expansion becomes necessary, it must be planned and approved as a separate future architecture slice.

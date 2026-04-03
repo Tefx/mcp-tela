@@ -211,9 +211,11 @@ Current-slice admission boundary:
 - `POST /connect` must not be used as a readiness cache or admission proof for ordinary MCP traffic
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for bridge and operator consumers
 - `tela connect` may query or relay runtime readiness facts but must not create local readiness state, cached readiness truth, or competing lifecycle labels
-- `tela connect` readiness waiting must be driven by `GET /status` observations rather than fixed sleep intervals or bridge-local lifecycle guesses
+- `tela connect` readiness waiting must be driven by `GET /status` observations (status-driven polling) rather than fixed sleep intervals or bridge-local lifecycle guesses
 - retry is authorized only when the gateway emits the transient non-ready contract defined for `POST /mcp`; bridge consumers must not invent retry permission from other non-ready signals
 - if `GET /status` continues to report degraded or otherwise non-ready state past the bounded wait policy, `tela connect` must exit cleanly and boundedly instead of looping indefinitely
+
+**Explicit non-goal**: This slice does not expand `shutting_down` lifecycle handling. The `shutting_down` state from ADR-004 remains deferred and is not part of current runtime behavior. Bridge retry/admission must not assume or key off a `shutting_down` state label.
 
 ### 7.2.1 `POST /mcp` transient 503 contract
 
@@ -311,6 +313,7 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 - bridge retry/admission behavior in the current slice must be keyed from the existing runtime snapshot semantics above, not from a new teardown state label
 - any future teardown-state expansion must be planned as a separate architecture slice before this schema changes
 - bridge-local state or lockfile discovery must not be documented as a substitute authority for the `state` field
+- **Non-goal confirmation**: No `shutting_down` expansion in this slice per ADR-004 deferred status
 
 **Count-vs-Collection Semantics**:
 - `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)

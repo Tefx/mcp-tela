@@ -77,6 +77,12 @@ Runtime lifecycle/readiness truth comes from the in-process runtime status snaps
 (and operator surfaces derived from it, such as `GET /status`), not from the
 lockfile.
 
+**Discovery-before-readiness cold-start semantics**: When `tela connect` performs
+lockfile discovery (the default path without `--server`), the lockfile may be
+written before downstream convergence completes. The endpoint is discoverable,
+but readiness must be verified separately via `GET /status`. Consumers must not
+assume endpoint discoverability implies MCP admission readiness.
+
 Admission boundary in this slice:
 
 - `POST /mcp` is the readiness-gated HTTP admission surface during convergence
@@ -101,6 +107,14 @@ Implications:
 - this approved slice does **not** introduce a new public `shutting_down` lifecycle state in `/status`
 - this approved slice does **not** add bridge retry or reconnect policy keyed off a `shutting_down` state label
 - if teardown-state vocabulary becomes necessary later, it must be planned as a separate future architecture slice rather than folded into the current readiness/convergence work
+
+**`tela connect` readiness behavior**:
+- After `POST /connect` registration, the bridge polls `GET /status` for readiness
+- Polling is bounded (`BRIDGE_READINESS_MAX_POLLS = HTTP_TRANSIENT_RETRIES + 1`, default 4 polls)
+- If `GET /status` returns `state: "ready"`, the bridge proceeds to MCP forwarding
+- If `GET /status` returns `state: "degraded"`, the bridge exits cleanly with error
+- If bounded polls exhaust without reaching `ready`, the bridge exits cleanly
+- The bridge must not retry indefinitely; bounded exit is required for non-ready authority
 
 Authoritative freeze for downstream work:
 
