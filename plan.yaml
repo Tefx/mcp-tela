@@ -51334,7 +51334,7 @@ phases:
   steps:
   - id: doc_sync.full_b.update_readiness_docs
     name: Update readiness documentation
-    status: claimed
+    status: done
     description: 'Documentation sync for the Full-B readiness slice after deep review.
 
 
@@ -51354,6 +51354,63 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-04-03T15:46:16.736767+00:00'
+    done_at: '2026-04-03T15:51:49.914565+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 69fd849b7a406235510393dd1ff7828d8f0acc21
+
+
+      Verification:
+
+      - Run: `git log --oneline -1` -> `69fd849 docs: sync readiness-facing docs with
+      Full-B slice implementation`
+
+      - Run: docs grep checks for status-driven polling, bounded retry/exit, non-goal
+      `shutting_down`, and discovery-before-readiness semantics -> confirmed across
+      updated readiness-facing docs.
+
+
+      Documentation updates synchronized to implemented Full-B behavior:
+
+      - `/status` as sole readiness authority
+
+      - `/mcp` transient not-ready 503 contract and bounded semantics
+
+      - `tela connect` status-driven polling with bounded retry/exit behavior
+
+      - discovery-before-readiness cold-start semantics
+
+      - explicit non-goal: no `shutting_down` expansion in this slice
+
+
+      Files updated (docs-only):
+
+      - README.md
+
+      - docs/ADR-004-gateway-startup-state-machine.md
+
+      - docs/AGENT_INTERFACE.md
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - docs/USAGE.md
+
+
+      Spec link:
+
+      - contracts/mcp_admission_transient_503.schema.json
+
+      - docs/ADR-005-readiness-authority-boundary.md
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/shell/gateway_lifecycle.py
+
+      - src/tela/shell/mcp_admission_contract.py'
   - id: doc_sync.full_b.gate
     name: Gate Full-B documentation sync
     status: pending
