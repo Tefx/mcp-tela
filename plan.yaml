@@ -50002,6 +50002,71 @@ phases:
     - connect_bridge_readiness.impl
     - connect_bridge_readiness.bounded_retry_negative_proof
     agent: python-senior
+  - id: connect_bridge_readiness.retest_gate_blocker_teardown_tests
+    name: Retest gate blocker teardown readiness tests
+    status: pending
+    description: 'Test step.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Independently rerun the two gate-blocker teardown interrupt tests after the
+      shared readiness mock/setup fix.
+
+
+      Scope:
+
+      - `tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_does_not_block_process_exit`
+
+      - `tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section`
+
+
+      Verify the bounded cleanup section still resumes correctly under the readiness-polling
+      contract and that process exit is not blocked.'
+    verification: '- Run the two named teardown interrupt tests after the fix
+
+      - Expected result is green for both tests
+
+      - Evidence includes exact command, actual test output, and confirmation that
+      the readiness mock path was exercised'
+    evidence_template: '## Retest Report
+
+
+      **Command**:
+
+      ```
+
+      uv run pytest tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_does_not_block_process_exit
+      tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section
+      -v
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste pytest output>
+
+      ```
+
+
+      **Checks**
+
+      - `_get_gateway_status` readiness mock/setup present in teardown path
+
+      - process exit remains unblocked
+
+      - bounded cleanup resumes and completes as expected'
+    depends_on:
+    - connect_bridge_readiness.fix_gate_blocker_teardown_tests
+    agent: integration-verifier
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
