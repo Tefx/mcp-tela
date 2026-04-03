@@ -49296,7 +49296,7 @@ phases:
     agent: integration-verifier
   - id: mcp_readiness_gate.fix_stale_connect_warming_test
     name: Update stale /connect warming tests to current contract
-    status: pending
+    status: claimed
     description: 'Update stale `/connect` warming expectation tests to match the current
       readiness contract.
 
@@ -49344,6 +49344,8 @@ phases:
     depends_on:
     - mcp_readiness_gate.fix_gate_contract_drift
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-03T12:43:38.699253+00:00'
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
