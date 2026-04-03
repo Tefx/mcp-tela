@@ -48632,7 +48632,7 @@ phases:
       for any `shutting_down` expansion)'
   - id: meta.full_b_contract.gate
     name: Gate Full-B contract freeze
-    status: pending
+    status: claimed
     description: 'Gate review: verify the Full-B readiness planning basis is frozen
       before implementation phases begin.'
     verification: '- Readiness authority is frozen at gateway `/status`
@@ -48651,6 +48651,8 @@ phases:
     - meta.full_b_contract.freeze_transient_503_contract
     - meta.full_b_contract.exclude_shutting_down_expansion
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T10:14:35.257043+00:00'
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
