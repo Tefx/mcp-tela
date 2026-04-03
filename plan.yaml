@@ -50357,7 +50357,7 @@ phases:
       \ worktree"
   - id: cold_start_compat.degraded_mode
     name: Verify degraded-mode negative path
-    status: claimed
+    status: pending
     description: 'Verification step.
 
 
@@ -50378,8 +50378,6 @@ phases:
 
       - Bound observed'
     agent: blind-tester
-    claimed_by: blind-tester
-    claimed_at: '2026-04-03T14:54:31.203427+00:00'
   - id: cold_start_compat.gate
     name: Gate cold-start compatibility phase
     status: pending
