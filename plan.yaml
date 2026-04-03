@@ -49095,6 +49095,7 @@ phases:
     - mcp_readiness_gate.impl
     - mcp_readiness_gate.bounded_transient_503_proof
     - mcp_readiness_gate.spec_conformance
+    - mcp_readiness_gate.retest_gate_contract_drift
     agent: gate-reviewer
   - id: mcp_readiness_gate.fix_gate_contract_drift
     name: Fix batched /connect contract and doc drift from gate findings
