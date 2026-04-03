@@ -48904,6 +48904,35 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: blind-tester
+  - id: connect_bridge_readiness.bounded_retry_negative_proof
+    name: Prove bounded retry negative path
+    status: pending
+    description: 'Verification step.
+
+
+      Independently prove the negative path: when gateway remains degraded or non-ready,
+      the bridge exits cleanly and boundedly instead of looping indefinitely or forwarding
+      early.'
+    verification: '- Persistent non-ready/degraded case exits within a documented
+      bound
+
+      - No premature MCP forward occurs
+
+      - Retry is only authorized by transient gateway signal'
+    evidence_template: '## Bounded negative-path proof
+
+      - Non-ready/degraded fixture used
+
+      - Exact command/test
+
+      - Elapsed wait bound observed
+
+      - Exit/output captured
+
+      - Proof that MCP forward did not occur'
+    depends_on:
+    - connect_bridge_readiness.impl
+    agent: integration-verifier
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
