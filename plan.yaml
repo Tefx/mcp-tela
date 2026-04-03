@@ -48327,7 +48327,7 @@ phases:
   steps:
   - id: meta.full_b_contract.resolve_open_questions
     name: Resolve Full-B readiness open questions
-    status: claimed
+    status: done
     description: 'Planning step.
 
 
@@ -48355,6 +48355,41 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T10:11:36.237662+00:00'
+    done_at: '2026-04-03T10:14:18.863925+00:00'
+    evidence: 'Artifact:
+
+      - PR: a58fcae
+
+
+      Verification:
+
+      - Run: `git status --short --branch` -> clean on `vectl/step-meta.full_b_contract.resolve_open_questions`
+      after commit
+
+      - Run: `python3 -c "import json; json.load(open(''contracts/mcp_admission_transient_503.schema.json''));
+      print(''schema-ok'')"` -> `schema-ok`
+
+      - Run: `grep -REn "sole readiness authority|registration/lifecycle plumbing
+      only|shutting_down|machine-readable" evidence/*.md` -> `evidence/full_b_readiness_open_questions_resolution.md`
+      contains all four required confirmations and the surviving conflict note
+
+      - Run: `git commit -m "docs: resolve full-b readiness open questions"` -> created
+      commit `a58fcae`
+
+
+      Spec link:
+
+      - `evidence/full_b_readiness_open_questions_resolution.md`
+
+      - `docs/ADR-005-readiness-authority-boundary.md`
+
+      - `docs/CONFIRMED-SURFACE-CONTRACT.md` §1.1-1.2
+
+      - `docs/INTERFACES.md` §7.2, §7.2.1, §7.2.2
+
+      - `docs/AGENT_INTERFACE.md` §6.1, §7
+
+      - `docs/DESIGN.md` §Discovery and readiness'
   - id: meta.full_b_contract.freeze_readiness_authority
     name: Freeze readiness authority boundary
     status: done
