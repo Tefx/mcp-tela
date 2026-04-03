@@ -48376,6 +48376,29 @@ phases:
 
       - No downstream step language assigns readiness ownership to the bridge'
     agent: software-architect
+  - id: meta.full_b_contract.freeze_admission_boundary
+    name: Freeze admission boundary
+    status: pending
+    description: 'Planning contract freeze.
+
+
+      Freeze the admission split:
+
+      - `POST /mcp` is the readiness-gated admission surface during convergence
+
+      - `POST /connect` remains registration and lifecycle plumbing only
+
+      - `POST /connect` must not become readiness truth, readiness cache, or readiness
+      admission proof
+
+
+      This step preserves the external contract boundary between connection registration
+      and MCP admission.'
+    verification: '- `/mcp` is the only new readiness-gated HTTP admission surface
+      in this slice
+
+      - `/connect` remains a non-readiness registration path in downstream plan text'
+    agent: software-architect
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
