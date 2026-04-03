@@ -48947,7 +48947,7 @@ phases:
       \ not change /connect semantics beyond existing behavior."
   - id: mcp_readiness_gate.bounded_transient_503_proof
     name: Prove bounded transient 503 behavior
-    status: pending
+    status: claimed
     description: 'Verification step.
 
 
@@ -48997,6 +48997,8 @@ phases:
     depends_on:
     - mcp_readiness_gate.impl
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T10:50:05.320488+00:00'
   - id: mcp_readiness_gate.spec_conformance
     name: Verify /mcp readiness spec conformance
     status: pending
