@@ -48765,6 +48765,36 @@ phases:
 
       - Retry permission is sourced from gateway signal, not local lifecycle guesses'
     agent: software-architect
+  - id: connect_bridge_readiness.tests_red
+    name: Add expected-red connect readiness consumer tests
+    status: pending
+    description: 'Test step.
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+
+      Add tests that expose the current gap between fixed-delay guessing and gateway-authoritative
+      readiness consumption.
+
+
+      Required coverage:
+
+      - `tela connect` polls `/status` before forwarding MCP traffic
+
+      - transient 503 signal permits bounded retry
+
+      - persistent degraded/non-ready exits cleanly without indefinite wait
+
+      - bridge does not invent local lifecycle labels'
+    verification: '- Tests are test-only and expected to fail before implementation
+
+      - Exposed gaps are recorded for bridge implementation work'
+    agent: python-executor
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
