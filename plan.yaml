@@ -49037,7 +49037,7 @@ phases:
       ```\n\nAll tests pass. Implementation commits include verification commit `418f55f`."
   - id: mcp_readiness_gate.spec_conformance
     name: Verify /mcp readiness spec conformance
-    status: claimed
+    status: done
     description: Spec conformance verification via adversarial divergence hunting
       for the `/mcp` readiness gate and transient 503 contract only.
     verification: '- External `/mcp` readiness behavior matches the frozen contract
@@ -49060,6 +49060,23 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-04-03T12:27:16.746359+00:00'
+    done_at: '2026-04-03T12:28:44.860530+00:00'
+    evidence: "## Spec Conformance Report\nScope: Full-B `/mcp` readiness gate\n\n\
+      - Spec sections cited:\n  - docs/INTERFACES.md §7.2.1\n  - docs/CONFIRMED-SURFACE-CONTRACT.md\
+      \ §1.2\n  - contracts/mcp_admission_transient_503.schema.json\n- Implementation\
+      \ file:line cited:\n  - src/tela/shell/http_auth.py:42-53, 103-111, 150-170\n\
+      \  - src/tela/shell/gateway_lifecycle.py:57-69\n  - src/tela/shell/mcp_admission_contract.py:23-26,\
+      \ 37, 53\n- Verdict per requirement:\n  - 20 requirements total\n  - CONFORMS:\
+      \ 18\n  - DIVERGES: 0\n  - NEEDS_TEST: 2 (consumer-side retry behavior)\n\n\
+      Top risks ranked:\n1) Consumer retry behavior proof (NEEDS_TEST): downstream\
+      \ bridge must key retry on gateway-authored fields (`code`, `transient`, `retry.authorized`)\
+      \ instead of bare HTTP 503.\n2) Bounded retry behavior proof (NEEDS_TEST): downstream\
+      \ bridge should enforce bounded retry when `retry.expectation == \"bounded\"\
+      `.\n\nAdditional evidence:\n- tests/shell/test_mcp_readiness_gate.py validates\
+      \ warming 503 contract fields, non-503 behavior when ready, and /connect not\
+      \ gated by readiness.\n- Lifecycle state mapping conforms to warming/ready/degraded\
+      \ transitions in gateway_lifecycle.\n- No spec divergences identified in current\
+      \ /mcp readiness gate implementation."
   - id: mcp_readiness_gate.gate
     name: Gate /mcp readiness gate phase
     status: pending
