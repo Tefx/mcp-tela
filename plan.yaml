@@ -48353,6 +48353,29 @@ phases:
 
       - Any surviving ambiguity is explicitly enumerated rather than guessed'
     agent: software-architect
+  - id: meta.full_b_contract.freeze_readiness_authority
+    name: Freeze readiness authority boundary
+    status: pending
+    description: 'Planning contract freeze.
+
+
+      Authoritative rule:
+
+      - gateway runtime lifecycle plus `GET /status` is the sole readiness authority
+
+      - the bridge must not create or own readiness state, cached readiness truth,
+      or local lifecycle labels
+
+      - lockfile remains discovery-only and is explicitly not readiness truth
+
+
+      Pin this as the authoritative boundary for all downstream phases so implementers
+      cannot shift readiness into `tela connect`.'
+    verification: '- Downstream phases are constrained to gateway-authoritative readiness
+      only
+
+      - No downstream step language assigns readiness ownership to the bridge'
+    agent: software-architect
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
