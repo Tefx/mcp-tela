@@ -48695,7 +48695,7 @@ phases:
   steps:
   - id: mcp_readiness_gate.contract
     name: Define /mcp readiness gate contract
-    status: claimed
+    status: done
     description: 'Contract step.
 
 
@@ -48738,6 +48738,17 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-03T10:21:58.602950+00:00'
+    done_at: '2026-04-03T10:25:46.348978+00:00'
+    evidence: "Artifact:\n- PR: 8570cde3e67b8cd65c54eb49092d1c381b4716fd\n- Supporting\
+      \ commits:\n  - 8570cde add readiness contract freeze regression tests\n  -\
+      \ bdc2307 freeze transient /mcp readiness contract\n\nVerification:\n- Run:\
+      \ `uv run pytest tests/shell/test_mcp_admission_contract_freeze.py` -> 4 passed\n\
+      - Run: `invar guard` (changed files) -> passed\n- Run: `git status --short &&\
+      \ git rev-parse HEAD` -> clean worktree, HEAD=`8570cde3e67b8cd65c54eb49092d1c381b4716fd`\n\
+      \nSpec link:\n- `docs/INTERFACES.md` §7.2.1 `POST /mcp` transient 503 contract\n\
+      - `docs/CONFIRMED-SURFACE-CONTRACT.md` §1.1 Admission boundary freeze\n- `docs/CONFIRMED-SURFACE-CONTRACT.md`\
+      \ §1.2 `POST /mcp` transient warming rejection\n- `src/tela/shell/mcp_admission_contract.py`\n\
+      - `contracts/mcp_admission_transient_503.schema.json`"
   - id: mcp_readiness_gate.tests_red
     name: Add expected-red /mcp readiness gate tests
     status: pending
