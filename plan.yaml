@@ -49003,6 +49003,27 @@ phases:
 
       - Final success evidence'
     agent: blind-tester
+  - id: cold_start_compat.discovery_before_readiness_proof
+    name: Prove discovery can precede readiness
+    status: pending
+    description: 'Verification step.
+
+
+      Explicitly prove that the lockfile can exist before readiness and that `/status`
+      remains non-ready during that window.'
+    verification: '- Lockfile/discovery artifact exists before readiness
+
+      - `/status` still reports non-ready during that window
+
+      - Evidence separates discovery truth from readiness truth'
+    evidence_template: '## Discovery-before-readiness proof
+
+      - Lockfile evidence
+
+      - `/status` snapshot while non-ready
+
+      - Timing/order notes'
+    agent: integration-verifier
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
