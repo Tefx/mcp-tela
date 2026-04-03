@@ -49916,7 +49916,7 @@ phases:
       with consumer-only contract.'
   - id: connect_bridge_readiness.gate
     name: Gate bridge readiness consumer phase
-    status: pending
+    status: claimed
     description: 'Gate review: verify `tela connect` is a readiness consumer only
       and that bounded negative-path behavior is proven.'
     verification: '- Bridge reads readiness from `/status`
@@ -49935,6 +49935,8 @@ phases:
     - connect_bridge_readiness.bounded_retry_negative_proof
     - connect_bridge_readiness.spec_conformance
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T14:38:55.864355+00:00'
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
