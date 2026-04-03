@@ -49296,7 +49296,7 @@ phases:
     agent: integration-verifier
   - id: mcp_readiness_gate.fix_stale_connect_warming_test
     name: Update stale /connect warming tests to current contract
-    status: claimed
+    status: done
     description: 'Update stale `/connect` warming expectation tests to match the current
       readiness contract.
 
@@ -49346,6 +49346,23 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-03T12:43:38.699253+00:00'
+    done_at: '2026-04-03T12:46:13.261463+00:00'
+    evidence: "Branch: vectl/step-mcp_readiness_gate.fix_stale_connect_warming_test\n\
+      Commit: 071dffa\n\nScope fulfilled:\n- Updated stale /connect warming expectation\
+      \ test in:\n  tests/shell/test_http_routes.py\n- Renamed test:\n  test_handle_connect_rejects_while_warming\n\
+      \  -> test_handle_connect_is_not_readiness_gated_while_warming\n- Updated assertions\
+      \ to enforce current contract:\n  /connect is NOT readiness-gated during warming\n\
+      \  (expects successful connect response, not ADMISSION_REJECTED_WARMING)\n\n\
+      Contract alignment source used:\n- \"/connect remains outside readiness gating\
+      \ during warming\"\n- \"ADMISSION_REJECTED_WARMING applies to /mcp, not /connect\"\
+      \n\nTargeted verification run:\nCommand:\n  uv run pytest -v tests/shell/test_http_routes.py\
+      \ tests/shell/test_mcp_readiness_gate.py\nResult:\n  - 34 collected\n  - 34\
+      \ passed\n  - 0 failed\n  - 0 skipped\n  - Includes pass for:\n    tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_is_not_readiness_gated_while_warming\n\
+      \    tests/shell/test_mcp_readiness_gate.py::TestMcpReadinessGate::test_post_mcp_returns_transient_503_when_warming\n\
+      \    tests/shell/test_mcp_readiness_gate.py::TestMcpReadinessGate::test_connect_does_not_return_transient_503_when_warming\n\
+      \nGit status after commit:\n  ## vectl/step-mcp_readiness_gate.fix_stale_connect_warming_test\n\
+      \nExplicitly NOT done:\n- No product code changes\n- No edits to plan.yaml\n\
+      - No edits to .git/vectl/claims.json\n- No orchestrator state modifications"
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
