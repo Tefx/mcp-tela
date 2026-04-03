@@ -51328,13 +51328,13 @@ phases:
       product_implementation_files_modified: false'
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
-  status: pending
+  status: in_progress
   depends_on:
   - deep_review.full_b
   steps:
   - id: doc_sync.full_b.update_readiness_docs
     name: Update readiness documentation
-    status: pending
+    status: claimed
     description: 'Documentation sync for the Full-B readiness slice after deep review.
 
 
@@ -51352,6 +51352,8 @@ phases:
     verification: '- All readiness-facing docs align with implemented behavior and
       non-goals'
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-04-03T15:46:16.736767+00:00'
   - id: doc_sync.full_b.gate
     name: Gate Full-B documentation sync
     status: pending
