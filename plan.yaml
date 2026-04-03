@@ -49433,7 +49433,7 @@ phases:
       - No edits to .git/vectl/claims.json\n- No orchestrator state modifications"
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
-  status: in_progress
+  status: done
   depends_on:
   - mcp_readiness_gate
   steps:
@@ -49916,7 +49916,7 @@ phases:
       with consumer-only contract.'
   - id: connect_bridge_readiness.gate
     name: Gate bridge readiness consumer phase
-    status: claimed
+    status: done
     description: 'Gate review: verify `tela connect` is a readiness consumer only
       and that bounded negative-path behavior is proven, including teardown interrupt
       regressions after the readiness-polling refactor.'
@@ -49941,6 +49941,56 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-03T14:49:36.393494+00:00'
+    done_at: '2026-04-03T14:54:04.390265+00:00'
+    evidence: 'Artifact:
+
+      - Gate review task ses_2ac2d9aa6ffeFoO7YCyZu0FSdA
+
+      - Branch/worktree commit: 515ec6f
+
+
+      Verification:
+
+      - Run: `invar guard --all` -> PASSED (errors=0, warnings=0, infos=0)
+
+      - Run: `uv run pytest tests/shell/test_connect_bridge_readiness_contract_freeze.py
+      tests/shell/test_connect_cmd.py -v` -> 36 passed in 1.84s
+
+      - Run: `uv run mypy src/tela/commands/connect_cmd.py` -> success, no issues
+
+      - Run: `uv run pyright src/tela/commands/connect_cmd.py` -> 0 errors/warnings
+
+      - Run: `uv run pytest tests/shell/test_connect_cmd.py -k teardown -v` -> 2 passed,
+      30 deselected
+
+
+      Spec link:
+
+      - docs/ADR-005-readiness-authority-boundary.md
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md §1.1-1.3
+
+      - docs/INTERFACES.md readiness authority contract
+
+      - src/tela/commands/connect_cmd.py:776-819 (_wait_for_gateway_readiness), 857-883
+      (_is_mcp_transient_warming_error)
+
+
+      Gate verdict:
+
+      - PASS
+
+      - consumer-only readiness from /status verified
+
+      - wait-then-forward path verified
+
+      - bounded degraded exit verified
+
+      - retry authorization only via transient gateway contract signal verified
+
+      - no bridge-owned readiness truth/local labels found
+
+      - previously failing teardown interrupt tests now pass'
   - id: connect_bridge_readiness.fix_gate_blocker_teardown_tests
     name: Fix gate blocker teardown readiness tests
     status: done
@@ -50104,7 +50154,7 @@ phases:
       \ connection id"
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
-  status: locked
+  status: pending
   depends_on:
   - connect_bridge_readiness
   steps:
