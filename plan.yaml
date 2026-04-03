@@ -49094,6 +49094,31 @@ phases:
   status: locked
   depends_on:
   - cold_start_compat
+  steps:
+  - id: deep_review.full_b.wiring_audit
+    name: Run Full-B wiring audit
+    status: pending
+    description: 'Full wiring audit for the Full-B readiness slice.
+
+
+      Verify:
+
+      - readiness authority is not duplicated into bridge-owned state
+
+      - `/status`, `/connect`, and `/mcp` are wired to the intended roles
+
+      - no leftover fixed-sleep readiness path remains in connect/bridge flow'
+    verification: '- Any orphaned readiness path or duplicate truth is surfaced explicitly'
+    evidence_template: '## Wiring Audit Report
+
+      - Duplicate readiness owners
+
+      - Wrongly wired admission paths
+
+      - Leftover fixed-delay heuristics
+
+      - Verdict'
+    agent: wiring-auditor
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
   status: locked
