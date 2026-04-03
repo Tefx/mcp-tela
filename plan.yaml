@@ -50486,7 +50486,7 @@ phases:
     agent: gate-reviewer
   - id: cold_start_compat.fix_obsolete_expected_red_tests
     name: Fix obsolete expected-red readiness tests
-    status: claimed
+    status: done
     description: 'Fix ALL blocker-class obsolete expected-red tests for bridge readiness
       behavior.
 
@@ -50540,6 +50540,30 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-03T15:15:57.536443+00:00'
+    done_at: '2026-04-03T15:21:18.489200+00:00'
+    evidence: "Commit hash:\n- 1c80b5e31ae220acfbfff7ddc61cbb577a5f167d\n\nFiles changed:\n\
+      - tests/shell/test_connect_bridge_readiness_gaps_red.py\n\nObsolete assertions\
+      \ fixed:\n- Removed outdated expected-red assertions claiming bridge does not\
+      \ poll /status.\n- Removed contradictory assertion pattern expecting status_calls\
+      \ == 0.\n- Replaced incorrect instrumentation that monkeypatched _post_json\
+      \ and then asserted internal retry behavior.\n- Replaced no-op/false-positive\
+      \ tests with concrete compatibility assertions aligned to implemented behavior:\n\
+      \  - _run_bridge performs readiness wait before forwarding.\n  - _wait_for_gateway_readiness\
+      \ exits boundedly on persistent warming.\n  - _wait_for_gateway_readiness exits\
+      \ on degraded with reason.\n  - _post_mcp_message retries boundedly on transient\
+      \ 503 contract.\n  - Readiness authority path uses _get_gateway_status polling.\n\
+      \nSibling search output:\n- Command:\n  rg -n \"assert\\s+len\\(status_calls\\\
+      )\\s*==\\s*0|No /status calls detected|Bridge does NOT poll /status|doesn't\
+      \ poll /status\" tests/shell\n- Output:\n  (no matches)\n\nAdditional marker\
+      \ scan:\n- Command:\n  rg -n \"expected-red\" tests/shell\n- Output:\n  tests/shell/test_mcp_readiness_gate.py:126:\
+      \ CURRENT BEHAVIOR (expected-red): ...\n  tests/shell/test_connect_bridge_readiness_gaps_red.py:3:\
+      \ historical note in docstring\n\nVerification commands/results:\n- uv run pytest\
+      \ -q tests/shell/test_connect_bridge_readiness_gaps_red.py\n  -> 5 passed in\
+      \ 0.14s\n- uv run pytest -q tests/shell/test_mcp_readiness_gate.py\n  -> 8 passed\
+      \ in 0.29s\n- uv run pytest -q tests/shell/test_connect_bridge_readiness_gaps_red.py\
+      \ tests/shell/test_mcp_readiness_gate.py\n  -> 13 passed in 0.30s\n- invar_guard(path=<worktree>,\
+      \ changed=true)\n  -> status=passed; static errors=0; warnings=0\n- git status\
+      \ --short\n  -> clean (no output)"
   - id: cold_start_compat.retest_obsolete_expected_red_tests
     name: Retest bridge readiness expectations after obsolete expected-red cleanup
     status: pending
