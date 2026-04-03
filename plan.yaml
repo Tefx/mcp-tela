@@ -50207,7 +50207,7 @@ phases:
     claimed_at: '2026-04-03T14:54:48.301726+00:00'
   - id: cold_start_compat.transient_503_and_retry
     name: Verify transient 503 and retry under cold start
-    status: claimed
+    status: done
     description: 'Verification step.
 
 
@@ -50231,6 +50231,43 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-03T14:55:16.976968+00:00'
+    done_at: '2026-04-03T14:58:19.307716+00:00'
+    evidence: "## Cold-start transient 503 and retry proof\n\n### Exact Command/Test\n\
+      ```bash\ncd .vectl/worktrees/cold_start_compat.transient_503_and_retry\nuv run\
+      \ python test_bounded_503.py\nuv run pytest tests/repro/test_cold_start_transient_503_retry.py\
+      \ -xvs\nuv run pytest tests/shell/test_mcp_readiness_gate.py -xvs\n```\n\n###\
+      \ Early Non-Ready Response (/mcp transient 503 contract)\n\n**Test**: `test_bounded_503.py`\
+      \ - NON-READY STATE\n\n**Output**:\n```\nGateway state: warming\nServer count:\
+      \ 1\nConnected servers: ()\n\nPOST /mcp response (warming state):\nStatus: 503\n\
+      Body:\n{\n  \"error\": \"ADMISSION_REJECTED_WARMING: gateway not ready for MCP\
+      \ admission\",\n  \"code\": \"ADMISSION_REJECTED_WARMING\",\n  \"transient\"\
+      : true,\n  \"retry\": {\n    \"authorized\": true,\n    \"basis\": \"gateway_signal\"\
+      ,\n    \"expectation\": \"bounded\"\n  },\n  \"gateway_state\": \"warming\"\n\
+      }\n```\n\n**Verification**: Early `/mcp` admission attempts receive the machine-readable\
+      \ transient 503 contract during warming state.\n\n### Retry Sequence Evidence\n\
+      \n**Test**: `test_mcp_transient_503_contract_drives_retry`\n\n**Output**:\n\
+      ```\nValid contract triggers retry: {'code': 'ADMISSION_REJECTED_WARMING', 'transient':\
+      \ True, 'retry': {'authorized': True, 'basis': 'gateway_signal', 'expectation':\
+      \ 'bounded'}, 'gateway_state': 'warming'}\nInvalid contracts do NOT trigger\
+      \ retry: count=5\nRetry constants: HTTP_TRANSIENT_RETRIES=3, HTTP_TRANSIENT_BACKOFF_SECONDS=0.5\n\
+      ```\n\n**Implementation** (`src/tela/commands/connect_cmd.py` lines 850-883,\
+      \ 680-686):\n- `_is_mcp_transient_warming_error()` checks ALL contract fields\n\
+      - Retry triggered only if: code + transient + retry.authorized + retry.basis\
+      \ + retry.expectation + gateway_state ALL match\n- Non-contract 503 does NOT\
+      \ trigger retry\n- Bounded retries: HTTP_TRANSIENT_RETRIES=3 with exponential\
+      \ backoff\n\n**Verification**: Retry behavior is driven by contract fields,\
+      \ not just HTTP status code.\n\n### Final Success After Readiness Convergence\n\
+      \n**Test**: `test_eventual_success_after_readiness_convergence`\n\n**Output**:\n\
+      ```\nPart 1 (warming): Status=503, code=ADMISSION_REJECTED_WARMING\nPart 2 (ready):\
+      \ Status=421 (NOT 503)\n```\n\n**Verification**: When gateway transitions from\
+      \ warming to ready, `/mcp` stops returning 503 and allows request through (421\
+      \ is MCP's Host validation, proving readiness gate passed).\n\n### All Tests\
+      \ Pass\n\n```\ntests/shell/test_mcp_readiness_gate.py: 8 passed\ntests/repro/test_cold_start_transient_503_retry.py:\
+      \ 4 passed\n```\n\n### Verification Summary\n\n| Requirement | Status |\n|-------------|--------|\n\
+      | Early forward attempts see transient 503 | ✅ PASS |\n| Retry driven by contract\
+      \ (not timeout) | ✅ PASS |\n| Eventual success after convergence | ✅ PASS |\n\
+      | Readiness gate on /mcp only | ✅ PASS |\n\nFull evidence: `EVIDENCE.md` in\
+      \ worktree"
   - id: cold_start_compat.degraded_mode
     name: Verify degraded-mode negative path
     status: claimed
