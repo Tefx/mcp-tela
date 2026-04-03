@@ -48954,6 +48954,27 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: spec-verifier
+  - id: connect_bridge_readiness.gate
+    name: Gate bridge readiness consumer phase
+    status: pending
+    description: 'Gate review: verify `tela connect` is a readiness consumer only
+      and that bounded negative-path behavior is proven.'
+    verification: '- Bridge reads readiness from `/status`
+
+      - Bridge owns no readiness truth or lifecycle labels
+
+      - Retry happens only on transient gateway signal
+
+      - Persistent degraded/non-ready exits cleanly and boundedly'
+    depends_on:
+    - connect_bridge_readiness.status_authority_contract
+    - connect_bridge_readiness.tests_red
+    - connect_bridge_readiness.impl
+    - connect_bridge_readiness.seam_integration_proof
+    - connect_bridge_readiness.status_polling_proof
+    - connect_bridge_readiness.bounded_retry_negative_proof
+    - connect_bridge_readiness.spec_conformance
+    agent: gate-reviewer
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
