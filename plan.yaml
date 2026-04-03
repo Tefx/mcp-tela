@@ -50566,7 +50566,7 @@ phases:
       \ --short\n  -> clean (no output)"
   - id: cold_start_compat.retest_obsolete_expected_red_tests
     name: Retest bridge readiness expectations after obsolete expected-red cleanup
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), re-run the bridge-readiness
       verification path after obsolete expected-red test cleanup.
 
@@ -50647,6 +50647,44 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-03T15:21:42.620399+00:00'
+    done_at: '2026-04-03T15:24:09.894902+00:00'
+    evidence: '## Retest Report
+
+      Tester: integration-verifier
+
+      Scope: bridge readiness expected-red cleanup
+
+      Independence: L1
+
+
+      Commands executed:
+
+      1) Targeted bridge readiness tests
+
+      `PYTHONPATH=worktree/src main_venv/bin/pytest worktree/tests/shell/test_connect_bridge_readiness_gaps_red.py
+      worktree/tests/shell/test_connect_bridge_readiness_contract_freeze.py -v`
+
+      2) Expected-red marker audit
+
+      `grep -n "@pytest.mark.xfail\|@pytest.mark.skip" tests/shell/test_connect_bridge_readiness_gaps_red.py
+      tests/shell/test_connect_bridge_readiness_contract_freeze.py`
+
+
+      Actual output summary:
+
+      - 9 passed in 0.15s
+
+      - Gaps-red file: 5 passed
+
+      - Contract-freeze file: 4 passed
+
+      - Marker audit: no xfail/skip decorators found
+
+
+      Verdict:
+
+      - PASS: obsolete expected-red cleanup validated; bridge readiness expectations
+      now align with implemented behavior and frozen contracts.'
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
