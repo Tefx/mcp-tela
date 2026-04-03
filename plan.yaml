@@ -48441,6 +48441,26 @@ phases:
 
       - Retry authorization is tied to gateway signal, not client guesswork'
     agent: software-architect
+  - id: meta.full_b_contract.exclude_shutting_down_expansion
+    name: Exclude shutting_down expansion
+    status: pending
+    description: 'Planning guardrail.
+
+
+      Explicitly exclude `shutting_down` from this Full-B slice:
+
+      - no new public `shutting_down` lifecycle state in `/status`
+
+      - no bridge retry logic keyed off `shutting_down`
+
+      - no doc or code planning that widens this feature into a teardown-state redesign
+
+
+      If shutdown-state expansion becomes necessary, it must be planned as a separate
+      future architecture slice.'
+    verification: '- No downstream step introduces `shutting_down` as a required deliverable
+      or verification target'
+    agent: software-architect
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
   status: locked
