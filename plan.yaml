@@ -50182,7 +50182,7 @@ phases:
     agent: blind-tester
   - id: cold_start_compat.discovery_before_readiness_proof
     name: Prove discovery can precede readiness
-    status: pending
+    status: claimed
     description: 'Verification step.
 
 
@@ -50201,6 +50201,8 @@ phases:
 
       - Timing/order notes'
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T14:54:48.301726+00:00'
   - id: cold_start_compat.transient_503_and_retry
     name: Verify transient 503 and retry under cold start
     status: pending
