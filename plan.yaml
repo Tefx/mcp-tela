@@ -49024,6 +49024,30 @@ phases:
 
       - Timing/order notes'
     agent: integration-verifier
+  - id: cold_start_compat.transient_503_and_retry
+    name: Verify transient 503 and retry under cold start
+    status: pending
+    description: 'Verification step.
+
+
+      Prove that early `/mcp` admission attempts see the transient 503 contract and
+      that bridge retry behavior is driven by that signal rather than a guessed timeout.'
+    verification: '- Early forward attempts do not fail the host due to premature
+      MCP send
+
+      - Retry behavior is traceable to the transient 503 contract
+
+      - Eventual success follows readiness convergence'
+    evidence_template: '## Cold-start transient 503 and retry proof
+
+      - Exact command/test
+
+      - Early non-ready response
+
+      - Retry sequence
+
+      - Final success output'
+    agent: integration-verifier
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
