@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from email.message import Message
 import io
 import json
+from urllib import error as urllib_error
 
 import pytest
 
 from tela.cli import main
 from tela.commands import connect_cmd
 from tela.commands.connect_transport import inject_bridge_connection_id
-from tela.core.models import LockfileData
+from tela.core.models import LockfileData, StatusResponse
 from tela.shell.config_loader import Result
 
 
@@ -236,7 +238,31 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         _ = stdout_buffer
         return Result(value=None)
 
+    def _fake_get_gateway_status(
+        *, status_url: str, bearer_token: str
+    ) -> Result[StatusResponse, str]:
+        _ = status_url, bearer_token
+        return Result(
+            value=StatusResponse(
+                uptime_seconds=1.0,
+                server_count=0,
+                connected_servers=[],
+                active_connections=1,
+                profile_count=1,
+                total_tool_calls=0,
+                state="ready",
+                discovery_source="lockfile",
+                config_path="/tmp/tela.yaml",
+                requested_config_path="/tmp/tela.yaml",
+                config_mismatch=False,
+                degraded_reason=None,
+                connections=[],
+                audit_entries=[],
+            )
+        )
+
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
 
     result = connect_cmd._run_bridge(
@@ -246,6 +272,177 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
     )
     assert result.is_ok
     assert endpoints == [
+        "http://127.0.0.1:8123/connect",
+        "http://127.0.0.1:8123/disconnect",
+    ]
+
+
+def test_run_bridge_waits_for_status_ready_before_forwarding(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bridge must poll ``GET /status`` before forwarding MCP traffic."""
+
+    endpoint_calls: list[str] = []
+    readiness_snapshots: list[dict[str, object]] = []
+    status_sequence = [
+        StatusResponse(
+            uptime_seconds=1.0,
+            server_count=1,
+            connected_servers=[],
+            active_connections=1,
+            profile_count=1,
+            total_tool_calls=0,
+            state="warming",
+            discovery_source="lockfile",
+            config_path="/tmp/tela.yaml",
+            requested_config_path="/tmp/tela.yaml",
+            config_mismatch=False,
+            degraded_reason=None,
+            connections=[],
+            audit_entries=[],
+        ),
+        StatusResponse(
+            uptime_seconds=2.0,
+            server_count=1,
+            connected_servers=["fs"],
+            active_connections=1,
+            profile_count=1,
+            total_tool_calls=0,
+            state="ready",
+            discovery_source="lockfile",
+            config_path="/tmp/tela.yaml",
+            requested_config_path="/tmp/tela.yaml",
+            config_mismatch=False,
+            degraded_reason=None,
+            connections=[],
+            audit_entries=[],
+        ),
+    ]
+    forwarded: list[bool] = []
+
+    def _fake_post_json(
+        *, url: str, bearer_token: str, payload: dict[str, str]
+    ) -> Result[None, str]:
+        _ = bearer_token, payload
+        endpoint_calls.append(url)
+        return Result(value=None)
+
+    def _fake_get_gateway_status(
+        *, status_url: str, bearer_token: str
+    ) -> Result[StatusResponse, str]:
+        _ = status_url, bearer_token
+        next_status = status_sequence.pop(0)
+        readiness_snapshots.append(next_status.model_dump())
+        return Result(value=next_status)
+
+    def _fake_forward_stdio_http(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        bridge_connection_id: str,
+        should_stop: Callable[[], bool],
+        stdin_buffer,
+        stdout_buffer,
+    ) -> Result[None, str]:
+        _ = mcp_url, bearer_token, bridge_connection_id, should_stop
+        _ = stdin_buffer, stdout_buffer
+        forwarded.append(True)
+        return Result(value=None)
+
+    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
+    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+
+    result = connect_cmd._run_bridge(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="token",
+    )
+
+    assert result.is_ok
+    assert forwarded == [True]
+    assert [snapshot["state"] for snapshot in readiness_snapshots] == [
+        "warming",
+        "ready",
+    ]
+    assert endpoint_calls == [
+        "http://127.0.0.1:8123/connect",
+        "http://127.0.0.1:8123/disconnect",
+    ]
+
+
+def test_run_bridge_exits_boundedly_on_persistent_degraded_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bridge must exit cleanly on persistent degraded readiness authority."""
+
+    endpoint_calls: list[str] = []
+    readiness_snapshots: list[dict[str, object]] = []
+    forwarded: list[bool] = []
+
+    degraded_status = StatusResponse(
+        uptime_seconds=1.0,
+        server_count=1,
+        connected_servers=[],
+        active_connections=1,
+        profile_count=1,
+        total_tool_calls=0,
+        state="degraded",
+        discovery_source="lockfile",
+        config_path="/tmp/tela.yaml",
+        requested_config_path="/tmp/tela.yaml",
+        config_mismatch=False,
+        degraded_reason="DOWNSTREAM_CONNECT_FAILED",
+        connections=[],
+        audit_entries=[],
+    )
+
+    def _fake_post_json(
+        *, url: str, bearer_token: str, payload: dict[str, str]
+    ) -> Result[None, str]:
+        _ = bearer_token, payload
+        endpoint_calls.append(url)
+        return Result(value=None)
+
+    def _fake_get_gateway_status(
+        *, status_url: str, bearer_token: str
+    ) -> Result[StatusResponse, str]:
+        _ = status_url, bearer_token
+        readiness_snapshots.append(degraded_status.model_dump())
+        return Result(value=degraded_status)
+
+    def _fake_forward_stdio_http(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        bridge_connection_id: str,
+        should_stop: Callable[[], bool],
+        stdin_buffer,
+        stdout_buffer,
+    ) -> Result[None, str]:
+        _ = mcp_url, bearer_token, bridge_connection_id, should_stop
+        _ = stdin_buffer, stdout_buffer
+        forwarded.append(True)
+        return Result(value=None)
+
+    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
+    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+
+    result = connect_cmd._run_bridge(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="token",
+    )
+
+    assert result.is_err
+    assert result.error is not None
+    assert "BRIDGE_NOT_READY" in result.error
+    assert "degraded_reason=DOWNSTREAM_CONNECT_FAILED" in result.error
+    assert forwarded == []
+    assert [snapshot["state"] for snapshot in readiness_snapshots] == ["degraded"]
+    assert endpoint_calls == [
         "http://127.0.0.1:8123/connect",
         "http://127.0.0.1:8123/disconnect",
     ]
@@ -636,6 +833,99 @@ def test_forward_stdio_http_returns_error_on_write_failure(
     assert result.is_err
     assert result.error is not None
     assert "BRIDGE_WRITE_FAILED" in result.error
+
+
+def test_post_mcp_message_retries_only_for_transient_contract_signal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """503 retry must require gateway transient contract fields."""
+
+    class _FakeResponse:
+        def __init__(self, body: bytes) -> None:
+            self._body = body
+            self.headers = {
+                "Content-Type": "application/json",
+                "mcp-session-id": "s-1",
+            }
+
+        def __enter__(self) -> "_FakeResponse":
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> None:  # type: ignore[no-untyped-def]
+            _ = exc_type, exc, tb
+
+        def read(self) -> bytes:
+            return self._body
+
+    transient_payload = {
+        "error": "ADMISSION_REJECTED_WARMING: gateway not ready for MCP admission",
+        "code": "ADMISSION_REJECTED_WARMING",
+        "transient": True,
+        "retry": {
+            "authorized": True,
+            "basis": "gateway_signal",
+            "expectation": "bounded",
+        },
+        "gateway_state": "warming",
+    }
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise urllib_error.HTTPError(
+                "http://127.0.0.1:8123/mcp",
+                503,
+                "Service Unavailable",
+                Message(),
+                io.BytesIO(json.dumps(transient_payload).encode("utf-8")),
+            )
+        return _FakeResponse(b'{"jsonrpc":"2.0","id":1,"result":{}}')
+
+    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+
+    result = connect_cmd._post_mcp_message(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        payload=b'{"jsonrpc":"2.0","id":1,"method":"initialize"}',
+    )
+
+    assert result.is_ok
+    assert calls["count"] == 2
+
+
+def test_post_mcp_message_does_not_retry_on_plain_503_without_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Plain 503 without transient contract must not authorize retry."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.HTTPError(
+            "http://127.0.0.1:8123/mcp",
+            503,
+            "Service Unavailable",
+            Message(),
+            io.BytesIO(b'{"error":"unstructured 503"}'),
+        )
+
+    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
+
+    result = connect_cmd._post_mcp_message(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        payload=b'{"jsonrpc":"2.0","id":1,"method":"initialize"}',
+    )
+
+    assert result.is_err
+    assert result.error == "MCP_FORWARD_FAILED: http 503"
+    assert calls["count"] == 1
 
 
 # =============================================================================

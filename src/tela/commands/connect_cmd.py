@@ -34,7 +34,7 @@ from urllib import error as urllib_error
 from urllib import request as urllib_request
 import uuid
 
-from tela.core.models import LockfileData
+from tela.core.models import LockfileData, StatusResponse
 from tela.commands.connect_transport import (
     extract_response_messages,
     inject_bridge_connection_id,
@@ -53,6 +53,7 @@ HTTP_TIMEOUT_SECONDS = 10.0
 HTTP_TRANSIENT_RETRIES = 3
 HTTP_TRANSIENT_BACKOFF_SECONDS = 0.5
 TEARDOWN_RESUME_TIMEOUT_SECONDS = 1.0
+BRIDGE_READINESS_MAX_POLLS = HTTP_TRANSIENT_RETRIES + 1
 
 
 def _emit_bridge_diagnostic(message: str, connection_id: str) -> None:
@@ -365,19 +366,30 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
     bridge_error: str | None = None
     try:
         try:
-            forward_result = _forward_stdio_http(
-                mcp_url=f"{base_url}/mcp",
+            readiness_result = _wait_for_gateway_readiness(
+                status_url=f"{base_url}/status",
                 bearer_token=bearer_token,
-                bridge_connection_id=connection_id,
-                should_stop=stop_requested.is_set,
-                stdin_buffer=sys.stdin.buffer,
-                stdout_buffer=sys.stdout.buffer,
+                max_polls=BRIDGE_READINESS_MAX_POLLS,
             )
-            if forward_result.is_err:
-                bridge_error = forward_result.error
+            if readiness_result.is_err:
+                bridge_error = readiness_result.error
                 _emit_bridge_diagnostic(
-                    f"forwarding stopped: {bridge_error}", connection_id
+                    f"readiness wait stopped: {bridge_error}", connection_id
                 )
+            else:
+                forward_result = _forward_stdio_http(
+                    mcp_url=f"{base_url}/mcp",
+                    bearer_token=bearer_token,
+                    bridge_connection_id=connection_id,
+                    should_stop=stop_requested.is_set,
+                    stdin_buffer=sys.stdin.buffer,
+                    stdout_buffer=sys.stdout.buffer,
+                )
+                if forward_result.is_err:
+                    bridge_error = forward_result.error
+                    _emit_bridge_diagnostic(
+                        f"forwarding stopped: {bridge_error}", connection_id
+                    )
         except KeyboardInterrupt:
             bridge_error = "INTERRUPT: bridge attach loop interrupted"
             _emit_bridge_diagnostic("attach loop interrupted", connection_id)
@@ -665,6 +677,13 @@ def _post_mcp_message(
                 resp_session_id = response.headers.get("mcp-session-id")
                 return Result(value=(content_type, response.read(), resp_session_id))
         except urllib_error.HTTPError as exc:
+            if (
+                exc.code == 503
+                and attempt < HTTP_TRANSIENT_RETRIES
+                and _is_mcp_transient_warming_error(exc).value
+            ):
+                time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+                continue
             return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
         except urllib_error.URLError as exc:
             last_error = f"MCP_FORWARD_FAILED: {exc.reason}"
@@ -752,3 +771,113 @@ def _post_json_once(
         return Result(error=f"HTTP_{exc.code}: {url}")
     except urllib_error.URLError as exc:
         return Result(error=f"HTTP_CONNECT_ERROR: {exc.reason}")
+
+
+def _wait_for_gateway_readiness(
+    *, status_url: str, bearer_token: str, max_polls: int
+) -> Result[None, str]:
+    """Poll ``GET /status`` until ready or bounded non-ready exit.
+
+    ``tela connect`` consumes gateway-owned readiness truth from ``GET /status``
+    and must not infer readiness from local lifecycle labels or fixed-delay-only
+    assumptions.
+    """
+
+    for poll_index in range(max_polls):
+        status_result = _get_gateway_status(
+            status_url=status_url,
+            bearer_token=bearer_token,
+        )
+        if status_result.is_err:
+            return Result(error=f"BRIDGE_READINESS_QUERY_FAILED: {status_result.error}")
+        assert status_result.value is not None
+        status = status_result.value
+
+        if status.state == "ready":
+            return Result(value=None)
+
+        if status.state == "degraded":
+            degraded_reason = status.degraded_reason or "unknown"
+            return Result(
+                error=(
+                    "BRIDGE_NOT_READY: state=degraded "
+                    f"degraded_reason={degraded_reason}"
+                )
+            )
+
+        if poll_index == max_polls - 1:
+            state = status.state or "unknown"
+            return Result(
+                error=(
+                    "BRIDGE_NOT_READY: bounded readiness wait exhausted "
+                    f"state={state} polls={max_polls}"
+                )
+            )
+
+        time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (poll_index + 1))
+
+    return Result(error="BRIDGE_NOT_READY: bounded readiness wait exhausted")
+
+
+def _get_gateway_status(
+    *, status_url: str, bearer_token: str
+) -> Result[StatusResponse, str]:
+    """Fetch and validate ``GET /status`` gateway readiness payload."""
+
+    request = urllib_request.Request(
+        status_url,
+        method="GET",
+        headers={
+            "Authorization": f"Bearer {bearer_token}",
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
+            decoded = response.read().decode("utf-8")
+    except urllib_error.HTTPError as exc:
+        return Result(error=f"HTTP_{exc.code}: {status_url}")
+    except urllib_error.URLError as exc:
+        return Result(error=f"HTTP_CONNECT_ERROR: {exc.reason}")
+
+    try:
+        parsed = json.loads(decoded)
+    except json.JSONDecodeError as exc:
+        return Result(error=f"INVALID_STATUS_PAYLOAD: {exc}")
+
+    if not isinstance(parsed, dict):
+        return Result(error="INVALID_STATUS_PAYLOAD: expected object")
+
+    try:
+        return Result(value=StatusResponse.model_validate(parsed))
+    except Exception as exc:
+        return Result(error=f"INVALID_STATUS_PAYLOAD: {exc}")
+
+
+def _is_mcp_transient_warming_error(exc: urllib_error.HTTPError) -> Result[bool, str]:
+    """Return True when a 503 matches the transient MCP warming contract."""
+
+    if exc.code != 503:
+        return Result(value=False)
+
+    try:
+        payload = json.loads(exc.read().decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return Result(value=False)
+
+    if not isinstance(payload, dict):
+        return Result(value=False)
+
+    retry = payload.get("retry")
+    if not isinstance(retry, dict):
+        return Result(value=False)
+
+    is_contract_match = (
+        payload.get("code") == "ADMISSION_REJECTED_WARMING"
+        and payload.get("transient") is True
+        and retry.get("authorized") is True
+        and retry.get("basis") == "gateway_signal"
+        and retry.get("expectation") == "bounded"
+        and payload.get("gateway_state") == "warming"
+    )
+    return Result(value=is_contract_match)
