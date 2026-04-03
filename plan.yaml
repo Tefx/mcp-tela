@@ -48689,13 +48689,13 @@ phases:
       - Surface contract: docs/CONFIRMED-SURFACE-CONTRACT.md'
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
-  status: pending
+  status: in_progress
   depends_on:
   - meta.full_b_contract
   steps:
   - id: mcp_readiness_gate.contract
     name: Define /mcp readiness gate contract
-    status: pending
+    status: claimed
     description: 'Contract step.
 
 
@@ -48736,6 +48736,8 @@ phases:
 
       - Contract preserves gateway-only readiness authority'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-03T10:21:58.602950+00:00'
   - id: mcp_readiness_gate.tests_red
     name: Add expected-red /mcp readiness gate tests
     status: pending
