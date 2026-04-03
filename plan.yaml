@@ -50834,7 +50834,7 @@ phases:
     claimed_at: '2026-04-03T15:28:33.699028+00:00'
   - id: deep_review.full_b.black_box_verification
     name: Run black-box Full-B readiness verification
-    status: pending
+    status: claimed
     description: 'Using only the public CLI/HTTP contract, verify the Full-B readiness
       behavior black-box.
 
@@ -50860,6 +50860,8 @@ phases:
 
       - Negative-path behavior'
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-04-03T15:28:57.762804+00:00'
   - id: deep_review.full_b.gate
     name: Gate Full-B deep review
     status: pending
