@@ -48727,6 +48727,44 @@ phases:
   status: locked
   depends_on:
   - mcp_readiness_gate
+  steps:
+  - id: connect_bridge_readiness.status_authority_contract
+    name: Freeze bridge status-authority-only contract
+    status: pending
+    description: 'Contract step.
+
+
+      step_type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs:
+
+      - signatures
+
+      - interfaces
+
+      - docstrings
+
+      - stubs
+
+
+      Pin the bridge contract so `tela connect` is only a consumer of gateway readiness.
+
+
+      Required semantics:
+
+      - `tela connect` waits off `GET /status`, not fixed sleeps
+
+      - bridge does not create or cache readiness truth beyond request-scoped consumption
+
+      - retries occur only when gateway signals the transient non-ready condition
+
+      - persistent degraded or non-ready states exit cleanly and boundedly'
+    verification: '- Bridge role is consumer-only
+
+      - Retry permission is sourced from gateway signal, not local lifecycle guesses'
+    agent: software-architect
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
