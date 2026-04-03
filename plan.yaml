@@ -49487,7 +49487,7 @@ phases:
       \  outcome: clean"
   - id: connect_bridge_readiness.tests_red
     name: Add expected-red connect readiness consumer tests
-    status: pending
+    status: claimed
     description: 'Test step.
 
 
@@ -49515,6 +49515,8 @@ phases:
 
       - Exposed gaps are recorded for bridge implementation work'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-03T13:36:24.692368+00:00'
   - id: connect_bridge_readiness.impl
     name: Implement bridge readiness consumption
     status: pending
