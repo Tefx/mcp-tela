@@ -49099,7 +49099,7 @@ phases:
     agent: gate-reviewer
   - id: mcp_readiness_gate.fix_gate_contract_drift
     name: Fix batched /connect contract and doc drift from gate findings
-    status: claimed
+    status: done
     description: 'Batched remediation for the failed `mcp_readiness_gate.gate` review.
 
 
@@ -49196,6 +49196,38 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-03T12:35:35.760898+00:00'
+    done_at: '2026-04-03T12:38:30.144769+00:00'
+    evidence: "## Batched gate remediation evidence\n\nUpdated location(s):\n- src/tela/shell/http_routes.py\n\
+      \nCommit:\n- Branch: vectl/step-mcp_readiness_gate.fix_gate_contract_drift\n\
+      - Commit hash: a9b81e7\n- Message: fix(http): remove stale /connect warming\
+      \ contract drift\n\nFiles changed:\n- src/tela/shell/http_routes.py (1 file\
+      \ changed, 9 insertions, 14 deletions)\n\nContract change summary:\n- Removed\
+      \ stale @post allowance for connect warming rejection by deleting:\n  `or _is_admission_warming_error(result)`\
+      \ from `handle_connect` postcondition.\n- Removed obsolete helper `_is_admission_warming_error`\
+      \ from `http_routes.py`.\n\nDocstring change summary:\n- Updated `handle_connect`\
+      \ docstring to stop claiming warming rejection on `/connect`.\n- Added explicit\
+      \ boundary wording:\n  - `/connect` is lifecycle plumbing only\n  - `/mcp` is\
+      \ readiness-gated admission\n  - `GET /status` is readiness authority\n\nAlignment\
+      \ proof (/connect outside readiness gate, /mcp authoritative gating):\n- Source\
+      \ basis:\n  - docs/INTERFACES.md lines 204-213:\n    - `POST /connect` is non-readiness\
+      \ lifecycle plumbing\n    - `POST /mcp` is readiness-gated admission\n    -\
+      \ `GET /status` is sole readiness authority\n  - docs/CONFIRMED-SURFACE-CONTRACT.md\
+      \ lines 42-52:\n    - same admission-boundary freeze\n- Implementation alignment:\n\
+      \  - `handle_connect` contract no longer allows ADMISSION_REJECTED_WARMING path\n\
+      \  - `handle_connect` docstring now explicitly states the non-gating role of\
+      \ `/connect`\n\nVerification commands/outcomes:\n- `git status --short --branch`\
+      \ (workdir: .vectl/worktrees/mcp_readiness_gate.fix_gate_contract_drift)\n \
+      \ - Outcome: clean branch header only (`## vectl/step-mcp_readiness_gate.fix_gate_contract_drift`)\n\
+      - `git diff -- src/tela/shell/http_routes.py`\n  - Outcome: confirms only targeted\
+      \ contract/docstring drift remediations\n- `grep \"_is_admission_warming_error|ADMISSION_REJECTED_WARMING\"\
+      \ src/tela/shell/http_routes.py`\n  - Outcome: no matches found\n- `invar_invar_guard(path=<worktree>,\
+      \ changed=true, strict=false, coverage=false, contracts_only=false)`\n  - Outcome:\
+      \ passed\n  - Summary: errors=0, warnings=1, infos=2\n  - Note: remaining warning\
+      \ is unrelated residual (`dead_assign` local `facts` in handle_connect)\n\n\
+      Residual drift check confirmation:\n- Stale `/connect` warming-admission allowance\
+      \ removed.\n- `/connect` wording aligned with non-readiness-gated lifecycle\
+      \ boundary.\n- `/mcp` remains authoritative readiness-gated admission surface.\n\
+      - No orchestrator state files modified; no vectl CLI commands used."
   - id: mcp_readiness_gate.retest_gate_contract_drift
     name: Retest /connect readiness contract boundary after batched fix
     status: pending
