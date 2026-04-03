@@ -49079,7 +49079,7 @@ phases:
       \ /mcp readiness gate implementation."
   - id: mcp_readiness_gate.gate
     name: Gate /mcp readiness gate phase
-    status: pending
+    status: claimed
     description: 'Gate review: verify `/mcp` readiness gating is complete, bounded,
       and still gateway-authoritative.'
     verification: '- `/mcp` is gated during convergence
@@ -49097,6 +49097,8 @@ phases:
     - mcp_readiness_gate.spec_conformance
     - mcp_readiness_gate.retest_gate_contract_drift
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T12:50:12.575033+00:00'
   - id: mcp_readiness_gate.fix_gate_contract_drift
     name: Fix batched /connect contract and doc drift from gate findings
     status: done
