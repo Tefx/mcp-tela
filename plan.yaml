@@ -49618,7 +49618,7 @@ phases:
       \ (errors=0, warnings=1, infos=3)"
   - id: connect_bridge_readiness.seam_integration_proof
     name: Prove bridge readiness seam integration
-    status: claimed
+    status: done
     description: 'Integration companion: provide seam-level real path evidence for
       the bridge readiness flow from `tela connect` through `/status` to MCP forwarding.'
     verification: '- Real command exercises connect -> status polling -> MCP forward
@@ -49649,6 +49649,65 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-03T14:22:37.753706+00:00'
+    done_at: '2026-04-03T14:38:02.918480+00:00'
+    evidence: "status: verified\n\nevidence:\n  commit_hash: 785485bcbca317124d3bcd465282b573b93a892f\n\
+      \  \n  test_command: |\n    cd .vectl/worktrees/connect_bridge_readiness.seam_integration_proof\n\
+      \    uv run python -m pytest tests/repro/test_connect_runtime_liveness.py -v\n\
+      \  \n  test_results: |\n    ============================= test session starts\
+      \ ==============================\n    platform darwin -- Python 3.12.12, pytest-9.0.2,\
+      \ pluggy-1.6.0\n    collected 6 items\n\n    tests/repro/test_connect_runtime_liveness.py::test_serve_ephemeral_bind_publishes_lockfile\
+      \ PASSED [ 16%]\n    tests/repro/test_connect_runtime_liveness.py::test_connect_discovers_via_lockfile\
+      \ PASSED [ 33%]\n    tests/repro/test_connect_runtime_liveness.py::test_bridge_handles_mcp_initialize_and_tools_list\
+      \ PASSED [ 50%]\n    tests/repro/test_connect_runtime_liveness.py::test_disconnect_decrements_connection_count\
+      \ PASSED [ 66%]\n    tests/repro/test_connect_runtime_liveness.py::test_coldstart_endpoint_discovers_before_convergence\
+      \ PASSED [ 83%]\n    tests/repro/test_connect_runtime_liveness.py::test_concurrent_attach_converges_on_single_leader\
+      \ PASSED [100%]\n\n    ============================= 6 passed in 15.46s ==============================\n\
+      \n  seam_integration_proof_command: |\n    uv run python test_seam_proof.py\n\
+      \    \n  seam_proof_output: |\n    ======================================================================\n\
+      \    SEAM INTEGRATION PROOF: connect -> /status -> /mcp\n    ======================================================================\n\
+      \n    [STEP 1] Starting tela serve...\n    [STEP 2] Waiting for lockfile (proves\
+      \ server /status endpoint binding)...\n      ✓ Lockfile published: 127.0.0.1:58974\n\
+      \      ✓ Token: 3W7ByX2DZaIqTkH_...\n\n    [STEP 3] Querying GET /status directly...\n\
+      \      ✓ /status response: state=ready\n      ✓ /status active_connections=0\n\
+      \n    [STEP 4] Starting tela connect (proves connect path chains to /status\
+      \ readiness check)...\n      ✓ connect process alive (passed /status readiness\
+      \ check)\n\n    [STEP 5] Verifying /status shows bridge connection...\n    \
+      \  ✓ /status reports active_connections=1 (was 0 before connect)\n\n    [STEP\
+      \ 6] Sending MCP initialize through bridge (proves /mcp forwarding)...\n   \
+      \   ✓ Bridge forwarded MCP request through POST /mcp\n      ✓ Server returned\
+      \ capabilities: ['experimental', 'prompts', 'resources', 'tools']...\n\n   \
+      \ [STEP 7] Verifying disconnect (POST /disconnect)...\n      ✓ /status reports\
+      \ active_connections=0 (decremented from 1)\n\n    ======================================================================\n\
+      \    SEAM INTEGRATION PROOF COMPLETE\n    Full chain verified: connect -> POST\
+      \ /connect -> GET /status (readiness) -> POST /mcp (forwarding)\n    ======================================================================\n\
+      \n  implementation_verification:\n    bridge_readiness_functions:\n      - function:\
+      \ _wait_for_gateway_readiness (lines 776-819)\n        implementation: Polls\
+      \ GET /status until ready, bounded by max_polls\n        location: src/tela/commands/connect_cmd.py\n\
+      \      - function: _get_gateway_status (lines 822-854)\n        implementation:\
+      \ HTTP GET to /status endpoint with bearer auth\n        location: src/tela/commands/connect_cmd.py\n\
+      \      - invocation: Line 369 in _run_bridge\n        flow: connect_command\
+      \ -> _run_bridge -> _wait_for_gateway_readiness -> _get_gateway_status\n\n \
+      \ contract_freeze_tests: |\n    All contract freeze tests passed:\n    - test_interfaces_doc_freezes_status_authority_waiting_and_exit_rules\n\
+      \    - test_surface_contract_freezes_consumer_only_bridge_readiness_behavior\n\
+      \    - test_adr_records_rationale_for_status_authority_contract\n    - test_agent_and_readme_surfaces_repeat_operator_contract\n\
+      \n  verification_outcome: |\n    SEAM-LEVEL VERIFICATION COMPLETE\n    \n  \
+      \  The bridge readiness seam integration has been proven through:\n    \n  \
+      \  1. CONTRACT FREEZE: Documentation and contract tests verify that consumer-only\n\
+      \       readiness contract is frozen (must poll GET /status, no local state\
+      \ inference).\n    \n    2. IMPLEMENTATION: connect_cmd.py implements _wait_for_gateway_readiness()\
+      \ that\n       polls GET /status with bounded retries, rejecting local inference.\n\
+      \    \n    3. INTEGRATION TEST: test_connect_runtime_liveness.py exercises the\
+      \ full chain:\n       - connect discovers via lockfile\n       - connect registers\
+      \ via POST /connect\n       - connect polls GET /status for readiness\n    \
+      \   - connect forwards MCP through POST /mcp\n       - disconnect decrements\
+      \ via POST /disconnect\n    \n    4. SEAM PROOF: End-to-end execution traces\
+      \ show actual HTTP requests flowing\n       through the documented path:\n \
+      \      - Step 3: GET /status returns {\"state\":\"ready\"} \n       - Step 4:\
+      \ connect survives readiness wait\n       - Step 5: active_connections increments\
+      \ (POST /connect worked)\n       - Step 6: MCP initialize returns capabilities\
+      \ (POST /mcp forwarding worked)\n       - Step 7: active_connections decrements\
+      \ (POST /disconnect worked)\n    \n    NO MOCKS. Real subprocess startup, real\
+      \ HTTP requests, real stdio-MCP framing.\n    The seam is proven."
   - id: connect_bridge_readiness.status_polling_proof
     name: Prove status-driven polling behavior
     status: done
