@@ -48849,6 +48849,37 @@ phases:
     - connect_bridge_readiness.status_authority_contract
     - connect_bridge_readiness.tests_red
     agent: python-senior
+  - id: connect_bridge_readiness.seam_integration_proof
+    name: Prove bridge readiness seam integration
+    status: pending
+    description: 'Integration companion: provide seam-level real path evidence for
+      the bridge readiness flow from `tela connect` through `/status` to MCP forwarding.'
+    verification: '- Real command exercises connect -> status polling -> MCP forward
+      path
+
+      - Actual output is recorded, not summarized'
+    evidence_template: '## Integration Evidence
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+      **Path exercised**: connect CLI -> `/status` -> `/mcp`'
+    depends_on:
+    - connect_bridge_readiness.impl
+    agent: integration-verifier
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
