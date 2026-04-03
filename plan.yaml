@@ -49433,13 +49433,13 @@ phases:
       - No edits to .git/vectl/claims.json\n- No orchestrator state modifications"
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
-  status: pending
+  status: in_progress
   depends_on:
   - mcp_readiness_gate
   steps:
   - id: connect_bridge_readiness.status_authority_contract
     name: Freeze bridge status-authority-only contract
-    status: pending
+    status: claimed
     description: 'Contract step.
 
 
@@ -49474,6 +49474,8 @@ phases:
 
       - Retry permission is sourced from gateway signal, not local lifecycle guesses'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-03T13:31:35.560167+00:00'
   - id: connect_bridge_readiness.tests_red
     name: Add expected-red connect readiness consumer tests
     status: pending
