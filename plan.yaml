@@ -49673,7 +49673,7 @@ phases:
     agent: blind-tester
   - id: connect_bridge_readiness.bounded_retry_negative_proof
     name: Prove bounded retry negative path
-    status: pending
+    status: claimed
     description: 'Verification step.
 
 
@@ -49700,6 +49700,8 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-03T14:22:28.502223+00:00'
   - id: connect_bridge_readiness.spec_conformance
     name: Verify bridge readiness spec conformance
     status: pending
