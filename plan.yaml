@@ -48378,7 +48378,7 @@ phases:
     agent: software-architect
   - id: meta.full_b_contract.freeze_admission_boundary
     name: Freeze admission boundary
-    status: pending
+    status: claimed
     description: 'Planning contract freeze.
 
 
@@ -48399,6 +48399,8 @@ phases:
 
       - `/connect` remains a non-readiness registration path in downstream plan text'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-03T09:59:56.305082+00:00'
   - id: meta.full_b_contract.freeze_transient_503_contract
     name: Freeze transient 503 contract
     status: pending
