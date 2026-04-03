@@ -48334,3 +48334,8 @@ phases:
   status: locked
   depends_on:
   - mcp_readiness_gate
+- id: cold_start_compat
+  name: Cold-Start Compatibility and Readiness Convergence
+  status: locked
+  depends_on:
+  - connect_bridge_readiness
