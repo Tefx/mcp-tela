@@ -49130,6 +49130,34 @@ phases:
 
       - No `shutting_down` scope creep was introduced'
     agent: software-architect
+  - id: deep_review.full_b.black_box_verification
+    name: Run black-box Full-B readiness verification
+    status: pending
+    description: 'Using only the public CLI/HTTP contract, verify the Full-B readiness
+      behavior black-box.
+
+
+      Required checks:
+
+      - `/status` is authoritative for readiness
+
+      - `/mcp` is transiently gated while non-ready
+
+      - `tela connect` waits and forwards only after readiness
+
+      - persistent degraded/non-ready exits boundedly'
+    verification: '- Black-box evidence covers ready and non-ready paths without implementation-only
+      assumptions'
+    evidence_template: '## Black-box verification
+
+      - Public commands/endpoints used
+
+      - Observed outputs
+
+      - Ready vs non-ready behavior
+
+      - Negative-path behavior'
+    agent: blind-tester
 - id: doc_sync.full_b
   name: Full-B Documentation Sync
   status: locked
