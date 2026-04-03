@@ -50160,7 +50160,7 @@ phases:
   steps:
   - id: cold_start_compat.opencode_cold_start
     name: Verify OpenCode cold-start behavior
-    status: pending
+    status: claimed
     description: 'Verification step for the actual cold-start host path.
 
 
@@ -50180,6 +50180,8 @@ phases:
 
       - Final success evidence'
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-04-03T14:59:56.112435+00:00'
   - id: cold_start_compat.discovery_before_readiness_proof
     name: Prove discovery can precede readiness
     status: claimed
