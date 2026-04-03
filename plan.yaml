@@ -48751,7 +48751,7 @@ phases:
       - `contracts/mcp_admission_transient_503.schema.json`"
   - id: mcp_readiness_gate.tests_red
     name: Add expected-red /mcp readiness gate tests
-    status: pending
+    status: claimed
     description: 'Test step.
 
 
@@ -48787,6 +48787,8 @@ phases:
 
       - Exposed gaps are recorded for the implementation step'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-03T10:26:02.067584+00:00'
   - id: mcp_readiness_gate.impl
     name: Implement /mcp readiness admission gate
     status: pending
