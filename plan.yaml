@@ -48856,7 +48856,7 @@ phases:
       - contracts/mcp_admission_transient_503.schema.json'
   - id: mcp_readiness_gate.impl
     name: Implement /mcp readiness admission gate
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
 
@@ -48915,6 +48915,36 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-03T10:46:30.019538+00:00'
+    done_at: '2026-04-03T10:49:51.790688+00:00'
+    evidence: "Commit:\n- a0d8f08 fix(shell): gate /mcp admission with transient warming\
+      \ 503\n\nSource-cited implementation decisions:\n- Added readiness gate only\
+      \ on POST /mcp in ASGI auth middleware (not /connect), per:\n  - docs/INTERFACES.md\
+      \ §7.2 (lines 204-213, 215-263)\n  - docs/CONFIRMED-SURFACE-CONTRACT.md §1.1/1.2\
+      \ (lines 48-67)\n- Returned machine-readable transient 503 payload fields per:\n\
+      \  - contracts/mcp_admission_transient_503.schema.json (required/code/transient/retry/gateway_state)\n\
+      \  - docs/INTERFACES.md §7.2.1 normative response (lines 233-244)\n\nFiles modified:\n\
+      - src/tela/shell/http_auth.py\n\n## MCP readiness gate evidence\n\n1) HTTP command/test\
+      \ exercising not-ready /mcp path\nCommand:\n- uv run python - <<'PY' ... (warming\
+      \ setup + TestClient POST /mcp)\nOutput:\n- WARMING /mcp status: 503\n\n2) Actual\
+      \ 503 payload showing machine-readable transient marker\nFrom same command output:\n\
+      - WARMING /mcp body: {'error': 'ADMISSION_REJECTED_WARMING: gateway not ready\
+      \ for MCP admission', 'code': 'ADMISSION_REJECTED_WARMING', 'transient': True,\
+      \ 'retry': {'authorized': True, 'basis': 'gateway_signal', 'expectation': 'bounded'},\
+      \ 'gateway_state': 'warming'}\n\n3) HTTP command/test exercising ready /mcp\
+      \ path\nCommand:\n- uv run python - <<'PY' ... (ready setup + TestClient POST\
+      \ /mcp)\nOutput:\n- READY /mcp status: 421\n- READY /mcp body snippet: Invalid\
+      \ Host header\nInterpretation:\n- Not 503, so warming readiness gate is not\
+      \ applied when gateway is ready.\n\n4) Proof that /connect still registers lifecycle\
+      \ state without becoming readiness truth\nCommand:\n- uv run python - <<'PY'\
+      \ ... (warming setup + handle_connect)\nOutput:\n- /connect result during warming\
+      \ is_ok: True\n- /connect result during warming payload_or_error: {'connection_id':\
+      \ 'evidence-conn', 'profile_name': 'default', 'status': 'connected'}\nInterpretation:\n\
+      - /connect remains registration plumbing while /mcp is readiness-gated.\n\n\
+      Verification run output:\n- uv run pytest -v tests/shell/test_mcp_readiness_gate.py\n\
+      - Result: 8 passed in 1.54s\n- invar_guard(changed=true): status=passed, errors=0,\
+      \ warnings=0\n\nDeviation records:\n- none\n\nNOT Done:\n- Did not modify contract\
+      \ artifacts, tests, plan/orchestrator files, or any vectl state files.\n- Did\
+      \ not change /connect semantics beyond existing behavior."
   - id: mcp_readiness_gate.bounded_transient_503_proof
     name: Prove bounded transient 503 behavior
     status: pending
