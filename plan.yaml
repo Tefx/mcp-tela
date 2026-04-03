@@ -49651,7 +49651,7 @@ phases:
     claimed_at: '2026-04-03T14:22:37.753706+00:00'
   - id: connect_bridge_readiness.status_polling_proof
     name: Prove status-driven polling behavior
-    status: claimed
+    status: done
     description: 'Verification step.
 
 
@@ -49675,6 +49675,25 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-04-03T14:22:49.835814+00:00'
+    done_at: '2026-04-03T14:34:30.213892+00:00'
+    evidence: "status: completed\n\nevidence:\n  - test_path: tests/repro/test_status_polling_proof.py\n\
+      \  - test_result: 2/2 PASSED\n  - lockfile_before_ready_evidence:\n      - \"\
+      Lockfile appeared at t=0.32s (discovery truth)\"\n      - \"Status endpoint\
+      \ queryable at /status (readiness authority)\"\n      - \"Lockfile ≠ readiness\
+      \ (separate concerns per ADR-005)\"\n  - status_snapshots_evidence:\n      -\
+      \ \"Status at t=0.01s: state=ready, connected=0/0\"\n      - \"Bridge MUST poll\
+      \ /status for readiness (not infer from lockfile)\"\n      - \"Status polling\
+      \ observations: state=ready at t=0.00s\"\n  - bridge_behavior_proven:\n    \
+      \  - \"Discovered gateway via lockfile (discovery truth)\"\n      - \"Polled\
+      \ /status for readiness (readiness authority)\"\n      - \"Connected successfully\
+      \ when status=ready\"\n      - \"No local readiness labels or timing heuristics\
+      \ used\"\n\nverification:\n  - \"test_lockfile_discovery_vs_status_readiness_authority:\
+      \ PASSED\"\n  - \"test_bridge_waits_for_status_ready_not_lockfile_heuristic:\
+      \ PASSED\"\n\ncontract_proof:\n  - per ADR-005: Lockfile = discovery truth only\
+      \ (process identity, endpoint, auth)\n  - per DESIGN.md: GET /status = lifecycle/readiness\
+      \ truth (warming, ready, degraded)\n  - evidence shows bridge polls /status\
+      \ for readiness, never infers from lockfile\n  - no local readiness labels or\
+      \ cached truth are used by the bridge"
   - id: connect_bridge_readiness.bounded_retry_negative_proof
     name: Prove bounded retry negative path
     status: done
