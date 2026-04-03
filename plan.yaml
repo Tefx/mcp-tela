@@ -50486,7 +50486,7 @@ phases:
     agent: gate-reviewer
   - id: cold_start_compat.fix_obsolete_expected_red_tests
     name: Fix obsolete expected-red readiness tests
-    status: pending
+    status: claimed
     description: 'Fix ALL blocker-class obsolete expected-red tests for bridge readiness
       behavior.
 
@@ -50538,6 +50538,8 @@ phases:
     depends_on:
     - cold_start_compat.discovery_before_readiness_proof
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-03T15:15:57.536443+00:00'
   - id: cold_start_compat.retest_obsolete_expected_red_tests
     name: Retest bridge readiness expectations after obsolete expected-red cleanup
     status: pending
