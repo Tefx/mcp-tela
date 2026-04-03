@@ -48327,7 +48327,7 @@ phases:
   steps:
   - id: meta.full_b_contract.resolve_open_questions
     name: Resolve Full-B readiness open questions
-    status: pending
+    status: claimed
     description: 'Planning step.
 
 
@@ -48353,6 +48353,8 @@ phases:
 
       - Any surviving ambiguity is explicitly enumerated rather than guessed'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-03T10:11:36.237662+00:00'
   - id: meta.full_b_contract.freeze_readiness_authority
     name: Freeze readiness authority boundary
     status: done
