@@ -48321,7 +48321,7 @@ phases:
       Feature ready for production use.'
 - id: meta.full_b_contract
   name: Full-B Readiness Contract Freeze
-  status: in_progress
+  status: done
   depends_on:
   - cl.deep_review
   steps:
@@ -48632,7 +48632,7 @@ phases:
       for any `shutting_down` expansion)'
   - id: meta.full_b_contract.gate
     name: Gate Full-B contract freeze
-    status: claimed
+    status: done
     description: 'Gate review: verify the Full-B readiness planning basis is frozen
       before implementation phases begin.'
     verification: '- Readiness authority is frozen at gateway `/status`
@@ -48653,9 +48653,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-03T10:14:35.257043+00:00'
+    done_at: '2026-04-03T10:16:48.554630+00:00'
+    evidence: 'Artifact:
+
+      - Commit: 98597b5 (gate review evidence in worktree)
+
+      - Resolution: evidence/full_b_readiness_open_questions_resolution.md
+
+      - Schema: contracts/mcp_admission_transient_503.schema.json
+
+      - Python contract: src/tela/shell/mcp_admission_contract.py
+
+
+      Verification:
+
+      - Run: All doc cross-checks passed (sole readiness authority: 7 consistent mentions,
+      no conflicts)
+
+      - Run: Schema validation passed (required fields: error, code, transient, retry,
+      gateway_state)
+
+      - Run: Python contract validation passed (TypedDict fields match JSON Schema)
+
+      - Run: Exclusion check passed (no current-slice shutting_down implementation)
+
+
+      Spec link:
+
+      - ADR-005: docs/ADR-005-readiness-authority-boundary.md
+
+      - INTERFACES: docs/INTERFACES.md lines 200-296
+
+      - DESIGN: docs/DESIGN.md lines 76-113
+
+      - Surface contract: docs/CONFIRMED-SURFACE-CONTRACT.md'
 - id: mcp_readiness_gate
   name: MCP Readiness Gate
-  status: locked
+  status: pending
   depends_on:
   - meta.full_b_contract
   steps:
