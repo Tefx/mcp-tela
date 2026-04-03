@@ -50467,7 +50467,7 @@ phases:
       \ exit)"
   - id: cold_start_compat.gate
     name: Gate cold-start compatibility phase
-    status: pending
+    status: claimed
     description: 'Gate review: verify cold-start behavior preserves discovery/readiness
       separation and bounded bridge behavior.'
     verification: '- Lockfile can exist before readiness
@@ -50483,6 +50483,8 @@ phases:
     - cold_start_compat.transient_503_and_retry
     - cold_start_compat.degraded_mode
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-03T15:10:33.528143+00:00'
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
