@@ -63,6 +63,13 @@ Normative freeze for downstream phases:
 - `tela connect` must not cache readiness truth as an authoritative substitute
 - `tela connect` must not invent local lifecycle labels that compete with
   gateway runtime status
+- `tela connect` readiness waiting must consult `GET /status` rather than rely
+  on fixed sleep intervals or bridge-local lifecycle inference
+- retries are authorized only when the gateway emits an explicit transient
+  non-ready contract signal; degraded/non-ready status alone does not grant
+  retry permission
+- if authoritative runtime status remains degraded or otherwise non-ready past
+  the bounded wait policy, `tela connect` must exit cleanly and boundedly
 - `POST /connect` remains registration/lifecycle plumbing only
 - lockfile remains discovery-only and is explicitly not readiness truth
 

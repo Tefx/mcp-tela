@@ -68,6 +68,19 @@ SurfaceContract := {
 - Retry expectation is `bounded`; this contract does not authorize indefinite
   retry and does not add any new public lifecycle label beyond `warming`.
 
+### 1.3 Bridge consumer-only readiness freeze
+
+- `tela connect` waits for readiness by consulting `GET /status`; fixed sleep
+  delays are not an acceptable readiness authority.
+- The bridge remains a consumer of readiness truth only and must not create,
+  cache, or relabel readiness state locally.
+- Retry is allowed only when the gateway emits the transient non-ready contract
+  for `POST /mcp`; other degraded/non-ready observations do not self-authorize
+  retry.
+- If authoritative `GET /status` facts remain degraded or otherwise non-ready
+  through the bounded wait policy, `tela connect` must exit cleanly and
+  boundedly.
+
 ## 2. Tool vs resource rules
 
 ### 2.1 MCP tools

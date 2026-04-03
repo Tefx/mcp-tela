@@ -211,6 +211,9 @@ Current-slice admission boundary:
 - `POST /connect` must not be used as a readiness cache or admission proof for ordinary MCP traffic
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for bridge and operator consumers
 - `tela connect` may query or relay runtime readiness facts but must not create local readiness state, cached readiness truth, or competing lifecycle labels
+- `tela connect` readiness waiting must be driven by `GET /status` observations rather than fixed sleep intervals or bridge-local lifecycle guesses
+- retry is authorized only when the gateway emits the transient non-ready contract defined for `POST /mcp`; bridge consumers must not invent retry permission from other non-ready signals
+- if `GET /status` continues to report degraded or otherwise non-ready state past the bounded wait policy, `tela connect` must exit cleanly and boundedly instead of looping indefinitely
 
 ### 7.2.1 `POST /mcp` transient 503 contract
 
