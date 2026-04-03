@@ -50154,7 +50154,7 @@ phases:
       \ connection id"
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
-  status: pending
+  status: in_progress
   depends_on:
   - connect_bridge_readiness
   steps:
@@ -50227,7 +50227,7 @@ phases:
     agent: integration-verifier
   - id: cold_start_compat.degraded_mode
     name: Verify degraded-mode negative path
-    status: pending
+    status: claimed
     description: 'Verification step.
 
 
@@ -50248,6 +50248,8 @@ phases:
 
       - Bound observed'
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-04-03T14:54:31.203427+00:00'
   - id: cold_start_compat.gate
     name: Gate cold-start compatibility phase
     status: pending
