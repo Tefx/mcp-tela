@@ -49751,7 +49751,7 @@ phases:
       \ 0\n  - cleanup:\n      disconnect_called: true\nerror: null\n```"
   - id: connect_bridge_readiness.spec_conformance
     name: Verify bridge readiness spec conformance
-    status: claimed
+    status: done
     description: Spec conformance verification via adversarial divergence hunting
       for `tela connect` readiness consumption only.
     verification: '- CLI and bridge behavior conforms to gateway-authoritative readiness
@@ -49772,6 +49772,70 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-04-03T14:22:43.036516+00:00'
+    done_at: '2026-04-03T14:30:09.086407+00:00'
+    evidence: 'Commit: N/A (worktree isolation)
+
+      Branch: vectl/step-connect_bridge_readiness.spec_conformance
+
+
+      Phase 1: Requirements register extracted from authoritative spec:
+
+      - ADR-005-readiness-authority-boundary.md
+
+      - CONFIRMED-SURFACE-CONTRACT.md sections 1.1-1.3
+
+
+      Phase 2: Implementation located:
+
+      - Bridge readiness consumer: src/tela/commands/connect_cmd.py:776-819 (_wait_for_gateway_readiness)
+
+      - Retry contract gate: connect_cmd.py:679-883 (_is_mcp_transient_warming_error)
+
+      - Bounded exit: connect_cmd.py:799-815
+
+
+      Phase 3: Verification results:
+
+      - R1-R3 (no ownership/cache/label): CONFORMS. Bridge queries /status once per
+      poll, stores no persistent state, synthesizes no local lifecycle label.
+
+      - R4 (status-driven, not fixed-sleep): CONFORMS. Poll loop queries _get_gateway_status()
+      each iteration; sleep is backoff-only.
+
+      - R5 (retry on gateway contract signal): CONFORMS. _is_mcp_transient_warming_error
+      checks ALL contract fields: code, transient, retry.authorized, retry.basis,
+      retry.expectation, gateway_state.
+
+      - R6 (degraded does NOT authorize retry): CONFORMS. Degraded status causes immediate
+      exit at line 799-806, not retry.
+
+      - R7 (bounded exit): CONFORMS. max_polls exhaustion returns error cleanly at
+      line 808-815.
+
+      - R8 (/connect is plumbing): CONFORMS. POST /connect called once at startup;
+      no readiness check follows.
+
+      - R9 (lockfile is discovery-only): CONFORMS. Lockfile used for host/port/token;
+      readiness determined by /status poll.
+
+
+      Test verification:
+
+      - tests/shell/test_connect_cmd.py::test_run_bridge_waits_for_status_ready_before_forwarding
+      validates status-polling forwarding path.
+
+      - tests/shell/test_connect_cmd.py::test_run_bridge_exits_boundedly_on_persistent_degraded_status
+      validates bounded exit.
+
+      - tests/shell/test_connect_cmd.py::test_post_mcp_message_retries_only_for_transient_contract_signal
+      validates retry gate.
+
+      - tests/shell/test_connect_cmd.py::test_post_mcp_message_does_not_retry_on_plain_503_without_contract
+      validates non-retry on plain 503.
+
+
+      Coverage: 14/14 requirements verified. No divergence found. Implementation aligns
+      with consumer-only contract.'
   - id: connect_bridge_readiness.gate
     name: Gate bridge readiness consumer phase
     status: pending
