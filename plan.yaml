@@ -49096,6 +49096,99 @@ phases:
     - mcp_readiness_gate.bounded_transient_503_proof
     - mcp_readiness_gate.spec_conformance
     agent: gate-reviewer
+  - id: mcp_readiness_gate.fix_gate_contract_drift
+    name: Fix batched /connect contract and doc drift from gate findings
+    status: pending
+    description: 'Batched remediation for the failed `mcp_readiness_gate.gate` review.
+
+
+      step_type: implementation
+
+      provenance: introduced_now
+
+      disposition: blocking-now
+
+      symbolic_testing: false
+
+
+      Fix ALL gate findings in `src/tela/shell/http_routes.py` in one pass; do not
+      split them into sibling micro-fixes.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      - Remove stale `@post` allowance for `_is_admission_warming_error(result)` from
+      `handle_connect`
+
+      - Update the `handle_connect` docstring so it no longer claims `/connect` rejects
+      during warming
+
+      - Align contract/doc text with the current spec and implementation expectation
+      that `/connect` is NOT readiness-gated
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: contract/doc artifacts still encode an older warming-rejection
+      rule after readiness authority moved to `/mcp`
+
+      - Symptom: `handle_connect` postcondition and docstring drift from the current
+      readiness contract and gateway behavior
+
+      - Why this fix is not surface-level: repair the authoritative contract and explanatory
+      text together so the route boundary, spec conformance, and gate criteria agree
+
+
+      ## KNOWN RISKS
+
+      - Contract drift in shell HTTP route surfaces can survive passing behavior tests
+      if docstrings and `@post` branches are not updated together
+
+      - `/connect` must not be silently repurposed into readiness truth while fixing
+      `/mcp`-only admission gating
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any remaining `_is_admission_warming_error(result)` allowance on `handle_connect`
+
+      2. Any docstring language claiming `/connect` rejects during warming
+
+      3. Any residual wording that makes `/connect` a readiness gate instead of `/mcp`
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic/contracts/docs alignment that
+      matches the current `/connect` boundary.
+
+      '
+    verification: '- `src/tela/shell/http_routes.py` no longer allows warming rejection
+      in `handle_connect` `@post`
+
+      - `handle_connect` docstring states `/connect` is not readiness-gated and no
+      longer claims warming rejection
+
+      - Updated contract/doc wording matches current `/mcp` readiness behavior and
+      does not repurpose `/connect` into readiness truth'
+    evidence_template: '## Batched gate remediation evidence
+
+      - Updated location(s): `src/tela/shell/http_routes.py`
+
+      - Contract change summary: <what changed in `@post`>
+
+      - Docstring change summary: <what changed in `handle_connect` docs>
+
+      - Alignment proof: explain why `/connect` remains outside readiness gating while
+      `/mcp` remains gateway-authoritative
+
+      - Residual drift check: confirm no stale warming-rejection wording remains around
+      `handle_connect`'
+    depends_on:
+    - mcp_readiness_gate.gate
+    agent: python-senior
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
