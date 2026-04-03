@@ -49230,7 +49230,7 @@ phases:
       - No orchestrator state files modified; no vectl CLI commands used."
   - id: mcp_readiness_gate.retest_gate_contract_drift
     name: Retest /connect readiness contract boundary after batched fix
-    status: claimed
+    status: done
     description: 'Independent retest after `mcp_readiness_gate.fix_gate_contract_drift`.
 
 
@@ -49296,6 +49296,28 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-03T12:46:28.803188+00:00'
+    done_at: '2026-04-03T12:49:52.746984+00:00'
+    evidence: "## Retest evidence\n\n**Commands executed**:\n```bash\ncd .vectl/worktrees/mcp_readiness_gate.retest_gate_contract_drift\
+      \ && uv run pytest tests/shell/test_mcp_readiness_gate.py tests/shell/test_http_routes.py\
+      \ tests/shell/test_connect_cmd.py -v --tb=short\nuv run pytest tests/shell/test_mcp_readiness_gate.py::TestMcpReadinessGate\
+      \ -v\nuv run pytest tests/shell/test_http_routes.py::TestHandleConnect -v\n\
+      uv run invar guard --all\n```\n\n**Coverage**:\n- `/mcp` readiness gate path\
+      \ (PASS):\n  - test_post_mcp_returns_transient_503_when_warming\n  - test_post_mcp_does_not_return_503_when_ready\n\
+      \  - test_connect_does_not_return_transient_503_when_warming\n  - test_mcp_transient_503_matches_schema\n\
+      - `/connect` boundary path (PASS):\n  - test_handle_connect_rejects_invalid_token\n\
+      \  - test_handle_connect_rejects_when_gateway_not_started\n  - test_handle_connect_is_not_readiness_gated_while_warming\n\
+      \  - test_handle_connect_accepts_when_ready\n  - test_handle_connect_registers_connection\n\
+      \n**Results**:\n- Green tests: 62 passed, 0 failed\n- File-level outcomes:\n\
+      \  - tests/shell/test_connect_cmd.py: 28 passed\n  - tests/shell/test_mcp_readiness_gate.py:\
+      \ 8 passed\n  - tests/shell/test_http_routes.py: 26 passed\n- `invar guard --all`:\
+      \ contracts passed; non-zero due pre-existing escape hatch budget exceeded (non-blocking\
+      \ for this retest)\n\n**Drift status for `handle_connect`**: resolved\n- Previous\
+      \ stale expectation removed.\n- Current assertion confirms `/connect` is not\
+      \ readiness-gated during warming.\n- Implementation verification:\n  - `src/tela/shell/http_routes.py::handle_connect`\
+      \ has zero warming-rejection checks and postconditions exclude ADMISSION_REJECTED_WARMING\n\
+      \  - readiness gate remains in `src/tela/shell/http_auth.py` lines 103-111 for\
+      \ POST /mcp when lifecycle state is warming\n\nCommit: `f4d8534` (retest evidence\
+      \ commit)"
   - id: mcp_readiness_gate.fix_stale_connect_warming_test
     name: Update stale /connect warming tests to current contract
     status: done
