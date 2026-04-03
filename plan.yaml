@@ -48319,3 +48319,8 @@ phases:
       counts stay accurate.
 
       Feature ready for production use.'
+- id: meta.full_b_contract
+  name: Full-B Readiness Contract Freeze
+  status: pending
+  depends_on:
+  - cl.deep_review
