@@ -48880,6 +48880,30 @@ phases:
     depends_on:
     - connect_bridge_readiness.impl
     agent: integration-verifier
+  - id: connect_bridge_readiness.status_polling_proof
+    name: Prove status-driven polling behavior
+    status: pending
+    description: 'Verification step.
+
+
+      Independently prove that bridge readiness decisions come from gateway `/status`
+      rather than discovery artifacts or local timing heuristics.'
+    verification: '- Evidence shows lockfile may exist before ready while bridge still
+      waits on `/status`
+
+      - Evidence shows no local readiness labels or cached readiness truth are required'
+    evidence_template: '## Status polling proof
+
+      - Observed lockfile/discovery state
+
+      - Observed `/status` non-ready state
+
+      - Bridge behavior before ready
+
+      - Bridge behavior after ready'
+    depends_on:
+    - connect_bridge_readiness.impl
+    agent: blind-tester
 - id: cold_start_compat
   name: Cold-Start Compatibility and Readiness Convergence
   status: locked
