@@ -49099,7 +49099,7 @@ phases:
     agent: gate-reviewer
   - id: mcp_readiness_gate.fix_gate_contract_drift
     name: Fix batched /connect contract and doc drift from gate findings
-    status: pending
+    status: claimed
     description: 'Batched remediation for the failed `mcp_readiness_gate.gate` review.
 
 
@@ -49194,6 +49194,8 @@ phases:
     - mcp_readiness_gate.bounded_transient_503_proof
     - mcp_readiness_gate.spec_conformance
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-03T12:35:35.760898+00:00'
   - id: mcp_readiness_gate.retest_gate_contract_drift
     name: Retest /connect readiness contract boundary after batched fix
     status: pending
