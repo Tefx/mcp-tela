@@ -49037,7 +49037,7 @@ phases:
       ```\n\nAll tests pass. Implementation commits include verification commit `418f55f`."
   - id: mcp_readiness_gate.spec_conformance
     name: Verify /mcp readiness spec conformance
-    status: pending
+    status: claimed
     description: Spec conformance verification via adversarial divergence hunting
       for the `/mcp` readiness gate and transient 503 contract only.
     verification: '- External `/mcp` readiness behavior matches the frozen contract
@@ -49058,6 +49058,8 @@ phases:
     depends_on:
     - mcp_readiness_gate.impl
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-04-03T12:27:16.746359+00:00'
   - id: mcp_readiness_gate.gate
     name: Gate /mcp readiness gate phase
     status: pending
