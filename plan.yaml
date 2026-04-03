@@ -48531,6 +48531,44 @@ phases:
 
       - Contract preserves gateway-only readiness authority'
     agent: software-architect
+  - id: mcp_readiness_gate.tests_red
+    name: Add expected-red /mcp readiness gate tests
+    status: pending
+    description: 'Test step.
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+
+      Add tests that expose the readiness-gating gap before implementation.
+
+
+      Required coverage:
+
+      - `/mcp` returns transient 503 while gateway is not ready
+
+      - the payload is machine-readable enough for bridge retry decisions
+
+      - `/mcp` stops returning the transient gate once gateway becomes ready
+
+      - `/connect` remains ungated registration/lifecycle plumbing
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one fixture must use the exact documented `/status` and HTTP error
+      shape from the authoritative spec.'
+    verification: '- Tests are limited to test files and helpers
+
+      - Red is expected before implementation because the readiness gate is not yet
+      implemented
+
+      - Exposed gaps are recorded for the implementation step'
+    agent: python-executor
 - id: connect_bridge_readiness
   name: Connect Bridge Readiness Consumer
   status: locked
