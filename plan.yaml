@@ -50483,6 +50483,60 @@ phases:
     - cold_start_compat.transient_503_and_retry
     - cold_start_compat.degraded_mode
     agent: gate-reviewer
+  - id: cold_start_compat.fix_obsolete_expected_red_tests
+    name: Fix obsolete expected-red readiness tests
+    status: pending
+    description: 'Fix ALL blocker-class obsolete expected-red tests for bridge readiness
+      behavior.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      ### B1: tests/shell/test_connect_bridge_readiness_gaps_red.py contradicts implemented
+      bridge-readiness behavior
+
+      Locations: tests/shell/test_connect_bridge_readiness_gaps_red.py
+
+      Remediation: Delete or update obsolete expected-red assertions so the suite
+      matches the current bridge readiness contract and only preserves red expectations
+      for still-unimplemented behavior.
+
+      Grep hint: rg -n "expected-red|readiness_gaps|bridge readiness|connect bridge"
+      tests/shell
+
+      IMPORTANT: Search for sibling assertions in the same module that still encode
+      superseded readiness-gap expectations.
+
+
+      ## Completion Criteria
+
+      - ALL obsolete expected-red cases in tests/shell/test_connect_bridge_readiness_gaps_red.py
+      are removed or updated
+
+      - Remaining red expectations, if any, are explicitly tied to still-missing behavior
+      rather than already-implemented readiness semantics
+
+      - Sibling search completed for contradictory expected-red readiness assertions
+
+      - Test intent is no longer ambiguous for bridge readiness behavior'
+    verification: '- Update/delete obsolete expected-red tests so they reflect current
+      bridge readiness implementation
+
+      - Provide sibling-search evidence for contradictory expected-red assertions
+      in tests/shell
+
+      - Highest-risk failure path covered: no stale expected-red assertion remains
+      for already-implemented readiness behavior'
+    evidence_template: "## Remediation Evidence\n- Files changed: <list>\n- Obsolete\
+      \ expected-red assertions removed/updated: <list>\n- Remaining expected-red\
+      \ cases and why they are still valid: <list or none>\n- Sibling search command/output:\n\
+      ```bash\nrg -n \"expected-red|readiness_gaps|bridge readiness|connect bridge\"\
+      \ tests/shell\n```\n- Root cause vs symptom:\n  - Root cause: stale test expectations\
+      \ after readiness behavior changed\n  - Symptom: blocker B1 at cold_start_compat.gate\n\
+      \  - Why this closes the blocker family: <one line>"
+    depends_on:
+    - cold_start_compat.discovery_before_readiness_proof
+    agent: python-senior
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
