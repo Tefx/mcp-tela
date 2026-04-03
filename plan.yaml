@@ -49538,7 +49538,7 @@ phases:
       \ ce6d1d575b93b4fd98fefdb28b8a4ce4e79b5a02"
   - id: connect_bridge_readiness.impl
     name: Implement bridge readiness consumption
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
 
@@ -49592,6 +49592,30 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-03T13:53:54.083281+00:00'
+    done_at: '2026-04-03T14:01:22.821481+00:00'
+    evidence: "Commit: fe94109\nBranch: vectl/step-connect_bridge_readiness.impl\n\
+      \nFiles modified:\n- src/tela/commands/connect_cmd.py\n- tests/shell/test_connect_cmd.py\n\
+      \nBridge readiness consumer evidence:\n- Exact command/test for bridge wait-then-forward\
+      \ path:\n  Command: uv run pytest -v tests/shell/test_connect_cmd.py::test_run_bridge_waits_for_status_ready_before_forwarding\n\
+      \  Outcome: PASSED (1 passed in 0.25s)\n- Exact command/test for persistent\
+      \ degraded exit path:\n  Command: uv run pytest -v tests/shell/test_connect_cmd.py::test_run_bridge_exits_boundedly_on_persistent_degraded_status\n\
+      \  Outcome: PASSED (1 passed in 0.23s)\n- Actual /status snapshots used in each\
+      \ case:\n  Wait-then-forward snapshots:\n    1) state=warming, connected_servers=[],\
+      \ degraded_reason=null, config_path=/tmp/tela.yaml, active_connections=1\n \
+      \   2) state=ready, connected_servers=[fs], degraded_reason=null, config_path=/tmp/tela.yaml,\
+      \ active_connections=1\n  Persistent degraded exit snapshot:\n    1) state=degraded,\
+      \ degraded_reason=DOWNSTREAM_CONNECT_FAILED, connected_servers=[], config_path=/tmp/tela.yaml,\
+      \ active_connections=1\n- Statement of removed fixed-delay assumption:\n  Readiness\
+      \ gating now polls GET /status (bounded) before forwarding MCP traffic; bridge\
+      \ no longer assumes fixed delay as readiness authority.\n\nRetry authorization\
+      \ contract evidence:\n- Command: uv run pytest -v tests/shell/test_connect_cmd.py::test_post_mcp_message_retries_only_for_transient_contract_signal\
+      \ tests/shell/test_connect_cmd.py::test_post_mcp_message_does_not_retry_on_plain_503_without_contract\n\
+      - Outcome: PASSED (2 passed in 0.23s)\n- Verified behavior: retry occurs only\
+      \ when 503 body matches ADMISSION_REJECTED_WARMING transient contract fields;\
+      \ plain 503 does not retry.\n\nAdditional commands/outcomes:\n- uv run pytest\
+      \ -v tests/shell/test_connect_bridge_readiness_contract_freeze.py\n  Outcome:\
+      \ PASSED (4 passed in 0.06s)\n- invar guard (changed files)\n  Outcome: PASSED\
+      \ (errors=0, warnings=1, infos=3)"
   - id: connect_bridge_readiness.seam_integration_proof
     name: Prove bridge readiness seam integration
     status: pending
