@@ -50537,6 +50537,87 @@ phases:
     depends_on:
     - cold_start_compat.discovery_before_readiness_proof
     agent: python-senior
+  - id: cold_start_compat.retest_obsolete_expected_red_tests
+    name: Retest bridge readiness expectations after obsolete expected-red cleanup
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), re-run the bridge-readiness
+      verification path after obsolete expected-red test cleanup.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Test for:
+
+      - Updated bridge-readiness tests now align with implemented behavior
+
+      - No contradictory expected-red readiness assertions remain in the targeted
+      shell test module
+
+      - Any remaining expected-red cases are still legitimately red and documented
+      as such'
+    verification: '- expected_result: green
+
+      - Targeted readiness test module reflects implemented bridge behavior and passes
+      in its intended state
+
+      - Evidence explicitly states whether any expected-red cases remain and why
+
+      - Downstream gate protected: cold_start_compat.gate'
+    evidence_template: '## Retest Report
+
+      **Tester**: integration-verifier
+
+      **Scope**: bridge readiness expected-red cleanup
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```bash
+
+      <targeted pytest command(s) for readiness bridge tests>
+
+      ```
+
+      - Actual output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | blocker/should_fix/suggestion | <if any> | <location> | <steps> |
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - cold_start_compat.fix_obsolete_expected_red_tests
+    agent: integration-verifier
 - id: deep_review.full_b
   name: Full-B Deep Review
   status: locked
