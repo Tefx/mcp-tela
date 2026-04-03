@@ -49292,7 +49292,7 @@ phases:
 
       - Drift status for `handle_connect`: resolved|still present'
     depends_on:
-    - mcp_readiness_gate.fix_gate_contract_drift
+    - mcp_readiness_gate.fix_stale_connect_warming_test
     agent: integration-verifier
   - id: mcp_readiness_gate.fix_stale_connect_warming_test
     name: Update stale /connect warming tests to current contract
