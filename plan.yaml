@@ -49918,14 +49918,17 @@ phases:
     name: Gate bridge readiness consumer phase
     status: pending
     description: 'Gate review: verify `tela connect` is a readiness consumer only
-      and that bounded negative-path behavior is proven.'
+      and that bounded negative-path behavior is proven, including teardown interrupt
+      regressions after the readiness-polling refactor.'
     verification: '- Bridge reads readiness from `/status`
 
       - Bridge owns no readiness truth or lifecycle labels
 
       - Retry happens only on transient gateway signal
 
-      - Persistent degraded/non-ready exits cleanly and boundedly'
+      - Persistent degraded/non-ready exits cleanly and boundedly
+
+      - Teardown interrupt regressions are green after retest evidence'
     depends_on:
     - connect_bridge_readiness.status_authority_contract
     - connect_bridge_readiness.tests_red
@@ -49934,6 +49937,7 @@ phases:
     - connect_bridge_readiness.status_polling_proof
     - connect_bridge_readiness.bounded_retry_negative_proof
     - connect_bridge_readiness.spec_conformance
+    - connect_bridge_readiness.retest_gate_blocker_teardown_tests
     agent: gate-reviewer
   - id: connect_bridge_readiness.fix_gate_blocker_teardown_tests
     name: Fix gate blocker teardown readiness tests
