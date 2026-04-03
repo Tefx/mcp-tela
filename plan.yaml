@@ -49187,7 +49187,11 @@ phases:
       - Residual drift check: confirm no stale warming-rejection wording remains around
       `handle_connect`'
     depends_on:
-    - mcp_readiness_gate.gate
+    - mcp_readiness_gate.contract
+    - mcp_readiness_gate.tests_red
+    - mcp_readiness_gate.impl
+    - mcp_readiness_gate.bounded_transient_503_proof
+    - mcp_readiness_gate.spec_conformance
     agent: python-senior
   - id: mcp_readiness_gate.retest_gate_contract_drift
     name: Retest /connect readiness contract boundary after batched fix
