@@ -53837,6 +53837,8 @@ phases:
       | remediation_owner | re_close_proof |
 
       |---|---|---|---|---|---|'
+    depends_on:
+    - debt_closure.review_miss.root_cause_analysis
     agent: software-architect
   - id: debt_closure.review_miss.root_cause_analysis
     name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
