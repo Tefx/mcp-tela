@@ -55302,7 +55302,7 @@ phases:
   steps:
   - id: debt_closure.final_review.final_gate
     name: Final gate for post-gate debt closure
-    status: pending
+    status: claimed
     description: 'Step type: gate
 
       Verification scope: full-plan-check protecting any return to done state.
@@ -55366,6 +55366,8 @@ phases:
     - debt_closure.final_review.behavior_rereview
     - debt_closure.final_review.wiring_rereview
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T20:49:46.918419+00:00'
   - id: debt_closure.verify.gate
     name: Gate runtime evidence and wiring audit
     status: done
