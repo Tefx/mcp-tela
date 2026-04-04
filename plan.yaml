@@ -52275,6 +52275,31 @@ phases:
     - adr006_recovery.impl.reload_race_authority
     - adr006_recovery.impl.downstream_recovery_kernel
     agent: gate-reviewer
+  - id: adr006_recovery.impl.fix_probe_free_test_setup
+    name: Fix healthy-path probe-free test setup
+    status: pending
+    description: Repair test architecture for test_adr006_healthy_path_single_attempt_probe_free
+      so it exercises a true healthy call path with a live client handle (or explicitly
+      skip with justified scope note if healthy-path cannot be represented in this
+      harness layer). Keep ADR-006 semantics unchanged; no recovery-logic redesign.
+    verification: Targeted pytest for the failing test passes and asserts healthy-path
+      single-attempt/probe-free semantics without triggering synthetic reconnect due
+      to missing client handle.
+    evidence_template: '## Fix Evidence
+
+      - Files changed
+
+      - Why previous test setup was invalid
+
+      - How healthy-path setup is now represented
+
+      - Command: uv run pytest tests/shell/test_upstream.py::test_adr006_healthy_path_single_attempt_probe_free
+
+      - Result'
+    depends_on:
+    - adr006_recovery.impl.downstream_recovery_kernel
+    - adr006_recovery.impl.reload_race_authority
+    agent: python-senior
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
