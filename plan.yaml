@@ -52378,6 +52378,53 @@ phases:
   gate: Documentation sync for implemented downstream recovery semantics
   depends_on:
   - adr006_recovery.verify
+  steps:
+  - id: adr006_recovery.doc_sync.update_runtime_docs
+    name: Update runtime docs for ADR-006 recovery behavior
+    status: pending
+    description: 'Update documentation to match the implemented ADR-006 downstream
+      recovery behavior.
+
+
+      Required checks:
+
+      - runtime/design docs describe failure-triggered recovery for steady-state downstream
+      calls
+
+      - healthy path remains probe-free
+
+      - recovery is per target server, not global
+
+      - only recovery-eligible disconnect-class failures are retried
+
+      - ambiguous failures fail closed
+
+      - at most one automatic retry per original user call
+
+      - shell/reload.py remains convergence authority
+
+      - config reload/remove wins over in-flight recovery
+
+      - timeout budget is 15.0s for this slice
+
+      - structured diagnostics and TelaError.details fields match implementation
+
+
+      Out of scope:
+
+      - do not reopen reaper-defaults/reaper-policy decisions
+
+      - do not add heartbeat/lease protocol behavior'
+    verification: 'Verification scope: local-check protecting adr006_recovery.doc_sync.gate.
+
+      - Documentation matches implemented ADR-006 recovery semantics exactly
+
+      - No scope drift into heartbeat or reaper-defaults work'
+    evidence_template: "## Doc Sync Evidence\n- Docs updated:\n  - <list files>\n\
+      - Runtime behaviors aligned:\n  - <list each documented claim and implementing\
+      \ location>\n- Explicitly excluded from edits:\n  - heartbeat/lease\n  - reaper-defaults\
+      \ reopening"
+    agent: doc-reviewer
 - id: adr006_recovery.deep_review
   name: ADR-006 Downstream Recovery Deep Review
   status: locked
