@@ -51515,3 +51515,9 @@ phases:
   gate: Sync runtime docs to the implemented ADR-006 recovery behavior only.
   depends_on:
   - adr006_recovery.verify
+- id: adr006_recovery.deep_review
+  name: ADR-006 Recovery Deep Review
+  status: locked
+  gate: Independent review of runtime recovery architecture, wiring, and spec conformance.
+  depends_on:
+  - adr006_recovery.doc_sync
