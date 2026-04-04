@@ -1383,33 +1383,81 @@ def test_filter_tools_for_profile_matches_tool_override_on_raw_name() -> None:
 # =============================================================================
 
 
-def test_adr006_healthy_path_single_attempt_probe_free() -> None:
+def test_adr006_healthy_path_single_attempt_probe_free(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Healthy downstream call must complete in exactly one attempt.
 
     Ref: ADR-006 §healthy-path: unchanged latency envelope, no new protocol step.
     This test verifies that when a downstream is connected, call_tool does NOT
     perform any extra probe/health-check behavior - it should be a direct call.
 
-    This test will FAIL until recovery is implemented (expected-red).
+    Harness note: use a real stdio MCP fixture to provide a live client handle.
     """
     import asyncio
+    import sys
+    from pathlib import Path
 
     from tela.core.models import ServerConfig
-    from tela.shell.downstream import call_tool, connect_all, disconnect_all
+    from tela.shell import downstream
+
+    server_script = (
+        Path(__file__).resolve().parents[1] / "fixtures" / "fastmcp_stdio_server.py"
+    )
 
     async def _run() -> None:
-        # Setup: connect a server with a tool
-        servers = {"fs": ServerConfig(name="fs", command="cmd")}
-        tool_lists = {"fs": [{"name": "read_file", "inputSchema": {}}]}
-        connect_result = await connect_all(servers, tool_lists=tool_lists)
+        # Setup: connect a real stdio server so call_tool has a live session.
+        servers = {
+            "local_stdio": ServerConfig(
+                name="local_stdio",
+                command=sys.executable,
+                args=[str(server_script)],
+            )
+        }
+        connect_result = await downstream.connect_all(servers)
         assert connect_result.is_ok
 
+        client_handle = downstream._clients.get("local_stdio")
+        assert client_handle is not None
+
+        original_call_tool = client_handle.session.call_tool
+        ping_call_count = 0
+
+        async def _counted_call_tool(
+            tool_name: str,
+            *,
+            arguments: dict | None = None,
+        ):
+            nonlocal ping_call_count
+            if tool_name == "ping":
+                ping_call_count += 1
+            return await original_call_tool(tool_name, arguments=arguments)
+
+        monkeypatch.setattr(client_handle.session, "call_tool", _counted_call_tool)
+
+        recovery_called = False
+
+        async def _unexpected_recovery(
+            server_name: str,
+            *,
+            deadline_monotonic: float,
+        ):
+            del server_name
+            del deadline_monotonic
+            nonlocal recovery_called
+            recovery_called = True
+            raise AssertionError("Healthy path must not invoke recovery")
+
+        monkeypatch.setattr(downstream, "_recover_server_client", _unexpected_recovery)
+
         try:
-            # Healthy path - call should succeed without extra probe
-            result = await call_tool("fs", "read_file", {"path": "/tmp"})
+            # Healthy path - call should succeed without probe/recovery.
+            result = await downstream.call_tool("local_stdio", "ping", {})
             assert result.is_ok
+            assert ping_call_count == 1
+            assert recovery_called is False
         finally:
-            await disconnect_all()
+            await downstream.disconnect_all()
 
     asyncio.run(_run())
 
