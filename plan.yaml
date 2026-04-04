@@ -52993,7 +52993,7 @@ phases:
     agent: spec-verifier
   - id: adr006_recovery.deep_review.architecture_review
     name: Review ADR-006 locking and recovery architecture
-    status: claimed
+    status: pending
     description: 'Review module boundaries, dependency direction, and concurrency
       safety for the ADR-006 downstream recovery slice.
 
@@ -53026,8 +53026,6 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.wiring_audit
     agent: software-architect
-    claimed_by: software-architect
-    claimed_at: '2026-04-04T15:38:17.371298+00:00'
   - id: adr006_recovery.deep_review.contract_strength
     name: Audit ADR-006 contract strength
     status: pending
