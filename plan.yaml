@@ -53128,7 +53128,7 @@ phases:
       No blocker divergence found for this contract-strength slice.'
   - id: adr006_recovery.deep_review.black_box_verification
     name: Run black-box ADR-006 recovery verification
-    status: pending
+    status: claimed
     description: 'Using only the accepted ADR and public behavior surfaces, verify
       the downstream recovery slice from a black-box perspective.
 
@@ -53164,6 +53164,8 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.spec_conformance
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-04-04T15:47:14.431749+00:00'
   - id: adr006_recovery.deep_review.gate
     name: Final gate ADR-006 downstream recovery deep review
     status: pending
