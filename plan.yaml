@@ -52404,7 +52404,7 @@ phases:
   steps:
   - id: adr006_recovery.verify.retest_green_matrix
     name: Run green recovery verification matrix
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: retest_green
@@ -52490,6 +52490,56 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-04T14:46:29.192734+00:00'
+    done_at: '2026-04-04T14:55:24.753412+00:00'
+    evidence: '## Verification Report
+
+      Tester: integration-verifier
+
+      Scope: ADR-006 recovery matrix
+
+      Independence Level: L2
+
+
+      ### Commands executed
+
+      - pytest tests/shell/ -k "adr006 or recover" -v --tb=short
+
+      - pytest tests/shell/test_downstream_recovery.py -v --tb=short
+
+      - pytest tests/shell/test_upstream.py -k "adr006" -v --tb=short
+
+      - pytest tests/shell/test_gateway.py -k "adr006" -v --tb=short
+
+
+      ### Required outcomes
+
+      - healthy path single-attempt/probe-free: PASS
+
+      - eligible recovery single retry: PASS
+
+      - ambiguous failure no retry: PASS
+
+      - timeout -> recovery_timeout: PASS
+
+      - stale waiter reuse/config_missing/timeout: PASS
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+      | INFO | 7 xfailed post-impl gap tests | tests/shell/test_downstream_recovery.py
+      | pytest --runxfail |
+
+
+      ### Verdict
+
+      - PASS
+
+
+      Pass/fail summary: 39 passed, 7 xfailed, 0 failed for ADR-focused verification.'
   - id: adr006_recovery.verify.surface_conformance
     name: Verify caller-visible recovery surface conformance
     status: pending
