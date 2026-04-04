@@ -55293,7 +55293,7 @@ phases:
       modifications.'
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
-  status: in_progress
+  status: done
   gate: Behavioral re-verification, wiring/manifest audit, independent rereviews,
     and the final closure gate must all stay blocked until blocker-class runtime evidence
     is resolved or explicitly shown non-intersecting.
@@ -55302,7 +55302,7 @@ phases:
   steps:
   - id: debt_closure.final_review.final_gate
     name: Final gate for post-gate debt closure
-    status: claimed
+    status: done
     description: 'Step type: gate
 
       Verification scope: full-plan-check protecting any return to done state.
@@ -55368,6 +55368,13 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T20:49:46.918419+00:00'
+    done_at: '2026-04-04T20:51:25.057681+00:00'
+    evidence: 'Final gate-reviewer issued **BLOCK** with blocker-class unresolved
+      obligations: R42 remains NEEDS_TEST (config-reload-inflight + disconnect-under-recovery),
+      R13 status inconsistent (PROVEN claim vs skipped runtime witness), SURFACE-REENUMERATE
+      and AUTH-MCP-FASTMCP have conflicting verdicts across artifacts, and required
+      non-intersection enumeration missing. Recommendation remains BLOCK with explicit
+      remediation prerequisites and error fingerprint `BLOCKER_CLASS_OBLIGATIONS_UNRESOLVED`.'
   - id: debt_closure.verify.gate
     name: Gate runtime evidence and wiring audit
     status: done
