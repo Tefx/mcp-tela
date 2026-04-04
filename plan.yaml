@@ -53562,7 +53562,7 @@ phases:
   steps:
   - id: debt_closure.contract_test.gate
     name: Gate contract freeze and test hardening
-    status: pending
+    status: claimed
     description: 'Step type: gate
 
       Verification scope: phase-check protecting debt_closure.runtime_evidence and
@@ -53620,6 +53620,8 @@ phases:
     - debt_closure.contract_test.freeze_closure_contract
     - debt_closure.contract_test.add_runtime_hardening_tests
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T19:12:25.660582+00:00'
   - id: debt_closure.runtime_evidence.gate
     name: Gate runtime proof obligations and uncertainty resolution
     status: pending
