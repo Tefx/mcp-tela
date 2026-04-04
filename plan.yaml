@@ -54500,7 +54500,7 @@ phases:
     agent: software-architect
   - id: debt_closure.runtime_evidence.collect_behavioral_proof
     name: Collect behavioral proof for R13 and R42
-    status: pending
+    status: claimed
     description: 'Step type: verification
 
       Verification scope: full-plan-check protecting debt_closure.impl, debt_closure.verify,
@@ -54651,6 +54651,8 @@ phases:
     depends_on:
     - debt_closure.contract_test.gate
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-04T19:36:16.910450+00:00'
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
   status: locked
