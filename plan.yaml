@@ -53534,48 +53534,6 @@ phases:
   depends_on:
   - debt_closure.verify
   steps:
-  - id: debt_closure.final_review.spec_rereview
-    name: Re-review ADR-006 closure criteria and audit verdicts
-    status: pending
-    description: 'Step type: review
-
-      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
-
-      Independence Level: L1
-
-      Agent source: default.
-
-
-      Re-review the proof-obligation contract, behavioral proof registers, uncertainty
-      register, and verify-gate decision basis against the authoritative ADR-006 semantics.
-
-
-      Required outputs:
-
-      - requirement-to-evidence map showing whether each closure criterion is PROVEN,
-      PARTIAL, DIVERGES, NEEDS_TEST, or AMBIGUOUS_SPEC
-
-      - explicit challenge to any closure claim that lacks runtime-proof expectations
-      or gate-decision basis
-
-      - note whether any spec or contract text should still be treated as stale after
-      resolution
-
-
-      This is not a tests-pass review; it is a proof-obligation conformance rereview.'
-    verification: '- Cite the authoritative contract or spec section for each conclusion
-
-      - Any NEEDS_TEST, PARTIAL, or DIVERGES verdict is surfaced to the final gate
-      as blocker or explicit non-intersection
-
-      - No behavioral closure claim is accepted without evidence mapping'
-    evidence_template: '## Proof Conformance Re-Review
-
-      | requirement_ref | authority_ref | evidence_ref | verdict | final_gate_impact
-      |
-
-      |---|---|---|---|---|'
-    agent: spec-verifier
   - id: debt_closure.final_review.wiring_rereview
     name: Re-review wiring closure and review-process anti-regression uptake
     status: pending
@@ -54859,3 +54817,45 @@ phases:
 
       |---|---|---|---|---|'
     agent: wiring-auditor
+  - id: debt_closure.final_review.spec_rereview
+    name: Re-review ADR-006 closure criteria and audit verdicts
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
+
+      Independence Level: L1
+
+      Agent source: default.
+
+
+      Re-review the proof-obligation contract, behavioral proof registers, uncertainty
+      register, and verify-gate decision basis against the authoritative ADR-006 semantics.
+
+
+      Required outputs:
+
+      - requirement-to-evidence map showing whether each closure criterion is PROVEN,
+      PARTIAL, DIVERGES, NEEDS_TEST, or AMBIGUOUS_SPEC
+
+      - explicit challenge to any closure claim that lacks runtime-proof expectations
+      or gate-decision basis
+
+      - note whether any spec or contract text should still be treated as stale after
+      resolution
+
+
+      This is not a tests-pass review; it is a proof-obligation conformance rereview.'
+    verification: '- Cite the authoritative contract or spec section for each conclusion
+
+      - Any NEEDS_TEST, PARTIAL, or DIVERGES verdict is surfaced to the final gate
+      as blocker or explicit non-intersection
+
+      - No behavioral closure claim is accepted without evidence mapping'
+    evidence_template: '## Proof Conformance Re-Review
+
+      | requirement_ref | authority_ref | evidence_ref | verdict | final_gate_impact
+      |
+
+      |---|---|---|---|---|'
+    agent: spec-verifier
