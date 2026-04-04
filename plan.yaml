@@ -54772,7 +54772,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.impl.apply_surface_and_manifest_resolution
     name: Apply re_enumerate and mcp fastmcp resolution
-    status: pending
+    status: claimed
     description: 'Step type: implementation
 
       Verification scope: local-check protecting debt_closure.verify.gate and debt_closure.final_review.final_gate.
@@ -54881,6 +54881,8 @@ phases:
     depends_on:
     - debt_closure.impl.decide_surface_and_manifest_authority
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-04T20:00:40.440490+00:00'
   - id: debt_closure.impl.close_runtime_gap_if_exposed
     name: Close any remaining R13 R42 runtime defect or proof gap
     status: done
