@@ -53386,7 +53386,7 @@ phases:
       tests> (passed per worker evidence).'
   - id: adr006_recovery.deep_review.retest_reload_authority_architecture
     name: Re-review ADR-006 reload-wins recovery authority
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (software-architect), re-verify the exact
       ADR-006 architecture checks after the reload-authority fix.
 
@@ -53437,3 +53437,5 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.fix_reload_authority
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-04T16:05:30.722085+00:00'
