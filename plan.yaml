@@ -52117,6 +52117,93 @@ phases:
   gate: Independent green verification and ADR conformance review
   depends_on:
   - adr006_recovery.impl
+  steps:
+  - id: adr006_recovery.verify.retest_green_matrix
+    name: Run green recovery verification matrix
+    status: pending
+    description: 'step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      As an INDEPENDENT TESTER (integration-verifier), validate the ADR-006 downstream
+      recovery matrix from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Must verify at least:
+
+      - healthy call path remains single-attempt and probe-free
+
+      - explicit eligible disconnect failures trigger at most one per-server recovery
+
+      - concurrent calls to different servers are not blocked by one server recovery
+
+      - ambiguous transport failures do not auto-retry
+
+      - exhausted recovery returns DOWNSTREAM_UNAVAILABLE with recovery_timeout stage
+
+      - stale waiters reuse recovered client, fail config_missing, or time out under
+      shared budget
+
+
+      Independence Level: L2'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.verify.gate
+      and deep review.
+
+      - Post-implementation tests run green
+
+      - Main path and highest-risk failure path both evidenced
+
+      - No second recovery / no second retry observed
+
+      - Healthy-path probe-free behavior evidenced'
+    evidence_template: '## Verification Report
+
+      Tester: integration-verifier
+
+      Scope: ADR-006 recovery matrix
+
+      Independence Level: L2
+
+
+      ### Commands executed
+
+      ```
+
+      <paste targeted pytest commands>
+
+      ```
+
+
+      ### Required outcomes
+
+      - healthy path single-attempt/probe-free: PASS/FAIL
+
+      - eligible recovery single retry: PASS/FAIL
+
+      - ambiguous failure no retry: PASS/FAIL
+
+      - timeout -> recovery_timeout: PASS/FAIL
+
+      - stale waiter reuse/config_missing/timeout: PASS/FAIL
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE'
+    agent: integration-verifier
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
   status: locked
