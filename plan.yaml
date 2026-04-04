@@ -54126,6 +54126,82 @@ phases:
 
       - Why the change is not symptom-only:'
     agent: python-senior
+  - id: debt_closure.impl.apply_surface_and_manifest_resolution
+    name: Apply re_enumerate and mcp fastmcp resolution
+    status: pending
+    description: 'Step type: implementation
+
+      Verification scope: local-check protecting debt_closure.verify wiring and manifest
+      audits.
+
+      Agent source: default.
+
+
+      Implement the authoritative decision from debt_closure.impl.decide_surface_and_manifest_authority.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - docs/DESIGN.md — currently advertises re_enumerate as public API
+
+      - source files importing mcp / fastmcp — current dependency boundary under audit
+
+
+      YOUR SCOPE:
+
+      - Make the chosen re_enumerate classification real in code and docs
+
+      - Make the chosen mcp/fastmcp ownership rule real in code, docs, and dependency/manifest
+      metadata as required
+
+      - Eliminate ambiguity: after this step, auditors must be able to tell whether
+      a symbol is intentionally reachable and whether the import boundary is authoritative
+
+
+      KNOWN RISKS:
+
+      - Dead-export claims are often wrong when framework entrypoints or docs imply
+      a public contract
+
+      - Dependency clarity work can drift if code, docs, and metadata are not updated
+      together
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic or concrete contract/documentation
+      changes that make the chosen authority rule externally auditable.'
+    verification: '- Re_enumerate is either reachable by documented contract or removed/hidden
+      with matching docs
+
+      - mcp/fastmcp ownership is consistent across code, docs, and metadata
+
+      - Evidence shows the chosen authority rule is externally auditable'
+    evidence_template: '## Surface/Manifest Resolution Evidence
+
+
+      ### Decision Applied
+
+      - re_enumerate:
+
+      - mcp/fastmcp:
+
+
+      ### Files Changed
+
+      - <list>
+
+
+      ### Auditability Proof
+
+      - How an auditor can verify the new surface/import rule:
+
+      - Residual ambiguity: <must be none>'
+    depends_on:
+    - debt_closure.impl.decide_surface_and_manifest_authority
+    agent: python-senior
 - id: debt_closure.verify
   name: Post-Gate Runtime Verification and Evidence
   status: locked
