@@ -53278,7 +53278,7 @@ phases:
     agent: gate-reviewer
   - id: adr006_recovery.deep_review.fix_reload_authority
     name: Fix ADR-006 downstream reload authority fallback
-    status: pending
+    status: claimed
     description: 'Fix ALL blockers found by the ADR-006 architecture review for downstream
       recovery config authority.
 
@@ -53363,6 +53363,8 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.architecture_review
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-04T16:02:41.457605+00:00'
   - id: adr006_recovery.deep_review.retest_reload_authority_architecture
     name: Re-review ADR-006 reload-wins recovery authority
     status: pending
