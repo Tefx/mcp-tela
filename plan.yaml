@@ -53672,7 +53672,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.review_miss.gate
     name: Gate root-cause and review-hardening basis
-    status: pending
+    status: claimed
     description: 'Step type: gate
 
       Verification scope: phase-check protecting debt_closure.contract_test and every
@@ -53733,6 +53733,8 @@ phases:
     - debt_closure.review_miss.capture_reversal_record
     - debt_closure.review_miss.harden_review_closure_basis
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T18:56:10.985777+00:00'
   - id: debt_closure.review_miss.harden_review_closure_basis
     name: Define review-hardening basis for debt-closure execution
     status: done
