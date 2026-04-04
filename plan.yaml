@@ -54929,6 +54929,32 @@ phases:
       2. mcp / fastmcp manifest and dependency authority
 
 
+      Authoritative review set:
+
+      - docs/adr/ADR-006-downstream-recovery.md
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - pyproject.toml
+
+      - src/tela/shell/downstream.py
+
+
+      Candidate touch paths if changes are required:
+
+      - src/tela/shell/downstream.py
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - pyproject.toml
+
+      - any export or test file explicitly proven to carry the ambiguity
+
+
       Required artifact: surface and authority decision record with one row per decision
       containing:
 
@@ -54971,12 +54997,40 @@ phases:
       or no-change closure
 
       - Identify exact files to change only when changes are still required'
-    evidence_template: '## Surface and Authority Decision Record
+    evidence_template: '## Surface And Authority Decision Record
 
-      | decision_ref | ambiguity | chosen_authority | rejected_alternatives | files_to_edit
-      | verification_evidence | closure_path |
 
-      |---|---|---|---|---|---|---|'
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      | decision_ref | current_ambiguity | chosen_authority | rejected_alternatives
+      | change_required | exact_files_if_change | no_change_evidence | verification_evidence_required
+      | closure_path |
+
+      |---|---|---|---|---|---|---|---|---|
+
+      | SURFACE-REENUMERATE | ... | ... | ... | yes/no | ... | ... | ... | ... |
+
+      | AUTH-MCP-FASTMCP | ... | ... | ... | yes/no | ... | ... | ... | ... |
+
+
+      ## Conflict Notes
+
+      - docs/code conflict:
+
+      - metadata/import conflict:
+
+      '
+    refs:
+    - docs/adr/ADR-006-downstream-recovery.md
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - pyproject.toml
+    - src/tela/shell/downstream.py
     agent: software-architect
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
