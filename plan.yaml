@@ -53966,6 +53966,66 @@ phases:
     fixed or explicitly resolved before verification.
   depends_on:
   - debt_closure.contract_test
+  steps:
+  - id: debt_closure.impl.decide_surface_and_manifest_authority
+    name: Decide re_enumerate surface status and mcp fastmcp authority
+    status: pending
+    description: 'Step type: planning
+
+      Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution
+      and debt_closure.verify.
+
+      Agent source: default.
+
+
+      Resolve the two non-runtime ambiguity families raised by the audits:
+
+      1. potential dead export concern for re_enumerate()
+
+      2. dependency/manifest clarity risk around mcp / fastmcp imports
+
+
+      Required outputs:
+
+      - authoritative classification for re_enumerate(): retain as supported public
+      API, demote to internal-only and remove export/docs, or mark as framework-only
+      escape hatch with justification
+
+      - authoritative dependency/manifest statement for mcp and fastmcp imports, including
+      which files are allowed to import which package and how that rule is documented
+
+      - explicit list of code/docs/metadata files Phase C must edit to make the decision
+      real
+
+
+      This is architecture/process authority work. It MUST NOT hand-wave with ''probably
+      okay''. If the current contract or docs conflict, name the conflict and pick
+      one authoritative basis for remediation.'
+    verification: '- Produce a binding classification for re_enumerate()
+
+      - Produce a binding ownership rule for mcp/fastmcp imports
+
+      - Identify exact files to change in the next implementation step'
+    evidence_template: '## Surface and Manifest Authority Decision
+
+
+      ### re_enumerate
+
+      - Decision:
+
+      - Why:
+
+      - Files impacted:
+
+
+      ### mcp / fastmcp
+
+      - Ownership rule:
+
+      - Allowed import surfaces:
+
+      - Documentation/metadata files impacted:'
+    agent: software-architect
 - id: debt_closure.verify
   name: Post-Gate Runtime Verification and Evidence
   status: locked
