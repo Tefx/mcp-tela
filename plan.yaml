@@ -52334,7 +52334,7 @@ phases:
     agent: integration-verifier
   - id: adr006_recovery.impl.normalize_gap_tests_post_impl
     name: Normalize expected-red gap tests for post-implementation green retest
-    status: pending
+    status: claimed
     description: Update tests/shell/test_downstream_recovery.py so gap-exposure tests
       do not hard-fail in post-implementation retest runs (e.g., convert to xfail/legacy
       gap markers or split into red-only suite). Preserve historical intent while
@@ -52355,6 +52355,8 @@ phases:
     - adr006_recovery.impl.reload_race_authority
     - adr006_recovery.impl.fix_probe_free_test_setup
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-04T14:37:30.885224+00:00'
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
