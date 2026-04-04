@@ -51798,7 +51798,7 @@ phases:
       \ semantics"
   - id: adr006_recovery.test.gate
     name: Gate ADR-006 expected-red tests
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       expected-red tests define the recovery gap without implementing product code.
 
@@ -51840,6 +51840,8 @@ phases:
     - adr006_recovery.test.define_red_core_matrix
     - adr006_recovery.test.define_red_surface_contract
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T13:40:01.589921+00:00'
 - id: adr006_recovery.impl
   name: ADR-006 Downstream Recovery Implementation
   status: locked
