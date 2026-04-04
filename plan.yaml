@@ -52300,6 +52300,23 @@ phases:
     - adr006_recovery.impl.downstream_recovery_kernel
     - adr006_recovery.impl.reload_race_authority
     agent: python-senior
+  - id: adr006_recovery.impl.retest_probe_free_contract
+    name: Retest ADR-006 implementation after probe-free test fix
+    status: pending
+    description: Run focused ADR-006 test set to confirm implementation and surface-contract
+      tests all pass after test setup correction.
+    verification: Focused suite passes; no regression in classifier, retry cap, reload-wins,
+      and error-details contracts.
+    evidence_template: '## Retest Evidence
+
+      - Command(s)
+
+      - Pass/fail counts
+
+      - Any remaining failures and disposition'
+    depends_on:
+    - adr006_recovery.impl.fix_probe_free_test_setup
+    agent: integration-verifier
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
