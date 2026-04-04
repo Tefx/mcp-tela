@@ -55531,7 +55531,7 @@ phases:
       found.'
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
-    status: claimed
+    status: done
     description: 'Step type: verification
 
       Verification scope: phase-check protecting debt_closure.final_review.
@@ -55628,6 +55628,14 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-04T20:37:19.057303+00:00'
+    done_at: '2026-04-04T20:41:10.104789+00:00'
+    evidence: 'Wiring-auditor returned structured closure audit with refs confirmation
+      and requirement-wise verdicts. Both decision families reported PASS with concrete
+      evidence traces: SURFACE-REENUMERATE (downstream definition/export/import/doc/test
+      chain) and AUTH-MCP-FASTMCP (pyproject fastmcp dependency aligned with runtime
+      mcp.* imports/docs/tests). Audit checklist covers export reachability, dead-export/escape-hatch
+      state, dependency and import usage review, docs/tests wording consistency, and
+      anti-regression uptake. Residual ambiguity: none.'
   - id: debt_closure.final_review.spec_rereview
     name: Re-review ADR-006 closure criteria and audit verdicts
     status: pending
