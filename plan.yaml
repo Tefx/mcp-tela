@@ -51509,3 +51509,9 @@ phases:
     conformance.
   depends_on:
   - adr006_recovery.impl
+- id: adr006_recovery.doc_sync
+  name: ADR-006 Recovery Documentation Sync
+  status: locked
+  gate: Sync runtime docs to the implemented ADR-006 recovery behavior only.
+  depends_on:
+  - adr006_recovery.verify
