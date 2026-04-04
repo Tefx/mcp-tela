@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -78,6 +78,16 @@ must become self-healing without requiring any new client behavior.
 Choose **Option A**. I chose it because it solves the user-visible
 availability problem without adding cost to every healthy call and without
 depending on client behavior that the gateway cannot enforce.
+
+Implementation status:
+
+- downstream recovery policy: specified here, pending implementation follow-through
+- reaper policy surface and defaults: implemented
+  - runtime config exposes dedicated `reaper` settings
+  - `tela serve` exposes CLI overrides with CLI precedence over config
+  - `native_idle_ttl_seconds = 0` and `bridge_idle_ttl_seconds = 0` both disable
+    idle reaping for that connection class
+  - default `bridge_idle_ttl_seconds` is `900.0`
 
 Normative boundary for this slice:
 
@@ -705,6 +715,4 @@ Illustrative test shapes:
 
 ## Open Questions
 
-- Should bridge idle reaping defaults be relaxed in a separate ADR so upstream
-  bridge identity survives longer during silent periods, or is downstream
-  self-healing sufficient for the next slice?
+- None for this ADR slice.
