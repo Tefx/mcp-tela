@@ -51650,7 +51650,7 @@ phases:
   steps:
   - id: adr006_recovery.test.define_red_core_matrix
     name: Define expected-red core recovery matrix tests
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: test_define_red
@@ -51714,6 +51714,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-04T13:25:18.372892+00:00'
+    done_at: '2026-04-04T13:39:29.506453+00:00'
+    evidence: "## Expected-Red Core Matrix Evidence\n- step_intent: test_define_red\n\
+      - expected_result: red\n- observed_result: red (gaps exposed via 3 failing assertions\
+      \ and gap-detection checks)\n- failure_alignment: aligned with pre-implementation\
+      \ intent for ADR-006 recovery behavior\n- product implementation files modified:\
+      \ no\n- New/updated tests:\n  - tests/shell/test_downstream_recovery.py\n- Exposed\
+      \ gaps:\n  - eligibility classifier absent/incomplete\n  - one-retry enforcement\
+      \ absent/incomplete\n  - per-server recovery lock behavior absent/incomplete\n\
+      \  - timeout budget absent/incomplete\n  - reload-wins behavior absent/incomplete\n\
+      - Expected failures observed:\n  - test_gap_error_details_missing_recovery_fields\n\
+      \  - test_gap_recovery_diagnostics_not_emitted\n  - test_gap_shared_recovery_primitive_not_extracted\n\
+      - Downstream implementation owner:\n  - adr006_recovery.impl.downstream_recovery_kernel\n\
+      \  - adr006_recovery.impl.reload_race_authority"
   - id: adr006_recovery.test.define_red_surface_contract
     name: Define expected-red caller-visible recovery contract tests
     status: claimed
