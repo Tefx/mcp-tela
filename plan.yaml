@@ -53920,66 +53920,6 @@ phases:
     depends_on:
     - debt_closure.contract_test.freeze_closure_contract
     agent: python-executor
-  - id: debt_closure.contract_test.gate
-    name: Gate contract freeze and test hardening
-    status: pending
-    description: 'Step type: gate
-
-      Verification scope: phase-check protecting debt_closure.runtime_evidence and
-      all later phases.
-
-      Agent source: default.
-
-
-      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the debt-closure
-      basis is frozen tightly enough to support real proof collection.
-
-
-      BLOCK if:
-
-      - any proof obligation lacks pass/fail boundaries
-
-      - any probe/test obligation lacks a named execution anchor
-
-      - the uncertainty register schema is missing
-
-      - the contract would allow a later gate to close on summary-only evidence
-
-
-      Required artifact: gate decision basis mapping proof obligations to executable
-      probes and unresolved handling rules.'
-    verification: '- Review the proof-obligation contract and runtime probe inventory
-      together
-
-      - Record explicit OPEN or BLOCK recommendation with missing contract gaps if
-      blocked
-
-      - Confirm later phases cannot reinterpret unresolved statuses informally'
-    evidence_template: '## Gate Review Report
-
-
-      ### Closure Readiness
-
-      | Item | Contract Frozen | Test Exists | Remediation Needed | Notes |
-
-      |---|---|---|---|---|
-
-      | R13 | | | | |
-
-      | R42 | | | | |
-
-      | re_enumerate clarity | | | | |
-
-      | mcp/fastmcp clarity | | | | |
-
-
-      ### Gate Decision
-
-      - OPEN or BLOCKED'
-    depends_on:
-    - debt_closure.contract_test.freeze_closure_contract
-    - debt_closure.contract_test.add_runtime_hardening_tests
-    agent: gate-reviewer
 - id: debt_closure.impl
   name: Post-Gate Runtime and Manifest Remediation
   status: locked
@@ -54877,6 +54817,64 @@ phases:
     path can open.
   depends_on:
   - adr006_recovery.deep_review
+  steps:
+  - id: debt_closure.contract_test.gate
+    name: Gate contract freeze and test hardening
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: phase-check protecting debt_closure.runtime_evidence and
+      all later phases.
+
+      Agent source: default.
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the debt-closure
+      basis is frozen tightly enough to support real proof collection.
+
+
+      BLOCK if:
+
+      - any proof obligation lacks pass/fail boundaries
+
+      - any probe/test obligation lacks a named execution anchor
+
+      - the uncertainty register schema is missing
+
+      - the contract would allow a later gate to close on summary-only evidence
+
+
+      Required artifact: gate decision basis mapping proof obligations to executable
+      probes and unresolved handling rules.'
+    verification: '- Review the proof-obligation contract and runtime probe inventory
+      together
+
+      - Record explicit OPEN or BLOCK recommendation with missing contract gaps if
+      blocked
+
+      - Confirm later phases cannot reinterpret unresolved statuses informally'
+    evidence_template: '## Gate Review Report
+
+
+      ### Closure Readiness
+
+      | Item | Contract Frozen | Test Exists | Remediation Needed | Notes |
+
+      |---|---|---|---|---|
+
+      | R13 | | | | |
+
+      | R42 | | | | |
+
+      | re_enumerate clarity | | | | |
+
+      | mcp/fastmcp clarity | | | | |
+
+
+      ### Gate Decision
+
+      - OPEN or BLOCKED'
+    agent: gate-reviewer
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
   status: locked
