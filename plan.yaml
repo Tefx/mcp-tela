@@ -53511,89 +53511,6 @@ phases:
     are frozen before runtime closure or remediation.
   depends_on:
   - debt_closure.review_miss
-  steps:
-  - id: debt_closure.contract_test.freeze_closure_contract
-    name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
-    status: pending
-    description: 'Step type: contract
-
-      contract_purity: ENFORCED
-
-      contract_outputs:
-
-      - behavioral proof obligations
-
-      - uncertainty register schema
-
-      - surface-decision criteria
-
-      - manifest-authority criteria
-
-      - gate decision prompts
-
-      Verification scope: phase-check protecting debt_closure.runtime_evidence, debt_closure.impl,
-      debt_closure.verify, and debt_closure.final_review.
-
-      Agent source: default.
-
-
-      Freeze the authoritative closure contract for the ADR-006 debt slice.
-
-
-      Required artifact: proof-obligation contract with one row per closure item containing
-      ALL of:
-
-      - requirement_ref
-
-      - behavior_claim or decision_claim
-
-      - runtime_proof_expected or decision_evidence_expected
-
-      - pass_fail_boundary
-
-      - allowed status values
-
-      - closure_path if unresolved
-
-      - gate_decision_basis expectations
-
-
-      Must define:
-
-      - exact closure criteria for R13: prove _registry_lock is not held across awaited
-      network I/O in downstream recovery paths
-
-      - exact closure criteria for R42: prove per-server recovery locks are pruned
-      after config-reload-remove / disconnect scenarios, including in-flight recovery
-      cases
-
-      - exact uncertainty questions for healthy-neighbor liveness and config_missing
-      fail-closed behavior where they support R13/R42 closure
-
-      - classification criteria for re_enumerate(): supported public surface, framework-only
-      escape hatch, or dead export to remove
-
-      - dependency/manifest authority rule for mcp and fastmcp imports: what is authoritative,
-      where it is documented, and what evidence counts as closure
-
-
-      If existing docs are insufficient for a decision outcome, record that ambiguity
-      explicitly and bind debt_closure.impl.decide_surface_and_manifest_authority
-      to resolve it before any later gate can open.'
-    verification: '- Proof-obligation contract contains explicit pass/fail conditions
-      for R13, R42, re_enumerate, and mcp/fastmcp authority
-
-      - The contract defines the uncertainty register schema and allowed statuses
-
-      - No acceptance criterion relies on vague language such as looks safe or probably
-      conformant'
-    evidence_template: '## Proof-Obligation Contract
-
-      | requirement_ref | claim_type | claim | expected_evidence | pass_fail_boundary
-      | unresolved_status_policy | closure_path | gate_decision_basis |
-
-      |---|---|---|---|---|---|---|---|'
-    agent: python-senior
 - id: debt_closure.impl
   name: Post-Gate Runtime and Manifest Remediation
   status: locked
@@ -54684,6 +54601,88 @@ phases:
 
       |---|---|---|---|---|---|'
     agent: python-executor
+  - id: debt_closure.contract_test.freeze_closure_contract
+    name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
+    status: pending
+    description: 'Step type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs:
+
+      - behavioral proof obligations
+
+      - uncertainty register schema
+
+      - surface-decision criteria
+
+      - manifest-authority criteria
+
+      - gate decision prompts
+
+      Verification scope: phase-check protecting debt_closure.runtime_evidence, debt_closure.impl,
+      debt_closure.verify, and debt_closure.final_review.
+
+      Agent source: default.
+
+
+      Freeze the authoritative closure contract for the ADR-006 debt slice.
+
+
+      Required artifact: proof-obligation contract with one row per closure item containing
+      ALL of:
+
+      - requirement_ref
+
+      - behavior_claim or decision_claim
+
+      - runtime_proof_expected or decision_evidence_expected
+
+      - pass_fail_boundary
+
+      - allowed status values
+
+      - closure_path if unresolved
+
+      - gate_decision_basis expectations
+
+
+      Must define:
+
+      - exact closure criteria for R13: prove _registry_lock is not held across awaited
+      network I/O in downstream recovery paths
+
+      - exact closure criteria for R42: prove per-server recovery locks are pruned
+      after config-reload-remove / disconnect scenarios, including in-flight recovery
+      cases
+
+      - exact uncertainty questions for healthy-neighbor liveness and config_missing
+      fail-closed behavior where they support R13/R42 closure
+
+      - classification criteria for re_enumerate(): supported public surface, framework-only
+      escape hatch, or dead export to remove
+
+      - dependency/manifest authority rule for mcp and fastmcp imports: what is authoritative,
+      where it is documented, and what evidence counts as closure
+
+
+      If existing docs are insufficient for a decision outcome, record that ambiguity
+      explicitly and bind debt_closure.impl.decide_surface_and_manifest_authority
+      to resolve it before any later gate can open.'
+    verification: '- Proof-obligation contract contains explicit pass/fail conditions
+      for R13, R42, re_enumerate, and mcp/fastmcp authority
+
+      - The contract defines the uncertainty register schema and allowed statuses
+
+      - No acceptance criterion relies on vague language such as looks safe or probably
+      conformant'
+    evidence_template: '## Proof-Obligation Contract
+
+      | requirement_ref | claim_type | claim | expected_evidence | pass_fail_boundary
+      | unresolved_status_policy | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|---|'
+    agent: python-senior
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
   status: locked
