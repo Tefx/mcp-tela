@@ -52554,3 +52554,33 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.wiring_audit
     agent: software-architect
+  - id: adr006_recovery.deep_review.contract_strength
+    name: Audit ADR-006 contract strength
+    status: pending
+    description: 'Verify contract/docstring strength for the ADR-006 downstream recovery
+      slice.
+
+
+      Check that any new or updated contract-facing descriptions are non-vacuous and
+      preserve:
+
+      - exact recovery_stage vocabulary
+
+      - exact TelaError.details key names
+
+      - exact fail-closed eligibility boundary
+
+      - exact one-retry semantics'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.deep_review.gate.
+
+      - No tautological or incomplete contract text remains for this slice'
+    evidence_template: '## Contract Strength Audit
+
+      - Non-vacuous contract text: PASS/FAIL
+
+      - Stable detail keys preserved: PASS/FAIL
+
+      - Stable recovery_stage vocabulary preserved: PASS/FAIL'
+    depends_on:
+    - adr006_recovery.deep_review.wiring_audit
+    agent: gate-reviewer
