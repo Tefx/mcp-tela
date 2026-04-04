@@ -53519,65 +53519,6 @@ phases:
     verification.
   depends_on:
   - debt_closure.runtime_evidence
-  steps:
-  - id: debt_closure.impl.decide_surface_and_manifest_authority
-    name: Decide re_enumerate surface status and mcp fastmcp authority
-    status: pending
-    description: 'Step type: planning
-
-      Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution,
-      debt_closure.verify, and debt_closure.final_review.
-
-      Agent source: default.
-
-
-      Resolve the two semantic/surface decision families raised by the audits:
-
-      1. re_enumerate() public-surface status
-
-      2. mcp / fastmcp manifest and dependency authority
-
-
-      Required artifact: surface and authority decision record with one row per decision
-      containing:
-
-      - decision_ref
-
-      - current ambiguity
-
-      - chosen authority
-
-      - rejected alternatives
-
-      - exact files to edit
-
-      - evidence required for verification and rereview
-
-      - closure_path if any residual ambiguity remains
-
-
-      Hard rules:
-
-      - re_enumerate() must be classified explicitly as supported public surface,
-      framework-only escape hatch, or dead export to remove
-
-      - mcp / fastmcp authority must name which package/path is canonical for this
-      repo and where that rule is documented
-
-      - do not hand-wave with probably okay; if docs conflict, name the conflict and
-      pick the authoritative basis for remediation'
-    verification: '- Produce a binding classification for re_enumerate()
-
-      - Produce a binding authority rule for mcp/fastmcp imports and manifest docs
-
-      - Identify exact files to change in debt_closure.impl.apply_surface_and_manifest_resolution'
-    evidence_template: '## Surface and Authority Decision Record
-
-      | decision_ref | ambiguity | chosen_authority | rejected_alternatives | files_to_edit
-      | verification_evidence | closure_path |
-
-      |---|---|---|---|---|---|---|'
-    agent: software-architect
 - id: debt_closure.verify
   name: Debt Closure Verification and Closure Audit
   status: locked
@@ -54744,6 +54685,64 @@ phases:
 
       - Why the change is not symptom-only:'
     agent: python-senior
+  - id: debt_closure.impl.decide_surface_and_manifest_authority
+    name: Decide re_enumerate surface status and mcp fastmcp authority
+    status: pending
+    description: 'Step type: planning
+
+      Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution,
+      debt_closure.verify, and debt_closure.final_review.
+
+      Agent source: default.
+
+
+      Resolve the two semantic/surface decision families raised by the audits:
+
+      1. re_enumerate() public-surface status
+
+      2. mcp / fastmcp manifest and dependency authority
+
+
+      Required artifact: surface and authority decision record with one row per decision
+      containing:
+
+      - decision_ref
+
+      - current ambiguity
+
+      - chosen authority
+
+      - rejected alternatives
+
+      - exact files to edit
+
+      - evidence required for verification and rereview
+
+      - closure_path if any residual ambiguity remains
+
+
+      Hard rules:
+
+      - re_enumerate() must be classified explicitly as supported public surface,
+      framework-only escape hatch, or dead export to remove
+
+      - mcp / fastmcp authority must name which package/path is canonical for this
+      repo and where that rule is documented
+
+      - do not hand-wave with probably okay; if docs conflict, name the conflict and
+      pick the authoritative basis for remediation'
+    verification: '- Produce a binding classification for re_enumerate()
+
+      - Produce a binding authority rule for mcp/fastmcp imports and manifest docs
+
+      - Identify exact files to change in debt_closure.impl.apply_surface_and_manifest_resolution'
+    evidence_template: '## Surface and Authority Decision Record
+
+      | decision_ref | ambiguity | chosen_authority | rejected_alternatives | files_to_edit
+      | verification_evidence | closure_path |
+
+      |---|---|---|---|---|---|---|'
+    agent: software-architect
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
   status: locked
