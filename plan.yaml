@@ -52963,7 +52963,7 @@ phases:
       drift for transitive imports), not ADR-006 recovery-wiring blockers'
   - id: adr006_recovery.deep_review.spec_conformance
     name: Audit full ADR-006 recovery conformance
-    status: pending
+    status: claimed
     description: 'Full-system adversarial conformance audit for the ADR-006 downstream
       recovery slice.
 
@@ -52991,6 +52991,8 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.wiring_audit
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-04-04T15:39:47.298671+00:00'
   - id: adr006_recovery.deep_review.architecture_review
     name: Review ADR-006 locking and recovery architecture
     status: claimed
