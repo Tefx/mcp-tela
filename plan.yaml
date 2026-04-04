@@ -51488,3 +51488,10 @@ phases:
   gate: Freeze recovery interfaces and behavioral contract before tests.
   depends_on:
   - doc_sync.full_b
+- id: adr006_recovery.test
+  name: ADR-006 Recovery Red Tests
+  status: locked
+  gate: Define expected-red tests covering retry eligibility, caller-visible behavior,
+    lock timing, and fail-closed semantics before implementation.
+  depends_on:
+  - adr006_recovery.contract
