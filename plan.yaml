@@ -54410,7 +54410,7 @@ phases:
       Commit: 464113b'
   - id: debt_closure.runtime_evidence.resolve_uncertainty_register
     name: Resolve runtime uncertainty register and remediation basis
-    status: claimed
+    status: done
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.impl and all later gates.
@@ -54500,6 +54500,17 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T19:42:10.883554+00:00'
+    done_at: '2026-04-04T19:46:57.587119+00:00'
+    evidence: 'Software-architect converted behavioral proof into explicit runtime
+      uncertainty register and committed artifact `evidence/runtime_uncertainty_register.md`
+      (commit 07ea658). Register includes per-item provenance/disposition/evidence
+      sufficiency/owner/closure path/review-miss cause/overturned decision/re-close
+      proof. Carry-forward blockers explicitly mapped: R13, R42-config-remove-inflight,
+      R42-disconnect-under-recovery -> debt_closure.impl.close_runtime_gap_if_exposed;
+      SURFACE-REENUMERATE and AUTH-MCP-FASTMCP -> debt_closure.impl.decide_surface_and_manifest_authority
+      (and apply_surface... as needed). Provenance-vs-disposition check included;
+      pre-existing used only as provenance while blocker-now flagged due intersection
+      with debt_closure.verify/final_review.'
   - id: debt_closure.runtime_evidence.collect_behavioral_proof
     name: Collect behavioral proof for R13 and R42
     status: done
