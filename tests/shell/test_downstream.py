@@ -1279,3 +1279,220 @@ def test_handle_reconnect_swaps_client_before_enumeration(
         "enumerate:mocked",
         "on_server_reconnect:mocked",
     ], f"Unexpected order: {client_handle_order}"
+
+
+def test_recover_server_client_fails_closed_when_server_removed_mid_recovery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Removal from runtime config beats in-flight recovery."""
+    from typing import Any
+
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    class FakeSession:
+        async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_a")})
+    )
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        set_runtime_config(TelaConfig(servers={}))
+        return Result(
+            value=downstream._ClientHandle(  # type: ignore[arg-type]
+                session=FakeSession(),
+                stack=FakeStack(),
+            )
+        )
+
+    async def _fake_enumerate_client_tools(
+        server_name: str,
+        handle: downstream._ClientHandle,
+    ) -> Result[list[dict], str]:
+        return Result(value=[{"name": "tool_a", "inputSchema": {}}])
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        downstream, "_enumerate_client_tools", _fake_enumerate_client_tools
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect", _fake_on_server_reconnect
+    )
+
+    try:
+        recovery_result = asyncio.run(
+            downstream._recover_server_client(
+                "srv",
+                deadline_monotonic=1e12,
+            )
+        )
+    finally:
+        set_runtime_config(old_runtime)
+        downstream._clients.clear()
+
+    assert recovery_result.is_err
+    assert recovery_result.error is not None
+    assert recovery_result.error.details is not None
+    assert recovery_result.error.details.get("config_missing") is True
+
+
+def test_recover_server_client_rejects_material_config_change_before_swap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Material config drift must block stale recovered handle swap."""
+    from typing import Any
+
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    class FakeSession:
+        async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+    stale_handle = downstream._ClientHandle(  # type: ignore[arg-type]
+        session=FakeSession(),
+        stack=FakeStack(),
+    )
+    downstream._clients["srv"] = stale_handle
+
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_a")})
+    )
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        set_runtime_config(
+            TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_b")})
+        )
+        return Result(
+            value=downstream._ClientHandle(  # type: ignore[arg-type]
+                session=FakeSession(),
+                stack=FakeStack(),
+            )
+        )
+
+    async def _fake_enumerate_client_tools(
+        server_name: str,
+        handle: downstream._ClientHandle,
+    ) -> Result[list[dict], str]:
+        return Result(value=[{"name": "tool_a", "inputSchema": {}}])
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        downstream, "_enumerate_client_tools", _fake_enumerate_client_tools
+    )
+
+    try:
+        recovery_result = asyncio.run(
+            downstream._recover_server_client(
+                "srv",
+                deadline_monotonic=1e12,
+            )
+        )
+    finally:
+        set_runtime_config(old_runtime)
+
+    assert recovery_result.is_err
+    assert recovery_result.error is not None
+    assert recovery_result.error.details is not None
+    assert recovery_result.error.details.get("config_missing") is False
+    assert downstream._clients.get("srv") is stale_handle
+
+
+def test_call_tool_stops_after_convergence_rejection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Convergence rejection is terminal for the original call."""
+    from tela.core.models import TelaError
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+
+    class FailingSession:
+        call_count = 0
+
+        async def call_tool(self, tool_name: str, *, arguments: dict) -> Any:
+            self.call_count += 1
+            raise RuntimeError(
+                "Client is not connected. Use the 'async with client:' context manager first."
+            )
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    failing_session = FailingSession()
+    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
+        session=failing_session,
+        stack=FakeStack(),
+    )
+
+    async def _fake_recover_server_client(
+        server_name: str,
+        *,
+        deadline_monotonic: float,
+    ) -> Result[None, TelaError]:
+        return Result(
+            error=TelaError(
+                code="DOWNSTREAM_UNAVAILABLE",
+                message="Convergence rejected",
+                details={
+                    "server_name": server_name,
+                    "recovery_attempted": True,
+                    "recovery_eligible": True,
+                    "recovery_stage": "convergence_rejected",
+                    "underlying_error": "TOOL_CONFLICT",
+                    "config_missing": False,
+                },
+            )
+        )
+
+    monkeypatch.setattr(
+        downstream,
+        "_recover_server_client",
+        _fake_recover_server_client,
+    )
+
+    try:
+        result = asyncio.run(downstream.call_tool("srv", "tool_a", {}))
+    finally:
+        downstream._clients.clear()
+
+    assert result.is_err
+    assert result.error is not None
+    assert result.error.details is not None
+    assert result.error.details.get("recovery_stage") == "convergence_rejected"
+    assert failing_session.call_count == 1
