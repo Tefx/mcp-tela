@@ -52267,6 +52267,66 @@ phases:
 
       **Verdict**: PASS | ISSUES_FOUND | INCOMPLETE'
     agent: blind-tester
+  - id: adr006_recovery.verify.spec_conformance
+    name: Run ADR-006 spec conformance review
+    status: pending
+    description: 'Spec conformance verification via adversarial divergence hunting.
+
+      Agent: spec-verifier (dedicated, read-only, independent).
+
+
+      This is NOT ''do tests pass'' — it is ''does the implementation match what the
+      accepted ADR says.''
+
+
+      Scope:
+
+      - only the downstream steady-state recovery slice from docs/ADR-006-steady-state-downstream-recovery.md
+
+      - exclude heartbeat/lease protocols
+
+      - exclude already-implemented reaper policy/defaults decision work
+
+
+      Focus areas:
+
+      - exact eligibility classifier boundaries
+
+      - exact retry-count semantics
+
+      - exact recovery_stage / TelaError.details field names
+
+      - config-reload/remove precedence over in-flight recovery
+
+      - structured diagnostics event names/levels/stages
+
+      - healthy-path probe-free contract'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.verify.gate
+      and adr006_recovery.doc_sync.
+
+      - For each requirement, cite ADR section and implementation file:line
+
+      - Behavioral precedence claims that need runtime proof may be marked NEEDS_TEST
+      rather than asserted
+
+      - Any drift from accepted ADR is surfaced explicitly'
+    evidence_template: '## Spec Conformance Report
+
+      **Phase**: adr006_recovery.verify
+
+      **Spec source**: docs/ADR-006-steady-state-downstream-recovery.md
+
+
+      ## Evidence Table
+
+      | ADR Section | Requirement | Implementation | Verdict | Notes |
+
+      |---|---|---|---|---|
+
+
+      Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
+      | SPEC_POSSIBLY_STALE'
+    agent: spec-verifier
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
   status: locked
