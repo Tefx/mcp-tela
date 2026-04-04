@@ -53504,3 +53504,10 @@ phases:
     execution.
   depends_on:
   - adr006_recovery.deep_review
+- id: debt_closure.contract_test
+  name: ADR-006 Debt Closure Contract and Test Hardening
+  status: locked
+  gate: R13/R42 closure criteria, anti-regression tests, and evidence expectations
+    are frozen before remediation.
+  depends_on:
+  - debt_closure.review_miss
