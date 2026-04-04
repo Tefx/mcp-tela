@@ -54885,3 +54885,11 @@ phases:
     behavioral evidence.'
   depends_on:
   - debt_closure.triage_and_decide
+- id: debt_closure.verify_and_close
+  name: Debt Closure Verify and Close
+  status: locked
+  gate: Behavioral re-verification, wiring/manifest audit, independent rereviews,
+    and the final closure gate must all stay blocked until blocker-class runtime evidence
+    is resolved or explicitly shown non-intersecting.
+  depends_on:
+  - debt_closure.impl_if_needed
