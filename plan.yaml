@@ -55694,7 +55694,7 @@ phases:
     claimed_at: '2026-04-04T20:43:25.518580+00:00'
   - id: debt_closure.final_review.behavior_rereview
     name: Re-review behavioral proof closure from a fresh reader
-    status: claimed
+    status: done
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.final_review.final_gate.
@@ -55739,6 +55739,13 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-04-04T20:43:19.978913+00:00'
+    done_at: '2026-04-04T20:48:54.953906+00:00'
+    evidence: 'Blind-tester delivered fresh-reader behavioral rereview table and challenged
+      over-optimistic R13 closure. Findings: R13 status inconsistent (static-only
+      proof with runtime probe skipped); R42 config-remove-inflight and disconnect-under-recovery
+      remain blockers; SURFACE-REENUMERATE and AUTH-MCP-FASTMCP remain blocker-class
+      ambiguities. Final recommendation: BLOCK until explicit closure evidence/ownership
+      is resolved.'
   - id: debt_closure.final_review.wiring_rereview
     name: Re-review wiring closure and review-process anti-regression uptake
     status: claimed
