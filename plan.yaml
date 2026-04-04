@@ -54026,6 +54026,108 @@ phases:
 
       - Documentation/metadata files impacted:'
     agent: software-architect
+  - id: debt_closure.impl.close_runtime_gap_if_exposed
+    name: Close any remaining R13 R42 runtime defect or proof gap
+    status: pending
+    description: 'Step type: implementation
+
+      Verification scope: local-check protecting debt_closure.verify runtime evidence
+      and all later gates.
+
+      Agent source: default.
+
+
+      Fill in any remaining runtime gap exposed by debt_closure.contract_test.add_runtime_hardening_tests
+      for the ADR-006 recovery slice.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - evidence/ADR-006-deep-conformance-audit.md — R13/R42 semantics are authoritative
+
+      - tests/shell/test_downstream_recovery.py — anti-regression tests are protected
+
+
+      YOUR SCOPE:
+
+      - Replace any remaining ambiguous or incomplete runtime logic in src/tela/shell/downstream.py
+      and tightly coupled recovery/reload helpers only where the new tests or closure
+      contract prove a real gap
+
+      - If code already conforms, add only the minimal substantive runtime support
+      needed to make evidence deterministic and repeatable; do not weaken tests
+
+      - Keep the implementation bounded to the ADR-006 recovery path and per-server
+      lock lifecycle
+
+
+      ## Failure-Mode Checklist (MANDATORY)
+
+      - config-reload remove while recovery lock is waiting or held
+
+      - lock cleanup after failed recovery vs successful recovery
+
+      - stale waiter fails closed with config_missing=true when server disappears
+
+      - no _registry_lock held during awaited network I/O
+
+
+      ## State Semantics
+
+      - last-writer-wins: runtime config removal beats in-flight recovery completion
+
+      - must preserve exactly: per-server serialization and healthy-neighbor non-blocking
+      behavior
+
+      - backward-compatible behavior: existing successful recovery and retry semantics
+      outside the audited gap
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.'
+    verification: '- Main path: targeted ADR-006 recovery tests cover the expected
+      recovery and cleanup behavior
+
+      - Failure path: targeted regression covers config-reload-remove and lock/I/O
+      separation
+
+      - Proof: no test was weakened to make the behavior appear closed'
+    evidence_template: '## Runtime Remediation Evidence
+
+
+      ### Files Changed
+
+      - <list>
+
+
+      ### Main Path Proof
+
+      - Test/command:
+
+      - Output:
+
+
+      ### Failure Path Proof
+
+      - Test/command:
+
+      - Output:
+
+
+      ### Why this closes the gap
+
+      - Root cause:
+
+      - Why prior evidence was insufficient:
+
+      - Why the change is not symptom-only:'
+    depends_on:
+    - debt_closure.impl.decide_surface_and_manifest_authority
+    agent: python-senior
 - id: debt_closure.verify
   name: Post-Gate Runtime Verification and Evidence
   status: locked
