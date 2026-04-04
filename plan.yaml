@@ -54564,51 +54564,54 @@ phases:
       that let it survive prior phase reviews.
 
 
-      Gate decision MUST stay BLOCKED unless all of the following are true:
+      Required final decision basis must include:
 
-      - R13 has executable runtime proof
+      - requirement or decision refs reviewed
+
+      - evidence refs reviewed
+
+      - unresolved statuses (NEEDS_TEST, UNPROVEN, UNCERTAIN_BLOCKING, PARTIAL)
+
+      - why each unresolved item blocks or does not intersect any remaining required
+      gate
+
+      - final OPEN/BLOCK recommendation
+
+
+      Gate MUST stay BLOCKED unless all of the following are true:
+
+      - R13 has executable runtime proof with explicit re-close confirmation where
+      earlier closure was overturned
 
       - R42 has executable cleanup proof in the config-reload-remove scenario
 
-      - re_enumerate() is no longer ambiguously public/dead
+      - re_enumerate() is no longer ambiguously public, dead, or framework-only
 
-      - mcp/fastmcp ownership is documented and auditable
+      - mcp/fastmcp authority is documented and auditable
 
-      - the Phase A review-hardening basis was demonstrably applied
-
-
-      This final gate is the only completion path for the new phase group; no bypass
-      is permitted.'
-    verification: '- Review final technical and process-closure evidence together
-
-      - Confirm no remaining blocker, PARTIAL, or NEEDS_TEST verdict survives
-
-      - Confirm this phase group forms the only authorized closure path for the debt
-      slice'
-    evidence_template: '## Final Debt-Closure Gate
+      - the review_miss phase hardening rules were demonstrably applied
 
 
-      ### Closure Checklist
+      This final gate is the only completion path for the debt-closure slice. downstream.py
+      size/refactor debt remains secondary and is not part of blocker closure unless
+      a prior artifact proves otherwise.'
+    verification: '- Review behavioral, spec, and wiring rereviews together
 
-      | Item | Closed | Evidence | Notes |
+      - Confirm no blocker-class unresolved status survives without explicit non-intersection
+      evidence
 
-      |---|---|---|---|
+      - Record explicit OPEN or BLOCK recommendation and cite the decisive artifacts'
+    evidence_template: '## Final Debt Closure Gate Decision Basis
 
-      | R13 runtime proof | | | |
+      | ref | evidence_ref | unresolved_status | blocks_done_state | non_intersection_basis
+      | final_decision_note |
 
-      | R42 cleanup proof | | | |
-
-      | re_enumerate clarity | | | |
-
-      | mcp/fastmcp clarity | | | |
-
-      | review-process anti-regression applied | | | |
+      |---|---|---|---|---|---|
 
 
-      ### Final Decision
-
-      - OPEN or BLOCKED'
+      **Recommendation**: OPEN | BLOCK'
     depends_on:
+    - debt_closure.final_review.behavior_rereview
     - debt_closure.final_review.spec_rereview
     - debt_closure.final_review.wiring_rereview
     agent: gate-reviewer
