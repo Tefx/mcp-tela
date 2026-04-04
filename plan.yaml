@@ -53526,56 +53526,6 @@ phases:
     be green before independent re-review.
   depends_on:
   - debt_closure.impl
-  steps:
-  - id: debt_closure.verify.wiring_and_manifest_audit
-    name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
-    status: pending
-    description: 'Step type: verification
-
-      Verification scope: phase-check protecting debt_closure.final_review.
-
-      Independence Level: L1
-
-      Agent source: default.
-
-
-      Audit the non-runtime closure claims after remediation.
-
-
-      Required checks:
-
-      1. re_enumerate() classification matches code, exports, docs, and any escape-hatch
-      annotations
-
-      2. mcp / fastmcp authority matches dependency metadata, imports, docs, and tests
-
-      3. no public-surface or manifest claim remains split across two authoritative
-      sources
-
-      4. review-miss anti-regression rules were actually consumed by the artifacts
-      emitted in this phase group
-
-
-      Required artifact: closure audit table containing requirement_ref or decision_ref,
-      evidence reviewed, verdict, and any residual ambiguity.
-
-
-      Use grep/import-trace style evidence or equivalent auditable outputs; assertions
-      without evidence are insufficient.'
-    verification: '- Report PASS or ISSUES_FOUND for re_enumerate() and mcp/fastmcp
-      authority separately
-
-      - Name each evidence source reviewed
-
-      - Any residual ambiguity is classified with explicit closure_path or blocker
-      reason'
-    evidence_template: '## Surface and Manifest Closure Audit
-
-      | decision_ref | evidence_reviewed | verdict | residual_ambiguity | closure_path
-      |
-
-      |---|---|---|---|---|'
-    agent: wiring-auditor
 - id: debt_closure.final_review
   name: Debt Closure Independent Re-Review and Final Closure Gate
   status: locked
@@ -54860,3 +54810,52 @@ phases:
 
       ```'
     agent: integration-verifier
+  - id: debt_closure.verify.wiring_and_manifest_audit
+    name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
+    status: pending
+    description: 'Step type: verification
+
+      Verification scope: phase-check protecting debt_closure.final_review.
+
+      Independence Level: L1
+
+      Agent source: default.
+
+
+      Audit the non-runtime closure claims after remediation.
+
+
+      Required checks:
+
+      1. re_enumerate() classification matches code, exports, docs, and any escape-hatch
+      annotations
+
+      2. mcp / fastmcp authority matches dependency metadata, imports, docs, and tests
+
+      3. no public-surface or manifest claim remains split across two authoritative
+      sources
+
+      4. review-miss anti-regression rules were actually consumed by the artifacts
+      emitted in this phase group
+
+
+      Required artifact: closure audit table containing requirement_ref or decision_ref,
+      evidence reviewed, verdict, and any residual ambiguity.
+
+
+      Use grep/import-trace style evidence or equivalent auditable outputs; assertions
+      without evidence are insufficient.'
+    verification: '- Report PASS or ISSUES_FOUND for re_enumerate() and mcp/fastmcp
+      authority separately
+
+      - Name each evidence source reviewed
+
+      - Any residual ambiguity is classified with explicit closure_path or blocker
+      reason'
+    evidence_template: '## Surface and Manifest Closure Audit
+
+      | decision_ref | evidence_reviewed | verdict | residual_ambiguity | closure_path
+      |
+
+      |---|---|---|---|---|'
+    agent: wiring-auditor
