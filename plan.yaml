@@ -54008,9 +54008,10 @@ phases:
   name: Post-Gate Runtime and Manifest Remediation
   status: locked
   gate: All runtime, public-surface, and manifest/dependency ambiguities are either
-    fixed or explicitly resolved before verification.
+    fixed or explicitly resolved after runtime proof collection and before closure
+    verification.
   depends_on:
-  - debt_closure.contract_test
+  - debt_closure.runtime_evidence
   steps:
   - id: debt_closure.impl.decide_surface_and_manifest_authority
     name: Decide re_enumerate surface status and mcp fastmcp authority
