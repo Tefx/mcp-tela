@@ -54507,10 +54507,10 @@ phases:
     - debt_closure.verify.wiring_and_manifest_audit
     agent: gate-reviewer
 - id: debt_closure.final_review
-  name: Debt Closure Independent Re-Review and Final Gate
+  name: Debt Closure Independent Re-Review and Final Closure Gate
   status: locked
-  gate: Independent auditors must confirm closure of R13/R42 and review-process gaps
-    before the plan can return to done.
+  gate: Independent auditors must confirm behavioral proof, surface decisions, manifest
+    authority, and review-miss hardening before the debt slice can return to done.
   depends_on:
   - debt_closure.verify
   steps:
