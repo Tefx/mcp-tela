@@ -53229,7 +53229,7 @@ phases:
       No new public recovery protocol step surfaced; stable error envelope preserved.'
   - id: adr006_recovery.deep_review.gate
     name: Final gate ADR-006 downstream recovery deep review
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery slice is complete, safe, and tightly scoped.
 
@@ -53276,6 +53276,8 @@ phases:
     - adr006_recovery.deep_review.black_box_verification
     - adr006_recovery.deep_review.retest_reload_authority_architecture
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T16:07:26.463059+00:00'
   - id: adr006_recovery.deep_review.fix_reload_authority
     name: Fix ADR-006 downstream reload authority fallback
     status: done
