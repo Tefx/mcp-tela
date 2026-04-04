@@ -55451,6 +55451,18 @@ phases:
       emitted in this phase group
 
 
+      Required audit breakdown:
+
+      - re_enumerate: export reachability, dead_export state if applicable, framework-only
+      classification if applicable, doc/public-surface wording consistency
+
+      - mcp / fastmcp: dependency declaration, actual import path usage, docs wording,
+      and test wording consistency
+
+      - anti-regression uptake: verify this phase''s artifacts actually consumed the
+      review-hardening expectations rather than merely restating them
+
+
       Required artifact: closure audit table containing requirement_ref or decision_ref,
       evidence reviewed, verdict, and any residual ambiguity.
 
@@ -55464,12 +55476,48 @@ phases:
 
       - Any residual ambiguity is classified with explicit closure_path or blocker
       reason'
-    evidence_template: '## Surface and Manifest Closure Audit
+    evidence_template: '## Wiring And Manifest Closure Audit
 
-      | decision_ref | evidence_reviewed | verdict | residual_ambiguity | closure_path
-      |
 
-      |---|---|---|---|---|'
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      | decision_or_requirement_ref | evidence_reviewed | verdict | residual_ambiguity
+      | closure_path |
+
+      |---|---|---|---|---|
+
+      | SURFACE-REENUMERATE | ... | PASS/ISSUES_FOUND | ... | ... |
+
+      | AUTH-MCP-FASTMCP | ... | PASS/ISSUES_FOUND | ... | ... |
+
+
+      ## Audit Checklist
+
+      - export reachability reviewed:
+
+      - dead_export / framework-only state reviewed:
+
+      - dependency declaration reviewed:
+
+      - import path usage reviewed:
+
+      - docs wording reviewed:
+
+      - tests wording reviewed:
+
+      - review-hardening uptake reviewed:
+
+      '
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - pyproject.toml
+    - src/tela/shell/downstream.py
     agent: wiring-auditor
   - id: debt_closure.final_review.spec_rereview
     name: Re-review ADR-006 closure criteria and audit verdicts
