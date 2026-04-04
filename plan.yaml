@@ -51870,7 +51870,7 @@ phases:
       - product implementation files modified: no'
 - id: adr006_recovery.impl
   name: ADR-006 Downstream Recovery Implementation
-  status: in_progress
+  status: done
   gate: Implementation of downstream recovery kernel and reload-race authority only
   depends_on:
   - adr006_recovery.test
@@ -52218,7 +52218,7 @@ phases:
       - none"
   - id: adr006_recovery.impl.gate
     name: Gate ADR-006 implementation
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery implementation meets the quality bar for independent verification.
 
@@ -52278,6 +52278,23 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T14:41:29.918230+00:00'
+    done_at: '2026-04-04T14:45:03.301069+00:00'
+    evidence: '## Gate Review Report
+
+      Phase: adr006_recovery.impl
+
+      - Implementation steps complete: yes
+
+      - Main-path evidence adequate: yes
+
+      - Failure-path evidence adequate: yes
+
+      - Shared-state/locking concerns: addressed (per-server lock map, lock-ordering
+      preserved, no I/O under _registry_lock, stale waiter/config reread checks)
+
+      - Diagnostic contract preserved: yes
+
+      - Decision: OPEN'
   - id: adr006_recovery.impl.fix_probe_free_test_setup
     name: Fix healthy-path probe-free test setup
     status: done
@@ -52380,7 +52397,7 @@ phases:
       \ counts\n  - 217 passed, 7 xfailed, 1 warning"
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
-  status: locked
+  status: pending
   gate: Independent green verification and ADR conformance review
   depends_on:
   - adr006_recovery.impl
