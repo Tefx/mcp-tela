@@ -54095,67 +54095,6 @@ phases:
     depends_on:
     - debt_closure.impl.decide_surface_and_manifest_authority
     agent: python-senior
-  - id: debt_closure.impl.gate
-    name: Gate runtime and surface remediation
-    status: pending
-    description: 'Step type: gate
-
-      Verification scope: phase-check protecting debt_closure.verify and debt_closure.final_review.
-
-      Agent source: default.
-
-
-      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether remediation and explicit
-      decisions are complete enough to justify post-resolution verification.
-
-
-      BLOCK if:
-
-      - runtime uncertainty remains blocker-class without explicit carry-forward proof
-      requirements
-
-      - re_enumerate() remains ambiguously supported
-
-      - mcp / fastmcp authority remains split across code, docs, or dependency metadata
-
-      - the phase attempts to fold downstream.py refactor debt into blocker closure
-      without proof that correctness is already closed
-
-
-      Required artifact: implementation gate decision basis mapping each runtime or
-      decision issue to the exact remediation evidence produced.'
-    verification: '- Review runtime remediation evidence and the surface/authority
-      decision record together
-
-      - Record explicit OPEN or BLOCK recommendation with unresolved blocker list
-      if blocked
-
-      - Confirm downstream_refactor debt remains secondary and non-blocking at this
-      stage'
-    evidence_template: '## Gate Review Report
-
-
-      ### Implementation Closure
-
-      | Item | Resolved | Evidence Quality | Notes |
-
-      |---|---|---|---|
-
-      | R13/R42 runtime gap | | | |
-
-      | re_enumerate classification | | | |
-
-      | mcp/fastmcp ownership | | | |
-
-
-      ### Gate Decision
-
-      - OPEN or BLOCKED'
-    depends_on:
-    - debt_closure.impl.decide_surface_and_manifest_authority
-    - debt_closure.impl.close_runtime_gap_if_exposed
-    - debt_closure.impl.apply_surface_and_manifest_resolution
-    agent: gate-reviewer
 - id: debt_closure.verify
   name: Debt Closure Verification and Closure Audit
   status: locked
@@ -54761,6 +54700,64 @@ phases:
     behavioral evidence.'
   depends_on:
   - debt_closure.triage_and_decide
+  steps:
+  - id: debt_closure.impl.gate
+    name: Gate runtime and surface remediation
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: phase-check protecting debt_closure.verify and debt_closure.final_review.
+
+      Agent source: default.
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether remediation and explicit
+      decisions are complete enough to justify post-resolution verification.
+
+
+      BLOCK if:
+
+      - runtime uncertainty remains blocker-class without explicit carry-forward proof
+      requirements
+
+      - re_enumerate() remains ambiguously supported
+
+      - mcp / fastmcp authority remains split across code, docs, or dependency metadata
+
+      - the phase attempts to fold downstream.py refactor debt into blocker closure
+      without proof that correctness is already closed
+
+
+      Required artifact: implementation gate decision basis mapping each runtime or
+      decision issue to the exact remediation evidence produced.'
+    verification: '- Review runtime remediation evidence and the surface/authority
+      decision record together
+
+      - Record explicit OPEN or BLOCK recommendation with unresolved blocker list
+      if blocked
+
+      - Confirm downstream_refactor debt remains secondary and non-blocking at this
+      stage'
+    evidence_template: '## Gate Review Report
+
+
+      ### Implementation Closure
+
+      | Item | Resolved | Evidence Quality | Notes |
+
+      |---|---|---|---|
+
+      | R13/R42 runtime gap | | | |
+
+      | re_enumerate classification | | | |
+
+      | mcp/fastmcp ownership | | | |
+
+
+      ### Gate Decision
+
+      - OPEN or BLOCKED'
+    agent: gate-reviewer
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
   status: locked
