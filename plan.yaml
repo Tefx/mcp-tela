@@ -53497,3 +53497,10 @@ phases:
       - tests/shell/test_downstream.py::test_get_runtime_server_config_uses_runtime_authority_over_hints
 
       - tests/shell/test_downstream.py::test_get_runtime_server_config_fails_when_server_removed_even_with_hint'
+- id: debt_closure.review_miss
+  name: Post-Gate Review-Miss Root Cause Analysis
+  status: pending
+  gate: Root-cause explanation and review-hardening basis approved before debt closure
+    execution.
+  depends_on:
+  - adr006_recovery.deep_review
