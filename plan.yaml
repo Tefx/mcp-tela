@@ -52809,7 +52809,7 @@ phases:
   steps:
   - id: adr006_recovery.doc_sync.update_runtime_docs
     name: Update runtime docs for ADR-006 recovery behavior
-    status: claimed
+    status: done
     description: 'Update documentation to match the implemented ADR-006 downstream
       recovery behavior.
 
@@ -52855,6 +52855,18 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-04-04T15:19:54.639269+00:00'
+    done_at: '2026-04-04T15:25:26.286143+00:00'
+    evidence: "## Doc Sync Evidence\n- Docs updated:\n  - docs/DESIGN.md\n  - docs/INTERFACES.md\n\
+      \  - docs/ADR-006-steady-state-downstream-recovery.md\n- Runtime behaviors aligned:\n\
+      \  - Eligibility classifier (_is_recovery_eligible_exception) -> src/tela/shell/downstream.py\n\
+      \  - One-retry max in call_tool retry path -> src/tela/shell/downstream.py\n\
+      \  - Per-server locks (_recovery_locks) -> src/tela/shell/downstream.py\n  -\
+      \ Timeout budget 15s (_RECOVERY_TIMEOUT_SECONDS) -> src/tela/shell/downstream.py\n\
+      \  - Error details keys (_build_recovery_error) -> src/tela/shell/downstream.py\n\
+      \  - Diagnostics events (_emit_recovery_diagnostic) -> src/tela/shell/downstream.py\n\
+      \  - Shared recovery primitive (_recover_server_client) used by call path and\
+      \ reconnect handler\n- Explicitly excluded from edits:\n  - heartbeat/lease\n\
+      \  - reaper-defaults reopening"
   - id: adr006_recovery.doc_sync.gate
     name: Gate ADR-006 documentation sync
     status: pending
