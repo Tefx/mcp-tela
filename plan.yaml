@@ -54759,56 +54759,6 @@ phases:
     depends_on:
     - debt_closure.runtime_evidence.collect_behavioral_proof
     agent: software-architect
-  - id: debt_closure.runtime_evidence.gate
-    name: Gate runtime proof obligations and uncertainty resolution
-    status: pending
-    description: 'Step type: gate
-
-      Verification scope: full-plan-check protecting debt_closure.impl and every downstream
-      closure path.
-
-      Agent source: default.
-
-
-      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether runtime proof collection
-      is strong enough to unlock remediation/decision work.
-
-
-      BLOCK if:
-
-      - the behavioral proof register omits any blocker-class obligation
-
-      - any NEEDS_TEST / UNPROVEN / UNCERTAIN_BLOCKING item lacks explicit ownership
-
-      - the uncertainty register blurs provenance with disposition
-
-      - the gate decision basis would allow debt_closure.impl or later gates to bypass
-      unresolved runtime evidence
-
-
-      Required decision artifact: gate decision basis mapping requirement refs, evidence
-      refs reviewed, unresolved statuses, non-intersection claims if any, and OPEN/BLOCK
-      recommendation.'
-    verification: '- Review both runtime artifacts together
-
-      - Record explicit OPEN or BLOCK recommendation with blocker list if blocked
-
-      - No downstream phase may proceed on vague or summary-only runtime evidence'
-    evidence_template: '## Runtime Evidence Gate Decision Basis
-
-      | requirement_ref | evidence_ref_reviewed | unresolved_status | blocks_next_phase
-      | non_intersection_basis | decision_note |
-
-      |---|---|---|---|---|---|
-
-
-      **Recommendation**: OPEN | BLOCK
-
-      **Blocking items**: <list or none>'
-    depends_on:
-    - debt_closure.runtime_evidence.collect_behavioral_proof
-    - debt_closure.runtime_evidence.resolve_uncertainty_register
-    agent: gate-reviewer
 - id: debt_closure.triage_and_decide
   name: Debt Closure Triage and Decide
   status: pending
@@ -54874,6 +54824,53 @@ phases:
       ### Gate Decision
 
       - OPEN or BLOCKED'
+    agent: gate-reviewer
+  - id: debt_closure.runtime_evidence.gate
+    name: Gate runtime proof obligations and uncertainty resolution
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: full-plan-check protecting debt_closure.impl and every downstream
+      closure path.
+
+      Agent source: default.
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether runtime proof collection
+      is strong enough to unlock remediation/decision work.
+
+
+      BLOCK if:
+
+      - the behavioral proof register omits any blocker-class obligation
+
+      - any NEEDS_TEST / UNPROVEN / UNCERTAIN_BLOCKING item lacks explicit ownership
+
+      - the uncertainty register blurs provenance with disposition
+
+      - the gate decision basis would allow debt_closure.impl or later gates to bypass
+      unresolved runtime evidence
+
+
+      Required decision artifact: gate decision basis mapping requirement refs, evidence
+      refs reviewed, unresolved statuses, non-intersection claims if any, and OPEN/BLOCK
+      recommendation.'
+    verification: '- Review both runtime artifacts together
+
+      - Record explicit OPEN or BLOCK recommendation with blocker list if blocked
+
+      - No downstream phase may proceed on vague or summary-only runtime evidence'
+    evidence_template: '## Runtime Evidence Gate Decision Basis
+
+      | requirement_ref | evidence_ref_reviewed | unresolved_status | blocks_next_phase
+      | non_intersection_basis | decision_note |
+
+      |---|---|---|---|---|---|
+
+
+      **Recommendation**: OPEN | BLOCK
+
+      **Blocking items**: <list or none>'
     agent: gate-reviewer
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
