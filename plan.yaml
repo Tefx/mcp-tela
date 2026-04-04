@@ -55754,7 +55754,7 @@ phases:
       is resolved.'
   - id: debt_closure.final_review.wiring_rereview
     name: Re-review wiring closure and review-process anti-regression uptake
-    status: claimed
+    status: done
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.final_review.final_gate.
@@ -55799,3 +55799,9 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-04T20:43:30.755437+00:00'
+    done_at: '2026-04-04T20:49:21.003124+00:00'
+    evidence: 'Wiring-auditor rereview produced full W1–W13 audit with concrete traces.
+      Most checks PASS (schema/CLI/contracts/dependencies/anti-regression uptake),
+      but identifies residual dead-export issue: `gateway_start` flagged dead (W1/W9)
+      and test-only `bind_gateway_startup` documented. Surface/process rereview includes
+      evidence refs and final gate impact that residual dead export remains open.'
