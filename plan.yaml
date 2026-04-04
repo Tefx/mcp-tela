@@ -53925,31 +53925,36 @@ phases:
     status: pending
     description: 'Step type: gate
 
-      Verification scope: phase-check protecting debt_closure.impl and all later phases.
+      Verification scope: phase-check protecting debt_closure.runtime_evidence and
+      all later phases.
 
       Agent source: default.
 
 
-      As an independent gate reviewer, confirm this phase converted the audit caveats
-      into executable closure criteria and runnable anti-regression tests.
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the debt-closure
+      basis is frozen tightly enough to support real proof collection.
 
 
       BLOCK if:
 
-      - R13 or R42 still lacks an executable pass/fail condition
+      - any proof obligation lacks pass/fail boundaries
 
-      - tests were added without naming the precise closure requirement they protect
+      - any probe/test obligation lacks a named execution anchor
 
-      - failures were found but not translated into concrete remediation scope for
-      Phase C
+      - the uncertainty register schema is missing
 
-      - re_enumerate() or mcp/fastmcp ownership remains unclassified'
-    verification: '- Review the frozen closure contract against the added tests
+      - the contract would allow a later gate to close on summary-only evidence
 
-      - Confirm every audit gap now has either runnable evidence or explicit remediation
-      ownership
 
-      - Confirm later phases can execute without reinterpreting the audit findings'
+      Required artifact: gate decision basis mapping proof obligations to executable
+      probes and unresolved handling rules.'
+    verification: '- Review the proof-obligation contract and runtime probe inventory
+      together
+
+      - Record explicit OPEN or BLOCK recommendation with missing contract gaps if
+      blocked
+
+      - Confirm later phases cannot reinterpret unresolved statuses informally'
     evidence_template: '## Gate Review Report
 
 
