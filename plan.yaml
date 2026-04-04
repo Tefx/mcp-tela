@@ -53527,77 +53527,6 @@ phases:
   depends_on:
   - debt_closure.impl
   steps:
-  - id: debt_closure.verify.runtime_evidence_r13_r42
-    name: Re-verify behavioral proof register after resolution
-    status: pending
-    description: 'Step type: verification
-
-      Verification scope: full-plan-check for the ADR-006 debt-closure slice; protects
-      debt_closure.final_review and any attempt to re-mark the plan done.
-
-      Independence Level: L2
-
-      Agent source: default.
-
-
-      As an INDEPENDENT TESTER, re-run the behavioral proof obligations after debt_closure.impl
-      work completes.
-
-
-      YOUR GOAL IS TO FIND REMAINING PROBLEMS, not to confirm success.
-
-
-      Required artifact: updated behavioral proof register using the same required
-      fields from debt_closure.runtime_evidence.collect_behavioral_proof.
-
-
-      Test for:
-
-      - R13 main proof and highest-risk failure path
-
-      - R42 main proof and highest-risk failure path
-
-      - any re-close proof required by the reversal register
-
-      - regression of healthy-neighbor liveness or config_missing fail-closed behavior
-
-
-      This step MUST paste the exact commands/tests and the actual observed output.
-      If any row remains NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING, say so explicitly
-      and identify the blocker family.'
-    verification: '- Re-run named R13/R42 probes and any re-close proof commands
-
-      - Evidence includes exact commands and pasted output, not summary-only pass
-      language
-
-      - Updated proof register assigns explicit status for every obligation
-
-      - Findings are reported as PASS or ISSUES_FOUND with blocker-family names'
-    evidence_template: '## Updated Behavioral Proof Register
-
-      | requirement_ref | evidence_ref | status | delta_from_runtime_evidence_phase
-      | closure_path | gate_decision_basis |
-
-      |---|---|---|---|---|---|
-
-
-      ## Commands Executed
-
-      ```
-
-      <paste exact commands>
-
-      ```
-
-
-      ## Actual Output
-
-      ```
-
-      <paste actual output>
-
-      ```'
-    agent: integration-verifier
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
     status: pending
@@ -54860,3 +54789,74 @@ phases:
 
       **Recommendation**: OPEN | BLOCK'
     agent: gate-reviewer
+  - id: debt_closure.verify.runtime_evidence_r13_r42
+    name: Re-verify behavioral proof register after resolution
+    status: pending
+    description: 'Step type: verification
+
+      Verification scope: full-plan-check for the ADR-006 debt-closure slice; protects
+      debt_closure.final_review and any attempt to re-mark the plan done.
+
+      Independence Level: L2
+
+      Agent source: default.
+
+
+      As an INDEPENDENT TESTER, re-run the behavioral proof obligations after debt_closure.impl
+      work completes.
+
+
+      YOUR GOAL IS TO FIND REMAINING PROBLEMS, not to confirm success.
+
+
+      Required artifact: updated behavioral proof register using the same required
+      fields from debt_closure.runtime_evidence.collect_behavioral_proof.
+
+
+      Test for:
+
+      - R13 main proof and highest-risk failure path
+
+      - R42 main proof and highest-risk failure path
+
+      - any re-close proof required by the reversal register
+
+      - regression of healthy-neighbor liveness or config_missing fail-closed behavior
+
+
+      This step MUST paste the exact commands/tests and the actual observed output.
+      If any row remains NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING, say so explicitly
+      and identify the blocker family.'
+    verification: '- Re-run named R13/R42 probes and any re-close proof commands
+
+      - Evidence includes exact commands and pasted output, not summary-only pass
+      language
+
+      - Updated proof register assigns explicit status for every obligation
+
+      - Findings are reported as PASS or ISSUES_FOUND with blocker-family names'
+    evidence_template: '## Updated Behavioral Proof Register
+
+      | requirement_ref | evidence_ref | status | delta_from_runtime_evidence_phase
+      | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|
+
+
+      ## Commands Executed
+
+      ```
+
+      <paste exact commands>
+
+      ```
+
+
+      ## Actual Output
+
+      ```
+
+      <paste actual output>
+
+      ```'
+    agent: integration-verifier
