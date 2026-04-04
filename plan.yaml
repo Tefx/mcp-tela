@@ -51643,7 +51643,7 @@ phases:
       - Product implementation files modified: none'
 - id: adr006_recovery.test
   name: ADR-006 Downstream Recovery Tests
-  status: in_progress
+  status: done
   gate: Expected-red definition before implementation; green verification after implementation
   depends_on:
   - adr006_recovery.contract
@@ -51798,7 +51798,7 @@ phases:
       \ semantics"
   - id: adr006_recovery.test.gate
     name: Gate ADR-006 expected-red tests
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       expected-red tests define the recovery gap without implementing product code.
 
@@ -51842,9 +51842,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T13:40:01.589921+00:00'
+    done_at: '2026-04-04T13:43:28.636918+00:00'
+    evidence: '## Gate Review Report
+
+      Phase: adr006_recovery.test
+
+      - Test-only scope preserved: yes
+
+      - Core matrix coverage adequate: yes
+
+      - Surface contract coverage adequate: yes
+
+      - Scope drift present: no
+
+      - Decision: OPEN
+
+      - step_intent: gate_review
+
+      - expected_result: open_or_blocked
+
+      - observed_result: OPEN (expected-red test definitions sufficiently cover ADR-006
+      gaps)
+
+      - failure_alignment: aligned; expected-red tests document missing behavior without
+      product implementation edits
+
+      - product implementation files modified: no'
 - id: adr006_recovery.impl
   name: ADR-006 Downstream Recovery Implementation
-  status: locked
+  status: pending
   gate: Implementation of downstream recovery kernel and reload-race authority only
   depends_on:
   - adr006_recovery.test
