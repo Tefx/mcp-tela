@@ -54630,3 +54630,10 @@ phases:
     - debt_closure.final_review.spec_rereview
     - debt_closure.final_review.wiring_rereview
     agent: gate-reviewer
+- id: debt_closure.runtime_evidence
+  name: ADR-006 Behavioral Runtime Evidence
+  status: locked
+  gate: Behavioral proof obligations and uncertainty resolution must be explicit before
+    any remediation or closure decision proceeds.
+  depends_on:
+  - debt_closure.contract_test
