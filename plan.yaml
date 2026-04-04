@@ -51488,6 +51488,52 @@ phases:
   gate: Contract freeze for downstream steady-state self-healing recovery only
   depends_on:
   - doc_sync.full_b
+  steps:
+  - id: adr006_recovery.contract.freeze_recovery_contract
+    name: Freeze ADR-006 downstream recovery contract
+    status: pending
+    description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
+      \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\n\nPin the exact implementation\
+      \ contract for the remaining ADR-006 downstream steady-state self-healing recovery\
+      \ slice.\n\nAuthoritative interface anchors:\n- async def call_tool(server_name:\
+      \ str, tool_name: str, arguments: dict) -> Result[dict, TelaError]\n- async\
+      \ def _recover_server_client(server_name: str, *, deadline_monotonic: float)\
+      \ -> Result[None, TelaError]\n\nRequired contract freeze:\n- healthy path remains\
+      \ probe-free\n- recovery is per target server, not global\n- automatic retry\
+      \ is only for recovery-eligible disconnect-class failures\n- ambiguous failures\
+      \ fail closed\n- at most one automatic retry per original user call\n- recovery\
+      \ reuses existing reconnect/convergence authority via shell/reload.py\n- config\
+      \ reload/remove wins over in-flight recovery\n- recovery timeout budget is 15.0s\
+      \ including lock wait + reconnect + init + enumeration + convergence\n- TelaError.details\
+      \ field names stay stable per ADR\n- structured diagnostics events/levels/stages\
+      \ stay stable per ADR\n\nContract-only scope:\n- clarify eligibility classifier\
+      \ boundaries and diagnostic payload shape\n- clarify lock ordering, stale-waiter\
+      \ reread rules, and recovery-stage values\n- do NOT implement runtime logic\
+      \ here\n- do NOT add heartbeat/lease work\n- do NOT reopen already-implemented\
+      \ reaper policy/default decisions"
+    verification: 'Verification scope: phase-check protecting adr006_recovery.test
+      and all downstream implementation/gates.
+
+      - Contract pins the exact signatures and the exact retry/eligibility envelope
+      from ADR-006
+
+      - Description preserves existing public call_tool surface and shared recovery
+      authority requirement
+
+      - No implementation logic is authorized by this step
+
+      - Out-of-scope exclusions are explicit: heartbeat/lease and reaper-defaults
+      are excluded'
+    evidence_template: "## ADR-006 Contract Freeze Evidence\n- Authoritative ADR sections\
+      \ cited:\n  - ownership-and-module-boundaries\n  - recovery-eligibility-contract\n\
+      \  - recovery-sequence\n  - concurrency-contract\n  - config-reload-concurrency-contract\n\
+      \  - error-payload-contract\n  - recovery-timeout-contract\n  - observability\n\
+      - Pinned interfaces:\n  - call_tool(...)\n  - _recover_server_client(...)\n\
+      - Required TelaError.details keys:\n  - server_name\n  - recovery_attempted\n\
+      \  - recovery_stage\n  - recovery_eligible\n  - config_missing\n  - underlying_error\n\
+      - Explicit non-goals:\n  - no heartbeat/lease protocol\n  - no reaper-policy\
+      \ reopening"
+    agent: python-executor
 - id: adr006_recovery.test
   name: ADR-006 Downstream Recovery Tests
   status: locked
