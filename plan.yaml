@@ -54144,54 +54144,57 @@ phases:
     status: pending
     description: 'Step type: implementation
 
-      Verification scope: local-check protecting debt_closure.verify wiring and manifest
-      audits.
+      Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review.
 
       Agent source: default.
 
 
-      Implement the authoritative decision from debt_closure.impl.decide_surface_and_manifest_authority.
+      Fill in the concrete resolution work required by the surface and authority decision
+      record.
 
 
       UPSTREAM ARTIFACTS:
 
-      - docs/DESIGN.md — currently advertises re_enumerate as public API
+      - debt_closure.impl.decide_surface_and_manifest_authority — decision record
+      is AUTHORITATIVE
 
-      - source files importing mcp / fastmcp — current dependency boundary under audit
+      - debt_closure.contract_test.freeze_closure_contract — proof and closure criteria
+      are PROTECTED
 
 
       YOUR SCOPE:
 
-      - Make the chosen re_enumerate classification real in code and docs
+      - make the chosen re_enumerate() classification real in code, exports, and docs
 
-      - Make the chosen mcp/fastmcp ownership rule real in code, docs, and dependency/manifest
-      metadata as required
+      - make the chosen mcp / fastmcp authority real in code, dependency metadata,
+      and docs
 
-      - Eliminate ambiguity: after this step, auditors must be able to tell whether
-      a symbol is intentionally reachable and whether the import boundary is authoritative
+      - keep edits limited to the files explicitly named by the decision record
 
 
-      KNOWN RISKS:
+      Known risk preview:
 
-      - Dead-export claims are often wrong when framework entrypoints or docs imply
-      a public contract
+      - dead-export ambiguity must not survive through undocumented public surface
+      leftovers
 
-      - Dependency clarity work can drift if code, docs, and metadata are not updated
-      together
+      - manifest authority must not remain split across pyproject, docs, and import
+      paths
+
+      - do not expand into downstream.py refactor debt; only close the decision-backed
+      surface and authority gaps
 
 
       ## Completion Criteria (stub exclusion)
 
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+      This is an IMPLEMENTATION step. Stub-only or docs-only closure is insufficient
+      if code or metadata still contradict the chosen authority.'
+    verification: '- The chosen re_enumerate() classification is reflected consistently
+      in code/docs/exports
 
-      Each deliverable MUST contain substantive logic or concrete contract/documentation
-      changes that make the chosen authority rule externally auditable.'
-    verification: '- Re_enumerate is either reachable by documented contract or removed/hidden
-      with matching docs
+      - The chosen mcp/fastmcp authority is reflected consistently in dependency metadata
+      and import guidance
 
-      - mcp/fastmcp ownership is consistent across code, docs, and metadata
-
-      - Evidence shows the chosen authority rule is externally auditable'
+      - Evidence names each edited file and the decision row it satisfies'
     evidence_template: '## Surface/Manifest Resolution Evidence
 
 
