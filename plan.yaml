@@ -55020,7 +55020,7 @@ phases:
     claimed_at: '2026-04-04T19:51:04.669101+00:00'
   - id: debt_closure.impl.decide_surface_and_manifest_authority
     name: Decide re_enumerate surface status and mcp fastmcp authority
-    status: pending
+    status: claimed
     description: 'Step type: planning
 
       Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution,
@@ -55143,6 +55143,8 @@ phases:
     - pyproject.toml
     - src/tela/shell/downstream.py
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-04T19:51:09.313573+00:00'
   - id: debt_closure.impl.harden_auditability_if_needed
     name: Harden proof auditability if runtime behavior is already correct
     status: pending
