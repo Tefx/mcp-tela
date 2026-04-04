@@ -52278,7 +52278,7 @@ phases:
     agent: gate-reviewer
   - id: adr006_recovery.impl.fix_probe_free_test_setup
     name: Fix healthy-path probe-free test setup
-    status: pending
+    status: claimed
     description: Repair test architecture for test_adr006_healthy_path_single_attempt_probe_free
       so it exercises a true healthy call path with a live client handle (or explicitly
       skip with justified scope note if healthy-path cannot be represented in this
@@ -52301,6 +52301,8 @@ phases:
     - adr006_recovery.impl.downstream_recovery_kernel
     - adr006_recovery.impl.reload_race_authority
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-04T14:31:46.614577+00:00'
   - id: adr006_recovery.impl.retest_probe_free_contract
     name: Retest ADR-006 implementation after probe-free test fix
     status: pending
