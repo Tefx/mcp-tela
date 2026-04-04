@@ -55075,6 +55075,96 @@ phases:
     - pyproject.toml
     - src/tela/shell/downstream.py
     agent: software-architect
+  - id: debt_closure.impl.harden_auditability_if_needed
+    name: Harden proof auditability if runtime behavior is already correct
+    status: pending
+    description: 'Step type: implementation
+
+      Verification scope: local-check protecting debt_closure.verify.runtime_evidence_r13_r42
+      and debt_closure.final_review.final_gate.
+
+      Agent source: default.
+
+
+      This step exists to separate proof-audit hardening from true runtime defect
+      repair.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - debt_closure.runtime_evidence.resolve_uncertainty_register — authoritative
+      source for whether runtime behavior is already PROVEN
+
+      - debt_closure.impl.close_runtime_gap_if_exposed — if runtime remediation occurred,
+      consume its outputs instead of re-opening the defect
+
+
+      YOUR SCOPE:
+
+      - If runtime behavior is already correct, make the proof auditable without manufacturing
+      functional churn
+
+      - Allowed work: narrowly scoped evidence anchors, probe-friendly comments/docs,
+      minimal helper exposure needed for verification, or explicit no-change closure
+      notes in the named artifacts
+
+      - If debt_closure.impl.close_runtime_gap_if_exposed already changed runtime
+      code, limit this step to proof-hardening that makes the closure easier to audit;
+      do not reopen design or refactor debt
+
+
+      Hard rules:
+
+      - do not change behavior merely to make tests easier
+
+      - do not broaden into downstream.py cleanup or architecture reshaping
+
+      - if existing artifacts are already auditable, emit explicit no-change evidence
+      instead of touching files
+
+
+      Completion criteria:
+
+      - runtime closure claims are auditable without relying on summary-only prose
+
+      - any no-change conclusion is backed by named evidence anchors'
+    verification: '- Evidence states whether any file changes were needed for auditability
+
+      - Any edit is minimal, proof-preserving, and tied to a named ambiguity row
+
+      - No new behavioral churn is introduced while hardening auditability'
+    evidence_template: '## Proof Auditability Hardening Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Auditability Decision
+
+      - file_changes_needed: yes/no
+
+      - if no: explicit no-change closure with evidence refs
+
+      - ambiguity rows closed:
+
+
+      ## Files Changed
+
+      - <path> — <auditability reason>
+
+
+      ## Why This Is Not Behavioral Churn
+
+      - <one line per edit or no-change rationale>
+
+      '
+    depends_on:
+    - debt_closure.impl.close_runtime_gap_if_exposed
+    agent: python-executor
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
   status: locked
