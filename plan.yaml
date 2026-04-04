@@ -54476,42 +54476,35 @@ phases:
       Agent source: default.
 
 
-      As spec-verifier, re-run an independent closure review against the frozen debt-closure
-      contract and the new runtime evidence.
+      Re-review the proof-obligation contract, behavioral proof registers, uncertainty
+      register, and verify-gate decision basis against the authoritative ADR-006 semantics.
 
 
       Required outputs:
 
-      - verdict for R13
+      - requirement-to-evidence map showing whether each closure criterion is PROVEN,
+      PARTIAL, DIVERGES, NEEDS_TEST, or AMBIGUOUS_SPEC
 
-      - verdict for R42
+      - explicit challenge to any closure claim that lacks runtime-proof expectations
+      or gate-decision basis
 
-      - verdict for re_enumerate surface clarity
-
-      - verdict for mcp/fastmcp ownership clarity
-
-
-      Use the same seven-verdict discipline from prior conformance audits. Behavioral
-      claims may not be marked closed without executable evidence from Phase D.'
-    verification: '- Produce explicit verdicts for each debt family
-
-      - Cite the closure contract and Phase D evidence in every verdict
-
-      - Flag any remaining NEEDS_TEST / PARTIAL / DIVERGES items as blockers'
-    evidence_template: '## Spec Re-Review Report
+      - note whether any spec or contract text should still be treated as stale after
+      resolution
 
 
-      | Item | Verdict | Evidence Cited | Notes |
+      This is not a tests-pass review; it is a proof-obligation conformance rereview.'
+    verification: '- Cite the authoritative contract or spec section for each conclusion
 
-      |---|---|---|---|
+      - Any NEEDS_TEST, PARTIAL, or DIVERGES verdict is surfaced to the final gate
+      as blocker or explicit non-intersection
 
-      | R13 | | | |
+      - No behavioral closure claim is accepted without evidence mapping'
+    evidence_template: '## Proof Conformance Re-Review
 
-      | R42 | | | |
+      | requirement_ref | authority_ref | evidence_ref | verdict | final_gate_impact
+      |
 
-      | re_enumerate clarity | | | |
-
-      | mcp/fastmcp clarity | | | |'
+      |---|---|---|---|---|'
     agent: spec-verifier
   - id: debt_closure.final_review.wiring_rereview
     name: Re-review wiring closure and review-process anti-regression uptake
