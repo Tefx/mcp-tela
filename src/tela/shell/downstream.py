@@ -663,6 +663,17 @@ async def _close_handle_best_effort(handle: _ClientHandle) -> None:
         return
 
 
+async def _drop_client_for_server(server_name: str) -> None:
+    """Remove one cached client handle and close it best-effort."""
+
+    async with _registry_lock:
+        stale_handle = _clients.pop(server_name, None)
+        _server_instructions.pop(server_name, None)
+
+    if stale_handle is not None:
+        await _close_handle_best_effort(stale_handle)
+
+
 async def _recover_server_client(
     server_name: str,
     *,
@@ -690,6 +701,7 @@ async def _recover_server_client(
                 config_result.error is not None
                 and (config_result.error.details or {}).get("config_missing") is True
             ):
+                await _drop_client_for_server(server_name)
                 should_prune_lock = True
             return Result(error=config_result.error)
         assert config_result.value is not None
@@ -804,6 +816,7 @@ async def _recover_server_client(
                 post_enum_config.error is not None
                 and (post_enum_config.error.details or {}).get("config_missing") is True
             ):
+                await _drop_client_for_server(server_name)
                 should_prune_lock = True
             return Result(error=post_enum_config.error)
         assert post_enum_config.value is not None
@@ -887,6 +900,7 @@ async def _recover_server_client(
                 pre_swap_config.error is not None
                 and (pre_swap_config.error.details or {}).get("config_missing") is True
             ):
+                await _drop_client_for_server(server_name)
                 should_prune_lock = True
             return Result(error=pre_swap_config.error)
         assert pre_swap_config.value is not None

@@ -1358,6 +1358,293 @@ def test_recover_server_client_fails_closed_when_server_removed_mid_recovery(
     assert recovery_result.error.details.get("config_missing") is True
 
 
+def test_recover_server_client_config_remove_cleans_stale_client_and_lock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Config removal during recovery drops stale client and prunes lock."""
+    from typing import Any
+
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    class TrackCloseStack:
+        def __init__(self) -> None:
+            self.closed = False
+
+        async def aclose(self) -> None:
+            self.closed = True
+
+    class FakeSession:
+        async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_a")})
+    )
+
+    stale_stack = TrackCloseStack()
+    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
+        session=FakeSession(),
+        stack=stale_stack,
+    )
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        set_runtime_config(TelaConfig(servers={}))
+        return Result(
+            value=downstream._ClientHandle(  # type: ignore[arg-type]
+                session=FakeSession(),
+                stack=TrackCloseStack(),
+            )
+        )
+
+    async def _fake_enumerate_client_tools(
+        server_name: str,
+        handle: downstream._ClientHandle,
+    ) -> Result[list[dict], str]:
+        return Result(value=[{"name": "tool_a", "inputSchema": {}}])
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        downstream, "_enumerate_client_tools", _fake_enumerate_client_tools
+    )
+
+    try:
+        recovery_result = asyncio.run(
+            downstream._recover_server_client(
+                "srv",
+                deadline_monotonic=1e12,
+            )
+        )
+    finally:
+        set_runtime_config(old_runtime)
+        downstream._clients.clear()
+        downstream._recovery_locks.clear()
+
+    assert recovery_result.is_err
+    assert recovery_result.error is not None
+    assert recovery_result.error.details is not None
+    assert recovery_result.error.details.get("config_missing") is True
+    assert stale_stack.closed is True
+    assert "srv" not in downstream._clients
+    assert "srv" not in downstream._recovery_locks
+
+
+def test_recover_server_client_releases_registry_lock_around_network_io(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Recovery network awaits run without holding _registry_lock."""
+    from typing import Any
+
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    class FakeSession:
+        async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_a")})
+    )
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        assert not downstream._registry_lock.locked()
+        return Result(
+            value=downstream._ClientHandle(  # type: ignore[arg-type]
+                session=FakeSession(),
+                stack=FakeStack(),
+            )
+        )
+
+    async def _fake_enumerate_client_tools(
+        server_name: str,
+        handle: downstream._ClientHandle,
+    ) -> Result[list[dict], str]:
+        assert not downstream._registry_lock.locked()
+        return Result(value=[{"name": "tool_a", "inputSchema": {}}])
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        assert not downstream._registry_lock.locked()
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        downstream, "_enumerate_client_tools", _fake_enumerate_client_tools
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect", _fake_on_server_reconnect
+    )
+
+    try:
+        recovery_result = asyncio.run(
+            downstream._recover_server_client(
+                "srv",
+                deadline_monotonic=1e12,
+            )
+        )
+    finally:
+        set_runtime_config(old_runtime)
+        downstream._clients.clear()
+        downstream._recovery_locks.clear()
+
+    assert recovery_result.is_ok
+
+
+def test_recover_server_client_success_closes_replaced_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Successful recovery closes stale client handle after swap."""
+    from typing import Any
+
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.config_loader import Result
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    class TrackCloseStack:
+        def __init__(self) -> None:
+            self.closed = False
+
+        async def aclose(self) -> None:
+            self.closed = True
+
+    class FakeSession:
+        async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_a")})
+    )
+
+    old_stack = TrackCloseStack()
+    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
+        session=FakeSession(),
+        stack=old_stack,
+    )
+
+    new_stack = TrackCloseStack()
+
+    async def _fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any | None = None,
+    ) -> Result[downstream._ClientHandle, str]:
+        return Result(
+            value=downstream._ClientHandle(  # type: ignore[arg-type]
+                session=FakeSession(),
+                stack=new_stack,
+            )
+        )
+
+    async def _fake_enumerate_client_tools(
+        server_name: str,
+        handle: downstream._ClientHandle,
+    ) -> Result[list[dict], str]:
+        return Result(value=[{"name": "tool_a", "inputSchema": {}}])
+
+    async def _fake_on_server_reconnect(
+        server_name: str,
+        server_config: ServerConfig,
+        tool_list: list[dict],
+    ) -> Result[None, str]:
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", _fake_open_client_for_server
+    )
+    monkeypatch.setattr(
+        downstream, "_enumerate_client_tools", _fake_enumerate_client_tools
+    )
+    monkeypatch.setattr(
+        "tela.shell.reload.on_server_reconnect", _fake_on_server_reconnect
+    )
+
+    try:
+        recovery_result = asyncio.run(
+            downstream._recover_server_client(
+                "srv",
+                deadline_monotonic=1e12,
+            )
+        )
+    finally:
+        set_runtime_config(old_runtime)
+        downstream._clients.clear()
+        downstream._recovery_locks.clear()
+
+    assert recovery_result.is_ok
+    assert old_stack.closed is True
+    assert new_stack.closed is False
+
+
+def test_disconnect_all_cleans_recovery_lock_under_recovery_pressure() -> None:
+    """disconnect_all clears recovery locks even when one is held."""
+    from typing import Any
+
+    from tela.shell import downstream
+
+    class TrackCloseStack:
+        def __init__(self) -> None:
+            self.closed = False
+
+        async def aclose(self) -> None:
+            self.closed = True
+
+    class FakeSession:
+        async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
+            return None
+
+    async def _exercise() -> None:
+        held_lock = asyncio.Lock()
+        await held_lock.acquire()
+        downstream._recovery_locks["srv"] = held_lock
+
+        stack = TrackCloseStack()
+        downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
+            session=FakeSession(),
+            stack=stack,
+        )
+
+        result = await downstream.disconnect_all()
+        assert result.is_ok
+        assert stack.closed is True
+        assert "srv" not in downstream._clients
+        assert "srv" not in downstream._recovery_locks
+
+        held_lock.release()
+
+    try:
+        asyncio.run(_exercise())
+    finally:
+        downstream._clients.clear()
+        downstream._recovery_locks.clear()
+
+
 def test_recover_server_client_rejects_material_config_change_before_swap(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
