@@ -53511,3 +53511,10 @@ phases:
     are frozen before remediation.
   depends_on:
   - debt_closure.review_miss
+- id: debt_closure.impl
+  name: Post-Gate Runtime and Manifest Remediation
+  status: locked
+  gate: All runtime, public-surface, and manifest/dependency ambiguities are either
+    fixed or explicitly resolved before verification.
+  depends_on:
+  - debt_closure.contract_test
