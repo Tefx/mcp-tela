@@ -54518,3 +54518,52 @@ phases:
 
       | mcp/fastmcp clarity | | | |'
     agent: spec-verifier
+  - id: debt_closure.final_review.wiring_rereview
+    name: Re-review wiring closure and review-process anti-regression uptake
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
+
+      Independence Level: L1
+
+      Agent source: default.
+
+
+      As wiring-auditor, re-review the final debt-closure slice with two goals:
+
+      1. confirm the re_enumerate and mcp/fastmcp ambiguity is actually closed in
+      the live repo state
+
+      2. confirm the anti-regression review basis from Phase A was concretely applied
+      in later evidence and gate shapes
+
+
+      This is not a generic pass-through. It must say whether the same class of review
+      miss could still recur after these phase additions.'
+    verification: '- Re-review the repo state and later-phase evidence against the
+      Phase A anti-regression checklist
+
+      - Explicitly answer whether the original miss pattern is now prevented
+
+      - Any residual repeatability risk is blocker-class'
+    evidence_template: '## Wiring / Review-Process Re-Review
+
+
+      ### Technical closure
+
+      - re_enumerate:
+
+      - mcp/fastmcp:
+
+
+      ### Process closure
+
+      - Runtime-evidence guardrail applied:
+
+      - Dead-export guardrail applied:
+
+      - Dependency-boundary guardrail applied:
+
+      - Could the same miss recur? yes/no and why'
+    agent: wiring-auditor
