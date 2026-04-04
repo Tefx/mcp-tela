@@ -53507,10 +53507,12 @@ phases:
   depends_on:
   - adr006_recovery.deep_review
 - id: debt_closure.contract_test
-  name: Debt Closure Basis and Proof Contract
+  name: Legacy shell (absorbed by debt_closure.triage_and_decide)
   status: locked
-  gate: Proof obligations, uncertainty register inputs, and executable runtime probes
-    are frozen before runtime closure or remediation.
+  gate: Legacy phase shell retained for provenance only; active debt-closure work
+    now lives in debt_closure.triage_and_decide.
+  context: No active steps remain; preserved only because phase deletion is not available
+    via vectl mutate.
   depends_on:
   - debt_closure.review_miss
 - id: debt_closure.impl
