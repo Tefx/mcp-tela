@@ -53334,3 +53334,56 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.architecture_review
     agent: python-senior
+  - id: adr006_recovery.deep_review.retest_reload_authority_architecture
+    name: Re-review ADR-006 reload-wins recovery authority
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (software-architect), re-verify the exact
+      ADR-006 architecture checks after the reload-authority fix.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Re-check all originally failed architecture concerns with explicit emphasis
+      on reload-wins authority:
+
+      - per-server recovery serialization rather than global serialization
+
+      - lock ordering between `_registry_lock` and per-server recovery locks
+
+      - cleanup/removal of lock instances for removed servers and `disconnect_all()`
+
+      - stale waiter reread rules and reload-wins semantics
+
+      - no fallback from runtime removal to `_server_config_hints` or equivalent stale
+      cache authority
+
+      - no cross-server interference from server A recovery to healthy server B calls
+
+
+      Independence Level: L2
+
+      Verification scope: phase-check protecting adr006_recovery.deep_review.gate.'
+    verification: '- Architecture review evidence explicitly states whether reload
+      removal remains authoritative over stale hints in downstream recovery lookup
+
+      - Review re-checks the exact prior architecture criteria, including reload-wins
+      semantics and stale reread behavior
+
+      - If any stale authority path remains, report it as blocker-class debt for gate
+      intersection'
+    evidence_template: '## Architecture Re-Review Report
+
+      - Prior blocker fingerprint: reload-wins stale-hint fallback
+
+      - Exact checks rerun: serialization, lock ordering, removal cleanup, stale reread,
+      reload-wins authority, cross-server isolation
+
+      - Reload-wins verdict: PASS | BLOCKED
+
+      - Evidence: <file:line + regression references>
+
+      - Remaining blockers: <none or list>'
+    depends_on:
+    - adr006_recovery.deep_review.fix_reload_authority
+    agent: software-architect
