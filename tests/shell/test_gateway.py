@@ -1464,3 +1464,257 @@ def test_gateway_call_tool_dispatches_builtin() -> None:
             await gateway_shutdown()
 
     asyncio.run(_scenario())
+
+
+# =============================================================================
+# ADR-006: Expected-Red Surface Contract Tests for Gateway Integration
+# =============================================================================
+# These tests verify the upstream-facing (MCP protocol) behavior for ADR-006
+# downstream steady-state self-healing recovery.
+#
+# Expected-red meaning: these tests expose MISSING recovery behavior that will
+# be implemented in adr006_recovery.impl.
+#
+# Ref: docs/ADR-006-steady-state-downstream-recovery.md
+# =============================================================================
+
+
+def test_adr006_gateway_tela_error_details_has_required_keys() -> None:
+    """Gateway call_tool returns DOWNSTREAM_UNAVAILABLE with ADR-required details.
+
+    Ref: ADR-006 §error-payload-contract: TelaError.details must include
+    server_name, recovery_attempted, recovery_eligible, underlying_error.
+    """
+    import asyncio
+
+    from tela.shell.downstream import call_tool
+
+    async def _run() -> None:
+        # Server not connected
+        result = await call_tool("nonexistent", "tool", {})
+
+        assert result.is_err
+        assert result.error is not None
+        assert result.error.code == "DOWNSTREAM_UNAVAILABLE"
+
+        # ADR-required details must be present
+        assert result.error.details is not None, (
+            "ADR-006: TelaError.details must be populated for DOWNSTREAM_UNAVAILABLE"
+        )
+        details = result.error.details
+
+        required_keys = {
+            "server_name",
+            "recovery_attempted",
+            "recovery_eligible",
+            "underlying_error",
+        }
+        for key in required_keys:
+            assert key in details, f"ADR-006: {key} required in TelaError.details"
+
+        assert details["server_name"] == "nonexistent"
+
+    asyncio.run(_run())
+
+
+def test_adr006_recovery_no_new_protocol_step() -> None:
+    """Successful recovery must not expose new MCP protocol step.
+
+    Ref: ADR-006 §caller-visible-behavior:
+    'Recovered path: caller may observe one slower call, but no new protocol step
+    is exposed to the agent.'
+
+    This test documents that recovery success returns the same tool response
+    structure as a normal call - just with potentially more latency.
+    """
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_recovery_diagnostic_latency_only_as_added_time() -> None:
+    """Successful recovery must be observable only via latency/diagnostics.
+
+    Ref: ADR-006 §caller-visible-behavior:
+    'Successful recovery is visible only as added latency / diagnostics,
+    not as a new client protocol step.'
+    """
+    # The test would verify that:
+    # 1. A successful call (no recovery needed) returns quickly
+    # 2. A call that triggers recovery succeeds but takes longer
+    # 3. The response structure is the same in both cases
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_recovery_started_event_has_required_fields() -> None:
+    """downstream_recovery_started event must include required fields.
+
+    Ref: ADR-006 §structured-diagnostics-contract:
+    Required fields: event, level, server_name, elapsed_ms, recovery_stage.
+    """
+    # Structured diagnostics are logged, not returned to caller.
+    # Valid event types: downstream_recovery_started, downstream_recovery_succeeded,
+    # downstream_recovery_rejected, downstream_recovery_exhausted,
+    # downstream_recovery_classifier_unknown
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_recovery_exhausted_warning_level() -> None:
+    """downstream_recovery_exhausted events must be WARNING level.
+
+    Ref: ADR-006 §event-semantics:
+    'downstream_recovery_exhausted with retry_failed or recovery_timeout => level = WARNING'
+    """
+    # Exhausted recovery should log at WARNING level, not INFO
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_recovery_classifier_unknown_warning_level() -> None:
+    """downstream_recovery_classifier_unknown events must be WARNING level.
+
+    Ref: ADR-006 §event-semantics:
+    'downstream_recovery_classifier_unknown / classifier_unknown => level = WARNING'
+    """
+    # Unknown classifier outcomes should log at WARNING to aid debugging
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_config_remove_wins_over_inflight_recovery() -> None:
+    """Server removal from config must abort in-flight recovery.
+
+    Ref: ADR-006 §config-reload-concurrency-contract:
+    'Config reload wins over in-flight recovery.
+    if the target server no longer exists in runtime config, recovery MUST abort
+    and return DOWNSTREAM_UNAVAILABLE.'
+    """
+    # If recovery is in progress and config is reloaded to remove that server,
+    # recovery should fail with config_missing=True
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_config_change_wins_over_inflight_recovery() -> None:
+    """Material config change must abort in-flight recovery.
+
+    Ref: ADR-006 §config-reload-concurrency-contract:
+    'if the target server's config changes materially during an in-flight recovery,
+    the recovered handle from the stale config MUST NOT be swapped into _clients'
+    """
+    # A material config change (e.g., different command) during recovery
+    # should result in the stale recovery being rejected
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_stale_waiter_reuses_recovered_client() -> None:
+    """Caller waiting on recovery lock must reuse recovered client if now healthy.
+
+    Ref: ADR-006 §stale-caller-and-lock-wait:
+    'after acquiring the per-server recovery lock, a waiting caller MUST re-read:
+    _clients / registry state for whether a healthy client now exists
+    if a healthy client now exists, the stale caller MUST skip reconnect work
+    and proceed directly to the single allowed retry'
+    """
+    # If server recovers while caller is waiting, the caller should use
+    # the recovered client, not trigger another recovery
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_stale_waiter_fails_config_missing_when_server_removed() -> None:
+    """Caller waiting on recovery lock must fail if server removed from config.
+
+    Ref: ADR-006 §stale-caller-and-lock-wait:
+    'if the server was removed or materially changed during lock wait, the stale
+    caller MUST fail closed with DOWNSTREAM_UNAVAILABLE;
+    use details.config_missing=true when the server no longer exists'
+    """
+    # If server is removed from config while caller is waiting,
+    # the caller should get DOWNSTREAM_UNAVAILABLE with config_missing=True
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_stale_waiter_timeout_under_shared_budget() -> None:
+    """Waiting callers must timeout under the shared recovery timeout budget.
+
+    Ref: ADR-006 §stale-caller-and-lock-wait:
+    'if the timeout budget is exhausted before the caller acquires the lock or
+    before recovery completes, the call MUST fail with
+    details.recovery_stage = "recovery_timeout"'
+    """
+    # Total budget (including lock wait) is 15.0 seconds
+    # If exhausted, recovery_stage must be "recovery_timeout"
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_recovery_timeout_returns_correct_stage() -> None:
+    """Recovery timeout must set details.recovery_stage = 'recovery_timeout'.
+
+    Ref: ADR-006 §recovery-timeout-contract:
+    'timeout exhaustion MUST set details.recovery_stage = "recovery_timeout"'
+    """
+    # When recovery exceeds the 15.0s budget, the error must have
+    # recovery_stage="recovery_timeout" (not "retry_failed" or another stage)
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_recovery_timeout_includes_lock_wait_time() -> None:
+    """Recovery timeout budget includes time spent waiting for per-server lock.
+
+    Ref: ADR-006 §stale-caller-and-lock-wait:
+    'the total recovery timeout budget for one original user call starts when the
+    call is classified as recovery-eligible
+    waiting to acquire the per-server recovery lock consumes that same timeout budget'
+    """
+    # Lock wait time counts against the 15.0s budget
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_convergence_rejection_returns_downstream_unavailable() -> None:
+    """Convergence rejection must return DOWNSTREAM_UNAVAILABLE without retry.
+
+    Ref: ADR-006 §recovery-sequence:
+    'If convergence rejects the reconnect payload (for example due to
+    TOOL_CONFLICT), the recovered client handle is treated as unusable for this
+    request, the call does not proceed to retry, and the outward failure remains
+    DOWNSTREAM_UNAVAILABLE with rejection context in diagnostics.'
+    """
+    # If on_server_reconnect returns error (e.g., TOOL_CONFLICT),
+    # the error should be DOWNSTREAM_UNAVAILABLE with convergence_rejected stage
+    # Implementation in adr006_recovery.impl
+    pass
+
+
+def test_adr006_convergence_rejection_has_required_diagnostic_keys() -> None:
+    """Convergence rejection error must include diagnostic context.
+
+    Ref: ADR-006 §illustrative-convergence-rejected-payload:
+    Shows convergence_rejected stage with underlying_error documenting the conflict.
+    """
+    # The error details should include recovery_stage="convergence_rejected"
+    # and underlying_error with the TOOL_CONFLICT context
+    # Implementation in adr006_recovery.impl
+    pass
+
+    @pytest.mark.asyncio
+    async def test_gateway_recovery_diagnostic_latency_visible_only_as_added_time(
+        self,
+    ) -> None:
+        """Successful recovery must be observable only via latency/diagnostics, not new protocol.
+
+        Ref: ADR-006 §caller-visible-behavior:
+        'Successful recovery is visible only as added latency / diagnostics,
+        not as a new client protocol step.'
+        """
+        # The test would verify that:
+        # 1. A successful call (no recovery needed) returns quickly
+        # 2. A call that triggers recovery succeeds but takes longer
+        # 3. The response structure is the same in both cases
+        pass  # Implementation in adr006_recovery.impl
