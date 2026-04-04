@@ -53518,3 +53518,10 @@ phases:
     fixed or explicitly resolved before verification.
   depends_on:
   - debt_closure.contract_test
+- id: debt_closure.verify
+  name: Post-Gate Runtime Verification and Evidence
+  status: locked
+  gate: Runtime evidence for R13/R42 and wiring/manifest closure must exist before
+    re-review.
+  depends_on:
+  - debt_closure.impl
