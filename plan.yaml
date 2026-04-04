@@ -51707,6 +51707,50 @@ phases:
       \  - ADR details keys preserved\n- Expected failures observed:\n  - <paste failing\
       \ test names>"
     agent: python-executor
+  - id: adr006_recovery.test.gate
+    name: Gate ADR-006 expected-red tests
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
+      expected-red tests define the recovery gap without implementing product code.
+
+
+      YOU ARE THE QUALITY GATE. Block progress if:
+
+      - tests blur eligible vs ambiguous failures
+
+      - one-retry semantics are not explicit
+
+      - timeout/lock-wait budget is missing
+
+      - reload-wins races are not covered
+
+      - healthy-path probe-free behavior is not asserted
+
+      - product logic leaked into the test-definition step'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.impl.
+
+      - Both red-test steps are test-only
+
+      - Gap exposure is explicit and sufficient for implementation
+
+      - No out-of-scope heartbeat/reaper-default behavior was introduced'
+    evidence_template: '## Gate Review Report
+
+      Phase: adr006_recovery.test
+
+      - Test-only scope preserved: yes/no
+
+      - Core matrix coverage adequate: yes/no
+
+      - Surface contract coverage adequate: yes/no
+
+      - Scope drift present: yes/no
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - adr006_recovery.test.define_red_core_matrix
+    - adr006_recovery.test.define_red_surface_contract
+    agent: gate-reviewer
 - id: adr006_recovery.impl
   name: ADR-006 Downstream Recovery Implementation
   status: locked
