@@ -54288,7 +54288,7 @@ phases:
   - debt_closure.impl
   steps:
   - id: debt_closure.verify.runtime_evidence_r13_r42
-    name: Collect independent runtime evidence for R13 and R42
+    name: Re-verify behavioral proof register after resolution
     status: pending
     description: 'Step type: verification
 
@@ -54300,77 +54300,63 @@ phases:
       Agent source: default.
 
 
-      As an INDEPENDENT TESTER, validate the ADR-006 downstream recovery runtime behavior
-      from a fresh perspective.
+      As an INDEPENDENT TESTER, re-run the behavioral proof obligations after debt_closure.impl
+      work completes.
 
 
-      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+      YOUR GOAL IS TO FIND REMAINING PROBLEMS, not to confirm success.
+
+
+      Required artifact: updated behavioral proof register using the same required
+      fields from debt_closure.runtime_evidence.collect_behavioral_proof.
 
 
       Test for:
 
-      - Happy path: recovery still succeeds without holding _registry_lock across
-      awaited network I/O
+      - R13 main proof and highest-risk failure path
 
-      - Edge cases: config-reload-remove during in-flight recovery; cleanup after
-      failure vs success; healthy-neighbor server remains unblocked
+      - R42 main proof and highest-risk failure path
 
-      - Error scenarios: stale waiter fails closed with config_missing=true when the
-      server disappears
+      - any re-close proof required by the reversal register
 
-      - Runtime proof: show actual command/test output demonstrating the lock protocol
-      and cleanup behavior
+      - regression of healthy-neighbor liveness or config_missing fail-closed behavior
 
 
-      Integration Evidence is mandatory. Mock-heavy summaries alone are insufficient.
+      This step MUST paste the exact commands/tests and the actual observed output.
+      If any row remains NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING, say so explicitly
+      and identify the blocker family.'
+    verification: '- Re-run named R13/R42 probes and any re-close proof commands
 
-      This step MUST paste the exact commands/tests and the actual observed output.'
-    verification: '- Run the named R13/R42 tests and any focused integration command
-      needed to prove runtime behavior
+      - Evidence includes exact commands and pasted output, not summary-only pass
+      language
 
-      - Evidence includes actual command lines and output, not ''tests pass'' summaries
+      - Updated proof register assigns explicit status for every obligation
 
-      - Report issues_found vs pass explicitly; findings are a successful verifier
-      outcome and must feed remediation if present'
-    evidence_template: '## Runtime Verification Report
+      - Findings are reported as PASS or ISSUES_FOUND with blocker-family names'
+    evidence_template: '## Updated Behavioral Proof Register
 
+      | requirement_ref | evidence_ref | status | delta_from_runtime_evidence_phase
+      | closure_path | gate_decision_basis |
 
-      **Tester**: integration-verifier
-
-      **Scope**: R13/R42 runtime closure
-
-      **Independence Level**: L2
-
-
-      ### Commands executed
-
-      ```\n<paste exact commands>\n```
+      |---|---|---|---|---|---|
 
 
-      ### Actual output
+      ## Commands Executed
 
-      ```\n<paste relevant output>\n```
+      ```
 
+      <paste exact commands>
 
-      ### Coverage
-
-      - R13 runtime proof:
-
-      - R42 cleanup proof:
-
-      - Healthy-neighbor non-blocking proof:
+      ```
 
 
-      ### Issues Found
+      ## Actual Output
 
-      | Severity | Description | Reproduction |
+      ```
 
-      |---|---|---|
+      <paste actual output>
 
-
-      ### Verdict
-
-      - PASS | ISSUES_FOUND | INCOMPLETE'
+      ```'
     agent: integration-verifier
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
