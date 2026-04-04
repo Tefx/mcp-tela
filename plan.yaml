@@ -54407,6 +54407,60 @@ phases:
 
       - <must be none or blocker>'
     agent: wiring-auditor
+  - id: debt_closure.verify.gate
+    name: Gate runtime evidence and wiring audit
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: full-plan-check protecting debt_closure.final_review and
+      plan completion.
+
+      Agent source: default.
+
+
+      As an independent gate reviewer, verify that Phase D produced the runtime evidence
+      and wiring/manifest audit required to close the post-hoc debt.
+
+
+      BLOCK if:
+
+      - runtime evidence is missing raw command/output proof
+
+      - R13 or R42 still relies on code inspection alone
+
+      - re_enumerate() or mcp/fastmcp clarity still depends on reader interpretation
+
+      - any blocker found by verification lacks a remediation path'
+    verification: '- Review verification evidence for completeness and independence
+
+      - Confirm the slice has executable proof, not only reasoning
+
+      - Confirm no bypass exists around this gate'
+    evidence_template: '## Gate Review Report
+
+
+      ### Verification Coverage
+
+      | Item | Evidence Present | Independent | Blocking Concerns |
+
+      |---|---|---|---|
+
+      | R13 runtime proof | | | |
+
+      | R42 cleanup proof | | | |
+
+      | re_enumerate clarity | | | |
+
+      | mcp/fastmcp clarity | | | |
+
+
+      ### Gate Decision
+
+      - OPEN or BLOCKED'
+    depends_on:
+    - debt_closure.verify.runtime_evidence_r13_r42
+    - debt_closure.verify.wiring_and_manifest_audit
+    agent: gate-reviewer
 - id: debt_closure.final_review
   name: Debt Closure Independent Re-Review and Final Gate
   status: locked
