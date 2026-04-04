@@ -52906,14 +52906,14 @@ phases:
       - Decision: OPEN'
 - id: adr006_recovery.deep_review
   name: ADR-006 Downstream Recovery Deep Review
-  status: pending
+  status: in_progress
   gate: Final independent audit of ADR-006 downstream recovery slice
   depends_on:
   - adr006_recovery.doc_sync
   steps:
   - id: adr006_recovery.deep_review.wiring_audit
     name: Audit ADR-006 recovery wiring
-    status: pending
+    status: claimed
     description: 'Complete wiring audit for ADR-006 downstream recovery path.
 
 
@@ -52943,6 +52943,8 @@ phases:
 
       - Verdict: PASS | ISSUES_FOUND'
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-04-04T15:31:53.748138+00:00'
   - id: adr006_recovery.deep_review.spec_conformance
     name: Audit full ADR-006 recovery conformance
     status: pending
