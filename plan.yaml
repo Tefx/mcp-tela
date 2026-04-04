@@ -52327,6 +52327,51 @@ phases:
       Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
       | SPEC_POSSIBLY_STALE'
     agent: spec-verifier
+  - id: adr006_recovery.verify.gate
+    name: Gate ADR-006 verification
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
+      downstream recovery slice has sufficient independent evidence to proceed.
+
+
+      YOU ARE THE QUALITY GATE. Block progress if:
+
+      - green verification is incomplete
+
+      - caller-visible conformance is not proven
+
+      - spec drift remains unresolved
+
+      - healthy-path probe-free behavior is not evidenced
+
+      - ambiguous failures are still retried or retry counting is unclear'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.doc_sync
+      and deep review.
+
+      - All verification steps completed with adequate evidence
+
+      - No unresolved blocker remains on retry safety, probe-free healthy path, config-race
+      precedence, or diagnostic contract
+
+      - Ready for documentation sync'
+    evidence_template: '## Gate Review Report
+
+      Phase: adr006_recovery.verify
+
+      - Green verification adequate: yes/no
+
+      - Surface conformance adequate: yes/no
+
+      - Spec conformance adequate: yes/no
+
+      - Blocking issues: <list>
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - adr006_recovery.verify.retest_green_matrix
+    - adr006_recovery.verify.surface_conformance
+    - adr006_recovery.verify.spec_conformance
+    agent: gate-reviewer
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
   status: locked
