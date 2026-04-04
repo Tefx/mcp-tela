@@ -52397,14 +52397,14 @@ phases:
       \ counts\n  - 217 passed, 7 xfailed, 1 warning"
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
-  status: pending
+  status: in_progress
   gate: Independent green verification and ADR conformance review
   depends_on:
   - adr006_recovery.impl
   steps:
   - id: adr006_recovery.verify.retest_green_matrix
     name: Run green recovery verification matrix
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       step_intent: retest_green
@@ -52488,6 +52488,8 @@ phases:
 
       - PASS | ISSUES_FOUND | INCOMPLETE'
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-04T14:45:22.267290+00:00'
   - id: adr006_recovery.verify.surface_conformance
     name: Verify caller-visible recovery surface conformance
     status: pending
