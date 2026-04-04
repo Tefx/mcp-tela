@@ -51562,7 +51562,7 @@ phases:
       \  - no healthy-path probe"
   - id: adr006_recovery.contract.gate
     name: Gate ADR-006 contract freeze
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery contract freeze is complete and sufficiently specific for
       safe implementation.
@@ -51608,6 +51608,8 @@ phases:
     depends_on:
     - adr006_recovery.contract.freeze_recovery_contract
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T13:21:44.338574+00:00'
 - id: adr006_recovery.test
   name: ADR-006 Downstream Recovery Tests
   status: locked
