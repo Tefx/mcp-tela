@@ -52542,7 +52542,7 @@ phases:
       Pass/fail summary: 39 passed, 7 xfailed, 0 failed for ADR-focused verification.'
   - id: adr006_recovery.verify.surface_conformance
     name: Verify caller-visible recovery surface conformance
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (blind-tester), validate the caller-visible
       ADR-006 behavior from the upstream surface.
 
@@ -52605,6 +52605,30 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-04-04T14:59:41.890083+00:00'
+    done_at: '2026-04-04T15:14:38.479961+00:00'
+    evidence: '## Integration Evidence
+
+      **Command or test exercising the full path**:
+
+      - uv run python tests/repro/test_adr006_runtime_evidence.py
+
+      - uv run pytest tests/shell/test_downstream_recovery.py -v
+
+
+      **Actual output**:
+
+      - runtime evidence script reported recovery primitive/classifier/lock/convergence
+      signatures present and exercised
+
+      - pytest output: 11 passed, 7 xfailed in tests/shell/test_downstream_recovery.py
+
+
+      **Path exercised**: upstream invocation seam -> downstream.call_tool -> eligibility
+      classifier -> per-server recovery lock -> _recover_server_client -> reload.on_server_reconnect
+      convergence -> retry/error outcome
+
+
+      **Verdict**: PASS'
   - id: adr006_recovery.verify.spec_conformance
     name: Run ADR-006 spec conformance review
     status: done
