@@ -54468,3 +54468,53 @@ phases:
     before the plan can return to done.
   depends_on:
   - debt_closure.verify
+  steps:
+  - id: debt_closure.final_review.spec_rereview
+    name: Re-review ADR-006 closure criteria and audit verdicts
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
+
+      Independence Level: L1
+
+      Agent source: default.
+
+
+      As spec-verifier, re-run an independent closure review against the frozen debt-closure
+      contract and the new runtime evidence.
+
+
+      Required outputs:
+
+      - verdict for R13
+
+      - verdict for R42
+
+      - verdict for re_enumerate surface clarity
+
+      - verdict for mcp/fastmcp ownership clarity
+
+
+      Use the same seven-verdict discipline from prior conformance audits. Behavioral
+      claims may not be marked closed without executable evidence from Phase D.'
+    verification: '- Produce explicit verdicts for each debt family
+
+      - Cite the closure contract and Phase D evidence in every verdict
+
+      - Flag any remaining NEEDS_TEST / PARTIAL / DIVERGES items as blockers'
+    evidence_template: '## Spec Re-Review Report
+
+
+      | Item | Verdict | Evidence Cited | Notes |
+
+      |---|---|---|---|
+
+      | R13 | | | |
+
+      | R42 | | | |
+
+      | re_enumerate clarity | | | |
+
+      | mcp/fastmcp clarity | | | |'
+    agent: spec-verifier
