@@ -53582,43 +53582,42 @@ phases:
   - id: debt_closure.review_miss.harden_review_closure_basis
     name: Define review-hardening basis for debt-closure execution
     status: pending
-    description: 'Step type: planning
+    description: 'Step type: review
 
-      Verification scope: phase-check protecting debt_closure.contract_test and all
-      later gates.
+      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
+      and all downstream closure gates.
 
       Agent source: default.
 
 
-      Using debt_closure.review_miss.root_cause_analysis as input, produce the binding
-      review-hardening basis for this remediation effort.
+      Define the review-hardening basis that this remediation plan will enforce.
 
 
       Required outputs:
 
-      - explicit closure criteria for when audit findings count as ''debt closed''
-      vs ''conforms-with-gaps''
+      - gate-review checklist that explicitly rejects any OPEN recommendation while
+      blocker-class behavioral obligations remain NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING
 
-      - mandatory evidence expectations for runtime-lock claims, dead-export claims,
-      and dependency-boundary claims
+      - requirement for structured artifacts: behavioral proof register, runtime uncertainty
+      register, and final gate decision basis
 
-      - reviewer prompts for future gate-reviewer, wiring-auditor, and spec-verifier
-      steps in this phase group
+      - closure rule for non-intersection claims: they must name the remaining gates
+      they do not intersect
 
-      - anti-regression rule stating that behavioral CONFORMS claims with runtime
-      caveats cannot close without executable evidence
+      - review-depth guidance for the debt_closure phases
+
+      - explicit note that post-hoc reversals require review_miss_cause, remediation_owner,
+      and re-close proof
 
 
-      This step is planning-only: do not alter product code. It defines the evidence
-      bar that downstream steps must satisfy.'
-    verification: '- Closure basis explicitly names R13 and R42 as must-close items
+      Do not create generic process advice. Produce the binding review rules this
+      phase group will use.'
+    verification: '- Review-hardening basis names the exact artifact types later phases
+      must emit
 
-      - Closure basis defines how re_enumerate() and mcp/fastmcp import clarity will
-      be judged
+      - The basis blocks premature closure on unresolved behavioral-runtime evidence
 
-      - Output provides reviewer-specific prompts reused by later phases
-
-      - No blocker-class evidence requirement is left implicit'
+      - The basis records how a future reviewer decides OPEN vs BLOCK'
     evidence_template: '## Debt-Closure Review Basis
 
 
@@ -53647,6 +53646,7 @@ phases:
       - <numbered list>'
     depends_on:
     - debt_closure.review_miss.root_cause_analysis
+    - debt_closure.review_miss.capture_reversal_record
     agent: software-architect
   - id: debt_closure.review_miss.gate
     name: Gate root-cause and review-hardening basis
