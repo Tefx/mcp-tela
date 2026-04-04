@@ -54052,71 +54052,63 @@ phases:
     status: pending
     description: 'Step type: implementation
 
-      Verification scope: local-check protecting debt_closure.verify runtime evidence
-      and all later gates.
+      Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review
+      runtime closure.
 
       Agent source: default.
 
 
-      Fill in any remaining runtime gap exposed by debt_closure.contract_test.add_runtime_hardening_tests
-      for the ADR-006 recovery slice.
-
-
-      UPSTREAM ARTIFACTS:
-
-      - evidence/ADR-006-deep-conformance-audit.md — R13/R42 semantics are authoritative
-
-      - tests/shell/test_downstream_recovery.py — anti-regression tests are protected
+      Use the runtime uncertainty register from debt_closure.runtime_evidence.resolve_uncertainty_register
+      as the authoritative scope input.
 
 
       YOUR SCOPE:
 
-      - Replace any remaining ambiguous or incomplete runtime logic in src/tela/shell/downstream.py
-      and tightly coupled recovery/reload helpers only where the new tests or closure
-      contract prove a real gap
+      - If R13 or R42 remains UNPROVEN or UNCERTAIN_BLOCKING because of an actual
+      code defect, replace the failing runtime path with working logic and preserve
+      the proof probes
 
-      - If code already conforms, add only the minimal substantive runtime support
-      needed to make evidence deterministic and repeatable; do not weaken tests
-
-      - Keep the implementation bounded to the ADR-006 recovery path and per-server
-      lock lifecycle
-
-
-      ## Failure-Mode Checklist (MANDATORY)
-
-      - config-reload remove while recovery lock is waiting or held
-
-      - lock cleanup after failed recovery vs successful recovery
-
-      - stale waiter fails closed with config_missing=true when server disappears
-
-      - no _registry_lock held during awaited network I/O
+      - If runtime behavior is already PROVEN and no code defect exists, complete
+      only the minimal edits needed to make that proof auditable and non-ambiguous
+      (for example evidence-anchor helpers or narrowly scoped runtime comments/docs
+      tied to the proof contract)
 
 
-      ## State Semantics
+      Required failure-mode coverage inside this step:
 
-      - last-writer-wins: runtime config removal beats in-flight recovery completion
+      - config-reload-remove while recovery is in flight
 
-      - must preserve exactly: per-server serialization and healthy-neighbor non-blocking
-      behavior
+      - cleanup after success and cleanup after failure
 
-      - backward-compatible behavior: existing successful recovery and retry semantics
-      outside the audited gap
+      - missing-file / removed-server fail-closed behavior
+
+      - healthy-neighbor non-blocking behavior during recovery
+
+      - lock-hold boundary around awaited network I/O
 
 
       ## Completion Criteria (stub exclusion)
 
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Any
+      code change must contain substantive logic or substantive proof-preserving instrumentation
+      that varies based on runtime state. If no code change is needed, the evidence-hardening
+      edits must still make the proof contract executable and auditable.
 
-      Each deliverable MUST contain substantive logic that processes its inputs and
-      produces outputs that vary based on those inputs.'
-    verification: '- Main path: targeted ADR-006 recovery tests cover the expected
-      recovery and cleanup behavior
 
-      - Failure path: targeted regression covers config-reload-remove and lock/I/O
-      separation
+      Out-of-scope guardrail:
 
-      - Proof: no test was weakened to make the behavior appear closed'
+      - downstream.py size/refactor remains deferred; do not do structural cleanup
+      beyond what is required to close the R13/R42 blocker family.'
+    verification: '- Main path: targeted R13/R42 probes have a concrete implementation
+      target or auditable evidence anchor
+
+      - Failure path: at least one regression covers in-flight removal or lock-hold
+      boundary
+
+      - Evidence states clearly whether product-code changes were required or proof-hardening
+      only was required
+
+      - No closure claim rests on summary-only reasoning'
     evidence_template: '## Runtime Remediation Evidence
 
 
