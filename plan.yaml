@@ -55648,7 +55648,7 @@ phases:
       anti-regression uptake. Residual ambiguity: none.'
   - id: debt_closure.final_review.spec_rereview
     name: Re-review ADR-006 closure criteria and audit verdicts
-    status: pending
+    status: claimed
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.final_review.final_gate.
@@ -55690,6 +55690,8 @@ phases:
     depends_on:
     - debt_closure.verify.gate
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-04-04T20:43:25.518580+00:00'
   - id: debt_closure.final_review.behavior_rereview
     name: Re-review behavioral proof closure from a fresh reader
     status: claimed
