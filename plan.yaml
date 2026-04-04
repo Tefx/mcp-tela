@@ -52519,3 +52519,38 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.wiring_audit
     agent: spec-verifier
+  - id: adr006_recovery.deep_review.architecture_review
+    name: Review ADR-006 locking and recovery architecture
+    status: pending
+    description: 'Review module boundaries, dependency direction, and concurrency
+      safety for the ADR-006 downstream recovery slice.
+
+
+      Specifically check:
+
+      - per-server recovery serialization rather than global serialization
+
+      - lock ordering between _registry_lock and per-server recovery locks
+
+      - cleanup/removal of lock instances for removed servers and disconnect_all()
+
+      - stale waiter reread rules and reload-wins semantics
+
+      - no cross-server interference from server A recovery to healthy server B calls'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.deep_review.gate.
+
+      - Architecture review explicitly assesses concurrency and shared-state risk'
+    evidence_template: '## Architecture Review
+
+      - Per-server isolation: PASS/FAIL
+
+      - Lock ordering: PASS/FAIL
+
+      - Cleanup semantics: PASS/FAIL
+
+      - Reload-wins semantics: PASS/FAIL
+
+      - Notes: <details>'
+    depends_on:
+    - adr006_recovery.deep_review.wiring_audit
+    agent: software-architect
