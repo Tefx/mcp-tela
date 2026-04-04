@@ -54567,3 +54567,66 @@ phases:
 
       - Could the same miss recur? yes/no and why'
     agent: wiring-auditor
+  - id: debt_closure.final_review.final_gate
+    name: Final gate for post-gate debt closure
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: full-plan-check protecting any return to done state.
+
+      Agent source: default.
+
+
+      As the final independent gate reviewer, decide whether this debt-closure effort
+      actually closes both the technical ADR-006 debt and the review-process debt
+      that let it survive prior phase reviews.
+
+
+      Gate decision MUST stay BLOCKED unless all of the following are true:
+
+      - R13 has executable runtime proof
+
+      - R42 has executable cleanup proof in the config-reload-remove scenario
+
+      - re_enumerate() is no longer ambiguously public/dead
+
+      - mcp/fastmcp ownership is documented and auditable
+
+      - the Phase A review-hardening basis was demonstrably applied
+
+
+      This final gate is the only completion path for the new phase group; no bypass
+      is permitted.'
+    verification: '- Review final technical and process-closure evidence together
+
+      - Confirm no remaining blocker, PARTIAL, or NEEDS_TEST verdict survives
+
+      - Confirm this phase group forms the only authorized closure path for the debt
+      slice'
+    evidence_template: '## Final Debt-Closure Gate
+
+
+      ### Closure Checklist
+
+      | Item | Closed | Evidence | Notes |
+
+      |---|---|---|---|
+
+      | R13 runtime proof | | | |
+
+      | R42 cleanup proof | | | |
+
+      | re_enumerate clarity | | | |
+
+      | mcp/fastmcp clarity | | | |
+
+      | review-process anti-regression applied | | | |
+
+
+      ### Final Decision
+
+      - OPEN or BLOCKED'
+    depends_on:
+    - debt_closure.final_review.spec_rereview
+    - debt_closure.final_review.wiring_rereview
+    agent: gate-reviewer
