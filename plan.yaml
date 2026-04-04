@@ -52317,7 +52317,7 @@ phases:
       - Result: 1 passed in 0.70s"
   - id: adr006_recovery.impl.retest_probe_free_contract
     name: Retest ADR-006 implementation after probe-free test fix
-    status: claimed
+    status: done
     description: Run focused ADR-006 test set to confirm implementation and surface-contract
       tests all pass after test setup correction.
     verification: Focused suite passes; no regression in classifier, retry cap, reload-wins,
@@ -52334,6 +52334,13 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-04T14:40:19.144175+00:00'
+    done_at: '2026-04-04T14:41:15.238253+00:00'
+    evidence: "## Retest Evidence\n- Command(s)\n  - uv run pytest tests/shell/test_downstream.py\
+      \ tests/shell/test_downstream_recovery.py tests/shell/test_reload.py tests/shell/test_upstream.py\
+      \ tests/shell/test_gateway.py -q\n- Pass/fail counts\n  - Total 224\n  - Passed\
+      \ 217\n  - Xfailed 7 (expected)\n  - Warnings 1 (non-blocking pytest mark warning)\n\
+      - Any remaining failures and disposition\n  - No hard failures; focused ADR\
+      \ suite green with expected xfails only."
   - id: adr006_recovery.impl.normalize_gap_tests_post_impl
     name: Normalize expected-red gap tests for post-implementation green retest
     status: done
