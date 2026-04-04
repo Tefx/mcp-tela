@@ -54426,72 +54426,6 @@ phases:
 
       |---|---|---|---|---|'
     agent: wiring-auditor
-  - id: debt_closure.final_review.final_gate
-    name: Final gate for post-gate debt closure
-    status: pending
-    description: 'Step type: gate
-
-      Verification scope: full-plan-check protecting any return to done state.
-
-      Agent source: default.
-
-
-      As the final independent gate reviewer, decide whether this debt-closure effort
-      actually closes both the technical ADR-006 debt and the review-process debt
-      that let it survive prior phase reviews.
-
-
-      Required final decision basis must include:
-
-      - requirement or decision refs reviewed
-
-      - evidence refs reviewed
-
-      - unresolved statuses (NEEDS_TEST, UNPROVEN, UNCERTAIN_BLOCKING, PARTIAL)
-
-      - why each unresolved item blocks or does not intersect any remaining required
-      gate
-
-      - final OPEN/BLOCK recommendation
-
-
-      Gate MUST stay BLOCKED unless all of the following are true:
-
-      - R13 has executable runtime proof with explicit re-close confirmation where
-      earlier closure was overturned
-
-      - R42 has executable cleanup proof in the config-reload-remove scenario
-
-      - re_enumerate() is no longer ambiguously public, dead, or framework-only
-
-      - mcp/fastmcp authority is documented and auditable
-
-      - the review_miss phase hardening rules were demonstrably applied
-
-
-      This final gate is the only completion path for the debt-closure slice. downstream.py
-      size/refactor debt remains secondary and is not part of blocker closure unless
-      a prior artifact proves otherwise.'
-    verification: '- Review behavioral, spec, and wiring rereviews together
-
-      - Confirm no blocker-class unresolved status survives without explicit non-intersection
-      evidence
-
-      - Record explicit OPEN or BLOCK recommendation and cite the decisive artifacts'
-    evidence_template: '## Final Debt Closure Gate Decision Basis
-
-      | ref | evidence_ref | unresolved_status | blocks_done_state | non_intersection_basis
-      | final_decision_note |
-
-      |---|---|---|---|---|---|
-
-
-      **Recommendation**: OPEN | BLOCK'
-    depends_on:
-    - debt_closure.final_review.behavior_rereview
-    - debt_closure.final_review.spec_rereview
-    - debt_closure.final_review.wiring_rereview
-    agent: gate-reviewer
   - id: debt_closure.final_review.behavior_rereview
     name: Re-review behavioral proof closure from a fresh reader
     status: pending
@@ -54884,3 +54818,66 @@ phases:
     is resolved or explicitly shown non-intersecting.
   depends_on:
   - debt_closure.impl_if_needed
+  steps:
+  - id: debt_closure.final_review.final_gate
+    name: Final gate for post-gate debt closure
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: full-plan-check protecting any return to done state.
+
+      Agent source: default.
+
+
+      As the final independent gate reviewer, decide whether this debt-closure effort
+      actually closes both the technical ADR-006 debt and the review-process debt
+      that let it survive prior phase reviews.
+
+
+      Required final decision basis must include:
+
+      - requirement or decision refs reviewed
+
+      - evidence refs reviewed
+
+      - unresolved statuses (NEEDS_TEST, UNPROVEN, UNCERTAIN_BLOCKING, PARTIAL)
+
+      - why each unresolved item blocks or does not intersect any remaining required
+      gate
+
+      - final OPEN/BLOCK recommendation
+
+
+      Gate MUST stay BLOCKED unless all of the following are true:
+
+      - R13 has executable runtime proof with explicit re-close confirmation where
+      earlier closure was overturned
+
+      - R42 has executable cleanup proof in the config-reload-remove scenario
+
+      - re_enumerate() is no longer ambiguously public, dead, or framework-only
+
+      - mcp/fastmcp authority is documented and auditable
+
+      - the review_miss phase hardening rules were demonstrably applied
+
+
+      This final gate is the only completion path for the debt-closure slice. downstream.py
+      size/refactor debt remains secondary and is not part of blocker closure unless
+      a prior artifact proves otherwise.'
+    verification: '- Review behavioral, spec, and wiring rereviews together
+
+      - Confirm no blocker-class unresolved status survives without explicit non-intersection
+      evidence
+
+      - Record explicit OPEN or BLOCK recommendation and cite the decisive artifacts'
+    evidence_template: '## Final Debt Closure Gate Decision Basis
+
+      | ref | evidence_ref | unresolved_status | blocks_done_state | non_intersection_basis
+      | final_decision_note |
+
+      |---|---|---|---|---|---|
+
+
+      **Recommendation**: OPEN | BLOCK'
+    agent: gate-reviewer
