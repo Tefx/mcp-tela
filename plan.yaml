@@ -51887,6 +51887,171 @@ phases:
 
       - none | <describe>'
     agent: python-senior
+  - id: adr006_recovery.impl.downstream_recovery_kernel
+    name: Implement downstream recovery kernel and one-safe-retry path
+    status: pending
+    description: 'step_type: implementation
+
+
+      Fill in stub bodies and existing runtime logic in src/tela/shell/downstream.py
+      per the contract from step adr006_recovery.contract.freeze_recovery_contract.
+
+
+      UPSTREAM ARTIFACTS (from contract/test steps):
+
+      - docs/ADR-006-steady-state-downstream-recovery.md — signatures, retries, timeout,
+      details, diagnostics are AUTHORITATIVE
+
+      - tests/shell/test_downstream.py / tests/shell/test_downstream_recovery.py —
+      red test cases are PROTECTED
+
+      - tests/shell/test_reload.py — race and convergence expectations are PROTECTED
+
+      - tests/shell/test_upstream.py and tests/shell/test_gateway.py — caller-visible
+      behavior is PROTECTED
+
+
+      YOUR SCOPE: Replace missing recovery behavior in the existing call path only.
+
+      - extract and implement shared internal recovery primitive _recover_server_client(...)
+
+      - add conservative recovery-eligibility classification exactly per ADR
+
+      - add per-server recovery lock map owned by shell/downstream.py
+
+      - enforce one original attempt plus at most one automatic retry
+
+      - require caller to re-read live client/registry state after successful recovery
+
+      - emit structured recovery diagnostics with ADR-required event/level/stage fields
+
+      - preserve healthy-path probe-free behavior
+
+
+      If a contract artifact is wrong or incomplete, document a deviation record (type,
+      what, why, impact) — do NOT silently rewrite.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Failure-mode checklist
+
+      - no client handle -> recovery-eligible
+
+      - explicit local not-connected / closed / uninitialized runtime errors -> recovery-eligible
+      only when they exactly match ADR-approved classifier rules
+
+      - TimeoutError / asyncio.TimeoutError -> NOT retried
+
+      - BrokenPipeError / ConnectionResetError / EOF-like mid-flight failures -> NOT
+      retried
+
+      - retry failure is terminal; do not start a second recovery attempt
+
+      - lock wait consumes the same 15.0s recovery budget
+
+
+      ## State semantics
+
+      - last-writer-wins: latest runtime config after lock acquisition
+
+      - must preserve exactly: shared reload convergence authority and current public
+      call_tool entrypoint
+
+      - backward-compatible behavior: healthy calls stay single-attempt and probe-free
+
+
+      ## Module-level mutable state hardening
+
+      Because this step introduces/changes shared runtime state in shell/downstream.py,
+      include explicit handling for:
+
+      - concurrent access to per-server recovery locks
+
+      - cleanup/removal semantics for lock instances during disconnect_all() and permanent
+      server removal
+
+      - bounded growth / no orphaned lock entries for removed servers
+
+      - isolation guarantee: recovery for server A must not block healthy calls to
+      server B
+
+
+      ## KNOWN RISKS (from project history)
+
+      - Output/diagnostic drift: preserve exact structured detail keys and event semantics;
+      gates will reject renamed fields
+
+      - Shared mutable runtime state: lock ordering mistakes can deadlock or serialize
+      unrelated servers
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any second automatic retry or second recovery attempt for one original call
+
+      2. Any ambiguous failure auto-retry
+
+      3. Any ad hoc _clients or registry mutation bypassing reload.py convergence
+
+      4. Any global lock behavior that blocks unrelated healthy servers'
+    verification: 'Verification scope: local-check protecting adr006_recovery.verify
+      and deep review.
+
+      - Main path: targeted tests for eligibility, retry cap, stale waiter reuse,
+      and probe-free healthy path pass
+
+      - Failure path: focused regression tests cover timeout, ambiguous transport
+      failures, config_missing, and recovery_timeout
+
+      - Proof: no recovery path mutates _clients or registry ad hoc outside the accepted
+      convergence path
+
+      - Proof: no second retry / no second recovery attempt for one original call'
+    evidence_template: '## Implementation Evidence
+
+      **Files changed**:
+
+      - src/tela/shell/downstream.py
+
+
+      **Recovery classifier cases implemented**:
+
+      - eligible: missing client, exact approved RuntimeError variants
+
+      - ineligible: timeout, broken pipe/reset/EOF, downstream tool/app errors, unknown
+      exception classes/messages
+
+
+      **Shared-state notes**:
+
+      - per-server lock map lifecycle
+
+      - disconnect_all cleanup behavior
+
+      - server-removal cleanup behavior
+
+
+      **Commands/tests run**:
+
+      - <paste targeted test commands>
+
+
+      **Highest-risk failure proof**:
+
+      - <paste test/output for timeout or ambiguous-failure no-retry case>
+
+
+      **Deviation record**:
+
+      - none | <describe>'
+    agent: python-senior
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
