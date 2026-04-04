@@ -55368,7 +55368,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.verify.gate
     name: Gate runtime evidence and wiring audit
-    status: pending
+    status: claimed
     description: 'Step type: gate
 
       Verification scope: full-plan-check protecting debt_closure.final_review and
@@ -55415,6 +55415,8 @@ phases:
     - debt_closure.verify.runtime_evidence_r13_r42
     - debt_closure.verify.wiring_and_manifest_audit
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T20:41:28.842549+00:00'
   - id: debt_closure.verify.runtime_evidence_r13_r42
     name: Re-verify behavioral proof register after resolution
     status: done
