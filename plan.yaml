@@ -52584,3 +52584,41 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.wiring_audit
     agent: gate-reviewer
+  - id: adr006_recovery.deep_review.black_box_verification
+    name: Run black-box ADR-006 recovery verification
+    status: pending
+    description: 'Using only the accepted ADR and public behavior surfaces, verify
+      the downstream recovery slice from a black-box perspective.
+
+
+      Must confirm:
+
+      - healthy calls do not require a visible probe/preflight step
+
+      - recovered calls surface as ordinary successful calls plus latency/diagnostics,
+      not a new protocol step
+
+      - ambiguous failures fail closed
+
+      - exhausted recovery remains DOWNSTREAM_UNAVAILABLE
+
+
+      This is limited to the ADR-006 downstream recovery slice only.'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.deep_review.gate.
+
+      - Behavior is validated from public surface expectations, not implementation
+      knowledge'
+    evidence_template: '## Black-Box Verification
+
+      - Surface tested: <which public/tool path>
+
+      - Healthy-path visible probe: yes/no
+
+      - Recovery visible as new protocol step: yes/no
+
+      - Ambiguous failure retried: yes/no
+
+      - Exhausted recovery code/message shape: <evidence>'
+    depends_on:
+    - adr006_recovery.deep_review.spec_conformance
+    agent: blind-tester
