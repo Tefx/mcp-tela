@@ -40,9 +40,11 @@ _recovery_locks: dict[str, asyncio.Lock] = {}
 _RECOVERY_TIMEOUT_SECONDS = 15.0
 _RECOVERY_STAGE_NOT_ATTEMPTED = "not_attempted"
 _RECOVERY_STAGE_RECONNECT_STARTED = "reconnect_started"
+_RECOVERY_STAGE_RECONNECT_SUCCEEDED = "reconnect_succeeded"
 _RECOVERY_STAGE_CONVERGENCE_REJECTED = "convergence_rejected"
 _RECOVERY_STAGE_RETRY_FAILED = "retry_failed"
 _RECOVERY_STAGE_RECOVERY_TIMEOUT = "recovery_timeout"
+_RECOVERY_STAGE_CLASSIFIER_UNKNOWN = "classifier_unknown"
 _ELIGIBLE_RUNTIME_ERRORS: tuple[str, ...] = (
     "Client is not connected. Use the 'async with client:' context manager first.",
     "Server session was closed unexpectedly",
@@ -284,17 +286,57 @@ async def _handle_reconnect(
     Enumeration policy: reuse_fresh_raw_tools once reconnect enumeration succeeds.
     """
 
+    recovery_started = time.monotonic()
+    _emit_recovery_diagnostic(
+        event="downstream_recovery_started",
+        level="INFO",
+        server_name=server_name,
+        tool_name=None,
+        elapsed_ms=0.0,
+        recovery_stage=_RECOVERY_STAGE_RECONNECT_STARTED,
+        underlying_error=None,
+    )
+
     recovery_result = await _recover_server_client(
         server_name,
         deadline_monotonic=time.monotonic() + _RECOVERY_TIMEOUT_SECONDS,
     )
     if recovery_result.is_err:
         assert recovery_result.error is not None
+        details = recovery_result.error.details or {}
+        stage = str(details.get("recovery_stage", _RECOVERY_STAGE_RETRY_FAILED))
+        event = (
+            "downstream_recovery_rejected"
+            if stage == _RECOVERY_STAGE_CONVERGENCE_REJECTED
+            else "downstream_recovery_exhausted"
+        )
+        _emit_recovery_diagnostic(
+            event=event,
+            level="WARNING",
+            server_name=server_name,
+            tool_name=None,
+            elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+            recovery_stage=stage,
+            underlying_error=str(
+                details.get("underlying_error") or recovery_result.error.message
+            ),
+        )
         logging.warning(
             "Downstream reconnect rejected for %s: %s",
             server_name,
             recovery_result.error.message,
         )
+        return
+
+    _emit_recovery_diagnostic(
+        event="downstream_recovery_succeeded",
+        level="INFO",
+        server_name=server_name,
+        tool_name=None,
+        elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+        recovery_stage=_RECOVERY_STAGE_RECONNECT_SUCCEEDED,
+        underlying_error=None,
+    )
 
 
 # @shell_orchestration: builds closure that dispatches reconnect and tool-list-changed I/O.
@@ -459,6 +501,48 @@ def _is_recovery_eligible_exception(exc: Exception) -> bool:
     return False
 
 
+def _emit_recovery_diagnostic(
+    *,
+    event: str,
+    level: Literal["INFO", "WARNING"],
+    server_name: str,
+    recovery_stage: str,
+    elapsed_ms: float,
+    tool_name: str | None,
+    underlying_error: str | None,
+) -> None:
+    """Emit ADR-006 structured recovery diagnostics via logger."""
+
+    entry: dict[str, Any] = {
+        "event": event,
+        "level": level,
+        "server_name": server_name,
+        "tool_name": tool_name,
+        "elapsed_ms": elapsed_ms,
+        "recovery_stage": recovery_stage,
+        "underlying_error": underlying_error,
+        "request_id": None,
+    }
+    if level == "INFO":
+        logging.info("%s", entry)
+        return
+    logging.warning("%s", entry)
+
+
+async def _prune_recovery_lock_if_unused(server_name: str) -> None:
+    """Remove per-server lock entry when no active client remains."""
+
+    async with _registry_lock:
+        existing_lock = _recovery_locks.get(server_name)
+        if existing_lock is None:
+            return
+        if existing_lock.locked():
+            return
+        if server_name in _clients:
+            return
+        _recovery_locks.pop(server_name, None)
+
+
 def _build_recovery_error(
     server_name: str,
     *,
@@ -490,7 +574,7 @@ async def _acquire_recovery_lock(
     server_name: str,
     *,
     deadline_monotonic: float,
-) -> Result[asyncio.Lock, TelaError]:
+) -> Result[tuple[asyncio.Lock, bool], TelaError]:
     """Acquire per-server recovery lock within shared timeout budget."""
 
     async with _registry_lock:
@@ -498,6 +582,7 @@ async def _acquire_recovery_lock(
         if lock is None:
             lock = asyncio.Lock()
             _recovery_locks[server_name] = lock
+        wait_contended = lock.locked()
 
     remaining = deadline_monotonic - time.monotonic()
     if remaining <= 0:
@@ -524,7 +609,7 @@ async def _acquire_recovery_lock(
                 config_missing=False,
             )
         )
-    return Result(value=lock)
+    return Result(value=(lock, wait_contended))
 
 
 def _get_runtime_server_config(server_name: str) -> Result[ServerConfig, TelaError]:
@@ -592,17 +677,30 @@ async def _recover_server_client(
     if lock_result.is_err:
         return Result(error=lock_result.error)
     assert lock_result.value is not None
-    lock = lock_result.value
+    lock, wait_contended = lock_result.value
 
     new_handle: _ClientHandle | None = None
     old_handle: _ClientHandle | None = None
     previous_tools: list[ResolvedTool] = []
+    should_prune_lock = False
     try:
         config_result = _get_runtime_server_config(server_name)
         if config_result.is_err:
+            if (
+                config_result.error is not None
+                and (config_result.error.details or {}).get("config_missing") is True
+            ):
+                should_prune_lock = True
             return Result(error=config_result.error)
         assert config_result.value is not None
         server_config = config_result.value
+
+        if wait_contended:
+            async with _registry_lock:
+                current_handle = _clients.get(server_name)
+                current_registry = _registry.get_all_tools().get(server_name)
+            if current_handle is not None and current_registry is not None:
+                return Result(value=None)
 
         remaining = deadline_monotonic - time.monotonic()
         if remaining <= 0:
@@ -702,6 +800,11 @@ async def _recover_server_client(
         post_enum_config = _get_runtime_server_config(server_name)
         if post_enum_config.is_err:
             await _close_handle_best_effort(new_handle)
+            if (
+                post_enum_config.error is not None
+                and (post_enum_config.error.details or {}).get("config_missing") is True
+            ):
+                should_prune_lock = True
             return Result(error=post_enum_config.error)
         assert post_enum_config.value is not None
         latest_server_config = post_enum_config.value
@@ -780,6 +883,11 @@ async def _recover_server_client(
                     _registry.register(server_name, previous_tools)
                 else:
                     _registry.unregister(server_name)
+            if (
+                pre_swap_config.error is not None
+                and (pre_swap_config.error.details or {}).get("config_missing") is True
+            ):
+                should_prune_lock = True
             return Result(error=pre_swap_config.error)
         assert pre_swap_config.value is not None
         if pre_swap_config.value != latest_server_config:
@@ -812,6 +920,8 @@ async def _recover_server_client(
         return Result(value=None)
     finally:
         lock.release()
+        if should_prune_lock:
+            await _prune_recovery_lock_if_unused(server_name)
 
 
 async def call_tool(
@@ -839,6 +949,21 @@ async def call_tool(
         except Exception as exc:
             initial_exc = exc
             recovery_eligible = _is_recovery_eligible_exception(exc)
+            if not recovery_eligible:
+                if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
+                    pass
+                elif isinstance(exc, (BrokenPipeError, ConnectionResetError)):
+                    pass
+                else:
+                    _emit_recovery_diagnostic(
+                        event="downstream_recovery_classifier_unknown",
+                        level="WARNING",
+                        server_name=server_name,
+                        tool_name=tool_name,
+                        elapsed_ms=0.0,
+                        recovery_stage=_RECOVERY_STAGE_CLASSIFIER_UNKNOWN,
+                        underlying_error=_get_exception_text(exc),
+                    )
         else:
             payload = downstream_result.model_dump(by_alias=True, exclude_none=True)
             if downstream_result.isError:
@@ -873,11 +998,42 @@ async def call_tool(
             )
         )
 
+    recovery_started = time.monotonic()
+    _emit_recovery_diagnostic(
+        event="downstream_recovery_started",
+        level="INFO",
+        server_name=server_name,
+        tool_name=tool_name,
+        elapsed_ms=0.0,
+        recovery_stage=_RECOVERY_STAGE_RECONNECT_STARTED,
+        underlying_error=(
+            _get_exception_text(initial_exc) if initial_exc is not None else None
+        ),
+    )
     recovery_result = await _recover_server_client(
         server_name,
         deadline_monotonic=deadline_monotonic,
     )
     if recovery_result.is_err:
+        assert recovery_result.error is not None
+        details = recovery_result.error.details or {}
+        stage = str(details.get("recovery_stage", _RECOVERY_STAGE_RETRY_FAILED))
+        failure_event = (
+            "downstream_recovery_rejected"
+            if stage == _RECOVERY_STAGE_CONVERGENCE_REJECTED
+            else "downstream_recovery_exhausted"
+        )
+        _emit_recovery_diagnostic(
+            event=failure_event,
+            level="WARNING",
+            server_name=server_name,
+            tool_name=tool_name,
+            elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+            recovery_stage=stage,
+            underlying_error=str(
+                details.get("underlying_error") or recovery_result.error.message
+            ),
+        )
         return Result(error=recovery_result.error)
 
     async with _registry_lock:
@@ -913,6 +1069,15 @@ async def call_tool(
             timeout=remaining,
         )
     except asyncio.TimeoutError:
+        _emit_recovery_diagnostic(
+            event="downstream_recovery_exhausted",
+            level="WARNING",
+            server_name=server_name,
+            tool_name=tool_name,
+            elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+            recovery_stage=_RECOVERY_STAGE_RECOVERY_TIMEOUT,
+            underlying_error="Recovery timeout exhausted during retry",
+        )
         return Result(
             error=_build_recovery_error(
                 server_name,
@@ -924,6 +1089,15 @@ async def call_tool(
             )
         )
     except Exception as exc:
+        _emit_recovery_diagnostic(
+            event="downstream_recovery_exhausted",
+            level="WARNING",
+            server_name=server_name,
+            tool_name=tool_name,
+            elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+            recovery_stage=_RECOVERY_STAGE_RETRY_FAILED,
+            underlying_error=_get_exception_text(exc),
+        )
         return Result(
             error=_build_recovery_error(
                 server_name,
@@ -937,6 +1111,15 @@ async def call_tool(
 
     retry_payload = retry_result.model_dump(by_alias=True, exclude_none=True)
     if retry_result.isError:
+        _emit_recovery_diagnostic(
+            event="downstream_recovery_exhausted",
+            level="WARNING",
+            server_name=server_name,
+            tool_name=tool_name,
+            elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+            recovery_stage=_RECOVERY_STAGE_RETRY_FAILED,
+            underlying_error="Retry returned downstream tool error",
+        )
         return Result(
             error=_build_recovery_error(
                 server_name,
@@ -947,6 +1130,15 @@ async def call_tool(
                 config_missing=False,
             )
         )
+    _emit_recovery_diagnostic(
+        event="downstream_recovery_succeeded",
+        level="INFO",
+        server_name=server_name,
+        tool_name=tool_name,
+        elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
+        recovery_stage=_RECOVERY_STAGE_RECONNECT_SUCCEEDED,
+        underlying_error=None,
+    )
     return Result(value=retry_payload)
 
 
