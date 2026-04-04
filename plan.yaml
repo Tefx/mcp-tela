@@ -52052,6 +52052,65 @@ phases:
 
       - none | <describe>'
     agent: python-senior
+  - id: adr006_recovery.impl.gate
+    name: Gate ADR-006 implementation
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
+      downstream recovery implementation meets the quality bar for independent verification.
+
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - shared mutable runtime state and lock ordering
+
+      - retry safety and fail-closed ambiguity constraints
+
+      - config-reload race authority
+
+
+      cross_cutting_focus:
+
+      - one automatic retry maximum
+
+      - per-server not global serialization
+
+      - reload.py remains convergence authority
+
+      - no healthy-path probe regression
+
+      - exact TelaError.details and structured diagnostics contracts preserved'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.verify.
+
+      - All implementation steps complete
+
+      - Evidence quality is specific and verifies both main path and highest-risk
+      failure path
+
+      - No unresolved blockers on retry safety, lock ordering, config races, or diagnostic
+      drift
+
+      - Ready for independent green verification'
+    evidence_template: '## Gate Review Report
+
+      Phase: adr006_recovery.impl
+
+      - Implementation steps complete: yes/no
+
+      - Main-path evidence adequate: yes/no
+
+      - Failure-path evidence adequate: yes/no
+
+      - Shared-state/locking concerns: <notes>
+
+      - Diagnostic contract preserved: yes/no
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - adr006_recovery.impl.reload_race_authority
+    - adr006_recovery.impl.downstream_recovery_kernel
+    agent: gate-reviewer
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
