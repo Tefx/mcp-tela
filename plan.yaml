@@ -51500,3 +51500,9 @@ phases:
   gate: Implementation of downstream recovery kernel and reload-race authority only
   depends_on:
   - adr006_recovery.test
+- id: adr006_recovery.verify
+  name: ADR-006 Downstream Recovery Verification
+  status: locked
+  gate: Independent green verification and ADR conformance review
+  depends_on:
+  - adr006_recovery.impl
