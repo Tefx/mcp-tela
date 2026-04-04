@@ -54475,9 +54475,13 @@ phases:
     description: 'Step type: planning
 
       Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution,
-      debt_closure.verify, and debt_closure.final_review.
+      debt_closure.verify.gate, and debt_closure.final_review.final_gate.
 
       Agent source: default.
+
+
+      This step makes the conditional-implementation decision for the compressed debt-closure
+      flow.
 
 
       Resolve the two semantic/surface decision families raised by the audits:
@@ -54498,7 +54502,10 @@ phases:
 
       - rejected alternatives
 
-      - exact files to edit
+      - whether implementation is actually required or an explicit no-change closure
+      is sufficient
+
+      - exact files to edit if changes are required
 
       - evidence required for verification and rereview
 
@@ -54514,12 +54521,18 @@ phases:
       repo and where that rule is documented
 
       - do not hand-wave with probably okay; if docs conflict, name the conflict and
-      pick the authoritative basis for remediation'
+      pick the authoritative basis for remediation
+
+      - if existing code/docs/metadata already satisfy the chosen decision, record
+      explicit no-change evidence instead of manufacturing churn'
     verification: '- Produce a binding classification for re_enumerate()
 
       - Produce a binding authority rule for mcp/fastmcp imports and manifest docs
 
-      - Identify exact files to change in debt_closure.impl.apply_surface_and_manifest_resolution'
+      - State explicitly whether each decision family requires implementation work
+      or no-change closure
+
+      - Identify exact files to change only when changes are still required'
     evidence_template: '## Surface and Authority Decision Record
 
       | decision_ref | ambiguity | chosen_authority | rejected_alternatives | files_to_edit
