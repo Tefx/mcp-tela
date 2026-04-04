@@ -51495,3 +51495,10 @@ phases:
     lock timing, and fail-closed semantics before implementation.
   depends_on:
   - adr006_recovery.contract
+- id: adr006_recovery.impl
+  name: ADR-006 Recovery Implementation
+  status: locked
+  gate: Implement shared recovery authority, reload-race handling, and one-retry semantics
+    without ad hoc registry mutation.
+  depends_on:
+  - adr006_recovery.test
