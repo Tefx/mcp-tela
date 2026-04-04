@@ -51484,7 +51484,7 @@ phases:
       product_implementation_files_modified: false'
 - id: adr006_recovery.contract
   name: ADR-006 Downstream Recovery Contract
-  status: in_progress
+  status: done
   gate: Contract freeze for downstream steady-state self-healing recovery only
   depends_on:
   - doc_sync.full_b
@@ -51562,7 +51562,7 @@ phases:
       \  - no healthy-path probe"
   - id: adr006_recovery.contract.gate
     name: Gate ADR-006 contract freeze
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery contract freeze is complete and sufficiently specific for
       safe implementation.
@@ -51610,9 +51610,40 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T13:21:44.338574+00:00'
+    done_at: '2026-04-04T13:24:22.607732+00:00'
+    evidence: '## Gate Review Report
+
+      Phase: adr006_recovery.contract
+
+      - Completeness: pinned interfaces and diagnostic contract present
+
+      - Safety: retry and ambiguity rules explicit
+
+      - Scope: excludes heartbeat/reaper-default work
+
+      - Decision: OPEN
+
+
+      Verification notes:
+
+      - Probe-free healthy path explicitly pinned in ADR and test anchors
+
+      - One automatic retry maximum explicitly pinned; second retry/reclassification
+      forbidden
+
+      - Fail-closed classifier boundary explicit, including unknown exception/message
+      handling
+
+      - Per-server serialization and lock architecture explicit
+
+      - Shared recovery authority via reload.py explicit
+
+      - No unresolved blocker remains for test-definition phase
+
+      - Product implementation files modified: none'
 - id: adr006_recovery.test
   name: ADR-006 Downstream Recovery Tests
-  status: locked
+  status: pending
   gate: Expected-red definition before implementation; green verification after implementation
   depends_on:
   - adr006_recovery.contract
