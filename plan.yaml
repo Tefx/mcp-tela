@@ -54103,6 +54103,8 @@ phases:
       | owner_step | review_miss_cause | reversal_risk | re_close_proof |
 
       |---|---|---|---|---|---|---|---|---|'
+    depends_on:
+    - debt_closure.runtime_evidence.collect_behavioral_proof
     agent: software-architect
   - id: debt_closure.runtime_evidence.collect_behavioral_proof
     name: Collect behavioral proof for R13 and R42
