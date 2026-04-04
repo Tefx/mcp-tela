@@ -53022,7 +53022,7 @@ phases:
       by verifier: evidence/ADR-006-deep-conformance-audit.md and evidence/ADR-006-deep-conformance-report.yaml.'
   - id: adr006_recovery.deep_review.architecture_review
     name: Review ADR-006 locking and recovery architecture
-    status: claimed
+    status: done
     description: 'Review module boundaries, dependency direction, and concurrency
       safety for the ADR-006 downstream recovery slice.
 
@@ -53057,6 +53057,30 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T16:02:17.511601+00:00'
+    done_at: '2026-04-04T16:02:23.347819+00:00'
+    evidence: '## Architecture Review
+
+      - Per-server isolation: PASS
+
+      - Lock ordering: PASS
+
+      - Cleanup semantics: PASS
+
+      - Reload-wins semantics: FAIL
+
+      - Notes: Review surfaced blocker in reload authority: stale `_server_config_hints`
+      fallback can bypass removed runtime config server entry.
+
+
+      Disposition: downstream-blocker promoted to owned remediation.
+
+      Plan remediation created and linked:
+
+      - adr006_recovery.deep_review.fix_reload_authority
+
+      - adr006_recovery.deep_review.retest_reload_authority_architecture
+
+      - adr006_recovery.deep_review.gate depends on retest step.'
   - id: adr006_recovery.deep_review.contract_strength
     name: Audit ADR-006 contract strength
     status: done
