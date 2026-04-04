@@ -53579,75 +53579,6 @@ phases:
 
       - <must be empty or escalated with owner>'
     agent: software-architect
-  - id: debt_closure.review_miss.harden_review_closure_basis
-    name: Define review-hardening basis for debt-closure execution
-    status: pending
-    description: 'Step type: review
-
-      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
-      and all downstream closure gates.
-
-      Agent source: default.
-
-
-      Define the review-hardening basis that this remediation plan will enforce.
-
-
-      Required outputs:
-
-      - gate-review checklist that explicitly rejects any OPEN recommendation while
-      blocker-class behavioral obligations remain NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING
-
-      - requirement for structured artifacts: behavioral proof register, runtime uncertainty
-      register, and final gate decision basis
-
-      - closure rule for non-intersection claims: they must name the remaining gates
-      they do not intersect
-
-      - review-depth guidance for the debt_closure phases
-
-      - explicit note that post-hoc reversals require review_miss_cause, remediation_owner,
-      and re-close proof
-
-
-      Do not create generic process advice. Produce the binding review rules this
-      phase group will use.'
-    verification: '- Review-hardening basis names the exact artifact types later phases
-      must emit
-
-      - The basis blocks premature closure on unresolved behavioral-runtime evidence
-
-      - The basis records how a future reviewer decides OPEN vs BLOCK'
-    evidence_template: '## Debt-Closure Review Basis
-
-
-      ### Closure Criteria
-
-      - R13:
-
-      - R42:
-
-      - re_enumerate surface clarity:
-
-      - mcp/fastmcp manifest clarity:
-
-
-      ### Reviewer Prompts
-
-      - gate-reviewer:
-
-      - wiring-auditor:
-
-      - spec-verifier:
-
-
-      ### Anti-Regression Rules
-
-      - <numbered list>'
-    depends_on:
-    - debt_closure.review_miss.root_cause_analysis
-    - debt_closure.review_miss.capture_reversal_record
-    agent: software-architect
   - id: debt_closure.review_miss.capture_reversal_record
     name: Capture post-hoc reversal and re-close obligations
     status: pending
@@ -54692,6 +54623,72 @@ phases:
 
       - Required follow-up if blocked'
     agent: gate-reviewer
+  - id: debt_closure.review_miss.harden_review_closure_basis
+    name: Define review-hardening basis for debt-closure execution
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
+      and all downstream closure gates.
+
+      Agent source: default.
+
+
+      Define the review-hardening basis that this remediation plan will enforce.
+
+
+      Required outputs:
+
+      - gate-review checklist that explicitly rejects any OPEN recommendation while
+      blocker-class behavioral obligations remain NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING
+
+      - requirement for structured artifacts: behavioral proof register, runtime uncertainty
+      register, and final gate decision basis
+
+      - closure rule for non-intersection claims: they must name the remaining gates
+      they do not intersect
+
+      - review-depth guidance for the debt_closure phases
+
+      - explicit note that post-hoc reversals require review_miss_cause, remediation_owner,
+      and re-close proof
+
+
+      Do not create generic process advice. Produce the binding review rules this
+      phase group will use.'
+    verification: '- Review-hardening basis names the exact artifact types later phases
+      must emit
+
+      - The basis blocks premature closure on unresolved behavioral-runtime evidence
+
+      - The basis records how a future reviewer decides OPEN vs BLOCK'
+    evidence_template: '## Debt-Closure Review Basis
+
+
+      ### Closure Criteria
+
+      - R13:
+
+      - R42:
+
+      - re_enumerate surface clarity:
+
+      - mcp/fastmcp manifest clarity:
+
+
+      ### Reviewer Prompts
+
+      - gate-reviewer:
+
+      - wiring-auditor:
+
+      - spec-verifier:
+
+
+      ### Anti-Regression Rules
+
+      - <numbered list>'
+    agent: software-architect
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
   status: locked
