@@ -55417,7 +55417,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.verify.runtime_evidence_r13_r42
     name: Re-verify behavioral proof register after resolution
-    status: claimed
+    status: pending
     description: 'Step type: verification
 
       Verification scope: full-plan-check for the ADR-006 debt-closure slice; protects
@@ -55518,8 +55518,6 @@ phases:
     - tests/repro/test_adr006_runtime_hardening_probes.py
     - src/tela/shell/downstream.py
     agent: integration-verifier
-    claimed_by: integration-verifier
-    claimed_at: '2026-04-04T20:11:35.378982+00:00'
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
     status: pending
