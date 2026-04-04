@@ -54830,16 +54830,29 @@ phases:
       as the authoritative scope input.
 
 
+      UPSTREAM ARTIFACTS:
+
+      - debt_closure.runtime_evidence.resolve_uncertainty_register — blocker rows
+      are AUTHORITATIVE
+
+      - debt_closure.contract_test.freeze_closure_contract — proof and closure criteria
+      are PROTECTED
+
+      - debt_closure.contract_test.add_runtime_hardening_tests — probes and runtime
+      checks are PROTECTED
+
+
       YOUR SCOPE:
 
-      - If R13 or R42 remains UNPROVEN or UNCERTAIN_BLOCKING because of an actual
-      code defect, replace the failing runtime path with working logic and preserve
-      the proof probes
+      - Only remediate actual R13/R42 runtime defects or concrete proof gaps that
+      require code-level correction
 
-      - If runtime behavior is already PROVEN and no code defect exists, complete
-      only the minimal edits needed to make that proof auditable and non-ambiguous
-      (for example evidence-anchor helpers or narrowly scoped runtime comments/docs
-      tied to the proof contract)
+      - Replace the failing runtime path with working logic while preserving the proof
+      probes
+
+      - If the uncertainty register shows no runtime defect requiring product-code
+      change, record NO_RUNTIME_CODE_CHANGE in evidence and leave product code untouched
+      except for changes explicitly delegated to debt_closure.impl.harden_auditability_if_needed
 
 
       Required failure-mode coverage inside this step:
@@ -54858,9 +54871,9 @@ phases:
       ## Completion Criteria (stub exclusion)
 
       This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Any
-      code change must contain substantive logic or substantive proof-preserving instrumentation
-      that varies based on runtime state. If no code change is needed, the evidence-hardening
-      edits must still make the proof contract executable and auditable.
+      code change must contain substantive logic that varies based on runtime state.
+      If no code change is needed, the evidence must say so explicitly and defer auditability-only
+      work to debt_closure.impl.harden_auditability_if_needed.
 
 
       Out-of-scope guardrail:
@@ -54868,44 +54881,74 @@ phases:
       - downstream.py size/refactor remains deferred; do not do structural cleanup
       beyond what is required to close the R13/R42 blocker family.'
     verification: '- Main path: targeted R13/R42 probes have a concrete implementation
-      target or auditable evidence anchor
+      target where a runtime defect exists
 
       - Failure path: at least one regression covers in-flight removal or lock-hold
       boundary
 
-      - Evidence states clearly whether product-code changes were required or proof-hardening
-      only was required
+      - Evidence states clearly whether product-code changes were required or NO_RUNTIME_CODE_CHANGE
+      applies
 
       - No closure claim rests on summary-only reasoning'
     evidence_template: '## Runtime Remediation Evidence
 
 
-      ### Files Changed
+      ### refs Read Confirmation (MANDATORY)
 
-      - <list>
+      For each ref in this step:
 
-
-      ### Main Path Proof
-
-      - Test/command:
-
-      - Output:
+      - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Failure Path Proof
+      ## Runtime Change Decision
 
-      - Test/command:
+      - product_code_change_required: yes/no
 
-      - Output:
+      - if no: NO_RUNTIME_CODE_CHANGE
+
+      - blocker rows addressed:
 
 
-      ### Why this closes the gap
+      ## Files Changed
 
-      - Root cause:
+      - <path> — <why>
 
-      - Why prior evidence was insufficient:
 
-      - Why the change is not symptom-only:'
+      ## Commands / Targeted Tests
+
+      ```text
+
+      <paste exact commands>
+
+      ```
+
+
+      ## Actual Output
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ## Failure-Mode Coverage
+
+      - config-reload-remove while in-flight:
+
+      - cleanup after success/failure:
+
+      - fail-closed config_missing path:
+
+      - healthy-neighbor non-blocking path:
+
+      - lock-hold boundary:
+
+      '
+    refs:
+    - src/tela/shell/downstream.py
+    - tests/repro/test_adr006_runtime_hardening_probes.py
+    - docs/adr/ADR-006-downstream-recovery.md
     agent: python-senior
   - id: debt_closure.impl.decide_surface_and_manifest_authority
     name: Decide re_enumerate surface status and mcp fastmcp authority
