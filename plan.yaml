@@ -52802,14 +52802,14 @@ phases:
       - Decision: OPEN'
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
-  status: pending
+  status: in_progress
   gate: Documentation sync for implemented downstream recovery semantics
   depends_on:
   - adr006_recovery.verify
   steps:
   - id: adr006_recovery.doc_sync.update_runtime_docs
     name: Update runtime docs for ADR-006 recovery behavior
-    status: pending
+    status: claimed
     description: 'Update documentation to match the implemented ADR-006 downstream
       recovery behavior.
 
@@ -52853,6 +52853,8 @@ phases:
       \ location>\n- Explicitly excluded from edits:\n  - heartbeat/lease\n  - reaper-defaults\
       \ reopening"
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-04-04T15:19:54.639269+00:00'
   - id: adr006_recovery.doc_sync.gate
     name: Gate ADR-006 documentation sync
     status: pending
