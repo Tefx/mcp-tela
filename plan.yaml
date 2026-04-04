@@ -53766,10 +53766,10 @@ phases:
     - debt_closure.review_miss.root_cause_analysis
     agent: software-architect
 - id: debt_closure.contract_test
-  name: ADR-006 Debt Closure Contract and Test Hardening
+  name: Debt Closure Basis and Proof Contract
   status: locked
-  gate: R13/R42 closure criteria, anti-regression tests, and evidence expectations
-    are frozen before remediation.
+  gate: Proof obligations, uncertainty register inputs, and executable runtime probes
+    are frozen before runtime closure or remediation.
   depends_on:
   - debt_closure.review_miss
   steps:
