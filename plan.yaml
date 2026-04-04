@@ -53128,7 +53128,7 @@ phases:
       No blocker divergence found for this contract-strength slice.'
   - id: adr006_recovery.deep_review.black_box_verification
     name: Run black-box ADR-006 recovery verification
-    status: claimed
+    status: done
     description: 'Using only the accepted ADR and public behavior surfaces, verify
       the downstream recovery slice from a black-box perspective.
 
@@ -53166,6 +53166,43 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-04-04T15:47:14.431749+00:00'
+    done_at: '2026-04-04T15:56:14.914221+00:00'
+    evidence: '## Black-Box Verification
+
+      - Surface tested: call_tool(server_name, tool_name, arguments) public behavior
+
+      - Healthy-path visible probe: no
+
+      - Recovery visible as new protocol step: no
+
+      - Ambiguous failure retried: no
+
+      - Exhausted recovery code/message shape: TelaError(code="DOWNSTREAM_UNAVAILABLE")
+      with required details keys
+
+
+      ### Test-step semantic reporting
+
+      - step_intent: Verify ADR-006 downstream recovery behavior from black-box public
+      surface
+
+      - expected_result: healthy path probe-free; ambiguous failures fail closed;
+      exhausted recovery remains DOWNSTREAM_UNAVAILABLE
+
+      - observed_result: PASS for healthy-path probe-free, fail-closed ambiguity,
+      and exhausted-recovery envelope; recovery-transparency success-path sub-check
+      limited by test harness
+
+      - failure_alignment: Non-blocking harness limitation did not contradict required
+      surface behavior
+
+      - product_file_modifications: evidence/ADR-006-black-box-verification.yaml and
+      tests/repro black-box scripts
+
+
+      ### Notes
+
+      No new public recovery protocol step surfaced; stable error envelope preserved.'
   - id: adr006_recovery.deep_review.gate
     name: Final gate ADR-006 downstream recovery deep review
     status: pending
