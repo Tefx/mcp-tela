@@ -55417,7 +55417,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.verify.runtime_evidence_r13_r42
     name: Re-verify behavioral proof register after resolution
-    status: claimed
+    status: done
     description: 'Step type: verification
 
       Verification scope: full-plan-check for the ADR-006 debt-closure slice; protects
@@ -55520,6 +55520,15 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-04T20:12:00.898639+00:00'
+    done_at: '2026-04-04T20:13:54.948518+00:00'
+    evidence: 'Integration-verifier re-ran `tests/repro/test_adr006_runtime_hardening_probes.py
+      -v` and provided updated behavioral proof register with raw output. Results:
+      5 passed, 2 skipped, 1 xfailed, 2 failed. Register marks SURFACE-REENUMERATE
+      and AUTH-MCP-FASTMCP as UNCERTAIN_BLOCKING with explicit blocker families and
+      closure-path needs. Also reports residual integration-level gaps for R13 instrumentation
+      and R42 in-flight race probe (skipped/xfail). Evidence includes refs-read confirmations
+      for test and downstream runtime sources; ADR ref path mismatch noted as not
+      found.'
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
     status: pending
