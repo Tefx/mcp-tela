@@ -53247,3 +53247,90 @@ phases:
     - adr006_recovery.deep_review.contract_strength
     - adr006_recovery.deep_review.black_box_verification
     agent: gate-reviewer
+  - id: adr006_recovery.deep_review.fix_reload_authority
+    name: Fix ADR-006 downstream reload authority fallback
+    status: pending
+    description: 'Fix ALL blockers found by the ADR-006 architecture review for downstream
+      recovery config authority.
+
+
+      ## Blockers to Fix (ALL of these, not just the first):
+
+      - reload-wins violation: `_get_runtime_server_config()` falls back to `_server_config_hints`
+      after runtime config removed the server
+
+      - stale-hint fallback keeps removed server definitions reachable during downstream
+      recovery lookup
+
+      - downstream recovery config resolution must honor ADR-006 runtime authority
+      after reload/removal, not resurrect deleted state from hint caches
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: config lookup authority is split between runtime-resolved state
+      and stale hint state, so removal semantics are not authoritative during recovery
+      reads
+
+      - Symptom: after reload removes a server, downstream recovery lookup can still
+      resolve config through `_server_config_hints`
+
+      - Why this fix is not surface-level: it must eliminate stale-hint authority
+      for recovery lookup and preserve reload-wins semantics across the actual resolution
+      path, not just add another conditional guard
+
+
+      ### Required sibling search
+
+      - Search all downstream recovery config lookup and reload/removal paths for
+      any alternate fallback that can rehydrate removed server config from hint/state
+      caches
+
+      - Confirm no helper, wrapper, or cached lookup path still prefers stale hints
+      over runtime-resolved removal
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Completion Criteria
+
+      - `_get_runtime_server_config()` and any sibling recovery lookup path stop treating
+      `_server_config_hints` as authority after runtime removal
+
+      - reload-wins semantics are explicit: removal in runtime config beats stale
+      hints/cache state
+
+      - any retained hint data is limited to non-authoritative diagnostics or bootstrap
+      behavior and cannot resurrect removed downstream servers during recovery
+
+      - focused regressions cover removed-server lookup after reload and confirm no
+      stale fallback remains'
+    verification: '- Main path: targeted regression proves active runtime config still
+      resolves legitimate downstream recovery config
+
+      - Failure path: targeted regression proves removed server lookup after reload/removal
+      does NOT fall back to `_server_config_hints`
+
+      - Proof: sibling search evidence shows no alternate stale-hint authority remains
+      in downstream recovery config lookup paths'
+    evidence_template: '## Reload Authority Fix Evidence
+
+      - Root cause addressed: <how stale-hint authority was removed>
+
+      - Sibling search performed: <files/helpers checked>
+
+      - Main path regression: <test name / command>
+
+      - Failure path regression: <test name / command proving removed server stays
+      removed>
+
+      - Remaining ambiguity: <none or explicit note>'
+    depends_on:
+    - adr006_recovery.deep_review.architecture_review
+    agent: python-senior
