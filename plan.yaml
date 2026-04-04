@@ -54741,3 +54741,53 @@ phases:
 
       - UNCERTAIN_BLOCKING: <list>'
     agent: integration-verifier
+  - id: debt_closure.runtime_evidence.resolve_uncertainty_register
+    name: Resolve runtime uncertainty register and remediation basis
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.impl and all later gates.
+
+      Agent source: default.
+
+
+      Convert the behavioral proof register into an explicit runtime uncertainty register
+      and disposition record.
+
+
+      Required outputs:
+
+      - one row per R13/R42 obligation and adjacent runtime edge case
+
+      - provenance (pre-existing | introduced_now | out-of-step-origin)
+
+      - disposition (blocking-now | blocking-later | non-blocking)
+
+      - why the current evidence is sufficient or insufficient
+
+      - explicit owner step for every item that is not already PROVEN
+
+      - review_miss_cause and overturned_decision notes where the new proof reverses
+      earlier closure assumptions
+
+      - re-close proof required after any remediation
+
+
+      Hard rule: pre-existing is provenance only, never a disposition. If the issue
+      intersects debt_closure.verify or debt_closure.final_review, it is blocker-class
+      debt now.'
+    verification: '- Every non-PROVEN item has an explicit owner and closure_path
+
+      - Any overturned earlier OPEN recommendation records review_miss_cause, reversal_risk,
+      remediation_owner, and re-close proof
+
+      - The uncertainty register distinguishes provenance from disposition correctly'
+    evidence_template: '## Runtime Uncertainty Register
+
+      | requirement_ref | current_status | provenance | disposition | evidence_ref
+      | owner_step | review_miss_cause | reversal_risk | re_close_proof |
+
+      |---|---|---|---|---|---|---|---|---|'
+    depends_on:
+    - debt_closure.runtime_evidence.collect_behavioral_proof
+    agent: software-architect
