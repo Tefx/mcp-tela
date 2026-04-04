@@ -53594,80 +53594,6 @@ phases:
 
       |---|---|---|---|---|---|---|---|'
     agent: python-senior
-  - id: debt_closure.contract_test.add_runtime_hardening_tests
-    name: Add anti-regression tests and instrumentation for R13 and R42
-    status: pending
-    description: 'Step type: test
-
-      step_intent: retest_green
-
-      expected_result: green
-
-      Verification scope: phase-check protecting debt_closure.runtime_evidence and
-      debt_closure.verify.
-
-      Agent source: default.
-
-
-      Author the executable probes, regressions, and minimal test-only instrumentation
-      required by the proof-obligation contract.
-
-
-      Required coverage:
-
-      1. Config-reload remove during in-flight recovery cleans the per-server lock
-      and surfaces config_missing=true where required
-
-      2. Healthy server B remains unblocked while server A is recovering
-
-      3. Runtime evidence proves _registry_lock is not held while awaited network
-      I/O is in progress
-
-      4. At least one focused assertion or audit helper exists for the re_enumerate()
-      surface decision and for mcp/fastmcp authority evidence when the contract requires
-      them
-
-
-      Required outputs:
-
-      - exact named tests/probes per proof obligation
-
-      - evidence anchor names that debt_closure.runtime_evidence will execute
-
-      - exposed_gaps section for any probe that still fails or cannot yet prove the
-      behavior
-
-
-      Repo-specific reason for expected_result: green
-
-      - The current issue is primarily proof and closure quality; these probes are
-      expected to run against existing behavior, but any failing probe must be preserved
-      as remediation input rather than weakened.
-
-
-      ## Spec-Fixture Conformance (MANDATORY)
-
-      Fixtures and runtime setup MUST match documented ADR-006 recovery flows and
-      actual downstream runtime entrypoints; do not rely on convenience-only setup
-      absent from production paths.'
-    verification: '- Add named probes/tests for each proof obligation
-
-      - Evidence includes exact test names, whether they passed, and any exposed_gaps
-
-      - Modified files stay limited to tests and test-only helpers/instrumentation
-      in this phase
-
-      - Any failure is recorded as runtime remediation input for debt_closure.runtime_evidence
-      and debt_closure.impl, not dismissed'
-    evidence_template: '## Runtime Probe Inventory
-
-      | proof_obligation | test_or_probe_name | evidence_anchor | expected_signal
-      | current_result | exposed_gap |
-
-      |---|---|---|---|---|---|'
-    depends_on:
-    - debt_closure.contract_test.freeze_closure_contract
-    agent: python-executor
 - id: debt_closure.impl
   name: Post-Gate Runtime and Manifest Remediation
   status: locked
@@ -54686,6 +54612,78 @@ phases:
 
       - <must be empty or escalated with owner>'
     agent: software-architect
+  - id: debt_closure.contract_test.add_runtime_hardening_tests
+    name: Add anti-regression tests and instrumentation for R13 and R42
+    status: pending
+    description: 'Step type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      Verification scope: phase-check protecting debt_closure.runtime_evidence and
+      debt_closure.verify.
+
+      Agent source: default.
+
+
+      Author the executable probes, regressions, and minimal test-only instrumentation
+      required by the proof-obligation contract.
+
+
+      Required coverage:
+
+      1. Config-reload remove during in-flight recovery cleans the per-server lock
+      and surfaces config_missing=true where required
+
+      2. Healthy server B remains unblocked while server A is recovering
+
+      3. Runtime evidence proves _registry_lock is not held while awaited network
+      I/O is in progress
+
+      4. At least one focused assertion or audit helper exists for the re_enumerate()
+      surface decision and for mcp/fastmcp authority evidence when the contract requires
+      them
+
+
+      Required outputs:
+
+      - exact named tests/probes per proof obligation
+
+      - evidence anchor names that debt_closure.runtime_evidence will execute
+
+      - exposed_gaps section for any probe that still fails or cannot yet prove the
+      behavior
+
+
+      Repo-specific reason for expected_result: green
+
+      - The current issue is primarily proof and closure quality; these probes are
+      expected to run against existing behavior, but any failing probe must be preserved
+      as remediation input rather than weakened.
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      Fixtures and runtime setup MUST match documented ADR-006 recovery flows and
+      actual downstream runtime entrypoints; do not rely on convenience-only setup
+      absent from production paths.'
+    verification: '- Add named probes/tests for each proof obligation
+
+      - Evidence includes exact test names, whether they passed, and any exposed_gaps
+
+      - Modified files stay limited to tests and test-only helpers/instrumentation
+      in this phase
+
+      - Any failure is recorded as runtime remediation input for debt_closure.runtime_evidence
+      and debt_closure.impl, not dismissed'
+    evidence_template: '## Runtime Probe Inventory
+
+      | proof_obligation | test_or_probe_name | evidence_anchor | expected_signal
+      | current_result | exposed_gap |
+
+      |---|---|---|---|---|---|'
+    agent: python-executor
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
   status: locked
