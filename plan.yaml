@@ -54097,7 +54097,7 @@ phases:
       - None."
   - id: debt_closure.contract_test.add_runtime_hardening_tests
     name: Add anti-regression tests and instrumentation for R13 and R42
-    status: pending
+    status: claimed
     description: 'Step type: test
 
       step_intent: retest_green
@@ -54169,6 +54169,8 @@ phases:
     depends_on:
     - debt_closure.contract_test.freeze_closure_contract
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-04T19:04:52.152836+00:00'
   - id: debt_closure.contract_test.freeze_closure_contract
     name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
     status: done
