@@ -51588,6 +51588,71 @@ phases:
   gate: Expected-red definition before implementation; green verification after implementation
   depends_on:
   - adr006_recovery.contract
+  steps:
+  - id: adr006_recovery.test.define_red_core_matrix
+    name: Define expected-red core recovery matrix tests
+    status: pending
+    description: 'step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+
+      Define the core ADR-006 gap-exposing tests without modifying product code.
+
+
+      Test-only scope:
+
+      - recovery-eligible classification for only the ADR-approved disconnect-class
+      failures
+
+      - one automatic retry maximum per original call
+
+      - per-server recovery serialization (not global)
+
+      - stale waiter behavior after lock acquisition
+
+      - shared timeout budget consumption including lock wait
+
+      - reload/remove wins over in-flight recovery
+
+      - convergence rejection becomes terminal DOWNSTREAM_UNAVAILABLE
+
+
+      Spec-Fixture Conformance (MANDATORY)
+
+      - Use the exact ADR field names and recovery stages in expectations
+
+      - Cite the authoritative ADR sections for each fixture/assertion shape
+
+
+      Expected-red meaning:
+
+      - success for this step means the missing recovery behavior is exposed clearly
+
+      - this step MUST NOT add product implementation logic
+
+      - modified files must stay in tests/ plus minimal helpers only'
+    verification: 'Verification scope: local-check protecting adr006_recovery.impl.*.
+
+      - Test-only diff under tests/
+
+      - Expected failures/exposed gaps documented
+
+      - Matrix covers eligibility, retry cap, lock wait, stale waiter, timeout, and
+      reload-wins race
+
+      - No product implementation code added'
+    evidence_template: "## Expected-Red Core Matrix Evidence\n- New/updated tests:\n\
+      \  - tests/shell/test_downstream.py or tests/shell/test_downstream_recovery.py\n\
+      \  - tests/shell/test_reload.py\n- Exposed gaps:\n  - eligibility classifier\
+      \ absent/incomplete\n  - one-retry enforcement absent/incomplete\n  - per-server\
+      \ recovery lock behavior absent/incomplete\n  - timeout budget absent/incomplete\n\
+      \  - reload-wins behavior absent/incomplete\n- Expected failures observed:\n\
+      \  - <paste failing test names>\n- Downstream implementation owner:\n  - adr006_recovery.impl.downstream_recovery_kernel\n\
+      \  - adr006_recovery.impl.reload_race_authority"
+    agent: python-executor
 - id: adr006_recovery.impl
   name: ADR-006 Downstream Recovery Implementation
   status: locked
