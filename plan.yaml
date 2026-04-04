@@ -51729,7 +51729,7 @@ phases:
       \  - adr006_recovery.impl.reload_race_authority"
   - id: adr006_recovery.test.define_red_surface_contract
     name: Define expected-red caller-visible recovery contract tests
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: test_define_red
@@ -51783,6 +51783,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-04T13:25:25.609866+00:00'
+    done_at: '2026-04-04T13:39:44.910585+00:00'
+    evidence: "## Expected-Red Surface Contract Evidence\n- step_intent: test_define_red\n\
+      - expected_result: red\n- observed_result: red (ADR-visible behavior gaps exposed)\n\
+      - failure_alignment: aligned with pre-implementation expected-red objective\n\
+      - product implementation files modified: no\n- New/updated tests:\n  - tests/shell/test_upstream.py\n\
+      \  - tests/shell/test_gateway.py\n- Required visible behaviors asserted:\n \
+      \ - healthy call path single-attempt/probe-free\n  - ambiguous failure no retry\n\
+      \  - exhausted recovery -> DOWNSTREAM_UNAVAILABLE\n  - ADR details keys preserved\n\
+      \  - no new public recovery protocol surface\n- Expected failures observed:\n\
+      \  - test_adr006_healthy_path_single_attempt_probe_free\n  - test_adr006_tela_error_details_has_required_keys_for_missing_client\n\
+      \  - test_adr006_missing_client_is_recovery_eligible\n  - test_adr006_gateway_tela_error_details_has_required_keys\n\
+      - Notes:\n  - successful recovery remains constrained to latency/diagnostics\
+      \ semantics"
   - id: adr006_recovery.test.gate
     name: Gate ADR-006 expected-red tests
     status: pending
