@@ -54097,7 +54097,7 @@ phases:
       - None."
   - id: debt_closure.contract_test.add_runtime_hardening_tests
     name: Add anti-regression tests and instrumentation for R13 and R42
-    status: claimed
+    status: done
     description: 'Step type: test
 
       step_intent: retest_green
@@ -54171,6 +54171,67 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-04T19:04:52.152836+00:00'
+    done_at: '2026-04-04T19:12:04.182182+00:00'
+    evidence: '## Runtime Probe Inventory
+
+      | proof_obligation | test_or_probe_name | evidence_anchor | expected_signal
+      | current_result | exposed_gap |
+
+      |---|---|---|---|---|---|
+
+      | R13 | test_r13_lock_released_before_lock_acquire_await | code-structure probe
+      | lock released before/through await | PASS | none at structure level |
+
+      | R13 | test_r13_runtime_lock_state_during_network_await | runtime instrumentation
+      anchor | runtime lock-state trace during network await | SKIPPED | live runtime
+      tracing still required in runtime_evidence phase |
+
+      | R42 | test_r42_prune_lock_after_config_remove | unit probe | lock pruned when
+      server absent from config | PASS | integration race still needs runtime evidence
+      |
+
+      | R42 | test_r42_config_remove_during_inflight_recovery | integration-style
+      probe | config_missing=true and lock pruned during in-flight removal | XFAIL
+      | requires runtime evidence path in runtime_evidence phase |
+
+      | UNC-LIVENESS-HEALTHY-NEIGHBOR | test_healthy_neighbor_uses_different_recovery_lock
+      | unit/design probe | server B unaffected by server A recovery | PASS | concurrent
+      integration witness pending |
+
+      | UNC-LIVENESS-HEALTHY-NEIGHBOR | test_healthy_neighbor_concurrent_calls_during_peer_recovery
+      | integration anchor | concurrent healthy-neighbor responsiveness | SKIPPED
+      | runtime integration proof pending |
+
+      | UNC-CONFIG-MISSING-FAIL-CLOSED | test_get_runtime_server_config_returns_config_missing_true
+      | unit probe | fail-closed config_missing=true | PASS | none at unit level |
+
+      | SURFACE-REENUMERATE | test_re_enumerate_is_importable | surface anchor | symbol
+      importability present | PASS | explicit classification still unresolved |
+
+      | SURFACE-REENUMERATE | test_re_enumerate_surface_classification_audit | policy
+      assertion | explicit public/internal/shim classification | FAIL | unresolved
+      -> debt_closure.impl.decide_surface_and_manifest_authority |
+
+      | AUTH-MCP-FASTMCP | test_fastmcp_authority_tuple_audit | authority assertion
+      | canonical tuple package/import/manifest | FAIL | split authority -> debt_closure.impl.decide_surface_and_manifest_authority
+      |
+
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      observed_result: mixed (passes + preserved gap/failure anchors)
+
+      failure_alignment: failures/skips preserved as explicit remediation inputs;
+      no weakening/dismissal
+
+      product_implementation_files_modified: false
+
+
+      Files changed: tests/repro/test_adr006_runtime_hardening_probes.py
+
+      Commit: b7a7ba7'
   - id: debt_closure.contract_test.freeze_closure_contract
     name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
     status: done
