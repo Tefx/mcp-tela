@@ -53386,7 +53386,7 @@ phases:
       tests> (passed per worker evidence).'
   - id: adr006_recovery.deep_review.retest_reload_authority_architecture
     name: Re-review ADR-006 reload-wins recovery authority
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (software-architect), re-verify the exact
       ADR-006 architecture checks after the reload-authority fix.
 
@@ -53439,3 +53439,30 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T16:05:30.722085+00:00'
+    done_at: '2026-04-04T16:07:14.793098+00:00'
+    evidence: '## Architecture Re-Review Report
+
+      - Prior blocker fingerprint: reload-wins stale-hint fallback
+
+      - Exact checks rerun: serialization, lock ordering, removal cleanup, stale reread,
+      reload-wins authority, cross-server isolation
+
+      - Reload-wins verdict: PASS
+
+      - Evidence: runtime-config-only lookup in `_get_runtime_server_config`; no stale-hint
+      authority path; targeted regressions and stale-hint probe passed.
+
+      - Remaining blockers: none
+
+
+      Regression suite used in re-review included:
+
+      - tests/shell/test_downstream_recovery.py::test_gap_healthy_server_unblocked_during_neighbor_recovery
+
+      - tests/shell/test_downstream.py::test_recover_server_client_fails_closed_when_server_removed_mid_recovery
+
+      - tests/shell/test_downstream.py::test_recover_server_client_rejects_material_config_change_before_swap
+
+      - tests/shell/test_downstream.py::test_get_runtime_server_config_uses_runtime_authority_over_hints
+
+      - tests/shell/test_downstream.py::test_get_runtime_server_config_fails_when_server_removed_even_with_hint'
