@@ -53653,32 +53653,36 @@ phases:
     status: pending
     description: 'Step type: gate
 
-      Verification scope: phase-check protecting debt_closure.contract_test and all
-      downstream phases.
+      Verification scope: phase-check protecting debt_closure.contract_test and every
+      later closure path.
 
       Agent source: default.
 
 
-      As an independent gate reviewer, verify that the review-miss analysis explains
-      why prior phase reviews missed the latest audit findings and that the anti-regression
-      review basis is concrete enough to govern the remediation phases.
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the review-miss phase
+      has fully converted the post-hoc reversal into binding planning inputs.
 
 
       BLOCK if:
 
-      - any blocker-class issue family lacks explicit downstream ownership
+      - any missed issue family lacks downstream ownership
 
-      - the report does not explain why previous gates allowed the gap through
+      - the reversal register omits remediation_owner or re-close proof
 
-      - runtime evidence requirements remain vague
+      - the hardening basis would still allow unresolved behavioral-runtime evidence
+      to reach a later OPEN gate
 
-      - dead-export or dependency-boundary concerns are left as unclassified notes'
-    verification: '- Review RCA completeness and closure-basis specificity
+      - provenance is being used as a disposition
 
-      - Confirm downstream phases have enough acceptance detail to execute without
-      guessing
 
-      - Confirm no bypass exists around this gate for later phases'
+      Required artifact: phase gate decision basis showing which review-miss outputs
+      were accepted and how they constrain later phases.'
+    verification: '- Review RCA, reversal register, and review-hardening basis together
+
+      - Record explicit OPEN or BLOCK recommendation with missing artifact list if
+      blocked
+
+      - Confirm downstream phases inherit the no-premature-closure rule'
     evidence_template: '## Gate Review Report
 
 
@@ -53704,6 +53708,7 @@ phases:
       - Required follow-up if blocked'
     depends_on:
     - debt_closure.review_miss.root_cause_analysis
+    - debt_closure.review_miss.capture_reversal_record
     - debt_closure.review_miss.harden_review_closure_basis
     agent: gate-reviewer
   - id: debt_closure.review_miss.capture_reversal_record
