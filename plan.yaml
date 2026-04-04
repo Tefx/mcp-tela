@@ -51877,7 +51877,7 @@ phases:
   steps:
   - id: adr006_recovery.impl.reload_race_authority
     name: Implement reload-wins recovery authority
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
 
@@ -52006,6 +52006,25 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-04T14:08:45.231492+00:00'
+    done_at: '2026-04-04T14:18:31.167055+00:00'
+    evidence: "## Reload Authority Evidence\n**Files changed**:\n- src/tela/shell/downstream.py\n\
+      - tests/shell/test_downstream.py\n\n**Race outcomes proved**:\n- removal beats\
+      \ recovery\n- material change beats recovery\n- convergence rejection blocks\
+      \ retry\n\n**Commands/tests run**:\n- uv run pytest tests/shell/test_downstream.py::test_recover_server_client_fails_closed_when_server_removed_mid_recovery\
+      \ tests/shell/test_downstream.py::test_recover_server_client_rejects_material_config_change_before_swap\
+      \ tests/shell/test_downstream.py::test_call_tool_stops_after_convergence_rejection\
+      \ tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\
+      \ tests/shell/test_reload.py\n  - 31 passed in 0.39s\n- uv run pytest tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\
+      \ tests/shell/test_reload.py tests/shell/test_downstream.py::test_call_tool_returns_downstream_unavailable_when_not_connected\
+      \ tests/shell/test_upstream.py::test_adr006_tela_error_details_has_required_keys_for_missing_client\
+      \ tests/shell/test_upstream.py::test_adr006_missing_client_is_recovery_eligible\n\
+      \  - 31 passed in 0.32s\n\n**Highest-risk failure proof**:\n- Config-remove\
+      \ race: recovery re-reads config after lock and after enumeration; removal during\
+      \ in-flight recovery fails closed with details.config_missing=true before convergence/retry.\n\
+      - Material-change race: recovery detects pre-open vs post-enumeration config\
+      \ mismatch and prevents stale recovered handle swap.\n- Convergence rejection\
+      \ terminality: convergence_rejected returns terminal DOWNSTREAM_UNAVAILABLE\
+      \ and no retry proceeds.\n\n**Deviation record**:\n- none"
   - id: adr006_recovery.impl.downstream_recovery_kernel
     name: Implement downstream recovery kernel and one-safe-retry path
     status: claimed
