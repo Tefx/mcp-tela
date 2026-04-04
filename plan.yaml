@@ -53855,18 +53855,17 @@ phases:
 
       expected_result: green
 
-      Verification scope: phase-check protecting debt_closure.impl and debt_closure.verify.
+      Verification scope: phase-check protecting debt_closure.runtime_evidence and
+      debt_closure.verify.
 
       Agent source: default.
 
 
-      Because the latest ADR-006 audit concluded that implementation mostly conforms
-      and the remaining debt is primarily an executable-evidence gap, author the missing
-      anti-regression tests and any minimal test-only instrumentation needed to make
-      the closure criteria runnable.
+      Author the executable probes, regressions, and minimal test-only instrumentation
+      required by the proof-obligation contract.
 
 
-      Required test coverage:
+      Required coverage:
 
       1. Config-reload remove during in-flight recovery cleans the per-server lock
       and surfaces config_missing=true where required
@@ -53876,59 +53875,48 @@ phases:
       3. Runtime evidence proves _registry_lock is not held while awaited network
       I/O is in progress
 
-      4. At least one focused assertion or audit helper exists for the re_enumerate()/surface-clarity
-      decision if the contract freezes it as public or removable
+      4. At least one focused assertion or audit helper exists for the re_enumerate()
+      surface decision and for mcp/fastmcp authority evidence when the contract requires
+      them
 
 
-      ## Anti-Regression Requirements (MANDATORY)
+      Required outputs:
 
-      - Name each new or updated regression explicitly
+      - exact named tests/probes per proof obligation
 
-      - Cover both the main path and the highest-risk failure path
+      - evidence anchor names that debt_closure.runtime_evidence will execute
 
-      - If any test fails, record the failing scenario precisely and hand it to Phase
-      C; do not silently weaken the assertion
+      - exposed_gaps section for any probe that still fails or cannot yet prove the
+      behavior
 
 
       Repo-specific reason for expected_result: green
 
-      - The deep conformance audit already found code-level conformance for R13/R42
-      and requested executable evidence rather than a known code rewrite.
+      - The current issue is primarily proof and closure quality; these probes are
+      expected to run against existing behavior, but any failing probe must be preserved
+      as remediation input rather than weakened.
 
 
       ## Spec-Fixture Conformance (MANDATORY)
 
-      Fixtures and runtime setup MUST match the documented external/runtime format
-      used by ADR-006 recovery flows; do not depend on convenience-only setup that
-      production paths would never see.'
-    verification: '- Add named tests for R13 and R42 closure scenarios
+      Fixtures and runtime setup MUST match documented ADR-006 recovery flows and
+      actual downstream runtime entrypoints; do not rely on convenience-only setup
+      absent from production paths.'
+    verification: '- Add named probes/tests for each proof obligation
 
-      - Evidence includes exact test names, whether they passed, and any exposed gaps
+      - Evidence includes exact test names, whether they passed, and any exposed_gaps
 
       - Modified files stay limited to tests and test-only helpers/instrumentation
       in this phase
 
-      - Any failure is recorded as Phase C remediation input, not dismissed'
-    evidence_template: '## Contract/Test Hardening Evidence
+      - Any failure is recorded as runtime remediation input for debt_closure.runtime_evidence
+      and debt_closure.impl, not dismissed'
+    evidence_template: '## Runtime Probe Inventory
 
+      | proof_obligation | test_or_probe_name | evidence_anchor | expected_signal
+      | current_result | exposed_gap |
 
-      ### Tests Added or Updated
-
-      | Test | Requirement | Expected Result | Actual Result |
-
-      |---|---|---|---|
-
-
-      ### Runtime Instrumentation
-
-      - Helper/hook added:
-
-      - Why it is test-only:
-
-
-      ### Exposed Gaps
-
-      - <none or precise failing scenario handed to Phase C>'
+      |---|---|---|---|---|---|'
     depends_on:
     - debt_closure.contract_test.freeze_closure_contract
     agent: python-executor
