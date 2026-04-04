@@ -54171,7 +54171,7 @@ phases:
     agent: python-executor
   - id: debt_closure.contract_test.freeze_closure_contract
     name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
-    status: claimed
+    status: done
     description: 'Step type: contract
 
       contract_purity: ENFORCED
@@ -54255,6 +54255,64 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-04T18:59:56.020204+00:00'
+    done_at: '2026-04-04T19:04:30.296230+00:00'
+    evidence: '## Proof-Obligation Contract
+
+      | requirement_ref | claim_type | claim | expected_evidence | pass_fail_boundary
+      | unresolved_status_policy | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|---|
+
+      | R13 | behavioral_proof | Prove _registry_lock not held across awaited network
+      I/O in downstream recovery | Named integration/tracing commands with raw output
+      in proof register | PASS only with observed await window + lock released + concurrent
+      registry access unblocked | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING; any
+      non-PROVEN blocks gate | debt_closure.runtime_evidence.collect_behavioral_proof
+      -> debt_closure.impl.close_runtime_gap_if_exposed | Gate must cite runtime evidence
+      row and PASS conditions |
+
+      | R42 | behavioral_proof | Prove per-server recovery lock pruned after config-reload-remove/disconnect
+      including in-flight recovery | Runtime witness evidence for removal+disconnect
+      under recovery pressure including config_missing=true where required | PASS
+      only if both scenarios observed with cleanup confirmed | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING;
+      any non-PROVEN blocks gate | debt_closure.runtime_evidence.collect_behavioral_proof
+      -> debt_closure.impl.close_runtime_gap_if_exposed | Gate must cite explicit
+      rows for both scenarios |
+
+      | UNC-LIVENESS-HEALTHY-NEIGHBOR | uncertainty_question | Resolve healthy-neighbor
+      liveness during failing-server recovery | Integration evidence during recovery
+      window with exact command/output | PASS only if healthy neighbor remains responsive
+      in-window | RESOLVED_NON_BLOCKING/UNCERTAIN_BLOCKING; UNCERTAIN_BLOCKING forces
+      BLOCK | debt_closure.runtime_evidence.resolve_uncertainty_register | Non-intersection
+      claims must enumerate remaining_gates_not_intersected |
+
+      | UNC-CONFIG-MISSING-FAIL-CLOSED | uncertainty_question | Resolve config_missing=true
+      fail-closed behavior on missing-server path supporting R42 | Runtime evidence
+      from removal/recovery paths | PASS only if fail-closed + config_missing=true
+      and no permissive leak | RESOLVED_BLOCKING/UNCERTAIN_BLOCKING; UNCERTAIN_BLOCKING
+      forces BLOCK | debt_closure.runtime_evidence.resolve_uncertainty_register ->
+      debt_closure.impl.close_runtime_gap_if_exposed | Gate must show resolved status
+      before OPEN |
+
+      | SURFACE-REENUMERATE | surface_decision | Classify re_enumerate as supported
+      public surface, framework-only escape hatch, or dead export | Decision record
+      + matching docs/tests/annotations/removal evidence | PASS only with one explicit
+      classification and matching evidence | RESOLVED_EXTERNAL_CONTRACT/RESOLVED_INTERNAL_ONLY/RESOLVED_COMPATIBILITY_SHIM/UNCERTAIN_BLOCKING;
+      unresolved blocks | unresolved -> debt_closure.impl.decide_surface_and_manifest_authority
+      | Gate must include chosen classification + evidence + rejected alternatives
+      |
+
+      | AUTH-MCP-FASTMCP | manifest_authority_decision | Reconcile canonical authority
+      tuple for package/import/manifest wording | Authority record citing pyproject,
+      runtime imports, manifest/header text, supporting evidence | PASS only if tuple
+      consistent or explicit translation boundary verified | RESOLVED_CANONICAL_TUPLE/UNCERTAIN_BLOCKING;
+      unresolved blocks | unresolved/docs insufficient -> debt_closure.impl.decide_surface_and_manifest_authority
+      | Gate must quote tuple and evidence refs; provenance != disposition |
+
+
+      Artifact: evidence/proof_obligation_contract.md
+
+      Commit: 464113b'
   - id: debt_closure.runtime_evidence.resolve_uncertainty_register
     name: Resolve runtime uncertainty register and remediation basis
     status: pending
