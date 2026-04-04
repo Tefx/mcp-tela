@@ -52622,3 +52622,49 @@ phases:
     depends_on:
     - adr006_recovery.deep_review.spec_conformance
     agent: blind-tester
+  - id: adr006_recovery.deep_review.gate
+    name: Final gate ADR-006 downstream recovery deep review
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
+      downstream recovery slice is complete, safe, and tightly scoped.
+
+
+      YOU ARE THE QUALITY GATE. Block completion if:
+
+      - any review finds retry-safety or ambiguity failures
+
+      - any review finds global serialization or lock-ordering risk
+
+      - any review finds spec drift in details/events/stages
+
+      - any scope drift into heartbeat or reaper-default work appears'
+    verification: 'Verification scope: full-plan-check for the ADR-006 downstream
+      recovery slice.
+
+      - All deep review steps completed with adequate evidence
+
+      - No unresolved blockers remain
+
+      - Scope remains limited to downstream steady-state self-healing recovery'
+    evidence_template: '## Final Gate Review
+
+      Phase: adr006_recovery.deep_review
+
+      - Wiring audit: PASS/FAIL
+
+      - Spec conformance: PASS/FAIL
+
+      - Architecture review: PASS/FAIL
+
+      - Contract strength: PASS/FAIL
+
+      - Black-box verification: PASS/FAIL
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - adr006_recovery.deep_review.wiring_audit
+    - adr006_recovery.deep_review.spec_conformance
+    - adr006_recovery.deep_review.architecture_review
+    - adr006_recovery.deep_review.contract_strength
+    - adr006_recovery.deep_review.black_box_verification
+    agent: gate-reviewer
