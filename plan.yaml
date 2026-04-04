@@ -54305,13 +54305,13 @@ phases:
     status: pending
     description: 'Step type: implementation
 
-      Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review.
+      Verification scope: local-check protecting debt_closure.verify.gate and debt_closure.final_review.final_gate.
 
       Agent source: default.
 
 
-      Fill in the concrete resolution work required by the surface and authority decision
-      record.
+      Fill in only the concrete resolution work still required by the surface and
+      authority decision record.
 
 
       UPSTREAM ARTIFACTS:
@@ -54325,10 +54325,14 @@ phases:
 
       YOUR SCOPE:
 
-      - make the chosen re_enumerate() classification real in code, exports, and docs
+      - if the decision record finds a real divergence, make the chosen re_enumerate()
+      classification real in code, exports, and docs
 
-      - make the chosen mcp / fastmcp authority real in code, dependency metadata,
-      and docs
+      - if the decision record finds a real divergence, make the chosen mcp / fastmcp
+      authority real in code, dependency metadata, and docs
+
+      - if either family is already aligned, emit explicit no-change evidence for
+      that row instead of churning files
 
       - keep edits limited to the files explicitly named by the decision record
 
@@ -54348,14 +54352,17 @@ phases:
       ## Completion Criteria (stub exclusion)
 
       This is an IMPLEMENTATION step. Stub-only or docs-only closure is insufficient
-      if code or metadata still contradict the chosen authority.'
+      if code or metadata still contradict the chosen authority. When no code or metadata
+      change is required, evidence must still prove why no-change closure is valid
+      and auditable.'
     verification: '- The chosen re_enumerate() classification is reflected consistently
-      in code/docs/exports
+      in code/docs/exports or explicitly proven already aligned
 
       - The chosen mcp/fastmcp authority is reflected consistently in dependency metadata
-      and import guidance
+      and import guidance or explicitly proven already aligned
 
-      - Evidence names each edited file and the decision row it satisfies'
+      - Evidence names each edited file or explicit no-change row and the decision
+      record entry it satisfies'
     evidence_template: '## Surface/Manifest Resolution Evidence
 
 
