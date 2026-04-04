@@ -53804,7 +53804,7 @@ phases:
     agent: software-architect
   - id: debt_closure.review_miss.capture_reversal_record
     name: Capture post-hoc reversal and re-close obligations
-    status: pending
+    status: claimed
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
@@ -53847,6 +53847,8 @@ phases:
     depends_on:
     - debt_closure.review_miss.root_cause_analysis
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-04T18:51:03.367920+00:00'
   - id: debt_closure.review_miss.root_cause_analysis
     name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
     status: done
