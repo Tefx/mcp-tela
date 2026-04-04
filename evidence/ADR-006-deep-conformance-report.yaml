@@ -1,0 +1,75 @@
+status: SUCCESS
+
+evidence: |
+  ## Deep Spec Conformance Report
+  
+  **Spec**: docs/ADR-006-steady-state-downstream-recovery.md
+  **Scope**: Cross-cutting and integration-level requirements
+  **Date**: 2026-04-04
+  
+  ### Summary
+  
+  - **Total Requirements**: 57
+  - **CONFORMS**: 50
+  - **NEEDS_TEST**: 2 (R13, R42)
+  - **DIVERGES**: 0
+  - **PARTIAL**: 0
+  - **NOT_FOUND**: 0
+  - **AMBIGUOUS_SPEC**: 0
+  
+  All ADR-006 requirements verified. Implementation demonstrates strong conformance.
+  
+  ### Critical Verifications
+  
+  **End-to-End Retry Semantics (R8)**:
+  - Verified: One original call attempt (lines 934-983)
+  - Verified: Exactly one recovery attempt (lines 985-1037)
+  - Verified: Exactly one retry after successful recovery (lines 1066-1110)
+  - Verified: No second recovery loop on retry failure
+  - Citation: src/tela/shell/downstream.py
+  
+  **Exact Diagnostic Payload Stability (R18-R22, R31-R36)**:
+  - Verified: All required error detail fields present (server_name, recovery_attempted, recovery_stage, recovery_eligible, underlying_error)
+  - Verified: All diagnostic event fields present (event, level, server_name, tool_name, elapsed_ms, underlying_error)
+  - Verified: Event names match ADR contract exactly (downstream_recovery_started|succeeded|rejected|exhausted|classifier_unknown)
+  - Citation: src/tela/shell/downstream.py:546-570, 504-529
+  
+  **Config-Reload Remove-Precedence (R15-R17)**:
+  - Verified: Runtime config re-read after lock acquisition (line 687)
+  - Verified: config_missing=true when server removed during lock wait (lines 640-654, 689-694)
+  - Verified: Server config change detection before swap (lines 800-822, 878-909)
+  - Citation: src/tela/shell/downstream.py
+  
+  **No Healthy-Path Probe Creep (R39-R40)**:
+  - Verified: Direct call_tool attempt without preflight check (line 945)
+  - Verified: Recovery only triggered AFTER failure (line 949)
+  - Verified: No liveness probe on healthy path
+  - Citation: src/tela/shell/downstream.py:934-983
+  
+  **No Scope Creep (R51-R52)**:
+  - Verified: No heartbeat/lease protocol modifications
+  - Verified: No tela connect client behavior changes
+  - Verified: Reaper config surface only (behavioral invariants unchanged)
+  - Citation: src/tela/shell/downstream.py, src/tela/core/reaper_config.py
+  
+  ### NEEDS_TEST Items
+  
+  **R42: Per-Server Lock Cleanup on Config-Reload-Remove**:
+  - Implementation: `_prune_recovery_lock_if_unused` called at lines 481, 923-924
+  - Behavioral claim: Lock removed when server removed from config
+  - Needs: Integration test with concurrent recovery + config-reload-remove scenario
+  
+  **R13: Registry Lock Not Held During Network I/O**:
+  - Implementation: `_registry_lock` released before network I/O (lines 573-612)
+  - Behavioral claim: Lock hold duration excludes await on network operations
+  - Needs: Runtime verification with concurrent callers
+  
+  ### Top Risks
+  
+  1. **R42**: Lock cleanup during config-reload requires integration test
+  2. **R13**: Registry lock protocol benefits from concurrent-load test
+  3. **Timeout Budget**: Very slow enumeration/convergence could cause timeout in unexpected places
+  
+  Full evidence table: evidence/ADR-006-deep-conformance-audit.md
+
+error: ""
