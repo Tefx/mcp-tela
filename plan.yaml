@@ -53538,10 +53538,12 @@ phases:
   depends_on:
   - debt_closure.verify
 - id: debt_closure.runtime_evidence
-  name: ADR-006 Behavioral Runtime Evidence
+  name: Legacy shell (absorbed by debt_closure.triage_and_decide)
   status: locked
-  gate: Behavioral proof obligations and uncertainty resolution must be explicit before
-    any remediation or closure decision proceeds.
+  gate: Legacy phase shell retained for provenance only; active debt-closure work
+    now lives in debt_closure.triage_and_decide.
+  context: No active steps remain; preserved only because phase deletion is not available
+    via vectl mutate.
   depends_on:
   - debt_closure.contract_test
 - id: debt_closure.triage_and_decide
