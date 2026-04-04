@@ -54410,7 +54410,7 @@ phases:
       Commit: 464113b'
   - id: debt_closure.runtime_evidence.resolve_uncertainty_register
     name: Resolve runtime uncertainty register and remediation basis
-    status: pending
+    status: claimed
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.impl and all later gates.
@@ -54498,6 +54498,8 @@ phases:
     depends_on:
     - debt_closure.runtime_evidence.collect_behavioral_proof
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-04T19:42:10.883554+00:00'
   - id: debt_closure.runtime_evidence.collect_behavioral_proof
     name: Collect behavioral proof for R13 and R42
     status: done
