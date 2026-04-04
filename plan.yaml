@@ -52218,7 +52218,7 @@ phases:
       - none"
   - id: adr006_recovery.impl.gate
     name: Gate ADR-006 implementation
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery implementation meets the quality bar for independent verification.
 
@@ -52275,6 +52275,8 @@ phases:
     - adr006_recovery.impl.reload_race_authority
     - adr006_recovery.impl.downstream_recovery_kernel
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T14:25:58.772996+00:00'
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
