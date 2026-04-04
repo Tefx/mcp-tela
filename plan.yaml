@@ -54199,6 +54199,8 @@ phases:
       - UNPROVEN: <list>
 
       - UNCERTAIN_BLOCKING: <list>'
+    depends_on:
+    - debt_closure.contract_test.gate
     agent: integration-verifier
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
