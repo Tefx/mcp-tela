@@ -52542,7 +52542,7 @@ phases:
       Pass/fail summary: 39 passed, 7 xfailed, 0 failed for ADR-focused verification.'
   - id: adr006_recovery.verify.surface_conformance
     name: Verify caller-visible recovery surface conformance
-    status: claimed
+    status: pending
     description: 'As an INDEPENDENT TESTER (blind-tester), validate the caller-visible
       ADR-006 behavior from the upstream surface.
 
@@ -52603,8 +52603,6 @@ phases:
 
       **Verdict**: PASS | ISSUES_FOUND | INCOMPLETE'
     agent: blind-tester
-    claimed_by: blind-tester
-    claimed_at: '2026-04-04T14:56:03.387500+00:00'
   - id: adr006_recovery.verify.spec_conformance
     name: Run ADR-006 spec conformance review
     status: done
