@@ -53553,7 +53553,7 @@ phases:
   - debt_closure.contract_test
 - id: debt_closure.triage_and_decide
   name: Debt Closure Triage and Decide
-  status: in_progress
+  status: done
   gate: Review-miss capture, closure contract freeze, initial behavioral proof, and
     uncertainty/disposition resolution must be explicit before any optional remediation
     path can open.
@@ -53654,7 +53654,7 @@ phases:
       rows have explicit closure paths.'
   - id: debt_closure.runtime_evidence.gate
     name: Gate runtime proof obligations and uncertainty resolution
-    status: claimed
+    status: done
     description: 'Step type: gate
 
       Verification scope: full-plan-check protecting debt_closure.impl and every downstream
@@ -53704,6 +53704,16 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T19:47:21.870710+00:00'
+    done_at: '2026-04-04T19:50:16.225068+00:00'
+    evidence: 'Gate-reviewer produced independent runtime evidence gate basis and
+      issued **BLOCK** recommendation (semantic gate result). Blocking set: (B1) R13
+      inconsistency between proof-register PROVEN marking and required runtime witness;
+      (B2) R42 config-remove in-flight remains NEEDS_TEST; (B3) missing explicit disconnect-under-recovery
+      witness for R42 two-path obligation; (B4) SURFACE-REENUMERATE remains UNCERTAIN_BLOCKING;
+      (B5) AUTH-MCP-FASTMCP authority split remains UNCERTAIN_BLOCKING; (B6) non-intersection
+      schema-field gaps for non-blocking claims. Explicitly confirms gate_open_allowed=NO
+      and that unresolved blocker-class items intersect downstream debt_closure.impl/debt_closure.verify/debt_closure.final_review
+      paths. No product implementation files modified.'
   - id: debt_closure.review_miss.gate
     name: Gate root-cause and review-hardening basis
     status: done
@@ -54681,7 +54691,7 @@ phases:
       closure paths and gate decision basis for each obligation.'
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
-  status: locked
+  status: pending
   gate: 'Conditional remediation only: runtime, surface, or manifest changes may proceed
     only when triage proves blocker-class gaps remain and no gate may bypass unresolved
     behavioral evidence.'
