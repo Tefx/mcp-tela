@@ -52204,6 +52204,69 @@ phases:
 
       - PASS | ISSUES_FOUND | INCOMPLETE'
     agent: integration-verifier
+  - id: adr006_recovery.verify.surface_conformance
+    name: Verify caller-visible recovery surface conformance
+    status: pending
+    description: 'As an INDEPENDENT TESTER (blind-tester), validate the caller-visible
+      ADR-006 behavior from the upstream surface.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Integration companion: provide seam-level real path evidence for the changed
+      seam.
+
+
+      Changed seam path requires at least one full-path proof:
+
+      - upstream tool invocation reaches downstream call path
+
+      - recovery, if triggered, is visible only as latency/diagnostics
+
+      - no new probe/preflight step is added to the healthy path
+
+      - no new public recovery protocol step is introduced
+
+
+      Path exercised: upstream tool call -> upstream.handle_tools_call -> downstream.call_tool
+      -> recovery/convergence path (when eligible)
+
+
+      Independence Level: L2'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.verify.gate.
+
+      - At least one seam-level full-path proof is present
+
+      - Evidence shows actual command/test output, not only summary
+
+      - Confirms no extra healthy-path protocol step or probe cost is introduced'
+    evidence_template: '## Integration Evidence
+
+      **Command or test exercising the full path**:
+
+      ```
+
+      <paste exact command or test name>
+
+      ```
+
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr or test runner output>
+
+      ```
+
+
+      **Path exercised**: upstream -> downstream.call_tool -> recovery/convergence
+      -> retry outcome
+
+
+      **Verdict**: PASS | ISSUES_FOUND | INCOMPLETE'
+    agent: blind-tester
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
   status: locked
