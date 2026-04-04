@@ -53579,51 +53579,6 @@ phases:
 
       - <must be empty or escalated with owner>'
     agent: software-architect
-  - id: debt_closure.review_miss.capture_reversal_record
-    name: Capture post-hoc reversal and re-close obligations
-    status: pending
-    description: 'Step type: review
-
-      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
-      and all later gates.
-
-      Agent source: default.
-
-
-      Capture the formal post-hoc reversal record for the ADR-006 debt slice.
-
-
-      Required outputs:
-
-      - overturned_decision entries for any earlier OPEN or done-state assumption
-      now invalidated by R13/R42 or surface/manifest ambiguity
-
-      - review_miss_cause for each overturned decision
-
-      - reversal_risk if the same review weakness could recur elsewhere
-
-      - remediation_owner for each overturned decision
-
-      - re-close proof obligation required before the debt slice can return to done
-
-
-      This step exists because the control-plane rules were upgraded after the earlier
-      closure. Do not summarize this as generic ''follow-up debt''; record the exact
-      earlier closure assumption that no longer holds.'
-    verification: '- Every overturned earlier closure assumption is listed explicitly
-
-      - Each record names remediation_owner and re-close proof
-
-      - No blocker-class reversal is left as narrative-only commentary'
-    evidence_template: '## Reversal Register
-
-      | overturned_decision | why_it_was_overturned | review_miss_cause | reversal_risk
-      | remediation_owner | re_close_proof |
-
-      |---|---|---|---|---|---|'
-    depends_on:
-    - debt_closure.review_miss.root_cause_analysis
-    agent: software-architect
 - id: debt_closure.contract_test
   name: Debt Closure Basis and Proof Contract
   status: locked
@@ -54688,6 +54643,49 @@ phases:
       ### Anti-Regression Rules
 
       - <numbered list>'
+    agent: software-architect
+  - id: debt_closure.review_miss.capture_reversal_record
+    name: Capture post-hoc reversal and re-close obligations
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
+      and all later gates.
+
+      Agent source: default.
+
+
+      Capture the formal post-hoc reversal record for the ADR-006 debt slice.
+
+
+      Required outputs:
+
+      - overturned_decision entries for any earlier OPEN or done-state assumption
+      now invalidated by R13/R42 or surface/manifest ambiguity
+
+      - review_miss_cause for each overturned decision
+
+      - reversal_risk if the same review weakness could recur elsewhere
+
+      - remediation_owner for each overturned decision
+
+      - re-close proof obligation required before the debt slice can return to done
+
+
+      This step exists because the control-plane rules were upgraded after the earlier
+      closure. Do not summarize this as generic ''follow-up debt''; record the exact
+      earlier closure assumption that no longer holds.'
+    verification: '- Every overturned earlier closure assumption is listed explicitly
+
+      - Each record names remediation_owner and re-close proof
+
+      - No blocker-class reversal is left as narrative-only commentary'
+    evidence_template: '## Reversal Register
+
+      | overturned_decision | why_it_was_overturned | review_miss_cause | reversal_risk
+      | remediation_owner | re_close_proof |
+
+      |---|---|---|---|---|---|'
     agent: software-architect
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
