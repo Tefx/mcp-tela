@@ -53510,63 +53510,49 @@ phases:
     status: pending
     description: 'Step type: review
 
-      Verification scope: phase-check protecting downstream debt_closure.contract_test
-      and debt_closure.impl gates.
+      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
+      debt_closure.impl, and all later gates.
 
       Agent source: default.
 
 
-      Analyze why earlier phase reviews, deep reviews, and completion gates did not
-      close the following post-hoc findings before the plan reached 100% done:
+      Analyze why prior ADR-006 recovery reviews reached done-state without forcing
+      closure for:
 
-      - R42 lock-cleanup evidence gap for config-reload-remove while recovery is in
-      flight
+      - R42 lock-cleanup proof in config-reload-remove while recovery is in flight
 
-      - R13 runtime evidence gap for ''registry lock not held during network I/O''
+      - R13 proof that _registry_lock is not held during awaited network I/O
 
-      - Potential dead export concern for re_enumerate()
+      - re_enumerate() public-surface ambiguity
 
-      - Dependency/manifest clarity risk around mcp / fastmcp imports
+      - mcp / fastmcp manifest and dependency authority ambiguity
 
 
       Required outputs:
 
-      1. blocker_fingerprint for each missed issue family
+      1. blocker_fingerprint per issue family
 
-      2. provenance vs disposition matrix (pre-existing vs blocking-now / blocking-later
-      / non-blocking)
+      2. provenance vs disposition matrix
 
-      3. review escape analysis explaining which prior gate/evidence shape allowed
-      the issue through
+      3. review escape analysis naming the exact prior phase, gate, or evidence shape
+      that allowed the miss through
 
-      4. anti-regression checklist for future phase gates covering runtime-evidence
-      debt, dead-export ambiguity, and dependency-boundary clarity
+      4. anti-regression checklist for future phase gates covering runtime-proof debt,
+      dead-export ambiguity, and dependency-authority clarity
 
-      5. explicit recommendation for which later phase owns each closure action in
-      this remediation plan
-
-
-      Use the latest audit artifacts as authoritative evidence, compare them against
-      the already-completed ADR-006 recovery phases, and state exactly whether the
-      miss was due to missing tests, insufficient gate criteria, insufficient auditor
-      evidence, or scope ambiguity.
+      5. explicit downstream ownership mapping to debt_closure.contract_test, debt_closure.runtime_evidence,
+      debt_closure.impl, debt_closure.verify, or debt_closure.final_review
 
 
-      Gate Preview:
-
-      1. Root-cause analysis that only says ''tests were missing'' is insufficient.
-
-      2. The report MUST explain why the earlier gate structure failed to force runtime
-      proof.
-
-      3. The report MUST distinguish technical debt from review-process debt.'
+      This RCA MUST explain why earlier gate structure failed to force behavioral
+      proof obligations, not merely that tests were missing. Distinguish technical
+      debt from review-process debt.'
     verification: '- Produce a written RCA with one row per missed issue family
 
       - For each row, identify the missed trigger, the gate that should have caught
       it, and the new anti-regression rule
 
-      - Explicitly assign downstream ownership to debt_closure.contract_test, debt_closure.impl,
-      debt_closure.verify, or debt_closure.final_review
+      - Explicitly assign downstream ownership to one later debt_closure phase
 
       - No unresolved blocker-class debt may remain unowned'
     evidence_template: '## Review-Miss RCA
