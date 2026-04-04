@@ -52906,7 +52906,7 @@ phases:
       - Decision: OPEN'
 - id: adr006_recovery.deep_review
   name: ADR-006 Downstream Recovery Deep Review
-  status: in_progress
+  status: done
   gate: Final independent audit of ADR-006 downstream recovery slice
   depends_on:
   - adr006_recovery.doc_sync
@@ -53229,7 +53229,7 @@ phases:
       No new public recovery protocol step surfaced; stable error envelope preserved.'
   - id: adr006_recovery.deep_review.gate
     name: Final gate ADR-006 downstream recovery deep review
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery slice is complete, safe, and tightly scoped.
 
@@ -53278,6 +53278,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T16:07:26.463059+00:00'
+    done_at: '2026-04-04T16:12:07.726951+00:00'
+    evidence: '## Final Gate Review
+
+      Phase: adr006_recovery.deep_review
+
+      - Wiring audit: PASS
+
+      - Spec conformance: PASS
+
+      - Architecture review: PASS
+
+      - Contract strength: PASS
+
+      - Black-box verification: PASS (with one mock-infrastructure timeout noted)
+
+      - Decision: OPEN
+
+
+      step_intent: Final quality gate for ADR-006 downstream recovery deep review
+
+      expected_result: No unresolved blocker-class debt; safe, scoped, spec-conformant
+      slice
+
+      observed_result: Gate criteria satisfied; no unresolved blockers remained after
+      reload-authority remediation/retest
+
+      failure_alignment: N/A
+
+      product_file_modifications: verification-only step; no product changes'
   - id: adr006_recovery.deep_review.fix_reload_authority
     name: Fix ADR-006 downstream reload authority fallback
     status: done
