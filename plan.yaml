@@ -53533,50 +53533,6 @@ phases:
     authority, and review-miss hardening before the debt slice can return to done.
   depends_on:
   - debt_closure.verify
-  steps:
-  - id: debt_closure.final_review.wiring_rereview
-    name: Re-review wiring closure and review-process anti-regression uptake
-    status: pending
-    description: 'Step type: review
-
-      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
-
-      Independence Level: L1
-
-      Agent source: default.
-
-
-      Re-review the non-runtime closure families from a fresh perspective:
-
-      - re_enumerate() surface disposition is now explicit and auditable
-
-      - mcp / fastmcp authority is consistent across code, docs, and dependency metadata
-
-      - review-miss hardening outputs were actually consumed by later artifacts and
-      gates
-
-
-      Required outputs:
-
-      - decision-by-decision audit verdicts
-
-      - any residual dead-export, split-authority, or review-hardening drift
-
-      - explicit OPEN/BLOCK recommendation for the final gate on these non-runtime
-      items'
-    verification: '- Review surface/authority decision record, verify-phase audit,
-      and review-miss outputs together
-
-      - Any residual ambiguity is surfaced explicitly to final gate
-
-      - No split-authority or dead-export ambiguity is allowed to remain narrative-only'
-    evidence_template: '## Surface and Process Re-Review
-
-      | decision_ref | rereview_verdict | evidence_ref | residual_gap | final_gate_impact
-      |
-
-      |---|---|---|---|---|'
-    agent: wiring-auditor
 - id: debt_closure.runtime_evidence
   name: ADR-006 Behavioral Runtime Evidence
   status: locked
@@ -54859,3 +54815,46 @@ phases:
 
       |---|---|---|---|---|'
     agent: blind-tester
+  - id: debt_closure.final_review.wiring_rereview
+    name: Re-review wiring closure and review-process anti-regression uptake
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
+
+      Independence Level: L1
+
+      Agent source: default.
+
+
+      Re-review the non-runtime closure families from a fresh perspective:
+
+      - re_enumerate() surface disposition is now explicit and auditable
+
+      - mcp / fastmcp authority is consistent across code, docs, and dependency metadata
+
+      - review-miss hardening outputs were actually consumed by later artifacts and
+      gates
+
+
+      Required outputs:
+
+      - decision-by-decision audit verdicts
+
+      - any residual dead-export, split-authority, or review-hardening drift
+
+      - explicit OPEN/BLOCK recommendation for the final gate on these non-runtime
+      items'
+    verification: '- Review surface/authority decision record, verify-phase audit,
+      and review-miss outputs together
+
+      - Any residual ambiguity is surfaced explicitly to final gate
+
+      - No split-authority or dead-export ambiguity is allowed to remain narrative-only'
+    evidence_template: '## Surface and Process Re-Review
+
+      | decision_ref | rereview_verdict | evidence_ref | residual_gap | final_gate_impact
+      |
+
+      |---|---|---|---|---|'
+    agent: wiring-auditor
