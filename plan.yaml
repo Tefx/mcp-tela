@@ -53648,69 +53648,6 @@ phases:
     - debt_closure.review_miss.root_cause_analysis
     - debt_closure.review_miss.capture_reversal_record
     agent: software-architect
-  - id: debt_closure.review_miss.gate
-    name: Gate root-cause and review-hardening basis
-    status: pending
-    description: 'Step type: gate
-
-      Verification scope: phase-check protecting debt_closure.contract_test and every
-      later closure path.
-
-      Agent source: default.
-
-
-      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the review-miss phase
-      has fully converted the post-hoc reversal into binding planning inputs.
-
-
-      BLOCK if:
-
-      - any missed issue family lacks downstream ownership
-
-      - the reversal register omits remediation_owner or re-close proof
-
-      - the hardening basis would still allow unresolved behavioral-runtime evidence
-      to reach a later OPEN gate
-
-      - provenance is being used as a disposition
-
-
-      Required artifact: phase gate decision basis showing which review-miss outputs
-      were accepted and how they constrain later phases.'
-    verification: '- Review RCA, reversal register, and review-hardening basis together
-
-      - Record explicit OPEN or BLOCK recommendation with missing artifact list if
-      blocked
-
-      - Confirm downstream phases inherit the no-premature-closure rule'
-    evidence_template: '## Gate Review Report
-
-
-      ### RCA Coverage
-
-      | Check | Status | Notes |
-
-      |---|---|---|
-
-      | All issue families analyzed | | |
-
-      | Why prior reviews missed them | | |
-
-      | Anti-regression rules are concrete | | |
-
-      | Downstream ownership assigned | | |
-
-
-      ### Gate Decision
-
-      - OPEN or BLOCKED
-
-      - Required follow-up if blocked'
-    depends_on:
-    - debt_closure.review_miss.root_cause_analysis
-    - debt_closure.review_miss.capture_reversal_record
-    - debt_closure.review_miss.harden_review_closure_basis
-    agent: gate-reviewer
   - id: debt_closure.review_miss.capture_reversal_record
     name: Capture post-hoc reversal and re-close obligations
     status: pending
@@ -54871,6 +54808,65 @@ phases:
       **Recommendation**: OPEN | BLOCK
 
       **Blocking items**: <list or none>'
+    agent: gate-reviewer
+  - id: debt_closure.review_miss.gate
+    name: Gate root-cause and review-hardening basis
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: phase-check protecting debt_closure.contract_test and every
+      later closure path.
+
+      Agent source: default.
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the review-miss phase
+      has fully converted the post-hoc reversal into binding planning inputs.
+
+
+      BLOCK if:
+
+      - any missed issue family lacks downstream ownership
+
+      - the reversal register omits remediation_owner or re-close proof
+
+      - the hardening basis would still allow unresolved behavioral-runtime evidence
+      to reach a later OPEN gate
+
+      - provenance is being used as a disposition
+
+
+      Required artifact: phase gate decision basis showing which review-miss outputs
+      were accepted and how they constrain later phases.'
+    verification: '- Review RCA, reversal register, and review-hardening basis together
+
+      - Record explicit OPEN or BLOCK recommendation with missing artifact list if
+      blocked
+
+      - Confirm downstream phases inherit the no-premature-closure rule'
+    evidence_template: '## Gate Review Report
+
+
+      ### RCA Coverage
+
+      | Check | Status | Notes |
+
+      |---|---|---|
+
+      | All issue families analyzed | | |
+
+      | Why prior reviews missed them | | |
+
+      | Anti-regression rules are concrete | | |
+
+      | Downstream ownership assigned | | |
+
+
+      ### Gate Decision
+
+      - OPEN or BLOCKED
+
+      - Required follow-up if blocked'
     agent: gate-reviewer
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
