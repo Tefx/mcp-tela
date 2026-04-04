@@ -55368,7 +55368,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.verify.gate
     name: Gate runtime evidence and wiring audit
-    status: claimed
+    status: done
     description: 'Step type: gate
 
       Verification scope: full-plan-check protecting debt_closure.final_review and
@@ -55417,6 +55417,14 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T20:41:28.842549+00:00'
+    done_at: '2026-04-04T20:43:01.934981+00:00'
+    evidence: 'Gate-reviewer produced decision basis and issued **BLOCK** recommendation.
+      Unresolved blocker-class items identified: R42-CONFIG-REMOVE-INFLIGHT (NEEDS_TEST),
+      R42-DISCONNECT-UNDER-RECOVERY (NEEDS_TEST), SURFACE-REENUMERATE (UNCERTAIN_BLOCKING
+      pending applied+verified classification), AUTH-MCP-FASTMCP (UNCERTAIN_BLOCKING
+      pending applied+verified authority tuple). Also flagged divergence between wiring-audit
+      PASS and behavioral/uncertainty registers; required carry-forward actions listed
+      before re-review. Gate remains closed for final_review progression.'
   - id: debt_closure.verify.runtime_evidence_r13_r42
     name: Re-verify behavioral proof register after resolution
     status: done
