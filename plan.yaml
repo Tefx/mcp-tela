@@ -52330,7 +52330,7 @@ phases:
 
       - Any remaining failures and disposition'
     depends_on:
-    - adr006_recovery.impl.fix_probe_free_test_setup
+    - adr006_recovery.impl.normalize_gap_tests_post_impl
     agent: integration-verifier
   - id: adr006_recovery.impl.normalize_gap_tests_post_impl
     name: Normalize expected-red gap tests for post-implementation green retest
