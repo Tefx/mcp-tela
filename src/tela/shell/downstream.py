@@ -613,7 +613,11 @@ async def _acquire_recovery_lock(
 
 
 def _get_runtime_server_config(server_name: str) -> Result[ServerConfig, TelaError]:
-    """Read latest runtime config and resolve one target server config."""
+    """Resolve server config from runtime authority only.
+
+    ADR-006 reload-wins rule: once runtime config no longer contains a server,
+    recovery MUST fail closed and must not revive stale hint/cache state.
+    """
 
     runtime_result = get_runtime_config()
     if runtime_result.is_err:
@@ -632,10 +636,6 @@ def _get_runtime_server_config(server_name: str) -> Result[ServerConfig, TelaErr
         server_config = runtime_config.servers.get(server_name)
         if server_config is not None:
             return Result(value=server_config)
-
-    hinted_config = _server_config_hints.get(server_name)
-    if hinted_config is not None:
-        return Result(value=hinted_config)
 
     missing_reason = (
         "Runtime config unavailable"

@@ -1433,6 +1433,59 @@ def test_recover_server_client_rejects_material_config_change_before_swap(
     assert downstream._clients.get("srv") is stale_handle
 
 
+def test_get_runtime_server_config_uses_runtime_authority_over_hints() -> None:
+    """Recovery config lookup must resolve from runtime config, not stale hints."""
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    old_runtime = get_runtime_config().value
+    old_hints = dict(downstream._server_config_hints)
+
+    runtime_config = ServerConfig(name="srv", command="runtime_cmd")
+    stale_hint = ServerConfig(name="srv", command="stale_hint_cmd")
+
+    set_runtime_config(TelaConfig(servers={"srv": runtime_config}))
+    downstream._server_config_hints["srv"] = stale_hint
+
+    try:
+        lookup_result = downstream._get_runtime_server_config("srv")
+    finally:
+        downstream._server_config_hints.clear()
+        downstream._server_config_hints.update(old_hints)
+        set_runtime_config(old_runtime)
+
+    assert lookup_result.is_ok
+    assert lookup_result.value == runtime_config
+
+
+def test_get_runtime_server_config_fails_when_server_removed_even_with_hint() -> None:
+    """Runtime removal must beat stale hint fallback for recovery lookup."""
+    from tela.core.models import TelaConfig
+    from tela.shell import downstream
+    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+
+    old_runtime = get_runtime_config().value
+    old_hints = dict(downstream._server_config_hints)
+
+    removed_server_hint = ServerConfig(name="srv", command="stale_hint_cmd")
+
+    set_runtime_config(TelaConfig(servers={}))
+    downstream._server_config_hints["srv"] = removed_server_hint
+
+    try:
+        lookup_result = downstream._get_runtime_server_config("srv")
+    finally:
+        downstream._server_config_hints.clear()
+        downstream._server_config_hints.update(old_hints)
+        set_runtime_config(old_runtime)
+
+    assert lookup_result.is_err
+    assert lookup_result.error is not None
+    assert lookup_result.error.details is not None
+    assert lookup_result.error.details.get("config_missing") is True
+
+
 def test_call_tool_stops_after_convergence_rejection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
