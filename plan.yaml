@@ -54637,3 +54637,107 @@ phases:
     any remediation or closure decision proceeds.
   depends_on:
   - debt_closure.contract_test
+  steps:
+  - id: debt_closure.runtime_evidence.collect_behavioral_proof
+    name: Collect behavioral proof for R13 and R42
+    status: pending
+    description: 'Step type: verification
+
+      Verification scope: full-plan-check protecting debt_closure.impl, debt_closure.verify,
+      debt_closure.final_review, and any attempt to close the ADR-006 debt slice without
+      runtime proof.
+
+      Independence Level: L2
+
+      Agent source: default.
+
+
+      As an INDEPENDENT TESTER (integration-verifier), execute the proof obligations
+      frozen by debt_closure.contract_test.freeze_closure_contract and the runtime
+      probes from debt_closure.contract_test.add_runtime_hardening_tests.
+
+
+      Required artifact: behavioral proof register with one row per obligation containing
+      ALL of:
+
+      - requirement_ref
+
+      - behavior_claim
+
+      - runtime_proof_expected
+
+      - evidence_ref
+
+      - status (PROVEN | NEEDS_TEST | UNPROVEN | UNCERTAIN_BLOCKING)
+
+      - closure_path
+
+      - gate_decision_basis
+
+
+      Minimum proof obligations:
+
+      1. R13: _registry_lock is not held during awaited network I/O in downstream
+      recovery paths
+
+      2. R42: per-server recovery lock is pruned after config-reload-remove / disconnect
+      while recovery is in flight
+
+      3. Healthy-neighbor liveness remains unaffected while the failing server is
+      recovering
+
+      4. Missing-server path fails closed with config_missing=true where the closure
+      contract requires it
+
+
+      Integration evidence is mandatory: paste exact commands, named tests, and actual
+      observed output. Mock-only summaries are invalid.
+
+
+      If runtime evidence exposes a code defect, do NOT down-class it as historical
+      debt. Mark status UNPROVEN or UNCERTAIN_BLOCKING and point closure_path at debt_closure.impl.close_runtime_gap_if_exposed.'
+    verification: '- Produce the behavioral proof register with explicit status per
+      obligation
+
+      - Evidence includes exact commands/tests and pasted output
+
+      - Any NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING row names the downstream remediation
+      or rereview owner
+
+      - No blocker-class behavioral obligation is left without a closure_path'
+    evidence_template: '## Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+
+      ## Commands Executed
+
+      ```
+
+      <paste exact commands>
+
+      ```
+
+
+      ## Actual Output
+
+      ```
+
+      <paste actual output>
+
+      ```
+
+
+      ## Findings
+
+      - PROVEN: <list>
+
+      - NEEDS_TEST: <list>
+
+      - UNPROVEN: <list>
+
+      - UNCERTAIN_BLOCKING: <list>'
+    agent: integration-verifier
