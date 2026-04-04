@@ -53662,6 +53662,64 @@ phases:
     depends_on:
     - debt_closure.review_miss.root_cause_analysis
     agent: software-architect
+  - id: debt_closure.review_miss.gate
+    name: Gate root-cause and review-hardening basis
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: phase-check protecting debt_closure.contract_test and all
+      downstream phases.
+
+      Agent source: default.
+
+
+      As an independent gate reviewer, verify that the review-miss analysis explains
+      why prior phase reviews missed the latest audit findings and that the anti-regression
+      review basis is concrete enough to govern the remediation phases.
+
+
+      BLOCK if:
+
+      - any blocker-class issue family lacks explicit downstream ownership
+
+      - the report does not explain why previous gates allowed the gap through
+
+      - runtime evidence requirements remain vague
+
+      - dead-export or dependency-boundary concerns are left as unclassified notes'
+    verification: '- Review RCA completeness and closure-basis specificity
+
+      - Confirm downstream phases have enough acceptance detail to execute without
+      guessing
+
+      - Confirm no bypass exists around this gate for later phases'
+    evidence_template: '## Gate Review Report
+
+
+      ### RCA Coverage
+
+      | Check | Status | Notes |
+
+      |---|---|---|
+
+      | All issue families analyzed | | |
+
+      | Why prior reviews missed them | | |
+
+      | Anti-regression rules are concrete | | |
+
+      | Downstream ownership assigned | | |
+
+
+      ### Gate Decision
+
+      - OPEN or BLOCKED
+
+      - Required follow-up if blocked'
+    depends_on:
+    - debt_closure.review_miss.root_cause_analysis
+    - debt_closure.review_miss.harden_review_closure_basis
+    agent: gate-reviewer
 - id: debt_closure.contract_test
   name: ADR-006 Debt Closure Contract and Test Hardening
   status: locked
