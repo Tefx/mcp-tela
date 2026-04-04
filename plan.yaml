@@ -53553,7 +53553,7 @@ phases:
   - debt_closure.contract_test
 - id: debt_closure.triage_and_decide
   name: Debt Closure Triage and Decide
-  status: pending
+  status: in_progress
   gate: Review-miss capture, closure contract freeze, initial behavioral proof, and
     uncertainty/disposition resolution must be explicit before any optional remediation
     path can open.
@@ -53849,7 +53849,7 @@ phases:
     agent: software-architect
   - id: debt_closure.review_miss.root_cause_analysis
     name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
-    status: pending
+    status: claimed
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
@@ -53921,6 +53921,8 @@ phases:
 
       - <must be empty or escalated with owner>'
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-04-04T18:46:50.866255+00:00'
   - id: debt_closure.contract_test.add_runtime_hardening_tests
     name: Add anti-regression tests and instrumentation for R13 and R42
     status: pending
