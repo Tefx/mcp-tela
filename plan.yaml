@@ -54305,10 +54305,10 @@ phases:
     - debt_closure.impl.apply_surface_and_manifest_resolution
     agent: gate-reviewer
 - id: debt_closure.verify
-  name: Post-Gate Runtime Verification and Evidence
+  name: Debt Closure Verification and Closure Audit
   status: locked
-  gate: Runtime evidence for R13/R42 and wiring/manifest closure must exist before
-    re-review.
+  gate: Post-resolution retest, surface audit, and structured closure basis must all
+    be green before independent re-review.
   depends_on:
   - debt_closure.impl
   steps:
