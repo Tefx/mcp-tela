@@ -53794,6 +53794,9 @@ phases:
       ### Anti-Regression Rules
 
       - <numbered list>'
+    depends_on:
+    - debt_closure.review_miss.root_cause_analysis
+    - debt_closure.review_miss.capture_reversal_record
     agent: software-architect
   - id: debt_closure.review_miss.capture_reversal_record
     name: Capture post-hoc reversal and re-close obligations
