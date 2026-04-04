@@ -51534,6 +51534,54 @@ phases:
       - Explicit non-goals:\n  - no heartbeat/lease protocol\n  - no reaper-policy\
       \ reopening"
     agent: python-executor
+  - id: adr006_recovery.contract.gate
+    name: Gate ADR-006 contract freeze
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
+      downstream recovery contract freeze is complete and sufficiently specific for
+      safe implementation.
+
+
+      YOU ARE THE QUALITY GATE. Block progress if the contract would allow:
+
+      - extra retries
+
+      - ambiguous mid-flight retries
+
+      - global rather than per-server serialization
+
+      - ad hoc registry/client mutation outside reload convergence
+
+      - silent drift in TelaError.details or structured diagnostics
+
+      - scope creep into heartbeat or reaper-defaults work'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.test.
+
+      - Contract freeze preserves probe-free healthy path
+
+      - One automatic retry maximum is explicit
+
+      - Fail-closed classifier boundary is explicit
+
+      - Shared recovery authority via reload.py is explicit
+
+      - Out-of-scope exclusions are explicit
+
+      - No unresolved blocker remains for test-definition phase'
+    evidence_template: '## Gate Review Report
+
+      Phase: adr006_recovery.contract
+
+      - Completeness: pinned interfaces and diagnostic contract present
+
+      - Safety: retry and ambiguity rules explicit
+
+      - Scope: excludes heartbeat/reaper-default work
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - adr006_recovery.contract.freeze_recovery_contract
+    agent: gate-reviewer
 - id: adr006_recovery.test
   name: ADR-006 Downstream Recovery Tests
   status: locked
