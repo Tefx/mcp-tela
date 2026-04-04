@@ -53966,6 +53966,8 @@ phases:
       | current_result | exposed_gap |
 
       |---|---|---|---|---|---|'
+    depends_on:
+    - debt_closure.contract_test.freeze_closure_contract
     agent: python-executor
   - id: debt_closure.contract_test.freeze_closure_contract
     name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
