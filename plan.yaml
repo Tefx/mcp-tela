@@ -54500,7 +54500,7 @@ phases:
     agent: software-architect
   - id: debt_closure.runtime_evidence.collect_behavioral_proof
     name: Collect behavioral proof for R13 and R42
-    status: claimed
+    status: done
     description: 'Step type: verification
 
       Verification scope: full-plan-check protecting debt_closure.impl, debt_closure.verify,
@@ -54653,6 +54653,17 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-04T19:36:16.910450+00:00'
+    done_at: '2026-04-04T19:41:40.975090+00:00'
+    evidence: 'Integration-verifier produced full behavioral proof register after
+      reading required refs (ADR-006 doc, repro probes, downstream runtime). Executed:
+      `uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py -v --tb=short`
+      with results: 5 passed, 2 skipped, 1 xfailed, 2 failed (surface-classification
+      audits out-of-scope for this runtime-proof step). Register outcome: R13 PROVEN
+      (registry lock not held across await boundaries), R42 NEEDS_TEST (unit prune
+      logic proven; in-flight config-reload race remains integration-level), healthy-neighbor
+      liveness PROVEN, config_missing fail-closed PROVEN. Non-PROVEN owner mapping
+      provided: R42 -> debt_closure.impl.close_runtime_gap_if_exposed. Includes explicit
+      closure paths and gate decision basis for each obligation.'
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
   status: locked
