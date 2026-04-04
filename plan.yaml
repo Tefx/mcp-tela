@@ -54877,3 +54877,11 @@ phases:
     path can open.
   depends_on:
   - adr006_recovery.deep_review
+- id: debt_closure.impl_if_needed
+  name: Debt Closure Conditional Implementation
+  status: locked
+  gate: 'Conditional remediation only: runtime, surface, or manifest changes may proceed
+    only when triage proves blocker-class gaps remain and no gate may bypass unresolved
+    behavioral evidence.'
+  depends_on:
+  - debt_closure.triage_and_decide
