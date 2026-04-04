@@ -53727,6 +53727,97 @@ phases:
     are frozen before remediation.
   depends_on:
   - debt_closure.review_miss
+  steps:
+  - id: debt_closure.contract_test.freeze_closure_contract
+    name: Freeze explicit closure contract for R13 R42 and surface-clarity debt
+    status: pending
+    description: 'Step type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs:
+
+      - signatures
+
+      - interfaces
+
+      - behavioral closure criteria
+
+      - reviewer prompts
+
+      Verification scope: phase-check protecting debt_closure.impl, debt_closure.verify,
+      and debt_closure.final_review.
+
+      Agent source: default.
+
+
+      Freeze the authoritative closure contract for this debt-closure slice.
+
+
+      Must define:
+
+      - exact closure criteria for R13: prove _registry_lock is not held across awaited
+      network I/O in the downstream recovery path
+
+      - exact closure criteria for R42: prove per-server recovery locks are pruned
+      after config-reload-remove / disconnect scenarios, including in-flight recovery
+      cases
+
+      - classification rule for re_enumerate(): intentional public API, framework-only
+      escape hatch, or dead export to remove
+
+      - dependency/manifest rule for mcp and fastmcp imports: what is authoritative,
+      where it is documented, and what evidence counts as clear ownership
+
+
+      Use existing ADR-006 audit evidence as the authoritative semantic basis. Clarify
+      semantics only on the existing interface surface; do not redesign public APIs
+      in this step.
+
+
+      If the existing docs appear insufficient to classify re_enumerate() or mcp import
+      ownership, state the ambiguity explicitly and bind Phase C to resolve it before
+      verification.'
+    verification: '- Closure contract contains explicit pass/fail conditions for R13
+      and R42
+
+      - Closure contract defines decision outcomes for re_enumerate() and mcp/fastmcp
+      import clarity
+
+      - No acceptance criterion relies on vague phrases such as ''looks safe'' or
+      ''probably conformant'''
+    evidence_template: '## Debt Closure Contract Freeze
+
+
+      ### R13 closure
+
+      - Required path:
+
+      - Forbidden behavior:
+
+      - Required runtime evidence:
+
+
+      ### R42 closure
+
+      - Required scenarios:
+
+      - Required cleanup evidence:
+
+      - Failure conditions:
+
+
+      ### Surface-clarity decisions
+
+      - re_enumerate classification:
+
+      - mcp/fastmcp ownership rule:
+
+
+      ### Open questions
+
+      - <must be empty or escalated>'
+    agent: python-senior
 - id: debt_closure.impl
   name: Post-Gate Runtime and Manifest Remediation
   status: locked
