@@ -51716,7 +51716,7 @@ phases:
     claimed_at: '2026-04-04T13:25:18.372892+00:00'
   - id: adr006_recovery.test.define_red_surface_contract
     name: Define expected-red caller-visible recovery contract tests
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       step_intent: test_define_red
@@ -51768,6 +51768,8 @@ phases:
       \  - ADR details keys preserved\n- Expected failures observed:\n  - <paste failing\
       \ test names>"
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-04T13:25:25.609866+00:00'
   - id: adr006_recovery.test.gate
     name: Gate ADR-006 expected-red tests
     status: pending
