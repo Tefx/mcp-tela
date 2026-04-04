@@ -51502,3 +51502,10 @@ phases:
     without ad hoc registry mutation.
   depends_on:
   - adr006_recovery.test
+- id: adr006_recovery.verify
+  name: ADR-006 Recovery Verification
+  status: locked
+  gate: Prove green behavior for recovery matrix, caller-visible surface, and spec
+    conformance.
+  depends_on:
+  - adr006_recovery.impl
