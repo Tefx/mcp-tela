@@ -52489,3 +52489,33 @@ phases:
 
       - Verdict: PASS | ISSUES_FOUND'
     agent: wiring-auditor
+  - id: adr006_recovery.deep_review.spec_conformance
+    name: Audit full ADR-006 recovery conformance
+    status: pending
+    description: 'Full-system adversarial conformance audit for the ADR-006 downstream
+      recovery slice.
+
+
+      Focus on cross-cutting and integration-level requirements that per-phase checks
+      can miss:
+
+      - end-to-end retry semantics
+
+      - exact diagnostic payload and event-name stability
+
+      - config-reload/remove precedence over in-flight recovery
+
+      - no healthy-path probe creep
+
+      - no scope creep into heartbeat or reaper-defaults work'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.deep_review.gate.
+
+      - Emergent drift is surfaced explicitly with ADR section references'
+    evidence_template: '## Deep Spec Conformance Report
+
+      | ADR Section | Requirement | Verdict | Evidence |
+
+      |---|---|---|---|'
+    depends_on:
+    - adr006_recovery.deep_review.wiring_audit
+    agent: spec-verifier
