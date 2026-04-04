@@ -52027,7 +52027,7 @@ phases:
       \ and no retry proceeds.\n\n**Deviation record**:\n- none"
   - id: adr006_recovery.impl.downstream_recovery_kernel
     name: Implement downstream recovery kernel and one-safe-retry path
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
 
@@ -52192,6 +52192,30 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-04T14:19:15.462825+00:00'
+    done_at: '2026-04-04T14:25:39.804503+00:00'
+    evidence: "## Implementation Evidence\n**Files changed**:\n- src/tela/shell/downstream.py\n\
+      \n**Recovery classifier cases implemented**:\n- eligible: missing client; exact\
+      \ approved RuntimeError variants for not-connected/session-closed\n- ineligible:\
+      \ TimeoutError/asyncio.TimeoutError, BrokenPipeError, ConnectionResetError\n\
+      - ineligible/fail-closed: unknown exception classes and unknown RuntimeError\
+      \ messages (with classifier-unknown warning diagnostic)\n- downstream tool/app\
+      \ errors remain non-recovery and not retried\n\n**Shared-state notes**:\n- per-server\
+      \ lock map lifecycle retained and hardened\n- stale waiter path added: if lock\
+      \ was contended and healthy client mapping exists, skip reconnect work\n- disconnect_all\
+      \ lock-map cleanup retained\n- server-removal cleanup added via lock pruning\
+      \ on config-missing failure\n- cross-server isolation preserved via per-server\
+      \ locks\n\n**Commands/tests run**:\n- uv run pytest -q tests/shell/test_downstream.py\
+      \ -k \"recover_server_client_fails_closed_when_server_removed_mid_recovery or\
+      \ recover_server_client_rejects_material_config_change_before_swap or call_tool_stops_after_convergence_rejection\"\
+      \ (3 passed)\n- uv run pytest -q tests/shell/test_downstream.py -k \"handle_reconnect\
+      \ or recover_server_client or call_tool_stops_after_convergence_rejection\"\
+      \ (6 passed)\n- uv run pytest -q tests/shell/test_upstream.py -k \"adr006_tela_error_details_has_required_keys_for_missing_client\
+      \ or adr006_missing_client_is_recovery_eligible or adr006_no_new_public_api_for_recovery\"\
+      \ (3 passed)\n- uv run python timeout no-retry verification snippet:\n  - is_err=True\n\
+      \  - recovery_calls=0\n  - stage=not_attempted\n  - eligible=False\n\n**Highest-risk\
+      \ failure proof**:\n- Timeout/ambiguous failure no-retry: recovery_calls remains\
+      \ 0 with stage=not_attempted and eligible=False.\n\n**Deviation record**:\n\
+      - none"
   - id: adr006_recovery.impl.gate
     name: Gate ADR-006 implementation
     status: pending
