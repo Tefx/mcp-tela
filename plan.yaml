@@ -54125,8 +54125,6 @@ phases:
       - Why prior evidence was insufficient:
 
       - Why the change is not symptom-only:'
-    depends_on:
-    - debt_closure.impl.decide_surface_and_manifest_authority
     agent: python-senior
 - id: debt_closure.verify
   name: Post-Gate Runtime Verification and Evidence
