@@ -51491,7 +51491,7 @@ phases:
   steps:
   - id: adr006_recovery.contract.freeze_recovery_contract
     name: Freeze ADR-006 downstream recovery contract
-    status: claimed
+    status: done
     description: "step_type: contract\ncontract_purity: ENFORCED\ncontract_outputs:\n\
       \  - signatures\n  - type_defs\n  - interfaces\n  - stubs\n\nPin the exact implementation\
       \ contract for the remaining ADR-006 downstream steady-state self-healing recovery\
@@ -51536,6 +51536,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-04T13:18:30.121823+00:00'
+    done_at: '2026-04-04T13:21:16.855535+00:00'
+    evidence: "## ADR-006 Contract Freeze Evidence\n- Authoritative ADR sections cited:\n\
+      \  - ownership-and-module-boundaries\n  - recovery-eligibility-contract\n  -\
+      \ recovery-sequence\n  - concurrency-contract\n  - config-reload-concurrency-contract\n\
+      \  - error-payload-contract\n  - recovery-timeout-contract\n  - observability\n\
+      - Pinned interfaces:\n  - call_tool(server_name: str, tool_name: str, arguments:\
+      \ dict) -> Result[dict, TelaError]\n  - _recover_server_client(server_name:\
+      \ str, *, deadline_monotonic: float) -> Result[None, TelaError]\n- Required\
+      \ TelaError.details keys:\n  - server_name\n  - recovery_attempted\n  - recovery_stage\n\
+      \  - recovery_eligible\n  - config_missing\n  - underlying_error\n- Recovery\
+      \ eligibility boundaries pinned conservatively:\n  - Eligible: missing client\
+      \ handle; explicit local not-connected/closed-runtime errors\n  - Ineligible:\
+      \ timeouts, broken-pipe/connection-reset/EOF after submission, McpError/ToolError/app\
+      \ errors\n  - Unknown exceptions/messages fail closed\n- Lock ordering and stale-waiter\
+      \ reread rules pinned:\n  - read handle under _registry_lock -> release -> acquire\
+      \ per-server lock -> re-read config/_clients\n  - stale waiter reuses recovered\
+      \ client if healthy now exists\n  - removed/materially changed server fails\
+      \ closed (config_missing)\n- Recovery-stage values pinned:\n  - not_attempted,\
+      \ reconnect_started, convergence_rejected, retry_failed, recovery_timeout\n\
+      - Structured diagnostics event set pinned:\n  - downstream_recovery_started,\
+      \ downstream_recovery_succeeded, downstream_recovery_rejected, downstream_recovery_exhausted,\
+      \ downstream_recovery_classifier_unknown\n- Explicit non-goals:\n  - no heartbeat/lease\
+      \ protocol\n  - no reaper-policy reopening\n  - no global connect_all recovery\n\
+      \  - no healthy-path probe"
   - id: adr006_recovery.contract.gate
     name: Gate ADR-006 contract freeze
     status: pending
