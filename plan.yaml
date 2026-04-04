@@ -53577,49 +53577,6 @@ phases:
 
       |---|---|---|---|---|'
     agent: wiring-auditor
-  - id: debt_closure.final_review.behavior_rereview
-    name: Re-review behavioral proof closure from a fresh reader
-    status: pending
-    description: 'Step type: review
-
-      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
-
-      Independence Level: L2
-
-      Agent source: default.
-
-
-      As an independent rereviewer, assess whether the behavioral proof register and
-      verify-gate decision basis really close R13 and R42.
-
-
-      Required outputs:
-
-      - fresh-reader assessment of whether each behavioral obligation is actually
-      PROVEN
-
-      - challenge any status that appears over-optimistic or under-evidenced
-
-      - verify that any overturned earlier closure has matching re-close proof
-
-      - name any residual ambiguity that would make final OPEN unsafe
-
-
-      This rereview is intentionally separate from implementation and from the earlier
-      runtime verifier so that weak evidence is not self-certified.'
-    verification: '- Review the proof register, uncertainty register, reversal register,
-      and verify-gate decision basis together
-
-      - Record PASS or ISSUES_FOUND for each behavioral obligation
-
-      - Any unresolved blocker is surfaced for the final gate explicitly'
-    evidence_template: '## Behavioral Re-Review
-
-      | requirement_ref | rereview_verdict | evidence_challenged | residual_risk |
-      final_gate_recommendation |
-
-      |---|---|---|---|---|'
-    agent: blind-tester
 - id: debt_closure.runtime_evidence
   name: ADR-006 Behavioral Runtime Evidence
   status: locked
@@ -54859,3 +54816,46 @@ phases:
 
       |---|---|---|---|---|'
     agent: spec-verifier
+  - id: debt_closure.final_review.behavior_rereview
+    name: Re-review behavioral proof closure from a fresh reader
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.final_review.final_gate.
+
+      Independence Level: L2
+
+      Agent source: default.
+
+
+      As an independent rereviewer, assess whether the behavioral proof register and
+      verify-gate decision basis really close R13 and R42.
+
+
+      Required outputs:
+
+      - fresh-reader assessment of whether each behavioral obligation is actually
+      PROVEN
+
+      - challenge any status that appears over-optimistic or under-evidenced
+
+      - verify that any overturned earlier closure has matching re-close proof
+
+      - name any residual ambiguity that would make final OPEN unsafe
+
+
+      This rereview is intentionally separate from implementation and from the earlier
+      runtime verifier so that weak evidence is not self-certified.'
+    verification: '- Review the proof register, uncertainty register, reversal register,
+      and verify-gate decision basis together
+
+      - Record PASS or ISSUES_FOUND for each behavioral obligation
+
+      - Any unresolved blocker is surfaced for the final gate explicitly'
+    evidence_template: '## Behavioral Re-Review
+
+      | requirement_ref | rereview_verdict | evidence_challenged | residual_risk |
+      final_gate_recommendation |
+
+      |---|---|---|---|---|'
+    agent: blind-tester
