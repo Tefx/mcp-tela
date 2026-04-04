@@ -53818,6 +53818,92 @@ phases:
 
       - <must be empty or escalated>'
     agent: python-senior
+  - id: debt_closure.contract_test.add_runtime_hardening_tests
+    name: Add anti-regression tests and instrumentation for R13 and R42
+    status: pending
+    description: 'Step type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      Verification scope: phase-check protecting debt_closure.impl and debt_closure.verify.
+
+      Agent source: default.
+
+
+      Because the latest ADR-006 audit concluded that implementation mostly conforms
+      and the remaining debt is primarily an executable-evidence gap, author the missing
+      anti-regression tests and any minimal test-only instrumentation needed to make
+      the closure criteria runnable.
+
+
+      Required test coverage:
+
+      1. Config-reload remove during in-flight recovery cleans the per-server lock
+      and surfaces config_missing=true where required
+
+      2. Healthy server B remains unblocked while server A is recovering
+
+      3. Runtime evidence proves _registry_lock is not held while awaited network
+      I/O is in progress
+
+      4. At least one focused assertion or audit helper exists for the re_enumerate()/surface-clarity
+      decision if the contract freezes it as public or removable
+
+
+      ## Anti-Regression Requirements (MANDATORY)
+
+      - Name each new or updated regression explicitly
+
+      - Cover both the main path and the highest-risk failure path
+
+      - If any test fails, record the failing scenario precisely and hand it to Phase
+      C; do not silently weaken the assertion
+
+
+      Repo-specific reason for expected_result: green
+
+      - The deep conformance audit already found code-level conformance for R13/R42
+      and requested executable evidence rather than a known code rewrite.
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      Fixtures and runtime setup MUST match the documented external/runtime format
+      used by ADR-006 recovery flows; do not depend on convenience-only setup that
+      production paths would never see.'
+    verification: '- Add named tests for R13 and R42 closure scenarios
+
+      - Evidence includes exact test names, whether they passed, and any exposed gaps
+
+      - Modified files stay limited to tests and test-only helpers/instrumentation
+      in this phase
+
+      - Any failure is recorded as Phase C remediation input, not dismissed'
+    evidence_template: '## Contract/Test Hardening Evidence
+
+
+      ### Tests Added or Updated
+
+      | Test | Requirement | Expected Result | Actual Result |
+
+      |---|---|---|---|
+
+
+      ### Runtime Instrumentation
+
+      - Helper/hook added:
+
+      - Why it is test-only:
+
+
+      ### Exposed Gaps
+
+      - <none or precise failing scenario handed to Phase C>'
+    depends_on:
+    - debt_closure.contract_test.freeze_closure_contract
+    agent: python-executor
 - id: debt_closure.impl
   name: Post-Gate Runtime and Manifest Remediation
   status: locked
