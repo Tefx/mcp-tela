@@ -81,7 +81,13 @@ depending on client behavior that the gateway cannot enforce.
 
 Implementation status:
 
-- downstream recovery policy: specified here, pending implementation follow-through
+- downstream recovery policy: **implemented** in `src/tela/shell/downstream.py`
+  - eligibility classifier: `_is_recovery_eligible_exception`
+  - one-retry max: enforced in `call_tool` retry path
+  - per-server locks: `_recovery_locks` dict with lazy lock creation
+  - timeout budget: `_RECOVERY_TIMEOUT_SECONDS = 15.0`
+  - error details: structured `TelaError.details` per Error Payload Contract
+  - diagnostics events: `_emit_recovery_diagnostic` with required fields
 - reaper policy surface and defaults: implemented
   - runtime config exposes dedicated `reaper` settings
   - `tela serve` exposes CLI overrides with CLI precedence over config
@@ -712,6 +718,12 @@ Illustrative test shapes:
 - do not bypass reconnect convergence by mutating `_registry` directly from the
   call path
 - do not pay probe cost on every healthy tool call
+
+## Documentation References
+
+- `docs/DESIGN.md` — `downstream.py` module section includes ADR-006 behavior summary
+- `docs/INTERFACES.md` — Error code table and `DOWNSTREAM_UNAVAILABLE` payload contract
+- Implementation: `src/tela/shell/downstream.py` — `_is_recovery_eligible_exception`, `_recover_server_client`, `_emit_recovery_diagnostic`
 
 ## Open Questions
 

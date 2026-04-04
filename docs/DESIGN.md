@@ -579,6 +579,48 @@ Available tools:
 
 **Concurrency:** `_registry_lock` is an `asyncio.Lock` protecting `_clients`, `_registry`, and `_server_instructions`. All connect/disconnect/re-enumerate operations acquire this lock. `call_tool` acquires the lock briefly to look up the client handle, then releases before the downstream RPC call. Event-entry adapters (`_handle_reconnect`, `_handle_tools_list_changed`) also acquire the lock.
 
+#### ADR-006 Downstream Recovery Behavior
+
+**Scope:** Steady-state tool-call recovery for transient downstream disconnects.
+
+Recovery is failure-triggered: `call_tool` attempts the downstream call immediately; only when the failure proves the client is locally disconnected before dispatch does recovery activate. Recovery is per-server, with one automatic retry maximum.
+
+**Recovery eligibility classifier** (`_is_recovery_eligible_exception`):
+- Eligible: `RuntimeError("Client is not connected...")` or `RuntimeError("Server session was closed unexpectedly")`
+- Ineligible: `TimeoutError`, `BrokenPipeError`, `ConnectionResetError`, or any downstream application error
+- Unknown exceptions fail closed (no retry)
+
+**Recovery sequence** (`_recover_server_client`):
+1. Acquire per-server recovery lock (`_recovery_locks`) to serialize concurrent recovery for the same server
+2. Re-read runtime config after lock acquisition; fail with `details.config_missing=true` if server removed
+3. Open fresh client session via `_open_client_for_server`
+4. Enumerate tools via `_enumerate_client_tools`
+5. Route through single-server convergence kernel (`on_server_reconnect`)
+6. On convergence success: swap new client into `_clients`, close old handle best-effort
+7. Return to caller for single retry
+
+**Timeout budget:** 15 seconds total (`_RECOVERY_TIMEOUT_SECONDS`), covering lock wait, reconnect, enumeration, convergence, and the single retry. Timeout exhaustion sets `details.recovery_stage="recovery_timeout"`.
+
+**Locking rules:**
+- Per-server recovery locks are created lazily per server name
+- `_registry_lock` is released before waiting on recovery locks or performing I/O
+- Re-acquired only for swap/register phases through convergence path
+- Locks are pruned when server is permanently removed or `disconnect_all()` tears down state
+
+**Error details keys** (`TelaError.details`):
+- `server_name`: required
+- `recovery_attempted`: required (bool)
+- `recovery_eligible`: required (bool)
+- `recovery_stage`: one of `"not_attempted"`, `"reconnect_started"`, `"reconnect_succeeded"`, `"convergence_rejected"`, `"retry_failed"`, `"recovery_timeout"`, `"classifier_unknown"`
+- `config_missing`: optional, true when server removed from runtime config during recovery
+- `underlying_error`: required, string representation of original failure
+
+**Structured recovery diagnostics** (`_emit_recovery_diagnostic`):
+Events: `downstream_recovery_started`, `downstream_recovery_succeeded`, `downstream_recovery_rejected`, `downstream_recovery_exhausted`, `downstream_recovery_classifier_unknown`
+Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (optional), `elapsed_ms`, `recovery_stage`, `underlying_error` (optional for INFO), `request_id` (optional)
+
+**Shared recovery primitive:** Both message-handler reconnect flow and call-triggered recovery flow use `_recover_server_client` as the single recovery authority. This ensures consistent convergence semantics regardless of trigger source.
+
 ---
 
 ### `downstream_clients.py`

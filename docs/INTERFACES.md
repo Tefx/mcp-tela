@@ -884,7 +884,7 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `GATEWAY_NOT_STARTED` | MCP + HTTP | Gateway runtime not initialized |
 | `TOOL_NOT_FOUND` | MCP | Tool name not in downstream registry |
 | `PROFILE_NOT_FOUND` | MCP | Bound profile not in runtime config |
-| `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected or call failed |
+| `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected, call failed, or recovery exhausted (see ADR-006) |
 | `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
 | `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
 | `INITIALIZE_REJECTED` | MCP | Token validation failed or no default profile |
@@ -914,6 +914,21 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `AUDIT_INIT_ERROR` | Startup | Cannot create audit log directory |
 | `AUDIT_WRITE_ERROR` | Runtime | Cannot write to audit JSONL file |
 | `AUDIT_QUERY_ERROR` | Runtime | Invalid timestamp format in query |
+
+### ADR-006 `DOWNSTREAM_UNAVAILABLE` Error Payload
+
+When recovery is attempted or considered, `TelaError.details` for `DOWNSTREAM_UNAVAILABLE` uses these field names per ADR-006:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `server_name` | `str` | Yes | Target downstream server name |
+| `recovery_attempted` | `bool` | Yes | Whether any recovery was tried |
+| `recovery_eligible` | `bool` | Yes | Whether the failure class qualified for recovery |
+| `recovery_stage` | `str` | When `recovery_attempted=true` | One of: `"not_attempted"`, `"reconnect_started"`, `"reconnect_succeeded"`, `"convergence_rejected"`, `"retry_failed"`, `"recovery_timeout"`, `"classifier_unknown"` |
+| `config_missing` | `bool` | Optional | `true` when server was removed from runtime config during recovery |
+| `underlying_error` | `str` | Yes | String representation of the original failure |
+
+Recovery is attempted only for eligible disconnect-class failures (see ADR-006 for classifier details). Timeout errors, connection resets after dispatch, and downstream application errors are ineligible and return `recovery_eligible=false`.
 
 ## 3.1a Config Loading Edge Cases
 
