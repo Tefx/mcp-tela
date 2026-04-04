@@ -54352,6 +54352,61 @@ phases:
 
       - PASS | ISSUES_FOUND | INCOMPLETE'
     agent: integration-verifier
+  - id: debt_closure.verify.wiring_and_manifest_audit
+    name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
+    status: pending
+    description: 'Step type: verification
+
+      Verification scope: phase-check protecting debt_closure.final_review.
+
+      Independence Level: L1
+
+      Agent source: default.
+
+
+      As an independent wiring auditor, verify that the surface and dependency decisions
+      from Phase C are externally auditable.
+
+
+      Required checks:
+
+      1. Export reachability or intentional removal for re_enumerate()
+
+      2. No dead-export ambiguity remains between docs and actual callers
+
+      3. mcp / fastmcp import ownership is clear in code and dependency metadata
+
+      4. Any remaining exceptions are explicitly documented as intentional, not accidental
+      drift
+
+
+      Use grep/import-trace style evidence, not narrative assertions.'
+    verification: '- Provide concrete reachability/removal evidence for re_enumerate()
+
+      - Provide concrete evidence for import-boundary and metadata clarity
+
+      - Any residual ambiguity is blocker-class for the next phase'
+    evidence_template: '## Wiring and Manifest Audit Report
+
+
+      ### re_enumerate
+
+      - Classification observed:
+
+      - Reachability/removal evidence:
+
+
+      ### mcp / fastmcp
+
+      - Import surfaces observed:
+
+      - Metadata/docs alignment evidence:
+
+
+      ### Residual ambiguity
+
+      - <must be none or blocker>'
+    agent: wiring-auditor
 - id: debt_closure.final_review
   name: Debt Closure Independent Re-Review and Final Gate
   status: locked
