@@ -54518,42 +54518,36 @@ phases:
       Agent source: default.
 
 
-      As wiring-auditor, re-review the final debt-closure slice with two goals:
+      Re-review the non-runtime closure families from a fresh perspective:
 
-      1. confirm the re_enumerate and mcp/fastmcp ambiguity is actually closed in
-      the live repo state
+      - re_enumerate() surface disposition is now explicit and auditable
 
-      2. confirm the anti-regression review basis from Phase A was concretely applied
-      in later evidence and gate shapes
+      - mcp / fastmcp authority is consistent across code, docs, and dependency metadata
 
-
-      This is not a generic pass-through. It must say whether the same class of review
-      miss could still recur after these phase additions.'
-    verification: '- Re-review the repo state and later-phase evidence against the
-      Phase A anti-regression checklist
-
-      - Explicitly answer whether the original miss pattern is now prevented
-
-      - Any residual repeatability risk is blocker-class'
-    evidence_template: '## Wiring / Review-Process Re-Review
+      - review-miss hardening outputs were actually consumed by later artifacts and
+      gates
 
 
-      ### Technical closure
+      Required outputs:
 
-      - re_enumerate:
+      - decision-by-decision audit verdicts
 
-      - mcp/fastmcp:
+      - any residual dead-export, split-authority, or review-hardening drift
 
+      - explicit OPEN/BLOCK recommendation for the final gate on these non-runtime
+      items'
+    verification: '- Review surface/authority decision record, verify-phase audit,
+      and review-miss outputs together
 
-      ### Process closure
+      - Any residual ambiguity is surfaced explicitly to final gate
 
-      - Runtime-evidence guardrail applied:
+      - No split-authority or dead-export ambiguity is allowed to remain narrative-only'
+    evidence_template: '## Surface and Process Re-Review
 
-      - Dead-export guardrail applied:
+      | decision_ref | rereview_verdict | evidence_ref | residual_gap | final_gate_impact
+      |
 
-      - Dependency-boundary guardrail applied:
-
-      - Could the same miss recur? yes/no and why'
+      |---|---|---|---|---|'
     agent: wiring-auditor
   - id: debt_closure.final_review.final_gate
     name: Final gate for post-gate debt closure
