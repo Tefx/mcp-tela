@@ -53504,81 +53504,6 @@ phases:
     execution.
   depends_on:
   - adr006_recovery.deep_review
-  steps:
-  - id: debt_closure.review_miss.root_cause_analysis
-    name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
-    status: pending
-    description: 'Step type: review
-
-      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
-      debt_closure.impl, and all later gates.
-
-      Agent source: default.
-
-
-      Analyze why prior ADR-006 recovery reviews reached done-state without forcing
-      closure for:
-
-      - R42 lock-cleanup proof in config-reload-remove while recovery is in flight
-
-      - R13 proof that _registry_lock is not held during awaited network I/O
-
-      - re_enumerate() public-surface ambiguity
-
-      - mcp / fastmcp manifest and dependency authority ambiguity
-
-
-      Required outputs:
-
-      1. blocker_fingerprint per issue family
-
-      2. provenance vs disposition matrix
-
-      3. review escape analysis naming the exact prior phase, gate, or evidence shape
-      that allowed the miss through
-
-      4. anti-regression checklist for future phase gates covering runtime-proof debt,
-      dead-export ambiguity, and dependency-authority clarity
-
-      5. explicit downstream ownership mapping to debt_closure.contract_test, debt_closure.runtime_evidence,
-      debt_closure.impl, debt_closure.verify, or debt_closure.final_review
-
-
-      This RCA MUST explain why earlier gate structure failed to force behavioral
-      proof obligations, not merely that tests were missing. Distinguish technical
-      debt from review-process debt.'
-    verification: '- Produce a written RCA with one row per missed issue family
-
-      - For each row, identify the missed trigger, the gate that should have caught
-      it, and the new anti-regression rule
-
-      - Explicitly assign downstream ownership to one later debt_closure phase
-
-      - No unresolved blocker-class debt may remain unowned'
-    evidence_template: '## Review-Miss RCA
-
-
-      ### Issue Families
-
-      | Family | Provenance | Disposition | Missed Gate | Why Missed | New Guardrail
-      | Owning Phase |
-
-      |---|---|---|---|---|---|---|
-
-
-      ### Anti-Regression Checklist
-
-      - Runtime-evidence gaps to block on
-
-      - Dead-export classification rules
-
-      - Dependency/manifest-clarity checks
-
-
-      ### Remaining Ambiguities
-
-      - <must be empty or escalated with owner>'
-    agent: software-architect
 - id: debt_closure.contract_test
   name: Debt Closure Basis and Proof Contract
   status: locked
@@ -54686,6 +54611,80 @@ phases:
       | remediation_owner | re_close_proof |
 
       |---|---|---|---|---|---|'
+    agent: software-architect
+  - id: debt_closure.review_miss.root_cause_analysis
+    name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
+    status: pending
+    description: 'Step type: review
+
+      Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
+      debt_closure.impl, and all later gates.
+
+      Agent source: default.
+
+
+      Analyze why prior ADR-006 recovery reviews reached done-state without forcing
+      closure for:
+
+      - R42 lock-cleanup proof in config-reload-remove while recovery is in flight
+
+      - R13 proof that _registry_lock is not held during awaited network I/O
+
+      - re_enumerate() public-surface ambiguity
+
+      - mcp / fastmcp manifest and dependency authority ambiguity
+
+
+      Required outputs:
+
+      1. blocker_fingerprint per issue family
+
+      2. provenance vs disposition matrix
+
+      3. review escape analysis naming the exact prior phase, gate, or evidence shape
+      that allowed the miss through
+
+      4. anti-regression checklist for future phase gates covering runtime-proof debt,
+      dead-export ambiguity, and dependency-authority clarity
+
+      5. explicit downstream ownership mapping to debt_closure.contract_test, debt_closure.runtime_evidence,
+      debt_closure.impl, debt_closure.verify, or debt_closure.final_review
+
+
+      This RCA MUST explain why earlier gate structure failed to force behavioral
+      proof obligations, not merely that tests were missing. Distinguish technical
+      debt from review-process debt.'
+    verification: '- Produce a written RCA with one row per missed issue family
+
+      - For each row, identify the missed trigger, the gate that should have caught
+      it, and the new anti-regression rule
+
+      - Explicitly assign downstream ownership to one later debt_closure phase
+
+      - No unresolved blocker-class debt may remain unowned'
+    evidence_template: '## Review-Miss RCA
+
+
+      ### Issue Families
+
+      | Family | Provenance | Disposition | Missed Gate | Why Missed | New Guardrail
+      | Owning Phase |
+
+      |---|---|---|---|---|---|---|
+
+
+      ### Anti-Regression Checklist
+
+      - Runtime-evidence gaps to block on
+
+      - Dead-export classification rules
+
+      - Dependency/manifest-clarity checks
+
+
+      ### Remaining Ambiguities
+
+      - <must be empty or escalated with owner>'
     agent: software-architect
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
