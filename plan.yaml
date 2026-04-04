@@ -54477,6 +54477,26 @@ phases:
       probes from debt_closure.contract_test.add_runtime_hardening_tests.
 
 
+      Authoritative refs for this step:
+
+      - docs/adr/ADR-006-downstream-recovery.md
+
+      - tests/repro/test_adr006_runtime_hardening_probes.py
+
+      - src/tela/shell/downstream.py
+
+
+      Primary runtime focus:
+
+      - _registry_lock hold boundary around awaited network I/O
+
+      - per-server recovery lock pruning after config-reload-remove / disconnect
+
+      - healthy-neighbor non-blocking behavior during peer recovery
+
+      - config_missing fail-closed behavior when the server disappears during recovery
+
+
       Required artifact: behavioral proof register with one row per obligation containing
       ALL of:
 
@@ -54510,12 +54530,16 @@ phases:
       contract requires it
 
 
-      Integration evidence is mandatory: paste exact commands, named tests, and actual
-      observed output. Mock-only summaries are invalid.
+      Evidence rules:
 
+      - cite exact pytest node ids or exact commands run
 
-      If runtime evidence exposes a code defect, do NOT down-class it as historical
-      debt. Mark status UNPROVEN or UNCERTAIN_BLOCKING and point closure_path at debt_closure.impl.close_runtime_gap_if_exposed.'
+      - paste actual stdout/stderr or test output, not summary-only prose
+
+      - map every non-PROVEN row to the precise downstream owner step
+
+      - if runtime evidence exposes a code defect, do NOT down-class it as historical
+      debt; mark it UNPROVEN or UNCERTAIN_BLOCKING and route closure_path to debt_closure.impl.close_runtime_gap_if_exposed'
     verification: '- Produce the behavioral proof register with explicit status per
       obligation
 
@@ -54527,39 +54551,63 @@ phases:
       - No blocker-class behavioral obligation is left without a closure_path'
     evidence_template: '## Behavioral Proof Register
 
-      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
-      status | closure_path | gate_decision_basis |
 
-      |---|---|---|---|---|---|---|
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ## Commands Executed
+      ## Commands / Tests Executed
 
-      ```
+      ```text
 
-      <paste exact commands>
+      <paste exact pytest node ids or commands>
 
       ```
 
 
       ## Actual Output
 
+      ```text
+
+      <paste stdout/stderr or test output>
+
       ```
 
-      <paste actual output>
 
-      ```
+      ## Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | R13 | ... | ... | ... | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING | ...
+      | ... |
+
+      | R42 | ... | ... | ... | ... | ... | ... |
 
 
-      ## Findings
+      ## Owner Mapping For Non-PROVEN Rows
 
-      - PROVEN: <list>
+      - <requirement_ref> -> <owner step id>
 
-      - NEEDS_TEST: <list>
 
-      - UNPROVEN: <list>
+      ## Coverage Notes
 
-      - UNCERTAIN_BLOCKING: <list>'
+      - happy path covered:
+
+      - highest-risk failure path covered:
+
+      - remaining ambiguity:
+
+      '
+    refs:
+    - docs/adr/ADR-006-downstream-recovery.md
+    - tests/repro/test_adr006_runtime_hardening_probes.py
+    - src/tela/shell/downstream.py
     depends_on:
     - debt_closure.contract_test.gate
     agent: integration-verifier
