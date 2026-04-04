@@ -54691,7 +54691,7 @@ phases:
       closure paths and gate decision basis for each obligation.'
 - id: debt_closure.impl_if_needed
   name: Debt Closure Conditional Implementation
-  status: in_progress
+  status: done
   gate: 'Conditional remediation only: runtime, surface, or manifest changes may proceed
     only when triage proves blocker-class gaps remain and no gate may bypass unresolved
     behavioral evidence.'
@@ -54700,7 +54700,7 @@ phases:
   steps:
   - id: debt_closure.impl.gate
     name: Gate runtime and surface remediation
-    status: claimed
+    status: done
     description: 'Step type: gate
 
       Verification scope: phase-check protecting debt_closure.verify_and_close.
@@ -54772,6 +54772,16 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T20:09:48.141442+00:00'
+    done_at: '2026-04-04T20:11:11.725207+00:00'
+    evidence: 'Gate-reviewer issued **BLOCKED** decision with explicit blocker families
+      and evidence mapping. Blockers: (1) R13 remains unproven for behavioral contract
+      due static-only closure and skipped runtime witness; (2) R42 remains NEEDS_TEST
+      for in-flight config-remove path and missing explicit disconnect-under-recovery
+      witness; (3) SURFACE-REENUMERATE remains UNCERTAIN_BLOCKING without explicit
+      classification; (4) AUTH-MCP-FASTMCP remains UNCERTAIN_BLOCKING due unresolved
+      package/import/manifest authority split. Gate output includes behavioral-proof
+      summary, `gate_open_allowed: false`, review-miss notes, and prevention-rule
+      hints. No product implementation files modified.'
   - id: debt_closure.impl.apply_surface_and_manifest_resolution
     name: Apply re_enumerate and mcp fastmcp resolution
     status: done
@@ -55283,7 +55293,7 @@ phases:
       modifications.'
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
-  status: locked
+  status: pending
   gate: Behavioral re-verification, wiring/manifest audit, independent rereviews,
     and the final closure gate must all stay blocked until blocker-class runtime evidence
     is resolved or explicitly shown non-intersecting.
