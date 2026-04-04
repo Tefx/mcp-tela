@@ -51757,6 +51757,136 @@ phases:
   gate: Implementation of downstream recovery kernel and reload-race authority only
   depends_on:
   - adr006_recovery.test
+  steps:
+  - id: adr006_recovery.impl.reload_race_authority
+    name: Implement reload-wins recovery authority
+    status: pending
+    description: 'step_type: implementation
+
+
+      Fill in runtime logic in src/tela/shell/reload.py and adjacent runtime helpers
+      per the contract from step adr006_recovery.contract.freeze_recovery_contract.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - docs/ADR-006-steady-state-downstream-recovery.md — reload-wins, config_missing,
+      convergence rejection, and stale-config prohibitions are AUTHORITATIVE
+
+      - tests/shell/test_reload.py — race expectations are PROTECTED
+
+      - tests/shell/test_downstream.py / tests/shell/test_downstream_recovery.py —
+      recovery orchestration expectations are PROTECTED
+
+
+      YOUR SCOPE: Complete the implementation within existing signatures.
+
+      - preserve shell/reload.py as the single-server convergence authority
+
+      - ensure recovery routes fresh tool payloads through reload convergence rather
+      than ad hoc registry mutation
+
+      - ensure config reload/remove wins over in-flight recovery
+
+      - ensure stale config cannot revive stale client/registry state after material
+      server change or removal
+
+      - preserve convergence rejection behavior as terminal for the original call
+
+
+      If a contract artifact is wrong or incomplete, document a deviation record (type,
+      what, why, impact) — do NOT silently rewrite.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Failure-mode checklist
+
+      - server removed during lock wait -> config_missing true, fail closed
+
+      - material config change during in-flight recovery -> stale handle must not
+      be swapped in
+
+      - convergence rejection (e.g. TOOL_CONFLICT) -> no retry proceeds
+
+      - lock ordering preserves no network I/O under _registry_lock
+
+
+      ## State semantics
+
+      - last-writer-wins: latest runtime config view after lock acquisition
+
+      - must preserve exactly: reload.py convergence authority and rollback/conflict
+      behavior
+
+      - backward-compatible behavior: accepted reconnect payloads remain authoritative
+      for convergence
+
+
+      ## KNOWN RISKS (from project history)
+
+      - Shared mutable runtime state: stale-config swaps or lock inversion can corrupt
+      convergence
+
+      - Wiring drift: recovery must not bypass reload convergence policy
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any stale-config recovery that revives removed/changed server state
+
+      2. Any bypass of reload.py convergence path
+
+      3. Any lock inversion with _registry_lock and per-server recovery locks'
+    verification: 'Verification scope: local-check protecting adr006_recovery.verify
+      and deep review.
+
+      - Main path: targeted tests for accepted convergence and reload-wins behavior
+      pass
+
+      - Failure path: focused regression covers removed-server config_missing, material-change
+      fail-closed, and convergence rejection terminal outcome
+
+      - Proof: stale recovery cannot swap stale client state into runtime after newer
+      config truth'
+    evidence_template: '## Reload Authority Evidence
+
+      **Files changed**:
+
+      - src/tela/shell/reload.py
+
+      - <optional adjacent runtime helper files>
+
+
+      **Race outcomes proved**:
+
+      - removal beats recovery
+
+      - material change beats recovery
+
+      - convergence rejection blocks retry
+
+
+      **Commands/tests run**:
+
+      - <paste targeted test commands>
+
+
+      **Highest-risk failure proof**:
+
+      - <paste config-change or config-missing race evidence>
+
+
+      **Deviation record**:
+
+      - none | <describe>'
+    agent: python-senior
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
