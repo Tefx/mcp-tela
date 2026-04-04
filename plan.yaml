@@ -54833,6 +54833,8 @@ phases:
       final_gate_recommendation |
 
       |---|---|---|---|---|'
+    depends_on:
+    - debt_closure.verify.gate
     agent: blind-tester
   - id: debt_closure.final_review.wiring_rereview
     name: Re-review wiring closure and review-process anti-regression uptake
