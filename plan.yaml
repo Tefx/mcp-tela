@@ -53516,11 +53516,12 @@ phases:
   depends_on:
   - debt_closure.review_miss
 - id: debt_closure.impl
-  name: Post-Gate Runtime and Manifest Remediation
+  name: Legacy shell (absorbed by debt_closure.impl_if_needed)
   status: locked
-  gate: All runtime, public-surface, and manifest/dependency ambiguities are either
-    fixed or explicitly resolved after runtime proof collection and before closure
-    verification.
+  gate: Legacy phase shell retained for provenance only; active debt-closure work
+    now lives in debt_closure.impl_if_needed.
+  context: No active steps remain; preserved only because phase deletion is not available
+    via vectl mutate.
   depends_on:
   - debt_closure.runtime_evidence
 - id: debt_closure.verify
