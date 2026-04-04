@@ -53508,7 +53508,7 @@ phases:
   - adr006_recovery.deep_review
 - id: debt_closure.contract_test
   name: Legacy shell (absorbed by debt_closure.triage_and_decide)
-  status: pending
+  status: done
   gate: Legacy phase shell retained for provenance only; active debt-closure work
     now lives in debt_closure.triage_and_decide.
   context: No active steps remain; preserved only because phase deletion is not available
@@ -53544,7 +53544,7 @@ phases:
   - debt_closure.verify
 - id: debt_closure.runtime_evidence
   name: Legacy shell (absorbed by debt_closure.triage_and_decide)
-  status: locked
+  status: pending
   gate: Legacy phase shell retained for provenance only; active debt-closure work
     now lives in debt_closure.triage_and_decide.
   context: No active steps remain; preserved only because phase deletion is not available
