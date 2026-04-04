@@ -52397,7 +52397,7 @@ phases:
       \ counts\n  - 217 passed, 7 xfailed, 1 warning"
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
-  status: in_progress
+  status: done
   gate: Independent green verification and ADR conformance review
   depends_on:
   - adr006_recovery.impl
@@ -52741,7 +52741,7 @@ phases:
       no divergences found.'
   - id: adr006_recovery.verify.gate
     name: Gate ADR-006 verification
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery slice has sufficient independent evidence to proceed.
 
@@ -52786,9 +52786,23 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T15:15:27.902952+00:00'
+    done_at: '2026-04-04T15:19:37.611109+00:00'
+    evidence: '## Gate Review Report
+
+      Phase: adr006_recovery.verify
+
+      - Green verification adequate: yes
+
+      - Surface conformance adequate: yes
+
+      - Spec conformance adequate: yes
+
+      - Blocking issues: none
+
+      - Decision: OPEN'
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
-  status: locked
+  status: pending
   gate: Documentation sync for implemented downstream recovery semantics
   depends_on:
   - adr006_recovery.verify
