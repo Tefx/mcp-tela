@@ -83,6 +83,9 @@ def fake_client_handle() -> downstream._ClientHandle:
 # ==============================================================================
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: recovery_eligible field now present in error details — gap closed"
+)
 def test_gap_recovery_eligibility_classifier_missing_for_no_handle(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
@@ -123,6 +126,9 @@ def test_gap_recovery_eligibility_classifier_missing_for_no_handle(
     )
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: TimeoutError now classified as recovery_ineligible — gap closed"
+)
 def test_gap_recovery_eligibility_classifier_rejects_timeout(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
@@ -165,6 +171,9 @@ def test_gap_recovery_eligibility_classifier_rejects_timeout(
     )
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: BrokenPipeError now classified as recovery_ineligible — gap closed"
+)
 def test_gap_recovery_eligibility_classifier_rejects_broken_pipe(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
@@ -330,6 +339,9 @@ def test_gap_second_retry_forbidden(
 # ==============================================================================
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: _recovery_locks per-server lock map now exists — gap closed"
+)
 def test_gap_per_server_recovery_serialization_absent(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
@@ -720,6 +732,9 @@ def test_gap_reload_wins_over_inflight_recovery(
 # ==============================================================================
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: _recover_server_client shared primitive now exists — gap closed"
+)
 def test_gap_convergence_rejection_returns_downstream_unavailable(
     fake_client_handle: downstream._ClientHandle,
     monkeypatch: pytest.MonkeyPatch,
@@ -856,6 +871,9 @@ def test_gap_error_details_missing_recovery_fields(
 # ==============================================================================
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: structured recovery diagnostics now emitted — gap closed"
+)
 def test_gap_recovery_diagnostics_not_emitted(
     fake_client_handle: downstream._ClientHandle,
     monkeypatch: pytest.MonkeyPatch,
@@ -986,6 +1004,9 @@ def test_gap_shared_recovery_primitive_not_extracted(
 # ==============================================================================
 
 
+@pytest.mark.xfail(
+    reason="Post-impl: full recovery sequence now runs (recovery_attempted=True) — gap closed"
+)
 def test_gap_full_recovery_sequence_not_implemented(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
