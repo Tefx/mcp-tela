@@ -53655,6 +53655,9 @@ phases:
       **Recommendation**: OPEN | BLOCK
 
       **Blocking items**: <list or none>'
+    depends_on:
+    - debt_closure.runtime_evidence.collect_behavioral_proof
+    - debt_closure.runtime_evidence.resolve_uncertainty_register
     agent: gate-reviewer
   - id: debt_closure.review_miss.gate
     name: Gate root-cause and review-hardening basis
