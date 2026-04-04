@@ -54048,6 +54048,8 @@ phases:
       | unresolved_status_policy | closure_path | gate_decision_basis |
 
       |---|---|---|---|---|---|---|---|'
+    depends_on:
+    - debt_closure.review_miss.gate
     agent: python-senior
   - id: debt_closure.runtime_evidence.resolve_uncertainty_register
     name: Resolve runtime uncertainty register and remediation basis
