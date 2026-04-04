@@ -53526,7 +53526,7 @@ phases:
   - debt_closure.runtime_evidence
 - id: debt_closure.verify
   name: Legacy shell (absorbed by debt_closure.verify_and_close)
-  status: pending
+  status: done
   gate: Legacy phase shell retained for provenance only; active debt-closure work
     now lives in debt_closure.verify_and_close.
   context: No active steps remain; preserved only because phase deletion is not available
@@ -53535,7 +53535,7 @@ phases:
   - debt_closure.impl
 - id: debt_closure.final_review
   name: Legacy shell (absorbed by debt_closure.verify_and_close)
-  status: locked
+  status: pending
   gate: Legacy phase shell retained for provenance only; active debt-closure work
     now lives in debt_closure.verify_and_close.
   context: No active steps remain; preserved only because phase deletion is not available
