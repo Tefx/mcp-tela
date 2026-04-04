@@ -54883,7 +54883,7 @@ phases:
     agent: python-senior
   - id: debt_closure.impl.close_runtime_gap_if_exposed
     name: Close any remaining R13 R42 runtime defect or proof gap
-    status: pending
+    status: claimed
     description: 'Step type: implementation
 
       Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review
@@ -55016,6 +55016,8 @@ phases:
     - tests/repro/test_adr006_runtime_hardening_probes.py
     - docs/adr/ADR-006-downstream-recovery.md
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-04T19:51:04.669101+00:00'
   - id: debt_closure.impl.decide_surface_and_manifest_authority
     name: Decide re_enumerate surface status and mcp fastmcp authority
     status: pending
