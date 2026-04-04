@@ -55531,7 +55531,7 @@ phases:
       found.'
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
-    status: pending
+    status: claimed
     description: 'Step type: verification
 
       Verification scope: phase-check protecting debt_closure.final_review.
@@ -55626,6 +55626,8 @@ phases:
     - pyproject.toml
     - src/tela/shell/downstream.py
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-04-04T20:37:19.057303+00:00'
   - id: debt_closure.final_review.spec_rereview
     name: Re-review ADR-006 closure criteria and audit verdicts
     status: pending
