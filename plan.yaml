@@ -53278,7 +53278,7 @@ phases:
     agent: gate-reviewer
   - id: adr006_recovery.deep_review.fix_reload_authority
     name: Fix ADR-006 downstream reload authority fallback
-    status: claimed
+    status: done
     description: 'Fix ALL blockers found by the ADR-006 architecture review for downstream
       recovery config authority.
 
@@ -53365,6 +53365,25 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-04T16:02:41.457605+00:00'
+    done_at: '2026-04-04T16:05:17.453126+00:00'
+    evidence: '## Reload Authority Fix Evidence
+
+      - Root cause addressed: Removed stale-hint authority from downstream recovery
+      config resolution by deleting `_server_config_hints` fallback in `_get_runtime_server_config`;
+      runtime-config-only lookup now fails closed on missing server.
+
+      - Sibling search performed: Checked downstream/reload/gateway lookup paths for
+      alternate stale-hint authority; no authoritative fallback path remains.
+
+      - Main path regression: tests/shell/test_downstream.py::test_get_runtime_server_config_uses_runtime_authority_over_hints
+
+      - Failure path regression: tests/shell/test_downstream.py::test_get_runtime_server_config_fails_when_server_removed_even_with_hint
+
+      - Remaining ambiguity: none.
+
+
+      Verification command (targeted): uv run pytest -q <new tests + related recovery
+      tests> (passed per worker evidence).'
   - id: adr006_recovery.deep_review.retest_reload_authority_architecture
     name: Re-review ADR-006 reload-wins recovery authority
     status: pending
