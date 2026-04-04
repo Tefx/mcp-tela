@@ -53240,12 +53240,15 @@ phases:
       - Black-box verification: PASS/FAIL
 
       - Decision: OPEN | BLOCKED'
+    refs:
+    - docs/adr/ADR-006-downstream-recovery.md
     depends_on:
     - adr006_recovery.deep_review.wiring_audit
     - adr006_recovery.deep_review.spec_conformance
     - adr006_recovery.deep_review.architecture_review
     - adr006_recovery.deep_review.contract_strength
     - adr006_recovery.deep_review.black_box_verification
+    - adr006_recovery.deep_review.retest_reload_authority_architecture
     agent: gate-reviewer
   - id: adr006_recovery.deep_review.fix_reload_authority
     name: Fix ADR-006 downstream reload authority fallback
