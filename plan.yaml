@@ -51488,3 +51488,9 @@ phases:
   gate: Contract freeze for downstream steady-state self-healing recovery only
   depends_on:
   - doc_sync.full_b
+- id: adr006_recovery.test
+  name: ADR-006 Downstream Recovery Tests
+  status: locked
+  gate: Expected-red definition before implementation; green verification after implementation
+  depends_on:
+  - adr006_recovery.contract
