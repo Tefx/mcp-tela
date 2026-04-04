@@ -52607,7 +52607,7 @@ phases:
     claimed_at: '2026-04-04T14:56:03.387500+00:00'
   - id: adr006_recovery.verify.spec_conformance
     name: Run ADR-006 spec conformance review
-    status: pending
+    status: claimed
     description: 'Spec conformance verification via adversarial divergence hunting.
 
       Agent: spec-verifier (dedicated, read-only, independent).
@@ -52665,6 +52665,8 @@ phases:
       Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
       | SPEC_POSSIBLY_STALE'
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-04-04T14:56:14.464625+00:00'
   - id: adr006_recovery.verify.gate
     name: Gate ADR-006 verification
     status: pending
