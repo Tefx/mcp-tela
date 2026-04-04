@@ -54869,3 +54869,11 @@ phases:
     - debt_closure.runtime_evidence.collect_behavioral_proof
     - debt_closure.runtime_evidence.resolve_uncertainty_register
     agent: gate-reviewer
+- id: debt_closure.triage_and_decide
+  name: Debt Closure Triage and Decide
+  status: pending
+  gate: Review-miss capture, closure contract freeze, initial behavioral proof, and
+    uncertainty/disposition resolution must be explicit before any optional remediation
+    path can open.
+  depends_on:
+  - adr006_recovery.deep_review
