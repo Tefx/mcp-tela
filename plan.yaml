@@ -52869,7 +52869,7 @@ phases:
       \  - reaper-defaults reopening"
   - id: adr006_recovery.doc_sync.gate
     name: Gate ADR-006 documentation sync
-    status: pending
+    status: claimed
     description: As an INDEPENDENT REVIEWER (gate-reviewer), assess whether documentation
       now matches the implemented ADR-006 downstream recovery slice and nothing outside
       that slice was reopened.
@@ -52892,6 +52892,8 @@ phases:
     depends_on:
     - adr006_recovery.doc_sync.update_runtime_docs
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T15:25:47.260669+00:00'
 - id: adr006_recovery.deep_review
   name: ADR-006 Downstream Recovery Deep Review
   status: locked
