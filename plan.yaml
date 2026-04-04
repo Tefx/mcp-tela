@@ -54629,6 +54629,10 @@ phases:
 
 
       **Recommendation**: OPEN | BLOCK'
+    depends_on:
+    - debt_closure.final_review.spec_rereview
+    - debt_closure.final_review.behavior_rereview
+    - debt_closure.final_review.wiring_rereview
     agent: gate-reviewer
   - id: debt_closure.verify.gate
     name: Gate runtime evidence and wiring audit
