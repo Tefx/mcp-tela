@@ -53804,7 +53804,7 @@ phases:
     agent: software-architect
   - id: debt_closure.review_miss.capture_reversal_record
     name: Capture post-hoc reversal and re-close obligations
-    status: claimed
+    status: done
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
@@ -53849,6 +53849,49 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T18:51:03.367920+00:00'
+    done_at: '2026-04-04T18:52:56.875801+00:00'
+    evidence: '## Reversal Register
+
+      Commit: `b4b0a81` (`add reversal register for adr-006 debt slice`)
+
+
+      | overturned_decision | why_it_was_overturned | review_miss_cause | reversal_risk
+      | remediation_owner | re_close_proof |
+
+      | --- | --- | --- | --- | --- | --- |
+
+      | ADR-006 deep conformance closure treated as done despite SUCCESS + NEEDS_TEST
+      for R42 lock-cleanup | Earlier closure granted success while blocker-class runtime
+      invariant remained unproven for config-reload-remove during in-flight recovery.
+      | Review accepted inventory completeness/source inspection instead of forcing
+      runtime proof. | May recur for race/cleanup invariants if SUCCESS can contain
+      NEEDS_TEST debt. | debt_closure.runtime_evidence | Live runtime evidence for
+      config-reload-remove during recovery proving config_missing=true and no stale
+      per-server recovery lock. |
+
+      | ADR-006 deep conformance closure treated as done despite SUCCESS + NEEDS_TEST
+      for R13 no-lock-during-await | Earlier closure relied on code reading for lock-not-held-during-await
+      claim, which requires behavioral proof. | Gate allowed analysis to stand in
+      for contention/runtime witness evidence. | Could recur for lock-await claims
+      across repo if static reasoning is treated as closure. | debt_closure.runtime_evidence
+      | Runtime tracing/contention probe showing awaited network I/O without _registry_lock
+      held and no blocked concurrent registry access. |
+
+      | surface taxonomy PASS implied downstream public surface classification complete
+      | Named-surface pass did not classify documented public helper re_enumerate().
+      | Surface review scope excluded full documented public helper set. | Future
+      surface audits may miss symbol-level public-surface drift. | debt_closure.contract_test
+      | Explicit re_enumerate classification + aligned docs/tests or internal-only
+      removal with evidence. |
+
+      | manifest/dependency review treated FastMCP authority as settled | Package/import/manifest
+      authorities remained split across artifacts. | Fragmented reviews passed independently
+      without canonical authority tuple. | Same issue can recur for dependencies with
+      differing package/import/runtime wording. | debt_closure.impl | One authoritative
+      dependency record across package declaration, canonical import path, runtime
+      policy, and manifest wording with aligned artifacts. |
+
+      '
   - id: debt_closure.review_miss.root_cause_analysis
     name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
     status: done
