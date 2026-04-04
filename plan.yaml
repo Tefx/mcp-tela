@@ -54266,6 +54266,92 @@ phases:
     re-review.
   depends_on:
   - debt_closure.impl
+  steps:
+  - id: debt_closure.verify.runtime_evidence_r13_r42
+    name: Collect independent runtime evidence for R13 and R42
+    status: pending
+    description: 'Step type: verification
+
+      Verification scope: full-plan-check for the ADR-006 debt-closure slice; protects
+      debt_closure.final_review and any attempt to re-mark the plan done.
+
+      Independence Level: L2
+
+      Agent source: default.
+
+
+      As an INDEPENDENT TESTER, validate the ADR-006 downstream recovery runtime behavior
+      from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - Happy path: recovery still succeeds without holding _registry_lock across
+      awaited network I/O
+
+      - Edge cases: config-reload-remove during in-flight recovery; cleanup after
+      failure vs success; healthy-neighbor server remains unblocked
+
+      - Error scenarios: stale waiter fails closed with config_missing=true when the
+      server disappears
+
+      - Runtime proof: show actual command/test output demonstrating the lock protocol
+      and cleanup behavior
+
+
+      Integration Evidence is mandatory. Mock-heavy summaries alone are insufficient.
+
+      This step MUST paste the exact commands/tests and the actual observed output.'
+    verification: '- Run the named R13/R42 tests and any focused integration command
+      needed to prove runtime behavior
+
+      - Evidence includes actual command lines and output, not ''tests pass'' summaries
+
+      - Report issues_found vs pass explicitly; findings are a successful verifier
+      outcome and must feed remediation if present'
+    evidence_template: '## Runtime Verification Report
+
+
+      **Tester**: integration-verifier
+
+      **Scope**: R13/R42 runtime closure
+
+      **Independence Level**: L2
+
+
+      ### Commands executed
+
+      ```\n<paste exact commands>\n```
+
+
+      ### Actual output
+
+      ```\n<paste relevant output>\n```
+
+
+      ### Coverage
+
+      - R13 runtime proof:
+
+      - R42 cleanup proof:
+
+      - Healthy-neighbor non-blocking proof:
+
+
+      ### Issues Found
+
+      | Severity | Description | Reproduction |
+
+      |---|---|---|
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE'
+    agent: integration-verifier
 - id: debt_closure.final_review
   name: Debt Closure Independent Re-Review and Final Gate
   status: locked
