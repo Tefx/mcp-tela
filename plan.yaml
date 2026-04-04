@@ -53498,10 +53498,12 @@ phases:
 
       - tests/shell/test_downstream.py::test_get_runtime_server_config_fails_when_server_removed_even_with_hint'
 - id: debt_closure.review_miss
-  name: Post-Gate Review-Miss Root Cause Analysis
+  name: Legacy shell (absorbed by debt_closure.triage_and_decide)
   status: pending
-  gate: Root-cause explanation and review-hardening basis approved before debt closure
-    execution.
+  gate: Legacy phase shell retained for provenance only; active debt-closure work
+    now lives in debt_closure.triage_and_decide.
+  context: No active steps remain; preserved only because phase deletion is not available
+    via vectl mutate.
   depends_on:
   - adr006_recovery.deep_review
 - id: debt_closure.contract_test
