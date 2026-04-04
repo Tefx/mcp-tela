@@ -51506,3 +51506,9 @@ phases:
   gate: Independent green verification and ADR conformance review
   depends_on:
   - adr006_recovery.impl
+- id: adr006_recovery.doc_sync
+  name: ADR-006 Downstream Recovery Documentation Sync
+  status: locked
+  gate: Documentation sync for implemented downstream recovery semantics
+  depends_on:
+  - adr006_recovery.verify
