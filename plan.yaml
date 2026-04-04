@@ -52317,7 +52317,7 @@ phases:
       - Result: 1 passed in 0.70s"
   - id: adr006_recovery.impl.retest_probe_free_contract
     name: Retest ADR-006 implementation after probe-free test fix
-    status: claimed
+    status: pending
     description: Run focused ADR-006 test set to confirm implementation and surface-contract
       tests all pass after test setup correction.
     verification: Focused suite passes; no regression in classifier, retry cap, reload-wins,
@@ -52332,8 +52332,6 @@ phases:
     depends_on:
     - adr006_recovery.impl.fix_probe_free_test_setup
     agent: integration-verifier
-    claimed_by: integration-verifier
-    claimed_at: '2026-04-04T14:34:38.774248+00:00'
 - id: adr006_recovery.verify
   name: ADR-006 Downstream Recovery Verification
   status: locked
