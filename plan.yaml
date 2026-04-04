@@ -52278,7 +52278,7 @@ phases:
     agent: gate-reviewer
   - id: adr006_recovery.impl.fix_probe_free_test_setup
     name: Fix healthy-path probe-free test setup
-    status: claimed
+    status: done
     description: Repair test architecture for test_adr006_healthy_path_single_attempt_probe_free
       so it exercises a true healthy call path with a live client handle (or explicitly
       skip with justified scope note if healthy-path cannot be represented in this
@@ -52303,6 +52303,18 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-04T14:31:46.614577+00:00'
+    done_at: '2026-04-04T14:34:15.896035+00:00'
+    evidence: "## Fix Evidence\n- Files changed\n  - tests/shell/test_upstream.py\
+      \ (only test_adr006_healthy_path_single_attempt_probe_free)\n- Why previous\
+      \ test setup was invalid\n  - Used connect_all(..., tool_lists=...) with command=\"\
+      cmd\", which bypassed live client/session creation; call_tool exercised recovery/error\
+      \ path instead of healthy path.\n- How healthy-path setup is now represented\n\
+      \  - Launches real stdio fixture server via sys.executable and calls connect_all(servers)\
+      \ without tool_lists to create live client handle.\n  - Asserts healthy semantics:\
+      \ exactly one ping call; _recover_server_client monkeypatched to fail if invoked.\n\
+      \  - Asserts call_tool(\"local_stdio\",\"ping\",{}) succeeds.\n- Command: uv\
+      \ run pytest tests/shell/test_upstream.py::test_adr006_healthy_path_single_attempt_probe_free\n\
+      - Result: 1 passed in 0.70s"
   - id: adr006_recovery.impl.retest_probe_free_contract
     name: Retest ADR-006 implementation after probe-free test fix
     status: pending
