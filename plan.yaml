@@ -51494,3 +51494,9 @@ phases:
   gate: Expected-red definition before implementation; green verification after implementation
   depends_on:
   - adr006_recovery.contract
+- id: adr006_recovery.impl
+  name: ADR-006 Downstream Recovery Implementation
+  status: locked
+  gate: Implementation of downstream recovery kernel and reload-race authority only
+  depends_on:
+  - adr006_recovery.test
