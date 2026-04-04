@@ -53032,7 +53032,7 @@ phases:
     claimed_at: '2026-04-04T15:39:30.404046+00:00'
   - id: adr006_recovery.deep_review.contract_strength
     name: Audit ADR-006 contract strength
-    status: claimed
+    status: done
     description: 'Verify contract/docstring strength for the ADR-006 downstream recovery
       slice.
 
@@ -53062,6 +53062,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T15:39:43.068260+00:00'
+    done_at: '2026-04-04T15:46:46.647088+00:00'
+    evidence: '## Contract Strength Audit
+
+      - Non-vacuous contract text: PASS
+
+      - Stable detail keys preserved: PASS
+
+      - Stable recovery_stage vocabulary preserved: PASS
+
+      - Stable fail-closed eligibility boundary preserved: PASS
+
+      - Exact one-retry semantics preserved: PASS
+
+
+      ### Verification Scope
+
+      Checked ADR-006 downstream recovery implementation for tautological docstrings,
+      identity-lambda contracts, error detail key stability, recovery-stage vocabulary
+      stability, fail-closed eligibility classifier, and one-retry semantics.
+
+
+      ### References
+
+      - src/tela/shell/downstream.py::_is_recovery_eligible_exception
+
+      - src/tela/shell/downstream.py::_build_recovery_error
+
+      - src/tela/shell/downstream.py::_emit_recovery_diagnostic
+
+      - src/tela/shell/downstream.py::call_tool
+
+      - src/tela/shell/downstream.py::_recover_server_client
+
+
+      ### Notes
+
+      No blocker divergence found for this contract-strength slice.'
   - id: adr006_recovery.deep_review.black_box_verification
     name: Run black-box ADR-006 recovery verification
     status: pending
