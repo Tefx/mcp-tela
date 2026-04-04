@@ -54883,7 +54883,7 @@ phases:
     agent: python-senior
   - id: debt_closure.impl.close_runtime_gap_if_exposed
     name: Close any remaining R13 R42 runtime defect or proof gap
-    status: claimed
+    status: done
     description: 'Step type: implementation
 
       Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review
@@ -55018,6 +55018,18 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-04T19:51:04.669101+00:00'
+    done_at: '2026-04-04T20:00:04.166994+00:00'
+    evidence: 'Python-senior implemented targeted runtime remediation with refs confirmation
+      and explicit blocker mapping. Product code changed in `src/tela/shell/downstream.py`
+      to drop stale client entries on config_missing recovery failure paths so lock
+      prune can succeed; added `_drop_client_for_server()` and invoked along relevant
+      R42 paths. Added targeted regressions in `tests/shell/test_downstream.py` covering
+      in-flight config-remove cleanup, lock-hold boundary around awaited network I/O,
+      cleanup-after-success, and disconnect-under-recovery cleanup. Commands/results:
+      targeted downstream tests `5 passed`; targeted ADR006 repro subset `4 passed,
+      2 skipped, 1 xfailed`; invar guard passed. Blocker coverage claims aligned to
+      R13/R42 family and evidence includes NO out-of-scope refactor. Commits on step
+      branch: b58a3da, b8d2b65, a8935f9.'
   - id: debt_closure.impl.decide_surface_and_manifest_authority
     name: Decide re_enumerate surface status and mcp fastmcp authority
     status: claimed
