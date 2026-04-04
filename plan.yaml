@@ -55339,6 +55339,17 @@ phases:
       YOUR GOAL IS TO FIND REMAINING PROBLEMS, not to confirm success.
 
 
+      Authoritative inputs:
+
+      - debt_closure.runtime_evidence.collect_behavioral_proof baseline register
+
+      - debt_closure.runtime_evidence.resolve_uncertainty_register
+
+      - debt_closure.impl.close_runtime_gap_if_exposed evidence
+
+      - debt_closure.impl.harden_auditability_if_needed evidence
+
+
       Required artifact: updated behavioral proof register using the same required
       fields from debt_closure.runtime_evidence.collect_behavioral_proof.
 
@@ -55365,17 +55376,19 @@ phases:
       - Updated proof register assigns explicit status for every obligation
 
       - Findings are reported as PASS or ISSUES_FOUND with blocker-family names'
-    evidence_template: '## Updated Behavioral Proof Register
-
-      | requirement_ref | evidence_ref | status | delta_from_runtime_evidence_phase
-      | closure_path | gate_decision_basis |
-
-      |---|---|---|---|---|---|
+    evidence_template: '## Re-Verification Behavioral Proof Register
 
 
-      ## Commands Executed
+      ### refs Read Confirmation (MANDATORY)
 
-      ```
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Commands / Tests Executed
+
+      ```text
 
       <paste exact commands>
 
@@ -55384,11 +55397,30 @@ phases:
 
       ## Actual Output
 
+      ```text
+
+      <paste output>
+
       ```
 
-      <paste actual output>
 
-      ```'
+      ## Updated Proof Register
+
+      | requirement_ref | evidence_ref | status | closure_path | gate_decision_basis
+      |
+
+      |---|---|---|---|---|
+
+
+      ## Residual Blockers Or Ambiguities
+
+      - <blocker family or none>
+
+      '
+    refs:
+    - docs/adr/ADR-006-downstream-recovery.md
+    - tests/repro/test_adr006_runtime_hardening_probes.py
+    - src/tela/shell/downstream.py
     agent: integration-verifier
   - id: debt_closure.verify.wiring_and_manifest_audit
     name: Audit re_enumerate reachability and mcp fastmcp manifest clarity
