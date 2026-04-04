@@ -51512,3 +51512,9 @@ phases:
   gate: Documentation sync for implemented downstream recovery semantics
   depends_on:
   - adr006_recovery.verify
+- id: adr006_recovery.deep_review
+  name: ADR-006 Downstream Recovery Deep Review
+  status: locked
+  gate: Final independent audit of ADR-006 downstream recovery slice
+  depends_on:
+  - adr006_recovery.doc_sync
