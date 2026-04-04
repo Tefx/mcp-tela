@@ -54878,4 +54878,6 @@ phases:
       |
 
       |---|---|---|---|---|'
+    depends_on:
+    - debt_closure.verify.gate
     agent: wiring-auditor
