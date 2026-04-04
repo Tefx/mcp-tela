@@ -53670,85 +53670,6 @@ phases:
 
       - Why the change is not symptom-only:'
     agent: python-senior
-  - id: debt_closure.impl.apply_surface_and_manifest_resolution
-    name: Apply re_enumerate and mcp fastmcp resolution
-    status: pending
-    description: 'Step type: implementation
-
-      Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review.
-
-      Agent source: default.
-
-
-      Fill in the concrete resolution work required by the surface and authority decision
-      record.
-
-
-      UPSTREAM ARTIFACTS:
-
-      - debt_closure.impl.decide_surface_and_manifest_authority — decision record
-      is AUTHORITATIVE
-
-      - debt_closure.contract_test.freeze_closure_contract — proof and closure criteria
-      are PROTECTED
-
-
-      YOUR SCOPE:
-
-      - make the chosen re_enumerate() classification real in code, exports, and docs
-
-      - make the chosen mcp / fastmcp authority real in code, dependency metadata,
-      and docs
-
-      - keep edits limited to the files explicitly named by the decision record
-
-
-      Known risk preview:
-
-      - dead-export ambiguity must not survive through undocumented public surface
-      leftovers
-
-      - manifest authority must not remain split across pyproject, docs, and import
-      paths
-
-      - do not expand into downstream.py refactor debt; only close the decision-backed
-      surface and authority gaps
-
-
-      ## Completion Criteria (stub exclusion)
-
-      This is an IMPLEMENTATION step. Stub-only or docs-only closure is insufficient
-      if code or metadata still contradict the chosen authority.'
-    verification: '- The chosen re_enumerate() classification is reflected consistently
-      in code/docs/exports
-
-      - The chosen mcp/fastmcp authority is reflected consistently in dependency metadata
-      and import guidance
-
-      - Evidence names each edited file and the decision row it satisfies'
-    evidence_template: '## Surface/Manifest Resolution Evidence
-
-
-      ### Decision Applied
-
-      - re_enumerate:
-
-      - mcp/fastmcp:
-
-
-      ### Files Changed
-
-      - <list>
-
-
-      ### Auditability Proof
-
-      - How an auditor can verify the new surface/import rule:
-
-      - Residual ambiguity: <must be none>'
-    depends_on:
-    - debt_closure.impl.decide_surface_and_manifest_authority
-    agent: python-senior
 - id: debt_closure.verify
   name: Debt Closure Verification and Closure Audit
   status: locked
@@ -54746,6 +54667,83 @@ phases:
 
       - OPEN or BLOCKED'
     agent: gate-reviewer
+  - id: debt_closure.impl.apply_surface_and_manifest_resolution
+    name: Apply re_enumerate and mcp fastmcp resolution
+    status: pending
+    description: 'Step type: implementation
+
+      Verification scope: local-check protecting debt_closure.verify and debt_closure.final_review.
+
+      Agent source: default.
+
+
+      Fill in the concrete resolution work required by the surface and authority decision
+      record.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - debt_closure.impl.decide_surface_and_manifest_authority — decision record
+      is AUTHORITATIVE
+
+      - debt_closure.contract_test.freeze_closure_contract — proof and closure criteria
+      are PROTECTED
+
+
+      YOUR SCOPE:
+
+      - make the chosen re_enumerate() classification real in code, exports, and docs
+
+      - make the chosen mcp / fastmcp authority real in code, dependency metadata,
+      and docs
+
+      - keep edits limited to the files explicitly named by the decision record
+
+
+      Known risk preview:
+
+      - dead-export ambiguity must not survive through undocumented public surface
+      leftovers
+
+      - manifest authority must not remain split across pyproject, docs, and import
+      paths
+
+      - do not expand into downstream.py refactor debt; only close the decision-backed
+      surface and authority gaps
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only or docs-only closure is insufficient
+      if code or metadata still contradict the chosen authority.'
+    verification: '- The chosen re_enumerate() classification is reflected consistently
+      in code/docs/exports
+
+      - The chosen mcp/fastmcp authority is reflected consistently in dependency metadata
+      and import guidance
+
+      - Evidence names each edited file and the decision row it satisfies'
+    evidence_template: '## Surface/Manifest Resolution Evidence
+
+
+      ### Decision Applied
+
+      - re_enumerate:
+
+      - mcp/fastmcp:
+
+
+      ### Files Changed
+
+      - <list>
+
+
+      ### Auditability Proof
+
+      - How an auditor can verify the new surface/import rule:
+
+      - Residual ambiguity: <must be none>'
+    agent: python-senior
 - id: debt_closure.verify_and_close
   name: Debt Closure Verify and Close
   status: locked
