@@ -53994,59 +53994,58 @@ phases:
     status: pending
     description: 'Step type: planning
 
-      Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution
-      and debt_closure.verify.
+      Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution,
+      debt_closure.verify, and debt_closure.final_review.
 
       Agent source: default.
 
 
-      Resolve the two non-runtime ambiguity families raised by the audits:
+      Resolve the two semantic/surface decision families raised by the audits:
 
-      1. potential dead export concern for re_enumerate()
+      1. re_enumerate() public-surface status
 
-      2. dependency/manifest clarity risk around mcp / fastmcp imports
-
-
-      Required outputs:
-
-      - authoritative classification for re_enumerate(): retain as supported public
-      API, demote to internal-only and remove export/docs, or mark as framework-only
-      escape hatch with justification
-
-      - authoritative dependency/manifest statement for mcp and fastmcp imports, including
-      which files are allowed to import which package and how that rule is documented
-
-      - explicit list of code/docs/metadata files Phase C must edit to make the decision
-      real
+      2. mcp / fastmcp manifest and dependency authority
 
 
-      This is architecture/process authority work. It MUST NOT hand-wave with ''probably
-      okay''. If the current contract or docs conflict, name the conflict and pick
-      one authoritative basis for remediation.'
+      Required artifact: surface and authority decision record with one row per decision
+      containing:
+
+      - decision_ref
+
+      - current ambiguity
+
+      - chosen authority
+
+      - rejected alternatives
+
+      - exact files to edit
+
+      - evidence required for verification and rereview
+
+      - closure_path if any residual ambiguity remains
+
+
+      Hard rules:
+
+      - re_enumerate() must be classified explicitly as supported public surface,
+      framework-only escape hatch, or dead export to remove
+
+      - mcp / fastmcp authority must name which package/path is canonical for this
+      repo and where that rule is documented
+
+      - do not hand-wave with probably okay; if docs conflict, name the conflict and
+      pick the authoritative basis for remediation'
     verification: '- Produce a binding classification for re_enumerate()
 
-      - Produce a binding ownership rule for mcp/fastmcp imports
+      - Produce a binding authority rule for mcp/fastmcp imports and manifest docs
 
-      - Identify exact files to change in the next implementation step'
-    evidence_template: '## Surface and Manifest Authority Decision
+      - Identify exact files to change in debt_closure.impl.apply_surface_and_manifest_resolution'
+    evidence_template: '## Surface and Authority Decision Record
 
+      | decision_ref | ambiguity | chosen_authority | rejected_alternatives | files_to_edit
+      | verification_evidence | closure_path |
 
-      ### re_enumerate
-
-      - Decision:
-
-      - Why:
-
-      - Files impacted:
-
-
-      ### mcp / fastmcp
-
-      - Ownership rule:
-
-      - Allowed import surfaces:
-
-      - Documentation/metadata files impacted:'
+      |---|---|---|---|---|---|---|'
     agent: software-architect
   - id: debt_closure.impl.close_runtime_gap_if_exposed
     name: Close any remaining R13 R42 runtime defect or proof gap
