@@ -52425,6 +52425,31 @@ phases:
       \ location>\n- Explicitly excluded from edits:\n  - heartbeat/lease\n  - reaper-defaults\
       \ reopening"
     agent: doc-reviewer
+  - id: adr006_recovery.doc_sync.gate
+    name: Gate ADR-006 documentation sync
+    status: pending
+    description: As an INDEPENDENT REVIEWER (gate-reviewer), assess whether documentation
+      now matches the implemented ADR-006 downstream recovery slice and nothing outside
+      that slice was reopened.
+    verification: 'Verification scope: phase-check protecting adr006_recovery.deep_review.
+
+      - Documentation matches implementation for ADR-006 downstream recovery slice
+
+      - Heartbeat/reaper-defaults remain out of scope
+
+      - Ready for final deep review'
+    evidence_template: '## Gate Review Report
+
+      Phase: adr006_recovery.doc_sync
+
+      - Docs aligned: yes/no
+
+      - Scope preserved: yes/no
+
+      - Decision: OPEN | BLOCKED'
+    depends_on:
+    - adr006_recovery.doc_sync.update_runtime_docs
+    agent: gate-reviewer
 - id: adr006_recovery.deep_review
   name: ADR-006 Downstream Recovery Deep Review
   status: locked
