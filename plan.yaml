@@ -55032,7 +55032,7 @@ phases:
       branch: b58a3da, b8d2b65, a8935f9.'
   - id: debt_closure.impl.decide_surface_and_manifest_authority
     name: Decide re_enumerate surface status and mcp fastmcp authority
-    status: claimed
+    status: done
     description: 'Step type: planning
 
       Verification scope: phase-check protecting debt_closure.impl.apply_surface_and_manifest_resolution,
@@ -55157,6 +55157,17 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T19:51:09.313573+00:00'
+    done_at: '2026-04-04T20:00:11.638741+00:00'
+    evidence: 'Software-architect produced binding decision record (`evidence/surface_and_manifest_authority_decision.md`,
+      commit 69b9a31) with per-decision ambiguity, authority choice, rejected alternatives,
+      change-required flags, exact-file touch set, verification evidence requirements,
+      and closure paths. Decision 1: classify `re_enumerate()` as supported public
+      surface (not escape-hatch/dead export), requiring explicit doc/classification
+      alignment. Decision 2: adopt explicit translation-boundary authority tuple for
+      fastmcp (package authority `fastmcp` in pyproject, runtime import authority
+      `mcp.server.fastmcp.FastMCP`, manifest/header import-path-neutral authority),
+      with required doc/probe updates. Includes refs-read confirmations and conflict
+      notes for ADR path mismatch and metadata/import ambiguity.'
   - id: debt_closure.impl.harden_auditability_if_needed
     name: Harden proof auditability if runtime behavior is already correct
     status: pending
