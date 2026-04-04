@@ -54284,55 +54284,6 @@ phases:
 
       |---|---|---|---|---|'
     agent: wiring-auditor
-  - id: debt_closure.verify.gate
-    name: Gate runtime evidence and wiring audit
-    status: pending
-    description: 'Step type: gate
-
-      Verification scope: full-plan-check protecting debt_closure.final_review and
-      plan completion.
-
-      Agent source: default.
-
-
-      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the debt slice is
-      ready for independent rereview.
-
-
-      Required decision basis artifact must map:
-
-      - requirement or decision refs reviewed
-
-      - evidence refs reviewed
-
-      - unresolved statuses (NEEDS_TEST, UNPROVEN, UNCERTAIN_BLOCKING)
-
-      - why each unresolved item blocks or does not intersect remaining required gates
-
-      - final OPEN/BLOCK recommendation
-
-
-      BLOCK if any blocker-class behavioral obligation or decision ambiguity reaches
-      this gate unresolved without explicit non-intersection evidence.'
-    verification: '- Review the updated behavioral proof register and surface/manifest
-      closure audit together
-
-      - Record explicit OPEN or BLOCK recommendation with blocking items if any
-
-      - No downstream rereview may start on unresolved blocker-class runtime evidence'
-    evidence_template: '## Debt Closure Verify Gate Decision Basis
-
-      | ref | evidence_ref | unresolved_status | blocks_final_review | non_intersection_basis
-      | decision_note |
-
-      |---|---|---|---|---|---|
-
-
-      **Recommendation**: OPEN | BLOCK'
-    depends_on:
-    - debt_closure.verify.runtime_evidence_r13_r42
-    - debt_closure.verify.wiring_and_manifest_audit
-    agent: gate-reviewer
 - id: debt_closure.final_review
   name: Debt Closure Independent Re-Review and Final Closure Gate
   status: locked
@@ -54875,6 +54826,52 @@ phases:
 
       | ref | evidence_ref | unresolved_status | blocks_done_state | non_intersection_basis
       | final_decision_note |
+
+      |---|---|---|---|---|---|
+
+
+      **Recommendation**: OPEN | BLOCK'
+    agent: gate-reviewer
+  - id: debt_closure.verify.gate
+    name: Gate runtime evidence and wiring audit
+    status: pending
+    description: 'Step type: gate
+
+      Verification scope: full-plan-check protecting debt_closure.final_review and
+      plan completion.
+
+      Agent source: default.
+
+
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether the debt slice is
+      ready for independent rereview.
+
+
+      Required decision basis artifact must map:
+
+      - requirement or decision refs reviewed
+
+      - evidence refs reviewed
+
+      - unresolved statuses (NEEDS_TEST, UNPROVEN, UNCERTAIN_BLOCKING)
+
+      - why each unresolved item blocks or does not intersect remaining required gates
+
+      - final OPEN/BLOCK recommendation
+
+
+      BLOCK if any blocker-class behavioral obligation or decision ambiguity reaches
+      this gate unresolved without explicit non-intersection evidence.'
+    verification: '- Review the updated behavioral proof register and surface/manifest
+      closure audit together
+
+      - Record explicit OPEN or BLOCK recommendation with blocking items if any
+
+      - No downstream rereview may start on unresolved blocker-class runtime evidence'
+    evidence_template: '## Debt Closure Verify Gate Decision Basis
+
+      | ref | evidence_ref | unresolved_status | blocks_final_review | non_intersection_basis
+      | decision_note |
 
       |---|---|---|---|---|---|
 
