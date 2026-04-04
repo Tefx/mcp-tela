@@ -54248,13 +54248,13 @@ phases:
     status: pending
     description: 'Step type: gate
 
-      Verification scope: phase-check protecting debt_closure.verify and debt_closure.final_review.
+      Verification scope: phase-check protecting debt_closure.verify_and_close.
 
       Agent source: default.
 
 
-      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether remediation and explicit
-      decisions are complete enough to justify post-resolution verification.
+      As an INDEPENDENT REVIEWER (gate-reviewer), decide whether conditional remediation
+      and explicit decisions are complete enough to justify post-resolution verification.
 
 
       BLOCK if:
@@ -54266,12 +54266,16 @@ phases:
 
       - mcp / fastmcp authority remains split across code, docs, or dependency metadata
 
+      - the phase forces unnecessary implementation churn where the decision record
+      required explicit no-change closure instead
+
       - the phase attempts to fold downstream.py refactor debt into blocker closure
       without proof that correctness is already closed
 
 
       Required artifact: implementation gate decision basis mapping each runtime or
-      decision issue to the exact remediation evidence produced.'
+      decision issue to the exact remediation evidence or explicit no-change evidence
+      produced.'
     verification: '- Review runtime remediation evidence and the surface/authority
       decision record together
 
@@ -54279,7 +54283,9 @@ phases:
       if blocked
 
       - Confirm downstream_refactor debt remains secondary and non-blocking at this
-      stage'
+      stage
+
+      - Confirm every no-change conclusion is backed by auditable evidence, not assertion'
     evidence_template: '## Gate Review Report
 
 
