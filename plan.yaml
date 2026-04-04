@@ -52456,3 +52456,36 @@ phases:
   gate: Final independent audit of ADR-006 downstream recovery slice
   depends_on:
   - adr006_recovery.doc_sync
+  steps:
+  - id: adr006_recovery.deep_review.wiring_audit
+    name: Audit ADR-006 recovery wiring
+    status: pending
+    description: 'Complete wiring audit for ADR-006 downstream recovery path.
+
+
+      Verify:
+
+      - call-triggered recovery and message-handler reconnect share the same recovery
+      authority where ADR requires shared authority
+
+      - recovery path reaches shell/reload.py convergence rather than ad hoc registry
+      mutation
+
+      - no orphaned helper path bypasses eligibility classification or retry cap
+
+      - no stale helper surface remains that revives removed/changed server state'
+    verification: 'Verification scope: phase-check protecting adr006_recovery.deep_review.gate.
+
+      - Wiring audit identifies any bypasses or orphan paths
+
+      - Report uses concrete code-path evidence'
+    evidence_template: '## Wiring Audit Report
+
+      - Shared recovery authority path: <evidence>
+
+      - Bypass paths found: <none or list>
+
+      - Convergence routing proof: <evidence>
+
+      - Verdict: PASS | ISSUES_FOUND'
+    agent: wiring-auditor
