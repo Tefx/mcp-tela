@@ -53593,6 +53593,75 @@ phases:
 
       - <must be empty or escalated with owner>'
     agent: software-architect
+  - id: debt_closure.review_miss.harden_review_closure_basis
+    name: Define review-hardening basis for debt-closure execution
+    status: pending
+    description: 'Step type: planning
+
+      Verification scope: phase-check protecting debt_closure.contract_test and all
+      later gates.
+
+      Agent source: default.
+
+
+      Using debt_closure.review_miss.root_cause_analysis as input, produce the binding
+      review-hardening basis for this remediation effort.
+
+
+      Required outputs:
+
+      - explicit closure criteria for when audit findings count as ''debt closed''
+      vs ''conforms-with-gaps''
+
+      - mandatory evidence expectations for runtime-lock claims, dead-export claims,
+      and dependency-boundary claims
+
+      - reviewer prompts for future gate-reviewer, wiring-auditor, and spec-verifier
+      steps in this phase group
+
+      - anti-regression rule stating that behavioral CONFORMS claims with runtime
+      caveats cannot close without executable evidence
+
+
+      This step is planning-only: do not alter product code. It defines the evidence
+      bar that downstream steps must satisfy.'
+    verification: '- Closure basis explicitly names R13 and R42 as must-close items
+
+      - Closure basis defines how re_enumerate() and mcp/fastmcp import clarity will
+      be judged
+
+      - Output provides reviewer-specific prompts reused by later phases
+
+      - No blocker-class evidence requirement is left implicit'
+    evidence_template: '## Debt-Closure Review Basis
+
+
+      ### Closure Criteria
+
+      - R13:
+
+      - R42:
+
+      - re_enumerate surface clarity:
+
+      - mcp/fastmcp manifest clarity:
+
+
+      ### Reviewer Prompts
+
+      - gate-reviewer:
+
+      - wiring-auditor:
+
+      - spec-verifier:
+
+
+      ### Anti-Regression Rules
+
+      - <numbered list>'
+    depends_on:
+    - debt_closure.review_miss.root_cause_analysis
+    agent: software-architect
 - id: debt_closure.contract_test
   name: ADR-006 Debt Closure Contract and Test Hardening
   status: locked
