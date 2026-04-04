@@ -53849,7 +53849,7 @@ phases:
     agent: software-architect
   - id: debt_closure.review_miss.root_cause_analysis
     name: Analyze why prior phase reviews missed R13/R42 and surface-clarity gaps
-    status: claimed
+    status: done
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
@@ -53923,6 +53923,44 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T18:46:50.866255+00:00'
+    done_at: '2026-04-04T18:50:45.833488+00:00'
+    evidence: "## Review-Miss RCA\n\nCommit: `a3fa857` (`add review miss root cause\
+      \ analysis`)\n\n### Issue Families\n| Family | Provenance | Disposition | Missed\
+      \ Gate | Why Missed | New Guardrail | Owning Phase |\n| --- | --- | --- | ---\
+      \ | --- | --- | --- |\n| runtime-proof:R42-lock-prune-remove | ADR-006 artifacts\
+      \ marked R42 as NEEDS_TEST in deep conformance evidence. | Blocker debt retained\
+      \ but closure granted without proof. | deep_review.spec_conformance accepted\
+      \ success with embedded NEEDS_TEST. | Gate validated inventory/completeness,\
+      \ not behavioral-proof closure. | Block runtime-concurrency invariants unless\
+      \ live evidence exists or explicit owned debt path is established. | debt_closure.runtime_evidence\
+      \ |\n| runtime-proof:R13-no-registry-lock-during-await | ADR-006 artifacts treated\
+      \ R13 as code-confirmed, runtime-unproven. | Blocker debt retained but closure\
+      \ granted. | deep_review.spec_conformance elevated static inspection to closure.\
+      \ | Concurrency safety claim passed via analysis instead of runtime witness.\
+      \ | Require runtime contention probe for lock-not-held-during-await claims.\
+      \ | debt_closure.runtime_evidence |\n| surface-authority:re_enumerate-public-surface\
+      \ | DESIGN public API listing conflicted with narrowed surface taxonomy checks.\
+      \ | Contract ambiguity retained. | Surface taxonomy verification focused only\
+      \ named agent surfaces. | Missing trigger for classifying all documented public\
+      \ helpers. | Force explicit classification: external contract / compatibility\
+      \ shim / internal adapter. | debt_closure.contract_test |\n| dependency-authority:fastmcp-manifest-import\
+      \ | Code imports, packaging, tests, and manifest wording not normalized to one\
+      \ authority tuple. | Authority split retained. | Independent checks passed separately\
+      \ with no cross-artifact authority reconciliation. | No gate asked for single\
+      \ canonical authority statement. | Bind package authority + import authority\
+      \ + manifest wording to one canonical tuple before pass. | debt_closure.impl\
+      \ |\n\n### Anti-Regression Checklist\n- Runtime-evidence gaps to block on:\n\
+      \  - No SUCCESS when blocker-class rows remain NEEDS_TEST/BLOCKED.\n  - Require\
+      \ live contention/recovery witness per lock invariant.\n  - Require explicit\
+      \ downstream owner before runtime-proof debt crosses gate.\n- Dead-export classification\
+      \ rules:\n  - Every documented public API symbol must be classified (external/internal/shim).\n\
+      \  - Named-surface audits must also confirm no unclassified documented helpers.\n\
+      \  - “Not in current matrix” is insufficient closure for symbol ambiguity.\n\
+      - Dependency/manifest-clarity checks:\n  - Canonical tuple required: package,\
+      \ import path, manifest/runtime wording.\n  - Reject split-proof passes where\
+      \ artifacts disagree on authority.\n  - If manifest defers to another surface,\
+      \ verify that surface is canonical runtime authority.\n\n### Remaining Ambiguities\n\
+      - None."
   - id: debt_closure.contract_test.add_runtime_hardening_tests
     name: Add anti-regression tests and instrumentation for R13 and R42
     status: pending
