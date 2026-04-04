@@ -54766,6 +54766,17 @@ phases:
       - keep edits limited to the files explicitly named by the decision record
 
 
+      Required audit checklist inside this step:
+
+      - re_enumerate export/public-surface state
+
+      - dead_export or framework-only escape-hatch state if applicable
+
+      - mcp / fastmcp canonical import/dependency authority
+
+      - docs wording consistency across DESIGN, INTERFACES, and dependency metadata
+
+
       Known risk preview:
 
       - dead-export ambiguity must not survive through undocumented public surface
@@ -54792,26 +54803,40 @@ phases:
 
       - Evidence names each edited file or explicit no-change row and the decision
       record entry it satisfies'
-    evidence_template: '## Surface/Manifest Resolution Evidence
+    evidence_template: '## Surface / Manifest Resolution Evidence
 
 
-      ### Decision Applied
+      ### refs Read Confirmation (MANDATORY)
 
-      - re_enumerate:
+      For each ref in this step:
 
-      - mcp/fastmcp:
-
-
-      ### Files Changed
-
-      - <list>
+      - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Auditability Proof
+      ## Decision Rows Implemented
 
-      - How an auditor can verify the new surface/import rule:
+      - <decision_ref> -> changed/no-change
 
-      - Residual ambiguity: <must be none>'
+
+      ## Files Changed Or Audited
+
+      - <path> — <decision row satisfied>
+
+
+      ## Consistency Checklist
+
+      - re_enumerate classification consistent: yes/no
+
+      - dead_export / framework-only state consistent: yes/no
+
+      - mcp/fastmcp authority consistent in metadata/imports/docs: yes/no
+
+      '
+    refs:
+    - docs/DESIGN.md
+    - docs/INTERFACES.md
+    - pyproject.toml
+    - src/tela/shell/downstream.py
     depends_on:
     - debt_closure.impl.decide_surface_and_manifest_authority
     agent: python-senior
