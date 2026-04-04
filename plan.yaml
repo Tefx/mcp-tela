@@ -54788,6 +54788,8 @@ phases:
       |
 
       |---|---|---|---|---|'
+    depends_on:
+    - debt_closure.verify.gate
     agent: spec-verifier
   - id: debt_closure.final_review.behavior_rereview
     name: Re-review behavioral proof closure from a fresh reader
