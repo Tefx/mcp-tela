@@ -52272,8 +52272,9 @@ phases:
 
       - Decision: OPEN | BLOCKED'
     depends_on:
-    - adr006_recovery.impl.reload_race_authority
     - adr006_recovery.impl.downstream_recovery_kernel
+    - adr006_recovery.impl.reload_race_authority
+    - adr006_recovery.impl.retest_probe_free_contract
     agent: gate-reviewer
   - id: adr006_recovery.impl.fix_probe_free_test_setup
     name: Fix healthy-path probe-free test setup
