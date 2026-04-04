@@ -52913,7 +52913,7 @@ phases:
   steps:
   - id: adr006_recovery.deep_review.wiring_audit
     name: Audit ADR-006 recovery wiring
-    status: claimed
+    status: done
     description: 'Complete wiring audit for ADR-006 downstream recovery path.
 
 
@@ -52945,6 +52945,22 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-04T15:31:53.748138+00:00'
+    done_at: '2026-04-04T15:38:05.853658+00:00'
+    evidence: '## Wiring Audit Report
+
+      - Shared recovery authority path: call_tool -> _recover_server_client -> reload.on_server_reconnect
+      convergence path verified
+
+      - Bypass paths found: none in recovery path (no ad hoc registry mutation; no
+      global recovery lock)
+
+      - Convergence routing proof: _recover_server_client opens transport, enumerates
+      tools, then routes through on_server_reconnect before swap/retry
+
+      - Verdict: PASS
+
+      - Notes: non-blocking hygiene findings reported by auditor (dependency declaration
+      drift for transitive imports), not ADR-006 recovery-wiring blockers'
   - id: adr006_recovery.deep_review.spec_conformance
     name: Audit full ADR-006 recovery conformance
     status: pending
