@@ -53728,6 +53728,10 @@ phases:
       - OPEN or BLOCKED
 
       - Required follow-up if blocked'
+    depends_on:
+    - debt_closure.review_miss.root_cause_analysis
+    - debt_closure.review_miss.capture_reversal_record
+    - debt_closure.review_miss.harden_review_closure_basis
     agent: gate-reviewer
   - id: debt_closure.review_miss.harden_review_closure_basis
     name: Define review-hardening basis for debt-closure execution
