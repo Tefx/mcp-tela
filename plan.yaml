@@ -54623,6 +54623,9 @@ phases:
 
 
       **Recommendation**: OPEN | BLOCK'
+    depends_on:
+    - debt_closure.verify.runtime_evidence_r13_r42
+    - debt_closure.verify.wiring_and_manifest_audit
     agent: gate-reviewer
   - id: debt_closure.verify.runtime_evidence_r13_r42
     name: Re-verify behavioral proof register after resolution
