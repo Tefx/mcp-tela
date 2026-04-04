@@ -53605,6 +53605,9 @@ phases:
       ### Gate Decision
 
       - OPEN or BLOCKED'
+    depends_on:
+    - debt_closure.contract_test.freeze_closure_contract
+    - debt_closure.contract_test.add_runtime_hardening_tests
     agent: gate-reviewer
   - id: debt_closure.runtime_evidence.gate
     name: Gate runtime proof obligations and uncertainty resolution
