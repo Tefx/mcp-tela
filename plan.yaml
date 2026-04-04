@@ -53654,7 +53654,7 @@ phases:
       rows have explicit closure paths.'
   - id: debt_closure.runtime_evidence.gate
     name: Gate runtime proof obligations and uncertainty resolution
-    status: pending
+    status: claimed
     description: 'Step type: gate
 
       Verification scope: full-plan-check protecting debt_closure.impl and every downstream
@@ -53702,6 +53702,8 @@ phases:
     - debt_closure.runtime_evidence.collect_behavioral_proof
     - debt_closure.runtime_evidence.resolve_uncertainty_register
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T19:47:21.870710+00:00'
   - id: debt_closure.review_miss.gate
     name: Gate root-cause and review-hardening basis
     status: done
