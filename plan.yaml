@@ -52741,7 +52741,7 @@ phases:
       no divergences found.'
   - id: adr006_recovery.verify.gate
     name: Gate ADR-006 verification
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer), assess whether the ADR-006
       downstream recovery slice has sufficient independent evidence to proceed.
 
@@ -52784,6 +52784,8 @@ phases:
     - adr006_recovery.verify.surface_conformance
     - adr006_recovery.verify.spec_conformance
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-04T15:15:27.902952+00:00'
 - id: adr006_recovery.doc_sync
   name: ADR-006 Downstream Recovery Documentation Sync
   status: locked
