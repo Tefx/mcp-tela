@@ -53672,7 +53672,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.review_miss.gate
     name: Gate root-cause and review-hardening basis
-    status: claimed
+    status: done
     description: 'Step type: gate
 
       Verification scope: phase-check protecting debt_closure.contract_test and every
@@ -53735,6 +53735,35 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-04T18:56:10.985777+00:00'
+    done_at: '2026-04-04T18:59:34.655258+00:00'
+    evidence: '## Gate Review Report
+
+
+      ### RCA Coverage
+
+      | Check | Status | Notes |
+
+      |---|---|---|
+
+      | All issue families analyzed | PASS | 4 families covered: R42, R13, re_enumerate,
+      fastmcp authority |
+
+      | Why prior reviews missed them | PASS | Miss causes documented as process debt
+      not just missing tests |
+
+      | Anti-regression rules are concrete | PASS | Explicit blocking rules and artifact
+      requirements provided |
+
+      | Downstream ownership assigned | PASS | Ownership mapped to runtime_evidence
+      / contract_test / impl |
+
+
+      ### Gate Decision
+
+      - OPEN
+
+      - Basis: RCA, reversal register, and review-hardening basis are complete; downstream
+      phases inherit no-premature-closure rule; provenance/disposition rule enforced.'
   - id: debt_closure.review_miss.harden_review_closure_basis
     name: Define review-hardening basis for debt-closure execution
     status: done
