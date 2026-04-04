@@ -53735,7 +53735,7 @@ phases:
     agent: gate-reviewer
   - id: debt_closure.review_miss.harden_review_closure_basis
     name: Define review-hardening basis for debt-closure execution
-    status: claimed
+    status: done
     description: 'Step type: review
 
       Verification scope: phase-check protecting debt_closure.contract_test, debt_closure.runtime_evidence,
@@ -53804,6 +53804,62 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-04-04T18:53:19.083460+00:00'
+    done_at: '2026-04-04T18:55:52.486901+00:00'
+    evidence: '## Debt-Closure Review Basis
+
+
+      ### Closure Criteria
+
+      - R13: blocker-class until behavioral proof register marks PROVEN with runtime
+      witness evidence; NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING requires BLOCK.
+
+      - R42: blocker-class until behavioral proof register marks PROVEN with runtime
+      witness evidence for config-reload-remove lock cleanup.
+
+      - re_enumerate surface clarity: must be explicitly classified (RESOLVED_EXTERNAL_CONTRACT
+      | RESOLVED_INTERNAL_ONLY | RESOLVED_COMPATIBILITY_SHIM | UNCERTAIN_BLOCKING);
+      unclassified -> BLOCK.
+
+      - mcp/fastmcp manifest clarity: requires one authority tuple (package declaration,
+      canonical import, manifest/header wording); unresolved split -> BLOCK.
+
+
+      ### Reviewer Prompts
+
+      - gate-reviewer: Which blocker-class rows remain unresolved, and where are they
+      proven resolved rather than described?
+
+      - wiring-auditor: Do package/import/manifest authorities align to one FastMCP
+      tuple?
+
+      - spec-verifier: Does each documented public helper (especially re_enumerate)
+      have explicit contract classification and matching proof?
+
+
+      ### Anti-Regression Rules
+
+      1. No OPEN while blocker-class behavioral obligations are NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING.
+
+      2. Static inspection supports analysis only; runtime witness evidence required
+      for R13/R42 closure.
+
+      3. Closure gates must cite behavioral proof register, runtime uncertainty register,
+      and final gate decision basis by name.
+
+      4. Non-intersection claims must enumerate remaining gates not intersected; omission
+      forces BLOCK.
+
+      5. Public-surface ambiguity for documented helpers is blocker-class until classified.
+
+      6. Dependency/manifest authority remains blocker-class until package/import/manifest
+      tuple is reconciled.
+
+      7. Post-hoc reversals require review_miss_cause, remediation_owner, and re_close_proof.
+
+
+      Artifact: evidence/debt_closure_review_basis.md
+
+      Commit: 2b49b939559f0ac66575fd5d45da84778e153830'
   - id: debt_closure.review_miss.capture_reversal_record
     name: Capture post-hoc reversal and re-close obligations
     status: done
