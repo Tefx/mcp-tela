@@ -54370,48 +54370,42 @@ phases:
       Agent source: default.
 
 
-      As an independent wiring auditor, verify that the surface and dependency decisions
-      from Phase C are externally auditable.
+      Audit the non-runtime closure claims after remediation.
 
 
       Required checks:
 
-      1. Export reachability or intentional removal for re_enumerate()
+      1. re_enumerate() classification matches code, exports, docs, and any escape-hatch
+      annotations
 
-      2. No dead-export ambiguity remains between docs and actual callers
+      2. mcp / fastmcp authority matches dependency metadata, imports, docs, and tests
 
-      3. mcp / fastmcp import ownership is clear in code and dependency metadata
+      3. no public-surface or manifest claim remains split across two authoritative
+      sources
 
-      4. Any remaining exceptions are explicitly documented as intentional, not accidental
-      drift
-
-
-      Use grep/import-trace style evidence, not narrative assertions.'
-    verification: '- Provide concrete reachability/removal evidence for re_enumerate()
-
-      - Provide concrete evidence for import-boundary and metadata clarity
-
-      - Any residual ambiguity is blocker-class for the next phase'
-    evidence_template: '## Wiring and Manifest Audit Report
+      4. review-miss anti-regression rules were actually consumed by the artifacts
+      emitted in this phase group
 
 
-      ### re_enumerate
-
-      - Classification observed:
-
-      - Reachability/removal evidence:
+      Required artifact: closure audit table containing requirement_ref or decision_ref,
+      evidence reviewed, verdict, and any residual ambiguity.
 
 
-      ### mcp / fastmcp
+      Use grep/import-trace style evidence or equivalent auditable outputs; assertions
+      without evidence are insufficient.'
+    verification: '- Report PASS or ISSUES_FOUND for re_enumerate() and mcp/fastmcp
+      authority separately
 
-      - Import surfaces observed:
+      - Name each evidence source reviewed
 
-      - Metadata/docs alignment evidence:
+      - Any residual ambiguity is classified with explicit closure_path or blocker
+      reason'
+    evidence_template: '## Surface and Manifest Closure Audit
 
+      | decision_ref | evidence_reviewed | verdict | residual_ambiguity | closure_path
+      |
 
-      ### Residual ambiguity
-
-      - <must be none or blocker>'
+      |---|---|---|---|---|'
     agent: wiring-auditor
   - id: debt_closure.verify.gate
     name: Gate runtime evidence and wiring audit
