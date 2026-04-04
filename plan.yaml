@@ -53525,10 +53525,12 @@ phases:
   depends_on:
   - debt_closure.runtime_evidence
 - id: debt_closure.verify
-  name: Debt Closure Verification and Closure Audit
+  name: Legacy shell (absorbed by debt_closure.verify_and_close)
   status: locked
-  gate: Post-resolution retest, surface audit, and structured closure basis must all
-    be green before independent re-review.
+  gate: Legacy phase shell retained for provenance only; active debt-closure work
+    now lives in debt_closure.verify_and_close.
+  context: No active steps remain; preserved only because phase deletion is not available
+    via vectl mutate.
   depends_on:
   - debt_closure.impl
 - id: debt_closure.final_review
