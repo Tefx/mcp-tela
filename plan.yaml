@@ -52008,7 +52008,7 @@ phases:
     claimed_at: '2026-04-04T13:55:51.980482+00:00'
   - id: adr006_recovery.impl.downstream_recovery_kernel
     name: Implement downstream recovery kernel and one-safe-retry path
-    status: claimed
+    status: pending
     description: 'step_type: implementation
 
 
@@ -52171,8 +52171,6 @@ phases:
 
       - none | <describe>'
     agent: python-senior
-    claimed_by: python-senior
-    claimed_at: '2026-04-04T13:55:46.496133+00:00'
   - id: adr006_recovery.impl.gate
     name: Gate ADR-006 implementation
     status: pending
