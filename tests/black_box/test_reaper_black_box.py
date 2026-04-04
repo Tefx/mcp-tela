@@ -4,13 +4,14 @@ Spec source: docs/DESIGN.md (Sweep behavior, Configuration defaults, Lifecycle w
 Tester: blind-tester (L3 independence -- no implementation source read)
 
 Expected behavior per spec:
-  - ReaperConfig defaults: sweep_interval=30.0, native_idle_ttl=120.0, bridge_idle_ttl=300.0
+  - ReaperConfig defaults: sweep_interval=30.0, native_idle_ttl=120.0, bridge_idle_ttl=900.0
   - ReaperConfig is frozen (immutable dataclass)
   - ConnectionReaper.start() and stop() are idempotent
   - sweep() on empty runtime returns ReaperSweepOutcome with checked=0
   - touch_connection_activity() returns Ok(False) for nonexistent connection
   - sweep() detects session-gone for conn_* connections without a captured session
   - bridge_idle_ttl_seconds=0 disables bridge idle reaping
+  - native_idle_ttl_seconds=0 disables native idle reaping
 """
 
 from __future__ import annotations
@@ -85,10 +86,10 @@ class TestReaperConfigDefaults:
         )
 
     def test_bridge_idle_ttl_default(self) -> None:
-        """bridge_idle_ttl_seconds defaults to 300.0 per spec."""
+        """bridge_idle_ttl_seconds defaults to 900.0 per spec."""
         config = ReaperConfig()
-        assert config.bridge_idle_ttl_seconds == 300.0, (
-            f"Expected bridge_idle_ttl_seconds=300.0, got {config.bridge_idle_ttl_seconds}"
+        assert config.bridge_idle_ttl_seconds == 900.0, (
+            f"Expected bridge_idle_ttl_seconds=900.0, got {config.bridge_idle_ttl_seconds}"
         )
 
 
@@ -197,9 +198,7 @@ class TestSweepEmptyRuntime:
         assert outcome.reaped_stale == [], (
             f"Expected empty reaped_stale, got {outcome.reaped_stale}"
         )
-        assert outcome.errors == [], (
-            f"Expected empty errors, got {outcome.errors}"
-        )
+        assert outcome.errors == [], f"Expected empty errors, got {outcome.errors}"
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +319,46 @@ class TestSweepBridgeTTLDisable:
             assert conn_id in remaining_ids, (
                 f"Bridge connection '{conn_id}' should still be in runtime "
                 f"when bridge TTL is disabled, but was removed: {remaining_ids}"
+            )
+        finally:
+            release_session(conn_id)
+
+
+class TestSweepNativeTTLDisable:
+    """Spec: native_idle_ttl_seconds=0 disables native reaping."""
+
+    @pytest.mark.usefixtures("runtime_env")
+    def test_stale_native_not_reaped_when_ttl_zero(self) -> None:
+        conn_id = "conn_bb_native_stale_1"
+        add_runtime_connection(
+            ConnectionContext(
+                connection_id=conn_id,
+                profile_name="default",
+                connected_at="2020-01-01T00:00:00Z",
+                last_activity="2020-01-01T00:00:00Z",
+            )
+        )
+        capture_session(conn_id, _StubSession())
+
+        try:
+            config = ReaperConfig(native_idle_ttl_seconds=0)
+            reaper = ConnectionReaper(config=config)
+            result = asyncio.run(reaper.sweep())
+
+            assert result.is_ok, f"sweep() failed: {result}"
+            outcome = result.value
+            assert conn_id not in outcome.reaped_stale, (
+                f"Native connection '{conn_id}' should NOT be reaped when "
+                f"native_idle_ttl_seconds=0, but appeared in reaped_stale: "
+                f"{outcome.reaped_stale}"
+            )
+
+            snap = get_runtime_connections_snapshot()
+            assert snap.is_ok
+            remaining_ids = [c.connection_id for c in snap.value]
+            assert conn_id in remaining_ids, (
+                f"Native connection '{conn_id}' should still be in runtime "
+                f"when native TTL is disabled, but was removed: {remaining_ids}"
             )
         finally:
             release_session(conn_id)

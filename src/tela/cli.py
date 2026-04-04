@@ -77,6 +77,24 @@ def main(argv: list[str] | None = None) -> int:
         help="Idle timeout seconds before shutdown (default: 300, 0 to disable)",
     )
     serve_parser.add_argument(
+        "--reaper-sweep-interval",
+        type=float,
+        default=None,
+        help="Override reaper sweep interval seconds (CLI wins over config)",
+    )
+    serve_parser.add_argument(
+        "--reaper-native-ttl",
+        type=float,
+        default=None,
+        help="Override native idle TTL seconds (0 disables native reaping)",
+    )
+    serve_parser.add_argument(
+        "--reaper-bridge-ttl",
+        type=float,
+        default=None,
+        help="Override bridge idle TTL seconds (0 disables bridge reaping)",
+    )
+    serve_parser.add_argument(
         "--token",
         default=None,
         help="Bearer token override (default: TELA_BEARER_TOKEN or generated)",
@@ -193,6 +211,9 @@ def main(argv: list[str] | None = None) -> int:
             host=args.host,
             default_profile=args.default_profile,
             idle_timeout=args.idle_timeout,
+            reaper_sweep_interval=args.reaper_sweep_interval,
+            reaper_native_ttl=args.reaper_native_ttl,
+            reaper_bridge_ttl=args.reaper_bridge_ttl,
             token=args.token,
         )
         if serve_result.is_err:

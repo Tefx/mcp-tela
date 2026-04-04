@@ -27,6 +27,7 @@ from tela.core.models import AuthMode, GatewayTransport, LockfileData, TelaConfi
 from tela.shell.config_loader import Result, load_config
 from tela.shell.gateway import (
     GatewayStartupConfig,
+    apply_reaper_overrides,
     gateway_converge_startup,
     gateway_prepare_startup,
     gateway_shutdown,
@@ -62,6 +63,9 @@ def serve_command(
     host: str = "127.0.0.1",
     default_profile: str | None = None,
     idle_timeout: int = 300,
+    reaper_sweep_interval: float | None = None,
+    reaper_native_ttl: float | None = None,
+    reaper_bridge_ttl: float | None = None,
     token: str | None = None,
 ) -> Result[int, str]:
     """Run ``tela serve`` as the HTTP gateway process.
@@ -72,6 +76,9 @@ def serve_command(
         host: HTTP bind host address.
         default_profile: Open-mode default profile override.
         idle_timeout: Seconds to wait before idle-triggered shutdown.
+        reaper_sweep_interval: Optional CLI override for reaper sweep interval.
+        reaper_native_ttl: Optional CLI override for native idle TTL.
+        reaper_bridge_ttl: Optional CLI override for bridge idle TTL.
         token: Optional bearer token override.
 
     Returns:
@@ -83,6 +90,18 @@ def serve_command(
 
     if idle_timeout < 0:
         return Result(error="INVALID_IDLE_TIMEOUT: --idle-timeout must be >= 0")
+    if reaper_sweep_interval is not None and reaper_sweep_interval < 0:
+        return Result(
+            error="INVALID_REAPER_SWEEP_INTERVAL: --reaper-sweep-interval must be >= 0"
+        )
+    if reaper_native_ttl is not None and reaper_native_ttl < 0:
+        return Result(
+            error="INVALID_REAPER_NATIVE_TTL: --reaper-native-ttl must be >= 0"
+        )
+    if reaper_bridge_ttl is not None and reaper_bridge_ttl < 0:
+        return Result(
+            error="INVALID_REAPER_BRIDGE_TTL: --reaper-bridge-ttl must be >= 0"
+        )
     if port < 0 or port > 65535:
         return Result(error="INVALID_PORT: --port must be in range 0..65535")
 
@@ -90,13 +109,23 @@ def serve_command(
     if config_result.is_err:
         return Result(error=config_result.error)
     assert config_result.value is not None
+    effective_config_result = apply_reaper_overrides(
+        config_result.value,
+        sweep_interval_seconds=reaper_sweep_interval,
+        native_idle_ttl_seconds=reaper_native_ttl,
+        bridge_idle_ttl_seconds=reaper_bridge_ttl,
+    )
+    if effective_config_result.is_err:
+        return Result(error=effective_config_result.error)
+    assert effective_config_result.value is not None
+    effective_config = effective_config_result.value
 
     startup_config = GatewayStartupConfig(
         transport=GatewayTransport.HTTP,
         host=host,
         port=port,
-        auth_mode=AuthMode(config_result.value.auth.mode),
-        default_profile=default_profile or config_result.value.resolved_default_profile,
+        auth_mode=AuthMode(effective_config.auth.mode),
+        default_profile=default_profile or effective_config.resolved_default_profile,
     )
 
     token_result = _resolve_bearer_token(token)
@@ -109,9 +138,12 @@ def serve_command(
     run_result = asyncio.run(
         _run_serve_gateway(
             startup_config=startup_config,
-            tela_config=config_result.value,
+            tela_config=effective_config,
             config_path=Path(config_path),
             idle_timeout=idle_timeout,
+            reaper_sweep_interval=reaper_sweep_interval,
+            reaper_native_ttl=reaper_native_ttl,
+            reaper_bridge_ttl=reaper_bridge_ttl,
             bearer_token=resolved_token,
         )
     )
@@ -151,6 +183,9 @@ async def _run_serve_gateway(
     tela_config: TelaConfig,
     config_path: Path,
     idle_timeout: int,
+    reaper_sweep_interval: float | None,
+    reaper_native_ttl: float | None,
+    reaper_bridge_ttl: float | None,
     bearer_token: str,
 ) -> Result[None, str]:
     """Run HTTP gateway lifecycle with lockfile and background watchers."""
@@ -238,6 +273,9 @@ async def _run_serve_gateway(
         _watch_config_changes(
             config_path=config_path,
             default_profile=startup_config.default_profile,
+            reaper_sweep_interval=reaper_sweep_interval,
+            reaper_native_ttl=reaper_native_ttl,
+            reaper_bridge_ttl=reaper_bridge_ttl,
             stop_event=stop_event,
         )
     )
@@ -458,6 +496,9 @@ async def _watch_config_changes(
     *,
     config_path: Path,
     default_profile: str | None,
+    reaper_sweep_interval: float | None,
+    reaper_native_ttl: float | None,
+    reaper_bridge_ttl: float | None,
     stop_event: asyncio.Event,
 ) -> None:
     """Poll config mtime and run hot-reload callback when it changes."""
@@ -485,6 +526,9 @@ async def _watch_config_changes(
         reload_result = await gateway_reload_config_from_disk(
             config_path=config_path,
             default_profile=default_profile,
+            sweep_interval_seconds=reaper_sweep_interval,
+            native_idle_ttl_seconds=reaper_native_ttl,
+            bridge_idle_ttl_seconds=reaper_bridge_ttl,
         )
         if reload_result.is_err:
             print(

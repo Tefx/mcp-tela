@@ -249,3 +249,36 @@ def test_parse_config_server_env_missing_and_explicit_empty_are_equivalent() -> 
     )
 
     assert missing_env.servers["fs"].env == explicit_empty_env.servers["fs"].env == {}
+
+
+def test_parse_config_reaper_defaults_are_present() -> None:
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+
+    assert config.reaper.sweep_interval_seconds == 30.0
+    assert config.reaper.native_idle_ttl_seconds == 120.0
+    assert config.reaper.bridge_idle_ttl_seconds == 900.0
+
+
+def test_parse_config_reaper_section_overrides_defaults() -> None:
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "auth": {"mode": "open"},
+            "reaper": {
+                "sweep_interval_seconds": 60.0,
+                "native_idle_ttl_seconds": 0.0,
+                "bridge_idle_ttl_seconds": 1800.0,
+            },
+        },
+        {},
+    )
+
+    assert config.reaper.sweep_interval_seconds == 60.0
+    assert config.reaper.native_idle_ttl_seconds == 0.0
+    assert config.reaper.bridge_idle_ttl_seconds == 1800.0

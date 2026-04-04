@@ -20,7 +20,7 @@ It does not own:
 
 ```text
 tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
-tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--token tok]
+tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--reaper-sweep-interval sec] [--reaper-native-ttl sec] [--reaper-bridge-ttl sec] [--token tok]
 tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -646,7 +646,7 @@ orphaned and idle upstream connections.
 
 | Type | Kind | Fields |
 |------|------|--------|
-| `ReaperConfig` | frozen dataclass | `sweep_interval_seconds: float = 30.0`, `native_idle_ttl_seconds: float = 120.0`, `bridge_idle_ttl_seconds: float = 300.0` |
+| `ReaperConfig` | frozen dataclass | `sweep_interval_seconds: float = 30.0`, `native_idle_ttl_seconds: float = 120.0`, `bridge_idle_ttl_seconds: float = 900.0` |
 | `ReaperSweepOutcome` | frozen dataclass | `checked: int`, `reaped_session_gone: list[str]`, `reaped_stale: list[str]`, `errors: list[str]` |
 | `ConnectionReaper` | class | `start()`, `stop()`, `sweep()` — all return `Result` |
 
@@ -708,7 +708,7 @@ orphaned and idle upstream connections.
 | Max tool calls counter | No limit enforced | — | `_runtime.total_tool_calls` is an unbounded `int` |
 | Reaper sweep interval | 30.0 seconds | Yes — `ReaperConfig.sweep_interval_seconds` | `shell/connection_reaper.py` |
 | Native idle TTL | 120.0 seconds | Yes — `ReaperConfig.native_idle_ttl_seconds` | `shell/connection_reaper.py` |
-| Bridge idle TTL | 300.0 seconds (0 = disabled) | Yes — `ReaperConfig.bridge_idle_ttl_seconds` | `shell/connection_reaper.py` |
+| Bridge idle TTL | 900.0 seconds (0 = disabled) | Yes — `ReaperConfig.bridge_idle_ttl_seconds` | `shell/connection_reaper.py` |
 
 ### 10.4 Tool Registry
 

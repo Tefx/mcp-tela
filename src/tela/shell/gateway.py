@@ -115,6 +115,34 @@ class GatewayStartupConfig:
     host: str = "127.0.0.1"
 
 
+# @shell_complexity: override projection is bounded field-mapping glue for shell startup wiring.
+def apply_reaper_overrides(
+    config: TelaConfig,
+    *,
+    sweep_interval_seconds: float | None = None,
+    native_idle_ttl_seconds: float | None = None,
+    bridge_idle_ttl_seconds: float | None = None,
+) -> Result[TelaConfig, str]:
+    """Apply CLI reaper overrides on top of config-file values."""
+
+    update: dict[str, float] = {}
+    if sweep_interval_seconds is not None:
+        update["sweep_interval_seconds"] = sweep_interval_seconds
+    if native_idle_ttl_seconds is not None:
+        update["native_idle_ttl_seconds"] = native_idle_ttl_seconds
+    if bridge_idle_ttl_seconds is not None:
+        update["bridge_idle_ttl_seconds"] = bridge_idle_ttl_seconds
+
+    if not update:
+        return Result(value=config)
+
+    return Result(
+        value=config.model_copy(
+            update={"reaper": config.reaper.model_copy(update=update)}
+        )
+    )
+
+
 # @shell_orchestration: wires HTTP endpoint handlers onto FastMCP Starlette app.
 # @shell_complexity: mounted HTTP adapters enforce auth and payload contracts per endpoint.
 def _register_http_routes(upstream_server: FastMCP) -> None:
@@ -388,9 +416,15 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 request_ctx.get().session, connections_snapshot
             )
             if conn_r.is_ok and conn_r.value is not None:
-                touch_r = touch_connection_activity(conn_r.value.connection_id, datetime.now(timezone.utc).isoformat())
+                touch_r = touch_connection_activity(
+                    conn_r.value.connection_id, datetime.now(timezone.utc).isoformat()
+                )
                 if touch_r.is_err:
-                    logger.warning("Failed to touch connection activity for %s: %s", conn_r.value.connection_id, touch_r.error)
+                    logger.warning(
+                        "Failed to touch connection activity for %s: %s",
+                        conn_r.value.connection_id,
+                        touch_r.error,
+                    )
                 return conn_r.value
         except LookupError:
             pass
@@ -410,7 +444,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                     capture_session(candidate.connection_id, current_session)
                     now_iso = datetime.now(timezone.utc).isoformat()
                     touch_connection_activity(candidate.connection_id, now_iso)
-                    logger.debug("Adopted unbound bridge %s for session", candidate.connection_id)
+                    logger.debug(
+                        "Adopted unbound bridge %s for session", candidate.connection_id
+                    )
                     return candidate
         except LookupError:
             pass
@@ -418,9 +454,15 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         if init_result.is_err:
             raise RuntimeError(init_result.error or "INITIALIZE_REJECTED")
         assert init_result.value is not None
-        touch_r = touch_connection_activity(init_result.value.connection_id, datetime.now(timezone.utc).isoformat())
+        touch_r = touch_connection_activity(
+            init_result.value.connection_id, datetime.now(timezone.utc).isoformat()
+        )
         if touch_r.is_err:
-            logger.warning("Failed to touch connection activity for %s: %s", init_result.value.connection_id, touch_r.error)
+            logger.warning(
+                "Failed to touch connection activity for %s: %s",
+                init_result.value.connection_id,
+                touch_r.error,
+            )
         return init_result.value
 
     def _build_tool_annotations(
@@ -595,6 +637,9 @@ def _set_reload_notify_callback(
 async def gateway_reload_config_from_disk(
     config_path: Path,
     default_profile: str | None,
+    sweep_interval_seconds: float | None = None,
+    native_idle_ttl_seconds: float | None = None,
+    bridge_idle_ttl_seconds: float | None = None,
 ) -> Result[None, str]:
     """Load config from disk and apply runtime hot-reload callback.
 
@@ -604,6 +649,9 @@ async def gateway_reload_config_from_disk(
     Args:
         config_path: Path to runtime config file.
         default_profile: CLI default-profile override.
+        sweep_interval_seconds: Optional CLI override for reaper sweep interval.
+        native_idle_ttl_seconds: Optional CLI override for native idle TTL.
+        bridge_idle_ttl_seconds: Optional CLI override for bridge idle TTL.
 
     Returns:
         Result[None, str] from config reload application.
@@ -614,10 +662,20 @@ async def gateway_reload_config_from_disk(
         return Result(error=config_result.error)
 
     assert config_result.value is not None
+    effective_config_result = apply_reaper_overrides(
+        config_result.value,
+        sweep_interval_seconds=sweep_interval_seconds,
+        native_idle_ttl_seconds=native_idle_ttl_seconds,
+        bridge_idle_ttl_seconds=bridge_idle_ttl_seconds,
+    )
+    if effective_config_result.is_err:
+        return Result(error=effective_config_result.error)
+    assert effective_config_result.value is not None
+    effective_config = effective_config_result.value
 
     from tela.shell.reload import on_config_changed
 
-    return await on_config_changed(config_result.value)
+    return await on_config_changed(effective_config)
 
 
 def bind_gateway_startup(
@@ -734,7 +792,6 @@ async def gateway_start(
         await gateway_shutdown()
         return Result(error=converge_result.error)
 
-
     return Result(value=None)
 
 
@@ -804,20 +861,24 @@ async def gateway_converge_startup(
         return Result(error=audit_result.error)
 
     global _reaper
-    _reaper = ConnectionReaper(ReaperConfig())
+    _reaper = ConnectionReaper(
+        ReaperConfig.from_tela_config(runtime_config), use_runtime_config=True
+    )
     await _reaper.start()
 
     # Notify bridges that connected during warming — tools are now available.
     from tela.shell.upstream import notify_tools_changed
     from tela.shell.gateway_runtime import get_runtime_connections_snapshot
     from tela.shell.downstream import get_registry
+
     snap = get_runtime_connections_snapshot()
     if snap.is_ok and snap.value:
         registry = get_registry()
-        digest = str(sorted(t.name for ts in registry.get_all_tools().values() for t in ts))
+        digest = str(
+            sorted(t.name for ts in registry.get_all_tools().values() for t in ts)
+        )
         for conn in snap.value:
             await notify_tools_changed(conn, digest)
-
 
     # Signal that downstream convergence is complete — tools are available.
     if _converge_event is not None:

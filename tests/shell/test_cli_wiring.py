@@ -23,12 +23,19 @@ def test_watch_config_changes_routes_reload_to_gateway_callback(
     )
 
     calls: list[tuple[Path, str | None]] = []
+    captured_overrides: list[tuple[float | None, float | None, float | None]] = []
 
     async def _fake_gateway_reload_config_from_disk(
         config_path: Path,
         default_profile: str | None,
+        sweep_interval_seconds: float | None = None,
+        native_idle_ttl_seconds: float | None = None,
+        bridge_idle_ttl_seconds: float | None = None,
     ) -> Result[None, str]:
         calls.append((config_path, default_profile))
+        captured_overrides.append(
+            (sweep_interval_seconds, native_idle_ttl_seconds, bridge_idle_ttl_seconds)
+        )
         return Result(value=None)
 
     monkeypatch.setattr(
@@ -43,6 +50,9 @@ def test_watch_config_changes_routes_reload_to_gateway_callback(
             _watch_config_changes(
                 config_path=config_path,
                 default_profile="dev",
+                reaper_sweep_interval=60.0,
+                reaper_native_ttl=0.0,
+                reaper_bridge_ttl=900.0,
                 stop_event=stop_event,
             )
         )
@@ -75,3 +85,4 @@ def test_watch_config_changes_routes_reload_to_gateway_callback(
     asyncio.run(_scenario())
 
     assert calls == [(config_path, "dev")]
+    assert captured_overrides == [(60.0, 0.0, 900.0)]

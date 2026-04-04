@@ -12,9 +12,13 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from tela.core.models import TelaConfig
 from tela.shell.config_loader import Result
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
-from tela.shell.gateway_runtime import get_runtime_connections_snapshot
+from tela.shell.gateway_runtime import (
+    get_runtime_config,
+    get_runtime_connections_snapshot,
+)
 from tela.shell.idle_shutdown import get_idle_manager
 from tela.shell.upstream import get_captured_session
 
@@ -28,14 +32,27 @@ class ReaperConfig:
     Attributes:
         sweep_interval_seconds: How often the reaper runs a sweep cycle.
         native_idle_ttl_seconds: Max idle time for native (non-bridge)
-            connections before they are reaped.
+            connections before they are reaped. Set to 0 to disable
+            native reaping.
         bridge_idle_ttl_seconds: Max idle time for bridge connections
-            before they are reaped.  Set to 0 to disable bridge reaping.
+            before they are reaped. Set to 0 to disable bridge reaping.
     """
 
     sweep_interval_seconds: float = 30.0
-    native_idle_ttl_seconds: float = 120.0
-    bridge_idle_ttl_seconds: float = 300.0  # 0 = disabled
+    native_idle_ttl_seconds: float = 120.0  # 0 = disabled
+    bridge_idle_ttl_seconds: float = 900.0  # 0 = disabled
+
+    @classmethod
+    def from_tela_config(cls, config: TelaConfig | None) -> "ReaperConfig":
+        """Project runtime config onto shell reaper settings."""
+
+        if config is None:
+            return cls()
+        return cls(
+            sweep_interval_seconds=config.reaper.sweep_interval_seconds,
+            native_idle_ttl_seconds=config.reaper.native_idle_ttl_seconds,
+            bridge_idle_ttl_seconds=config.reaper.bridge_idle_ttl_seconds,
+        )
 
 
 @dataclass(frozen=True)
@@ -71,7 +88,12 @@ class ConnectionReaper:
         30.0
     """
 
-    def __init__(self, config: ReaperConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: ReaperConfig | None = None,
+        *,
+        use_runtime_config: bool = False,
+    ) -> None:
         """Initialize the connection reaper.
 
         Args:
@@ -79,8 +101,20 @@ class ConnectionReaper:
                 if not provided.
         """
         self._config = config if config is not None else ReaperConfig()
+        self._use_runtime_config = use_runtime_config
         self._task: asyncio.Task[None] | None = None
         self._running: bool = False
+
+    def _effective_config(self) -> ReaperConfig:
+        """Return the reaper settings to use for the current cycle."""
+
+        if not self._use_runtime_config:
+            return self._config
+
+        runtime_config_result = get_runtime_config()
+        if runtime_config_result.is_err or runtime_config_result.value is None:
+            return self._config
+        return ReaperConfig.from_tela_config(runtime_config_result.value)
 
     async def start(self) -> Result[None, str]:
         """Start the reaper background task.
@@ -170,6 +204,7 @@ class ConnectionReaper:
         for conn in connections:
             cid = conn.connection_id
             already_reaped = False
+            effective_config = self._effective_config()
 
             # Session probe (conn_* only): check if session registry has a session
             if cid.startswith("conn_"):
@@ -190,20 +225,20 @@ class ConnectionReaper:
             if not already_reaped:
                 # Determine appropriate TTL
                 if cid.startswith("bridge_"):
-                    ttl = self._config.bridge_idle_ttl_seconds
+                    ttl = effective_config.bridge_idle_ttl_seconds
                     if ttl == 0:
                         continue  # bridge reaping disabled
                 else:
-                    ttl = self._config.native_idle_ttl_seconds
+                    ttl = effective_config.native_idle_ttl_seconds
+                    if ttl == 0:
+                        continue  # native reaping disabled
 
                 # Parse last activity timestamp, fall back to connected_at
                 ts_str = conn.last_activity if conn.last_activity else conn.connected_at
                 try:
                     last_ts = datetime.fromisoformat(ts_str)
                 except (ValueError, TypeError) as exc:
-                    errors.append(
-                        f"bad timestamp for {cid}: {exc}"
-                    )
+                    errors.append(f"bad timestamp for {cid}: {exc}")
                     continue
 
                 # Ensure timezone-aware comparison
@@ -234,14 +269,16 @@ class ConnectionReaper:
         """Background loop that runs sweep at the configured interval."""
         try:
             while self._running:
-                await asyncio.sleep(self._config.sweep_interval_seconds)
+                await asyncio.sleep(self._effective_config().sweep_interval_seconds)
                 if self._running:
                     result = await self.sweep()
                     if result.is_err:
                         logger.warning("Reaper sweep failed: %s", result.error)
                     elif result.value is not None:
                         outcome = result.value
-                        total = len(outcome.reaped_session_gone) + len(outcome.reaped_stale)
+                        total = len(outcome.reaped_session_gone) + len(
+                            outcome.reaped_stale
+                        )
                         if total > 0:
                             logger.info(
                                 "Reaper sweep: checked=%d, reaped_session_gone=%d, reaped_stale=%d, errors=%d",

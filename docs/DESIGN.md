@@ -209,7 +209,7 @@ timer can start when no connections remain.
 |-----------|---------|-------------|
 | `sweep_interval_seconds` | 30.0 | How often the reaper runs |
 | `native_idle_ttl_seconds` | 120.0 | Idle TTL for native (non-bridge) connections |
-| `bridge_idle_ttl_seconds` | 300.0 | Idle TTL for bridge connections (0 = disabled) |
+| `bridge_idle_ttl_seconds` | 900.0 | Idle TTL for bridge connections (0 = disabled) |
 
 **Lifecycle wiring:**
 

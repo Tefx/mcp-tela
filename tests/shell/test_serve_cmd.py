@@ -118,10 +118,16 @@ def test_serve_lockfile_written_then_deleted(
         *,
         config_path: Path,
         default_profile: str | None,
+        reaper_sweep_interval: float | None,
+        reaper_native_ttl: float | None,
+        reaper_bridge_ttl: float | None,
         stop_event: asyncio.Event,
     ) -> None:
         _ = config_path
         _ = default_profile
+        _ = reaper_sweep_interval
+        _ = reaper_native_ttl
+        _ = reaper_bridge_ttl
         await stop_event.wait()
 
     async def _fake_idle_shutdown_watch(
@@ -251,10 +257,16 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
         *,
         config_path: Path,
         default_profile: str | None,
+        reaper_sweep_interval: float | None,
+        reaper_native_ttl: float | None,
+        reaper_bridge_ttl: float | None,
         stop_event: asyncio.Event,
     ) -> None:
         _ = config_path
         _ = default_profile
+        _ = reaper_sweep_interval
+        _ = reaper_native_ttl
+        _ = reaper_bridge_ttl
         await stop_event.wait()
 
     async def _fake_idle_shutdown_watch(
@@ -317,6 +329,51 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
     assert len(writes) == 1
     assert getattr(writes[0], "port") == published_port
     assert getattr(writes[0], "port") > 0
+
+
+def test_serve_command_reaper_cli_overrides_win_over_config(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_reaper: list[tuple[float, float, float]] = []
+
+    def _fake_load_config(path: Path | None = None, default_profile: str | None = None):
+        _ = path
+        _ = default_profile
+        return Result(
+            value=TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+            )
+        )
+
+    async def _fake_run_serve_gateway(**kwargs) -> Result[None, str]:
+        tela_config = kwargs["tela_config"]
+        captured_reaper.append(
+            (
+                tela_config.reaper.sweep_interval_seconds,
+                tela_config.reaper.native_idle_ttl_seconds,
+                tela_config.reaper.bridge_idle_ttl_seconds,
+            )
+        )
+        return Result(value=None)
+
+    monkeypatch.setattr(serve_cmd, "load_config", _fake_load_config)
+    monkeypatch.setattr(serve_cmd, "_run_serve_gateway", _fake_run_serve_gateway)
+    monkeypatch.setattr(
+        serve_cmd, "_resolve_bearer_token", lambda token: Result(value=token or "tok")
+    )
+
+    result = serve_cmd.serve_command(
+        config_path="tela.yaml",
+        idle_timeout=0,
+        reaper_sweep_interval=60.0,
+        reaper_native_ttl=0.0,
+        reaper_bridge_ttl=1800.0,
+        token="tok",
+    )
+
+    assert result.is_ok
+    assert captured_reaper == [(60.0, 0.0, 1800.0)]
 
 
 def test_idle_shutdown_sets_stop_event_when_connections_stay_idle() -> None:

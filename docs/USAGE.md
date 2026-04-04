@@ -534,7 +534,7 @@ tela connect [--config path] [--default-profile name] [--server host:port] [--to
 ### `tela serve`
 
 ```bash
-tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--token tok]
+tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--reaper-sweep-interval sec] [--reaper-native-ttl sec] [--reaper-bridge-ttl sec] [--token tok]
 ```
 
 - `--config`: configuration file path (default: `tela.yaml`)
@@ -542,6 +542,9 @@ tela serve [--config path] [--port N] [--host addr] [--default-profile name] [--
 - `--host`: bind address (default: `127.0.0.1`)
 - `--default-profile`: override the open-mode default profile
 - `--idle-timeout`: seconds before auto-shutdown on idle (default: `300`, `0` to disable)
+- `--reaper-sweep-interval`: override connection-reaper sweep interval seconds (CLI wins over config)
+- `--reaper-native-ttl`: override native idle TTL seconds (`0` disables native reaping)
+- `--reaper-bridge-ttl`: override bridge idle TTL seconds (`0` disables bridge reaping; default bridge TTL is `900`)
 - `--token`: fixed bearer token override (default: auto-generated; or set `TELA_BEARER_TOKEN`)
 
 When started manually, the bearer token is printed to stderr for easy copy-paste.

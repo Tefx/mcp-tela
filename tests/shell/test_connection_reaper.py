@@ -57,7 +57,7 @@ def _runtime_setup():
 
 @pytest.fixture()
 def reaper_config() -> ReaperConfig:
-    """Architecture ADR: ReaperConfig defaults -- sweep_interval_seconds=30.0, native_idle_ttl_seconds=120.0, bridge_idle_ttl_seconds=300.0"""
+    """Architecture ADR: ReaperConfig defaults -- sweep_interval_seconds=30.0, native_idle_ttl_seconds=120.0, bridge_idle_ttl_seconds=900.0"""
     return ReaperConfig()
 
 
@@ -115,7 +115,7 @@ class TestReaperConfig:
         """Verify ReaperConfig defaults match the Architecture ADR."""
         assert reaper_config.sweep_interval_seconds == 30.0
         assert reaper_config.native_idle_ttl_seconds == 120.0
-        assert reaper_config.bridge_idle_ttl_seconds == 300.0
+        assert reaper_config.bridge_idle_ttl_seconds == 900.0
 
     def test_reaper_config_is_frozen(self) -> None:
         """ReaperConfig is a frozen dataclass -- no mutation allowed."""
@@ -178,7 +178,9 @@ class TestConnectionReaperSweep:
         async def _shutdown() -> None:
             pass
 
-        idle_mgr = IdleShutdownManager(timeout_seconds=30.0, shutdown_callback=_shutdown)
+        idle_mgr = IdleShutdownManager(
+            timeout_seconds=30.0, shutdown_callback=_shutdown
+        )
         reaper = ConnectionReaper()
 
         outcome_result = asyncio.run(reaper.sweep())
@@ -206,6 +208,7 @@ class TestConnectionReaperSweep:
         capture_session(conn_id, _StubSession())
 
         try:
+
             async def _shutdown() -> None:
                 pass
 
@@ -251,3 +254,30 @@ class TestConnectionReaperSweep:
         assert total_reaped > 0, "At least one connection should have been reaped"
         # The mock assertion depends on how the reaper receives the idle_manager;
         # the implementation will wire it. For now, this validates the sweep runs.
+
+    @pytest.mark.usefixtures("_runtime_setup")
+    def test_native_ttl_zero_disables_native_reaping(self) -> None:
+        conn_id = "conn_native_disable_1"
+        add_runtime_connection(
+            ConnectionContext(
+                connection_id=conn_id,
+                profile_name="default",
+                connected_at="2020-01-01T00:00:00Z",
+                last_activity="2020-01-01T00:00:00Z",
+            )
+        )
+        capture_session(conn_id, _StubSession())
+
+        try:
+            reaper = ConnectionReaper(config=ReaperConfig(native_idle_ttl_seconds=0.0))
+            outcome_result = asyncio.run(reaper.sweep())
+
+            assert outcome_result.is_ok
+            assert outcome_result.value is not None
+            assert conn_id not in outcome_result.value.reaped_stale
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            assert any(c.connection_id == conn_id for c in snapshot.value)
+        finally:
+            release_session(conn_id)
