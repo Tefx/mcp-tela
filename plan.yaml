@@ -52607,7 +52607,7 @@ phases:
     claimed_at: '2026-04-04T14:56:03.387500+00:00'
   - id: adr006_recovery.verify.spec_conformance
     name: Run ADR-006 spec conformance review
-    status: claimed
+    status: done
     description: 'Spec conformance verification via adversarial divergence hunting.
 
       Agent: spec-verifier (dedicated, read-only, independent).
@@ -52667,6 +52667,54 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-04-04T14:56:14.464625+00:00'
+    done_at: '2026-04-04T14:59:25.134387+00:00'
+    evidence: '## Spec Conformance Report
+
+      **Phase**: adr006_recovery.verify
+
+      **Spec source**: docs/ADR-006-steady-state-downstream-recovery.md
+
+
+      ## Evidence Table
+
+      | ADR Section | Requirement | Implementation | Verdict | Notes |
+
+      |---|---|---|---|---|
+
+      | ownership/downstream | call_tool public entrypoint remains | src/tela/shell/downstream.py
+      | CONFORMS | Signature preserved |
+
+      | ownership/downstream | _recover_server_client internal primitive extracted
+      | src/tela/shell/downstream.py | CONFORMS | Shared authority used by reconnect
+      + call path |
+
+      | recovery eligibility | exact eligible/ineligible classifier boundaries | src/tela/shell/downstream.py
+      | CONFORMS | Timeout/BrokenPipe/ConnectionReset/unknown fail closed |
+
+      | recovery sequence | one-attempt + at most one retry | src/tela/shell/downstream.py
+      | CONFORMS | No second recovery/retry path |
+
+      | concurrency contract | per-server locks, no global blocking | src/tela/shell/downstream.py
+      | CONFORMS | _recovery_locks map + lock ordering preserved |
+
+      | config reload precedence | reload/remove wins over in-flight recovery | src/tela/shell/downstream.py
+      + reload convergence | CONFORMS | config_missing/material-change fail-closed
+      paths present |
+
+      | timeout contract | 15.0s shared budget incl. lock wait | src/tela/shell/downstream.py
+      | CONFORMS | deadline propagation and stage checks |
+
+      | error payload contract | stable details keys/stages | src/tela/shell/downstream.py
+      | CONFORMS | server_name/recovery_attempted/recovery_stage/recovery_eligible/config_missing/underlying_error
+      |
+
+      | observability contract | structured diagnostics events/levels/fields | src/tela/shell/downstream.py
+      | CONFORMS | started/succeeded/rejected/exhausted/classifier_unknown emitted
+      |
+
+
+      Summary verdict: CONFORMS across checked ADR-006 downstream recovery requirements;
+      no divergences found.'
   - id: adr006_recovery.verify.gate
     name: Gate ADR-006 verification
     status: pending
