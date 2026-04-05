@@ -56615,6 +56615,59 @@ phases:
 
       '
     agent: software-architect-tacit
+  - id: reclose.basis.gate
+    name: Gate normalized blocker basis
+    status: pending
+    description: 'Gate review for the normalized blocker basis.
+
+
+      Review depth: THOROUGH.
+
+
+      You are checking that the plan''s reclose campaign begins from one internally
+      consistent blocker ledger. Block if any blocker family is missing, if blocker
+      rows are softened without explicit non-intersection evidence, or if gate_open_allowed
+      can still be read as true from any authoritative artifact.
+
+
+      Gate Preview (what the gate WILL reject)
+
+      1. Missing blocker family among R13 / both R42 branches / SURFACE-REENUMERATE
+      / AUTH-MCP-FASTMCP
+
+      2. Provenance used as a softening disposition
+
+      3. Any artifact implying the false-close state is still acceptable'
+    verification: '- All blocker families explicitly present
+
+      - Evidence basis is internally consistent
+
+      - No unresolved contradiction leaves a path for another false-close'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - blocker families checked:
+
+      - contradictions found:
+
+      - gate_open_allowed basis:
+
+      - decision: OPEN or BLOCK
+
+      '
+    depends_on:
+    - reclose.basis.normalize_blockers
+    agent: gate-reviewer-tacit
 - id: reclose.surface
   name: Surface and Authority Reclose
   status: locked
