@@ -571,6 +571,7 @@ When auto-started by `tela connect`, the token is only stored in the lockfile.
 ### Query commands
 
 ```bash
+tela stop
 tela status [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -578,6 +579,8 @@ tela audit [--json] [--since ISO-8601] [--limit N]
 ```
 
 Query commands discover the running server via `~/.tela/gateway.lock`.
+`tela stop` uses the same lockfile to discover the local gateway process, sends `SIGTERM`, waits boundedly for exit, and then cleans the lockfile.
+`tela stop` exits `0` on confirmed stop and exits `1` for no-running-server or signal/permission failures (with an error message on stderr).
 
 ## Built-in surfaces
 
@@ -596,6 +599,7 @@ The following are operator-only surfaces, not MCP built-in tools:
 | `tela status` | CLI / `GET /status` | Uptime, server count, connection count |
 | `tela connections` | CLI / via `/status` | Active upstream connections |
 | `tela audit` | CLI / via `/status` | Query audit log entries |
+| `tela stop` | CLI only | Send local SIGTERM to the lockfile-discovered gateway process |
 
 **Note:** These surfaces are accessible via CLI or HTTP, not via MCP `tools/call`.
 

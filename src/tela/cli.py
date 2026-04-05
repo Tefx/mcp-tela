@@ -15,6 +15,7 @@ from tela.commands.connections_cmd import connections_command
 from tela.commands.profiles_cmd import profiles_command
 from tela.commands.serve_cmd import serve_command
 from tela.commands.status_cmd import status_command
+from tela.commands.stop_cmd import stop_command
 
 
 # @invar:allow shell_result: CLI entrypoint returns int exit code per POSIX convention.
@@ -243,6 +244,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         assert connect_result.value is not None
         return connect_result.value
+    if args.command == "stop":
+        stop_result = stop_command()
+        if stop_result.is_err:
+            print(f"error: {stop_result.error}", file=sys.stderr)
+            return 1
+        assert stop_result.value is not None
+        return stop_result.value
     if args.command == "profiles":
         profiles_result = profiles_command(
             config_path=args.config,
