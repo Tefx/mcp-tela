@@ -116,6 +116,34 @@ Implications:
 - If bounded polls exhaust without reaching `ready`, the bridge exits cleanly
 - The bridge must not retry indefinitely; bounded exit is required for non-ready authority
 
+**`tela connect` runtime recovery**:
+
+During MCP forwarding, transient connection errors may occur (connection refused,
+reset, broken pipe, HTTP 503, readiness timeouts). The bridge implements bounded
+recovery:
+
+**Recovery classification** (`_is_recoverable_error`):
+- Recoverable: HTTP connection errors, connection refused/reset/aborted, broken pipe,
+  timeouts, HTTP 503, readiness query failures
+- Non-recoverable: degraded state, unknown error types
+
+**Recovery sequence**:
+1. Detect recoverable error during readiness poll or forwarding
+2. Check recovery attempts against `--max-recovery-attempts` (default: 3)
+3. Re-discover gateway via lockfile (`_recover_gateway`)
+4. Re-poll readiness at the recovered endpoint
+5. Re-register via `POST /connect` with the same `connection_id`
+6. Resume forwarding MCP frames
+
+**Session semantics**: The bridge maintains the same `connection_id` across
+recovery cycles. Downstream sessions are scoped to the gateway runtime, so
+bridge recovery does not reset downstream state. Upstream MCP clients should
+treat bridge exit as session termination and re-initialize on reconnect.
+
+**Bounded exit**: If recovery is exhausted or the error is non-recoverable,
+the bridge exits cleanly with diagnostic logging to stderr. This matches the
+interrupt/teardown contract: best-effort cleanup, never block process exit.
+
 Authoritative freeze for downstream work:
 
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority

@@ -337,9 +337,26 @@ degraded/non-ready status must end in a clean bounded exit.
 
 **Discovery-before-readiness cold-start**: After `tela connect` discovers the
 endpoint via lockfile, the bridge registers via `POST /connect` and then polls
-`GET /status` for readiness. The polling is bounded (default 4 attempts); if the
+`GET /status` for readiness. The polling is bounded (default 4 polls); if the
 gateway remains non-ready, the bridge exits cleanly rather than retrying
 indefinitely.
+
+**Bridge recovery**: During MCP forwarding, transient connection errors (e.g.,
+`Connection refused`, `Connection reset`, `HTTP 503`, readiness timeouts) may
+occur. The bridge attempts bounded recovery:
+- Classification via `_is_recoverable_error`: transient network errors are
+  recoverable; persistent degradation or unknown errors are not.
+- Up to `--max-recovery-attempts` recovery cycles (default: 3).
+- Each cycle: re-discover via lockfile, re-poll readiness, re-register via
+  `POST /connect`, then resume forwarding.
+- Recovery is best-effort; exhausted attempts or unrecoverable errors exit
+the bridge cleanly.
+
+**Session reset semantics**: When recovery succeeds and forwarding resumes,
+the bridge continues with the same `connection_id`. Downstream sessions are
+scoped to the gateway runtime; a bridge reconnect does not reset downstream
+state. Upstream MCP clients should treat a bridge exit as a session termination
+and re-initialize if they reconnect.
 
 MCP host configuration:
 
@@ -523,13 +540,14 @@ Use `tela serve --host 0.0.0.0 --port 8080` with token auth.
 ### `tela connect`
 
 ```bash
-tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
+tela connect [--config path] [--default-profile name] [--server host:port] [--token tok] [--max-recovery-attempts N]
 ```
 
 - `--config`: configuration file path (default: `tela.yaml`)
 - `--default-profile`: override the open-mode default profile
 - `--server`: explicit server address as `host:port` (e.g. `192.168.1.10:8080`; skip auto-discover/auto-start)
 - `--token`: bearer token for remote server auth (or set `TELA_BEARER_TOKEN`)
+- `--max-recovery-attempts`: maximum transient error recovery retries (default: `3`)
 
 ### `tela serve`
 
