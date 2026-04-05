@@ -55876,3 +55876,8 @@ phases:
     depends_on:
     - connect_runtime_recovery_impl.update-docs
     agent: gate-reviewer
+- id: connect_runtime_recovery_verify
+  name: Verify connect runtime recovery
+  status: locked
+  depends_on:
+  - connect_runtime_recovery_impl
