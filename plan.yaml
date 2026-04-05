@@ -56236,7 +56236,7 @@ phases:
       - PR: ddf590f'
   - id: connect_runtime_recovery_impl.retest-after-fix
     name: Retest runtime recovery gate preconditions after batched fix
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier), validate that the
       batched remediation closed the gate-intersecting blocker family for connect_runtime_recovery_impl.
 
@@ -56348,6 +56348,41 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-05T10:19:24.045663+00:00'
+    done_at: '2026-04-05T10:23:39.043476+00:00'
+    evidence: '## Retest Report
+
+
+      Tester: integration-verifier (independent)
+
+      Scope: connect_runtime_recovery_impl fix verification
+
+
+      refs Read Confirmation: No refs for this step.
+
+
+      Gate Preconditions:
+
+      - Downstream spillover removed: YES
+
+      - Targeted recovery tests green: YES
+
+      - Behavioral proof P1 reproduced: YES
+
+      - Repo-wide invar issue intersecting this phase: NO
+
+
+      Verification:
+
+      - uv run pytest tests -k ''recovery or connect_runtime_recovery'' -q -> passed
+
+      - uv run pytest tests/shell/test_connect_recovery_red.py tests/shell/test_downstream_recovery.py
+      -q -> passed
+
+      - uv run python -c "from tela.cli import main; print(''CLI imports cleanly'')"
+      -> passed
+
+
+      Verdict: PASS'
 - id: connect_runtime_recovery_verify
   name: Verify connect runtime recovery
   status: locked
