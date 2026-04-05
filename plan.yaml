@@ -56804,6 +56804,52 @@ phases:
     depends_on:
     - reclose.surface.apply_resolution
     agent: wiring-auditor
+  - id: reclose.surface.spec_conformance
+    name: Verify surface and authority conformance
+    status: pending
+    description: 'Spec conformance verification for the re_enumerate classification
+      and FastMCP authority tuple.
+
+
+      This is not a test-pass summary. For each requirement from the authority decision
+      record, cite the matching implementation/doc line and classify as CONFORMS,
+      DIVERGES, PARTIAL, or NEEDS_TEST.
+
+
+      Behavioral precedence claims must be flagged as NEEDS_TEST rather than inferred.'
+    verification: '- SURFACE-REENUMERATE no longer remains unclassified
+
+      - AUTH-MCP-FASTMCP no longer remains an unresolved authority split
+
+      - Any remaining drift is explicitly surfaced with file:line evidence'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Spec Conformance Report
+
+      | Requirement | Evidence | Verdict | Notes |
+
+      |---|---|---|---|
+
+
+      ## Coverage Summary
+
+      - SURFACE-REENUMERATE:
+
+      - AUTH-MCP-FASTMCP:
+
+      '
+    depends_on:
+    - reclose.surface.apply_resolution
+    agent: spec-verifier-tacit
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
