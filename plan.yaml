@@ -56046,12 +56046,14 @@ phases:
       - docs/DESIGN.md'
   - id: connect_runtime_recovery_impl.gate
     name: Impl phase gate
-    status: pending
+    status: claimed
     description: Confirm impl/doc scope complete, no downstream.py spillover, targeted
       green evidence exists
     depends_on:
     - connect_runtime_recovery_impl.retest-after-fix
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-05T10:23:53.374868+00:00'
   - id: connect_runtime_recovery_impl.fix-batched
     name: Batched remediation for runtime recovery gate blockers
     status: done
