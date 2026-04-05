@@ -55842,3 +55842,13 @@ phases:
     depends_on:
     - connect_runtime_recovery_impl.contract
     agent: python-executor
+  - id: connect_runtime_recovery_impl.impl-runtime-recovery
+    name: Implement runtime recovery logic
+    status: pending
+    description: 'Add recovery classification (_is_recoverable_error), re-discover/re-autostart
+      gateway (_recover_gateway), re-register bridge, resume forwarding within bounded
+      attempts. Touch: src/tela/commands/connect_cmd.py'
+    depends_on:
+    - connect_runtime_recovery_impl.test-define-red
+    - connect_runtime_recovery_impl.impl-cli-flag
+    agent: python-senior
