@@ -55852,3 +55852,11 @@ phases:
     - connect_runtime_recovery_impl.test-define-red
     - connect_runtime_recovery_impl.impl-cli-flag
     agent: python-senior
+  - id: connect_runtime_recovery_impl.retest-targeted-green
+    name: Verify targeted tests pass
+    status: pending
+    description: Rerun targeted recovery tests and prove they now pass with actual
+      output
+    depends_on:
+    - connect_runtime_recovery_impl.impl-runtime-recovery
+    agent: integration-verifier
