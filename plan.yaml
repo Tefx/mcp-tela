@@ -57314,6 +57314,47 @@ phases:
 
       '
     agent: software-architect-tacit
+  - id: reclose.verify.behavior_rereview
+    name: Re-review behavioral closure from fresh perspective
+    status: pending
+    description: 'As an INDEPENDENT TESTER (blind-tester-tacit), challenge the refreshed
+      closure basis from a fresh reading.
+
+
+      Your goal is to discover whether the refreshed registers overstate closure.
+      Attack the exact blocker families and check whether the gate basis is justified
+      by the cited runtime evidence rather than by prose summaries.'
+    verification: '- Fresh review confirms or refutes each blocker-family closure
+      claim
+
+      - Any overclaim is surfaced as blocker-class review output'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Behavioral Re-review
+
+      - R13 closure judgment:
+
+      - R42 config-remove-inflight judgment:
+
+      - R42 disconnect-under-recovery judgment:
+
+      - overclaim risks:
+
+      - verdict: PASS / ISSUES_FOUND
+
+      '
+    depends_on:
+    - reclose.verify.refresh_registers
+    agent: blind-tester-tacit
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
