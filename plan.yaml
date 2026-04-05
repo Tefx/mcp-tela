@@ -56011,7 +56011,7 @@ phases:
       product_implementation_files_modified: none'
   - id: connect_runtime_recovery_impl.update-docs
     name: Update USAGE.md and DESIGN.md
-    status: claimed
+    status: done
     description: 'Document new --max-recovery-attempts flag, recovery behavior, and
       session reset semantics. Touch: docs/USAGE.md, docs/DESIGN.md'
     depends_on:
@@ -56019,6 +56019,31 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-04-05T09:57:41.679788+00:00'
+    done_at: '2026-04-05T10:01:12.710884+00:00'
+    evidence: 'Artifact:
+
+      - PR: 5084e1f
+
+
+      Verification:
+
+      - Run: git diff -- docs/USAGE.md docs/DESIGN.md -> docs updated for --max-recovery-attempts
+      and recovery behavior
+
+      - Run: git commit -m "docs: document --max-recovery-attempts flag and bridge
+      recovery behavior" -> committed
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.update-docs
+
+
+      Files changed:
+
+      - docs/USAGE.md
+
+      - docs/DESIGN.md'
   - id: connect_runtime_recovery_impl.gate
     name: Impl phase gate
     status: pending
