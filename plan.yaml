@@ -57355,6 +57355,44 @@ phases:
     depends_on:
     - reclose.verify.refresh_registers
     agent: blind-tester-tacit
+  - id: reclose.verify.wiring_manifest_rereview
+    name: Re-review wiring and manifest closure
+    status: pending
+    description: 'Re-review re_enumerate reachability and FastMCP authority tuple
+      closure after register refresh.
+
+
+      This is a post-refresh audit. Check whether the refreshed registers are actually
+      supported by the artifact chain and whether any stale ambiguity remains in docs,
+      imports, or tests.'
+    verification: '- Surface/authority closure survives a fresh artifact-chain rereview
+
+      - No stale ambiguity remains between docs, imports, and tests'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Wiring and Manifest Re-review
+
+      - re_enumerate chain verdict:
+
+      - FastMCP authority chain verdict:
+
+      - stale ambiguity found:
+
+      - verdict: PASS / ISSUES_FOUND
+
+      '
+    depends_on:
+    - reclose.verify.refresh_registers
+    agent: wiring-auditor
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
