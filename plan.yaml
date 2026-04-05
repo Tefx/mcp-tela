@@ -57564,3 +57564,43 @@ phases:
 
       '
     agent: wiring-auditor
+  - id: reclose.deep_review.spec_conformance
+    name: Deep spec conformance audit for reclose
+    status: pending
+    description: 'Full-system adversarial conformance audit for the reclose slice.
+
+
+      Focus on emergent cross-artifact properties that per-phase checks can miss:
+
+      - false-close prevention semantics
+
+      - consistency of blocker closure basis across registers, docs, probes, and runtime-facing
+      wording
+
+      - absence of residual ambiguity for re_enumerate and FastMCP authority'
+    verification: '- Cross-artifact properties conform
+
+      - No per-phase acceptable drift becomes system-level divergence'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Deep Conformance Report
+
+      - false-close prevention semantics:
+
+      - surface/authority closure semantics:
+
+      - verdict: PASS / ISSUES_FOUND
+
+      '
+    depends_on:
+    - reclose.deep_review.wiring_audit
+    agent: spec-verifier-tacit
