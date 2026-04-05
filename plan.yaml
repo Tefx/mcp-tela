@@ -56850,6 +56850,57 @@ phases:
     depends_on:
     - reclose.surface.apply_resolution
     agent: spec-verifier-tacit
+  - id: reclose.surface.gate
+    name: Gate surface and authority reclose
+    status: pending
+    description: 'Gate review for surface and authority reclose.
+
+
+      Review depth: THOROUGH.
+
+
+      BLOCK if SURFACE-REENUMERATE or AUTH-MCP-FASTMCP can still be read as blocker-class
+      from the updated evidence, docs, or probes.
+
+
+      Cross-cutting focus:
+
+      - decision-record-to-artifact application
+
+      - import/package/manifest authority coherence
+
+      - docstring-level surface classification completeness'
+    verification: '- Surface/authority blocker families are either closed or explicitly
+      still blocked
+
+      - No artifact contradicts the gate decision
+
+      - Downstream runtime proof phase can rely on the authority basis'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - blocker families reviewed:
+
+      - remaining ambiguity:
+
+      - decision: OPEN or BLOCK
+
+      '
+    depends_on:
+    - reclose.surface.apply_resolution
+    - reclose.surface.audit_alignment
+    - reclose.surface.spec_conformance
+    agent: gate-reviewer-tacit
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
