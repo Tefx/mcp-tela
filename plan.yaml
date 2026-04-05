@@ -57194,6 +57194,70 @@ phases:
     depends_on:
     - reclose.runtime.close_gap_if_exposed
     agent: spec-verifier-tacit
+  - id: reclose.runtime.gate
+    name: Gate runtime proof reclose
+    status: pending
+    description: 'Gate review for runtime proof reclose.
+
+
+      Review depth: THOROUGH.
+
+
+      This gate protects against a second false-close.
+
+
+      BLOCK if:
+
+      - R13 still relies only on static reasoning where runtime witness is required
+
+      - either R42 path lacks its own explicit witness or green result
+
+      - registers and probe output disagree on closure status
+
+
+      Cross-cutting focus:
+
+      - module-level mutable state safety for _recovery_locks
+
+      - config_missing fail-closed semantics
+
+      - cleanup after in-flight recovery and disconnect pressure'
+    verification: '- R13 and both R42 paths are explicitly dispositioned from actual
+      evidence
+
+      - No blocker-class runtime row remains silently open
+
+      - Runtime phase is safe to feed register refresh'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - R13 status:
+
+      - R42 config-remove-inflight status:
+
+      - R42 disconnect-under-recovery status:
+
+      - register contradictions:
+
+      - decision: OPEN or BLOCK
+
+      '
+    depends_on:
+    - reclose.runtime.test_define_red
+    - reclose.runtime.close_gap_if_exposed
+    - reclose.runtime.retest_green
+    - reclose.runtime.spec_conformance
+    agent: gate-reviewer-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
