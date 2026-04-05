@@ -55820,13 +55820,45 @@ phases:
   steps:
   - id: connect_runtime_recovery_impl.contract
     name: Define recovery contract
-    status: claimed
+    status: done
     description: 'Pin recoverable error classes, recovery loop semantics, and CLI
       flag behavior. Touch: src/tela/commands/connect_cmd.py, src/tela/cli.py. Authoritative
       interface: tela connect CLI + new --max-recovery-attempts flag.'
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-05T09:08:27.140775+00:00'
+    done_at: '2026-04-05T09:17:57.209766+00:00'
+    evidence: 'Artifact:
+
+      - PR: 1fa8a12deab49f514b6ee493263febb5bbbc29b0
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_connect_cmd.py tests/shell/test_connect_bridge_readiness_gaps_red.py
+      -v -> pass (37 tests)
+
+      - Run: uv run python -m tela connect --help -> shows --max-recovery-attempts
+      flag
+
+      - Run: uv run invar guard src/tela/commands/connect_cmd.py -> passed
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.contract (recovery loop semantics + CLI flag
+      behavior)
+
+
+      Files changed:
+
+      - src/tela/cli.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - tests/shell/test_connect_cmd.py
+
+      - tests/shell/test_connect_bridge_readiness_gaps_red.py'
   - id: connect_runtime_recovery_impl.test-define-red
     name: Add red tests for recovery scenarios
     status: pending
