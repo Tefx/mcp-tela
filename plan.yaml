@@ -55870,7 +55870,7 @@ phases:
     agent: python-executor
   - id: connect_runtime_recovery_impl.impl-cli-flag
     name: Implement CLI flag --max-recovery-attempts
-    status: claimed
+    status: done
     description: 'Add --max-recovery-attempts flag to CLI parser. Wire parsed value
       into connect command path. Touch: src/tela/cli.py'
     depends_on:
@@ -55878,6 +55878,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-05T09:18:33.486096+00:00'
+    done_at: '2026-04-05T09:20:10.925836+00:00'
+    evidence: 'Artifact:
+
+      - PR: a2bb09e44de5a6a70d370896e06b477ebc192102
+
+
+      Verification:
+
+      - Run: grep -n "max.recovery.attempts" src/tela/cli.py -> flag present and wired
+
+      - Run: grep -n "max_recovery_attempts" src/tela/commands/connect_cmd.py -> parameter
+      propagated through call chain
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.impl-cli-flag
+
+
+      Files changed:
+
+      - src/tela/cli.py
+
+      - src/tela/commands/connect_cmd.py'
   - id: connect_runtime_recovery_impl.impl-runtime-recovery
     name: Implement runtime recovery logic
     status: pending
