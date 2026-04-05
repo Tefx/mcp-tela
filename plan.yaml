@@ -56188,6 +56188,118 @@ phases:
     depends_on:
     - connect_runtime_recovery_impl.update-docs
     agent: python-executor
+  - id: connect_runtime_recovery_impl.retest-after-fix
+    name: Retest runtime recovery gate preconditions after batched fix
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier), validate that the
+      batched remediation closed the gate-intersecting blocker family for connect_runtime_recovery_impl.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: local-check
+
+
+      YOUR GOAL IS TO FIND REMAINING PROBLEMS in the targeted recovery path and confirm
+      gate preconditions now hold.
+
+
+      Test for:
+
+      - targeted recovery scenarios remain green after the remediation
+
+      - CLI/recovery import surface no longer depends on missing or untracked downstream
+      artifacts
+
+      - behavioral proof P1 for the targeted recovery path is present and reproducible
+
+
+      This step does NOT own repo-wide pre-existing invar budget debt unless a concrete
+      targeted recovery command in this step still fails because of that debt.'
+    verification: '- Run the targeted recovery green test command(s) from the phase
+      and record actual output
+
+      - Re-check the CLI/recovery import path with `git ls-files --error-unmatch src/tela/commands/stop_cmd.py`
+      if the file remains in use, or equivalent proof that the import no longer exists
+
+      - Confirm gate preconditions: no downstream spillover for phase artifacts, targeted
+      green evidence exists, and behavioral proof P1 is reproduced for the intended
+      recovery path
+
+      - If any repo-wide invar issue appears, classify whether it intersects this
+      phase acceptance and record the basis'
+    evidence_template: '## Retest Report
+
+
+      **Tester**: integration-verifier (independent of implementation)
+
+      **Scope**: connect_runtime_recovery_impl fix verification
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Test Execution
+
+      ```bash
+
+      <paste exact targeted retest commands>
+
+      ```
+
+
+      ### Gate Preconditions
+
+      - Downstream spillover removed: YES/NO
+
+      - Targeted recovery tests green: YES/NO
+
+      - Behavioral proof P1 reproduced: YES/NO
+
+      - Repo-wide invar issue intersecting this phase: YES/NO (+ basis)
+
+
+      ### Actual Output
+
+      ```text
+
+      <paste stdout/stderr or test runner output>
+
+      ```
+
+
+      ### Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+      | blocker/should_fix/suggestion/tech_debt | <fill> | <fill> | <fill> |
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - connect_runtime_recovery_impl.fix-batched
+    agent: integration-verifier
 - id: connect_runtime_recovery_verify
   name: Verify connect runtime recovery
   status: locked
