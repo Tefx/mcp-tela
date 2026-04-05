@@ -57683,3 +57683,57 @@ phases:
     depends_on:
     - reclose.deep_review.spec_conformance
     agent: blind-tester-tacit
+  - id: reclose.deep_review.gate
+    name: Final reclose deep-review gate
+    status: pending
+    description: 'Final independent gate for the reclose campaign.
+
+
+      Review depth: THOROUGH.
+
+
+      Open only if all blocker families are actually closed and the evidence basis
+      is internally consistent across registers, docs, probes, and reviews.
+
+
+      BLOCK if any of the following remain true:
+
+      - R13 closure still depends on prose where runtime witness is required
+
+      - either R42 path lacks explicit witness/disposition
+
+      - re_enumerate classification or FastMCP authority can still be read as ambiguous
+
+      - gate_open_allowed and row-level statuses disagree anywhere'
+    verification: '- All blocker families are explicitly closed or explicitly still
+      blocked
+
+      - No cross-artifact inconsistency survives
+
+      - Final gate decision basis is auditable and self-consistent'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Final Gate Review Report
+
+      - blocker-family final status:
+
+      - cross-artifact inconsistencies:
+
+      - final decision: OPEN or BLOCK
+
+      '
+    depends_on:
+    - reclose.deep_review.wiring_audit
+    - reclose.deep_review.spec_conformance
+    - reclose.deep_review.architecture_review
+    - reclose.deep_review.black_box_verification
+    agent: gate-reviewer-tacit
