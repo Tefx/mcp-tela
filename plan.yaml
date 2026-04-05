@@ -57266,6 +57266,54 @@ phases:
     is to open.
   depends_on:
   - reclose.runtime
+  steps:
+  - id: reclose.verify.refresh_registers
+    name: Refresh behavioral and uncertainty registers from evidence
+    status: pending
+    description: 'Refresh the behavioral proof register and runtime uncertainty register
+      from actual reclose evidence.
+
+
+      Requirements:
+
+      - rewrite row statuses from executed probe and audit results, not prior assumptions
+
+      - no row may remain NEEDS_TEST or UNCERTAIN_BLOCKING if the downstream reclose
+      gate is to open
+
+      - if any blocker remains unresolved, say so explicitly and keep gate_open_allowed
+      false
+
+      - make the refreshed registers the explicit decision basis for all downstream
+      reviews'
+    verification: '- Registers reflect actual reclose evidence
+
+      - Status values and gate_open_allowed are internally consistent
+
+      - No stale blocker wording survives from the false-close state'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Register Refresh Report
+
+      - rows updated:
+
+      - gate_open_allowed:
+
+      - unresolved blocker rows:
+
+      - evidence source for each updated row:
+
+      '
+    agent: software-architect-tacit
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
