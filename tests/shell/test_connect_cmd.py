@@ -98,7 +98,8 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
     """Discovery must recover when auto-start races another connector.
 
     Flow: read_lockfile fails -> wait(0.3) fails -> autostart succeeds
-    (returns spawned PID) -> wait(5.0, expected_pid=spawned_pid) succeeds.
+    (returns spawned PID) -> wait(5.0, expected_pid=spawned_pid) succeeds,
+    then runtime-recovery nudge performs one bounded follow-up autostart.
     The expected_pid parameter binds lockfile identity to the spawned process.
     """
 
@@ -159,7 +160,9 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
     )
     assert result.is_ok
     assert result.value == lockfile
-    assert autostarts == 1
+    # First autostart is coordinator-led startup. Second is bounded
+    # runtime-recovery nudge when discovery began from missing lockfile.
+    assert autostarts == 2
     # First wait: quick race check with no PID filter
     # Second wait: after autostart, bound to spawned PID
     assert waits == [
