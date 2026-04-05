@@ -56553,3 +56553,10 @@ phases:
     audited, and proven non-ambiguous before runtime reclose can rely on them.
   depends_on:
   - reclose.basis
+- id: reclose.runtime
+  name: Runtime Proof Reclose
+  status: locked
+  gate: R13 and both R42 behavioral obligations must have executable proof or explicit
+    defect remediation with green retest evidence before the phase can open.
+  depends_on:
+  - reclose.surface
