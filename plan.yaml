@@ -57647,3 +57647,39 @@ phases:
     depends_on:
     - reclose.deep_review.wiring_audit
     agent: software-architect-tacit
+  - id: reclose.deep_review.black_box_verification
+    name: Black-box verification of reclose claims
+    status: pending
+    description: 'Using only public-facing docs, evidence outputs, and named probes,
+      challenge the final reclose claims without relying on implementation intent.
+
+
+      Focus on whether an outside reviewer would still conclude that blocker-class
+      debt remains, despite the claimed closure.'
+    verification: '- A fresh black-box read does not reproduce the earlier false-close
+      concern
+
+      - Remaining ambiguity, if any, is surfaced as blocker-class'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Black-Box Verification
+
+      - blocker families challenged:
+
+      - closure claims that still look weak:
+
+      - verdict: PASS / ISSUES_FOUND
+
+      '
+    depends_on:
+    - reclose.deep_review.spec_conformance
+    agent: blind-tester-tacit
