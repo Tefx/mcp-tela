@@ -236,6 +236,33 @@ def _discover_or_autostart(
     config-path ownership validation during concurrent connect invocations.
     """
 
+    initial_lockfile_result = read_lockfile()
+
+    first_result = _coordinator_discover_or_autostart(
+        config_path=config_path,
+        default_profile=default_profile,
+        read_lockfile=read_lockfile,
+        wait_for_live_lockfile=_wait_for_live_lockfile,
+        autostart_serve=_autostart_serve_adapter,
+        lockfile_wait_timeout_seconds=LOCKFILE_WAIT_TIMEOUT_SECONDS,
+    )
+    if first_result.is_ok:
+        # Runtime recovery contract: when discovery started from a missing
+        # lockfile state, issue one bounded re-autostart nudge so a follow-up
+        # connect can recover if the first leader exits before full readiness.
+        if initial_lockfile_result.is_err:
+            _ = _autostart_serve(
+                config_path=config_path,
+                default_profile=default_profile,
+            )
+        return first_result
+
+    # Bounded second-chance discovery for startup races where the first
+    # coordinator run fails while the gateway is still converging.
+    retryable_error = first_result.error or ""
+    if not retryable_error.startswith("DISCOVERY_FAILED"):
+        return first_result
+
     return _coordinator_discover_or_autostart(
         config_path=config_path,
         default_profile=default_profile,
@@ -370,33 +397,77 @@ def _run_bridge(
         return Result(error=connect_result.error)
 
     bridge_error: str | None = None
+    recovery_attempts = 0
+    current_host = host
+    current_port = port
     try:
         try:
-            readiness_result = _wait_for_gateway_readiness(
-                status_url=f"{base_url}/status",
-                bearer_token=bearer_token,
-                max_polls=BRIDGE_READINESS_MAX_POLLS,
-            )
-            if readiness_result.is_err:
-                bridge_error = readiness_result.error
-                _emit_bridge_diagnostic(
-                    f"readiness wait stopped: {bridge_error}", connection_id
-                )
-            else:
-                forward_result = _forward_stdio_http(
-                    mcp_url=f"{base_url}/mcp",
+            while not stop_requested.is_set():
+                readiness_result = _wait_for_gateway_readiness(
+                    status_url=f"{base_url}/status",
                     bearer_token=bearer_token,
-                    bridge_connection_id=connection_id,
-                    should_stop=stop_requested.is_set,
-                    stdin_buffer=sys.stdin.buffer,
-                    stdout_buffer=sys.stdout.buffer,
-                    max_recovery_attempts=max_recovery_attempts,
+                    max_polls=BRIDGE_READINESS_MAX_POLLS,
                 )
-                if forward_result.is_err:
-                    bridge_error = forward_result.error
+                if readiness_result.is_err:
+                    cycle_error = readiness_result.error
                     _emit_bridge_diagnostic(
-                        f"forwarding stopped: {bridge_error}", connection_id
+                        f"readiness wait stopped: {cycle_error}", connection_id
                     )
+                else:
+                    forward_result = _forward_stdio_http(
+                        mcp_url=f"{base_url}/mcp",
+                        bearer_token=bearer_token,
+                        bridge_connection_id=connection_id,
+                        should_stop=stop_requested.is_set,
+                        stdin_buffer=sys.stdin.buffer,
+                        stdout_buffer=sys.stdout.buffer,
+                        max_recovery_attempts=max_recovery_attempts,
+                    )
+                    if forward_result.is_ok:
+                        break
+                    cycle_error = forward_result.error
+                    _emit_bridge_diagnostic(
+                        f"forwarding stopped: {cycle_error}", connection_id
+                    )
+
+                if cycle_error is None:
+                    bridge_error = "BRIDGE_RUNTIME_ERROR: unknown bridge failure"
+                    break
+
+                recoverable_result = _is_recoverable_error(cycle_error)
+                if recoverable_result.is_err or not recoverable_result.value:
+                    bridge_error = cycle_error
+                    break
+
+                if recovery_attempts >= max_recovery_attempts:
+                    bridge_error = f"BRIDGE_RECOVERY_EXHAUSTED: {cycle_error}"
+                    break
+
+                recovery_attempts += 1
+                gateway_recovery_result = _recover_gateway(
+                    host=current_host,
+                    port=current_port,
+                    bearer_token=bearer_token,
+                )
+                if gateway_recovery_result.is_err:
+                    bridge_error = (
+                        f"BRIDGE_RECOVERY_FAILED: {gateway_recovery_result.error}"
+                    )
+                    break
+                assert gateway_recovery_result.value is not None
+                current_host, current_port = gateway_recovery_result.value
+                base_url = f"http://{current_host}:{current_port}"
+
+                reconnect_result = _post_json(
+                    url=f"{base_url}/connect",
+                    bearer_token=bearer_token,
+                    payload={"connection_id": connection_id},
+                )
+                if reconnect_result.is_err:
+                    bridge_error = (
+                        f"BRIDGE_RECOVERY_REGISTER_FAILED: {reconnect_result.error}"
+                    )
+                    break
         except KeyboardInterrupt:
             bridge_error = "INTERRUPT: bridge attach loop interrupted"
             _emit_bridge_diagnostic("attach loop interrupted", connection_id)
@@ -641,7 +712,73 @@ def _is_transient_url_error(exc: urllib_error.URLError) -> Result[bool, str]:
             errno.ETIMEDOUT,
         }
         return Result(value=reason.errno in transient_errnos)
+    if isinstance(reason, str):
+        normalized_reason = reason.lower()
+        transient_reason_markers = (
+            "connection refused",
+            "connection reset",
+            "connection aborted",
+            "broken pipe",
+            "timed out",
+            "temporarily unavailable",
+        )
+        return Result(
+            value=any(
+                marker in normalized_reason for marker in transient_reason_markers
+            )
+        )
     return Result(value=False)
+
+
+def _is_recoverable_error(error: str) -> Result[bool, str]:
+    """Classify bridge/runtime errors eligible for bounded recovery."""
+
+    normalized_error = error.lower()
+    recoverable_markers = (
+        "http_connect_error",
+        "connection refused",
+        "connection reset",
+        "connection aborted",
+        "broken pipe",
+        "timed out",
+        "http_503",
+        "http 503",
+        "bridge_readiness_query_failed",
+        "bridge_not_ready: bounded readiness wait exhausted",
+    )
+    return Result(
+        value=any(marker in normalized_error for marker in recoverable_markers)
+    )
+
+
+def _recover_gateway(
+    *, host: str, port: int, bearer_token: str
+) -> Result[tuple[str, int], str]:
+    """Recover gateway endpoint via lockfile discovery or readiness polling."""
+
+    discovery_result = _discover_or_autostart(
+        config_path="tela.yaml",
+        default_profile=None,
+    )
+    if discovery_result.is_ok:
+        assert discovery_result.value is not None
+        discovered = discovery_result.value
+        return Result(value=(discovered.host, discovered.port))
+
+    readiness_result = _wait_for_gateway_readiness(
+        status_url=f"http://{host}:{port}/status",
+        bearer_token=bearer_token,
+        max_polls=BRIDGE_READINESS_MAX_POLLS,
+    )
+    if readiness_result.is_ok:
+        return Result(value=(host, port))
+
+    return Result(
+        error=(
+            "GATEWAY_RECOVERY_FAILED: "
+            f"discovery={discovery_result.error}; readiness={readiness_result.error}"
+        )
+    )
 
 
 # @shell_complexity: HTTP POST with transient retry and SSE/JSON content-type dispatch.
@@ -834,21 +971,40 @@ def _get_gateway_status(
 ) -> Result[StatusResponse, str]:
     """Fetch and validate ``GET /status`` gateway readiness payload."""
 
-    request = urllib_request.Request(
-        status_url,
-        method="GET",
-        headers={
-            "Authorization": f"Bearer {bearer_token}",
-            "Accept": "application/json",
-        },
-    )
-    try:
-        with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
-            decoded = response.read().decode("utf-8")
-    except urllib_error.HTTPError as exc:
-        return Result(error=f"HTTP_{exc.code}: {status_url}")
-    except urllib_error.URLError as exc:
-        return Result(error=f"HTTP_CONNECT_ERROR: {exc.reason}")
+    decoded = ""
+    last_connect_error = ""
+    for attempt in range(HTTP_TRANSIENT_RETRIES + 1):
+        request = urllib_request.Request(
+            status_url,
+            method="GET",
+            headers={
+                "Authorization": f"Bearer {bearer_token}",
+                "Accept": "application/json",
+            },
+        )
+        try:
+            with urllib_request.urlopen(
+                request, timeout=HTTP_TIMEOUT_SECONDS
+            ) as response:
+                decoded = response.read().decode("utf-8")
+            break
+        except urllib_error.HTTPError as exc:
+            if exc.code == 503 and attempt < HTTP_TRANSIENT_RETRIES:
+                time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+                continue
+            return Result(error=f"HTTP_{exc.code}: {status_url}")
+        except urllib_error.URLError as exc:
+            last_connect_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
+            if (
+                not _is_transient_url_error(exc).value
+                or attempt == HTTP_TRANSIENT_RETRIES
+            ):
+                return Result(error=last_connect_error)
+            time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+    else:
+        if last_connect_error:
+            return Result(error=last_connect_error)
+        return Result(error=f"HTTP_CONNECT_ERROR: {status_url}")
 
     try:
         parsed = json.loads(decoded)
