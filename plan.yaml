@@ -56485,8 +56485,10 @@ phases:
       - non-intersecting contract-doc drift tests noted by verifier'
   - id: connect_runtime_recovery_verify.gate
     name: Final gate
-    status: pending
+    status: claimed
     description: Final open/block decision for connect runtime recovery feature
     depends_on:
     - connect_runtime_recovery_verify.integration-verification
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-05T11:07:29.946608+00:00'
