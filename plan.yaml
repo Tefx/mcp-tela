@@ -57393,6 +57393,53 @@ phases:
     depends_on:
     - reclose.verify.refresh_registers
     agent: wiring-auditor
+  - id: reclose.verify.gate
+    name: Gate refreshed reclose verification
+    status: pending
+    description: 'Gate review for refreshed reclose verification.
+
+
+      Review depth: THOROUGH.
+
+
+      This gate may open only if refreshed registers, fresh reviews, and upstream
+      runtime/surface evidence all agree.
+
+
+      BLOCK if any blocker-family row remains unresolved, if gate_open_allowed and
+      row statuses disagree, or if rereview agents expose overclaim risk.'
+    verification: '- gate_open_allowed and row statuses are consistent
+
+      - Fresh reviewers do not expose unresolved blocker-class debt
+
+      - Reclose basis is trustworthy for doc sync and final review'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - gate_open_allowed:
+
+      - unresolved rows:
+
+      - rereview disagreements:
+
+      - decision: OPEN or BLOCK
+
+      '
+    depends_on:
+    - reclose.verify.refresh_registers
+    - reclose.verify.behavior_rereview
+    - reclose.verify.wiring_manifest_rereview
+    agent: gate-reviewer-tacit
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
