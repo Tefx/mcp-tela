@@ -57604,3 +57604,46 @@ phases:
     depends_on:
     - reclose.deep_review.wiring_audit
     agent: spec-verifier-tacit
+  - id: reclose.deep_review.architecture_review
+    name: Deep architecture review for reclose
+    status: pending
+    description: 'Architecture and concurrency review for the reclose slice.
+
+
+      Check that the final closure basis still respects the intended boundaries:
+
+      - blocker ledger as control-plane truth
+
+      - runtime proof vs static proof distinctions
+
+      - module-level mutable state discipline for _recovery_locks
+
+      - no new authority split introduced while resolving FastMCP translation boundary'
+    verification: '- Architecture and concurrency boundaries remain sound
+
+      - Closure basis does not rest on hidden truth splits'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Architecture Review
+
+      - source-of-truth assessment:
+
+      - mutable-state assessment:
+
+      - authority-boundary assessment:
+
+      - verdict: PASS / ISSUES_FOUND
+
+      '
+    depends_on:
+    - reclose.deep_review.wiring_audit
+    agent: software-architect-tacit
