@@ -55933,7 +55933,7 @@ phases:
       - src/tela/commands/connect_cmd.py'
   - id: connect_runtime_recovery_impl.impl-runtime-recovery
     name: Implement runtime recovery logic
-    status: pending
+    status: claimed
     description: 'Add recovery classification (_is_recoverable_error), re-discover/re-autostart
       gateway (_recover_gateway), re-register bridge, resume forwarding within bounded
       attempts. Touch: src/tela/commands/connect_cmd.py'
@@ -55941,6 +55941,8 @@ phases:
     - connect_runtime_recovery_impl.test-define-red
     - connect_runtime_recovery_impl.impl-cli-flag
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-05T09:50:00.226431+00:00'
   - id: connect_runtime_recovery_impl.retest-targeted-green
     name: Verify targeted tests pass
     status: pending
