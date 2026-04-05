@@ -55817,3 +55817,11 @@ phases:
 - id: connect_runtime_recovery_impl
   name: Implement connect runtime recovery
   status: pending
+  steps:
+  - id: connect_runtime_recovery_impl.contract
+    name: Define recovery contract
+    status: pending
+    description: 'Pin recoverable error classes, recovery loop semantics, and CLI
+      flag behavior. Touch: src/tela/commands/connect_cmd.py, src/tela/cli.py. Authoritative
+      interface: tela connect CLI + new --max-recovery-attempts flag.'
+    agent: python-executor
