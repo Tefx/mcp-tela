@@ -56046,14 +56046,12 @@ phases:
       - docs/DESIGN.md'
   - id: connect_runtime_recovery_impl.gate
     name: Impl phase gate
-    status: claimed
+    status: pending
     description: Confirm impl/doc scope complete, no downstream.py spillover, targeted
       green evidence exists
     depends_on:
     - connect_runtime_recovery_impl.update-docs
     agent: gate-reviewer
-    claimed_by: gate-reviewer
-    claimed_at: '2026-04-05T10:01:29.503075+00:00'
 - id: connect_runtime_recovery_verify
   name: Verify connect runtime recovery
   status: locked
