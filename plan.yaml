@@ -55814,3 +55814,6 @@ phases:
       but identifies residual dead-export issue: `gateway_start` flagged dead (W1/W9)
       and test-only `bind_gateway_startup` documented. Surface/process rereview includes
       evidence refs and final gate impact that residual dead export remains open.'
+- id: connect_runtime_recovery_impl
+  name: Implement connect runtime recovery
+  status: pending
