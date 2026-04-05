@@ -56430,7 +56430,7 @@ phases:
       Verdict: PASS'
 - id: connect_runtime_recovery_verify
   name: Verify connect runtime recovery
-  status: in_progress
+  status: done
   depends_on:
   - connect_runtime_recovery_impl
   steps:
@@ -56485,10 +56485,56 @@ phases:
       - non-intersecting contract-doc drift tests noted by verifier'
   - id: connect_runtime_recovery_verify.gate
     name: Final gate
-    status: claimed
+    status: done
     description: Final open/block decision for connect runtime recovery feature
     depends_on:
     - connect_runtime_recovery_verify.integration-verification
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-05T11:07:29.946608+00:00'
+    done_at: '2026-04-05T11:11:52.301852+00:00'
+    evidence: 'Artifact:
+
+      - PR: none (verify-only gate)
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_connect_recovery_red.py -v --tb=short
+      -> 8 passed
+
+      - Run: uv run pytest tests/shell/test_connect_cmd.py::test_bridge_lifecycle_posts_connect_and_disconnect
+      tests/shell/test_connect_cmd.py::test_run_bridge_waits_for_status_ready_before_forwarding
+      tests/shell/test_connect_cmd.py::test_run_bridge_exits_boundedly_on_persistent_degraded_status
+      -v --tb=short -> all passed
+
+      - Run: uv run pytest tests/repro/test_liveness.py -v --tb=short -> 4 passed
+
+      - Run: uv run python -m tela connect --help -> --max-recovery-attempts present
+
+
+      Spec link:
+
+      - connect_runtime_recovery_verify.gate
+
+
+      behavioral_proof_register:
+
+      - Bridge lifecycle/connect-disconnect: PROVEN
+
+      - Readiness wait before forwarding: PROVEN
+
+      - Bounded degraded exit: PROVEN
+
+      - Transient retry + lockfile recovery: PROVEN
+
+      - Teardown interrupt semantics: PROVEN
+
+      - stdio/http liveness behavior: PROVEN
+
+
+      gate_open_allowed: true
+
+      uncertainty_sources:
+
+      - non-intersecting doc-contract drift tests and one race-flake noted by auditor'
