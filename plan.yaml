@@ -56560,3 +56560,11 @@ phases:
     defect remediation with green retest evidence before the phase can open.
   depends_on:
   - reclose.surface
+- id: reclose.verify
+  name: Register Refresh and Reclose Verification
+  status: locked
+  gate: Behavioral and uncertainty registers must be refreshed from actual evidence,
+    independently re-reviewed, and must not leave blocker rows unresolved if the gate
+    is to open.
+  depends_on:
+  - reclose.runtime
