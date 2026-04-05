@@ -57145,6 +57145,55 @@ phases:
     depends_on:
     - reclose.runtime.close_gap_if_exposed
     agent: integration-verifier-tacit
+  - id: reclose.runtime.spec_conformance
+    name: Verify ADR-006 runtime closure conformance
+    status: pending
+    description: 'Spec conformance verification for the runtime proof closure.
+
+
+      Check ADR-006 closure criteria and the evidence registers against the implemented
+      runtime/probe behavior. Any behavioral claim without runnable evidence must
+      be marked NEEDS_TEST rather than inferred.
+
+
+      This step protects the downstream reclose gate from another false-open based
+      on partial proof.'
+    verification: '- R13 and both R42 paths map to explicit proof or explicit remaining
+      blocker status
+
+      - ADR-006 closure criteria match the actual probe semantics
+
+      - No blocker is hidden behind summary text'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Spec Conformance Report
+
+      | Requirement | Evidence | Verdict | Notes |
+
+      |---|---|---|---|
+
+
+      ## Coverage Summary
+
+      - R13:
+
+      - R42-CONFIG-REMOVE-INFLIGHT:
+
+      - R42-DISCONNECT-UNDER-RECOVERY:
+
+      '
+    depends_on:
+    - reclose.runtime.close_gap_if_exposed
+    agent: spec-verifier-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
