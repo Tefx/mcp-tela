@@ -55975,7 +55975,7 @@ phases:
       - none'
   - id: connect_runtime_recovery_impl.retest-targeted-green
     name: Verify targeted tests pass
-    status: claimed
+    status: done
     description: Rerun targeted recovery tests and prove they now pass with actual
       output
     depends_on:
@@ -55983,6 +55983,32 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-04-05T09:56:05.862209+00:00'
+    done_at: '2026-04-05T09:57:20.970049+00:00'
+    evidence: 'Artifact:
+
+      - PR: implementation merged at commit 5dd7a69
+
+
+      Verification:
+
+      - Run: uv run pytest -v tests/shell/test_connect_recovery_red.py -> 8 passed
+      in 3.88s
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.retest-targeted-green
+
+
+      step_intent: verify
+
+      expected_result: green
+
+      observed_result: all targeted recovery tests passed
+
+      failure_alignment: N/A
+
+      product_implementation_files_modified: none'
   - id: connect_runtime_recovery_impl.update-docs
     name: Update USAGE.md and DESIGN.md
     status: pending
