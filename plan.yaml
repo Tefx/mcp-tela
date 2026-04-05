@@ -56976,6 +56976,106 @@ phases:
 
       '
     agent: python-senior-tacit
+  - id: reclose.runtime.close_gap_if_exposed
+    name: Close runtime proof or behavior gaps if exposed
+    status: pending
+    description: 'Close only the runtime defects or proof-enablement gaps exposed
+      by the executable probes.
+
+
+      This step follows an upstream contract/test basis.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - tests/repro/test_adr006_runtime_hardening_probes.py — proof probes are PROTECTED
+
+      - evidence/behavioral_proof_register.md — blocker semantics are AUTHORITATIVE
+
+      - evidence/runtime_uncertainty_register.md — blocker ownership is AUTHORITATIVE
+
+
+      YOUR SCOPE: Replace proof-enablement gaps or defective runtime paths with working
+      logic only where required to close R13 and the two R42 blocker families. Use
+      Edit tool to modify bodies only; do not broaden scope into unrelated refactors.
+
+
+      If a proof artifact is wrong or incomplete, document a deviation record — do
+      NOT silently rewrite blocker semantics.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes runtime recovery
+      state and produces evidence-bearing outcomes.
+
+
+      ## Failure-mode checklist
+
+      - config-remove during in-flight recovery yields explicit config_missing=true
+
+      - disconnect-under-recovery path gets its own cleanup proof path
+
+      - no stale per-server recovery lock remains after cleanup
+
+      - runtime tracing or equivalent contention evidence exists for R13
+
+      - mutable module-level _recovery_locks remains concurrency-safe and bounded
+      by cleanup semantics
+
+
+      ## State semantics bullets
+
+      - _registry_lock must not remain held during awaited network I/O
+
+      - per-server recovery lock ownership is last-writer-safe only within the existing
+      lock discipline
+
+      - cleanup must preserve healthy-neighbor isolation and fail-closed missing-config
+      semantics
+
+
+      ## Out-of-scope guardrail
+
+      - No broad extraction or file-splitting refactor
+
+      - No unrelated UX/doc changes beyond what is required for runtime proof closure'
+    verification: '- Main path: named R13/R42 probes have concrete implementation
+      support and targeted tests pass
+
+      - Failure path: regression coverage proves config_missing signaling, lock cleanup,
+      and disconnect-under-recovery cleanup
+
+      - Proof: no blocker family remains satisfied only by summary prose'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Runtime Gap Closure Evidence
+
+      - blocker family addressed:
+
+      - root cause vs symptom:
+
+      - files changed:
+
+      - runtime failure path closed:
+
+      - why this is not a surface-level patch:
+
+      '
+    depends_on:
+    - reclose.runtime.test_define_red
+    agent: python-senior-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
