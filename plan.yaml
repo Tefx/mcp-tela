@@ -56759,6 +56759,51 @@ phases:
 
       '
     agent: python-senior-tacit
+  - id: reclose.surface.audit_alignment
+    name: Audit surface and manifest alignment
+    status: pending
+    description: 'Wiring and alignment audit for the applied surface/authority resolution.
+
+
+      Audit these full paths, not summaries:
+
+      - re_enumerate definition -> export/import -> reload consumer -> docs -> probe
+
+      - FastMCP package declaration -> runtime import sites -> docs -> repro tests
+
+
+      Finding issues is success. Block if the decision record says the issue is resolved
+      but one of the consuming artifacts still encodes the old ambiguity.'
+    verification: '- Reachability and wording chain is consistent for re_enumerate
+
+      - FastMCP authority tuple is coherent across package/import/docs/tests
+
+      - No decision artifact remains unapplied'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Wiring Audit Report
+
+      - re_enumerate path trace:
+
+      - FastMCP authority trace:
+
+      - unapplied decision artifacts:
+
+      - verdict: PASS or ISSUES_FOUND
+
+      '
+    depends_on:
+    - reclose.surface.apply_resolution
+    agent: wiring-auditor
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
