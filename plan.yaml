@@ -56675,6 +56675,90 @@ phases:
     audited, and proven non-ambiguous before runtime reclose can rely on them.
   depends_on:
   - reclose.basis
+  steps:
+  - id: reclose.surface.apply_resolution
+    name: Apply surface classification and authority resolution
+    status: pending
+    description: 'Apply the recorded resolution for SURFACE-REENUMERATE and AUTH-MCP-FASTMCP.
+
+
+      Fill in the required docstring, docs, and test/probe alignment work from the
+      authority decision record.
+
+
+      UPSTREAM ARTIFACTS (authoritative for this step):
+
+      - evidence/surface_and_manifest_authority_decision.md — decisions are AUTHORITATIVE
+
+      - docs/DESIGN.md — re_enumerate public API declaration is AUTHORITATIVE
+
+      - docs/INTERFACES.md — translation-boundary wording is AUTHORITATIVE once aligned
+
+
+      YOUR SCOPE:
+
+      - add explicit supported-public-surface language to re_enumerate() without changing
+      its signature
+
+      - document the FastMCP translation-boundary authority tuple across package declaration,
+      runtime import authority, and manifest/header wording authority
+
+      - update affected probes/tests so they verify the documented translation boundary
+      instead of asserting an unresolved split
+
+      - touch surface_instructions.py only if user-facing wording currently leaks
+      conflicting import guidance
+
+
+      If an upstream authority artifact is wrong or incomplete, document a deviation
+      record — do NOT silently rewrite the authority basis.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic or wording updates that change
+      pass/fail behavior of the authority probes.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Decision record exists but re_enumerate docstring still unclassified
+
+      2. FastMCP package/import/manifest tuple still reads as split with no explicit
+      translation boundary
+
+      3. Tests still assert the old unresolved authority shape'
+    verification: '- re_enumerate() explicitly states supported public surface status
+
+      - docs and tests encode the chosen FastMCP translation boundary
+
+      - SURFACE-REENUMERATE and AUTH-MCP-FASTMCP blocker semantics are updated at
+      the source artifacts they depend on'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Authority Resolution Evidence
+
+      - re_enumerate classification text added at:
+
+      - FastMCP authority tuple documented at:
+
+      - tests/probes updated at:
+
+      - deviation records, if any:
+
+      '
+    agent: python-senior-tacit
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
