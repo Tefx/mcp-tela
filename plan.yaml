@@ -55860,3 +55860,11 @@ phases:
     depends_on:
     - connect_runtime_recovery_impl.impl-runtime-recovery
     agent: integration-verifier
+  - id: connect_runtime_recovery_impl.update-docs
+    name: Update USAGE.md and DESIGN.md
+    status: pending
+    description: 'Document new --max-recovery-attempts flag, recovery behavior, and
+      session reset semantics. Touch: docs/USAGE.md, docs/DESIGN.md'
+    depends_on:
+    - connect_runtime_recovery_impl.retest-targeted-green
+    agent: doc-reviewer
