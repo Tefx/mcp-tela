@@ -32,6 +32,7 @@ and enforces one bound capability profile per connection.
 |-------|-------------|-----------|
 | `tela connect` | Client bridge (stdio ↔ HTTP) | stdio upstream, HTTP to server |
 | `tela serve` | Gateway server | HTTP upstream, stdio/HTTP downstream |
+| `tela stop` | Local operator control | lockfile discovery → SIGTERM |
 
 ### Process model
 

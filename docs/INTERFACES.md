@@ -21,6 +21,7 @@ It does not own:
 ```text
 tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
 tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--reaper-sweep-interval sec] [--reaper-native-ttl sec] [--reaper-bridge-ttl sec] [--token tok]
+tela stop
 tela status  [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -29,6 +30,7 @@ tela audit   [--json] [--since ISO-8601] [--limit N]
 
 `tela connect` is the client entry point (stdio bridge with auto-discover/auto-start).
 `tela serve` is the server entry point (HTTP gateway).
+`tela stop` is the local operator stop surface (lockfile discovery + SIGTERM + bounded exit wait + lockfile cleanup).
 Query commands (`status`, `connections`, `audit`) discover the running server via
 `~/.tela/gateway.lock` and query over HTTP.
 
