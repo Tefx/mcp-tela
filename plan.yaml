@@ -56575,3 +56575,10 @@ phases:
     authority tuple, and behavioral closure basis with no stale ambiguity.
   depends_on:
   - reclose.verify
+- id: reclose.deep_review
+  name: Reclose Deep Review
+  status: locked
+  gate: Final reclose requires independent cross-functional confirmation that blocker
+    families are actually closed and the gate basis is internally consistent.
+  depends_on:
+  - reclose.doc_sync
