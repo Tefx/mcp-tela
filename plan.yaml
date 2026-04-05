@@ -55933,7 +55933,7 @@ phases:
       - src/tela/commands/connect_cmd.py'
   - id: connect_runtime_recovery_impl.impl-runtime-recovery
     name: Implement runtime recovery logic
-    status: claimed
+    status: done
     description: 'Add recovery classification (_is_recoverable_error), re-discover/re-autostart
       gateway (_recover_gateway), re-register bridge, resume forwarding within bounded
       attempts. Touch: src/tela/commands/connect_cmd.py'
@@ -55943,6 +55943,36 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-04-05T09:50:00.226431+00:00'
+    done_at: '2026-04-05T09:55:48.497111+00:00'
+    evidence: 'Artifact:
+
+      - PR: 055bc5f
+
+
+      Verification:
+
+      - Run: uv run pytest -q tests/shell/test_connect_recovery_red.py -> 8 passed
+
+      - Run: invar guard on changed paths -> passed
+
+      - Run: uv run ruff check src/tela/commands/connect_cmd.py -> passed
+
+      - Run: uv run mypy src/tela/commands/connect_cmd.py -> passed
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.impl-runtime-recovery
+
+
+      Files changed:
+
+      - src/tela/commands/connect_cmd.py
+
+
+      Deviation records:
+
+      - none'
   - id: connect_runtime_recovery_impl.retest-targeted-green
     name: Verify targeted tests pass
     status: pending
