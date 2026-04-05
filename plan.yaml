@@ -55975,12 +55975,14 @@ phases:
       - none'
   - id: connect_runtime_recovery_impl.retest-targeted-green
     name: Verify targeted tests pass
-    status: pending
+    status: claimed
     description: Rerun targeted recovery tests and prove they now pass with actual
       output
     depends_on:
     - connect_runtime_recovery_impl.impl-runtime-recovery
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-04-05T09:56:05.862209+00:00'
   - id: connect_runtime_recovery_impl.update-docs
     name: Update USAGE.md and DESIGN.md
     status: pending
