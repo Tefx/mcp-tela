@@ -57530,3 +57530,37 @@ phases:
     families are actually closed and the gate basis is internally consistent.
   depends_on:
   - reclose.doc_sync
+  steps:
+  - id: reclose.deep_review.wiring_audit
+    name: Deep wiring audit for reclose
+    status: pending
+    description: 'Independent deep wiring audit after doc sync.
+
+
+      Trace the final artifact graph for runtime proof closure and surface/authority
+      closure. Focus on whether any closed blocker can still be invalidated by an
+      unapplied consumer path or stale test/doc/import chain.'
+    verification: '- Final artifact graph supports the claimed closure state
+
+      - No hidden consumer path reintroduces stale ambiguity'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Deep Wiring Audit
+
+      - artifact graph traced:
+
+      - hidden consumer paths:
+
+      - verdict: PASS / ISSUES_FOUND
+
+      '
+    agent: wiring-auditor
