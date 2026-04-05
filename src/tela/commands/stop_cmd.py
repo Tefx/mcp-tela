@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import signal
 import time
+import subprocess
 
 from tela.shell.config_loader import Result
 from tela.shell.lockfile import delete_lockfile, read_lockfile
@@ -70,6 +71,8 @@ def _wait_for_process_exit(pid: int) -> Result[None, str]:
 
     deadline = time.monotonic() + STOP_WAIT_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
+        if _is_zombie_process(pid):
+            return Result(value=None)
         try:
             os.kill(pid, 0)
         except ProcessLookupError:
@@ -88,6 +91,25 @@ def _wait_for_process_exit(pid: int) -> Result[None, str]:
             f"{STOP_WAIT_TIMEOUT_SECONDS:.1f}s"
         )
     )
+
+
+def _is_zombie_process(pid: int) -> bool:
+    """Return whether ``pid`` is a zombie process according to ``ps``."""
+
+    try:
+        result = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "stat="],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return False
+
+    if result.returncode != 0:
+        return False
+
+    return "Z" in result.stdout.strip().upper()
 
 
 def _cleanup_lockfile_after_exit() -> Result[None, str]:

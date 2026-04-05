@@ -15,6 +15,7 @@ from tela.commands.audit_cmd import audit_command
 from tela.commands.connections_cmd import connections_command
 from tela.commands import remote_state
 from tela.commands.status_cmd import status_command
+from tela.shell.config_loader import Result
 
 
 @contextmanager
@@ -253,6 +254,28 @@ def test_query_commands_report_missing_or_stale_lockfile(
     assert stale_result.is_err
     assert stale_result.error is not None
     assert "NO_RUNNING_SERVER" in stale_result.error
+
+
+def test_status_reports_orphaned_serve_processes_when_lockfile_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Missing lockfile should surface orphaned serve diagnostics when present."""
+
+    monkeypatch.setattr(
+        "tela.commands.remote_state.read_lockfile",
+        lambda: Result(error="LOCKFILE_READ_ERROR: lockfile does not exist"),
+    )
+    monkeypatch.setattr(
+        "tela.commands.remote_state._find_orphaned_serve_processes",
+        lambda: [1543, 2168],
+    )
+
+    result = status_command()
+
+    assert result.is_err
+    assert result.error is not None
+    assert "NO_RUNNING_SERVER" in result.error
+    assert "orphaned tela serve processes detected: 1543, 2168" in result.error
 
 
 # =============================================================================

@@ -126,6 +126,8 @@ def connect_command(
         port=endpoint_result.value.port,
         bearer_token=token_result.value,
         max_recovery_attempts=max_recovery_attempts,
+        recovery_config_path=config_path if server is None else None,
+        recovery_default_profile=default_profile if server is None else None,
     )
     if bridge_result.is_err:
         return Result(error=bridge_result.error)
@@ -236,8 +238,6 @@ def _discover_or_autostart(
     config-path ownership validation during concurrent connect invocations.
     """
 
-    initial_lockfile_result = read_lockfile()
-
     first_result = _coordinator_discover_or_autostart(
         config_path=config_path,
         default_profile=default_profile,
@@ -247,14 +247,6 @@ def _discover_or_autostart(
         lockfile_wait_timeout_seconds=LOCKFILE_WAIT_TIMEOUT_SECONDS,
     )
     if first_result.is_ok:
-        # Runtime recovery contract: when discovery started from a missing
-        # lockfile state, issue one bounded re-autostart nudge so a follow-up
-        # connect can recover if the first leader exits before full readiness.
-        if initial_lockfile_result.is_err:
-            _ = _autostart_serve(
-                config_path=config_path,
-                default_profile=default_profile,
-            )
         return first_result
 
     # Bounded second-chance discovery for startup races where the first
@@ -349,7 +341,13 @@ def _autostart_serve(
 
 # @shell_complexity: bridge lifecycle coordinates signal handling, connect, forward, and disconnect.
 def _run_bridge(
-    *, host: str, port: int, bearer_token: str, max_recovery_attempts: int = 3
+    *,
+    host: str,
+    port: int,
+    bearer_token: str,
+    max_recovery_attempts: int = 3,
+    recovery_config_path: str | None = None,
+    recovery_default_profile: str | None = None,
 ) -> Result[None, str]:
     """Run connect/register/forward/disconnect lifecycle.
 
@@ -400,12 +398,55 @@ def _run_bridge(
     recovery_attempts = 0
     current_host = host
     current_port = port
+    current_bearer_token = bearer_token
+
+    def _recover_transport_for_inflight_message() -> Result[tuple[str, str], str]:
+        nonlocal \
+            recovery_attempts, \
+            current_host, \
+            current_port, \
+            current_bearer_token, \
+            base_url
+
+        if recovery_attempts >= max_recovery_attempts:
+            return Result(
+                error="BRIDGE_RECOVERY_EXHAUSTED: in-flight MCP request could not be replayed"
+            )
+
+        recovery_attempts += 1
+        gateway_recovery_result = _recover_gateway(
+            host=current_host,
+            port=current_port,
+            bearer_token=current_bearer_token,
+            config_path=recovery_config_path,
+            default_profile=recovery_default_profile,
+        )
+        if gateway_recovery_result.is_err:
+            return Result(
+                error=f"BRIDGE_RECOVERY_FAILED: {gateway_recovery_result.error}"
+            )
+        assert gateway_recovery_result.value is not None
+        current_host, current_port, current_bearer_token = gateway_recovery_result.value
+        base_url = f"http://{current_host}:{current_port}"
+
+        reconnect_result = _post_json(
+            url=f"{base_url}/connect",
+            bearer_token=current_bearer_token,
+            payload={"connection_id": connection_id},
+        )
+        if reconnect_result.is_err:
+            return Result(
+                error=(f"BRIDGE_RECOVERY_REGISTER_FAILED: {reconnect_result.error}")
+            )
+
+        return Result(value=(f"{base_url}/mcp", current_bearer_token))
+
     try:
         try:
             while not stop_requested.is_set():
                 readiness_result = _wait_for_gateway_readiness(
                     status_url=f"{base_url}/status",
-                    bearer_token=bearer_token,
+                    bearer_token=current_bearer_token,
                     max_polls=BRIDGE_READINESS_MAX_POLLS,
                 )
                 if readiness_result.is_err:
@@ -416,12 +457,13 @@ def _run_bridge(
                 else:
                     forward_result = _forward_stdio_http(
                         mcp_url=f"{base_url}/mcp",
-                        bearer_token=bearer_token,
+                        bearer_token=current_bearer_token,
                         bridge_connection_id=connection_id,
                         should_stop=stop_requested.is_set,
                         stdin_buffer=sys.stdin.buffer,
                         stdout_buffer=sys.stdout.buffer,
                         max_recovery_attempts=max_recovery_attempts,
+                        recover_transport=_recover_transport_for_inflight_message,
                     )
                     if forward_result.is_ok:
                         break
@@ -443,30 +485,9 @@ def _run_bridge(
                     bridge_error = f"BRIDGE_RECOVERY_EXHAUSTED: {cycle_error}"
                     break
 
-                recovery_attempts += 1
-                gateway_recovery_result = _recover_gateway(
-                    host=current_host,
-                    port=current_port,
-                    bearer_token=bearer_token,
-                )
-                if gateway_recovery_result.is_err:
-                    bridge_error = (
-                        f"BRIDGE_RECOVERY_FAILED: {gateway_recovery_result.error}"
-                    )
-                    break
-                assert gateway_recovery_result.value is not None
-                current_host, current_port = gateway_recovery_result.value
-                base_url = f"http://{current_host}:{current_port}"
-
-                reconnect_result = _post_json(
-                    url=f"{base_url}/connect",
-                    bearer_token=bearer_token,
-                    payload={"connection_id": connection_id},
-                )
-                if reconnect_result.is_err:
-                    bridge_error = (
-                        f"BRIDGE_RECOVERY_REGISTER_FAILED: {reconnect_result.error}"
-                    )
+                recovery_result = _recover_transport_for_inflight_message()
+                if recovery_result.is_err:
+                    bridge_error = recovery_result.error
                     break
         except KeyboardInterrupt:
             bridge_error = "INTERRUPT: bridge attach loop interrupted"
@@ -478,7 +499,7 @@ def _run_bridge(
         try:
             disconnect_result = _post_json(
                 url=disconnect_url,
-                bearer_token=bearer_token,
+                bearer_token=current_bearer_token,
                 payload=disconnect_payload,
             )
             if disconnect_result.is_err:
@@ -498,7 +519,7 @@ def _run_bridge(
             try:
                 resumed_disconnect_result = _post_json_once(
                     url=disconnect_url,
-                    bearer_token=bearer_token,
+                    bearer_token=current_bearer_token,
                     payload=disconnect_payload,
                     timeout_seconds=TEARDOWN_RESUME_TIMEOUT_SECONDS,
                 )
@@ -533,6 +554,7 @@ def _forward_stdio_http(
     stdin_buffer: BinaryIO,
     stdout_buffer: BinaryIO,
     max_recovery_attempts: int = 3,
+    recover_transport: Callable[[], Result[tuple[str, str], str]] | None = None,
 ) -> Result[None, str]:
     """Forward MCP stdio frames to HTTP and stream responses back.
 
@@ -541,6 +563,7 @@ def _forward_stdio_http(
     """
 
     session_id: str | None = None
+    initialize_payload: bytes | None = None
 
     while not should_stop():
         message_result = _read_framed_message(stdin_buffer)
@@ -554,16 +577,53 @@ def _forward_stdio_http(
             framed_message.payload,
             connection_id=bridge_connection_id,
         )
+        message_method = _extract_jsonrpc_method(message)
+        if message_method == "initialize":
+            initialize_payload = message
 
-        http_result = _post_mcp_message(
-            mcp_url=mcp_url,
-            bearer_token=bearer_token,
-            payload=message,
-            session_id=session_id,
-            max_recovery_attempts=max_recovery_attempts,
-        )
-        if http_result.is_err:
-            return Result(error=http_result.error)
+        while True:
+            http_result = _post_mcp_message(
+                mcp_url=mcp_url,
+                bearer_token=bearer_token,
+                payload=message,
+                session_id=session_id,
+                max_recovery_attempts=max_recovery_attempts,
+            )
+            if http_result.is_ok:
+                break
+
+            error_text = http_result.error or "MCP_FORWARD_FAILED: unknown error"
+            recoverable_result = _is_recoverable_error(error_text)
+            if (
+                recover_transport is None
+                or recoverable_result.is_err
+                or not recoverable_result.value
+            ):
+                return Result(error=error_text)
+
+            recovery_result = recover_transport()
+            if recovery_result.is_err:
+                return Result(error=recovery_result.error)
+            assert recovery_result.value is not None
+            mcp_url, bearer_token = recovery_result.value
+            session_id = None
+
+            if message_method != "initialize" and initialize_payload is not None:
+                bootstrap_result = _post_mcp_message(
+                    mcp_url=mcp_url,
+                    bearer_token=bearer_token,
+                    payload=initialize_payload,
+                    session_id=None,
+                    max_recovery_attempts=max_recovery_attempts,
+                )
+                if bootstrap_result.is_err:
+                    return Result(error=bootstrap_result.error)
+                assert bootstrap_result.value is not None
+                _content_type, _response_body, bootstrap_session_id = (
+                    bootstrap_result.value
+                )
+                session_id = bootstrap_session_id
+
         assert http_result.value is not None
         content_type, response_body, response_session_id = http_result.value
 
@@ -587,6 +647,20 @@ def _forward_stdio_http(
                 return Result(error=write_result.error)
 
     return Result(value=None)
+
+
+def _extract_jsonrpc_method(payload: bytes) -> str | None:
+    """Return JSON-RPC method name from payload when present."""
+
+    try:
+        decoded = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(decoded, dict):
+        return None
+    method = decoded.get("method")
+    return method if isinstance(method, str) else None
 
 
 @dataclass(frozen=True)
@@ -752,18 +826,28 @@ def _is_recoverable_error(error: str) -> Result[bool, str]:
 
 
 def _recover_gateway(
-    *, host: str, port: int, bearer_token: str
-) -> Result[tuple[str, int], str]:
+    *,
+    host: str,
+    port: int,
+    bearer_token: str,
+    config_path: str | None,
+    default_profile: str | None,
+) -> Result[tuple[str, int, str], str]:
     """Recover gateway endpoint via lockfile discovery or readiness polling."""
 
-    discovery_result = _discover_or_autostart(
-        config_path="tela.yaml",
-        default_profile=None,
-    )
-    if discovery_result.is_ok:
-        assert discovery_result.value is not None
-        discovered = discovery_result.value
-        return Result(value=(discovered.host, discovered.port))
+    if config_path is not None:
+        discovery_result = _discover_or_autostart(
+            config_path=config_path,
+            default_profile=default_profile,
+        )
+        if discovery_result.is_ok:
+            assert discovery_result.value is not None
+            discovered = discovery_result.value
+            return Result(value=(discovered.host, discovered.port, discovered.token))
+    else:
+        discovery_result = Result[LockfileData, str](
+            error="DISCOVERY_DISABLED: explicit server mode disables autostart recovery"
+        )
 
     readiness_result = _wait_for_gateway_readiness(
         status_url=f"http://{host}:{port}/status",
@@ -771,7 +855,7 @@ def _recover_gateway(
         max_polls=BRIDGE_READINESS_MAX_POLLS,
     )
     if readiness_result.is_ok:
-        return Result(value=(host, port))
+        return Result(value=(host, port, bearer_token))
 
     return Result(
         error=(

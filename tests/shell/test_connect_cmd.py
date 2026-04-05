@@ -72,12 +72,27 @@ def test_connect_server_path_uses_env_token(
     """``--server`` mode must skip lockfile and use env token."""
 
     monkeypatch.setenv("TELA_BEARER_TOKEN", "env-token")
-    calls: list[tuple[str, int, str]] = []
+    calls: list[tuple[str, int, str, str | None, str | None]] = []
 
     def _fake_run_bridge(
-        *, host: str, port: int, bearer_token: str, max_recovery_attempts: int = 3
+        *,
+        host: str,
+        port: int,
+        bearer_token: str,
+        max_recovery_attempts: int = 3,
+        recovery_config_path: str | None = None,
+        recovery_default_profile: str | None = None,
     ) -> Result[None, str]:
-        calls.append((host, port, bearer_token))
+        _ = max_recovery_attempts
+        calls.append(
+            (
+                host,
+                port,
+                bearer_token,
+                recovery_config_path,
+                recovery_default_profile,
+            )
+        )
         return Result(value=None)
 
     monkeypatch.setattr(connect_cmd, "_run_bridge", _fake_run_bridge)
@@ -89,7 +104,7 @@ def test_connect_server_path_uses_env_token(
         token=None,
     )
     assert result.is_ok
-    assert calls == [("127.0.0.1", 8123, "env-token")]
+    assert calls == [("127.0.0.1", 8123, "env-token", None, None)]
 
 
 def test_discovery_autostart_handles_race_lockfile_appearance(
@@ -98,8 +113,7 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
     """Discovery must recover when auto-start races another connector.
 
     Flow: read_lockfile fails -> wait(0.3) fails -> autostart succeeds
-    (returns spawned PID) -> wait(5.0, expected_pid=spawned_pid) succeeds,
-    then runtime-recovery nudge performs one bounded follow-up autostart.
+    (returns spawned PID) -> wait(5.0, expected_pid=spawned_pid) succeeds.
     The expected_pid parameter binds lockfile identity to the spawned process.
     """
 
@@ -160,9 +174,7 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
     )
     assert result.is_ok
     assert result.value == lockfile
-    # First autostart is coordinator-led startup. Second is bounded
-    # runtime-recovery nudge when discovery began from missing lockfile.
-    assert autostarts == 2
+    assert autostarts == 1
     # First wait: quick race check with no PID filter
     # Second wait: after autostart, bound to spawned PID
     assert waits == [
@@ -186,12 +198,27 @@ def test_connect_discovery_uses_published_lockfile_port(
         version="0.1.0",
     )
 
-    calls: list[tuple[str, int, str]] = []
+    calls: list[tuple[str, int, str, str | None, str | None]] = []
 
     def _fake_run_bridge(
-        *, host: str, port: int, bearer_token: str, max_recovery_attempts: int = 3
+        *,
+        host: str,
+        port: int,
+        bearer_token: str,
+        max_recovery_attempts: int = 3,
+        recovery_config_path: str | None = None,
+        recovery_default_profile: str | None = None,
     ) -> Result[None, str]:
-        calls.append((host, port, bearer_token))
+        _ = max_recovery_attempts
+        calls.append(
+            (
+                host,
+                port,
+                bearer_token,
+                recovery_config_path,
+                recovery_default_profile,
+            )
+        )
         return Result(value=None)
 
     monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
@@ -206,7 +233,209 @@ def test_connect_discovery_uses_published_lockfile_port(
     )
 
     assert result.is_ok
-    assert calls == [("127.0.0.1", 49152, "lock-token")]
+    assert calls == [
+        (
+            "127.0.0.1",
+            49152,
+            "lock-token",
+            "tela.yaml",
+            None,
+        )
+    ]
+
+
+def test_connect_discovery_passes_recovery_context_into_bridge(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Discovery mode must preserve config/default_profile for runtime recovery."""
+
+    lockfile = LockfileData(
+        pid=1234,
+        host="127.0.0.1",
+        port=49152,
+        token="lock-token",
+        started_at="2026-03-22T10:00:00Z",
+        config_path="/tmp/custom-tela.yaml",
+        version="0.1.0",
+    )
+
+    observed: dict[str, object] = {}
+
+    def _fake_run_bridge(
+        *,
+        host: str,
+        port: int,
+        bearer_token: str,
+        max_recovery_attempts: int = 3,
+        recovery_config_path: str | None = None,
+        recovery_default_profile: str | None = None,
+    ) -> Result[None, str]:
+        observed.update(
+            {
+                "host": host,
+                "port": port,
+                "bearer_token": bearer_token,
+                "max_recovery_attempts": max_recovery_attempts,
+                "recovery_config_path": recovery_config_path,
+                "recovery_default_profile": recovery_default_profile,
+            }
+        )
+        return Result(value=None)
+
+    monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
+    monkeypatch.setattr(connect_cmd, "read_lockfile", lambda: Result(value=lockfile))
+    monkeypatch.setattr(connect_cmd, "_run_bridge", _fake_run_bridge)
+
+    result = connect_cmd.connect_command(
+        config_path="/tmp/custom-tela.yaml",
+        default_profile="open-default",
+        server=None,
+        token=None,
+        max_recovery_attempts=7,
+    )
+
+    assert result.is_ok
+    assert observed == {
+        "host": "127.0.0.1",
+        "port": 49152,
+        "bearer_token": "lock-token",
+        "max_recovery_attempts": 7,
+        "recovery_config_path": "/tmp/custom-tela.yaml",
+        "recovery_default_profile": "open-default",
+    }
+
+
+def test_run_bridge_recovery_uses_passed_connect_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Runtime recovery must reuse the original connect config/default_profile."""
+
+    connect_calls: list[str] = []
+    recovery_calls: list[tuple[str, int, str, str | None, str | None]] = []
+    forward_calls = {"count": 0}
+
+    def _fake_post_json(
+        *, url: str, bearer_token: str, payload: dict[str, str]
+    ) -> Result[None, str]:
+        _ = bearer_token, payload
+        connect_calls.append(url)
+        return Result(value=None)
+
+    def _fake_forward_stdio_http(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        bridge_connection_id: str,
+        should_stop: Callable[[], bool],
+        stdin_buffer,
+        stdout_buffer,
+        max_recovery_attempts: int = 3,
+        recover_transport=None,
+    ) -> Result[None, str]:
+        _ = mcp_url, bearer_token, bridge_connection_id, should_stop, recover_transport
+        _ = stdin_buffer, stdout_buffer, max_recovery_attempts
+        forward_calls["count"] += 1
+        if forward_calls["count"] == 1:
+            return Result(error="MCP_FORWARD_FAILED: Connection refused")
+        return Result(value=None)
+
+    def _fake_recover_gateway(
+        *,
+        host: str,
+        port: int,
+        bearer_token: str,
+        config_path: str | None,
+        default_profile: str | None,
+    ) -> Result[tuple[str, int, str], str]:
+        recovery_calls.append((host, port, bearer_token, config_path, default_profile))
+        return Result(value=("127.0.0.1", 9001, "recovered-token"))
+
+    readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
+    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    monkeypatch.setattr(connect_cmd, "_recover_gateway", _fake_recover_gateway)
+
+    result = connect_cmd._run_bridge(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="test-token",
+        recovery_config_path="/tmp/custom-tela.yaml",
+        recovery_default_profile="open-default",
+    )
+
+    assert result.is_ok
+    assert recovery_calls == [
+        (
+            "127.0.0.1",
+            8123,
+            "test-token",
+            "/tmp/custom-tela.yaml",
+            "open-default",
+        )
+    ]
+    assert connect_calls == [
+        "http://127.0.0.1:8123/connect",
+        "http://127.0.0.1:9001/connect",
+        "http://127.0.0.1:9001/disconnect",
+    ]
+    assert [snapshot["state"] for snapshot in readiness_snapshots] == ["ready", "ready"]
+
+
+def test_run_bridge_uses_recovered_bearer_token_for_reconnect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Recovery must switch to the newly discovered lockfile token."""
+
+    reconnect_tokens: list[tuple[str, str]] = []
+    forward_calls = {"count": 0}
+
+    def _fake_post_json(
+        *, url: str, bearer_token: str, payload: dict[str, str]
+    ) -> Result[None, str]:
+        _ = payload
+        reconnect_tokens.append((url, bearer_token))
+        return Result(value=None)
+
+    def _fake_forward_stdio_http(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        bridge_connection_id: str,
+        should_stop: Callable[[], bool],
+        stdin_buffer,
+        stdout_buffer,
+        max_recovery_attempts: int = 3,
+        recover_transport=None,
+    ) -> Result[None, str]:
+        _ = mcp_url, bearer_token, bridge_connection_id, should_stop, recover_transport
+        _ = stdin_buffer, stdout_buffer, max_recovery_attempts
+        forward_calls["count"] += 1
+        if forward_calls["count"] == 1:
+            return Result(error="MCP_FORWARD_FAILED: Connection refused")
+        return Result(value=None)
+
+    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    monkeypatch.setattr(
+        connect_cmd,
+        "_recover_gateway",
+        lambda **_kwargs: Result(value=("127.0.0.1", 9001, "recovered-token")),
+    )
+    _mock_gateway_status_ready(monkeypatch)
+
+    result = connect_cmd._run_bridge(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="old-token",
+        recovery_config_path="/tmp/custom-tela.yaml",
+    )
+
+    assert result.is_ok
+    assert reconnect_tokens == [
+        ("http://127.0.0.1:8123/connect", "old-token"),
+        ("http://127.0.0.1:9001/connect", "recovered-token"),
+        ("http://127.0.0.1:9001/disconnect", "recovered-token"),
+    ]
 
 
 def test_bridge_lifecycle_posts_connect_and_disconnect(
@@ -841,6 +1070,88 @@ def test_forward_stdio_http_returns_error_on_write_failure(
     assert result.is_err
     assert result.error is not None
     assert "BRIDGE_WRITE_FAILED" in result.error
+
+
+def test_forward_stdio_http_replays_inflight_message_after_transport_recovery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failed in-flight MCP message must be retried after transport recovery."""
+
+    initialize_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    tools_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+    stdin_buffer = io.BytesIO(initialize_request + b"\n" + tools_request + b"\n")
+    stdout_buffer = io.BytesIO()
+    post_calls: list[tuple[str, str, str | None]] = []
+    recover_calls = {"count": 0}
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+        max_recovery_attempts: int = 3,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = payload, max_recovery_attempts
+        post_calls.append((mcp_url, bearer_token, session_id))
+        if len(post_calls) == 1:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "session-1",
+                )
+            )
+        if len(post_calls) == 2:
+            return Result(error="MCP_FORWARD_FAILED: Connection refused")
+        if len(post_calls) == 3:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "recovered-session",
+                )
+            )
+        return Result(
+            value=(
+                "application/json",
+                json.dumps({"jsonrpc": "2.0", "id": 2, "result": {"ok": True}}).encode(
+                    "utf-8"
+                ),
+                "recovered-session",
+            )
+        )
+
+    def _fake_recover_transport() -> Result[tuple[str, str], str]:
+        recover_calls["count"] += 1
+        return Result(value=("http://127.0.0.1:9001/mcp", "recovered-token"))
+
+    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="old-token",
+        bridge_connection_id="bridge_test",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=stdout_buffer,
+        recover_transport=_fake_recover_transport,
+    )
+
+    assert result.is_ok
+    assert recover_calls["count"] == 1
+    assert post_calls == [
+        ("http://127.0.0.1:8123/mcp", "old-token", None),
+        ("http://127.0.0.1:8123/mcp", "old-token", "session-1"),
+        ("http://127.0.0.1:9001/mcp", "recovered-token", None),
+        ("http://127.0.0.1:9001/mcp", "recovered-token", "recovered-session"),
+    ]
+    output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
+    assert '"ok": true' in output.lower()
 
 
 def test_post_mcp_message_retries_only_for_transient_contract_signal(

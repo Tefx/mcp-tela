@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import secrets
+import subprocess
 
 from tela.core.contracts import post, pre
 from tela.core.models import LockfileData
@@ -39,6 +40,9 @@ class _IsStale:
     def __call__(self, lockfile: LockfileData) -> bool:
         """Return True when lockfile's PID does not resolve to a live process."""
 
+        if _is_zombie_process(lockfile.pid):
+            return True
+
         try:
             os.kill(lockfile.pid, 0)
         except OverflowError:
@@ -55,6 +59,29 @@ class _IsStale:
 
 
 is_stale = _IsStale()
+
+
+def _is_zombie_process(pid: int) -> bool:
+    """Return whether ``pid`` is a zombie process according to ``ps``.
+
+    Best-effort only: any inspection failure is treated as non-zombie so callers
+    fall back to standard liveness checks.
+    """
+
+    try:
+        result = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "stat="],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return False
+
+    if result.returncode != 0:
+        return False
+
+    return "Z" in result.stdout.strip().upper()
 
 
 @pre(lambda data: isinstance(data, LockfileData))

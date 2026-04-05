@@ -161,6 +161,44 @@ def test_stop_command_times_out_if_process_does_not_exit(
     assert "STOP_TIMEOUT" in result.error
 
 
+def test_stop_command_treats_zombie_as_exited(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Zombie process state must count as exited for stop cleanup."""
+
+    delete_calls: list[bool] = []
+
+    monkeypatch.setattr(
+        "tela.commands.stop_cmd.read_lockfile",
+        lambda: Result(
+            value=LockfileData(
+                pid=43210,
+                host="127.0.0.1",
+                port=8080,
+                token="token",
+                started_at="2026-04-05T00:00:00Z",
+                config_path="/tmp/tela.yaml",
+                version="0.1.0",
+            )
+        ),
+    )
+    monkeypatch.setattr("tela.commands.stop_cmd.os.kill", lambda _pid, _sig: None)
+    monkeypatch.setattr("tela.commands.stop_cmd._is_zombie_process", lambda _pid: True)
+    monkeypatch.setattr(
+        "tela.commands.stop_cmd.delete_lockfile",
+        lambda: delete_calls.append(True) or Result(value=None),
+    )
+
+    result = stop_command()
+
+    assert result.is_ok
+    assert delete_calls == [True]
+    assert (
+        "stop confirmed: tela server pid 43210 exited and lockfile cleaned"
+        in capsys.readouterr().out
+    )
+
+
 def _raise_if_needed(result: object) -> None:
     if isinstance(result, BaseException):
         raise result

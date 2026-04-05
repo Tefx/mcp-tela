@@ -87,6 +87,24 @@ def test_read_lockfile_detects_stale_pid(
     assert result.error is not None
 
 
+def test_read_lockfile_treats_zombie_pid_as_stale(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    monkeypatch.setattr(lockfile, "_is_zombie_process", lambda _pid: True)
+
+    data = _sample_lockfile_data()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(data.model_dump_json(), encoding="utf-8")
+
+    result = lockfile.read_lockfile()
+
+    assert result.is_err
+    assert result.error is not None
+    assert "LOCKFILE_STALE" in result.error
+
+
 def test_read_lockfile_rejects_missing_file(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

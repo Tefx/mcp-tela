@@ -12,6 +12,7 @@ state independently.
 from __future__ import annotations
 
 import json
+import subprocess
 from dataclasses import dataclass
 from typing import Literal
 from urllib import error as urllib_error
@@ -394,6 +395,11 @@ def query_remote_state() -> Result[RemoteGatewayState, str]:
     lockfile_result = read_lockfile()
     if lockfile_result.is_err:
         detail = lockfile_result.error or "lockfile unavailable"
+        orphaned = _find_orphaned_serve_processes()
+        if orphaned:
+            detail = f"{detail}; orphaned tela serve processes detected: " + ", ".join(
+                str(pid) for pid in orphaned
+            )
         return Result(
             error=(
                 "NO_RUNNING_SERVER: no running tela server found via "
@@ -408,6 +414,42 @@ def query_remote_state() -> Result[RemoteGatewayState, str]:
     assert payload_result.value is not None
 
     return _parse_remote_state(payload_result.value)
+
+
+def _find_orphaned_serve_processes() -> list[int]:
+    """Return best-effort list of live ``tela serve`` pids without a lockfile."""
+
+    try:
+        result = subprocess.run(
+            ["ps", "-ax", "-o", "pid=,stat=,command="],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return []
+
+    if result.returncode != 0:
+        return []
+
+    matches: list[int] = []
+    for raw_line in result.stdout.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        parts = line.split(None, 2)
+        if len(parts) != 3:
+            continue
+        pid_raw, stat, command = parts
+        if "Z" in stat.upper():
+            continue
+        if "tela serve" not in command:
+            continue
+        try:
+            matches.append(int(pid_raw))
+        except ValueError:
+            continue
+    return matches
 
 
 # @shell_complexity: HTTP request branches on transport errors, HTTP errors, and JSON-parse.
