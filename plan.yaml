@@ -57076,6 +57076,75 @@ phases:
     depends_on:
     - reclose.runtime.test_define_red
     agent: python-senior-tacit
+  - id: reclose.runtime.retest_green
+    name: Retest runtime proof obligations green
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
+      the reclose runtime scope from a fresh perspective.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Test for:
+
+      - Happy path: named R13 and R42 witness probes pass green
+
+      - Edge cases: config-remove during in-flight recovery, disconnect-under-recovery,
+      healthy-neighbor isolation if touched
+
+      - Error scenarios: config_missing signaling, stale-lock cleanup, contradictory
+      proof output
+
+
+      If this step verifies symbolic or proof-style testing, require the exact project
+      command and raw output.
+
+
+      Independence Level: L2'
+    verification: '- Named R13/R42 witness probes pass green
+
+      - Actual command/output is captured
+
+      - Highest-risk failure path evidence is included, not summarized away'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Verification Report
+
+      - exact command executed:
+
+      - raw output:
+
+      - R13 witness result:
+
+      - R42 config-remove-inflight result:
+
+      - R42 disconnect-under-recovery result:
+
+      - highest-risk failure path checked:
+
+      - verdict: PASS / ISSUES_FOUND / INCOMPLETE
+
+      '
+    depends_on:
+    - reclose.runtime.close_gap_if_exposed
+    agent: integration-verifier-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
