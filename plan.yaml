@@ -55816,7 +55816,7 @@ phases:
       evidence refs and final gate impact that residual dead export remains open.'
 - id: connect_runtime_recovery_impl
   name: Implement connect runtime recovery
-  status: in_progress
+  status: done
   steps:
   - id: connect_runtime_recovery_impl.contract
     name: Define recovery contract
@@ -56046,7 +56046,7 @@ phases:
       - docs/DESIGN.md'
   - id: connect_runtime_recovery_impl.gate
     name: Impl phase gate
-    status: claimed
+    status: done
     description: Confirm impl/doc scope complete, no downstream.py spillover, targeted
       green evidence exists
     depends_on:
@@ -56054,6 +56054,49 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-04-05T10:23:53.374868+00:00'
+    done_at: '2026-04-05T10:54:04.085425+00:00'
+    evidence: 'Artifact:
+
+      - Commit: b5d5e4a ([vectl] step-connect_runtime_recovery_impl.fix-batched completed)
+
+
+      Verification:
+
+      - Run: uv run python -c "from tela.cli import main; print(''CLI imports cleanly'')"
+      -> CLI imports cleanly
+
+      - Run: uv run pytest tests -k ''recovery or connect_runtime_recovery'' -q ->
+      39 passed, 1 skipped, 933 deselected, 8 xfailed
+
+      - Run: git ls-files --error-unmatch src/tela/commands/stop_cmd.py -> path not
+      tracked
+
+      - Run: grep -n "stop_cmd\|stop_command" src/tela/cli.py -> no references
+
+      - Run: uv run invar guard -> passed
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.gate
+
+
+      behavioral_proof_register:
+
+      - P1: no downstream spillover in targeted path -> PROVEN
+
+      - P2: targeted recovery tests green -> PROVEN
+
+      - P3: CLI imports cleanly without ModuleNotFoundError -> PROVEN
+
+      - P4: no intersecting invar issues for this phase -> PROVEN
+
+
+      gate_open_allowed: true
+
+      uncertainty_sources:
+
+      - none'
   - id: connect_runtime_recovery_impl.fix-batched
     name: Batched remediation for runtime recovery gate blockers
     status: done
@@ -56387,7 +56430,7 @@ phases:
       Verdict: PASS'
 - id: connect_runtime_recovery_verify
   name: Verify connect runtime recovery
-  status: locked
+  status: pending
   depends_on:
   - connect_runtime_recovery_impl
   steps:
