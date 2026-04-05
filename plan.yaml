@@ -56011,12 +56011,14 @@ phases:
       product_implementation_files_modified: none'
   - id: connect_runtime_recovery_impl.update-docs
     name: Update USAGE.md and DESIGN.md
-    status: pending
+    status: claimed
     description: 'Document new --max-recovery-attempts flag, recovery behavior, and
       session reset semantics. Touch: docs/USAGE.md, docs/DESIGN.md'
     depends_on:
     - connect_runtime_recovery_impl.retest-targeted-green
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-04-05T09:57:41.679788+00:00'
   - id: connect_runtime_recovery_impl.gate
     name: Impl phase gate
     status: pending
