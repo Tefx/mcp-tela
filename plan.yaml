@@ -55868,3 +55868,11 @@ phases:
     depends_on:
     - connect_runtime_recovery_impl.retest-targeted-green
     agent: doc-reviewer
+  - id: connect_runtime_recovery_impl.gate
+    name: Impl phase gate
+    status: pending
+    description: Confirm impl/doc scope complete, no downstream.py spillover, targeted
+      green evidence exists
+    depends_on:
+    - connect_runtime_recovery_impl.update-docs
+    agent: gate-reviewer
