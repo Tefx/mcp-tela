@@ -56546,6 +56546,75 @@ phases:
   depends_on:
   - debt_closure.verify_and_close
   - connect_runtime_recovery_verify
+  steps:
+  - id: reclose.basis.normalize_blockers
+    name: Normalize blocker ledger for reclose
+    status: pending
+    description: 'Normalize the blocker-class ledger before remediation.
+
+
+      Use the existing evidence artifacts to produce one authoritative blocker basis
+      naming exactly these blocker families: R13, R42-CONFIG-REMOVE-INFLIGHT, R42-DISCONNECT-UNDER-RECOVERY,
+      SURFACE-REENUMERATE, AUTH-MCP-FASTMCP.
+
+
+      Requirements:
+
+      - preserve provenance vs disposition distinctions
+
+      - explicitly record that gate_open_allowed remains false until reclose verification
+      closes blocker rows
+
+      - resolve any contradictory wording between the behavioral proof register and
+      runtime uncertainty register
+
+      - do not soften any blocker to non-blocking without explicit non-intersection
+      evidence
+
+
+      Outputs:
+
+      - refreshed blocker basis in evidence artifacts
+
+      - explicit mapping from each blocker family to downstream reclose ownership
+
+      - one-sentence explanation of why the earlier closure was invalid'
+    verification: '- Refreshed blocker basis explicitly lists all five blocker families
+
+      - gate_open_allowed is false until downstream reclose verification closes blocker
+      rows
+
+      - No blocker-class item is downgraded without explicit non-intersection evidence'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Normalized Blocker Ledger
+
+      - blocker families listed:
+
+      - gate_open_allowed state:
+
+      - mapping to downstream reclose steps:
+
+
+      ## Review-Miss Correction
+
+      - prior invalid closure shape:
+
+      - why it was invalid:
+
+      - how the refreshed basis prevents recurrence:
+
+      '
+    agent: software-architect-tacit
 - id: reclose.surface
   name: Surface and Authority Reclose
   status: locked
