@@ -56546,3 +56546,10 @@ phases:
   depends_on:
   - debt_closure.verify_and_close
   - connect_runtime_recovery_verify
+- id: reclose.surface
+  name: Surface and Authority Reclose
+  status: locked
+  gate: Surface classification and FastMCP authority must be applied, independently
+    audited, and proven non-ambiguous before runtime reclose can rely on them.
+  depends_on:
+  - reclose.basis
