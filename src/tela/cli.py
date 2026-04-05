@@ -15,6 +15,7 @@ from tela.commands.connections_cmd import connections_command
 from tela.commands.profiles_cmd import profiles_command
 from tela.commands.serve_cmd import serve_command
 from tela.commands.status_cmd import status_command
+from tela.commands.stop_cmd import stop_command
 
 
 # @invar:allow shell_result: CLI entrypoint returns int exit code per POSIX convention.
@@ -124,6 +125,15 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Bearer token override (default: env, then lockfile)",
     )
+    connect_parser.add_argument(
+        "--max-recovery-attempts",
+        type=int,
+        default=3,
+        help="Maximum transient error recovery retries (default: 3)",
+    )
+
+    # --- stop ---
+    subparsers.add_parser("stop", help="Stop the running tela HTTP gateway")
 
     # --- status ---
     status_parser = subparsers.add_parser("status", help="Show gateway status")
@@ -204,6 +214,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         assert status_result.value is not None
         return status_result.value
+    if args.command == "stop":
+        stop_result = stop_command()
+        if stop_result.is_err:
+            print(f"error: {stop_result.error}", file=sys.stderr)
+            return 1
+        assert stop_result.value is not None
+        return stop_result.value
     if args.command == "serve":
         serve_result = serve_command(
             config_path=args.config,
@@ -227,6 +244,7 @@ def main(argv: list[str] | None = None) -> int:
             default_profile=args.default_profile,
             server=args.server,
             token=args.token,
+            max_recovery_attempts=args.max_recovery_attempts,
         )
         if connect_result.is_err:
             print(f"error: {connect_result.error}", file=sys.stderr)

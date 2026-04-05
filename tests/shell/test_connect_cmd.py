@@ -75,7 +75,7 @@ def test_connect_server_path_uses_env_token(
     calls: list[tuple[str, int, str]] = []
 
     def _fake_run_bridge(
-        *, host: str, port: int, bearer_token: str
+        *, host: str, port: int, bearer_token: str, max_recovery_attempts: int = 3
     ) -> Result[None, str]:
         calls.append((host, port, bearer_token))
         return Result(value=None)
@@ -186,7 +186,7 @@ def test_connect_discovery_uses_published_lockfile_port(
     calls: list[tuple[str, int, str]] = []
 
     def _fake_run_bridge(
-        *, host: str, port: int, bearer_token: str
+        *, host: str, port: int, bearer_token: str, max_recovery_attempts: int = 3
     ) -> Result[None, str]:
         calls.append((host, port, bearer_token))
         return Result(value=None)
@@ -229,6 +229,7 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         should_stop: Callable[[], bool],
         stdin_buffer,
         stdout_buffer,
+        max_recovery_attempts: int = 3,
     ) -> Result[None, str]:
         _ = mcp_url
         _ = bearer_token
@@ -343,6 +344,7 @@ def test_run_bridge_waits_for_status_ready_before_forwarding(
         should_stop: Callable[[], bool],
         stdin_buffer,
         stdout_buffer,
+        max_recovery_attempts: int = 3,
     ) -> Result[None, str]:
         _ = mcp_url, bearer_token, bridge_connection_id, should_stop
         _ = stdin_buffer, stdout_buffer
@@ -648,6 +650,7 @@ def test_forward_stdio_http_preserves_content_length_framing_for_tools_flow(
         bearer_token: str,
         payload: bytes,
         session_id: str | None = None,
+        max_recovery_attempts: int = 3,
     ) -> Result[tuple[str, bytes, str | None], str]:
         _ = mcp_url
         _ = bearer_token
@@ -705,6 +708,7 @@ def test_forward_stdio_http_preserves_newline_framing_for_tools_flow(
         bearer_token: str,
         payload: bytes,
         session_id: str | None = None,
+        max_recovery_attempts: int = 3,
     ) -> Result[tuple[str, bytes, str | None], str]:
         _ = mcp_url
         _ = bearer_token
@@ -815,6 +819,7 @@ def test_forward_stdio_http_returns_error_on_write_failure(
         bearer_token: str,
         payload: bytes,
         session_id: str | None = None,
+        max_recovery_attempts: int = 3,
     ) -> Result[tuple[str, bytes, str | None], str]:
         _ = mcp_url, bearer_token, payload, session_id
         return Result(value=response)
@@ -1023,6 +1028,7 @@ def test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup(
         should_stop: Callable[[], bool],
         stdin_buffer,
         stdout_buffer,
+        max_recovery_attempts: int = 3,
     ) -> Result[None, str]:
         forward_calls.append(None)
         # Simulate that should_stop becomes True (interrupt was received)
@@ -1118,6 +1124,7 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
         should_stop: Callable[[], bool],
         stdin_buffer,
         stdout_buffer,
+        max_recovery_attempts: int = 3,
     ) -> Result[None, str]:
         # Forward completes normally
         return Result(value=None)
@@ -1185,6 +1192,7 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         should_stop: Callable[[], bool],
         stdin_buffer,
         stdout_buffer,
+        max_recovery_attempts: int = 3,
     ) -> Result[None, str]:
         _ = mcp_url, bearer_token, bridge_connection_id, should_stop
         _ = stdin_buffer, stdout_buffer

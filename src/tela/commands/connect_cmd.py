@@ -89,6 +89,7 @@ def connect_command(
     default_profile: str | None = None,
     server: str | None = None,
     token: str | None = None,
+    max_recovery_attempts: int = 3,
 ) -> Result[int, str]:
     """Run ``tela connect`` stdio bridge.
 
@@ -97,6 +98,7 @@ def connect_command(
         default_profile: Optional open-mode default profile for auto-started server.
         server: Optional explicit ``host:port`` endpoint.
         token: Optional bearer token override.
+        max_recovery_attempts: Maximum transient error recovery retries.
 
     Returns:
         Result with exit code ``0`` on success.
@@ -123,6 +125,7 @@ def connect_command(
         host=endpoint_result.value.host,
         port=endpoint_result.value.port,
         bearer_token=token_result.value,
+        max_recovery_attempts=max_recovery_attempts,
     )
     if bridge_result.is_err:
         return Result(error=bridge_result.error)
@@ -318,13 +321,16 @@ def _autostart_serve(
 
 
 # @shell_complexity: bridge lifecycle coordinates signal handling, connect, forward, and disconnect.
-def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]:
+def _run_bridge(
+    *, host: str, port: int, bearer_token: str, max_recovery_attempts: int = 3
+) -> Result[None, str]:
     """Run connect/register/forward/disconnect lifecycle.
 
     Args:
         host: Gateway host address.
         port: Gateway port number.
         bearer_token: Bearer token for authentication.
+        max_recovery_attempts: Maximum transient error recovery retries.
 
     Returns:
         Result with None on success or error string on failure.
@@ -384,6 +390,7 @@ def _run_bridge(*, host: str, port: int, bearer_token: str) -> Result[None, str]
                     should_stop=stop_requested.is_set,
                     stdin_buffer=sys.stdin.buffer,
                     stdout_buffer=sys.stdout.buffer,
+                    max_recovery_attempts=max_recovery_attempts,
                 )
                 if forward_result.is_err:
                     bridge_error = forward_result.error
@@ -454,6 +461,7 @@ def _forward_stdio_http(
     should_stop: Callable[[], bool],
     stdin_buffer: BinaryIO,
     stdout_buffer: BinaryIO,
+    max_recovery_attempts: int = 3,
 ) -> Result[None, str]:
     """Forward MCP stdio frames to HTTP and stream responses back.
 
@@ -481,6 +489,7 @@ def _forward_stdio_http(
             bearer_token=bearer_token,
             payload=message,
             session_id=session_id,
+            max_recovery_attempts=max_recovery_attempts,
         )
         if http_result.is_err:
             return Result(error=http_result.error)
@@ -642,10 +651,11 @@ def _post_mcp_message(
     bearer_token: str,
     payload: bytes,
     session_id: str | None = None,
+    max_recovery_attempts: int = 3,
 ) -> Result[tuple[str, bytes, str | None], str]:
     """POST payload to MCP Streamable HTTP endpoint with transient retry.
 
-    Retries up to ``HTTP_TRANSIENT_RETRIES`` times on transient connection
+    Retries up to ``max_recovery_attempts`` times on transient connection
     errors (connection refused, reset, broken pipe) that occur when the
     gateway is still starting up. Non-transient errors are returned immediately.
 
@@ -662,7 +672,7 @@ def _post_mcp_message(
         headers["mcp-session-id"] = session_id
 
     last_error: str = ""
-    for attempt in range(HTTP_TRANSIENT_RETRIES + 1):
+    for attempt in range(max_recovery_attempts + 1):
         request = urllib_request.Request(
             mcp_url,
             data=payload,
@@ -679,7 +689,7 @@ def _post_mcp_message(
         except urllib_error.HTTPError as exc:
             if (
                 exc.code == 503
-                and attempt < HTTP_TRANSIENT_RETRIES
+                and attempt < max_recovery_attempts
                 and _is_mcp_transient_warming_error(exc).value
             ):
                 time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
@@ -689,7 +699,7 @@ def _post_mcp_message(
             last_error = f"MCP_FORWARD_FAILED: {exc.reason}"
             if (
                 not _is_transient_url_error(exc).value
-                or attempt == HTTP_TRANSIENT_RETRIES
+                or attempt == max_recovery_attempts
             ):
                 return Result(error=last_error)
             time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
