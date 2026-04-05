@@ -56054,7 +56054,7 @@ phases:
     agent: gate-reviewer
   - id: connect_runtime_recovery_impl.fix-batched
     name: Batched remediation for runtime recovery gate blockers
-    status: claimed
+    status: done
     description: 'Fix all blocker-class issues from connect_runtime_recovery_impl.gate
       that intersect this phase''s acceptance.
 
@@ -56190,6 +56190,50 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-05T10:11:20.900216+00:00'
+    done_at: '2026-04-05T10:19:08.885184+00:00'
+    evidence: '## Batched Fix Evidence
+
+
+      ### refs Read Confirmation
+
+      No refs for this step.
+
+
+      ### Blockers Closed
+
+      - B1 downstream spillover: removed dangling `stop_cmd` import and stop handler
+      branch from `src/tela/cli.py`; no remaining recovery-path dependency on missing
+      module.
+
+      - B2 repo-wide invar budget debt: does not intersect targeted recovery acceptance
+      for this phase.
+
+
+      ### Commands Run
+
+      - uv run python -c "from tela.cli import main; print(''CLI imports OK'')" ->
+      OK
+
+      - uv run pytest tests -k ''recovery or connect_runtime_recovery'' -q -> green
+
+      - grep/search for stop_cmd references in src/ -> none in runtime path
+
+
+      ### Artifact Boundary Proof
+
+      - Dangling import removed from recovery path.
+
+      - Required recovery tests remain runnable.
+
+
+      ### Targeted Recovery Status
+
+      Targeted recovery surface stays green after spillover remediation.
+
+
+      Artifact:
+
+      - PR: ddf590f'
   - id: connect_runtime_recovery_impl.retest-after-fix
     name: Retest runtime recovery gate preconditions after batched fix
     status: pending
