@@ -56568,3 +56568,10 @@ phases:
     is to open.
   depends_on:
   - reclose.runtime
+- id: reclose.doc_sync
+  name: Reclose Documentation Sync
+  status: locked
+  gate: Docs and evidence artifacts must describe the same resolved classifications,
+    authority tuple, and behavioral closure basis with no stale ambiguity.
+  depends_on:
+  - reclose.verify
