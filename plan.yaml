@@ -55861,7 +55861,7 @@ phases:
       - tests/shell/test_connect_bridge_readiness_gaps_red.py'
   - id: connect_runtime_recovery_impl.test-define-red
     name: Add red tests for recovery scenarios
-    status: claimed
+    status: done
     description: 'Add failing tests for: connection refused, stale lockfile, gateway
       503, successful rediscover/re-autostart/re-register/continue-forwarding, recovery-attempt
       limit. Touch: tests/shell/test_connect_cmd.py'
@@ -55870,6 +55870,33 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-05T09:32:42.104859+00:00'
+    done_at: '2026-04-05T09:49:42.960057+00:00'
+    evidence: 'Artifact:
+
+      - PR: e120dc7f2ab8b3fc2de8a69f2dd5d7f9c596a0ea
+
+
+      Verification:
+
+      - Run: uv run pytest tests/shell/test_connect_recovery_red.py -v --tb=line ->
+      4 failed (expected red), 4 passed
+
+
+      Spec link:
+
+      - connect_runtime_recovery_impl.test-define-red
+
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      observed_result: 4 red tests failed as intended and exposed runtime recovery
+      gaps.
+
+      failure_alignment: failures align to missing retry/recovery semantics.
+
+      product_implementation_files_modified: none'
   - id: connect_runtime_recovery_impl.impl-cli-flag
     name: Implement CLI flag --max-recovery-attempts
     status: done
