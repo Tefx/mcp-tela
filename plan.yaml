@@ -55825,3 +55825,12 @@ phases:
       flag behavior. Touch: src/tela/commands/connect_cmd.py, src/tela/cli.py. Authoritative
       interface: tela connect CLI + new --max-recovery-attempts flag.'
     agent: python-executor
+  - id: connect_runtime_recovery_impl.test-define-red
+    name: Add red tests for recovery scenarios
+    status: pending
+    description: 'Add failing tests for: connection refused, stale lockfile, gateway
+      503, successful rediscover/re-autostart/re-register/continue-forwarding, recovery-attempt
+      limit. Touch: tests/shell/test_connect_cmd.py'
+    depends_on:
+    - connect_runtime_recovery_impl.contract
+    agent: python-executor
