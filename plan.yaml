@@ -55881,3 +55881,11 @@ phases:
   status: locked
   depends_on:
   - connect_runtime_recovery_impl
+  steps:
+  - id: connect_runtime_recovery_verify.integration-verification
+    name: Integration verification
+    status: pending
+    description: 'Independently exercise connect bridge through a gateway-exit/recovery
+      scenario. Require actual command/output evidence, not only unit test summary.
+      Touch: src/tela/commands/connect_cmd.py, src/tela/cli.py, tests/shell/test_connect_cmd.py'
+    agent: blind-tester
