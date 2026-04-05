@@ -56908,6 +56908,74 @@ phases:
     defect remediation with green retest evidence before the phase can open.
   depends_on:
   - reclose.surface
+  steps:
+  - id: reclose.runtime.test_define_red
+    name: Define executable red runtime proof probes
+    status: pending
+    description: 'Define executable proof probes for the remaining runtime blocker
+      families before closing gaps.
+
+
+      This is a TEST-DEFINITION step.
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+
+      Scope is limited to tests and minimal test helpers only.
+
+
+      Required probe split:
+
+      - R13 runtime lock-state tracing witness
+
+      - R42 config-remove during in-flight recovery witness
+
+      - R42 disconnect-under-recovery witness
+
+
+      If a real-runtime witness cannot be fully authored without product changes,
+      make the earliest meaningful red probe explicit and say what product gap it
+      exposes.
+
+
+      ## Spec-Fixture Conformance (MANDATORY)
+
+      At least one probe fixture MUST use the documented runtime/evidence format from
+      the authoritative ADR and evidence registers rather than convenience-only fixtures.'
+    verification: '- Probe set separates R13 from the two R42 paths
+
+      - Modified files are limited to tests and minimal test helpers
+
+      - Red behavior exposes the unresolved proof or runtime gap without modifying
+      product code'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Test-Definition Evidence
+
+      - modified files limited to tests/helpers:
+
+      - exposed_gaps:
+
+      - named probes added or revised:
+
+      - downstream implementation owner: reclose.runtime.close_gap_if_exposed
+
+      '
+    agent: python-senior-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
