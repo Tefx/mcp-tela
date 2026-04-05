@@ -56052,6 +56052,142 @@ phases:
     depends_on:
     - connect_runtime_recovery_impl.update-docs
     agent: gate-reviewer
+  - id: connect_runtime_recovery_impl.fix-batched
+    name: Batched remediation for runtime recovery gate blockers
+    status: pending
+    description: 'Fix all blocker-class issues from connect_runtime_recovery_impl.gate
+      that intersect this phase''s acceptance.
+
+
+      Work type: defect_repair
+
+
+      Scope:
+
+      - Close B1 downstream spillover by ensuring connect runtime recovery artifacts
+      do not leave dangling CLI imports or untracked required command/test files.
+
+      - Preserve the targeted recovery acceptance path so downstream recovery verification
+      remains green after the fix.
+
+      - Do NOT take ownership of repo-wide pre-existing invar guard budget debt unless
+      a concrete failure intersects the targeted recovery acceptance checked by this
+      phase.
+
+
+      Required actions:
+
+      1. Inspect the CLI/runtime recovery import surface around src/tela/commands/stop_cmd.py
+      and any recovery-related command registrations.
+
+      2. Make the phase self-contained by either tracking the required command/test
+      files for this feature path or removing/rewiring dangling imports that make
+      the recovery path depend on missing history.
+
+      3. Re-check the targeted recovery test surface after the code fix so the downstream
+      retest step can prove green behavior.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: this phase''s artifact boundary leaks into a CLI command module
+      that is missing/untracked in isolated execution history.
+
+      - Symptom: gate cannot allow open because recovery acceptance depends on a downstream
+      spillover path instead of a self-contained phase surface.
+
+      - Why this fix is not surface-level: it must remove the dependency leak or make
+      the required artifact explicit, not just patch a single failing import sighting.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Known Risks
+
+      - Do not silently broaden this step into repo-wide invar remediation.
+
+      - Search for siblings beyond the single reported import so no equivalent dangling
+      recovery-path imports remain.'
+    verification: '- `python -m pytest tests -k ''recovery or connect_runtime_recovery''
+      -q` (or the repo''s narrower targeted recovery test command if the exact tests
+      are renamed)
+
+      - `python -m pytest tests -k ''stop_cmd or connect'' -q` for the touched CLI/recovery
+      seam when applicable
+
+      - `git ls-files --error-unmatch src/tela/commands/stop_cmd.py` if the file remains
+      required by the CLI import graph; otherwise provide evidence the dangling import
+      was removed and the command graph still loads
+
+      - Provide grep/import-trace evidence that no equivalent dangling CLI import
+      remains in the targeted recovery path'
+    evidence_template: '## Batched Fix Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Blockers Closed
+
+      - B1 downstream spillover: <how the dangling import / untracked artifact dependency
+      was removed or made explicit>
+
+      - B2 repo-wide invar budget debt: <why non-intersecting for this phase, or exact
+      intersecting failure if ownership became necessary>
+
+
+      ### Commands Run
+
+      ```bash
+
+      <paste exact targeted commands>
+
+      ```
+
+
+      ### Artifact Boundary Proof
+
+      - Required command/test files for this phase: <list>
+
+      - Still imported from recovery path: <list or "none">
+
+      - Dangling imports removed or rewired: <list>
+
+
+      ### Sibling Search
+
+      - Search command(s):
+
+      ```bash
+
+      <paste grep/import-trace commands>
+
+      ```
+
+      - Result: <all sibling spillover sites addressed or none found>
+
+
+      ### Targeted Recovery Status
+
+      - Recovery-focused tests before handoff: <pass/fail summary>
+
+      - Remaining acceptance risk: <none or describe narrowly>'
+    depends_on:
+    - connect_runtime_recovery_impl.update-docs
+    agent: python-executor
 - id: connect_runtime_recovery_verify
   name: Verify connect runtime recovery
   status: locked
