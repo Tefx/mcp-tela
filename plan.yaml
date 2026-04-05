@@ -56538,3 +56538,11 @@ phases:
       uncertainty_sources:
 
       - non-intersecting doc-contract drift tests and one race-flake noted by auditor'
+- id: reclose.basis
+  name: Reclose Basis Normalization
+  status: pending
+  gate: Normalized blocker ledger must explicitly carry all blocker-class proof obligations
+    forward with gate_open_allowed=false until reclose verification completes.
+  depends_on:
+  - debt_closure.verify_and_close
+  - connect_runtime_recovery_verify
