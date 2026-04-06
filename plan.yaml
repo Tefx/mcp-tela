@@ -56540,7 +56540,7 @@ phases:
       - non-intersecting doc-contract drift tests and one race-flake noted by auditor'
 - id: reclose.basis
   name: Reclose Basis Normalization
-  status: in_progress
+  status: done
   gate: Normalized blocker ledger must explicitly carry all blocker-class proof obligations
     forward with gate_open_allowed=false until reclose verification completes.
   depends_on:
@@ -56661,7 +56661,7 @@ phases:
       \ naming remaining gates not intersected"
   - id: reclose.basis.gate
     name: Gate normalized blocker basis
-    status: claimed
+    status: done
     description: 'Gate review for the normalized blocker basis.
 
 
@@ -56714,9 +56714,41 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-06T18:59:14.845693+00:00'
+    done_at: '2026-04-06T19:05:14.246261+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n\nNo refs for this step.\n\n\
+      ## Gate Review Report\n- blocker families checked: `R13`, `R42-CONFIG-REMOVE-INFLIGHT`,\
+      \ `R42-DISCONNECT-UNDER-RECOVERY`, `SURFACE-REENUMERATE`, `AUTH-MCP-FASTMCP`\
+      \ — all five explicitly present in all three authoritative artifacts\n- contradictions\
+      \ found: `None` — all three artifacts (`normalized_blocker_basis.md`, `behavioral_proof_register.md`,\
+      \ `runtime_uncertainty_register.md`) are internally consistent, provenance is\
+      \ separated from disposition, and `gate_open_allowed=false` appears in all three\n\
+      - provenance used as softening disposition: `No` — line 17 of runtime_uncertainty_register.md\
+      \ explicitly states \"pre-existing is used only as provenance, not as a softening\
+      \ disposition\"\n- gate_open_allowed basis: consistently `false` across all\
+      \ authoritative artifacts (lines 25, 21, 101 respectively)\n- evidence basis\
+      \ is internally consistent: `Yes` — no unresolved contradiction leaves a path\
+      \ for false-close\n- decision: `BLOCK` — the normalized blocker basis is correct\
+      \ and internally consistent; the reclose campaign can proceed from this basis\n\
+      \nBehavioral-proof reporting (mandatory):\n- behavioral_proof_register: all\
+      \ five blocker rows present with blocker status (`NEEDS_TEST` or `UNCERTAIN_BLOCKING`);\
+      \ gate decision is `false`; rows 11-17 explicitly block gate-open until downstream\
+      \ reclose verification\n- gate_open_allowed: `false` — line 101 states gate-open\
+      \ disallowed until downstream reclose verification closes blocker rows\n- uncertainty\
+      \ sources when proof is incomplete:\n  - R13: runtime witness SKIPPED → `close_runtime_gap_if_exposed`\
+      \ must attach runtime tracing/contention evidence\n  - R42-CONFIG-REMOVE-INFLIGHT:\
+      \ in-flight scenario XFAIL → `close_runtime_gap_if_exposed` must produce integration\
+      \ evidence\n  - R42-DISCONNECT-UNDER-RECOVERY: no disconnect-path witness row\
+      \ → `close_runtime_gap_if_exposed` must add explicit proof row\n  - SURFACE-REENUMERATE:\
+      \ no explicit classification → `decide_surface_and_manifest_authority` must\
+      \ close classification\n  - AUTH-MCP-FASTMCP: authorities split → `decide_surface_and_manifest_authority`\
+      \ must record authoritative tuple\n\nNo gate-preview violation present:\n  -\
+      \ all blocker families present: `Yes`\n  - provenance not used as softening:\
+      \ `Yes`\n  - no artifact implying false-close acceptable: `Yes` (all artifacts\
+      \ explicitly forbid it)\n\nCommit: `f6e2ec6e` (`gate review: normalized blocker\
+      \ basis is internally consistent`)"
 - id: reclose.surface
   name: Surface and Authority Reclose
-  status: locked
+  status: pending
   gate: Surface classification and FastMCP authority must be applied, independently
     audited, and proven non-ambiguous before runtime reclose can rely on them.
   depends_on:
