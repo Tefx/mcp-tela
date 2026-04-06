@@ -56945,7 +56945,7 @@ phases:
     claimed_at: '2026-04-06T19:15:23.895769+00:00'
   - id: reclose.surface.spec_conformance
     name: Verify surface and authority conformance
-    status: claimed
+    status: done
     description: 'Spec conformance verification for the re_enumerate classification
       and FastMCP authority tuple.
 
@@ -56991,6 +56991,49 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-06T19:15:28.441454+00:00'
+    done_at: '2026-04-06T19:18:19.388938+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - evidence/surface_and_manifest_authority_decision.md — key passages: decision_table
+      with SURFACE-REENUMERATE and AUTH-MCP-FASTMCP requirements, verification requirements
+
+      - docs/DESIGN.md — key passages: downstream.py Public API list, gateway_runtime.py
+      Dependencies/FastMCP Translation Boundary
+
+      - docs/INTERFACES.md — key passages: FastMCP Translation Boundary section 9.0a
+
+      - pyproject.toml — fastmcp dependency
+
+      - src/tela/shell/downstream.py — re_enumerate docstring
+
+      - src/tela/shell/reload.py — _manual_reenumerate_adapter import
+
+
+      ## Spec Conformance Report
+
+      | Requirement | Evidence | Verdict | Notes |
+
+      |---|---|---|---|
+
+      | SURFACE-REENUMERATE classify as supported public surface | downstream.py docstring
+      explicit classification | CONFORMS | explicit in code and docs |
+
+      | SURFACE-REENUMERATE docs marker | DESIGN.md public API entry marked resolved
+      | CONFORMS | marker present |
+
+      | AUTH-MCP-FASTMCP package/import/docs tuple | pyproject + gateway imports +
+      DESIGN/INTERFACES translation boundary | CONFORMS | coherent authority tuple
+      |
+
+
+      ## Coverage Summary
+
+      - SURFACE-REENUMERATE: RESOLVED
+
+      - AUTH-MCP-FASTMCP: RESOLVED'
   - id: reclose.surface.gate
     name: Gate surface and authority reclose
     status: pending
