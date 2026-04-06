@@ -57108,7 +57108,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.surface.sync_evidence_registers
     name: Synchronize authoritative evidence registers
-    status: claimed
+    status: done
     description: 'Synchronize the authoritative evidence artifacts with the already-verified
       code, docs, and test state for SURFACE-REENUMERATE and AUTH-MCP-FASTMCP.
 
@@ -57209,6 +57209,51 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-06T19:46:51.306187+00:00'
+    done_at: '2026-04-06T19:55:25.657822+00:00'
+    evidence: '## Evidence Register Sync Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      - evidence/runtime_uncertainty_register.md
+
+      - evidence/behavioral_proof_register.md
+
+      - evidence/normalized_blocker_basis.md
+
+
+      ### Artifact-by-Artifact Updates
+
+      - evidence/runtime_uncertainty_register.md — SURFACE-REENUMERATE and AUTH-MCP-FASTMCP
+      moved from blocking-now to CLOSED-2026-04-07; R13/R42 rows left open
+
+      - evidence/behavioral_proof_register.md — SURFACE-REENUMERATE status to RESOLVED_EXTERNAL_CONTRACT;
+      AUTH-MCP-FASTMCP to RESOLVED; gate decision updated to remaining 3 runtime blockers
+
+      - evidence/normalized_blocker_basis.md — SURFACE-REENUMERATE and AUTH-MCP-FASTMCP
+      disposition updated to CLOSED-2026-04-07 and resolved records added
+
+
+      ### Blocker Row Disposition
+
+      | Family | Disposition | Evidence Ref |
+
+      |---|---|---|
+
+      | SURFACE-REENUMERATE | CLOSED-2026-04-07 | docs/DESIGN.md public API resolved
+      marker |
+
+      | AUTH-MCP-FASTMCP | CLOSED-2026-04-07 | docs/DESIGN.md + docs/INTERFACES.md
+      translation boundary |
+
+
+      ### Consistency Check
+
+      - Contradictions removed across three artifacts
+
+      - Runtime-only blockers remaining: R13, R42-CONFIG-REMOVE-INFLIGHT, R42-DISCONNECT-UNDER-RECOVERY
+
+      - Non-runtime rows now closed and aligned with verified code/docs/tests'
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
