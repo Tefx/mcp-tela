@@ -57108,7 +57108,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.surface.sync_evidence_registers
     name: Synchronize authoritative evidence registers
-    status: pending
+    status: claimed
     description: 'Synchronize the authoritative evidence artifacts with the already-verified
       code, docs, and test state for SURFACE-REENUMERATE and AUTH-MCP-FASTMCP.
 
@@ -57207,6 +57207,8 @@ phases:
     - reclose.surface.audit_alignment
     - reclose.surface.spec_conformance
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer-tacit
+    claimed_at: '2026-04-06T19:46:51.306187+00:00'
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
