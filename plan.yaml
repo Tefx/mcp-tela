@@ -57102,6 +57102,107 @@ phases:
     - reclose.surface.audit_alignment
     - reclose.surface.spec_conformance
     agent: gate-reviewer-tacit
+  - id: reclose.surface.sync_evidence_registers
+    name: Synchronize authoritative evidence registers
+    status: pending
+    description: 'Synchronize the authoritative evidence artifacts with the already-verified
+      code, docs, and test state for SURFACE-REENUMERATE and AUTH-MCP-FASTMCP.
+
+
+      Scope:
+
+      - evidence/runtime_uncertainty_register.md
+
+      - evidence/behavioral_proof_register.md
+
+      - evidence/normalized_blocker_basis.md
+
+
+      Implementation intent:
+
+      - update stale or contradictory rows after the resolved surface re-enumeration
+      and FastMCP authority changes
+
+      - align blocker status, authority basis, and proof references across all three
+      artifacts
+
+      - preserve completed step outputs as authoritative inputs; do not reopen code/doc/test
+      implementation
+
+      - close rows that are already satisfied by verified code/docs/tests state
+
+      - leave only genuinely unresolved runtime blockers open, with explicit runtime-only
+      scoping and cross-links
+
+
+      Required outputs:
+
+      - each SURFACE-REENUMERATE and AUTH-MCP-FASTMCP row is normalized across the
+      three artifacts
+
+      - every blocker-class row is either closed with cited evidence or explicitly
+      marked as runtime-only
+
+      - no contradiction remains between blocker basis, behavioral proof status, and
+      runtime uncertainty wording'
+    verification: '- The three evidence artifacts agree on SURFACE-REENUMERATE and
+      AUTH-MCP-FASTMCP status and authority wording
+
+      - Every blocker row is either closed with current evidence refs or explicitly
+      scoped to runtime blockers only
+
+      - No stale blocker-class row remains that contradicts the verified code/docs/tests
+      state
+
+      - Downstream gate can evaluate surface reclose without register drift'
+    evidence_template: '## Evidence Register Sync Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Artifact-by-Artifact Updates
+
+      - evidence/runtime_uncertainty_register.md — <rows updated and why>
+
+      - evidence/behavioral_proof_register.md — <rows updated and why>
+
+      - evidence/normalized_blocker_basis.md — <rows updated and why>
+
+
+      ### Blocker Row Disposition
+
+      | Family | Artifact Row(s) | Disposition | Evidence Ref |
+
+      |--------|------------------|-------------|--------------|
+
+      | SURFACE-REENUMERATE | <rows> | CLOSED or RUNTIME-ONLY | <spec/test/code/doc
+      ref> |
+
+      | AUTH-MCP-FASTMCP | <rows> | CLOSED or RUNTIME-ONLY | <spec/test/code/doc ref>
+      |
+
+
+      ### Consistency Check
+
+      - Contradictions removed: <list or none>
+
+      - Runtime-only blockers remaining: <list or none>
+
+      - Proof that non-runtime rows were closed or downgraded from blocker-class:
+      <summary>'
+    depends_on:
+    - reclose.surface.apply_resolution
+    - reclose.surface.audit_alignment
+    - reclose.surface.spec_conformance
+    agent: doc-reviewer-tacit
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
