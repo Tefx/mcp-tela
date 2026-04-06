@@ -56748,7 +56748,7 @@ phases:
       \ basis is internally consistent`)"
 - id: reclose.surface
   name: Surface and Authority Reclose
-  status: pending
+  status: in_progress
   gate: Surface classification and FastMCP authority must be applied, independently
     audited, and proven non-ambiguous before runtime reclose can rely on them.
   depends_on:
@@ -56756,7 +56756,7 @@ phases:
   steps:
   - id: reclose.surface.apply_resolution
     name: Apply surface classification and authority resolution
-    status: pending
+    status: claimed
     description: 'Apply the recorded resolution for SURFACE-REENUMERATE and AUTH-MCP-FASTMCP.
 
 
@@ -56837,6 +56837,8 @@ phases:
 
       '
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-06T19:05:34.588642+00:00'
   - id: reclose.surface.audit_alignment
     name: Audit surface and manifest alignment
     status: pending
