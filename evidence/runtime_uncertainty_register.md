@@ -16,6 +16,12 @@
 ## Provenance vs Disposition Check
 - any item marked pre-existing but blocking-now? yes — `R13`, `R42-CONFIG-REMOVE-INFLIGHT`, and `R42-DISCONNECT-UNDER-RECOVERY` are blocker debt now because current evidence is insufficient and these items intersect `debt_closure.verify.runtime_evidence_r13_r42` and `debt_closure.final_review.final_gate`; `pre-existing` is used only as provenance, not as a softening disposition.
 
+## Normalized Blocker Basis Rule
+- The authoritative blocker families are exactly: `R13`, `R42-CONFIG-REMOVE-INFLIGHT`, `R42-DISCONNECT-UNDER-RECOVERY`, `SURFACE-REENUMERATE`, and `AUTH-MCP-FASTMCP`.
+- `gate_open_allowed=false` until downstream reclose verification closes those blocker rows in the structured evidence set; documenting a blocker without closing it is not enough.
+- No blocker-class item may be downgraded to non-blocking unless explicit non-intersection evidence names the remaining gates it does not intersect. No such downgrade evidence exists in the current record for any of the five blocker families.
+- The earlier closure was invalid because it treated documented-but-open blocker rows as compatible with success instead of requiring those rows to be closed before gate-open.
+
 ## Carry-Forward Blockers
 - `R13` -> `debt_closure.impl.close_runtime_gap_if_exposed`
 - `R42-CONFIG-REMOVE-INFLIGHT` -> `debt_closure.impl.close_runtime_gap_if_exposed`

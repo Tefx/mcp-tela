@@ -8,11 +8,12 @@ Step: debt_closure.runtime_evidence.collect_behavioral_proof
 
 | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref | status | closure_path | gate_decision_basis |
 |---|---|---|---|---|---|---|
-| R13 | `_registry_lock` is not held across awaited network I/O in downstream recovery paths | Named integration test(s) showing lock-state transitions around awaited network calls; exact command lines and full raw output; artifact link in behavioral proof register | tests/repro/test_adr006_runtime_hardening_probes.py::TestR13RegistryLockNotHeldDuringAwait::test_r13_lock_released_before_lock_acquire_await + code analysis of downstream.py:580-875 | PROVEN | N/A — no defect exposed | **PASS**: Code-structure analysis confirms `_registry_lock` is only held during synchronous lock management (lines 580-584). After `_acquire_recovery_lock` returns (line 612), `_registry_lock` is released. All network I/O awaits in `_recover_server_client` (lines 718-728, 769-784, 843-862) occur after `_registry_lock` is released. The lock is not held during any awaited network operation. Static code reading alone cannot pass for behavioral proof, BUT the probe confirms the structure is correct and the runtime instrumentation probe (SKIPPED) documents what would be needed for full trace evidence. |
-| R42 | Per-server recovery lock is pruned after config-reload-remove and disconnect scenarios, including in-flight recovery cases | Runtime witness evidence for removal/disconnect while recovery is in flight; command+output proving `config_missing=true` where applicable and no stale per-server recovery lock after cleanup | tests/repro/test_adr006_runtime_hardening_probes.py::TestR42ConfigReloadRemovesLock::test_r42_prune_lock_after_config_remove + XFAIL test_r42_config_remove_during_inflight_recovery | NEEDS_TEST | debt_closure.impl.close_runtime_gap_if_exposed | **BLOCK**: Unit-level probe passes for config-reload-remove lock pruning (PASS). In-flight recovery race condition probe is XFAIL — requires integration-level test to observe `config_missing=true` during in-flight recovery AND lock cleanup after. The R42 behavioral invariant requires both scenarios observed. |
+| R13 | `_registry_lock` is not held across awaited network I/O in downstream recovery paths | Named integration test(s) showing lock-state transitions around awaited network calls; exact command lines and full raw output; artifact link in behavioral proof register | tests/repro/test_adr006_runtime_hardening_probes.py::TestR13RegistryLockNotHeldDuringAwait::test_r13_lock_released_before_lock_acquire_await + skipped runtime probe `test_r13_runtime_lock_state_during_network_await` + code analysis of downstream.py:580-875 | NEEDS_TEST | debt_closure.impl.close_runtime_gap_if_exposed | **BLOCK**: Code-structure analysis supports the claim, but the required runtime witness is still missing. Static code reading alone cannot close R13. Until runtime tracing/contention evidence is attached and reclose verification closes this row, `gate_open_allowed` remains false. |
+| R42-CONFIG-REMOVE-INFLIGHT | Per-server recovery lock is pruned when config reload removes a server during in-flight recovery, with fail-closed `config_missing=true` surfaced | Runtime witness evidence for config-reload-remove during in-flight recovery; exact command+output proving `config_missing=true` and no stale per-server recovery lock after cleanup | tests/repro/test_adr006_runtime_hardening_probes.py::TestR42ConfigReloadRemovesLock::test_r42_prune_lock_after_config_remove + XFAIL `test_r42_config_remove_during_inflight_recovery` | NEEDS_TEST | debt_closure.impl.close_runtime_gap_if_exposed | **BLOCK**: The unit-level prune helper pass is not enough. The in-flight config-remove race still lacks runtime witness evidence, so this blocker remains open and keeps `gate_open_allowed=false` until downstream reclose verification closes the row. |
+| R42-DISCONNECT-UNDER-RECOVERY | Per-server recovery lock is pruned after disconnect pressure while recovery is underway, leaving no stale lock state | Runtime witness evidence for disconnect-under-recovery cleanup showing no stale per-server recovery lock remains after disconnect pressure | No separate disconnect-path witness row exists in current artifacts; current R42 summary evidence is insufficient to disposition this path | NEEDS_TEST | debt_closure.impl.close_runtime_gap_if_exposed | **BLOCK**: The earlier combined R42 summary hid that the disconnect-under-recovery path never received its own proof row. This blocker cannot be softened or merged away without explicit non-intersection evidence, which is not present. |
 | UNC-LIVENESS-HEALTHY-NEIGHBOR | Healthy-neighbor liveness remains unaffected while failing server recovery is in progress | Integration evidence during recovery window with exact command/output | tests/repro/test_adr006_runtime_hardening_probes.py::TestHealthyNeighborLiveness::test_healthy_neighbor_uses_different_recovery_lock + SKIPPED test_healthy_neighbor_concurrent_calls_during_peer_recovery | RESOLVED_NON_BLOCKING | N/A — per-server lock design confirmed | **PASS**: Unit probe confirms `_recovery_locks` is a per-server dict `{server_name: asyncio.Lock}`, ensuring server A's lock does not block server B. Design satisfies healthy-neighbor liveness. Integration test (SKIPPED) would provide fuller evidence but design correctness is confirmed. No concurrency defect exposed. |
-| UNC-CONFIG-MISSING-FAIL-CLOSED | Missing-server path fails closed with `config_missing=true` where closure contract requires it | Runtime evidence from removal/recovery scenarios showing fail-closed behavior and `config_missing=true` | tests/repro/test_adr006_runtime_hardening_probes.py::TestConfigMissingFailClosed::test_get_runtime_server_config_returns_config_missing_true | RESOLVED_BLOCKING | N/A — fail-closed behavior confirmed | **PASS**: Unit probe confirms `_get_runtime_server_config(nonexistent_server)` returns `config_missing=True`. Code at downstream.py:640-654 implements fail-closed semantics. No permissive leak observed. |
-| SURFACE-REENUMERATE | `re_enumerate()` classification is explicitly one of: supported public surface, framework-only escape hatch, or dead export to remove | Decision record in runtime uncertainty register matching docs/tests/annotations | tests/repro/test_adr006_runtime_hardening_probes.py::TestReEnumerateSurfaceClassification::test_re_enumerate_is_importable (PASS) + test_re_enumerate_surface_classification_audit (FAIL) | UNCERTAIN_BLOCKING | debt_closure.impl.decide_surface_and_manifest_authority | **BLOCK**: re_enumerate is importable (PASS) but no explicit surface classification in docstring. Classification decision must be recorded in runtime uncertainty register. |
+| UNC-CONFIG-MISSING-FAIL-CLOSED | Missing-server path fails closed with `config_missing=true` where closure contract requires it | Runtime evidence from removal/recovery scenarios showing fail-closed behavior and `config_missing=true` | tests/repro/test_adr006_runtime_hardening_probes.py::TestConfigMissingFailClosed::test_get_runtime_server_config_returns_config_missing_true | RESOLVED_NON_BLOCKING | N/A — fail-closed behavior confirmed | **PASS**: Unit probe confirms `_get_runtime_server_config(nonexistent_server)` returns `config_missing=True`. Code at downstream.py:640-654 implements fail-closed semantics. No permissive leak observed. |
+| SURFACE-REENUMERATE | `re_enumerate()` classification is explicitly one of: `RESOLVED_EXTERNAL_CONTRACT`, `RESOLVED_INTERNAL_ONLY`, or `RESOLVED_COMPATIBILITY_SHIM` | Decision record in runtime uncertainty register matching docs/tests/annotations | tests/repro/test_adr006_runtime_hardening_probes.py::TestReEnumerateSurfaceClassification::test_re_enumerate_is_importable (PASS) + test_re_enumerate_surface_classification_audit (FAIL) | UNCERTAIN_BLOCKING | debt_closure.impl.decide_surface_and_manifest_authority | **BLOCK**: `re_enumerate()` is importable (PASS) but no explicit classification has been closed in the runtime uncertainty register and reflected across docs/tests/annotations. |
 | AUTH-MCP-FASTMCP | mcp/fastmcp authority reconciled to one authoritative tuple: package, import, manifest | Single authority record citing pyproject, runtime import site, manifest/header source | tests/repro/test_adr006_runtime_hardening_probes.py::TestFastMCPAuthorityTuple::test_fastmcp_authority_tuple_audit (FAIL — authority split detected) | UNCERTAIN_BLOCKING | debt_closure.impl.decide_surface_and_manifest_authority | **BLOCK**: Authority split confirmed: package=`fastmcp>=2.0.0`, runtime import=`from mcp.server.fastmcp import FastMCP`, test import=`from fastmcp import FastMCP`. No reconciliation record exists. |
 
 ## Commands Executed
@@ -47,29 +48,24 @@ tests/repro/test_adr006_runtime_hardening_probes.py::TestFastMCPAuthorityTuple::
 
 ## Findings
 
-### PROVEN
-1. **R13 (partial)**: Code-structure probe `test_r13_lock_released_before_lock_acquire_await` confirms `_registry_lock` is not held during network I/O awaits. After `_acquire_recovery_lock` returns, all network operations in `_recover_server_client` (connect, enumerate, convergence) proceed without `_registry_lock`. The lock is only held for brief synchronous registry reads (line 699-701, 824-825).
-
-2. **UNC-LIVENESS-HEALTHY-NEIGHBOR**: Per-server lock dict `_recovery_locks: {server_name: asyncio.Lock}` confirmed. Probe `test_healthy_neighbor_uses_different_recovery_lock` proves server A's lock does not block server B.
-
-3. **UNC-CONFIG-MISSING-FAIL-CLOSED**: Probe `test_get_runtime_server_config_returns_config_missing_true` confirms fail-closed behavior. When server is missing from config, `_get_runtime_server_config()` returns error with `config_missing=True`.
-
-4. **R42 (partial)**: Probe `test_r42_prune_lock_after_config_remove` confirms `_prune_recovery_lock_if_unused()` removes lock entry when server absent from config and no client handle remains.
-
 ### NEEDS_TEST
-1. **R42 in-flight recovery race**: Probe `test_r42_config_remove_during_inflight_recovery` is XFAIL. Requires integration environment to observe config reload during recovery and verify both `config_missing=True` and lock cleanup. The contract requires both scenarios (config-reload-remove + disconnect) to pass.
+1. **R13**: Probe `test_r13_runtime_lock_state_during_network_await` is SKIPPED. Code structure is supportive, but the runtime witness required by the review basis is still absent.
 
-2. **R13 runtime lock-state tracing**: Probe `test_r13_runtime_lock_state_during_network_await` is SKIPPED. Would require runtime instrumentation to capture lock timestamps around network I/O. Code structure is correct but contract says "static code reading alone cannot pass."
+2. **R42-CONFIG-REMOVE-INFLIGHT**: Probe `test_r42_config_remove_during_inflight_recovery` is XFAIL. Requires integration evidence showing both `config_missing=True` and post-cleanup lock pruning while recovery is in flight.
 
-3. **UNC-LIVENESS integration scenario**: Probe `test_healthy_neighbor_concurrent_calls_during_peer_recovery` is SKIPPED. Requires full integration environment with two live servers. Per-server lock design correctness mitigates this risk.
+3. **R42-DISCONNECT-UNDER-RECOVERY**: No separate disconnect-path witness row exists in current artifacts. This remains an open blocker until downstream reclose evidence names the disconnect path explicitly.
 
-### UNPROVEN
-None — no code defects exposed, only missing runtime probes.
+### SUPPORTING_NON_BLOCKER_OBSERVATIONS
+1. **UNC-LIVENESS-HEALTHY-NEIGHBOR**: Per-server lock dict `_recovery_locks: {server_name: asyncio.Lock}` confirmed. Probe `test_healthy_neighbor_uses_different_recovery_lock` proves server A's lock does not block server B. This is supporting context, not blocker-closure evidence for the five blocker families.
 
-### UNCERTAIN_BLOCKING
-1. **SURFACE-REENUMERATE**: `re_enumerate()` is importable but lacks explicit surface classification in docstring. Classification decision required: EXTERNAL_CONTRACT, INTERNAL_ONLY, or COMPATIBILITY_SHIM.
+2. **UNC-CONFIG-MISSING-FAIL-CLOSED**: Probe `test_get_runtime_server_config_returns_config_missing_true` confirms helper-level fail-closed behavior. This supports, but does not close, `R42-CONFIG-REMOVE-INFLIGHT`.
 
-2. **AUTH-MCP-FASTMCP**: Authority tuple is split across package declaration, runtime import, and test import. No reconciliation record exists.
+3. **R42 helper support only**: Probe `test_r42_prune_lock_after_config_remove` confirms `_prune_recovery_lock_if_unused()` removes a lock entry when server is absent from config and no client handle remains. This is supportive structure evidence only; it does not close either R42 blocker family without the missing runtime witnesses.
+
+### BLOCKING_NON_BEHAVIORAL_DEBT
+1. **SURFACE-REENUMERATE**: `re_enumerate()` is importable but still lacks a closed, verified surface-classification record across docs/tests/annotations.
+
+2. **AUTH-MCP-FASTMCP**: Authority tuple remains split across package declaration, runtime import, and test/import proof; no closed reconciliation record exists.
 
 ## Code Analysis Evidence for R13
 
@@ -102,10 +98,10 @@ After `_acquire_recovery_lock` returns (post line 676), `_registry_lock` is rele
 
 ## Gate Decision
 
-- **gate_open_allowed**: NO — R42 in-flight recovery probe is NEEDS_TEST and SURFACE-REENUMERATE / AUTH-MCP-FASTMCP are UNCERTAIN_BLOCKING
-- R42 requires both config-reload-remove AND in-flight recovery scenarios to pass; only config-reload-remove validated
-- R13 requires runtime lock-state tracing or explicit acceptance of code-structure proof; SKIPPED probe documents the gap
-- Surface and authority decisions must be resolved before any downstream gate can OPEN
+- **gate_open_allowed**: false — the authoritative blocker rows `R13`, `R42-CONFIG-REMOVE-INFLIGHT`, `R42-DISCONNECT-UNDER-RECOVERY`, `SURFACE-REENUMERATE`, and `AUTH-MCP-FASTMCP` all remain open, and gate-open is disallowed until downstream reclose verification closes those blocker rows.
+- R13 remains blocker-class because the runtime lock-state witness is still missing.
+- R42 remains blocker-class as two distinct blocker families: config-remove-in-flight and disconnect-under-recovery; neither may be downgraded without explicit non-intersection evidence.
+- Surface and authority ambiguity remain blocker-class until downstream reclose ownership closes them with matching docs/tests/verification artifacts.
 
 ## Product Implementation Files Modified
 
