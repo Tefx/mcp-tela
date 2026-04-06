@@ -56540,7 +56540,7 @@ phases:
       - non-intersecting doc-contract drift tests and one race-flake noted by auditor'
 - id: reclose.basis
   name: Reclose Basis Normalization
-  status: pending
+  status: in_progress
   gate: Normalized blocker ledger must explicitly carry all blocker-class proof obligations
     forward with gate_open_allowed=false until reclose verification completes.
   depends_on:
@@ -56549,7 +56549,7 @@ phases:
   steps:
   - id: reclose.basis.normalize_blockers
     name: Normalize blocker ledger for reclose
-    status: pending
+    status: claimed
     description: 'Normalize the blocker-class ledger before remediation.
 
 
@@ -56615,6 +56615,8 @@ phases:
 
       '
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-06T18:54:34.225436+00:00'
   - id: reclose.basis.gate
     name: Gate normalized blocker basis
     status: pending
