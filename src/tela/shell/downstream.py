@@ -1194,7 +1194,18 @@ def get_tool_server(tool_name: str) -> Result[str | None, str]:
 async def re_enumerate(
     server_name: str,
 ) -> Result[list[ResolvedTool], str]:
-    """Re-enumerate and re-register tools for a single connected server."""
+    """Re-enumerate and re-register tools for a single connected server.
+
+    Supported public surface for the shell module boundary.
+
+    Classification: RESOLVED_EXTERNAL_CONTRACT — explicitly supported public API
+    for manual re-enumeration of downstream server tools. Listed under Public API
+    in docs/DESIGN.md. Consumed by reload.py as _manual_reenumerate_adapter.
+
+    Callers may use this to trigger re-enumeration outside of automatic reconnect
+    or reload events. The function validates that the server is connected and
+    present in the runtime config before updating the registry.
+    """
 
     async with _registry_lock:
         client = _clients.get(server_name)

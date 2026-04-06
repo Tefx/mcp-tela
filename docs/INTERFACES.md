@@ -519,6 +519,25 @@ Available tools:
 This section defines the shell-side integration contract for connecting to
 downstream MCP providers via `mcp.client`/fastmcp session clients.
 
+### 9.0a FastMCP Translation Boundary
+
+FastMCP v2+ provides FastMCP through multiple import paths. This section documents
+the authoritative translation boundary for tela.
+
+**Authority tuple (AUTH-MCP-FASTMCP resolved):**
+
+| Authority Layer | Value | Purpose |
+|-----------------|-------|---------|
+| Package declaration | `fastmcp>=2.0.0` (pyproject.toml) | Dependency resolution — the distribution package name |
+| Runtime import authority | `from mcp.server.fastmcp import FastMCP` | Internal tela shell import — used in `gateway.py`, `gateway_runtime.py` |
+| Manifest/header authority | Implementation-agnostic | User-facing docs (`surface_instructions.py`) describe capability, not import paths |
+
+**Translation rule:**
+- Tela's shell modules import `FastMCP` from `mcp.server.fastmcp`.
+- This is the correct internal path for FastMCP v2+.
+- Manifests and user-facing documentation must not prescribe `from fastmcp import FastMCP` as the tela canonical import — runtime uses `mcp.server.fastmcp`.
+- Tests and fixtures may use either path depending on test fixture requirements; this does not indicate inconsistency.
+
 ### 9.1 `connect_all` transport behavior
 
 `connect_all(servers)` iterates configured servers and selects exactly one

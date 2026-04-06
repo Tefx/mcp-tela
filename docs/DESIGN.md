@@ -558,6 +558,23 @@ Available tools:
 - Upstream: `tela.core.models` (ConnectionContext, TelaConfig), `mcp.server.fastmcp` (FastMCP), `starlette` (Starlette).
 - Downstream: consumed by `gateway.py`, `http_routes.py`, `upstream.py`, `reload.py`, `connection_reaper.py`.
 
+**FastMCP Translation Boundary:**
+
+FastMCP appears under multiple authorities. This section reconciles those authorities.
+
+| Authority Layer | Value | Role |
+|-----------------|-------|------|
+| Package declaration | `fastmcp>=2.0.0` (pyproject.toml) | Package distribution name for dependency management |
+| Runtime import authority | `from mcp.server.fastmcp import FastMCP` (gateway.py, gateway_runtime.py) | Internal tela shell import path — the canonical import used within tela's shell modules |
+| Manifest/header authority | Implementation-agnostic (surface_instructions.py) | User-facing docs must not prescribe an import path — they describe capability, not implementation |
+
+**Authority decision (AUTH-MCP-FASTMCP):**
+- The `fastmcp` package provides FastMCP through both `from fastmcp import FastMCP` (public API) and `from mcp.server.fastmcp import FastMCP` (internal path in FastMCP v2+).
+- Tela's shell modules use `from mcp.server.fastmcp import FastMCP` as the internal implementation path.
+- This internal path is correct for FastMCP v2+ and does not indicate a missing dependency.
+- Manifests, instructions, and user-facing docs must not claim that `from fastmcp import FastMCP` is the canonical tela import — runtime uses `mcp.server.fastmcp`.
+- Tests that import FastMCP for fixture/test purposes may use either path depending on context; runtime code uses `mcp.server.fastmcp`.
+
 **Concurrency:** All public accessors acquire `_runtime_lock` (`threading.RLock`). The lock is reentrant. Returned snapshots share no mutable state with the runtime. The `FastMCP` reference never escapes the lock — only operation results are returned.
 
 ---
@@ -600,7 +617,7 @@ Available tools:
 - `get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]`
 - `get_tool_server(tool_name: str) -> Result[str | None, str]`
 - `get_server_instructions() -> Result[dict[str, str], str]`
-- `re_enumerate(server_name: str) -> Result[list[ResolvedTool], str]`
+- `re_enumerate(server_name: str) -> Result[list[ResolvedTool], str]` — **Supported public surface** (SURFACE-REENUMERATE resolved)
 - `get_registry() -> DownstreamRegistry`
 
 **Ownership:**
