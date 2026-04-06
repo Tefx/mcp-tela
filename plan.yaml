@@ -56756,7 +56756,7 @@ phases:
   steps:
   - id: reclose.surface.apply_resolution
     name: Apply surface classification and authority resolution
-    status: claimed
+    status: done
     description: 'Apply the recorded resolution for SURFACE-REENUMERATE and AUTH-MCP-FASTMCP.
 
 
@@ -56839,6 +56839,63 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-06T19:05:34.588642+00:00'
+    done_at: '2026-04-06T19:14:56.096087+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - evidence/surface_and_manifest_authority_decision.md — key passages: decision_table
+      with SURFACE-REENUMERATE and AUTH-MCP-FASTMCP resolutions, rejected alternatives,
+      and verification requirements
+
+      - docs/DESIGN.md — key passages: downstream.py Public API section with re_enumerate
+      listing, gateway_runtime.py Dependencies section
+
+      - docs/INTERFACES.md — key passages: Downstream fastmcp Client Contract section,
+      MCP Surface table
+
+
+      ## Authority Resolution Evidence
+
+
+      ### re_enumerate classification text added at:
+
+      - src/tela/shell/downstream.py:1194-1206 — added explicit docstring for supported
+      public surface and classification
+
+      - docs/DESIGN.md:603 — added "Supported public surface (SURFACE-REENUMERATE
+      resolved)" marker to Public API list
+
+
+      ### FastMCP authority tuple documented at:
+
+      - docs/DESIGN.md:557-577 — added FastMCP Translation Boundary section (package
+      declaration, runtime import authority, manifest/header authority)
+
+      - docs/INTERFACES.md:517-540 — added section 9.0a with authority tuple table
+      and translation rule
+
+
+      ### tests/probes updated at:
+
+      - tests/repro/test_adr006_runtime_hardening_probes.py:443-494 — updated TestReEnumerateSurfaceClassification
+      assertions to explicit classification language
+
+      - tests/repro/test_adr006_runtime_hardening_probes.py:530-628 — converted TestFastMCPAuthorityTuple
+      from blocking fail to verification probe for translation-boundary docs
+
+
+      ### Verification output:
+
+      `uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py -v`
+
+      - 7 passed, 2 skipped, 1 xfailed
+
+
+      ### deviation records, if any:
+
+      None'
   - id: reclose.surface.audit_alignment
     name: Audit surface and manifest alignment
     status: pending
