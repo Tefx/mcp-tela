@@ -57289,7 +57289,7 @@ phases:
       - Non-runtime rows now closed and aligned with verified code/docs/tests'
 - id: reclose.runtime
   name: Runtime Proof Reclose
-  status: pending
+  status: in_progress
   gate: R13 and both R42 behavioral obligations must have executable proof or explicit
     defect remediation with green retest evidence before the phase can open.
   depends_on:
@@ -57297,7 +57297,7 @@ phases:
   steps:
   - id: reclose.runtime.test_define_red
     name: Define executable red runtime proof probes
-    status: pending
+    status: claimed
     description: 'Define executable proof probes for the remaining runtime blocker
       families before closing gaps.
 
@@ -57362,6 +57362,8 @@ phases:
 
       '
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-06T19:59:49.658652+00:00'
   - id: reclose.runtime.close_gap_if_exposed
     name: Close runtime proof or behavior gaps if exposed
     status: pending
