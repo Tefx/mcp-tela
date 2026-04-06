@@ -56661,7 +56661,7 @@ phases:
       \ naming remaining gates not intersected"
   - id: reclose.basis.gate
     name: Gate normalized blocker basis
-    status: pending
+    status: claimed
     description: 'Gate review for the normalized blocker basis.
 
 
@@ -56712,6 +56712,8 @@ phases:
     depends_on:
     - reclose.basis.normalize_blockers
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-06T18:59:14.845693+00:00'
 - id: reclose.surface
   name: Surface and Authority Reclose
   status: locked
