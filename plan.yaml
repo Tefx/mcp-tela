@@ -56898,7 +56898,7 @@ phases:
       None'
   - id: reclose.surface.audit_alignment
     name: Audit surface and manifest alignment
-    status: pending
+    status: claimed
     description: 'Wiring and alignment audit for the applied surface/authority resolution.
 
 
@@ -56941,6 +56941,8 @@ phases:
     depends_on:
     - reclose.surface.apply_resolution
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-04-06T19:19:05.535609+00:00'
   - id: reclose.surface.spec_conformance
     name: Verify surface and authority conformance
     status: done
