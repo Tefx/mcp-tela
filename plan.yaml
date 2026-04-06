@@ -57053,7 +57053,7 @@ phases:
       - AUTH-MCP-FASTMCP: RESOLVED'
   - id: reclose.surface.gate
     name: Gate surface and authority reclose
-    status: pending
+    status: claimed
     description: 'Gate review for surface and authority reclose.
 
 
@@ -57106,6 +57106,8 @@ phases:
     - reclose.surface.spec_conformance
     - reclose.surface.sync_evidence_registers
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-06T19:55:48.718240+00:00'
   - id: reclose.surface.sync_evidence_registers
     name: Synchronize authoritative evidence registers
     status: done
