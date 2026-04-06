@@ -56549,7 +56549,7 @@ phases:
   steps:
   - id: reclose.basis.normalize_blockers
     name: Normalize blocker ledger for reclose
-    status: claimed
+    status: done
     description: 'Normalize the blocker-class ledger before remediation.
 
 
@@ -56617,6 +56617,48 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-06T18:54:34.225436+00:00'
+    done_at: '2026-04-06T18:58:46.060736+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n\nNo refs for this step.\n\n\
+      ## Normalized Blocker Ledger\n- blocker families listed: `R13`, `R42-CONFIG-REMOVE-INFLIGHT`,\
+      \ `R42-DISCONNECT-UNDER-RECOVERY`, `SURFACE-REENUMERATE`, `AUTH-MCP-FASTMCP`\n\
+      - refreshed evidence artifacts:\n  - `evidence/normalized_blocker_basis.md`\
+      \ — new authoritative blocker-class ledger with provenance/disposition split\
+      \ and downstream ownership\n  - `evidence/behavioral_proof_register.md` — normalized\
+      \ R13/R42 blocker rows, split R42 into two blocker families, aligned wording\
+      \ with runtime register, and restated blocker-class gate rules\n  - `evidence/runtime_uncertainty_register.md`\
+      \ — added normalized blocker basis rule, explicit `gate_open_allowed=false`,\
+      \ and no-downgrade-without-non-intersection guard\n- gate_open_allowed state:\
+      \ `false` until downstream reclose verification closes the blocker rows in the\
+      \ structured evidence set\n- mapping to downstream reclose steps:\n  - `R13`\
+      \ -> `debt_closure.impl.close_runtime_gap_if_exposed` -> `debt_closure.verify.runtime_evidence_r13_r42`\
+      \ -> `debt_closure.final_review.behavior_rereview` -> `debt_closure.final_review.final_gate`\n\
+      \  - `R42-CONFIG-REMOVE-INFLIGHT` -> `debt_closure.impl.close_runtime_gap_if_exposed`\
+      \ -> `debt_closure.verify.runtime_evidence_r13_r42` -> `debt_closure.final_review.behavior_rereview`\
+      \ -> `debt_closure.final_review.final_gate`\n  - `R42-DISCONNECT-UNDER-RECOVERY`\
+      \ -> `debt_closure.impl.close_runtime_gap_if_exposed` -> `debt_closure.verify.runtime_evidence_r13_r42`\
+      \ -> `debt_closure.final_review.behavior_rereview` -> `debt_closure.final_review.final_gate`\n\
+      \  - `SURFACE-REENUMERATE` -> `debt_closure.impl.decide_surface_and_manifest_authority`\
+      \ -> `debt_closure.verify.wiring_and_manifest_audit` -> `debt_closure.final_review.wiring_rereview`\
+      \ -> `debt_closure.final_review.final_gate`\n  - `AUTH-MCP-FASTMCP` -> `debt_closure.impl.decide_surface_and_manifest_authority`\
+      \ -> `debt_closure.verify.wiring_and_manifest_audit` -> `debt_closure.final_review.wiring_rereview`\
+      \ -> `debt_closure.final_review.final_gate`\n- no blocker-class item was downgraded:\
+      \ confirmed; no blocker family was softened to non-blocking, and the refreshed\
+      \ basis explicitly says no such downgrade is allowed without explicit non-intersection\
+      \ evidence\n- commit: `8a465469` (`normalize blocker basis ledger`)\n\n## Review-Miss\
+      \ Correction\n- prior invalid closure shape: success-state artifacts carried\
+      \ blocker-class rows as documented-but-open (`SUCCESS` / pass framing alongside\
+      \ `NEEDS_TEST` / unresolved blocker debt), with R42 collapsed into one summary\
+      \ row and R13 overstated as effectively proven by code reading\n- why it was\
+      \ invalid: blocker-class rows were still open, so closure violated the hardened\
+      \ rule that gate-open is forbidden until those rows are actually closed by downstream\
+      \ reclose verification\n- how the refreshed basis prevents recurrence:\n  -\
+      \ fixes the authoritative blocker family names to exactly the five required\
+      \ families\n  - preserves provenance (`pre-existing` / `out-of-step-origin`)\
+      \ separately from disposition (`blocking-now`)\n  - aligns behavioral and runtime\
+      \ registers so R13 and both R42 families remain explicitly blocking\n  - records\
+      \ `gate_open_allowed=false` until reclose verification closes the blocker rows\n\
+      \  - forbids any blocker downgrade absent explicit non-intersection evidence\
+      \ naming remaining gates not intersected"
   - id: reclose.basis.gate
     name: Gate normalized blocker basis
     status: pending
