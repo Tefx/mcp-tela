@@ -57297,7 +57297,7 @@ phases:
   steps:
   - id: reclose.runtime.test_define_red
     name: Define executable red runtime proof probes
-    status: claimed
+    status: done
     description: 'Define executable proof probes for the remaining runtime blocker
       families before closing gaps.
 
@@ -57364,6 +57364,61 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-06T19:59:49.658652+00:00'
+    done_at: '2026-04-06T20:06:48.784921+00:00'
+    evidence: "## refs Read Confirmation\nNo refs for this step.\n\n## Test-Definition\
+      \ Evidence\n\n### Modified Files Limited to Tests/Helpers:\n1. `tests/repro/test_reclose_runtime_red_probes.py`\
+      \ - NEW FILE (609 lines)\n   - Defines executable red probes for 3 blocker families:\
+      \ R13, R42-CONFIG-REMOVE-INFLIGHT, R42-DISCONNECT-UNDER-RECOVERY\n   - No product\
+      \ implementation files modified\n\n### Exposed Gaps:\n\n**Gap 1: R13 Runtime\
+      \ Instrumentation**\n- Product lacks lock-state tracing to capture `_registry_lock`\
+      \ acquire/release timestamps\n- Product lacks network I/O start/end timestamp\
+      \ capture\n- Cannot prove at runtime that `_registry_lock` is released before\
+      \ awaited network I/O\n- Code structure at `downstream.py:580-612` is correct,\
+      \ but behavioral proof requires runtime tracing\n\n**Gap 2: R42-CONFIG-REMOVE-INFLIGHT\
+      \ Integration Harness**\n- Product lacks test harness to inject config changes\
+      \ during in-flight recovery\n- Cannot runtime-witness `config_missing=True`\
+      \ surfacing when config reload removes a server mid-recovery\n- Cannot runtime-witness\
+      \ lock cleanup after config-reload-remove\n\n**Gap 3: R42-DISCONNECT-UNDER-RECOVERY\
+      \ Integration Harness**\n- Product lacks test harness to inject disconnect calls\
+      \ during in-flight recovery\n- Disconnect-path behavioral contract never received\
+      \ its own proof row\n- Cannot runtime-witness lock cleanup after disconnect\
+      \ during recovery\n\n**Gap 4: Runtime Witness Infrastructure**\n- No `_LockStateObserver`\
+      \ for capturing lock state transitions\n- No `_ConfigReloadInjector` for triggering\
+      \ config changes mid-recovery\n- No `_DisconnectInjector` for triggering disconnect\
+      \ mid-recovery\n\n### Named Probes Added:\n\n**R13 Probes (TestR13RuntimeWitness):**\n\
+      1. `test_r13_instrumentation_probe_exists` - RED: instrumentation check fails\n\
+      2. `test_r13_registry_lock_released_before_network_io` - XFAIL: needs instrumentation\n\
+      3. `test_r13_concurrent_registry_access_during_network_io` - XFAIL: needs contention\
+      \ test\n\n**R42-CONFIG-REMOVE-INFLIGHT Probes (TestR42ConfigRemoveInflightWitness):**\n\
+      1. `test_r42_config_remove_inflight_instrumentation_exists` - RED: infrastructure\
+      \ missing\n2. `test_r42_config_reload_removes_server_during_recovery` - XFAIL:\
+      \ needs integration harness\n3. `test_r42_config_missing_error_includes_flag`\
+      \ - GREEN: helper-level verified\n\n**R42-DISCONNECT-UNDER-RECOVERY Probes (TestR42DisconnectUnderRecoveryWitness):**\n\
+      1. `test_r42_disconnect_under_recovery_instrumentation_exists` - RED: infrastructure\
+      \ missing\n2. `test_r42_disconnect_during_recovery_prunes_lock` - XFAIL: needs\
+      \ integration harness\n3. `test_r42_disconnect_all_clears_locks` - GREEN: helper-level\
+      \ verified\n4. `test_r42_prune_removes_unused_lock` - GREEN: helper-level verified\n\
+      5. `test_r42_prune_keeps_held_lock` - GREEN: helper-level verified\n6. `test_r42_prune_keeps_lock_for_active_client`\
+      \ - GREEN: helper-level verified\n\n**Infrastructure Probes (TestRuntimeWitnessInfrastructure):**\n\
+      1. `test_lock_state_observer_available` - RED: no observer\n2. `test_config_reload_injector_available`\
+      \ - RED: no injector\n3. `test_disconnect_injector_available` - RED: no injector\n\
+      \n### Downstream Implementation Owner:\n`reclose.runtime.close_gap_if_exposed`\n\
+      \n### Step Intent:\nDefine separate executable red probes for R13, R42-CONFIG-REMOVE-INFLIGHT,\
+      \ and R42-DISCONNECT-UNDER-RECOVERY.\n\n### Expected Result:\nred (tests fail\
+      \ until product provides runtime witness infrastructure)\n\n### Observed Result:\n\
+      ```\n6 failed, 5 passed, 4 xfailed, 2 warnings in 0.29s\n```\n\n- 6 RED (instrumentation/infrastructure\
+      \ gaps exposed)\n- 4 XFAIL (integration test scenarios needing harness)\n- 5\
+      \ GREEN (helper-level sanity checks)\n- Total: 15 probes\n\n### Failure Alignment:\n\
+      All failures align with the expected red pattern:\n- RED probes expose missing\
+      \ instrumentation/product infrastructure\n- XFAIL probes document integration\
+      \ test scenarios needing implementation\n- GREEN probes verify helper-level\
+      \ behavioral correctness\n\nThe probes correctly define what runtime evidence\
+      \ is REQUIRED to close each blocker family.\n\n### Product Files Modified:\n\
+      None. Test-definition only - all changes limited to `tests/repro/test_reclose_runtime_red_probes.py`.\n\
+      \n## Commands Executed:\n\n```bash\nuv run pytest tests/repro/test_reclose_runtime_red_probes.py\
+      \ -v --tb=short\n```\n\n## Output:\n```\n============== 6 failed, 5 passed,\
+      \ 4 xfailed, 2 warnings in 0.29s ==============\n```\n\n## Evidence Files:\n\
+      - tests/repro/test_reclose_runtime_red_probes.py (NEW)"
   - id: reclose.runtime.close_gap_if_exposed
     name: Close runtime proof or behavior gaps if exposed
     status: pending
