@@ -56898,7 +56898,7 @@ phases:
       None'
   - id: reclose.surface.audit_alignment
     name: Audit surface and manifest alignment
-    status: claimed
+    status: done
     description: 'Wiring and alignment audit for the applied surface/authority resolution.
 
 
@@ -56943,6 +56943,23 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-06T19:19:05.535609+00:00'
+    done_at: '2026-04-06T19:26:02.813433+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nrefs provided: N/A - step specifies\
+      \ full path audit rather than refs\n\n## Wiring Audit Report\n- re_enumerate\
+      \ path trace:\n  - Definition: src/tela/shell/downstream.py re_enumerate docstring\
+      \ includes supported public surface + RESOLVED_EXTERNAL_CONTRACT classification\n\
+      \  - Consumer: src/tela/shell/reload.py imports and binds re_enumerate as _manual_reenumerate_adapter\n\
+      \  - Docs: docs/DESIGN.md public API marks SURFACE-REENUMERATE resolved\n  -\
+      \ Probe: tests/repro TestReEnumerateSurfaceClassification passes\n- FastMCP\
+      \ authority trace:\n  - Package declaration: pyproject.toml has fastmcp>=2.0.0\n\
+      \  - Runtime imports: gateway.py and gateway_runtime.py import from mcp.server.fastmcp\n\
+      \  - Docs: DESIGN.md and INTERFACES.md include FastMCP translation boundary\
+      \ tuple\n  - Probe: TestFastMCPAuthorityTuple passes\n- unapplied decision artifacts:\n\
+      \  - evidence/runtime_uncertainty_register.md still states SURFACE-REENUMERATE\
+      \ and AUTH-MCP-FASTMCP as blocking-now with gate_open_allowed no\n  - evidence/behavioral_proof_register.md\
+      \ still marks both rows UNCERTAIN_BLOCKING and includes stale FAIL output\n\
+      \  - inconsistency: decision resolved in code/docs/tests but evidence registers\
+      \ not synchronized\n- verdict: ISSUES_FOUND"
   - id: reclose.surface.spec_conformance
     name: Verify surface and authority conformance
     status: done
