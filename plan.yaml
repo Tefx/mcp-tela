@@ -57053,7 +57053,7 @@ phases:
       - AUTH-MCP-FASTMCP: RESOLVED'
   - id: reclose.surface.gate
     name: Gate surface and authority reclose
-    status: pending
+    status: claimed
     description: 'Gate review for surface and authority reclose.
 
 
@@ -57102,6 +57102,8 @@ phases:
     - reclose.surface.audit_alignment
     - reclose.surface.spec_conformance
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-06T19:26:22.523248+00:00'
 - id: reclose.runtime
   name: Runtime Proof Reclose
   status: locked
