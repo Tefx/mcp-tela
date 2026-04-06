@@ -111,17 +111,18 @@ When parsing legacy format:
 
 ### Output Format
 
-The `tela.profiles` MCP response emits dual keys during migration:
+Canonical `tela.profiles` MCP response shape:
 
 ```json
 {
-  "profile_name": "developer",
-  "tools": { "filesystem": "read_only" },
+  "profile_id": "developer",
+  "profile_name": "Developer",
   "capabilities": { "filesystem": "read_only" }
 }
 ```
 
-After migration completes, only `capabilities` is emitted.
+`profile_id` is the stable canonical identity. `profile_name`, when present, is
+display-only local vocabulary. Legacy `tools` output is not canonical.
 
 ## tool_overrides Section
 

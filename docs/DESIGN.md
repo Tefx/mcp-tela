@@ -369,7 +369,7 @@ CLI entrypoints only:
 | Layer | Mechanism | Purpose |
 |-------|-----------|---------|
 | Lockfile bearer token | Auto-generated per server instance | Protects HTTP endpoints |
-| Config `auth.mode: token` | CapabilityToken with HMAC | Binds connection to profile |
+| Config `auth.mode: token` | CapabilityToken with HMAC | Verifies canonical token fields and binds connection to canonical `profile_id` |
 | Config `auth.mode: open` | No token needed | Uses default profile |
 
 Both layers are independent and apply simultaneously:
@@ -378,6 +378,12 @@ Both layers are independent and apply simultaneously:
 - **Config `auth.mode`** (open/token): controls MCP-level profile binding
 - You can have `auth.mode: open` (no CapabilityToken) and still require the bearer token for HTTP access
 - You can override the bearer token with `--token` without changing profile authorization
+
+Canonical contract note:
+
+- `../opifex` owns the shared CapabilityToken and `_meta` contracts
+- token-mode binding uses canonical `profile_id`, not `profile_name` or `tools_profile`
+- `tela` is the verifier/enforcer and audit sink for those shared surfaces, not a second contract authority
 
 ## Ownership Rules
 
@@ -762,7 +768,7 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 
 ### `upstream_utils.py`
 
-**Responsibility:** Pure/synchronous helpers for upstream tool filtering, `_meta` stripping, and enforcement bridging. Extracted from `upstream.py` to stay under DX line-count thresholds.
+**Responsibility:** Pure/synchronous helpers for upstream tool filtering, `_meta` stripping/holding for audit correlation, and enforcement bridging. Extracted from `upstream.py` to stay under DX line-count thresholds.
 
 **Public API:**
 - `filter_tools_for_profile(all_tools: dict[str, list[ResolvedTool]], profile: ProfileConfig, server_default_postures: dict[str, Posture]) -> Result[list[ResolvedTool], str]`

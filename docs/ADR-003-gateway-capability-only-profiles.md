@@ -1,5 +1,10 @@
 # ADR-003: Gateway Profiles Express Capability Only
 
+> **Scope note:** ADR-003 remains authoritative for the capability-only profile
+> model (`capabilities` vs `tools`). Shared token naming, canonical profile
+> identity, and `_meta` contract semantics are governed by `docs/ADR-007-`
+> `opifex-canonical-contract-alignment.md` and `../opifex`, not by this ADR.
+
 ## Status
 
 Accepted
@@ -57,8 +62,11 @@ The `ProfileConfig.tools` field in code is renamed to `capabilities`.
 
 The `tela.profiles` MCP response key changes from `"tools"` to
 `"capabilities"`. The `"side_effect_policy"` field is dropped from the
-response. During migration, both `"tools"` and `"capabilities"` are emitted
-for backward compatibility. After migration, only `"capabilities"` is emitted.
+response.
+
+Current canonical documentation direction does not treat legacy dual-key output
+as normative contract truth. For current shared-surface guidance, see
+`docs/MIGRATION-003-capability-only-profiles.md` and ADR-007.
 
 Approval and runtime read-only mode are explicitly out of scope for tela.
 

@@ -14,6 +14,17 @@ policy enforcement, and audit logging.
 - Supports Streamable HTTP (default) and legacy SSE transports
 - Ships with a built-in profile catalog for common access patterns
 
+## Canonical contract note
+
+In composed deployments, `../opifex` is the canonical authority for shared
+CapabilityToken, `_meta`, and shared error semantics.
+
+- shared token binding identity is `profile_id`
+- `tools_profile` is not canonical shared vocabulary
+- `profile_name`, if shown locally, is a display label only
+- `_meta.trace_id` and related canonical `_meta` fields are audit carriers;
+  tela records them and strips `_meta` before forwarding downstream
+
 ## Quick start
 
 ```bash

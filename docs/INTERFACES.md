@@ -102,7 +102,8 @@ Supported modes:
 - `open`
 - `token`
 
-In token mode, a CapabilityToken binds the connection to one profile.
+In token mode, a CapabilityToken binds the connection to one canonical tela
+profile identity via `profile_id`.
 
 ### 3.4 Audit
 
@@ -111,10 +112,13 @@ Audit logging is configured independently of authorization semantics.
 Levels: `L1` (minimal), `L2` (standard), `L3` (verbose diagnostic).
 
 Each `AuditEntry` includes:
-- `timestamp`, `level`, `instance_id`, `connection_id`, `profile_name`
+- `timestamp`, `level`, `instance_id`, `connection_id`, `profile_id`
 - `tool_name`, `server_name`, `verdict`, `denied_by`, `error_code`
 - `latency_ms`, `param_hash` (L2+), `request_content`/`response_content` (L3)
 - `meta` (trace fields from `_meta` argument)
+
+If a repo-local `profile_name` is present in operator-facing output, it is a
+display label only and not the canonical authorization identity.
 
 `instance_id` is generated per `tela serve` invocation and identifies the
 server instance that produced each entry.
@@ -149,7 +153,7 @@ according to gateway configuration.
 
 At connection establishment, tela binds the session to exactly one profile.
 
-In token mode, the binding comes from the token `profile_name`.
+In token mode, the binding comes from the token `profile_id`.
 In open mode, the binding comes from one explicit local default profile.
 
 ### 6.2 Per-call authorization
@@ -322,16 +326,20 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 - `connections` is a **list** of `ConnectionContext` objects for structural inspection
 - These fields are logically related but semantically distinct: `len(connections)` should equal `active_connections` in steady state, but only `active_connections` is authoritative for count semantics
 
-**ConnectionContext** (structural):
+**ConnectionContext** (structural, repo-local runtime view):
 ```json
 {
   "connection_id": "bridge_abc123",
-  "profile_name": "developer",
+  "profile_id": "developer",
+  "profile_name": "Developer",
   "connected_at": "2026-03-25T12:00:00Z",
   "tool_call_count": 5,
   "last_activity": "2026-03-25T12:05:00Z"
 }
 ```
+
+`profile_id` is the canonical bound identity. `profile_name`, when present, is
+display-oriented local vocabulary only.
 
 `last_activity` is an ISO-8601 UTC timestamp updated on each client interaction
 (tool calls, tool list requests, connection registration). Empty string when no
@@ -414,16 +422,13 @@ MCP-level profile binding via CapabilityToken).
 
 `access: read` via MCP resource read (not `tools/call`).
 
-Migration payload shape (backward-compatible window):
+Canonical payload shape:
 
 ```json
 [
   {
-    "profile_name": "developer",
-    "tools": {
-      "filesystem": "read_write",
-      "git": "read_only"
-    },
+    "profile_id": "developer",
+    "profile_name": "Developer",
     "capabilities": {
       "filesystem": "read_write",
       "git": "read_only"
@@ -433,20 +438,9 @@ Migration payload shape (backward-compatible window):
 ]
 ```
 
-Post-migration payload shape (canonical):
-
-```json
-[
-  {
-    "profile_name": "developer",
-    "capabilities": {
-      "filesystem": "read_write",
-      "git": "read_only"
-    },
-    "default": false
-  }
-]
-```
+`profile_id` is the stable registry identity that canonical token issuance and
+verification bind. `profile_name`, when present, is a human-facing label and not
+shared authorization vocabulary.
 
 Historical/migration notes:
 - `tools` is emitted only during the migration window for backward compatibility
@@ -758,6 +752,9 @@ as a `TelaError` via MCP error semantics:
 The enforcement result is wrapped in a `TelaError(code=..., message=...)` and
 raised as a `RuntimeError` by the upstream MCP handler. The MCP framework
 serializes this as a standard MCP error response.
+
+In these operator-facing message templates, `profile_name` is local display
+vocabulary only. The canonical shared binding identity remains `profile_id`.
 
 ### Missing/invalid bearer token (HTTP)
 
