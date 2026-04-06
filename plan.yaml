@@ -56748,7 +56748,7 @@ phases:
       \ basis is internally consistent`)"
 - id: reclose.surface
   name: Surface and Authority Reclose
-  status: in_progress
+  status: done
   gate: Surface classification and FastMCP authority must be applied, independently
     audited, and proven non-ambiguous before runtime reclose can rely on them.
   depends_on:
@@ -57053,7 +57053,7 @@ phases:
       - AUTH-MCP-FASTMCP: RESOLVED'
   - id: reclose.surface.gate
     name: Gate surface and authority reclose
-    status: claimed
+    status: done
     description: 'Gate review for surface and authority reclose.
 
 
@@ -57108,6 +57108,37 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-06T19:55:48.718240+00:00'
+    done_at: '2026-04-06T19:59:20.566851+00:00'
+    evidence: '## refs Read Confirmation
+
+      - evidence/normalized_blocker_basis.md
+
+      - evidence/behavioral_proof_register.md
+
+      - evidence/runtime_uncertainty_register.md
+
+      - evidence/surface_and_manifest_authority_decision.md
+
+      - docs/DESIGN.md
+
+      - src/tela/shell/downstream.py
+
+      - tests/repro/test_adr006_runtime_hardening_probes.py
+
+
+      ## Gate Review Report
+
+      - blocker families reviewed: SURFACE-REENUMERATE and AUTH-MCP-FASTMCP closed;
+      R13 and R42 branches remain runtime blockers
+
+      - remaining ambiguity: runtime witness blockers only (R13, R42-CONFIG-REMOVE-INFLIGHT,
+      R42-DISCONNECT-UNDER-RECOVERY)
+
+      - decision: BLOCK
+
+      - behavioral_proof_register: SURFACE/AUTH resolved; runtime blockers NEEDS_TEST
+
+      - gate_open_allowed: false'
   - id: reclose.surface.sync_evidence_registers
     name: Synchronize authoritative evidence registers
     status: done
@@ -57258,7 +57289,7 @@ phases:
       - Non-runtime rows now closed and aligned with verified code/docs/tests'
 - id: reclose.runtime
   name: Runtime Proof Reclose
-  status: locked
+  status: pending
   gate: R13 and both R42 behavioral obligations must have executable proof or explicit
     defect remediation with green retest evidence before the phase can open.
   depends_on:
