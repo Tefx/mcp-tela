@@ -57074,6 +57074,9 @@ phases:
     verification: '- Surface/authority blocker families are either closed or explicitly
       still blocked
 
+      - SURFACE-REENUMERATE and AUTH-MCP-FASTMCP blocker rows are either closed or
+      explicitly scoped to runtime blockers only
+
       - No artifact contradicts the gate decision
 
       - Downstream runtime proof phase can rely on the authority basis'
@@ -57101,6 +57104,7 @@ phases:
     - reclose.surface.apply_resolution
     - reclose.surface.audit_alignment
     - reclose.surface.spec_conformance
+    - reclose.surface.sync_evidence_registers
     agent: gate-reviewer-tacit
   - id: reclose.surface.sync_evidence_registers
     name: Synchronize authoritative evidence registers
