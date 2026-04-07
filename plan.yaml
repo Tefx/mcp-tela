@@ -59809,7 +59809,7 @@ phases:
       \ semantics"
 - id: remediation_guardrails
   name: Remediation Guardrails
-  status: in_progress
+  status: done
   gate: Scope locked, keep-separate constraints recorded, and test seams inventoried
     before refactor branches begin.
   depends_on:
@@ -60031,7 +60031,7 @@ phases:
       \ add remediation guardrails coverage register"
   - id: remediation_guardrails.gate
     name: Gate remediation guardrails
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer-tacit), verify the remediation
       scope is locked before any branch work begins.
 
@@ -60077,9 +60077,73 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-07T18:59:49.129578+00:00'
+    done_at: '2026-04-07T19:03:23.654382+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - `docs/remediation_guardrails_scope_register.md` — Scope register defines 5
+      in-scope items, 2 keep-separate constraints (Request extractor vs ASGI extractor
+      remain separate; no general auth rewrite), and 1 deferred item (recovery-envelope
+      abstraction)
+
+      - `evidence/remediation_guardrails_test_seam_inventory_coverage_register.md`
+      — Coverage register maps all 4 remediation branches to must-run tests, monkeypatch
+      seams, and risk notes
+
+      - `src/tela/shell/gateway_http_auth.py` — `extract_bearer_token(Request)` returns
+      `Result[str, str]` (lines 10-21)
+
+      - `src/tela/shell/http_auth.py` — `BearerAuthMiddleware._extract_bearer_token(scope)`
+      returns `str | None` (lines 116-127)
+
+
+      ## Gate Review Report
+
+      - Scope lock acceptable: YES. Scope register explicitly delimits 5 remediation
+      branches with clear boundaries.
+
+      - Keep-separate constraints preserved: YES. Verified Request and ASGI extractors
+      are separate functions with different signatures, boundary objects, and lifecycle
+      layers.
+
+      - Deferred recovery work preserved: YES. Recovery-envelope abstraction explicitly
+      deferred to prevent scope creep.
+
+      - Branch test seams identified: YES. All 4 remediation branches have must-run
+      tests and risk notes documented.
+
+      - Decision: OPEN
+
+
+      Step Intent: Verify remediation scope is locked before branch work begins.
+
+
+      Expected Result: Guardrail steps complete with explicit non-goals recorded and
+      each downstream branch mapped to test seams.
+
+
+      Observed Result: Scope register and coverage register complete; code verification
+      confirms keep-separate constraints; all BLOCK conditions clear.
+
+
+      Behavioral Proof Register:
+
+      - P1 (scope constraints): PROVEN via docs/remediation_guardrails_scope_register.md
+
+      - P2 (test seams): PROVEN via evidence/remediation_guardrails_test_seam_inventory_coverage_register.md
+
+      - P3 (extractor separation): PROVEN via code inspection (different files, signatures,
+      boundary objects)
+
+      - P4 (downstream gates): PROVEN via plan inspection (all phases locked with
+      clear gate criteria)
+
+
+      Gate Open Allowed: YES'
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
-  status: locked
+  status: pending
   gate: Pure passthrough wrappers removed without breaking monkeypatch-sensitive tests
     or downstream transport behavior.
   depends_on:
@@ -60193,7 +60257,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: error_semantics_foundation
   name: Error Semantics Foundation
-  status: locked
+  status: pending
   gate: Shared error constants/helpers established and scoped literals migrated without
     changing external behavior.
   depends_on:
@@ -60412,7 +60476,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: token_precedence_refactor
   name: Token Precedence Refactor
-  status: locked
+  status: pending
   gate: Shared CLI/env bearer-token precedence extracted while connect/serve-specific
     fallbacks remain local and unchanged.
   depends_on:
