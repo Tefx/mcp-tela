@@ -59119,7 +59119,7 @@ phases:
       - verdict: PASS'
   - id: reclose.deep_review.spec_conformance
     name: Deep spec conformance audit for reclose
-    status: claimed
+    status: pending
     description: 'Full-system adversarial conformance audit for the reclose slice.
 
 
@@ -59157,8 +59157,6 @@ phases:
     depends_on:
     - reclose.deep_review.wiring_audit
     agent: spec-verifier-tacit
-    claimed_by: spec-verifier-tacit
-    claimed_at: '2026-04-07T09:54:32.040097+00:00'
   - id: reclose.deep_review.architecture_review
     name: Deep architecture review for reclose
     status: claimed
