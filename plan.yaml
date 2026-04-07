@@ -60534,6 +60534,50 @@ phases:
   - error_classification_unification
   - token_precedence_refactor
   - gateway_auth_skeleton_refactor
+  steps:
+  - id: remediation_integration_verify.run_focused_regression_suite
+    name: Run focused remediation regression suite
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
+      the remediation branches together.
+
+
+      Required focus:
+
+      - downstream monkeypatch-sensitive behavior
+
+      - route auth/error-path behavior
+
+      - token precedence behavior
+
+      - error classification/status mapping behavior
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.'
+    verification: 'full-plan-check: focused regression suite covers all remediation
+      seams and reports any blocker intersections before doc sync or deep review.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Verification Report
+
+      - Commands executed:
+
+      - Test families covered:
+
+      - Cross-branch issues found:
+
+      - Verdict: PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    agent: integration-verifier-tacit
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
