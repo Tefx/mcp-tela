@@ -60222,6 +60222,39 @@ phases:
 
       '
     agent: python-executor
+  - id: error_classification_unification.unify_gateway_status_mapping
+    name: Unify gateway error-to-status mapping
+    status: pending
+    description: 'Refactor src/tela/shell/gateway.py so HTTP error-prefix to status-code
+      mapping uses the shared/data-driven classification basis instead of ad hoc duplicated
+      startswith checks.
+
+
+      Preserve all externally visible status outcomes.'
+    verification: 'local-check: gateway status mapping uses shared semantics and known
+      error prefixes still map to the same HTTP statuses as before.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Mapping Cleanup Report
+
+      - Previous ad hoc mappings replaced:
+
+      - Shared/data-driven mapping path:
+
+      - Preserved status outcomes:
+
+      '
+    depends_on:
+    - error_classification_unification.unify_http_routes_helpers
+    agent: python-executor
 - id: token_precedence_refactor
   name: Token Precedence Refactor
   status: locked
