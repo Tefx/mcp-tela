@@ -60392,7 +60392,7 @@ phases:
       \ classifiers (audit query literal etc.) intentionally unchanged"
   - id: error_semantics_foundation.gate
     name: Gate error semantics foundation
-    status: pending
+    status: claimed
     description: 'Gate review: verify the scoped shared error-code source and shared
       classification helpers are established cleanly before downstream classification
       cleanup begins.'
@@ -60423,6 +60423,8 @@ phases:
     - error_semantics_foundation.centralize_error_constants
     - error_semantics_foundation.add_classification_helpers
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-07T19:23:19.749741+00:00'
 - id: error_classification_unification
   name: Error Classification Unification
   status: locked
