@@ -60076,6 +60076,42 @@ phases:
     changing external behavior.
   depends_on:
   - remediation_guardrails
+  steps:
+  - id: error_semantics_foundation.centralize_error_constants
+    name: Centralize shared error constants
+    status: pending
+    description: 'Expand the authoritative shared error-code source so common shell/core
+      error code prefixes are not scattered as string literals.
+
+
+      Target shared set includes auth, gateway-not-started, downstream unavailable/connect/error,
+      connection-not-found, admission warming, and existing config codes.
+
+
+      Do not change externally visible semantics unless tests/specs require it.'
+    verification: 'local-check: authoritative shared error-code source covers the
+      scoped set and targeted modules no longer need to invent overlapping shared
+      literals.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Error Constant Centralization Report
+
+      - Shared codes added/confirmed:
+
+      - Modules migrated:
+
+      - Remaining intentional local literals:
+
+      '
+    agent: python-executor
 - id: error_classification_unification
   name: Error Classification Unification
   status: locked
