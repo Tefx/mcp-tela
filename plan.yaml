@@ -59410,7 +59410,7 @@ phases:
       reviewer: orchestrator
   - id: reclose.deep_review.sync_blocker_basis
     name: Synchronize blocker basis and gate semantics across authoritative artifacts
-    status: claimed
+    status: done
     description: 'work_type: proof_closure
 
       step_type: implementation
@@ -59502,6 +59502,46 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-07T10:14:40.259007+00:00'
+    done_at: '2026-04-07T10:18:19.685070+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n\nNo refs for this step.\n\n\
+      ## Cross-Artifact Synchronization Report\n- Artifacts changed:\n  - evidence/normalized_blocker_basis.md\n\
+      \  - evidence/behavioral_proof_register.md\n  - evidence/runtime_uncertainty_register.md\n\
+      \  - additional artifact(s) if touched: evidence/gate_review_report.md\n- Rows\
+      \ synchronized:\n  - R13: blocking-now / runtime witness missing -> PROVEN-2026-04-07\
+      \ / dedicated runtime witness PASS-backed in normalized blocker basis and gate\
+      \ review\n  - R42-CONFIG-REMOVE-INFLIGHT: blocking-now / XFAIL-era wording ->\
+      \ PROVEN-2026-04-07 / distinct config-remove runtime witness PASS-backed\n \
+      \ - R42-DISCONNECT-UNDER-RECOVERY: blocking-now / no separate proof row -> PROVEN-2026-04-07\
+      \ / distinct disconnect-under-recovery runtime witness PASS-backed\n- gate_open_allowed\
+      \ before/after by artifact:\n  - normalized_blocker_basis: false -> true\n \
+      \ - behavioral_proof_register: true -> true\n  - runtime_uncertainty_register:\
+      \ true -> true\n- Committed evidence diff references:\n  - evidence/normalized_blocker_basis.md:\
+      \ commit 16e15f3ba592d87d859f93bf9f7a25f8338b51f5; row hunk @@ -17,3 +17,3 @@\
+      \ rewrote R13 / R42-CONFIG-REMOVE-INFLIGHT / R42-DISCONNECT-UNDER-RECOVERY from\
+      \ blocking-now to PROVEN-2026-04-07; gate basis hunk @@ -34 +34 @@ changed gate_open_allowed=false\
+      \ -> gate_open_allowed=true; alignment hunk @@ -41,2 +41,2 @@ updated register\
+      \ notes\n  - evidence/behavioral_proof_register.md: commit 16e15f3ba592d87d859f93bf9f7a25f8338b51f5;\
+      \ sync basis hunk @@ -56,0 +57,6 @@ added explicit cross-artifact row/gate alignment\
+      \ note tying normalized blocker basis and runtime uncertainty register to the\
+      \ same PROVEN rows and gate_open_allowed=true\n  - evidence/runtime_uncertainty_register.md:\
+      \ commit 16e15f3ba592d87d859f93bf9f7a25f8338b51f5; sync basis hunk @@ -40,0\
+      \ +41,5 @@ added explicit note that normalized blocker basis now carries the\
+      \ three blocker-family rows as PROVEN-2026-04-07 and gate_open_allowed=true\
+      \ consistent across the three authoritative artifacts\n  - evidence/gate_review_report.md:\
+      \ commit 16e15f3ba592d87d859f93bf9f7a25f8338b51f5; R13 row hunk @@ -35 +35 @@\
+      \ changed RESOLVED/RESOLVED with skipped runtime instrumentation to PROVEN/PROVEN\
+      \ with PASS witness text; R13 witness hunk @@ -65 +65 @@ changed test_r13_runtime_lock_state_during_network_await\
+      \ SKIPPED -> PASS; gate basis hunk @@ -103 +101 @@ and @@ -106,2 +104,2 @@ updated\
+      \ gate-open basis to fresh runtime PASS evidence and 14 passed / 1 skipped execution\n\
+      - Residual contradictions: none\n- Why this closes the blocker family and prevents\
+      \ false-close regression:\n  - normalized_blocker_basis no longer carries stale\
+      \ blocker-open rows for R13 or either distinct R42 path\n  - behavioral_proof_register,\
+      \ runtime_uncertainty_register, and normalized_blocker_basis now agree that\
+      \ all blocker-class rows are PROVEN/CLOSED and therefore gate_open_allowed is\
+      \ true\n  - gate_review_report was refreshed to remove the stale R13 structural-gap\
+      \ narrative, so deep-review conformance no longer compares blocker-basis carry\
+      \ rows against newer runtime-proof rows\n\nCommit created:\n- 16e15f3ba592d87d859f93bf9f7a25f8338b51f5\
+      \ — sync blocker closure semantics across reclose evidence"
   - id: reclose.deep_review.spec_conformance_retest
     name: Rerun reclose conformance checks against contradiction-free registers
     status: pending
