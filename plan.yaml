@@ -57917,7 +57917,7 @@ phases:
       reviewer: orchestrator
   - id: reclose.runtime.refresh_behavioral_register
     name: Refresh behavioral proof register from current runtime outputs
-    status: rejected
+    status: claimed
     description: 'work_type: proof_closure
 
       step_type: verification
@@ -58026,7 +58026,7 @@ phases:
     - reclose.runtime.r13_runtime_witness
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-07T06:01:34.155878+00:00'
+    claimed_at: '2026-04-07T06:33:40.604371+00:00'
     done_at: '2026-04-07T06:10:48.163523+00:00'
     rejection_reason: Register still reports R13 skipped while current probe passes;
       refresh did not synchronize artifacts
