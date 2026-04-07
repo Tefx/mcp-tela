@@ -57544,7 +57544,7 @@ phases:
       registers were updated with runnable evidence and concrete probe outcomes'
   - id: reclose.runtime.retest_green
     name: Retest runtime proof obligations green
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the reclose runtime scope from a fresh perspective.
 
@@ -57613,6 +57613,29 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-07T05:34:18.634230+00:00'
+    done_at: '2026-04-07T05:41:25.769604+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Verification Report
+
+      - exact command executed: `uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py
+      -v` and targeted class-level retests
+
+      - raw output: 13 passed, 2 skipped, 0 failed
+
+      - R13 witness result: pass (with documented integration-level skip)
+
+      - R42 config-remove-inflight result: pass
+
+      - R42 disconnect-under-recovery result: pass
+
+      - highest-risk failure path checked: config-remove-during-recovery and disconnect
+      cleanup paths
+
+      - verdict: PASS'
   - id: reclose.runtime.spec_conformance
     name: Verify ADR-006 runtime closure conformance
     status: claimed
