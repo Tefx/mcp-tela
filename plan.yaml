@@ -59920,7 +59920,7 @@ phases:
       \ — `docs: add remediation guardrails scope register`"
   - id: remediation_guardrails.test_seam_inventory
     name: Inventory test seams and patch-sensitive coverage
-    status: claimed
+    status: done
     description: 'Inventory the exact tests and harness seams that protect this remediation
       tranche.
 
@@ -59955,6 +59955,80 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-07T18:51:26.569422+00:00'
+    done_at: '2026-04-07T18:55:55.551102+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Coverage Register\n- downstream_wrapper_removal:\n  - tests:\n    - evidence/remediation_guardrails_test_seam_inventory_coverage_register.md\n\
+      \    - tests/shell/test_downstream_runtime_connection.py::test_connect_all_enumerates_mocked_session\n\
+      \    - tests/shell/test_downstream_runtime_connection.py::test_connect_all_opens_downstreams_in_parallel\n\
+      \    - tests/shell/test_downstream_runtime_connection.py::test_connect_all_closes_successful_handles_when_parallel_peer_fails\n\
+      \    - tests/shell/test_downstream_runtime_connection.py::test_connect_all_uses_sse_transport_when_url_set\n\
+      \    - tests/shell/test_downstream_runtime_connection.py::test_re_enumerate_updates_tool_list_from_session\n\
+      \    - tests/shell/test_downstream_runtime_connection.py::test_message_handler_routes_reconnect_exception\n\
+      \    - tests/shell/test_downstream.py::test_handle_reconnect_calls_enumerate_once\n\
+      \    - tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\n\
+      \    - tests/shell/test_downstream.py::test_handle_reconnect_swaps_client_before_enumeration\n\
+      \    - tests/shell/test_downstream.py::test_recover_server_client_fails_closed_when_server_removed_mid_recovery\n\
+      \    - tests/shell/test_downstream.py::test_recover_server_client_config_remove_cleans_stale_client_and_lock\n\
+      \    - tests/shell/test_downstream.py::test_recover_server_client_releases_registry_lock_around_network_io\n\
+      \    - tests/shell/test_downstream.py::test_recover_server_client_success_closes_replaced_client\n\
+      \    - tests/shell/test_downstream.py::test_recover_server_client_rejects_material_config_change_before_swap\n\
+      \  - patch seam risk: \"_open_client_for_server is the active monkeypatch seam;\
+      \ removing/renaming the wrapper can strand the tests or skip reconnect ordering\
+      \ and cleanup. No direct monkeypatch coverage exists for downstream._validate_transport_mode,\
+      \ so that wrapper is a known seam gap.\"\n- error_semantics_foundation:\n  -\
+      \ tests:\n    - evidence/remediation_guardrails_test_seam_inventory_coverage_register.md\n\
+      \    - tests/core/test_classification.py\n    - tests/core/test_errors.py::test_auth_rate_limited_constant_exists\n\
+      \    - tests/shell/test_http_routes.py::TestHandleStatus::test_handle_status_rejects_invalid_token\n\
+      \    - tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_rejects_invalid_token\n\
+      \    - tests/shell/test_http_routes.py::TestHandleDisconnect::test_handle_disconnect_rejects_invalid_token\n\
+      \    - tests/shell/test_http_routes.py::TestBearerTokenUsage::test_all_handlers_use_validate_bearer_token\n\
+      \    - tests/shell/test_http_routes.py::TestBearerTokenUsage::test_validate_bearer_token_uses_hmac_compare_digest\n\
+      \    - tests/shell/test_http_auth.py::test_validate_bearer_token_rejects_invalid_token\n\
+      \    - tests/shell/test_http_auth.py::test_middleware_401_response_is_valid_json\n\
+      \    - tests/shell/test_http_auth.py::test_middleware_rejects_lowercase_bearer_scheme\n\
+      \    - tests/shell/test_http_auth.py::test_middleware_rejects_uppercase_bearer_scheme\n\
+      \    - tests/shell/test_http_auth.py::test_middleware_rejects_bearer_without_space\n\
+      \    - tests/shell/test_http_auth.py::test_middleware_rejects_bearer_with_tab_separator\n\
+      \    - tests/integration/test_mcp_auth_wire.py::test_post_mcp_without_bearer_token_returns_401\n\
+      \    - tests/integration/test_mcp_auth_wire.py::test_post_mcp_with_wrong_token_returns_401\n\
+      \    - tests/integration/test_mcp_auth_wire.py::test_post_mcp_with_lowercase_bearer_returns_401\n\
+      \    - tests/integration/test_mcp_auth_wire.py::test_post_mcp_with_uppercase_bearer_returns_401\n\
+      \    - tests/integration/test_mcp_auth_wire.py::test_post_mcp_with_bearer_no_space_returns_401\n\
+      \    - tests/integration/test_mcp_auth_wire.py::test_post_mcp_with_bearer_tab_separator_returns_401\n\
+      \    - literal audit: rg \"AUTH_INVALID_TOKEN|DOWNSTREAM_CONNECT_FAILED|INITIALIZE_REJECTED|MISSING_TOKEN\"\
+      \ tests src/tela\n    - literal audit: rg \"status_code == 401|startswith\\\
+      (\\\"AUTH_INVALID_TOKEN\" tests\n  - classification risk: \"Centralizing helpers/constants\
+      \ can change public error prefixes or 401 mapping, breaking exact/startswith\
+      \ assertions and route-vs-middleware parity.\"\n- token_precedence_refactor:\n\
+      \  - tests:\n    - evidence/remediation_guardrails_test_seam_inventory_coverage_register.md\n\
+      \    - tests/shell/test_connect_cmd.py::test_connect_token_override_priority_cli_env_lockfile\n\
+      \    - tests/shell/test_connect_cmd.py::test_connect_server_path_requires_token_or_env\n\
+      \    - tests/shell/test_connect_cmd.py::test_connect_server_path_uses_env_token\n\
+      \    - tests/shell/test_serve_cmd.py::test_token_override_priority_cli_over_env_over_generated\n\
+      \    - tests/shell/test_serve_cmd.py::test_serve_lockfile_written_then_deleted\n\
+      \  - precedence risk: \"A shared helper can collapse surface-specific fallback\
+      \ rules: connect may lose lockfile/missing-token behavior, or serve may stop\
+      \ generating a token when CLI+env are absent.\"\n- gateway_auth_skeleton_refactor:\n\
+      \  - tests:\n    - evidence/remediation_guardrails_test_seam_inventory_coverage_register.md\n\
+      \    - tests/shell/test_gateway.py::test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary\n\
+      \    - tests/shell/test_http_routes.py::TestHandleStatus::test_handle_status_rejects_invalid_token\n\
+      \    - tests/shell/test_http_routes.py::TestHandleStatus::test_handle_status_accepts_valid_token_when_gateway_not_started\n\
+      \    - tests/shell/test_http_routes.py::TestHandleStatus::test_handle_status_returns_status_when_gateway_started\n\
+      \    - tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_rejects_invalid_token\n\
+      \    - tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_rejects_when_gateway_not_started\n\
+      \    - tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_is_not_readiness_gated_while_warming\n\
+      \    - tests/shell/test_http_routes.py::TestHandleConnect::test_handle_connect_accepts_when_ready\n\
+      \    - tests/shell/test_http_routes.py::TestHandleDisconnect::test_handle_disconnect_rejects_invalid_token\n\
+      \    - tests/shell/test_http_routes.py::TestHandleDisconnect::test_handle_disconnect_rejects_when_gateway_not_started\n\
+      \    - tests/shell/test_http_routes.py::TestHandleDisconnect::test_handle_disconnect_removes_connection\n\
+      \    - tests/shell/test_http_routes.py::TestHandleDisconnect::test_handle_disconnect_fails_for_nonexistent_connection\n\
+      \    - tests/shell/test_http_auth.py::test_http_auth_gate_rejects_missing_authorization_header\n\
+      \    - tests/shell/test_http_auth.py::test_http_auth_gate_rejects_malformed_bearer_prefix\n\
+      \    - tests/shell/test_http_auth.py::test_http_auth_gate_bypasses_health_path\n\
+      \  - route-behavior risk: \"Shared skeleton extraction can accidentally readiness-gate\
+      \ /connect, alter /status gateway-not-started semantics, drop /disconnect connection-not-found\
+      \ behavior, or leak the /health auth exemption.\"\n\nCommit:\n- b95d38fd — docs:\
+      \ add remediation guardrails coverage register"
   - id: remediation_guardrails.gate
     name: Gate remediation guardrails
     status: pending
