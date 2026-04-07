@@ -59206,7 +59206,7 @@ phases:
     claimed_at: '2026-04-07T09:53:26.365387+00:00'
   - id: reclose.deep_review.black_box_verification
     name: Black-box verification of reclose claims
-    status: claimed
+    status: done
     description: 'Using only public-facing docs, evidence outputs, and named probes,
       challenge the final reclose claims without relying on implementation intent.
 
@@ -59246,6 +59246,96 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-07T10:22:33.067976+00:00'
+    done_at: '2026-04-07T10:26:50.552327+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+
+      No refs for this step.
+
+
+      ## Black-Box Verification
+
+
+      ### Blocker Families Challenged
+
+      - R13: PASS — three named probes pass in fresh execution and align to contract
+      behavior.
+
+      - R42-CONFIG-REMOVE-INFLIGHT: PASS — three named probes pass for config-remove
+      path with explicit fail-closed signaling and cleanup.
+
+      - R42-DISCONNECT-UNDER-RECOVERY: PASS — three named probes pass for disconnect
+      cleanup path.
+
+
+      ### Closure Claims That Still Look Weak
+
+      - None identified.
+
+
+      All closure claims include named probes, fresh PASS evidence, cross-artifact
+      PROVEN-2026-04-07 alignment, consistent gate_open_allowed=true semantics, and
+      preserved split R42 scenario wording.
+
+
+      ### Execution Freshness Verification
+
+      - Old reference: debt_closure.runtime_evidence.collect_behavioral_proof (2026-04-05)
+      with failures
+
+      - Fresh reference: reclose.verify.refresh_registers (2026-04-07) with 14 passed,
+      1 skipped
+
+
+      ### Contract Requirements vs Named Probes
+
+      - R13 probe names align with lock release and await-safety requirements.
+
+      - R42 config-remove probes align with missing-config envelope and lock cleanup
+      path.
+
+      - R42 disconnect probes align with disconnect cleanup path.
+
+
+      ### Skipped Test Analysis
+
+      - Only healthy-neighbor uncertainty probe skipped; non-blocker-class and permitted
+      as resolved non-blocking.
+
+
+      ### Stale Semantics Check
+
+      - No stale blocking-now rows remain for blocker families.
+
+      - No stale gate_open_allowed=false semantics remain for blocker families.
+
+
+      ### R42 Scenario Preservation
+
+      - Distinct rows remain for CONFIG-REMOVE-INFLIGHT and DISCONNECT-UNDER-RECOVERY.
+
+
+      ### Verdict
+
+      PASS — a fresh black-box read does not reproduce the earlier false-close concern
+      and no remaining ambiguity rises to blocker-class concern.
+
+
+      ## Metadata
+
+      - step_intent: Black-box independent verification
+
+      - expected_result: false-close concern resolved under external challenge
+
+      - observed_result: PASS
+
+      - failure_alignment: N/A
+
+      - product_files_modified: no
+
+
+      Commit: b2e9c64b — black-box verification: closure claims withstand independent
+      challenge'
   - id: reclose.deep_review.gate
     name: Final reclose deep-review gate
     status: pending
