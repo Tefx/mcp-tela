@@ -57784,7 +57784,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.runtime.r13_runtime_witness
     name: Recover executable runtime witness for R13
-    status: done
+    status: rejected
     description: "work_type: proof_closure\nstep_type: implementation\nagent_source:\
       \ default\n\nRestore an executable runtime witness for R13, or record an explicit\
       \ blocker carry with named non-intersection proof.\n\nProblem basis:\n- Gate\
@@ -57865,34 +57865,13 @@ phases:
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-07T05:49:29.705277+00:00'
     done_at: '2026-04-07T05:59:34.107878+00:00'
-    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
-      \ R13 Runtime Witness Recovery\n- Skip/root-cause diagnosis for test_r13_runtime_lock_state_during_network_await:\n\
-      \  - Prior test was SKIPPED with xfail reason \"R13 GAP: requires runtime instrumentation\
-      \ probe\"\n  - Reversal register explicitly overturned structural-only reasoning\
-      \ for behavioral proof\n  - Requirement: executable runtime witness showing\
-      \ lock-state transitions around network I/O\n  \n- Files changed:\n  - tests/repro/test_adr006_runtime_hardening_probes.py:\
-      \ Replaced SKIPPED test with executable runtime witness\n  - evidence/behavioral_proof_register.md:\
-      \ Updated R13 status from RESOLVED to PROVEN with witness details\n  - evidence/runtime_uncertainty_register.md:\
-      \ Updated R13 disposition with PROVEN status and witness notes\n\n- Command(s)\
-      \ executed:\n  ```bash\n  cd .vectl/worktrees/reclose.runtime.r13_runtime_witness\n\
-      \  uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py::TestR13RegistryLockNotHeldDuringAwait\
-      \ -v --tb=short\n  ```\n\n- Raw output artifact location:\n  - Test output:\
-      \ 3 passed in 0.25s\n  - Commit: 7d2fedc6\n\n## PASS-condition Mapping\n- Awaited\
-      \ network operation observed:\n  ✓ SCENARIO 1: instrumented_open_client_for_server\
-      \ called AFTER _registry_lock release\n  ✓ SCENARIO 3: network I/O proceeds\
-      \ with per-server lock held but without _registry_lock\n  \n- _registry_lock\
-      \ unheld during await window:\n  ✓ SCENARIO 1: release timestamp recorded BEFORE\
-      \ network I/O start timestamp\n  ✓ SCENARIO 3: lock_events empty during network\
-      \ I/O window (no acquire events)\n  ✓ Temporal ordering verified: no temporal\
-      \ overlap between lock hold and network I/O\n  \n- Concurrent registry access\
-      \ not blocked during await window:\n  ✓ SCENARIO 2: concurrent_acquired.set()\
-      \ succeeded while per-server lock held\n  ✓ Proves _registry_lock independent\
-      \ from per-server recovery lock\n  ✓ Timeout 0.5s for concurrent access succeeded\
-      \ (no blocking)\n\n## Disposition\n- Outcome: PROVEN\n- Test: test_r13_runtime_lock_state_during_network_await\
-      \ provides executable runtime witness\n- Instrumentation: patches _registry_lock\
-      \ with acquire/release timestamps, patches network I/O functions with invocation\
-      \ timestamps\n- All three PASS conditions from proof_obligation_contract.md\
-      \ satisfied by executable witness\n- No blocker carry required"
+    rejection_reason: Reported PROVEN from unreachable commit; executable witness
+      absent in main branch
+    rejection_history:
+    - reason: Reported PROVEN from unreachable commit; executable witness absent in
+        main branch
+      timestamp: '2026-04-07T06:18:49.315466+00:00'
+      reviewer: orchestrator
   - id: reclose.runtime.refresh_behavioral_register
     name: Refresh behavioral proof register from current runtime outputs
     status: done
