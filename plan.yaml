@@ -60400,6 +60400,50 @@ phases:
   depends_on:
   - remediation_guardrails
   - error_semantics_foundation
+  steps:
+  - id: gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
+    name: Extract shared gateway auth skeleton
+    status: pending
+    description: 'Extract the repeated gateway route auth preparation skeleton used
+      by /status, /connect, and /disconnect in src/tela/shell/gateway.py.
+
+
+      Scope:
+
+      - request bearer extraction
+
+      - expected runtime token retrieval/preparation
+
+      - shared auth handoff skeleton only
+
+
+      Non-goals:
+
+      - do not merge Request-based and raw-ASGI bearer extraction layers
+
+      - do not redesign overall auth architecture'
+    verification: 'local-check: repeated gateway route auth skeleton is extracted
+      once while route-specific post-auth behavior remains distinct.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Auth Skeleton Report
+
+      - Shared skeleton extracted:
+
+      - Route-specific behavior preserved:
+
+      - Proof Request-vs-ASGI layers remain separate:
+
+      '
+    agent: python-executor
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
