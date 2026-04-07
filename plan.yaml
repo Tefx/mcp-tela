@@ -59835,3 +59835,10 @@ phases:
     semantics with unchanged externally visible outcomes.
   depends_on:
   - error_semantics_foundation
+- id: token_precedence_refactor
+  name: Token Precedence Refactor
+  status: locked
+  gate: Shared CLI/env bearer-token precedence extracted while connect/serve-specific
+    fallbacks remain local and unchanged.
+  depends_on:
+  - remediation_guardrails
