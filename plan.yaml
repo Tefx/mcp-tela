@@ -58842,7 +58842,7 @@ phases:
       \ tests provide supporting evidence but are not blocking on their own."
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
-  status: in_progress
+  status: done
   gate: Docs and evidence artifacts must describe the same resolved classifications,
     authority tuple, and behavioral closure basis with no stale ambiguity.
   depends_on:
@@ -58937,7 +58937,7 @@ phases:
       \ this is explicitly documented as monitor-only and not a blocker row."
   - id: reclose.doc_sync.gate
     name: Gate reclose doc sync
-    status: claimed
+    status: done
     description: 'Gate review for documentation and evidence sync.
 
 
@@ -58971,9 +58971,96 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-07T07:45:43.011896+00:00'
+    done_at: '2026-04-07T07:47:43.960211+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Gate Review Report\n\n### Phase 0: Evidence Artifact Cross-Check\n\n**Behavioral\
+      \ Proof Register** (`evidence/behavioral_proof_register.md`):\n- R13: `**PROVEN-2026-04-07**`\
+      \ with fresh runtime witness evidence\n- R42-CONFIG-REMOVE-INFLIGHT: `**PROVEN-2026-04-07**`\
+      \ with fresh runtime probe evidence\n- R42-DISCONNECT-UNDER-RECOVERY: `**PROVEN-2026-04-07**`\
+      \ with fresh PASS evidence\n- SURFACE-REENUMERATE: `**RESOLVED_EXTERNAL_CONTRACT**`\
+      \ with audit evidence + doc alignment\n- AUTH-MCP-FASTMCP: `**CLOSED-2026-04-07**`\
+      \ with audit evidence + doc alignment\n- Evidence timestamp: 2026-04-07\n- Test\
+      \ result: 14 passed, 1 skipped (non-blocker)\n\n**Runtime Uncertainty Register**\
+      \ (`evidence/runtime_uncertainty_register.md`):\n- All blocker-family rows show\
+      \ `**PROVEN-2026-04-07**` or `**CLOSED-2026-04-07**`\n- No unresolved `NEEDS_TEST`,\
+      \ `UNPROVEN`, or `UNCERTAIN_BLOCKING` statuses\n- `gate_open_allowed=true` because\
+      \ no blocker-family row remains unresolved\n\n**Normalized Blocker Basis** (`evidence/normalized_blocker_basis.md`):\n\
+      - SURFACE-REENUMERATE: `**CLOSED-2026-04-07**` with DESIGN.md:620 reference\n\
+      - AUTH-MCP-FASTMCP: `**CLOSED-2026-04-07**` with DESIGN.md:561-578 reference\n\
+      - R13/R42 families: listed with pre-existing provenance, now PROVEN disposition\n\
+      \n### Phase 1: Documentation-to-Evidence Alignment\n\n**re_enumerate Classification\
+      \ Alignment:**\n\n| Artifact | Classification Status |\n|----------|----------------------|\n\
+      | DESIGN.md:620 | `**Supported public surface** (SURFACE-REENUMERATE resolved)`\
+      \ |\n| behavioral_proof_register.md row 16 | `RESOLVED_EXTERNAL_CONTRACT` |\
+      \ \n| runtime_uncertainty_register.md row 15 | `CLOSED-2026-04-07` |\n| normalized_blocker_basis.md\
+      \ row 20 | `CLOSED-2026-04-07` ✅ DESIGN.md reference |\n\n✅ **ALIGNED**: All\
+      \ artifacts classify `re_enumerate()` consistently as supported public surface.\n\
+      \n**FastMCP Authority Tuple Alignment:**\n\n| Authority Layer | DESIGN.md:561-578\
+      \ | INTERFACES.md:522-540 | Evidence Registers |\n|-----------------|-------------------|----------------------|-------------------|\n\
+      | Package declaration | `fastmcp>=2.0.0` | `fastmcp>=2.0.0` | CLOSED-2026-04-07\
+      \ |\n| Runtime import | `from mcp.server.fastmcp import FastMCP` | `from mcp.server.fastmcp\
+      \ import FastMCP` | CLOSED-2026-04-07 |\n| Manifest/header | Implementation-agnostic\
+      \ | Implementation-agnostic | CLOSED-2026-04-07 |\n\n✅ **ALIGNED**: Both documentation\
+      \ files record identical three-layer authority tuple; evidence registers confirm\
+      \ CLOSED status.\n\n**Blocker Closure State Wording:**\n\nE1. **R13 (Registry\
+      \ lock during await)**:\n   - behavioral_proof_register: `PROVEN-2026-04-07`\
+      \ via `TestR13RegistryLockNotHeldDuringAwait` tests\n   - runtime_uncertainty_register:\
+      \ `PROVEN-2026-04-07` with fresh runtime witness\n   - ❌ No `NEEDS_TEST` in\
+      \ current evidence\n\nE2. **R42-CONFIG-REMOVE-INFLIGHT (Config-reload-remove\
+      \ lock cleanup)**:\n   - behavioral_proof_register: `PROVEN-2026-04-07` via\
+      \ `TestR42ConfigReloadRemovesLock` tests\n   - runtime_uncertainty_register:\
+      \ `PROVEN-2026-04-07` with fresh probe execution\n   - ❌ No `NEEDS_TEST` in\
+      \ current evidence\n\nE3. **R42-DISCONNECT-UNDER-RECOVERY (Disconnect lock cleanup)**:\n\
+      \   - behavioral_proof_register: `PROVEN-2026-04-07` via `TestR42DisconnectUnderRecovery`\
+      \ tests\n   - runtime_uncertainty_register: `PROVEN-2026-04-07` with fresh PASS\
+      \ results\n   - ❌ No `NEEDS_TEST` in current evidence\n\n✅ **ALIGNED**: All\
+      \ blocker-class behavioral obligations are CLOSED with runtime witness evidence,\
+      \ not NEEDS_TEST.\n\n### Phase 2: Stale Wording Grep Scan\n\n**Checked locations\
+      \ for stale false-close language:**\n- `evidence/*.md` files for `NEEDS_TEST`\
+      \ in current status (not historical reference)\n- `docs/` for `false-close`\
+      \ or contradictory closure language\n\n**Findings:**\n- `NEEDS_TEST` appears\
+      \ only in:\n  - `proof_obligation_contract.md`: As allowed-status definition\
+      \ (contract boilerplate)\n  - `debt_closure_review_basis.md`: As gate-blocking\
+      \ rule definition (control framework)\n  - `reversal_register.md`: As overturned\
+      \ decision description (historical record)\n  - `review_miss_root_cause_analysis.md`:\
+      \ As pattern description (historical record)\n  - `ADR-006-deep-conformance-*`:\
+      \ As stale artifacts (historical, not current state)\n\n- **No SUCCESS + NEEDS_TEST\
+      \ contradictions in current state artifacts**\n- **No `false-close` in `docs/`\
+      \ directory**\n- **All blocker rows in behavioral proof register and runtime\
+      \ uncertainty register show resolved states with 2026-04-07 timestamps**\n\n\
+      ### Phase 3: Reversal Register Completeness\n\n**reversal_register.md entries:**\n\
+      1. ✅ Row 1: ADR-006 R42 lock-cleanup false-close → remediation_owner + re_close_proof\
+      \ documented\n2. ✅ Row 2: ADR-006 R13 no-lock-during-await false-close → remediation_owner\
+      \ + re_close_proof documented\n3. ✅ Row 3: Surface taxonomy PASS false-close\
+      \ → remediation_owner + re_close_proof documented\n4. ✅ Row 4: FastMCP authority\
+      \ drift false-close → remediation_owner + re_close_proof documented\n\n✅ **Complete**:\
+      \ All four false-close patterns correctly documented with remediation owners.\n\
+      \n### artifact alignment status:\n- ✅ DESIGN.md and INTERFACES.md agree on FastMCP\
+      \ authority tuple (three-layer: package/import/manifest)\n- ✅ DESIGN.md:620\
+      \ aligns with evidence registers on re_enumerate classification (RESOLVED_EXTERNAL_CONTRACT)\n\
+      - ✅ All three evidence registers (behavioral_proof_register, runtime_uncertainty_register,\
+      \ normalized_blocker_basis) synchronized on blocker status with 2026-04-07 timestamps\n\
+      - ✅ All blocker-class rows show PROVEN/CLOSED status, not NEEDS_TEST\n\n###\
+      \ stale wording found:\n- ❌ No stale `NEEDS_TEST` in current evidence state\n\
+      - ❌ No stale false-close contradictions in docs or evidence\n- ❌ No stale SUCCESS+NEEDS_TEST\
+      \ patterns in active artifacts\n- ✅ Historical false-close patterns correctly\
+      \ preserved in reversal_register.md for audit trail\n\n### decision: OPEN\n\n\
+      **Rationale:**\n1. **No unresolved blockers**: All blocker-family rows (R13,\
+      \ R42-CONFIG-REMOVE-INFLIGHT, R42-DISCONNECT-UNDER-RECOVERY, SURFACE-REENUMERATE,\
+      \ AUTH-MCP-FASTMCP) are resolved to PROVEN or CLOSED status with 2026-04-07\
+      \ timestamps.\n2. **Evidence aligns with documentation**: DESIGN.md and INTERFACES.md\
+      \ record authoritative FastMCP tuple and re_enumerate classification matching\
+      \ the evidence register closure status.\n3. **No stale false-close wording**:\
+      \ Current evidence artifacts show no NEEDS_TEST in active state; all historical\
+      \ NEEDS_TEST references are in reversal context or contract definition context.\n\
+      4. **Reversal register complete**: All four overturned decisions documented\
+      \ with remediation owners and re-close proof requirements.\n5. **Fresh runtime\
+      \ evidence**: 14 passed tests in behavioral_proof_register demonstrate actual\
+      \ execution grounding the PROVEN status, not stale structural analysis.\n\n\
+      The gate is **OPEN** with no blocking evidence gaps remaining."
 - id: reclose.deep_review
   name: Reclose Deep Review
-  status: locked
+  status: pending
   gate: Final reclose requires independent cross-functional confirmation that blocker
     families are actually closed and the gate basis is internally consistent.
   depends_on:
