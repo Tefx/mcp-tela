@@ -60039,6 +60039,36 @@ phases:
     depends_on:
     - downstream_wrapper_removal.remove_passthrough_wrappers
     agent: integration-verifier-tacit
+  - id: downstream_wrapper_removal.gate
+    name: Gate downstream wrapper removal
+    status: pending
+    description: 'Gate review: verify pure passthrough wrapper removal is complete
+      and did not damage test seams or downstream behavior.'
+    verification: 'phase-check: no orphaned wrapper definitions remain and evidence
+      demonstrates monkeypatch-sensitive test seams are preserved.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Wrapper removal complete:
+
+      - Test seam preserved:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - downstream_wrapper_removal.remove_passthrough_wrappers
+    - downstream_wrapper_removal.update_monkeypatch_tests
+    agent: gate-reviewer-tacit
 - id: error_semantics_foundation
   name: Error Semantics Foundation
   status: locked
