@@ -59265,7 +59265,10 @@ phases:
 
       - re_enumerate classification or FastMCP authority can still be read as ambiguous
 
-      - gate_open_allowed and row-level statuses disagree anywhere'
+      - gate_open_allowed and row-level statuses disagree anywhere
+
+      - the deep-review remediation/retest chain has not produced contradiction-free
+      authoritative artifacts for the blocker basis'
     verification: '- All blocker families are explicitly closed or explicitly still
       blocked
 
@@ -59294,8 +59297,8 @@ phases:
       '
     depends_on:
     - reclose.deep_review.wiring_audit
-    - reclose.deep_review.spec_conformance
     - reclose.deep_review.architecture_review
+    - reclose.deep_review.spec_conformance_retest
     - reclose.deep_review.black_box_verification
     agent: gate-reviewer-tacit
   - id: reclose.deep_review.dependency_declare_fix
