@@ -57718,7 +57718,7 @@ phases:
       - R42-DISCONNECT-UNDER-RECOVERY: resolved with witness evidence'
   - id: reclose.runtime.gate
     name: Gate runtime proof reclose
-    status: claimed
+    status: pending
     description: 'Gate review for runtime proof reclose.
 
 
@@ -57782,8 +57782,6 @@ phases:
     - reclose.runtime.r13_runtime_witness
     - reclose.runtime.refresh_behavioral_register
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-07T06:11:27.483664+00:00'
   - id: reclose.runtime.r13_runtime_witness
     name: Recover executable runtime witness for R13
     status: done
