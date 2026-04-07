@@ -59276,7 +59276,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.deep_review.dependency_declare_fix
     name: Resolve undeclared deal dependency mismatch
-    status: pending
+    status: claimed
     description: 'Resolve the deep-review dependency declaration mismatch caused by
       `deal` being imported from `core/contracts.py` without a matching declared dependency
       in `pyproject.toml`.
@@ -59348,3 +59348,5 @@ phases:
 
       '
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-07T07:57:07.120259+00:00'
