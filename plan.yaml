@@ -59866,3 +59866,10 @@ phases:
   gate: Docs/comments/examples align with final helper ownership and deferred non-goals.
   depends_on:
   - remediation_integration_verify
+- id: deep_review_gate
+  name: Deep Review Gate
+  status: locked
+  gate: Independent wiring, spec, architecture, and gate review confirm remediation
+    is complete and scope boundaries were respected.
+  depends_on:
+  - remediation_doc_sync
