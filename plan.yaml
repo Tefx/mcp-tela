@@ -60719,3 +60719,40 @@ phases:
     is complete and scope boundaries were respected.
   depends_on:
   - remediation_doc_sync
+  steps:
+  - id: deep_review_gate.architecture_review
+    name: Architecture review for remediation boundaries
+    status: pending
+    description: 'Independently review whether the remediation preserved intended
+      module/layer boundaries.
+
+
+      Required checks:
+
+      - Request-vs-ASGI bearer extraction layers remain separate
+
+      - downstream wrapper removal did not accidentally widen downstream client ownership
+
+      - error semantics centralization did not collapse unrelated local semantics'
+    verification: 'phase-check: architecture boundaries remain valid and no blocked
+      structural regressions are introduced by the remediation tranche.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Architecture Review Report
+
+      - Layer separation preserved:
+
+      - Ownership drift:
+
+      - Boundary concerns:
+
+      '
+    agent: software-architect-tacit
