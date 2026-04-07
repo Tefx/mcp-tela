@@ -59860,3 +59860,9 @@ phases:
   - error_classification_unification
   - token_precedence_refactor
   - gateway_auth_skeleton_refactor
+- id: remediation_doc_sync
+  name: Remediation Documentation Sync
+  status: locked
+  gate: Docs/comments/examples align with final helper ownership and deferred non-goals.
+  depends_on:
+  - remediation_integration_verify
