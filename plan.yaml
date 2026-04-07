@@ -60444,6 +60444,53 @@ phases:
 
       '
     agent: python-executor
+  - id: gateway_auth_skeleton_refactor.route_auth_retest
+    name: Retest gateway route auth and error paths
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
+      the gateway route auth skeleton refactor from a fresh perspective.
+
+
+      Test for /status, /connect, and /disconnect:
+
+      - missing bearer
+
+      - invalid bearer
+
+      - valid bearer
+
+      - preserved error/status behavior
+
+
+      Independence Level: L1'
+    verification: 'phase-check: targeted route auth/error-path tests pass green and
+      evidence shows route-specific behavior was not flattened by the shared skeleton.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Verification Report
+
+      - Commands executed:
+
+      - Routes tested:
+
+      - Error/status outcomes observed:
+
+      - Issues found:
+
+      - Verdict: PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
+    agent: integration-verifier-tacit
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
