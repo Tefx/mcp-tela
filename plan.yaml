@@ -59850,3 +59850,13 @@ phases:
   depends_on:
   - remediation_guardrails
   - error_semantics_foundation
+- id: remediation_integration_verify
+  name: Remediation Integration Verification
+  status: locked
+  gate: Focused regression suite and seam-level proofs confirm all remediation branches
+    compose safely.
+  depends_on:
+  - downstream_wrapper_removal
+  - error_classification_unification
+  - token_precedence_refactor
+  - gateway_auth_skeleton_refactor
