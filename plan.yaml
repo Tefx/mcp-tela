@@ -60788,3 +60788,51 @@ phases:
     depends_on:
     - deep_review_gate.architecture_review
     agent: spec-verifier-tacit
+  - id: deep_review_gate.final_gate
+    name: Final remediation gate
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer-tacit), decide whether
+      the remediation tranche is ready to close.
+
+
+      Block if:
+
+      - Request-vs-ASGI auth extractors were collapsed
+
+      - downstream test seam breakage remains
+
+      - shared error semantics are still fragmented in scoped files
+
+      - token precedence semantics changed unexpectedly
+
+      - deferred recovery-envelope work was pulled into scope without justification'
+    verification: 'full-plan-check: independent review confirms the remediation tranche
+      closed the planned issues without violating the recorded keep-separate and defer
+      constraints.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Final Gate Review Report
+
+      - Planned issues closed:
+
+      - Keep-separate constraints preserved:
+
+      - Deferred work still deferred:
+
+      - Open blockers:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - deep_review_gate.architecture_review
+    - deep_review_gate.spec_conformance
+    agent: gate-reviewer-tacit
