@@ -58313,7 +58313,7 @@ phases:
     claimed_at: '2026-04-07T06:50:49.871465+00:00'
   - id: reclose.verify.wiring_manifest_rereview
     name: Re-review wiring and manifest closure
-    status: pending
+    status: claimed
     description: 'Re-review re_enumerate reachability and FastMCP authority tuple
       closure after register refresh.
 
@@ -58349,6 +58349,8 @@ phases:
     depends_on:
     - reclose.verify.refresh_registers
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-04-07T06:51:20.550794+00:00'
   - id: reclose.verify.gate
     name: Gate refreshed reclose verification
     status: pending
