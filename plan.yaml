@@ -59276,7 +59276,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.deep_review.dependency_declare_fix
     name: Resolve undeclared deal dependency mismatch
-    status: claimed
+    status: done
     description: 'Resolve the deep-review dependency declaration mismatch caused by
       `deal` being imported from `core/contracts.py` without a matching declared dependency
       in `pyproject.toml`.
@@ -59350,7 +59350,31 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-07T08:08:28.820632+00:00'
-    done_at: '2026-04-07T08:00:04.499109+00:00'
+    done_at: '2026-04-07T08:09:54.155641+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - AGENTS.md read
+
+      - pyproject.toml read and updated
+
+      - src/tela/core/contracts.py read (direct deal imports)
+
+
+      ## Dependency Disposition
+
+      - Selected path: declare dependency
+
+      - Why this path is correct here: direct import usage requires explicit declaration
+
+      - Files changed: pyproject.toml
+
+
+      ## Proof
+
+      - Exact mismatch addressed: undeclared deal import now matched by pyproject
+      declaration
+
+      - Evidence: dependency list now includes `deal>=4.24.6` in step branch'
     rejection_reason: Deal declaration not present in main pyproject; previous fix
       not integrated
     rejection_history:
