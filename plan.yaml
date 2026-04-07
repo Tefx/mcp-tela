@@ -57779,6 +57779,8 @@ phases:
     - reclose.runtime.close_gap_if_exposed
     - reclose.runtime.retest_green
     - reclose.runtime.spec_conformance
+    - reclose.runtime.r13_runtime_witness
+    - reclose.runtime.refresh_behavioral_register
     agent: gate-reviewer-tacit
   - id: reclose.runtime.r13_runtime_witness
     name: Recover executable runtime witness for R13
