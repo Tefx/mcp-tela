@@ -60191,6 +60191,37 @@ phases:
     semantics with unchanged externally visible outcomes.
   depends_on:
   - error_semantics_foundation
+  steps:
+  - id: error_classification_unification.unify_http_routes_helpers
+    name: Unify duplicate HTTP route error helpers
+    status: pending
+    description: 'Replace the near-identical _is_*_error helpers in src/tela/shell/http_routes.py
+      with shared error classification helpers from the established foundation.
+
+
+      Preserve route behavior and readability; this is a behavior-preserving cleanup.'
+    verification: 'local-check: duplicate route-specific _is_*_error helper patterns
+      are removed or reduced to thin shared-helper wrappers with unchanged semantics.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Route Helper Cleanup Report
+
+      - Duplicates removed:
+
+      - Shared helpers used:
+
+      - Remaining intentional wrappers:
+
+      '
+    agent: python-executor
 - id: token_precedence_refactor
   name: Token Precedence Refactor
   status: locked
