@@ -59119,7 +59119,7 @@ phases:
       - verdict: PASS'
   - id: reclose.deep_review.spec_conformance
     name: Deep spec conformance audit for reclose
-    status: claimed
+    status: done
     description: 'Full-system adversarial conformance audit for the reclose slice.
 
 
@@ -59159,6 +59159,39 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-07T13:50:36.896034+00:00'
+    done_at: '2026-04-07T13:50:45.705344+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+
+      No refs for this step.
+
+
+      ## Deep Conformance Report
+
+
+      PASS — Cross-artifact properties conform after fresh execution.
+
+
+      - Fresh witness: `uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py
+      -v --tb=short` -> 14 passed, 1 skipped
+
+      - R13, R42-CONFIG-REMOVE-INFLIGHT, R42-DISCONNECT-UNDER-RECOVERY rows aligned
+      as PROVEN-2026-04-07 across normalized_blocker_basis, behavioral_proof_register,
+      runtime_uncertainty_register
+
+      - gate_open_allowed=true consistent across authoritative artifacts
+
+      - SURFACE-REENUMERATE and AUTH-MCP-FASTMCP closure semantics remain explicit
+      and contradiction-free
+
+      - No stale blocking-now / gate_open_allowed=false semantics remain for blocker
+      families
+
+
+      Evidence artifact: evidence/deep_conformance_audit.md
+
+
+      Commit: 95bd2bbc — deep conformance audit pass with fresh witness'
   - id: reclose.deep_review.architecture_review
     name: Deep architecture review for reclose
     status: claimed
