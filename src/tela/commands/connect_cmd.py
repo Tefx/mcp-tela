@@ -39,6 +39,7 @@ from tela.commands.connect_transport import (
     extract_response_messages,
     inject_bridge_connection_id,
 )
+from tela.commands.serve_cmd import _resolve_bearer_token_cli_or_env
 from tela.shell.config_loader import Result
 from tela.shell.lockfile import delete_lockfile, read_lockfile
 from tela.shell.startup_coordinator import (
@@ -196,13 +197,11 @@ def _resolve_connect_token(
     3. lockfile ``token`` field
     """
 
-    if cli_token is not None:
-        return Result(value=cli_token)
+    cli_env_result = _resolve_bearer_token_cli_or_env(cli_token)
+    if cli_env_result.is_ok:
+        return cli_env_result
 
-    env_token = os.environ.get("TELA_BEARER_TOKEN")
-    if env_token is not None:
-        return Result(value=env_token)
-
+    # Command-specific fallback: try lockfile token
     if lockfile_token is not None:
         return Result(value=lockfile_token)
 

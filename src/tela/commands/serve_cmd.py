@@ -152,6 +152,33 @@ def serve_command(
     return Result(value=0)
 
 
+# @shell_orchestration: shared CLI/env token precedence for connect and serve commands.
+def _resolve_bearer_token_cli_or_env(cli_token: str | None) -> Result[str, str]:
+    """Resolve bearer token from CLI or environment with strict precedence.
+
+    This helper is shared between ``tela serve`` and ``tela connect`` for the
+    CLI/env portion of their token precedence. Each command adds its own
+    command-specific fallback after this helper returns.
+
+    Precedence order:
+    1. ``--token`` CLI argument
+    2. ``TELA_BEARER_TOKEN`` environment variable
+
+    Returns:
+        Result with the resolved token string, or an error if neither
+        CLI token nor environment token is available.
+    """
+
+    if cli_token is not None:
+        return Result(value=cli_token)
+
+    env_token = os.environ.get("TELA_BEARER_TOKEN")
+    if env_token is not None:
+        return Result(value=env_token)
+
+    return Result(error="MISSING_TOKEN: --token or TELA_BEARER_TOKEN is required")
+
+
 # @shell_orchestration: token resolution selects CLI/env/generated source for HTTP auth boundary.
 def _resolve_bearer_token(cli_token: str | None) -> Result[str, str]:
     """Resolve bearer-token source with strict precedence.
@@ -162,13 +189,11 @@ def _resolve_bearer_token(cli_token: str | None) -> Result[str, str]:
     3. Generated token via ``secrets.token_urlsafe(32)``
     """
 
-    if cli_token is not None:
-        return Result(value=cli_token)
+    cli_env_result = _resolve_bearer_token_cli_or_env(cli_token)
+    if cli_env_result.is_ok:
+        return cli_env_result
 
-    env_token = os.environ.get("TELA_BEARER_TOKEN")
-    if env_token is not None:
-        return Result(value=env_token)
-
+    # Command-specific fallback: generate a token
     generated_result = generate_bearer_token()
     if generated_result.is_err:
         return Result(error=generated_result.error)
