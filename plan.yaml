@@ -59397,7 +59397,7 @@ phases:
       challenge'
   - id: reclose.deep_review.gate
     name: Final reclose deep-review gate
-    status: pending
+    status: claimed
     description: 'Final independent gate for the reclose campaign.
 
 
@@ -59452,6 +59452,8 @@ phases:
     - reclose.deep_review.spec_conformance_retest
     - reclose.deep_review.black_box_verification
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-07T13:56:57.424500+00:00'
   - id: reclose.deep_review.dependency_declare_fix
     name: Resolve undeclared deal dependency mismatch
     status: done
