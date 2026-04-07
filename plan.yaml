@@ -58842,7 +58842,7 @@ phases:
       \ tests provide supporting evidence but are not blocking on their own."
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
-  status: pending
+  status: in_progress
   gate: Docs and evidence artifacts must describe the same resolved classifications,
     authority tuple, and behavioral closure basis with no stale ambiguity.
   depends_on:
@@ -58850,7 +58850,7 @@ phases:
   steps:
   - id: reclose.doc_sync.update_docs
     name: Sync docs and evidence wording for reclose
-    status: pending
+    status: claimed
     description: 'Sync docs and evidence artifacts after reclose remediation.
 
 
@@ -58889,6 +58889,8 @@ phases:
 
       '
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer-tacit
+    claimed_at: '2026-04-07T07:41:45.095649+00:00'
   - id: reclose.doc_sync.gate
     name: Gate reclose doc sync
     status: pending
