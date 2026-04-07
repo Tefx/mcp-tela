@@ -59206,7 +59206,7 @@ phases:
     claimed_at: '2026-04-07T09:53:26.365387+00:00'
   - id: reclose.deep_review.black_box_verification
     name: Black-box verification of reclose claims
-    status: pending
+    status: claimed
     description: 'Using only public-facing docs, evidence outputs, and named probes,
       challenge the final reclose claims without relying on implementation intent.
 
@@ -59244,6 +59244,8 @@ phases:
     depends_on:
     - reclose.deep_review.spec_conformance_retest
     agent: blind-tester-tacit
+    claimed_by: blind-tester-tacit
+    claimed_at: '2026-04-07T10:22:33.067976+00:00'
   - id: reclose.deep_review.gate
     name: Final reclose deep-review gate
     status: pending
