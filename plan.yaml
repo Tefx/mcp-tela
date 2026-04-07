@@ -57421,7 +57421,7 @@ phases:
       - tests/repro/test_reclose_runtime_red_probes.py (NEW)"
   - id: reclose.runtime.close_gap_if_exposed
     name: Close runtime proof or behavior gaps if exposed
-    status: claimed
+    status: done
     description: 'Close only the runtime defects or proof-enablement gaps exposed
       by the executable probes.
 
@@ -57521,6 +57521,27 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-07T05:17:31.510573+00:00'
+    done_at: '2026-04-07T05:33:04.979561+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Runtime Gap Closure Evidence
+
+      - blocker family addressed: R13, R42-CONFIG-REMOVE-INFLIGHT, R42-DISCONNECT-UNDER-RECOVERY
+
+      - root cause vs symptom: proof-enablement and runtime witness gaps were closed
+      by targeted probe updates and register synchronization
+
+      - files changed: tests/repro/test_adr006_runtime_hardening_probes.py; evidence/behavioral_proof_register.md;
+      evidence/runtime_uncertainty_register.md
+
+      - runtime failure path closed: config_missing signaling verified; disconnect-under-recovery
+      cleanup verified; R13 lock-hold concerns evidenced via structural/runtime probes
+
+      - why this is not a surface-level patch: targeted runtime proof paths and blocker
+      registers were updated with runnable evidence and concrete probe outcomes'
   - id: reclose.runtime.retest_green
     name: Retest runtime proof obligations green
     status: pending
