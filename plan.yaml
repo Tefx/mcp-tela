@@ -59874,6 +59874,41 @@ phases:
 
       '
     agent: software-architect-tacit
+  - id: remediation_guardrails.test_seam_inventory
+    name: Inventory test seams and patch-sensitive coverage
+    status: pending
+    description: 'Inventory the exact tests and harness seams that protect this remediation
+      tranche.
+
+
+      Required focus:
+
+      - monkeypatch-heavy downstream tests that currently patch downstream._open_client_for_server
+      or downstream._validate_transport_mode
+
+      - gateway route auth/error-path tests covering /status, /connect, /disconnect
+
+      - token precedence tests for connect and serve
+
+      - error mapping/classification tests and any grep-based literal audits needed
+      later
+
+
+      Output a step-local coverage register mapping each remediation branch to its
+      must-run tests and highest-risk failure mode.'
+    verification: 'local-check: coverage register identifies monkeypatch-sensitive
+      tests, route auth/error-path tests, and command token-precedence tests, with
+      at least one must-run test family per planned remediation branch.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Coverage Register\n\
+      - downstream_wrapper_removal:\n  - tests:\n  - patch seam risk:\n- error_semantics_foundation:\n\
+      \  - tests:\n  - classification risk:\n- token_precedence_refactor:\n  - tests:\n\
+      \  - precedence risk:\n- gateway_auth_skeleton_refactor:\n  - tests:\n  - route-behavior\
+      \ risk:\n"
+    depends_on:
+    - remediation_guardrails.lock_scope
+    agent: software-architect-tacit
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
   status: locked
