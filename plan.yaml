@@ -58270,7 +58270,7 @@ phases:
       \ reclose registers with fresh probe results`"
   - id: reclose.verify.behavior_rereview
     name: Re-review behavioral closure from fresh perspective
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (blind-tester-tacit), challenge the refreshed
       closure basis from a fresh reading.
 
@@ -58310,6 +58310,8 @@ phases:
     - reclose.verify.refresh_registers
     - reclose.verify.runtime_witness_hardening
     agent: blind-tester-tacit
+    claimed_by: blind-tester-tacit
+    claimed_at: '2026-04-07T07:24:28.819566+00:00'
   - id: reclose.verify.wiring_manifest_rereview
     name: Re-review wiring and manifest closure
     status: done
