@@ -59194,7 +59194,7 @@ phases:
       Commit: 95bd2bbc — deep conformance audit pass with fresh witness'
   - id: reclose.deep_review.architecture_review
     name: Deep architecture review for reclose
-    status: claimed
+    status: done
     description: 'Architecture and concurrency review for the reclose slice.
 
 
@@ -59237,6 +59237,32 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-07T13:52:08.877376+00:00'
+    done_at: '2026-04-07T13:56:27.192498+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+
+      No refs for this step.
+
+
+      ## Architecture Review
+
+      - source-of-truth assessment: PASS — normalized_blocker_basis remains control-plane
+      authority; behavioral_proof_register remains runtime witness authority; runtime_uncertainty_register
+      mirrors disposition without introducing a second truth source; blocker families
+      aligned across artifacts.
+
+      - mutable-state assessment: PASS — _recovery_locks remains module-owned in src/tela/shell/downstream.py;
+      mutations disciplined through _registry_lock and per-server lock model; concurrency
+      boundary preserved.
+
+      - authority-boundary assessment: PASS — DESIGN/INTERFACES and runtime wiring
+      preserve reconciled FastMCP translation boundary (package authority fastmcp>=2.0.0;
+      runtime import mcp.server.fastmcp.FastMCP; manifest implementation-agnostic).
+
+      - verdict: PASS
+
+
+      Commit: 8be26659 — docs: add reclose architecture review evidence'
   - id: reclose.deep_review.black_box_verification
     name: Black-box verification of reclose claims
     status: done
