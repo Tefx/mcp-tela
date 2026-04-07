@@ -59544,7 +59544,7 @@ phases:
       \ — sync blocker closure semantics across reclose evidence"
   - id: reclose.deep_review.spec_conformance_retest
     name: Rerun reclose conformance checks against contradiction-free registers
-    status: claimed
+    status: done
     description: 'work_type: proof_closure
 
       step_type: verification
@@ -59611,3 +59611,32 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-07T10:19:00.451670+00:00'
+    done_at: '2026-04-07T10:22:11.121485+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n\nNo refs for this step.\n\n\
+      ## Reclose Conformance Retest Report\n- Commands / review method used:\n  -\
+      \ Cross-artifact row-by-row comparison across normalized_blocker_basis, behavioral_proof_register,\
+      \ runtime_uncertainty_register, and gate_review_report\n  - Semantic analysis\
+      \ for stale blocking-now and gate_open_allowed=false\n  - R42 aggregate wording\
+      \ check for scenario collapse\n  - Evidence diff reference verification\n\n\
+      - Requirement-by-requirement verdicts:\n  - R13: PASS — All three artifacts\
+      \ agree on PROVEN-2026-04-07 disposition with identical PASS witness names and\
+      \ matching closure paths\n  - R42-CONFIG-REMOVE-INFLIGHT: PASS — All three artifacts\
+      \ agree on PROVEN-2026-04-07 disposition with distinct scenario name preserved\
+      \ and matching witness tests\n  - R42-DISCONNECT-UNDER-RECOVERY: PASS — All\
+      \ three artifacts agree on PROVEN-2026-04-07 disposition with distinct scenario\
+      \ name preserved and matching witness tests\n\n- gate_open_allowed comparison:\n\
+      \  - normalized_blocker_basis: true\n  - behavioral_proof_register: true\n \
+      \ - runtime_uncertainty_register: true\n  - verdict: PASS — identical value\
+      \ and consistent justification across all authoritative artifacts\n\n- Cross-artifact\
+      \ contradiction check: none\n- Evidence diff references verified: yes\n- Final\
+      \ verdict: PASS — contradiction-free row state for R13, R42-CONFIG-REMOVE-INFLIGHT,\
+      \ and R42-DISCONNECT-UNDER-RECOVERY across all authoritative artifacts\n\n##\
+      \ Metadata\n- step_intent: retest_green\n- expected_result: green\n- observed_result:\
+      \ green\n- failure_alignment: N/A — no failures\n- product_files_modified: no\
+      \ — conformance retest report only\n\n## Behavioral Proof Register\n- claimed_behaviors:\
+      \ R13 lock behavior and split R42 config/disconnect recovery behaviors proven\n\
+      - direct_evidence: uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py\
+      \ -v --tb=short -> 14 passed, 1 skipped in 1.21s\n- uncertainty_sources: none\n\
+      - gate_open_allowed: true — all blocker rows resolved from fresh reclose evidence\n\
+      \nCommit: 12f2d176 — spec conformance retest: contradiction-free blocker/gate\
+      \ semantics"
