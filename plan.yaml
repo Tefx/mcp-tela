@@ -57860,6 +57860,116 @@ phases:
     - reclose.runtime.retest_green
     - reclose.runtime.spec_conformance
     agent: python-senior-tacit
+  - id: reclose.runtime.refresh_behavioral_register
+    name: Refresh behavioral proof register from current runtime outputs
+    status: pending
+    description: 'work_type: proof_closure
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      Refresh `evidence/behavioral_proof_register.md` and any linked `runtime_uncertainty`
+      disposition rows so the registers match the latest commanded runtime outputs
+      rather than stale earlier snapshots.
+
+
+      Data source:
+
+      - the latest green/commanded runtime proof outputs from this phase,
+
+      - the result of `reclose.runtime.r13_runtime_witness`,
+
+      - current gate-review basis for R13/R42.
+
+
+      Required behavior:
+
+      - Replace stale execution references that still point at superseded or skipped
+      runs.
+
+      - Reconcile status/disposition/freshness across `behavioral_proof_register.md`
+      and `runtime_uncertainty_register.md`.
+
+      - If R13 remains blocked, preserve blocker-class status consistently in both
+      artifacts.
+
+      - If R13 is proven, cite the exact fresh command/output artifact that closes
+      it.
+
+      - Do not claim gate-open from structural proof alone.
+
+
+      Touch paths (expected):
+
+      - evidence/behavioral_proof_register.md
+
+      - evidence/runtime_uncertainty_register.md
+
+      - evidence/gate_review_report.md
+
+
+      Harness refs:
+
+      - current commanded probe outputs for `tests/repro/test_adr006_runtime_hardening_probes.py`
+
+
+      Authoritative interface: NONE PINNED'
+    verification: '- `behavioral_proof_register.md` freshness and status align with
+      the latest commanded runtime outputs
+
+      - `runtime_uncertainty_register.md` uses matching blocker/disposition semantics
+      for R13
+
+      - Any gate-open or gate-block basis cites current evidence artifacts only'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Register Refresh Report
+
+      - Latest commanded run(s) used:
+
+      - Artifact paths / timestamps used:
+
+      - Superseded stale snapshot references removed or retained with reason:
+
+
+      ## Row Reconciliation
+
+      | requirement_ref | behavioral_proof status | runtime_uncertainty disposition
+      | freshness source | aligned? |
+
+      |---|---|---|---|---|
+
+
+      ## Gate Basis
+
+      - R13 basis:
+
+      - R42 basis:
+
+      - gate_open_allowed basis:
+
+
+      ## Remaining ambiguity
+
+      - None | <list>
+
+      '
+    depends_on:
+    - reclose.runtime.r13_runtime_witness
+    agent: integration-verifier-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
