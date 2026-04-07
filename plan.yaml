@@ -59809,7 +59809,7 @@ phases:
       \ semantics"
 - id: remediation_guardrails
   name: Remediation Guardrails
-  status: pending
+  status: in_progress
   gate: Scope locked, keep-separate constraints recorded, and test seams inventoried
     before refactor branches begin.
   depends_on:
@@ -59817,7 +59817,7 @@ phases:
   steps:
   - id: remediation_guardrails.lock_scope
     name: Lock remediation scope and non-goals
-    status: pending
+    status: claimed
     description: 'Technical-debt remediation guardrail step.
 
 
@@ -59874,6 +59874,8 @@ phases:
 
       '
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-07T18:48:30.056328+00:00'
   - id: remediation_guardrails.test_seam_inventory
     name: Inventory test seams and patch-sensitive coverage
     status: pending
