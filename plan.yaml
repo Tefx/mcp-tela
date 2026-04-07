@@ -60491,6 +60491,39 @@ phases:
     depends_on:
     - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     agent: integration-verifier-tacit
+  - id: gateway_auth_skeleton_refactor.gate
+    name: Gate gateway auth skeleton refactor
+    status: pending
+    description: 'Gate review: verify the shared gateway auth skeleton reduced duplication
+      without merging distinct HTTP abstraction layers or altering route-specific
+      behavior.'
+    verification: 'phase-check: route duplication is reduced, Request-vs-ASGI separation
+      is preserved, and independent route-auth evidence is sufficient.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Duplication reduced:
+
+      - Layer separation preserved:
+
+      - Retest evidence quality:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
+    - gateway_auth_skeleton_refactor.route_auth_retest
+    agent: gate-reviewer-tacit
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
