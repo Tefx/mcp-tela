@@ -57917,7 +57917,7 @@ phases:
       reviewer: orchestrator
   - id: reclose.runtime.refresh_behavioral_register
     name: Refresh behavioral proof register from current runtime outputs
-    status: done
+    status: rejected
     description: 'work_type: proof_closure
 
       step_type: verification
@@ -58028,52 +58028,13 @@ phases:
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-07T06:01:34.155878+00:00'
     done_at: '2026-04-07T06:10:48.163523+00:00'
-    evidence: '## refs Read Confirmation (MANDATORY)
-
-      No refs for this step.
-
-
-      ## Register Refresh Report
-
-      - Latest commanded run(s) used: `uv run pytest tests/repro/test_adr006_runtime_hardening_probes.py
-      -v --tb=short` (fresh runtime output)
-
-      - Artifact paths used: evidence/behavioral_proof_register.md, evidence/runtime_uncertainty_register.md,
-      evidence/gate_review_report.md
-
-      - Superseded stale references reconciled to fresh runtime outputs and current
-      phase evidence
-
-
-      ## Row Reconciliation
-
-      | requirement_ref | behavioral_proof status | runtime_uncertainty disposition
-      | freshness source | aligned? |
-
-      |---|---|---|---|---|
-
-      | R13 | updated to current evidence basis | matching disposition | fresh runtime/proof
-      outputs | yes |
-
-      | R42-CONFIG-REMOVE-INFLIGHT | updated to current evidence basis | matching
-      disposition | fresh runtime witness outputs | yes |
-
-      | R42-DISCONNECT-UNDER-RECOVERY | updated to current evidence basis | matching
-      disposition | fresh runtime witness outputs | yes |
-
-
-      ## Gate Basis
-
-      - R13 basis: cites current phase runtime/proof evidence
-
-      - R42 basis: cites current phase green witness evidence
-
-      - gate_open_allowed basis: current artifacts only, no stale snapshot reliance
-
-
-      ## Remaining ambiguity
-
-      - none material to this phase gate'
+    rejection_reason: Register still reports R13 skipped while current probe passes;
+      refresh did not synchronize artifacts
+    rejection_history:
+    - reason: Register still reports R13 skipped while current probe passes; refresh
+        did not synchronize artifacts
+      timestamp: '2026-04-07T06:33:15.328715+00:00'
+      reviewer: orchestrator
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
