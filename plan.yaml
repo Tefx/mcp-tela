@@ -59544,7 +59544,7 @@ phases:
       \ — sync blocker closure semantics across reclose evidence"
   - id: reclose.deep_review.spec_conformance_retest
     name: Rerun reclose conformance checks against contradiction-free registers
-    status: pending
+    status: claimed
     description: 'work_type: proof_closure
 
       step_type: verification
@@ -59609,3 +59609,5 @@ phases:
     depends_on:
     - reclose.deep_review.sync_blocker_basis
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-07T10:19:00.451670+00:00'
