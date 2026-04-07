@@ -59068,7 +59068,7 @@ phases:
   steps:
   - id: reclose.deep_review.wiring_audit
     name: Deep wiring audit for reclose
-    status: claimed
+    status: pending
     description: 'Independent deep wiring audit after doc sync.
 
 
@@ -59099,8 +59099,6 @@ phases:
 
       '
     agent: wiring-auditor
-    claimed_by: wiring-auditor
-    claimed_at: '2026-04-07T07:49:08.044998+00:00'
   - id: reclose.deep_review.spec_conformance
     name: Deep spec conformance audit for reclose
     status: pending
