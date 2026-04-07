@@ -60531,7 +60531,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: token_precedence_refactor
   name: Token Precedence Refactor
-  status: in_progress
+  status: done
   gate: Shared CLI/env bearer-token precedence extracted while connect/serve-specific
     fallbacks remain local and unchanged.
   depends_on:
@@ -60632,7 +60632,7 @@ phases:
       \ 7232d6e5"
   - id: token_precedence_refactor.gate
     name: Gate token precedence refactor
-    status: claimed
+    status: done
     description: 'Gate review: verify shared CLI/env precedence extraction is complete
       and command-specific fallback behavior remains unchanged.'
     verification: 'phase-check: shared precedence is consistent, command-specific
@@ -60664,6 +60664,18 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-07T19:23:31.239096+00:00'
+    done_at: '2026-04-07T19:30:18.191405+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/commands/serve_cmd.py\
+      \ — verified shared CLI/env helper and local generated-token fallback.\n- src/tela/commands/connect_cmd.py\
+      \ — verified shared helper usage and local lockfile fallback.\n- tests/shell/test_serve_cmd.py\
+      \ and tests/shell/test_connect_cmd.py — verified precedence tests for both commands.\n\
+      \n## Gate Review Report\n- Shared precedence complete:\n  - shared helper enforces\
+      \ CLI then env precedence and is used consistently by both commands.\n- Connect\
+      \ fallback preserved:\n  - lockfile fallback remains local after shared branch.\n\
+      - Serve fallback preserved:\n  - generated-token fallback remains local after\
+      \ shared branch.\n- Decision: OPEN\n\nNotes:\n- no blocker-class precedence\
+      \ regressions observed.\n- minor non-blocking lint cleanup noted (stale unused\
+      \ import)."
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
   status: locked
