@@ -60330,6 +60330,36 @@ phases:
 
       '
     agent: python-executor
+  - id: token_precedence_refactor.apply_connect_and_serve
+    name: Apply shared precedence helper to connect and serve
+    status: pending
+    description: Adopt the shared CLI/env precedence helper in connect and serve while
+      preserving each command's current fallback semantics after the shared branch.
+    verification: 'local-check: connect still falls back to lockfile/error behavior
+      as before, serve still falls back to generated token behavior as before, and
+      shared precedence is consistent in both commands.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Application Report
+
+      - connect behavior after shared branch:
+
+      - serve behavior after shared branch:
+
+      - unchanged command-specific fallback notes:
+
+      '
+    depends_on:
+    - token_precedence_refactor.extract_cli_env_helper
+    agent: python-executor
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
   status: locked
