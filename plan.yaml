@@ -57544,7 +57544,7 @@ phases:
       registers were updated with runnable evidence and concrete probe outcomes'
   - id: reclose.runtime.retest_green
     name: Retest runtime proof obligations green
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the reclose runtime scope from a fresh perspective.
 
@@ -57611,6 +57611,8 @@ phases:
     depends_on:
     - reclose.runtime.close_gap_if_exposed
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-07T05:34:18.634230+00:00'
   - id: reclose.runtime.spec_conformance
     name: Verify ADR-006 runtime closure conformance
     status: claimed
