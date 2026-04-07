@@ -59817,7 +59817,7 @@ phases:
   steps:
   - id: remediation_guardrails.lock_scope
     name: Lock remediation scope and non-goals
-    status: claimed
+    status: done
     description: 'Technical-debt remediation guardrail step.
 
 
@@ -59876,6 +59876,48 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-07T18:48:30.056328+00:00'
+    done_at: '2026-04-07T18:50:56.163245+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - src/tela/shell/gateway_http_auth.py — `extract_bearer_token(request: Request)\
+      \ -> Result[str, str]` extracts from Starlette `Request.headers` and returns\
+      \ `AUTH_INVALID_TOKEN` on missing/empty bearer input.\n- src/tela/shell/http_auth.py\
+      \ — `BearerAuthMiddleware._extract_bearer_token(scope) -> str | None` extracts\
+      \ from raw ASGI `scope[\"headers\"]`; middleware enforces auth before route\
+      \ dispatch and separately handles `POST /mcp` warming 503 behavior.\n- src/tela/shell/downstream.py\
+      \ — recovery flow contains repeated staged recovery error construction around\
+      \ reconnect/enumeration/convergence/retry timeouts, confirming the deferred\
+      \ recovery-envelope abstraction target exists but is broader than a simple helper\
+      \ cleanup.\n- src/tela/shell/gateway.py — `_register_http_routes()` repeats\
+      \ route-local bearer extraction plus `_as_error_response()` status classification\
+      \ for `AUTH_INVALID_TOKEN`, `CONNECTION_NOT_FOUND`, `GATEWAY_NOT_STARTED`, and\
+      \ `ADMISSION_REJECTED_WARMING`.\n- src/tela/shell/http_routes.py — route handlers\
+      \ share repeated auth validation and route error classifiers (`_is_auth_error`,\
+      \ `_is_gateway_not_started_error`, `_is_connection_not_found_error`, `_is_audit_query_error`),\
+      \ confirming duplicate route/gateway error classification cleanup and route\
+      \ auth skeleton extraction are in scope.\n- src/tela/commands/serve_cmd.py —\
+      \ `_resolve_bearer_token()` enforces precedence `--token` > `TELA_BEARER_TOKEN`\
+      \ > generated token.\n- src/tela/commands/connect_cmd.py — `_resolve_connect_token()`\
+      \ enforces precedence `--token` > `TELA_BEARER_TOKEN` > lockfile token, confirming\
+      \ a shared CLI/env precedence rule can be extracted without merging surface-specific\
+      \ fallbacks.\n\n## Guardrail Register\n- In-scope items:\n  - downstream passthrough\
+      \ wrapper removal\n  - shared error constant/helper centralization\n  - duplicate\
+      \ route/gateway error classification cleanup\n  - shared CLI/env bearer precedence\
+      \ extraction\n  - gateway route auth skeleton extraction\n- Non-goals:\n  -\
+      \ do not merge `src/tela/shell/gateway_http_auth.py::extract_bearer_token(Request)`\
+      \ with `src/tela/shell/http_auth.py::BearerAuthMiddleware._extract_bearer_token(scope)`\n\
+      \  - do not broaden into a general auth architecture rewrite\n- Deferred items:\n\
+      \  - do not abstract repetitive recovery-envelope construction in `src/tela/shell/downstream.py`\
+      \ in this tranche\n- Why Request-vs-ASGI auth extractors stay separate:\n  -\
+      \ They sit on different boundary objects and lifecycle layers. The Request helper\
+      \ is route-surface code operating on Starlette `Request`; the middleware extractor\
+      \ is raw ASGI-scope code operating before route dispatch. Merging them would\
+      \ blur Request-vs-ASGI ownership and collapse layers the step explicitly says\
+      \ to keep separate.\n- Why downstream recovery-envelope abstraction is deferred:\n\
+      \  - The repeated recovery construction in `downstream.py` is embedded in multi-stage\
+      \ reconnect/convergence/retry control flow, so abstracting it is not a narrow\
+      \ deduplication pass; it risks turning this tranche into a broader recovery-flow\
+      \ redesign. That exceeds the stated scope.\n\nCommit:\n- `ae4b58b4991743bab72dc4f09785b7eba15f51fc`\
+      \ — `docs: add remediation guardrails scope register`"
   - id: remediation_guardrails.test_seam_inventory
     name: Inventory test seams and patch-sensitive coverage
     status: pending
