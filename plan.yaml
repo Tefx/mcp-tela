@@ -60608,6 +60608,38 @@ phases:
     depends_on:
     - remediation_integration_verify.run_focused_regression_suite
     agent: spec-verifier-tacit
+  - id: remediation_integration_verify.gate
+    name: Gate remediation integration verification
+    status: pending
+    description: 'Gate review: verify all remediation branches compose safely and
+      that any remaining issues have explicit blocker disposition before doc sync.'
+    verification: 'full-plan-check: no unresolved blocker-class intersections remain
+      across the remediation seams and evidence is sufficient for doc sync.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Cross-branch composition acceptable:
+
+      - Remaining blocker intersections:
+
+      - Evidence sufficiency:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - remediation_integration_verify.run_focused_regression_suite
+    - remediation_integration_verify.literal_fragment_audit
+    agent: gate-reviewer-tacit
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
