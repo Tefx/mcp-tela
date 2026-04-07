@@ -57917,7 +57917,7 @@ phases:
       reviewer: orchestrator
   - id: reclose.runtime.refresh_behavioral_register
     name: Refresh behavioral proof register from current runtime outputs
-    status: claimed
+    status: done
     description: 'work_type: proof_closure
 
       step_type: verification
@@ -58027,7 +58027,52 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-07T06:33:40.604371+00:00'
-    done_at: '2026-04-07T06:10:48.163523+00:00'
+    done_at: '2026-04-07T06:40:03.398001+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Register Refresh Report
+
+      - Latest commanded runs used: targeted R13 probe and full runtime hardening
+      probe suite
+
+      - Artifact paths refreshed: evidence/behavioral_proof_register.md, evidence/runtime_uncertainty_register.md,
+      evidence/gate_review_report.md
+
+      - Superseded stale snapshot references removed: R13 SKIPPED references replaced
+      with current PASSED evidence
+
+
+      ## Row Reconciliation
+
+      | requirement_ref | behavioral_proof status | runtime_uncertainty disposition
+      | freshness source | aligned? |
+
+      |---|---|---|---|---|
+
+      | R13 | PROVEN | PROVEN | fresh commanded runtime outputs | yes |
+
+      | R42-CONFIG-REMOVE-INFLIGHT | PROVEN | PROVEN | fresh commanded runtime outputs
+      | yes |
+
+      | R42-DISCONNECT-UNDER-RECOVERY | PROVEN | PROVEN | fresh commanded runtime
+      outputs | yes |
+
+
+      ## Gate Basis
+
+      - R13 basis: runtime witness test now PASSED and documented
+
+      - R42 basis: both paths retain explicit green witnesses
+
+      - gate_open_allowed basis: current artifacts now aligned with latest outputs
+
+
+      ## Remaining ambiguity
+
+      - None material'
     rejection_reason: Register still reports R13 skipped while current probe passes;
       refresh did not synchronize artifacts
     rejection_history:
