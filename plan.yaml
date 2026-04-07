@@ -57613,7 +57613,7 @@ phases:
     agent: integration-verifier-tacit
   - id: reclose.runtime.spec_conformance
     name: Verify ADR-006 runtime closure conformance
-    status: pending
+    status: claimed
     description: 'Spec conformance verification for the runtime proof closure.
 
 
@@ -57660,6 +57660,8 @@ phases:
     depends_on:
     - reclose.runtime.close_gap_if_exposed
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-07T05:33:47.120742+00:00'
   - id: reclose.runtime.gate
     name: Gate runtime proof reclose
     status: pending
