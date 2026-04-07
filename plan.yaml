@@ -57895,7 +57895,7 @@ phases:
       \ satisfied by executable witness\n- No blocker carry required"
   - id: reclose.runtime.refresh_behavioral_register
     name: Refresh behavioral proof register from current runtime outputs
-    status: pending
+    status: claimed
     description: 'work_type: proof_closure
 
       step_type: verification
@@ -58003,6 +58003,8 @@ phases:
     depends_on:
     - reclose.runtime.r13_runtime_witness
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-07T06:01:34.155878+00:00'
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
