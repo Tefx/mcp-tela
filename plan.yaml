@@ -60570,7 +60570,7 @@ phases:
       - serve and connect token-priority tests pass\n\nCommit:\n- a1cb3c79"
   - id: token_precedence_refactor.apply_connect_and_serve
     name: Apply shared precedence helper to connect and serve
-    status: pending
+    status: claimed
     description: Adopt the shared CLI/env precedence helper in connect and serve while
       preserving each command's current fallback semantics after the shared branch.
     verification: 'local-check: connect still falls back to lockfile/error behavior
@@ -60598,6 +60598,8 @@ phases:
     depends_on:
     - token_precedence_refactor.extract_cli_env_helper
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-07T19:15:43.457867+00:00'
   - id: token_precedence_refactor.gate
     name: Gate token precedence refactor
     status: pending
