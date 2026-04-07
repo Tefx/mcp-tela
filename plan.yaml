@@ -59212,7 +59212,11 @@ phases:
 
 
       Focus on whether an outside reviewer would still conclude that blocker-class
-      debt remains, despite the claimed closure.'
+      debt remains, despite the claimed closure.
+
+
+      Do not start until `reclose.deep_review.spec_conformance_retest` reports a contradiction-free
+      register state for R13/R42 and gate_open_allowed semantics.'
     verification: '- A fresh black-box read does not reproduce the earlier false-close
       concern
 
@@ -59238,7 +59242,7 @@ phases:
 
       '
     depends_on:
-    - reclose.deep_review.spec_conformance
+    - reclose.deep_review.spec_conformance_retest
     agent: blind-tester-tacit
   - id: reclose.deep_review.gate
     name: Final reclose deep-review gate
