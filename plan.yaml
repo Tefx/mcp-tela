@@ -59920,7 +59920,7 @@ phases:
       \ — `docs: add remediation guardrails scope register`"
   - id: remediation_guardrails.test_seam_inventory
     name: Inventory test seams and patch-sensitive coverage
-    status: pending
+    status: claimed
     description: 'Inventory the exact tests and harness seams that protect this remediation
       tranche.
 
@@ -59953,6 +59953,8 @@ phases:
     depends_on:
     - remediation_guardrails.lock_scope
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-07T18:51:26.569422+00:00'
   - id: remediation_guardrails.gate
     name: Gate remediation guardrails
     status: pending
