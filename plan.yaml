@@ -57421,7 +57421,7 @@ phases:
       - tests/repro/test_reclose_runtime_red_probes.py (NEW)"
   - id: reclose.runtime.close_gap_if_exposed
     name: Close runtime proof or behavior gaps if exposed
-    status: pending
+    status: claimed
     description: 'Close only the runtime defects or proof-enablement gaps exposed
       by the executable probes.
 
@@ -57519,6 +57519,8 @@ phases:
     depends_on:
     - reclose.runtime.test_define_red
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-07T05:17:31.510573+00:00'
   - id: reclose.runtime.retest_green
     name: Retest runtime proof obligations green
     status: pending
