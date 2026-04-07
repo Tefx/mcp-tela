@@ -58313,7 +58313,7 @@ phases:
     claimed_at: '2026-04-07T06:50:49.871465+00:00'
   - id: reclose.verify.wiring_manifest_rereview
     name: Re-review wiring and manifest closure
-    status: claimed
+    status: done
     description: 'Re-review re_enumerate reachability and FastMCP authority tuple
       closure after register refresh.
 
@@ -58351,6 +58351,49 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-07T06:51:20.550794+00:00'
+    done_at: '2026-04-07T06:55:32.939550+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n\nNo refs for this step.\n\n\
+      ## Wiring and Manifest Re-review\n\n### re_enumerate Chain Verdict: VERIFIED\
+      \ LIVE PUBLIC SURFACE\n\n**Chain:**\n1. **Export Location**: `src/tela/shell/downstream.py:1194-1245`\n\
+      \   - Function `re_enumerate(server_name: str) -> Result[list[ResolvedTool],\
+      \ str]`\n   - Explicit docstring classification: `RESOLVED_EXTERNAL_CONTRACT`\
+      \ — supported public API\n   - Listed under public API in `docs/DESIGN.md`\n\
+      \n2. **Import/Consumption**: `src/tela/shell/reload.py:39-113`\n   - Imported:\
+      \ `from tela.shell.downstream import re_enumerate`\n   - Bound as `_manual_reenumerate_adapter\
+      \ = re_enumerate`\n   - Consumed by reload orchestration for manual re-enumeration\
+      \ triggers\n\n3. **Test Probes**: `tests/repro/test_adr006_runtime_hardening_probes.py:832-888`\n\
+      \   - `test_re_enumerate_is_importable()` — PASS\n   - `test_re_enumerate_surface_classification_audit()`\
+      \ — PASS\n\n4. **Registry Wire Chain**:\n   - `re_enumerate()` → `_enumerate_tools()`\
+      \ → `resolve_tools()` → `_registry.register()`\n   - Validates runtime config,\
+      \ enumerates tools via session, resolves, updates registry\n\n5. **Evidence\
+      \ Alignment** (`normalized_blocker_basis.md`, `runtime_uncertainty_register.md`):\n\
+      \   - SURFACE-REENUMERATE: **CLOSED-2026-04-07**\n   - Classification: `RESOLVED_EXTERNAL_CONTRACT`\n\
+      \   - Docs/code/tests all agree\n\n**Verdict**: ✅ PASS — Live public surface\
+      \ with documented classification, importable, consumed, and audited.\n\n###\
+      \ FastMCP Authority Chain Verdict: VERIFIED COHERENT TUPLE\n\n**Authority Tuple**:\n\
+      | Dimension | Value | Evidence |\n|-----------|-------|----------|\n| Package\
+      \ | `fastmcp>=2.0.0` | `pyproject.toml` |\n| Import | `from mcp.server.fastmcp\
+      \ import FastMCP` | `gateway.py:22`, `gateway_runtime.py:36` |\n| Docs | Translation\
+      \ boundary documented | `docs/DESIGN.md:561-578` |\n\n**Chain Verification:**\n\
+      1. Package declared: `fastmcp>=2.0.0` (no separate `mcp` package)\n2. Import\
+      \ path consistent: `mcp.server.fastmcp.FastMCP` in all shell modules\n3. Server\
+      \ creation: `FastMCP(\"tela-gateway\", instructions=...)` at `gateway.py:363-370`\n\
+      4. Handler registration: `@upstream_server._mcp_server.list_tools()`, `@upstream_server._mcp_server.call_tool()`,\
+      \ `_register_http_routes()`, `_register_profiles_resource()`\n5. Test probe:\
+      \ `test_fastmcp_authority_tuple_audit` — PASS\n\n**Evidence Alignment** (`runtime_uncertainty_register.md`):\n\
+      - AUTH-MCP-FASTMCP: **CLOSED-2026-04-07**\n- Authority tuple verified; no stale\
+      \ ambiguity\n\n**Verdict**: ✅ PASS — Coherent tuple across package, imports,\
+      \ and docs.\n\n### Stale Ambiguity Found: NONE\n\n**Artifact Cross-Check**:\n\
+      | Artifact | re_enumerate | FastMCP Authority | Consistency |\n|----------|--------------|-------------------|-------------|\n\
+      | `runtime_uncertainty_register.md` | CLOSED | CLOSED | ✅ Aligned |\n| `normalized_blocker_basis.md`\
+      \ | CLOSED | CLOSED | ✅ Aligned |\n| `gate_review_report.md` | PASS | PASS |\
+      \ ✅ Aligned |\n| `surface_and_manifest_authority_decision.md` | RESOLVED_EXTERNAL_CONTRACT\
+      \ | Translation boundary | ✅ Aligned |\n| Code (`downstream.py`) | Classification\
+      \ docstring | — | ✅ Matches |\n| Code (`gateway.py`, `gateway_runtime.py`) |\
+      \ — | `mcp.server.fastmcp` import | ✅ Matches |\n\nNo conflicting statements\
+      \ found across documentation (`docs/DESIGN.md:620`, `docs/DESIGN.md:561-578`),\
+      \ code exports, imports, evidence registers, or test probes.\n\n### Verdict:\
+      \ PASS"
   - id: reclose.verify.gate
     name: Gate refreshed reclose verification
     status: pending
