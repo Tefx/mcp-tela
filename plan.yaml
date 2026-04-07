@@ -60112,6 +60112,45 @@ phases:
 
       '
     agent: python-executor
+  - id: error_semantics_foundation.add_classification_helpers
+    name: Add shared error classification helpers
+    status: pending
+    description: 'Introduce shared helpers for prefix/classification checks used across
+      shell/core error consumers.
+
+
+      Scope:
+
+      - shared prefix/classification helpers only
+
+      - prepare a data-driven basis for later HTTP status mapping cleanup
+
+
+      Non-goal: do not flatten unrelated local error semantics into one global abstraction.'
+    verification: 'local-check: shared helpers can express the currently duplicated
+      classification patterns without changing classification outcomes.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Classification Helper Report
+
+      - Helpers added:
+
+      - Duplicated patterns covered:
+
+      - Behavior-preserving notes:
+
+      '
+    depends_on:
+    - error_semantics_foundation.centralize_error_constants
+    agent: python-executor
 - id: error_classification_unification
   name: Error Classification Unification
   status: locked
