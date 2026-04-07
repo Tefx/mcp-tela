@@ -59814,3 +59814,10 @@ phases:
     before refactor branches begin.
   depends_on:
   - reclose.deep_review
+- id: downstream_wrapper_removal
+  name: Downstream Wrapper Removal
+  status: locked
+  gate: Pure passthrough wrappers removed without breaking monkeypatch-sensitive tests
+    or downstream transport behavior.
+  depends_on:
+  - remediation_guardrails
