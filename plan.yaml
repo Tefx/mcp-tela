@@ -60584,7 +60584,7 @@ phases:
       - serve and connect token-priority tests pass\n\nCommit:\n- a1cb3c79"
   - id: token_precedence_refactor.apply_connect_and_serve
     name: Apply shared precedence helper to connect and serve
-    status: claimed
+    status: done
     description: Adopt the shared CLI/env precedence helper in connect and serve while
       preserving each command's current fallback semantics after the shared branch.
     verification: 'local-check: connect still falls back to lockfile/error behavior
@@ -60614,6 +60614,20 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-07T19:15:43.457867+00:00'
+    done_at: '2026-04-07T19:22:49.475951+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/commands/serve_cmd.py\
+      \ — shared helper introduced and consumed.\n- src/tela/commands/connect_cmd.py\
+      \ — imports shared helper and consumes it.\n\n## Application Report\n- connect\
+      \ behavior after shared branch:\n  - CLI/env precedence via shared helper\n\
+      \  - command fallback preserved: lockfile token, then error\n  - effective order:\
+      \ --token > TELA_BEARER_TOKEN > lockfile token > error\n- serve behavior after\
+      \ shared branch:\n  - CLI/env precedence via shared helper\n  - command fallback\
+      \ preserved: generated token\n  - effective order: --token > TELA_BEARER_TOKEN\
+      \ > generated token\n- unchanged command-specific fallback notes:\n  - connect\
+      \ lockfile fallback remains local to connect_cmd\n  - serve generated-token\
+      \ fallback remains local to serve_cmd\n\nVerification:\n- token precedence tests\
+      \ passed\n- type checking passed\n- no circular import issues\n\nCommit:\n-\
+      \ 7232d6e5"
   - id: token_precedence_refactor.gate
     name: Gate token precedence refactor
     status: pending
