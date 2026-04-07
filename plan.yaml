@@ -59493,3 +59493,70 @@ phases:
     depends_on:
     - reclose.deep_review.wiring_audit
     agent: software-architect-tacit
+  - id: reclose.deep_review.spec_conformance_retest
+    name: Rerun reclose conformance checks against contradiction-free registers
+    status: pending
+    description: 'work_type: proof_closure
+
+      step_type: verification
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+
+      As an INDEPENDENT TESTER (spec-verifier-tacit), rerun the deep reclose conformance
+      checks after authoritative artifact synchronization.
+
+
+      This step protects the reclose.deep_review black-box and gate checks.
+
+
+      Required assertions:
+
+      - conformance review sees contradiction-free row state for R13, R42-CONFIG-REMOVE-INFLIGHT,
+      and R42-DISCONNECT-UNDER-RECOVERY across normalized_blocker_basis, behavioral_proof_register,
+      and runtime_uncertainty_register
+
+      - gate_open_allowed is identical and justified by the same blocker-row state
+      in every authoritative artifact
+
+      - no remaining artifact cites stale blocking-now / gate_open_allowed=false semantics
+      once the fresh runtime evidence rows are PROVEN
+
+
+      Explicit failure conditions:
+
+      - any cross-artifact contradiction in row status, basis text, closure path,
+      or gate_open_allowed
+
+      - any artifact reintroduces aggregate R42 wording that hides one scenario
+
+      - any changed artifact lacks evidence diff references tying the synchronization
+      back to the committed update'
+    verification: '- expected_result: green
+
+      - Re-run conformance comparison across the authoritative artifacts and report
+      PASS only if R13/R42 blocker rows and gate_open_allowed are contradiction-free
+      everywhere
+
+      - FAIL if any cross-artifact contradiction survives, including stale blocking-now
+      wording, mismatched closure semantics, or missing evidence diff references'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Reclose Conformance\
+      \ Retest Report\n- Commands / review method used:\n  - <exact comparison / audit\
+      \ method>\n- Requirement-by-requirement verdicts:\n  - R13: PASS | FAIL — <why>\n\
+      \  - R42-CONFIG-REMOVE-INFLIGHT: PASS | FAIL — <why>\n  - R42-DISCONNECT-UNDER-RECOVERY:\
+      \ PASS | FAIL — <why>\n- gate_open_allowed comparison:\n  - normalized_blocker_basis:\
+      \ <value>\n  - behavioral_proof_register: <value>\n  - runtime_uncertainty_register:\
+      \ <value>\n  - verdict: PASS | FAIL\n- Cross-artifact contradiction check: none\
+      \ | <list every contradiction>\n- Evidence diff references verified: yes | no\n\
+      - Final verdict: PASS only if the register state is contradiction-free"
+    depends_on:
+    - reclose.deep_review.sync_blocker_basis
+    agent: spec-verifier-tacit
