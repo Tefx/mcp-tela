@@ -59909,6 +59909,52 @@ phases:
     depends_on:
     - remediation_guardrails.lock_scope
     agent: software-architect-tacit
+  - id: remediation_guardrails.gate
+    name: Gate remediation guardrails
+    status: pending
+    description: 'As an INDEPENDENT REVIEWER (gate-reviewer-tacit), verify the remediation
+      scope is locked before any branch work begins.
+
+
+      BLOCK if:
+
+      - the plan merges Request-vs-ASGI auth extractors
+
+      - the plan broadens into recovery-envelope abstraction
+
+      - branch seams or must-run test families are missing
+
+
+      review_depth: STANDARD'
+    verification: 'phase-check: all guardrail steps complete, explicit non-goals are
+      recorded, and each downstream remediation branch has a test seam and risk note.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Scope lock acceptable:
+
+      - Keep-separate constraints preserved:
+
+      - Deferred recovery work preserved:
+
+      - Branch test seams identified:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - remediation_guardrails.lock_scope
+    - remediation_guardrails.test_seam_inventory
+    agent: gate-reviewer-tacit
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
   status: locked
