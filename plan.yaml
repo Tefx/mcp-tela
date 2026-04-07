@@ -57289,7 +57289,7 @@ phases:
       - Non-runtime rows now closed and aligned with verified code/docs/tests'
 - id: reclose.runtime
   name: Runtime Proof Reclose
-  status: in_progress
+  status: done
   gate: R13 and both R42 behavioral obligations must have executable proof or explicit
     defect remediation with green retest evidence before the phase can open.
   depends_on:
@@ -57718,7 +57718,7 @@ phases:
       - R42-DISCONNECT-UNDER-RECOVERY: resolved with witness evidence'
   - id: reclose.runtime.gate
     name: Gate runtime proof reclose
-    status: claimed
+    status: done
     description: 'Gate review for runtime proof reclose.
 
 
@@ -57784,6 +57784,111 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-07T06:40:35.221955+00:00'
+    done_at: '2026-04-07T06:44:04.504723+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Gate Review Report
+
+
+      ### R13 Status:
+
+      **CRITICAL CONTRADICTION DETECTED**
+
+
+      Evidence registers claim:
+
+      - R13 status: "RESOLVED" (structural proof only)
+
+      - Runtime instrumentation probe: "SKIPPED"
+
+
+      Actual fresh test execution:
+
+      - `test_r13_runtime_lock_state_during_network_await PASSED [53%]`
+
+      - Lines 496-617 implement executable runtime witness with lock state tracking
+
+
+      The `reclose.runtime.r13_runtime_witness` step successfully implemented the
+      executable witness that the evidence registers claim is absent.
+
+
+      ### R42 Config-Remove-Inflight Status:
+
+      **PROVEN** - Fresh execution shows:
+
+      - `test_r42_config_remove_during_inflight_recovery PASSED`
+
+      - `test_r42_config_missing_error_envelope_has_required_fields PASSED`
+
+      - Evidence aligned with probes
+
+
+      ### R42 Disconnect-Under-Recovery Status:
+
+      **PROVEN** - Fresh execution shows:
+
+      - `test_r42_disconnect_all_clears_recovery_locks PASSED`
+
+      - `test_r42_lock_cleanup_with_held_lock PASSED`
+
+      - `test_r42_prune_lock_after_client_removal PASSED`
+
+      - Evidence aligned with probes
+
+
+      ### Register Contradictions:
+
+      **YES - BLOCKING CONTRADICTION**
+
+
+      File: `evidence/behavioral_proof_register.md` (lines 11-12)
+
+      - Claims: "test_r13_runtime_lock_state_during_network_await SKIPPED"
+
+      - Reality: Test PASSED with full instrumentation (lines 496-617)
+
+
+      File: `evidence/runtime_uncertainty_register.md` (line 10)
+
+      - Claims: R13 is "RESOLVED" with "runtime instrumentation probe remains SKIPPED"
+
+      - Reality: Probe now PASSED with executable witness
+
+
+      ### Decision: BLOCK
+
+
+      Decision rule states: "OPEN only if R13 witness proven, both R42 witnesses proven,
+      and no register/probe contradictions."
+
+
+      - ✅ R13 witness proven (test PASSED)
+
+      - ✅ R42 config-remove witness proven
+
+      - ✅ R42 disconnect witness proven
+
+      - ❌ Register contradiction exists (registers document stale probe status)
+
+
+      **Action Required**: Synchronize evidence registers with actual test status.
+      The `reclose.runtime.r13_runtime_witness` step succeeded but `reclose.runtime.refresh_behavioral_register`
+      failed to reflect the executable runtime witness in the registers.
+
+
+      ### Behavioral Proof Register:
+
+      **NEEDS_UPDATE** - R13 must be marked PROVEN with executable witness reference,
+      not SKIPPED/RESOLVED.
+
+
+      ### Gate Open Allowed:
+
+      **FALSE** - Register contradiction violates decision rule before synchronization.'
   - id: reclose.runtime.r13_runtime_witness
     name: Recover executable runtime witness for R13
     status: done
@@ -58084,7 +58189,7 @@ phases:
       reviewer: orchestrator
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
-  status: locked
+  status: pending
   gate: Behavioral and uncertainty registers must be refreshed from actual evidence,
     independently re-reviewed, and must not leave blocker rows unresolved if the gate
     is to open.
