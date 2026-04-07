@@ -60295,6 +60295,41 @@ phases:
     fallbacks remain local and unchanged.
   depends_on:
   - remediation_guardrails
+  steps:
+  - id: token_precedence_refactor.extract_cli_env_helper
+    name: Extract shared CLI/env token precedence helper
+    status: pending
+    description: 'Extract only the shared bearer-token precedence seam common to connect
+      and serve:
+
+      1. CLI token override
+
+      2. TELA_BEARER_TOKEN environment fallback
+
+
+      Non-goal: do not unify command-specific post-env fallback behavior.'
+    verification: 'local-check: a shared helper expresses only CLI/env precedence
+      and leaves command-specific fallback behavior outside the helper.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Token Helper Report
+
+      - Shared precedence helper:
+
+      - Scope limited to CLI/env only:
+
+      - Command-specific fallback kept local:
+
+      '
+    agent: python-executor
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
   status: locked
