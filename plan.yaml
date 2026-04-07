@@ -58937,7 +58937,7 @@ phases:
       \ this is explicitly documented as monitor-only and not a blocker row."
   - id: reclose.doc_sync.gate
     name: Gate reclose doc sync
-    status: pending
+    status: claimed
     description: 'Gate review for documentation and evidence sync.
 
 
@@ -58969,6 +58969,8 @@ phases:
     depends_on:
     - reclose.doc_sync.update_docs
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-07T07:45:43.011896+00:00'
 - id: reclose.deep_review
   name: Reclose Deep Review
   status: locked
