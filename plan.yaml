@@ -60280,7 +60280,7 @@ phases:
   steps:
   - id: error_semantics_foundation.centralize_error_constants
     name: Centralize shared error constants
-    status: claimed
+    status: done
     description: 'Expand the authoritative shared error-code source so common shell/core
       error code prefixes are not scattered as string literals.
 
@@ -60315,6 +60315,24 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-07T19:03:56.826108+00:00'
+    done_at: '2026-04-07T19:14:02.923285+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/core/errors.py —\
+      \ canonical source expanded with shared constants.\n- src/tela/shell/http_auth.py,\
+      \ gateway_http_auth.py, gateway.py, http_routes.py, upstream.py, downstream.py,\
+      \ downstream_clients.py — migrated to shared constants.\n- src/tela/shell/mcp_admission_contract.py\
+      \ — reviewed; literal type alias intentionally retained.\n\n## Error Constant\
+      \ Centralization Report\n- Shared codes added/confirmed:\n  - AUTH_INVALID_TOKEN\n\
+      \  - GATEWAY_NOT_STARTED\n  - CONNECTION_NOT_FOUND\n  - ADMISSION_REJECTED_WARMING\n\
+      \  - DOWNSTREAM_UNAVAILABLE\n  - DOWNSTREAM_CONNECT_FAILED\n  - DOWNSTREAM_ERROR\n\
+      \  - existing CONFIG_* and other canonical constants preserved\n- Modules migrated:\n\
+      \  - shell/http_auth.py\n  - shell/gateway_http_auth.py\n  - shell/gateway.py\n\
+      \  - shell/http_routes.py\n  - shell/upstream.py\n  - shell/downstream.py\n\
+      \  - shell/downstream_clients.py\n- Remaining intentional local literals:\n\
+      \  - mcp_admission_contract.py type-level Literal alias\n  - doctest example\
+      \ strings and test assertions\n  - one connect_cmd response comparison site\n\
+      \nVerification:\n- module imports validated\n- no external semantic changes\
+      \ intended\n- worker reported 228 tests passing with 3 pre-existing unrelated\
+      \ reconnect failures\n\nCommit:\n- e0d9c69"
   - id: error_semantics_foundation.add_classification_helpers
     name: Add shared error classification helpers
     status: pending
