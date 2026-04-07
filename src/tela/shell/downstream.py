@@ -11,14 +11,19 @@ from mcp.client.session import MessageHandlerFnT
 from mcp.shared.session import RequestResponder
 from typing import Any, Literal, Protocol, TypeAlias
 
+from tela.core.errors import (
+    DOWNSTREAM_CONNECT_FAILED,
+    DOWNSTREAM_ERROR,
+    DOWNSTREAM_UNAVAILABLE,
+)
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
 from tela.core.models import ResolvedTool, ServerConfig, TelaError
 from tela.shell.downstream_clients import (
     _ClientHandle,
     _enumerate_tools,
-    _open_client_for_server as _transport_open_client_for_server,
-    _validate_transport_mode as _transport_validate_transport_mode,
+    _open_client_for_server,
+    _validate_transport_mode,
 )
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.config_loader import Result
@@ -130,27 +135,6 @@ class _ConnectedServerData:
     instructions: str | None = None
 
 
-def _validate_transport_mode(
-    server_name: str,
-    server_config: ServerConfig,
-) -> Result[None, str]:
-    """Validate server transport mode and return explicit error on mismatch."""
-    return _transport_validate_transport_mode(server_name, server_config)
-
-
-async def _open_client_for_server(
-    server_name: str,
-    server_config: ServerConfig,
-    message_handler: MessageHandlerFnT | None = None,
-) -> Result[_ClientHandle, str]:
-    """Open a connected client handle from a server config transport."""
-    return await _transport_open_client_for_server(
-        server_name,
-        server_config,
-        message_handler=message_handler,
-    )
-
-
 # @shell_orchestration: swaps client handle under lock and closes prior session via aclose().
 async def _swap_client_handle(server_name: str, new_handle: _ClientHandle) -> None:
     """Replace one client handle and close any prior handle best-effort."""
@@ -176,7 +160,7 @@ async def _enumerate_client_tools(
     if tools_result.is_err:
         return Result(
             error=(
-                "DOWNSTREAM_UNAVAILABLE: "
+                f"{DOWNSTREAM_UNAVAILABLE}: "
                 f"re-enumeration failed for server '{server_name}': {tools_result.error}"
             )
         )
@@ -219,7 +203,7 @@ async def _connect_server(
             pass
         return Result(
             error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
                 f"server '{server_name}' connection/enumeration failed: {tools_result.error}"
             )
         )
@@ -564,7 +548,7 @@ def _build_recovery_error(
     if config_missing is not None:
         details["config_missing"] = config_missing
     return TelaError(
-        code="DOWNSTREAM_UNAVAILABLE",
+        code=DOWNSTREAM_UNAVAILABLE,
         message=f"Downstream server '{server_name}' is not connected",
         details=details,
     )
@@ -983,7 +967,7 @@ async def call_tool(
             if downstream_result.isError:
                 return Result(
                     error=TelaError(
-                        code="DOWNSTREAM_ERROR",
+                        code=DOWNSTREAM_ERROR,
                         message=(
                             f"Downstream server '{server_name}' returned tool error for '{tool_name}'"
                         ),
@@ -1212,21 +1196,21 @@ async def re_enumerate(
         if client is None:
             return Result(
                 error=(
-                    f"DOWNSTREAM_UNAVAILABLE: downstream server '{server_name}' is not connected"
+                    f"{DOWNSTREAM_UNAVAILABLE}: downstream server '{server_name}' is not connected"
                 )
             )
 
         config = get_runtime_config().value
         if config is None:
             return Result(
-                error="DOWNSTREAM_UNAVAILABLE: gateway runtime config is not loaded"
+                error=f"{DOWNSTREAM_UNAVAILABLE}: gateway runtime config is not loaded"
             )
 
         server_config = config.servers.get(server_name)
         if server_config is None:
             return Result(
                 error=(
-                    f"DOWNSTREAM_UNAVAILABLE: server '{server_name}' not found in runtime config"
+                    f"{DOWNSTREAM_UNAVAILABLE}: server '{server_name}' not found in runtime config"
                 )
             )
 
@@ -1234,7 +1218,7 @@ async def re_enumerate(
         if tools_result.is_err:
             return Result(
                 error=(
-                    "DOWNSTREAM_UNAVAILABLE: "
+                    f"{DOWNSTREAM_UNAVAILABLE}: "
                     f"re-enumeration failed for server '{server_name}': {tools_result.error}"
                 )
             )

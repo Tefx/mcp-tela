@@ -10,6 +10,11 @@ import logging
 import os
 from typing import Mapping
 
+from tela.core.errors import (
+    AUTH_INVALID_TOKEN,
+    CONNECTION_NOT_FOUND,
+    GATEWAY_NOT_STARTED,
+)
 from tela.core.models import (
     ConnectRequest,
     ConnectionContext,
@@ -42,7 +47,7 @@ def _is_auth_error(result: Result[object, str]) -> bool:
     return (
         result.is_err
         and isinstance(result.error, str)
-        and result.error.startswith("AUTH_INVALID_TOKEN")
+        and result.error.startswith(AUTH_INVALID_TOKEN)
     )
 
 
@@ -52,7 +57,7 @@ def _is_gateway_not_started_error(result: Result[object, str]) -> bool:
     return (
         result.is_err
         and isinstance(result.error, str)
-        and result.error.startswith("GATEWAY_NOT_STARTED")
+        and result.error.startswith(GATEWAY_NOT_STARTED)
     )
 
 
@@ -62,7 +67,7 @@ def _is_connection_not_found_error(result: Result[object, str]) -> bool:
     return (
         result.is_err
         and isinstance(result.error, str)
-        and result.error.startswith("CONNECTION_NOT_FOUND")
+        and result.error.startswith(CONNECTION_NOT_FOUND)
     )
 
 
@@ -169,7 +174,7 @@ def handle_status(
 
     snap = facts.snapshot
     if snap.config is None or not snap.running:
-        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     start_time = snap.start_time if snap.start_time else 0.0
     uptime = 0.0
@@ -271,7 +276,7 @@ def handle_connect(
 
     config = get_runtime_config().value
     if config is None or not is_runtime_running().value:
-        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     lifecycle_result = get_lifecycle_status_facts()
     if lifecycle_result.is_err:
@@ -376,7 +381,7 @@ def handle_disconnect(
         return Result(error=auth_result.error)
 
     if get_runtime_config().value is None or not is_runtime_running().value:
-        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     target_id = payload.connection_id
     cleanup_result = cleanup_connection_by_id(target_id)
@@ -385,7 +390,9 @@ def handle_disconnect(
     assert cleanup_result.value is not None
 
     if not cleanup_result.value.removed_runtime_connection:
-        return Result(error=f"CONNECTION_NOT_FOUND: connection '{target_id}' not found")
+        return Result(
+            error=f"{CONNECTION_NOT_FOUND}: connection '{target_id}' not found"
+        )
 
     return Result(
         value={

@@ -17,6 +17,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Mapping, Protocol, runtime_checkable
 
+from tela.core.errors import (
+    CONNECTION_NOT_FOUND,
+    DOWNSTREAM_UNAVAILABLE,
+    GATEWAY_NOT_STARTED,
+)
 from tela.core.models import (
     AuthMode,
     CapabilityToken,
@@ -232,7 +237,9 @@ def find_connection_for_session(
     for conn in connections:
         if conn.connection_id == cid_result.value:
             return Result(value=conn)
-    return Result(error=f"CONNECTION_NOT_FOUND: no connection for '{cid_result.value}'")
+    return Result(
+        error=f"{CONNECTION_NOT_FOUND}: no connection for '{cid_result.value}'"
+    )
 
 
 @dataclass(frozen=True)
@@ -342,7 +349,7 @@ async def handle_initialize(
 
     config = get_runtime_config().value
     if config is None:
-        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     bridge_connection_id = client_info.get(_BRIDGE_CONNECTION_ID_KEY)
     if bridge_connection_id is not None:
@@ -355,7 +362,7 @@ async def handle_initialize(
             if existing.connection_id == bridge_connection_id_str:
                 return Result(value=existing)
         return Result(
-            error=f"CONNECTION_NOT_FOUND: bridge initialize requires pre-registered connection '{bridge_connection_id_str}'"
+            error=f"{CONNECTION_NOT_FOUND}: bridge initialize requires pre-registered connection '{bridge_connection_id_str}'"
         )
 
     connection_id = f"conn_{uuid.uuid4().hex[:8]}"
@@ -469,7 +476,7 @@ async def handle_tools_list(
 
     config = get_runtime_config().value
     if config is None:
-        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     profile = config.profiles.get(connection.profile_name)
     if profile is None:
@@ -477,9 +484,15 @@ async def handle_tools_list(
             error=f"PROFILE_NOT_FOUND: profile '{connection.profile_name}' not found"
         )
 
-    touch_r = touch_connection_activity(connection.connection_id, datetime.now(timezone.utc).isoformat())
+    touch_r = touch_connection_activity(
+        connection.connection_id, datetime.now(timezone.utc).isoformat()
+    )
     if touch_r.is_err:
-        logger.warning("Failed to touch connection activity for %s: %s", connection.connection_id, touch_r.error)
+        logger.warning(
+            "Failed to touch connection activity for %s: %s",
+            connection.connection_id,
+            touch_r.error,
+        )
 
     all_tools_result = get_all_tools()
     if all_tools_result.is_err:
@@ -551,7 +564,7 @@ async def handle_tools_call(
     if config is None:
         return Result(
             error=TelaError(
-                code="GATEWAY_NOT_STARTED", message="Gateway has not been started"
+                code=GATEWAY_NOT_STARTED, message="Gateway has not been started"
             )
         )
 
@@ -584,9 +597,15 @@ async def handle_tools_call(
             )
         )
 
-    touch_r = touch_connection_activity(connection.connection_id, datetime.now(timezone.utc).isoformat())
+    touch_r = touch_connection_activity(
+        connection.connection_id, datetime.now(timezone.utc).isoformat()
+    )
     if touch_r.is_err:
-        logger.warning("Failed to touch connection activity for %s: %s", connection.connection_id, touch_r.error)
+        logger.warning(
+            "Failed to touch connection activity for %s: %s",
+            connection.connection_id,
+            touch_r.error,
+        )
 
     server_config = config.servers.get(tool.server_name)
     default_posture = server_config.default_posture if server_config else Posture.NONE
@@ -631,7 +650,7 @@ def handle_profiles_list() -> Result[list[dict], str]:
 
     config = get_runtime_config().value
     if config is None:
-        return Result(error="GATEWAY_NOT_STARTED: gateway has not been started")
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     # Migration: emit both 'capabilities' and 'tools' keys per ADR-003.
     # Canonical external profile identifier field is 'profile_name'.

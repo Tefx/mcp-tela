@@ -15,6 +15,7 @@ from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.client.streamable_http import streamable_http_client
 
+from tela.core.errors import DOWNSTREAM_CONNECT_FAILED
 from tela.core.models import ServerConfig
 from tela.shell.config_loader import Result
 
@@ -38,7 +39,7 @@ def _validate_transport_mode(
     if has_command == has_url:
         return Result(
             error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
                 f"server '{server_name}' must set exactly one transport: command or url"
             )
         )
@@ -55,7 +56,7 @@ async def _open_stdio_client(
     command = server_config.command
     if command is None:
         return Result(
-            error=f"DOWNSTREAM_CONNECT_FAILED: server '{server_name}' is missing command"
+            error=f"{DOWNSTREAM_CONNECT_FAILED}: server '{server_name}' is missing command"
         )
 
     params = StdioServerParameters(
@@ -87,7 +88,7 @@ async def _open_stdio_client(
         await stack.aclose()
         return Result(
             error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
                 f"server '{server_name}' stdio connect failed: {exc}"
             )
         )
@@ -103,7 +104,7 @@ async def _open_sse_client(
     url = server_config.url
     if url is None:
         return Result(
-            error=f"DOWNSTREAM_CONNECT_FAILED: server '{server_name}' is missing url"
+            error=f"{DOWNSTREAM_CONNECT_FAILED}: server '{server_name}' is missing url"
         )
 
     stack = AsyncExitStack()
@@ -128,7 +129,7 @@ async def _open_sse_client(
         await stack.aclose()
         return Result(
             error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
                 f"server '{server_name}' sse connect failed: {exc}"
             )
         )
@@ -144,7 +145,7 @@ async def _open_streamable_http_client(
     url = server_config.url
     if url is None:
         return Result(
-            error=f"DOWNSTREAM_CONNECT_FAILED: server '{server_name}' is missing url"
+            error=f"{DOWNSTREAM_CONNECT_FAILED}: server '{server_name}' is missing url"
         )
 
     stack = AsyncExitStack()
@@ -171,7 +172,7 @@ async def _open_streamable_http_client(
         await stack.aclose()
         return Result(
             error=(
-                "DOWNSTREAM_CONNECT_FAILED: "
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
                 f"server '{server_name}' streamable http connect failed: {exc}"
             )
         )

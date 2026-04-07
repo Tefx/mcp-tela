@@ -24,6 +24,13 @@ from pydantic import ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from tela.core.errors import (
+    ADMISSION_REJECTED_WARMING,
+    AUTH_INVALID_TOKEN,
+    CONNECTION_NOT_FOUND,
+    DOWNSTREAM_UNAVAILABLE,
+    GATEWAY_NOT_STARTED,
+)
 from tela.core.models import (
     AuditLevel,
     AuthMode,
@@ -157,13 +164,13 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
     def _as_error_response(error: str) -> JSONResponse:
         status_code = 400
-        if error.startswith("AUTH_INVALID_TOKEN"):
+        if error.startswith(AUTH_INVALID_TOKEN):
             status_code = 401
-        elif error.startswith("CONNECTION_NOT_FOUND"):
+        elif error.startswith(CONNECTION_NOT_FOUND):
             status_code = 404
-        elif error.startswith("GATEWAY_NOT_STARTED"):
+        elif error.startswith(GATEWAY_NOT_STARTED):
             status_code = 503
-        elif error.startswith("ADMISSION_REJECTED_WARMING"):
+        elif error.startswith(ADMISSION_REJECTED_WARMING):
             status_code = 503
         return JSONResponse(status_code=status_code, content={"error": error})
 

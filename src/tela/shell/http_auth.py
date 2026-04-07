@@ -9,6 +9,10 @@ import hmac
 import json
 from typing import Any, Callable
 
+from tela.core.errors import (
+    ADMISSION_REJECTED_WARMING,
+    AUTH_INVALID_TOKEN,
+)
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.mcp_admission_contract import McpAdmissionTransient503
 from tela.shell.result import Result
@@ -29,19 +33,19 @@ def validate_bearer_token(request_token: str, expected_token: str) -> Result[Non
 
     if hmac.compare_digest(request_token, expected_token):
         return Result(value=None)
-    return Result(error="AUTH_INVALID_TOKEN: bearer token validation failed")
+    return Result(error=f"{AUTH_INVALID_TOKEN}: bearer token validation failed")
 
 
 # Internal compatibility symbol used by current tests and call-sites.
 _validate_bearer_token = validate_bearer_token
 
 _AUTH_ERROR_BODY: bytes = json.dumps(
-    {"error": "AUTH_INVALID_TOKEN: bearer token validation failed"}
+    {"error": f"{AUTH_INVALID_TOKEN}: bearer token validation failed"}
 ).encode("utf-8")
 
 _MCP_WARMING_ERROR_PAYLOAD: McpAdmissionTransient503 = {
-    "error": "ADMISSION_REJECTED_WARMING: gateway not ready for MCP admission",
-    "code": "ADMISSION_REJECTED_WARMING",
+    "error": f"{ADMISSION_REJECTED_WARMING}: gateway not ready for MCP admission",
+    "code": ADMISSION_REJECTED_WARMING,
     "transient": True,
     "retry": {
         "authorized": True,
