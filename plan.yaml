@@ -59999,6 +59999,46 @@ phases:
 
       '
     agent: python-executor
+  - id: downstream_wrapper_removal.update_monkeypatch_tests
+    name: Update monkeypatch-sensitive downstream tests
+    status: pending
+    description: 'Adjust downstream tests so monkeypatch/fake injection targets the
+      authoritative open/validate seam after wrapper removal.
+
+
+      Required focus:
+
+      - tests that patch downstream._open_client_for_server
+
+      - tests that patch downstream._validate_transport_mode
+
+      - assertions around transport open/list_tools behavior that could silently stop
+      intercepting calls'
+    verification: 'local-check: identified monkeypatch-sensitive tests target the
+      authoritative seam explicitly and no critical test still depends on removed
+      wrapper symbols.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Test Seam Update Report
+
+      - Updated tests:
+
+      - Old patch targets removed:
+
+      - New authoritative targets:
+
+      '
+    depends_on:
+    - downstream_wrapper_removal.remove_passthrough_wrappers
+    agent: integration-verifier-tacit
 - id: error_semantics_foundation
   name: Error Semantics Foundation
   status: locked
