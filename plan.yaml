@@ -59821,3 +59821,10 @@ phases:
     or downstream transport behavior.
   depends_on:
   - remediation_guardrails
+- id: error_semantics_foundation
+  name: Error Semantics Foundation
+  status: locked
+  gate: Shared error constants/helpers established and scoped literals migrated without
+    changing external behavior.
+  depends_on:
+  - remediation_guardrails
