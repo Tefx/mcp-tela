@@ -54,3 +54,9 @@ tests/repro/test_adr006_runtime_hardening_probes.py::TestFastMCPAuthorityTuple::
 - blocker rows resolved from actual fresh reclose evidence: `R13`, `R42-CONFIG-REMOVE-INFLIGHT`, `R42-DISCONNECT-UNDER-RECOVERY`, `SURFACE-REENUMERATE`, `AUTH-MCP-FASTMCP`
 - unresolved blocker rows: none
 - remaining skipped probe: `UNC-LIVENESS-HEALTHY-NEIGHBOR` integration confidence-improver only; not a blocker row
+
+## Synchronization Basis
+
+- `normalized_blocker_basis.md` now mirrors `R13`, `R42-CONFIG-REMOVE-INFLIGHT`, and `R42-DISCONNECT-UNDER-RECOVERY` as **PROVEN-2026-04-07** instead of blocker-open carry rows.
+- `runtime_uncertainty_register.md` carries the same three blocker-family rows as **PROVEN-2026-04-07**.
+- `gate_open_allowed=true` is authoritative across the synchronized blocker-basis, behavioral-proof, and runtime-uncertainty artifacts because no blocker-family row remains unresolved.

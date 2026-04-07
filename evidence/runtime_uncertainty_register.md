@@ -38,3 +38,8 @@
 - `SURFACE-REENUMERATE`: **CLOSED** — current PASS audit evidence.
 - `AUTH-MCP-FASTMCP`: **CLOSED** — current PASS audit evidence.
 - `gate_open_allowed`: `true`
+
+## Synchronization Basis
+- `normalized_blocker_basis.md` now records the three blocker-family rows `R13`, `R42-CONFIG-REMOVE-INFLIGHT`, and `R42-DISCONNECT-UNDER-RECOVERY` as **PROVEN-2026-04-07** instead of carry-forward blocker rows.
+- `behavioral_proof_register.md` remains the runtime-proof source for the exact PASS witness text cited by those normalized blocker rows.
+- `gate_open_allowed=true` is consistent across all three authoritative blocker/gate artifacts because no blocker-family row remains unresolved.
