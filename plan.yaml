@@ -59814,6 +59814,66 @@ phases:
     before refactor branches begin.
   depends_on:
   - reclose.deep_review
+  steps:
+  - id: remediation_guardrails.lock_scope
+    name: Lock remediation scope and non-goals
+    status: pending
+    description: 'Technical-debt remediation guardrail step.
+
+
+      Confirm the tranche scope covers only:
+
+      - downstream passthrough wrapper removal
+
+      - shared error constant/helper centralization
+
+      - duplicate route/gateway error classification cleanup
+
+      - shared CLI/env bearer precedence extraction
+
+      - gateway route auth skeleton extraction
+
+
+      Explicit non-goals:
+
+      - DO NOT merge src/tela/shell/gateway_http_auth.py::extract_bearer_token(Request)
+      with src/tela/shell/http_auth.py::BearerAuthMiddleware._extract_bearer_token(scope)
+
+      - DO NOT abstract repetitive recovery-envelope construction in src/tela/shell/downstream.py
+      in this tranche
+
+      - DO NOT broaden into a general auth architecture rewrite
+
+
+      Produce a scope register naming the keep-separate constraints and the deferred
+      recovery item.'
+    verification: 'phase-check: confirm scope register names all five remediation
+      targets plus the two explicit non-goals/defer items, and that no proposed work
+      collapses Request-vs-ASGI auth layers.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Guardrail Register
+
+      - In-scope items:
+
+      - Non-goals:
+
+      - Deferred items:
+
+      - Why Request-vs-ASGI auth extractors stay separate:
+
+      - Why downstream recovery-envelope abstraction is deferred:
+
+      '
+    agent: software-architect-tacit
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
   status: locked
