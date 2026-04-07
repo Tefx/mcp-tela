@@ -60031,7 +60031,7 @@ phases:
       \ add remediation guardrails coverage register"
   - id: remediation_guardrails.gate
     name: Gate remediation guardrails
-    status: claimed
+    status: pending
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer-tacit), verify the remediation
       scope is locked before any branch work begins.
 
@@ -60075,8 +60075,6 @@ phases:
     - remediation_guardrails.lock_scope
     - remediation_guardrails.test_seam_inventory
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-07T18:56:12.618875+00:00'
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
   status: locked
