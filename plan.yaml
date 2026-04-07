@@ -60519,7 +60519,7 @@ phases:
   steps:
   - id: token_precedence_refactor.extract_cli_env_helper
     name: Extract shared CLI/env token precedence helper
-    status: claimed
+    status: done
     description: 'Extract only the shared bearer-token precedence seam common to connect
       and serve:
 
@@ -60553,6 +60553,17 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-07T19:04:02.074791+00:00'
+    done_at: '2026-04-07T19:14:12.476290+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/commands/serve_cmd.py\
+      \ — added _resolve_bearer_token_cli_or_env helper and used from _resolve_bearer_token.\n\
+      - src/tela/commands/connect_cmd.py — imports helper and uses in _resolve_connect_token.\n\
+      \n## Token Helper Report\n- Shared precedence helper:\n  - _resolve_bearer_token_cli_or_env(cli_token:\
+      \ str | None) -> Result[str, str]\n- Scope limited to CLI/env only:\n  - helper\
+      \ handles CLI token then TELA_BEARER_TOKEN only\n  - helper returns missing-token\
+      \ error when neither exists\n- Command-specific fallback kept local:\n  - serve_cmd\
+      \ keeps generate_bearer_token fallback in caller\n  - connect_cmd keeps lockfile\
+      \ token fallback in caller\n\nVerification:\n- 62 token-related tests pass\n\
+      - serve and connect token-priority tests pass\n\nCommit:\n- a1cb3c79"
   - id: token_precedence_refactor.apply_connect_and_serve
     name: Apply shared precedence helper to connect and serve
     status: pending
