@@ -59401,3 +59401,95 @@ phases:
     - reason: Deal declaration not present in main pyproject; previous fix not integrated
       timestamp: '2026-04-07T08:07:59.686669+00:00'
       reviewer: orchestrator
+  - id: reclose.deep_review.sync_blocker_basis
+    name: Synchronize blocker basis and gate semantics across authoritative artifacts
+    status: pending
+    description: 'work_type: proof_closure
+
+      step_type: implementation
+
+      agent_source: default
+
+
+      Synchronize blocker-class closure semantics across the authoritative reclose
+      artifacts so the deep-review conformance path no longer compares stale blocker-basis
+      rows against refreshed runtime-proof rows.
+
+
+      Refs / authoritative artifacts in scope:
+
+      - evidence/normalized_blocker_basis.md
+
+      - evidence/behavioral_proof_register.md
+
+      - evidence/runtime_uncertainty_register.md
+
+      - evidence/proof_obligation_contract.md
+
+      - evidence/gate_review_report.md
+
+
+      Required edits:
+
+      - align normalized_blocker_basis rows for R13, R42-CONFIG-REMOVE-INFLIGHT, and
+      R42-DISCONNECT-UNDER-RECOVERY to the currently proven runtime evidence where
+      the fresh probes are already recorded as PASS
+
+      - make gate_open_allowed semantics identical across the three authoritative
+      artifacts; no artifact may still assert gate_open_allowed=false once every blocker-class
+      row is PROVEN/CLOSED
+
+      - preserve row-level authority and blocker-family naming; do not collapse the
+      two R42 paths back into one aggregate row
+
+      - add committed evidence diff references showing exactly which row text and
+      gate basis lines changed in each artifact
+
+
+      Verification requirements (mandatory):
+
+      - normalized_blocker_basis R13/R42 statuses aligned to proven runtime evidence
+
+      - gate_open_allowed consistency across artifacts
+
+      - committed evidence diff references included for every changed artifact
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. The
+      artifacts must contain substantive, contradiction-free blocker/gate semantics,
+      not placeholder notes or TODO language.
+
+
+      ## Known Risks
+
+      - repeated false-close pattern from stale cross-artifact carry-forward
+
+      - aggregate R42 wording masking disconnect-vs-config-remove divergence
+
+      - one artifact left on gate_open_allowed=false while another opens the gate'
+    verification: '- Main path: authoritative artifacts now agree row-by-row for R13,
+      R42-CONFIG-REMOVE-INFLIGHT, and R42-DISCONNECT-UNDER-RECOVERY against the proven
+      runtime evidence already recorded
+
+      - Failure path: review shows no surviving contradiction where normalized_blocker_basis
+      or gate_open_allowed disagrees with behavioral_proof_register/runtime_uncertainty_register
+
+      - Proof: evidence includes committed diff references for every artifact changed'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Cross-Artifact Synchronization\
+      \ Report\n- Artifacts changed:\n  - evidence/normalized_blocker_basis.md\n \
+      \ - evidence/behavioral_proof_register.md\n  - evidence/runtime_uncertainty_register.md\n\
+      \  - additional artifact(s) if touched: <list>\n- Rows synchronized:\n  - R13:\
+      \ <before -> after>\n  - R42-CONFIG-REMOVE-INFLIGHT: <before -> after>\n  -\
+      \ R42-DISCONNECT-UNDER-RECOVERY: <before -> after>\n- gate_open_allowed before/after\
+      \ by artifact:\n  - normalized_blocker_basis: <before -> after>\n  - behavioral_proof_register:\
+      \ <before -> after>\n  - runtime_uncertainty_register: <before -> after>\n-\
+      \ Committed evidence diff references:\n  - <artifact>: <diff hunk / line reference>\n\
+      - Residual contradictions: none | <list>\n- Why this closes the repeated failure\
+      \ family: <one paragraph>"
+    depends_on:
+    - reclose.deep_review.wiring_audit
+    agent: software-architect-tacit
