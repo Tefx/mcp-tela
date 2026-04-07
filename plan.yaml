@@ -60255,6 +60255,39 @@ phases:
     depends_on:
     - error_classification_unification.unify_http_routes_helpers
     agent: python-executor
+  - id: error_classification_unification.gate
+    name: Gate error classification unification
+    status: pending
+    description: 'Gate review: verify duplicate route helpers and fragmented gateway
+      status mapping are unified without changing externally visible error behavior.'
+    verification: 'phase-check: classification duplication is reduced, status mapping
+      remains behavior-preserving, and evidence covers known auth/gateway/admission
+      error paths.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Route helper unification complete:
+
+      - Gateway mapping preserved:
+
+      - Evidence sufficiency:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - error_classification_unification.unify_http_routes_helpers
+    - error_classification_unification.unify_gateway_status_mapping
+    agent: gate-reviewer-tacit
 - id: token_precedence_refactor
   name: Token Precedence Refactor
   status: locked
