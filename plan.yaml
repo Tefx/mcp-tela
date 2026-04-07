@@ -57780,6 +57780,86 @@ phases:
     - reclose.runtime.retest_green
     - reclose.runtime.spec_conformance
     agent: gate-reviewer-tacit
+  - id: reclose.runtime.r13_runtime_witness
+    name: Recover executable runtime witness for R13
+    status: pending
+    description: "work_type: proof_closure\nstep_type: implementation\nagent_source:\
+      \ default\n\nRestore an executable runtime witness for R13, or record an explicit\
+      \ blocker carry with named non-intersection proof.\n\nProblem basis:\n- Gate\
+      \ finding says `test_r13_runtime_lock_state_during_network_await` is skipped,\
+      \ so R13 still lacks the required runtime witness.\n- Static/code-structure\
+      \ reasoning may support R13, but it cannot close the behavioral obligation by\
+      \ itself.\n\nScope:\n- Inspect why `tests/repro/test_adr006_runtime_hardening_probes.py::TestR13RegistryLockNotHeldDuringAwait::test_r13_runtime_lock_state_during_network_await`\
+      \ is skipped.\n- Prefer restoring an executable runtime witness that proves\
+      \ all R13 PASS conditions from `evidence/proof_obligation_contract.md`:\n  1.\
+      \ awaited network operation occurs,\n  2. `_registry_lock` is released before\
+      \ the await window and remains unheld during it,\n  3. concurrent registry access\
+      \ is not blocked by that await window.\n- If executable witness cannot be restored\
+      \ without new externally-missing authority, produce an explicit blocker-carry\
+      \ record that names the exact blocker, why current scope cannot close it, and\
+      \ non-intersection proof against remaining gates. Do NOT silently downgrade\
+      \ to structural proof.\n\nTouch paths (expected):\n- tests/repro/test_adr006_runtime_hardening_probes.py\n\
+      - src/tela/shell/downstream.py\n- evidence/behavioral_proof_register.md\n- evidence/runtime_uncertainty_register.md\n\
+      \nHarness refs:\n- tests/repro/test_adr006_runtime_hardening_probes.py\n\nAuthoritative\
+      \ interface: NONE PINNED\n\nKnown risks:\n- Prior closure was overturned because\
+      \ static reasoning was accepted for a behavioral runtime claim.\n- A stub or\
+      \ skipped probe does not satisfy runtime witness closure.\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis step is not complete with a skip marker, structural\
+      \ note, or prose-only rationale. It must either:\n- produce an executable runtime\
+      \ witness with command/output-ready evidence inputs, or\n- carry the blocker\
+      \ explicitly with non-intersection proof that names the remaining protected\
+      \ gates."
+    verification: '- R13 is dispositioned from executable runtime evidence or explicit
+      blocker carry, not static reasoning alone
+
+      - If witness path is used: commanded run output exists for the R13 probe and
+      covers await-window lock release plus concurrent access non-blocking
+
+      - If blocker carry path is used: evidence names why closure is not currently
+      authorized and why remaining gates do or do not intersect it'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## R13 Runtime Witness Recovery
+
+      - Skip/root-cause diagnosis for `test_r13_runtime_lock_state_during_network_await`:
+
+      - Files changed:
+
+      - Command(s) prepared or executed for the runtime witness:
+
+      - Raw output artifact location:
+
+
+      ## PASS-condition Mapping
+
+      - Awaited network operation observed:
+
+      - `_registry_lock` unheld during await window:
+
+      - Concurrent registry access not blocked during that window:
+
+
+      ## Disposition
+
+      - Outcome: PROVEN | BLOCKER_CARRY
+
+      - If BLOCKER_CARRY: exact blocker, why closure is unauthorized here, remaining
+      gates checked for non-intersection, owner path
+
+      '
+    depends_on:
+    - reclose.runtime.retest_green
+    - reclose.runtime.spec_conformance
+    agent: python-senior-tacit
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
   status: locked
