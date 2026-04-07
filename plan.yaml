@@ -60632,7 +60632,7 @@ phases:
       \ 7232d6e5"
   - id: token_precedence_refactor.gate
     name: Gate token precedence refactor
-    status: pending
+    status: claimed
     description: 'Gate review: verify shared CLI/env precedence extraction is complete
       and command-specific fallback behavior remains unchanged.'
     verification: 'phase-check: shared precedence is consistent, command-specific
@@ -60662,6 +60662,8 @@ phases:
     - token_precedence_refactor.extract_cli_env_helper
     - token_precedence_refactor.apply_connect_and_serve
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-07T19:23:31.239096+00:00'
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
   status: locked
