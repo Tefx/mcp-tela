@@ -60480,7 +60480,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: token_precedence_refactor
   name: Token Precedence Refactor
-  status: pending
+  status: in_progress
   gate: Shared CLI/env bearer-token precedence extracted while connect/serve-specific
     fallbacks remain local and unchanged.
   depends_on:
@@ -60488,7 +60488,7 @@ phases:
   steps:
   - id: token_precedence_refactor.extract_cli_env_helper
     name: Extract shared CLI/env token precedence helper
-    status: pending
+    status: claimed
     description: 'Extract only the shared bearer-token precedence seam common to connect
       and serve:
 
@@ -60520,6 +60520,8 @@ phases:
 
       '
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-07T19:04:02.074791+00:00'
   - id: token_precedence_refactor.apply_connect_and_serve
     name: Apply shared precedence helper to connect and serve
     status: pending
