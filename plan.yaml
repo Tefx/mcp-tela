@@ -58442,7 +58442,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.verify.runtime_witness_hardening
     name: Harden runtime witness and in-flight recovery probes
-    status: claimed
+    status: done
     description: 'Proof-closure remediation for blocker-class overclaim risk in the
       refreshed reclose basis.
 
@@ -58557,6 +58557,98 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-07T07:13:58.704734+00:00'
+    done_at: '2026-04-07T07:23:24.512419+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Runtime Witness Hardening Report\n\n### Proof Obligations\n\n#### R13: Registry\
+      \ Lock Not Held During Network I/O\n\n**Witness Analysis:**\n- **Helper-only\
+      \ probe**: `test_r13_runtime_lock_state_during_network_await` uses mock `_open_client_for_server`\
+      \ that tracks network I/O\n- **Authentic path test**: `test_recover_server_client_releases_registry_lock_around_network_io`\
+      \ (tests/shell/test_downstream.py:1441-1516) exercises REAL `_recover_server_client`\n\
+      \n**Real Path Exercised:**\n- **Entry point**: `tests/shell/test_downstream.py::test_recover_server_client_releases_registry_lock_around_network_io`\n\
+      - **Trigger**: Calls `downstream._recover_server_client()` with monkeypatched\
+      \ network operations\n- **Recovery seam traversed**: Lines 1458-1491 mock `_open_client_for_server`,\
+      \ `_enumerate_client_tools`, `on_server_reconnect` - each asserts `not downstream._registry_lock.locked()`\
+      \ before execution\n- **Why not helper-only**: The test uses the real `_recover_server_client`\
+      \ function; only network I/O boundaries are stubbed with assertions, not the\
+      \ lock logic itself\n\n**Mock/Instrumentation Audit:**\n- Remaining mocks: `_open_client_for_server`,\
+      \ `_enumerate_client_tools`, `on_server_reconnect`\n- Justification: These mocks\
+      \ replace NETWORK I/O operations with assertions that verify lock state. The\
+      \ lock acquisition/release logic (`_registry_lock`) is not mocked - it's the\
+      \ subject under test. This is NOT a tautology because:\n  1. Lock state assertions\
+      \ are independent observations, not derived from mocked setup\n  2. The recovery\
+      \ path (`_acquire_recovery_lock` -> `_get_runtime_server_config` -> `_open_client_for_server`\
+      \ -> `_enumerate_client_tools`) is traversed authentically\n  3. Mocks only\
+      \ replace I/O boundaries, not lock logic\n\n**Highest-Risk Failure Path Evidence:**\n\
+      - **Exact test**: `test_recover_server_client_releases_registry_lock_around_network_io`\n\
+      - **Actual timing behavior**: Lock assertions pass - `_registry_lock` is not\
+      \ held when `assert not downstream._registry_lock.locked()` executes at lines\
+      \ 1470, 1482, 1490\n- **Blocker carried?**: NO - authentic path test passes\
+      \ with real lock state verification\n- **Result**: PASS (confirmed 2026-04-07)\n\
+      \n---\n\n#### R42-CONFIG-REMOVE-INFLIGHT: Config Remove During In-Flight Recovery\n\
+      \n**Witness Analysis:**\n- **Helper-only probes**: `test_r42_config_remove_during_inflight_recovery`,\
+      \ `test_r42_config_missing_error_envelope_has_required_fields` test `_get_runtime_server_config`\
+      \ and `_prune_recovery_lock_if_unused` helpers only\n- **Authentic path tests**:\
+      \ \n  1. `test_recover_server_client_fails_closed_when_server_removed_mid_recovery`\
+      \ (lines 1284-1359)\n  2. `test_recover_server_client_config_remove_cleans_stale_client_and_lock`\
+      \ (lines 1361-1420)\n\n**Real Path Exercised for Timing:**\n- **Entry point**:\
+      \ `test_recover_server_client_fails_closed_when_server_removed_mid_recovery`\n\
+      - **Trigger**: Config removal happens DURING `_open_client_for_server` mock\
+      \ (line 1313 simulates config reload between open and enumerate)\n- **Recovery\
+      \ seam traversed**: Real `_recover_server_client` called with `deadline_monotonic`\
+      \ parameter; config mutation happens mid-recovery\n- **Why not helper-only**:\
+      \ The test uses the full recovery sequence including:\n  1. `_acquire_recovery_lock`\
+      \ (line 1345-1350)\n  2. `_get_runtime_server_config` (authentic config check)\n\
+      \  3. `_open_client_for_server` mocked to mutate config (line 1313)\n  4. Post-enumeration\
+      \ config check (tests/shell/test_downstream.py:1361-1420 also shows material\
+      \ config change detection at line 824)\n\n**In-Flight Recovery Timing Evidence:**\n\
+      - **Line 1313**: `set_runtime_config(TelaConfig(servers={}))` called during\
+      \ `_fake_open_client_for_server` - this is the TIMING path where config is removed\
+      \ WHILE recovery is in flight\n- **Line 812-821 in downstream.py**: `post_enum_config\
+      \ = _get_runtime_server_config(server_name)` followed by config comparison and\
+      \ fail-closed if material change detected\n- **Test verifies**: Error returned\
+      \ with `config_missing=True` (line 1357-1358), AND stale client/lock cleaned\n\
+      \n**Mock/Instrumentation Audit:**\n- Remaining mocks: `_open_client_for_server`,\
+      \ `_enumerate_client_tools`, `on_server_reconnect` - same as R13\n- Why not\
+      \ tautological: Mocks replace network I/O to inject timing race (config removal\
+      \ mid-recovery). The config check logic (`_get_runtime_server_config` at lines\
+      \ 698 and 812) is REAL and not mocked. The lock cleanup logic (`_prune_recovery_lock_if_unused`\
+      \ at lines 704-706) is REAL.\n- The test proves the timing path where server\
+      \ exists at recovery start but is removed during network I/O phase.\n\n**Highest-Risk\
+      \ Failure Path Evidence:**\n- **Exact test**: `test_recover_server_client_fails_closed_when_server_removed_mid_recovery`\n\
+      - **Actual timing behavior**: Config mutation (line 1313) occurs between `open_client`\
+      \ and enumeration. Recovery correctly detects this at line 812-821 and fails\
+      \ with `config_missing=True`.\n- **Blocker carried?**: NO - authentic timing\
+      \ path test passes, `config_missing=True` correctly surfaced\n- **Result**:\
+      \ PASS (confirmed 2026-04-07)\n\n---\n\n### Summary\n\n| Row | Probe Type |\
+      \ Authentic Path Test | Status | Blocker Carried |\n|-----|------------|---------------------|--------|-----------------|\n\
+      | R13 | Instrumented + structural | `test_recover_server_client_releases_registry_lock_around_network_io`\
+      \ | PASS | NO |\n| R42-CONFIG-REMOVE-INFLIGHT | Helper tests + authentic timing\
+      \ | `test_recover_server_client_fails_closed_when_server_removed_mid_recovery`\
+      \ | PASS | NO |\n\n**Commands Executed:**\n```bash\nuv run pytest tests/shell/test_downstream.py::test_recover_server_client_fails_closed_when_server_removed_mid_recovery\
+      \ tests/shell/test_downstream.py::test_recover_server_client_config_remove_cleans_stale_client_and_lock\
+      \ tests/shell/test_downstream.py::test_recover_server_client_releases_registry_lock_around_network_io\
+      \ -v --tb=short\n\nuv run pytest tests/repro/test_adr006_runtime_hardening_probes.py\
+      \ -v --tb=short\n```\n\n**Actual Output:**\n```\ntests/shell/test_downstream.py::test_recover_server_client_fails_closed_when_server_removed_mid_recovery\
+      \ PASSED\ntests/shell/test_downstream.py::test_recover_server_client_config_remove_cleans_stale_client_and_lock\
+      \ PASSED\ntests/shell/test_downstream.py::test_recover_server_client_releases_registry_lock_around_network_io\
+      \ PASSED\n\ntests/repro/test_adr006_runtime_hardening_probes.py::TestR42ConfigReloadRemovesLock::test_r42_config_remove_during_inflight_recovery\
+      \ PASSED\ntests/repro/test_adr006_runtime_hardening_probes.py::TestR13RegistryLockNotHeldDuringAwait::test_r13_runtime_lock_state_during_network_await\
+      \ PASSED\n...\n14 passed, 1 skipped\n```\n\n### Why Probes Are Not Tautologies\n\
+      \nThe probes in `test_adr006_runtime_hardening_probes.py` test helper functions\
+      \ in isolation:\n- `test_r42_config_remove_during_inflight_recovery`: Tests\
+      \ `_get_runtime_server_config` helper\n- `test_r13_runtime_lock_state_during_network_await`:\
+      \ Tests lock instrumentation with mock network I/O\n\nThese are VALID unit-level\
+      \ probes that verify behavior of isolated components. They are NOT \"helper-only\"\
+      \ in the sense of being skipped assertions - they provide real behavioral evidence.\n\
+      \nHOWEVER, the step requirement \"Must address R42-CONFIG-REMOVE-INFLIGHT: test\
+      \ must exercise the in-flight recovery timing path\" is satisfied by the AUTHENTIC\
+      \ PATH test `test_recover_server_client_fails_closed_when_server_removed_mid_recovery`\
+      \ which:\n1. Uses real `_recover_server_client` function\n2. Injects timing\
+      \ race via mock that mutates config mid-recovery\n3. Verifies fail-closed behavior\
+      \ with `config_missing=True`\n\n### Conclusion\n\nNo blocker carried forward.\
+      \ Both R13 and R42-CONFIG-REMOVE-INFLIGHT are closed by authentic runtime path\
+      \ tests that exercise real recovery seams, not helper-only assertions. The probe\
+      \ tests provide supporting evidence but are not blocking on their own."
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
