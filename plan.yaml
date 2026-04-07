@@ -59807,3 +59807,10 @@ phases:
       - gate_open_allowed: true — all blocker rows resolved from fresh reclose evidence\n\
       \nCommit: 12f2d176 — spec conformance retest: contradiction-free blocker/gate\
       \ semantics"
+- id: remediation_guardrails
+  name: Remediation Guardrails
+  status: pending
+  gate: Scope locked, keep-separate constraints recorded, and test seams inventoried
+    before refactor branches begin.
+  depends_on:
+  - reclose.deep_review
