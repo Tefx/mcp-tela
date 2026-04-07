@@ -59272,3 +59272,77 @@ phases:
     - reclose.deep_review.architecture_review
     - reclose.deep_review.black_box_verification
     agent: gate-reviewer-tacit
+  - id: reclose.deep_review.dependency_declare_fix
+    name: Resolve undeclared deal dependency mismatch
+    status: pending
+    description: 'Resolve the deep-review dependency declaration mismatch caused by
+      `deal` being imported from `core/contracts.py` without a matching declared dependency
+      in `pyproject.toml`.
+
+
+      Work scope:
+
+      - determine whether `deal` is a required runtime/development dependency for
+      the intended contract surface, or whether the import should be removed instead
+
+      - if retained, declare it in the authoritative project dependency surface with
+      rationale
+
+      - if removed, update the import/call site with rationale so the dependency graph
+      and contract story stay consistent
+
+      - document the chosen disposition and why it is correct for this repository
+
+
+      Touch paths expected:
+
+      - pyproject.toml
+
+      - core/contracts.py
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      The change must leave dependency intent explicit and consistent between imports
+      and declared project dependencies.'
+    verification: '- Dependency declaration and import usage are consistent
+
+      - Chosen path (declare vs remove) is justified in evidence with repo-specific
+      rationale
+
+      - Targeted proof shows the undeclared dependency mismatch no longer appears
+      in the deep-review wiring audit inputs'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - AGENTS.md — key passage or "NOT READ: <reason>"
+
+      - pyproject.toml — key passage or "NOT READ: <reason>"
+
+      - core/contracts.py — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Dependency Disposition
+
+      - Selected path: declare dependency | remove import
+
+      - Why this path is correct here:
+
+      - Files changed:
+
+
+      ## Proof
+
+      - Exact mismatch addressed:
+
+      - Command/output or artifact evidence showing the mismatch is resolved:
+
+      '
+    agent: software-architect-tacit
