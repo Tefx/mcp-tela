@@ -60756,3 +60756,35 @@ phases:
 
       '
     agent: software-architect-tacit
+  - id: deep_review_gate.spec_conformance
+    name: Spec conformance review for remediation behavior
+    status: pending
+    description: Independently review whether the remediation preserves the intended
+      external behavior for auth, error semantics, route outcomes, and command token
+      precedence.
+    verification: 'phase-check: no documented external behavior drift is introduced
+      across auth, status codes, route outcomes, or token precedence.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Spec Conformance Report
+
+      - Auth behavior:
+
+      - Route/status behavior:
+
+      - Token precedence behavior:
+
+      - Divergences:
+
+      '
+    depends_on:
+    - deep_review_gate.architecture_review
+    agent: spec-verifier-tacit
