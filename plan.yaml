@@ -60360,6 +60360,38 @@ phases:
     depends_on:
     - token_precedence_refactor.extract_cli_env_helper
     agent: python-executor
+  - id: token_precedence_refactor.gate
+    name: Gate token precedence refactor
+    status: pending
+    description: 'Gate review: verify shared CLI/env precedence extraction is complete
+      and command-specific fallback behavior remains unchanged.'
+    verification: 'phase-check: shared precedence is consistent, command-specific
+      fallbacks remain local, and no blocker-class precedence regression is evident.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Shared precedence complete:
+
+      - Connect fallback preserved:
+
+      - Serve fallback preserved:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - token_precedence_refactor.extract_cli_env_helper
+    - token_precedence_refactor.apply_connect_and_serve
+    agent: gate-reviewer-tacit
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
   status: locked
