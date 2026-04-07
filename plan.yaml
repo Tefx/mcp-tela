@@ -57638,7 +57638,7 @@ phases:
       - verdict: PASS'
   - id: reclose.runtime.spec_conformance
     name: Verify ADR-006 runtime closure conformance
-    status: claimed
+    status: done
     description: 'Spec conformance verification for the runtime proof closure.
 
 
@@ -57687,6 +57687,35 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-07T05:33:47.120742+00:00'
+    done_at: '2026-04-07T05:41:44.099345+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Spec Conformance Report
+
+      | Requirement | Evidence | Verdict | Notes |
+
+      |---|---|---|---|
+
+      | R13 | lock scope + probes | CONFORMS | explicit structural/runtime evidence
+      |
+
+      | R42-CONFIG-REMOVE-INFLIGHT | config_missing + prune + witnesses | CONFORMS
+      | dedicated probe coverage green |
+
+      | R42-DISCONNECT-UNDER-RECOVERY | disconnect cleanup + prune witnesses | CONFORMS
+      | dedicated probe coverage green |
+
+
+      ## Coverage Summary
+
+      - R13: resolved with proof
+
+      - R42-CONFIG-REMOVE-INFLIGHT: resolved with witness evidence
+
+      - R42-DISCONNECT-UNDER-RECOVERY: resolved with witness evidence'
   - id: reclose.runtime.gate
     name: Gate runtime proof reclose
     status: pending
