@@ -58442,7 +58442,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.verify.runtime_witness_hardening
     name: Harden runtime witness and in-flight recovery probes
-    status: pending
+    status: claimed
     description: 'Proof-closure remediation for blocker-class overclaim risk in the
       refreshed reclose basis.
 
@@ -58555,6 +58555,8 @@ phases:
     depends_on:
     - reclose.verify.refresh_registers
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-07T07:13:58.704734+00:00'
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
