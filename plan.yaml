@@ -58417,7 +58417,7 @@ phases:
       \ PASS"
   - id: reclose.verify.gate
     name: Gate refreshed reclose verification
-    status: pending
+    status: claimed
     description: 'Gate review for refreshed reclose verification.
 
 
@@ -58462,6 +58462,8 @@ phases:
     - reclose.verify.behavior_rereview
     - reclose.verify.wiring_manifest_rereview
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-07T07:32:50.491555+00:00'
   - id: reclose.verify.runtime_witness_hardening
     name: Harden runtime witness and in-flight recovery probes
     status: done
