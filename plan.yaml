@@ -60337,7 +60337,7 @@ phases:
       \ reconnect failures\n\nCommit:\n- e0d9c69"
   - id: error_semantics_foundation.add_classification_helpers
     name: Add shared error classification helpers
-    status: pending
+    status: claimed
     description: 'Introduce shared helpers for prefix/classification checks used across
       shell/core error consumers.
 
@@ -60374,6 +60374,8 @@ phases:
     depends_on:
     - error_semantics_foundation.centralize_error_constants
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-07T19:15:38.178008+00:00'
   - id: error_semantics_foundation.gate
     name: Gate error semantics foundation
     status: pending
