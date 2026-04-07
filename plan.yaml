@@ -58198,7 +58198,7 @@ phases:
   steps:
   - id: reclose.verify.refresh_registers
     name: Refresh behavioral and uncertainty registers from evidence
-    status: claimed
+    status: done
     description: 'Refresh the behavioral proof register and runtime uncertainty register
       from actual reclose evidence.
 
@@ -58245,6 +58245,29 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-07T06:45:30.390096+00:00'
+    done_at: '2026-04-07T06:49:53.350377+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n## Register\
+      \ Refresh Report\n- rows updated:\n  - `behavioral_proof_register.md`: rewrote\
+      \ R13 to `PROVEN-2026-04-07` from fresh executable witness; refreshed R42, SURFACE-REENUMERATE,\
+      \ and AUTH-MCP-FASTMCP rows against actual current probe/audit results; retained\
+      \ only non-blocking skip wording for `UNC-LIVENESS-HEALTHY-NEIGHBOR`\n  - `runtime_uncertainty_register.md`:\
+      \ rewrote blocker-family dispositions from actual current evidence; removed\
+      \ stale structural-only R13 closure wording; set refreshed register state as\
+      \ explicit blocker basis\n- gate_open_allowed:\n  - `true` — fresh probe run\
+      \ in `.vectl/worktrees/reclose.verify.refresh_registers` produced `14 passed,\
+      \ 1 skipped`; no blocker-family row remains unresolved\n- unresolved blocker\
+      \ rows:\n  - none\n- evidence source for each updated row:\n  - `R13`: `uv run\
+      \ pytest tests/repro/test_adr006_runtime_hardening_probes.py -v --tb=short`\
+      \ → `test_r13_runtime_lock_state_during_network_await` PASS plus two supporting\
+      \ R13 PASS probes\n  - `R42-CONFIG-REMOVE-INFLIGHT`: same command → config-remove\
+      \ and config-missing envelope probes PASS\n  - `R42-DISCONNECT-UNDER-RECOVERY`:\
+      \ same command → all three disconnect cleanup probes PASS\n  - `UNC-LIVENESS-HEALTHY-NEIGHBOR`:\
+      \ same command → one PASS, one SKIPPED confidence-improver; retained as non-blocking\
+      \ only\n  - `UNC-CONFIG-MISSING-FAIL-CLOSED`: same command → fail-closed helper\
+      \ probe PASS\n  - `SURFACE-REENUMERATE`: same command → importability and classification\
+      \ audit PASS; docs anchor retained\n  - `AUTH-MCP-FASTMCP`: same command → authority\
+      \ tuple audit PASS; docs anchor retained\n- commit:\n  - `fbd51fef docs: align\
+      \ reclose registers with fresh probe results`"
   - id: reclose.verify.behavior_rereview
     name: Re-review behavioral closure from fresh perspective
     status: pending
