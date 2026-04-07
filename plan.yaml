@@ -60337,7 +60337,7 @@ phases:
       \ reconnect failures\n\nCommit:\n- e0d9c69"
   - id: error_semantics_foundation.add_classification_helpers
     name: Add shared error classification helpers
-    status: claimed
+    status: done
     description: 'Introduce shared helpers for prefix/classification checks used across
       shell/core error consumers.
 
@@ -60376,6 +60376,20 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-07T19:15:38.178008+00:00'
+    done_at: '2026-04-07T19:22:40.430489+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/core/errors.py —\
+      \ added shared classification helpers.\n- src/tela/shell/http_routes.py — duplicated\
+      \ prefix checks mapped to helpers.\n- src/tela/shell/gateway.py — error classification\
+      \ chain mapped to helpers.\n- src/tela/core/contracts.py — precondition decorators\
+      \ used for helper contracts.\n\n## Classification Helper Report\n- Helpers added:\n\
+      \  - is_auth_error(error: str)\n  - is_gateway_not_started_error(error: str)\n\
+      \  - is_connection_not_found_error(error: str)\n  - is_admission_rejected_warming_error(error:\
+      \ str)\n- Duplicated patterns covered:\n  - http_routes prefix classifiers for\
+      \ auth/gateway-not-started/connection-not-found\n  - gateway HTTP status mapping\
+      \ checks for shared prefixes\n- Behavior-preserving notes:\n  - preserves existing\
+      \ startswith-based semantics\n  - added contracts and doctests for helper behavior\n\
+      \  - invar guard passed; doctests passed; shell tests passed\n\nNotes:\n- out-of-scope\
+      \ classifiers (audit query literal etc.) intentionally unchanged"
   - id: error_semantics_foundation.gate
     name: Gate error semantics foundation
     status: pending
