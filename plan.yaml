@@ -58189,7 +58189,7 @@ phases:
       reviewer: orchestrator
 - id: reclose.verify
   name: Register Refresh and Reclose Verification
-  status: pending
+  status: in_progress
   gate: Behavioral and uncertainty registers must be refreshed from actual evidence,
     independently re-reviewed, and must not leave blocker rows unresolved if the gate
     is to open.
@@ -58198,7 +58198,7 @@ phases:
   steps:
   - id: reclose.verify.refresh_registers
     name: Refresh behavioral and uncertainty registers from evidence
-    status: pending
+    status: claimed
     description: 'Refresh the behavioral proof register and runtime uncertainty register
       from actual reclose evidence.
 
@@ -58243,6 +58243,8 @@ phases:
 
       '
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-07T06:45:30.390096+00:00'
   - id: reclose.verify.behavior_rereview
     name: Re-review behavioral closure from fresh perspective
     status: pending
