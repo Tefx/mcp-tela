@@ -60259,7 +60259,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: error_semantics_foundation
   name: Error Semantics Foundation
-  status: pending
+  status: in_progress
   gate: Shared error constants/helpers established and scoped literals migrated without
     changing external behavior.
   depends_on:
@@ -60267,7 +60267,7 @@ phases:
   steps:
   - id: error_semantics_foundation.centralize_error_constants
     name: Centralize shared error constants
-    status: pending
+    status: claimed
     description: 'Expand the authoritative shared error-code source so common shell/core
       error code prefixes are not scattered as string literals.
 
@@ -60300,6 +60300,8 @@ phases:
 
       '
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-07T19:03:56.826108+00:00'
   - id: error_semantics_foundation.add_classification_helpers
     name: Add shared error classification helpers
     status: pending
