@@ -57784,7 +57784,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: reclose.runtime.r13_runtime_witness
     name: Recover executable runtime witness for R13
-    status: rejected
+    status: claimed
     description: "work_type: proof_closure\nstep_type: implementation\nagent_source:\
       \ default\n\nRestore an executable runtime witness for R13, or record an explicit\
       \ blocker carry with named non-intersection proof.\n\nProblem basis:\n- Gate\
@@ -57863,7 +57863,7 @@ phases:
     - reclose.runtime.spec_conformance
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
-    claimed_at: '2026-04-07T05:49:29.705277+00:00'
+    claimed_at: '2026-04-07T06:19:26.391987+00:00'
     done_at: '2026-04-07T05:59:34.107878+00:00'
     rejection_reason: Reported PROVEN from unreachable commit; executable witness
       absent in main branch
