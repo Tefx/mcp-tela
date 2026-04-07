@@ -59159,7 +59159,7 @@ phases:
     agent: spec-verifier-tacit
   - id: reclose.deep_review.architecture_review
     name: Deep architecture review for reclose
-    status: pending
+    status: claimed
     description: 'Architecture and concurrency review for the reclose slice.
 
 
@@ -59200,6 +59200,8 @@ phases:
     depends_on:
     - reclose.deep_review.wiring_audit
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-07T10:27:45.327452+00:00'
   - id: reclose.deep_review.black_box_verification
     name: Black-box verification of reclose claims
     status: done
