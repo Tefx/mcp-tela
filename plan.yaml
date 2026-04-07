@@ -60646,6 +60646,43 @@ phases:
   gate: Docs/comments/examples align with final helper ownership and deferred non-goals.
   depends_on:
   - remediation_integration_verify
+  steps:
+  - id: remediation_doc_sync.update_docs
+    name: Update remediation docs and comments
+    status: pending
+    description: 'Sync comments, notes, and any affected documentation/examples with
+      the final remediation outcome.
+
+
+      Required focus:
+
+      - helper ownership/source-of-truth notes
+
+      - explicit keep-separate auth-layer constraint where relevant
+
+      - deferred recovery-envelope non-goal if referenced in docs/comments'
+    verification: 'phase-check: documentation/comments reflect the implemented helper
+      ownership and preserve the explicit deferred/keep-separate constraints.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Doc Sync Report
+
+      - Updated docs/comments:
+
+      - Helper ownership clarified:
+
+      - Deferred non-goals documented:
+
+      '
+    agent: doc-reviewer-tacit
 - id: deep_review_gate
   name: Deep Review Gate
   status: locked
