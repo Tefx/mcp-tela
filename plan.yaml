@@ -58270,7 +58270,7 @@ phases:
       \ reclose registers with fresh probe results`"
   - id: reclose.verify.behavior_rereview
     name: Re-review behavioral closure from fresh perspective
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (blind-tester-tacit), challenge the refreshed
       closure basis from a fresh reading.
 
@@ -58312,6 +58312,26 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-07T07:24:28.819566+00:00'
+    done_at: '2026-04-07T07:32:32.254498+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Behavioral Re-review
+
+      - R13 closure judgment: PASS (integration witness present; minor probe-label
+      overclaim risk noted)
+
+      - R42 config-remove-inflight judgment: PASS (in-flight timing race exercised
+      in integration tests)
+
+      - R42 disconnect-under-recovery judgment: PASS (cleanup paths verified)
+
+      - overclaim risks: minor rhetorical overclaim only; no blocker-class unresolved
+      debt
+
+      - verdict: PASS'
   - id: reclose.verify.wiring_manifest_rereview
     name: Re-review wiring and manifest closure
     status: done
