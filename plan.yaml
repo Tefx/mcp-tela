@@ -59098,6 +59098,8 @@ phases:
       - verdict: PASS / ISSUES_FOUND
 
       '
+    depends_on:
+    - reclose.deep_review.dependency_declare_fix
     agent: wiring-auditor
   - id: reclose.deep_review.spec_conformance
     name: Deep spec conformance audit for reclose
