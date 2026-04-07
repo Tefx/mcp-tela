@@ -8,6 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from tela.core.contracts import pre
+
 
 @dataclass(frozen=True)
 class ConfigContractError(Exception):
@@ -64,3 +66,63 @@ DOWNSTREAM_CONNECT_FAILED: Literal["DOWNSTREAM_CONNECT_FAILED"] = (
     "DOWNSTREAM_CONNECT_FAILED"
 )
 DOWNSTREAM_ERROR: Literal["DOWNSTREAM_ERROR"] = "DOWNSTREAM_ERROR"
+
+
+# --------------------------------------------------------------------
+# Shared prefix / classification helpers
+# Canonical home: core/errors.py
+# Used by shell/core consumers to check error-code classification without
+# duplicating string-literal prefix patterns.
+# --------------------------------------------------------------------
+
+
+@pre(lambda error: isinstance(error, str))
+def is_auth_error(error: str) -> bool:
+    """Return True when an error message has AUTH_INVALID_TOKEN prefix.
+
+    Examples:
+        >>> is_auth_error("AUTH_INVALID_TOKEN: bearer token validation failed")
+        True
+        >>> is_auth_error("AUTHZ_DENY: permission denied")
+        False
+    """
+    return error.startswith(AUTH_INVALID_TOKEN)
+
+
+@pre(lambda error: isinstance(error, str))
+def is_gateway_not_started_error(error: str) -> bool:
+    """Return True when an error message has GATEWAY_NOT_STARTED prefix.
+
+    Examples:
+        >>> is_gateway_not_started_error("GATEWAY_NOT_STARTED: gateway not ready")
+        True
+        >>> is_gateway_not_started_error("AUTH_INVALID_TOKEN: bearer token validation failed")
+        False
+    """
+    return error.startswith(GATEWAY_NOT_STARTED)
+
+
+@pre(lambda error: isinstance(error, str))
+def is_connection_not_found_error(error: str) -> bool:
+    """Return True when an error message has CONNECTION_NOT_FOUND prefix.
+
+    Examples:
+        >>> is_connection_not_found_error("CONNECTION_NOT_FOUND: id=abc")
+        True
+        >>> is_connection_not_found_error("AUTH_INVALID_TOKEN: bearer token validation failed")
+        False
+    """
+    return error.startswith(CONNECTION_NOT_FOUND)
+
+
+@pre(lambda error: isinstance(error, str))
+def is_admission_rejected_warming_error(error: str) -> bool:
+    """Return True when an error message has ADMISSION_REJECTED_WARMING prefix.
+
+    Examples:
+        >>> is_admission_rejected_warming_error("ADMISSION_REJECTED_WARMING: too many warming")
+        True
+        >>> is_admission_rejected_warming_error("AUTH_INVALID_TOKEN: bearer token validation failed")
+        False
+    """
+    return error.startswith(ADMISSION_REJECTED_WARMING)
