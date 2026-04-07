@@ -60143,7 +60143,7 @@ phases:
       Gate Open Allowed: YES'
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
-  status: pending
+  status: in_progress
   gate: Pure passthrough wrappers removed without breaking monkeypatch-sensitive tests
     or downstream transport behavior.
   depends_on:
@@ -60151,7 +60151,7 @@ phases:
   steps:
   - id: downstream_wrapper_removal.remove_passthrough_wrappers
     name: Remove downstream passthrough wrappers
-    status: pending
+    status: claimed
     description: 'Refactor src/tela/shell/downstream.py to stop defining pure passthrough
       wrappers for _validate_transport_mode and _open_client_for_server when those
       functions already exist authoritatively in src/tela/shell/downstream_clients.py.
@@ -60185,6 +60185,8 @@ phases:
 
       '
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-07T19:03:52.635823+00:00'
   - id: downstream_wrapper_removal.update_monkeypatch_tests
     name: Update monkeypatch-sensitive downstream tests
     status: pending
