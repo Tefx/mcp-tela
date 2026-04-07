@@ -60151,7 +60151,7 @@ phases:
   steps:
   - id: downstream_wrapper_removal.remove_passthrough_wrappers
     name: Remove downstream passthrough wrappers
-    status: claimed
+    status: done
     description: 'Refactor src/tela/shell/downstream.py to stop defining pure passthrough
       wrappers for _validate_transport_mode and _open_client_for_server when those
       functions already exist authoritatively in src/tela/shell/downstream_clients.py.
@@ -60187,6 +60187,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-07T19:03:52.635823+00:00'
+    done_at: '2026-04-07T19:13:53.154451+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/shell/downstream.py\
+      \ — Import aliases at lines 17-22 showed passthrough wrappers at lines 133-151.\n\
+      - src/tela/shell/downstream_clients.py — authoritative _validate_transport_mode\
+      \ (31-45) and _open_client_for_server (180-213).\n\n## Wrapper Removal Report\n\
+      - Removed wrappers:\n  - _validate_transport_mode passthrough wrapper\n  - _open_client_for_server\
+      \ passthrough wrapper\n- Updated authoritative import/call sites:\n  - direct\
+      \ imports now use authoritative names from downstream_clients.py\n  - downstream.py\
+      \ call sites now resolve directly to authoritative functions\n- Remaining passthrough\
+      \ wrappers in downstream.py (must be none or justified):\n  - none\n\nVerification:\n\
+      - uv run pyright src/tela/shell/downstream.py => 0 errors\n- no redundant wrapper\
+      \ defs remain in downstream.py\n- runtime behavior preserved (indirection removed\
+      \ only)"
   - id: downstream_wrapper_removal.update_monkeypatch_tests
     name: Update monkeypatch-sensitive downstream tests
     status: pending
