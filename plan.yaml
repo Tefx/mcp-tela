@@ -58439,6 +58439,121 @@ phases:
     - reclose.verify.behavior_rereview
     - reclose.verify.wiring_manifest_rereview
     agent: gate-reviewer-tacit
+  - id: reclose.verify.runtime_witness_hardening
+    name: Harden runtime witness and in-flight recovery probes
+    status: pending
+    description: 'Proof-closure remediation for blocker-class overclaim risk in the
+      refreshed reclose basis.
+
+
+      Scope:
+
+      - Tighten runtime witnesses so claimed recovery proof executes authentic recovery
+      paths instead of structural/helper-only or mocked tautologies.
+
+      - Rework the R42-CONFIG-REMOVE-INFLIGHT coverage so it exercises the in-flight
+      recovery timing path, not just adjacent configuration removal behavior.
+
+      - If an authentic runtime path cannot yet be exercised, carry the blocker explicitly
+      in the refreshed evidence/register output instead of preserving an overclaim.
+
+
+      Implementation/test expectations:
+
+      - Replace helper-only witnesses with runtime-path probes that traverse the real
+      recovery seam end-to-end.
+
+      - Audit any mock/instrumentation still present; justify each remaining mock
+      and prove it does not convert the witness into a tautology.
+
+      - Add or update focused regressions for authentic recovery timing, including
+      the failing/high-risk path.
+
+
+      Known blocker families to close:
+
+      - R13 runtime-witness overclaim caused by structural/mock instrumentation standing
+      in for real recovery.
+
+      - R42-CONFIG-REMOVE-INFLIGHT not covering the in-flight recovery timing path.
+
+
+      Completion Criteria (stub exclusion):
+
+      This is an IMPLEMENTATION/TEST hardening step. Superficial helper assertions
+      or mock-only witnesses are NOT acceptable completion. Deliverables must show
+      substantive runtime-path proof or explicitly preserve blocker disposition where
+      proof cannot be obtained.'
+    verification: '- Main path: authentic recovery-path probe(s) execute the real
+      runtime seam rather than helper-only or mocked tautologies
+
+      - Failure path: focused regression covers the in-flight recovery timing case
+      behind R42-CONFIG-REMOVE-INFLIGHT
+
+      - Evidence explicitly states whether any blocker remains and why
+
+      - Downstream protection: hardens the closure basis consumed by reclose.verify.behavior_rereview
+      and reclose.verify.gate'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Runtime Witness Hardening Report
+
+
+      **Proof obligations**
+
+      - R13: <how the runtime witness now traverses an authentic recovery path, or
+      why blocker remains>
+
+      - R42-CONFIG-REMOVE-INFLIGHT: <how the test now exercises in-flight recovery
+      timing, or why blocker remains>
+
+
+      **Real path exercised**
+
+      - Entry point / trigger:
+
+      - Recovery seam traversed:
+
+      - Why this is not helper-only or mock-tautological:
+
+
+      **Mock/instrumentation audit**
+
+      - Remaining mocks/instrumentation:
+
+      - Why each remaining item does not invalidate runtime witness claims:
+
+
+      **Highest-risk failure path evidence**
+
+      - Exact test/probe name or command:
+
+      - Actual observed timing/recovery behavior:
+
+      - Blocker carried forward? yes/no
+
+      - If yes, exact blocker text to preserve:
+
+
+      **Disposition**
+
+      - PROVEN | BLOCKER_CARRIED | PARTIAL
+
+      - Notes for reclose.verify.behavior_rereview:
+
+      '
+    depends_on:
+    - reclose.verify.refresh_registers
+    agent: python-senior-tacit
 - id: reclose.doc_sync
   name: Reclose Documentation Sync
   status: locked
