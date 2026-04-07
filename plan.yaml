@@ -60151,6 +60151,39 @@ phases:
     depends_on:
     - error_semantics_foundation.centralize_error_constants
     agent: python-executor
+  - id: error_semantics_foundation.gate
+    name: Gate error semantics foundation
+    status: pending
+    description: 'Gate review: verify the scoped shared error-code source and shared
+      classification helpers are established cleanly before downstream classification
+      cleanup begins.'
+    verification: 'phase-check: shared constants/helpers exist, targeted modules are
+      migrated or intentionally deferred, and no blocker-class semantic drift is evident.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Shared error foundation complete:
+
+      - Migration coverage acceptable:
+
+      - Semantic drift concerns:
+
+      - Decision: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - error_semantics_foundation.centralize_error_constants
+    - error_semantics_foundation.add_classification_helpers
+    agent: gate-reviewer-tacit
 - id: error_classification_unification
   name: Error Classification Unification
   status: locked
