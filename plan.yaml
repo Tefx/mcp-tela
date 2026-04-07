@@ -59842,3 +59842,11 @@ phases:
     fallbacks remain local and unchanged.
   depends_on:
   - remediation_guardrails
+- id: gateway_auth_skeleton_refactor
+  name: Gateway Auth Skeleton Refactor
+  status: locked
+  gate: Shared request-auth skeleton extracted for gateway routes without merging
+    distinct HTTP abstraction layers or altering route-specific behavior.
+  depends_on:
+  - remediation_guardrails
+  - error_semantics_foundation
