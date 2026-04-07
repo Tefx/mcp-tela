@@ -58308,6 +58308,7 @@ phases:
       '
     depends_on:
     - reclose.verify.refresh_registers
+    - reclose.verify.runtime_witness_hardening
     agent: blind-tester-tacit
   - id: reclose.verify.wiring_manifest_rereview
     name: Re-review wiring and manifest closure
