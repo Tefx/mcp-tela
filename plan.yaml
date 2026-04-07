@@ -58850,7 +58850,7 @@ phases:
   steps:
   - id: reclose.doc_sync.update_docs
     name: Sync docs and evidence wording for reclose
-    status: claimed
+    status: done
     description: 'Sync docs and evidence artifacts after reclose remediation.
 
 
@@ -58891,6 +58891,50 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-07T07:41:45.095649+00:00'
+    done_at: '2026-04-07T07:45:05.639322+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Doc Sync Report\n\n### Checks Performed\n\n**1. DESIGN.md and INTERFACES.md\
+      \ alignment on re_enumerate + FastMCP translation boundary:**\n\n- ✅ **re_enumerate**:\
+      \ DESIGN.md line 620 correctly documents `re_enumerate(server_name: str)` as\
+      \ \"**Supported public surface** (SURFACE-REENUMERATE resolved)\". This aligns\
+      \ with `behavioral_proof_register.md` row `SURFACE-REENUMERATE: RESOLVED_EXTERNAL_CONTRACT`\
+      \ and `runtime_uncertainty_register.md` disposition `CLOSED-2026-04-07`.\n\n\
+      - ✅ **FastMCP Translation Boundary**: Both documents record the identical authority\
+      \ tuple:\n  - DESIGN.md lines 561-578: Documents the three authority layers\
+      \ (Package declaration, Runtime import authority, Manifest/header authority)\n\
+      \  - INTERFACES.md lines 522-540: Repeats the same three-layer authority tuple\n\
+      \  - Authority reconciliation complete: Package=`fastmcp>=2.0.0`, Runtime import=`from\
+      \ mcp.server.fastmcp import FastMCP`, Manifest=implementation-agnostic\n\n**2.\
+      \ ADR/evidence wording no longer implies false-close state:**\n\n- ✅ **R13 status**:\
+      \ Both registers now show `PROVEN-2026-04-07` with executable runtime witness\
+      \ (was previously `NEEDS_TEST` in stale artifacts)\n- ✅ **R42 status**: Both\
+      \ config-remove-inflight and disconnect-under-recovery paths show `PROVEN-2026-04-07`\
+      \ (was previously `NEEDS_TEST`)\n- ✅ **reversal_register.md** correctly records\
+      \ the overturned decisions with `review_miss_cause`, `remediation_owner`, and\
+      \ `re_close_proof_required` fields populated\n- ✅ **debt_closure_review_basis.md**\
+      \ establishes hardened closure rules preventing future false-close patterns\
+      \ (no SUCCESS with NEEDS_TEST for blocker-class items)\n- ✅ No evidence artifacts\
+      \ currently contain `SUCCESS + NEEDS_TEST` contradictions\n\n**3. No stale unresolved/closed\
+      \ contradictions:**\n\n- ✅ Grep scan of `docs/` directory shows no `NEEDS_TEST`\
+      \ or `false-close` language\n- ✅ Grep scan of `evidence/` shows `NEEDS_TEST`\
+      \ only appears in `proof_obligation_contract.md` as allowed-status definitions\
+      \ and `debt_closure_review_basis.md` as gate-closure rules - not as current\
+      \ state\n- ✅ `reversal_register.md` line 4-5 explicitly documents the false-close\
+      \ pattern that was reversed\n- ✅ Current `behavioral_proof_register.md` shows\
+      \ `14 passed, 1 skipped` with the skipped test being a non-blocker confidence-improver\
+      \ only\n\n### docs updated:\n- DESIGN.md: FastMCP Translation Boundary section\
+      \ (lines 561-578) reconciles all three authority layers\n- DESIGN.md: re_enumerate\
+      \ documented as supported public surface (line 620)\n- INTERFACES.md: FastMCP\
+      \ Translation Boundary section (lines 522-540) matches DESIGN.md\n\n### stale\
+      \ wording removed:\n- All `NEEDS_TEST` references for R13 and R42 removed from\
+      \ active decision basis\n- No documents imply \"closed but still has NEEDS_TEST\
+      \ blockers\" false-close state\n- `reversal_register.md` captures the overturned\
+      \ decisions for audit trail\n\n### remaining ambiguities, if any:\n- None identified.\
+      \ All blocker-class rows in behavioral proof register and runtime uncertainty\
+      \ register are now either `PROVEN` or `CLOSED` with 2026-04-07 timestamps from\
+      \ fresh reclose execution.\n- One non-blocking confidence-improver (`UNC-LIVENESS-HEALTHY-NEIGHBOR`\
+      \ integration test) remains skipped per the 14 passed, 1 skipped result, but\
+      \ this is explicitly documented as monitor-only and not a blocker row."
   - id: reclose.doc_sync.gate
     name: Gate reclose doc sync
     status: pending
