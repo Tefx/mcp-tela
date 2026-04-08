@@ -64024,8 +64024,11 @@ phases:
 - id: dup_audit.c2
   name: 'Duplicate Audit Remediation C2: HTTP Retry Skeleton Consolidation'
   status: locked
+  context: High-risk duplicate-abstraction remediation phase reserved for HTTP retry
+    skeleton consolidation. Kept separate to preserve incremental migration and stronger
+    gate scrutiny.
   depends_on:
-  - dup_audit.c4
+  - dup_audit.c3
   steps:
   - id: dup_audit.c2.extract-retry-http-request-foundation
     name: Create shared retry_http_request helper and migrate simplest caller
