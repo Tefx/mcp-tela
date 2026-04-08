@@ -61364,8 +61364,9 @@ phases:
       disposition before doc sync.'
     verification: 'full-plan-check: no unresolved blocker-class intersections remain
       across the remediation seams; focused regression blocker evidence includes exact
-      failing tests plus before/after outputs; literal audit evidence is sufficient
-      for doc sync.'
+      failing tests plus before/after outputs; static hygiene retest evidence includes
+      exact pyright, ruff, and targeted pytest before/after outputs plus the affected
+      node list; literal audit evidence is sufficient for doc sync.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -61390,6 +61391,7 @@ phases:
     depends_on:
     - remediation_integration_verify.retest_focused_regression_blockers
     - remediation_integration_verify.literal_fragment_audit
+    - remediation_integration_verify.retest_static_hygiene_blockers
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
