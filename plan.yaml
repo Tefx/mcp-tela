@@ -61094,7 +61094,7 @@ phases:
       \ route behavior preserved.\n- merge commit: 3f1bb73"
   - id: gateway_auth_skeleton_refactor.retest_pyright_route_auth_narrowing
     name: Retest pyright route auth narrowing and preserved behavior
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       that the gateway auth skeleton remediation closed the pyright narrowing regression
       without changing route behavior.
@@ -61154,6 +61154,39 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-08T08:58:09.084773+00:00'
+    done_at: '2026-04-08T09:01:24.382756+00:00'
+    evidence: '## Verification Report
+
+      - pyright src/tela/shell/gateway.py: 0 errors, 0 warnings, 0 infos.
+
+      - targeted auth route suites: tests/shell/test_http_auth.py pass; tests/shell/test_http_routes.py
+      pass; gateway auth boundary tests pass.
+
+      - observed non-auth unrelated failure in readiness-gap red test stub (_fake_forward_stdio_http
+      missing recover_transport kwarg) reported as out-of-scope fixture issue.
+
+      - route behavior preservation: missing/invalid bearer rejected; valid bearer
+      accepted to route logic; health auth bypass preserved; disconnect route-specific
+      behavior preserved.
+
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      observed_result: green for scoped auth/route checks
+
+      failure_alignment: unrelated external red-test fixture gap only
+
+      behavioral_proof_register:
+
+      - pyright clean for gateway.py: PROVEN
+
+      - /status,/connect,/disconnect auth behavior unchanged: PROVEN
+
+      - /health no-auth path unchanged: PROVEN
+
+      gate_open_allowed: true'
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
