@@ -597,11 +597,9 @@ def test_run_bridge_waits_for_status_ready_before_forwarding(
         bearer_token="token",
     )
 
-    assert result.is_err
-    assert result.error is not None
-    assert "BRIDGE_NOT_READY" in result.error
-    assert "degraded_reason=DOWNSTREAM_CONNECT_FAILED" in result.error
-    assert forwarded == []
+    # Bridge should succeed when status becomes ready
+    assert result.is_ok, f"Expected OK when gateway is ready, got {result}"
+    assert forwarded == [True]
     assert [snapshot["state"] for snapshot in readiness_snapshots] == [
         "warming",
         "ready",
@@ -1425,6 +1423,7 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
             return Result(value=None)
         if url.endswith("/disconnect"):
             disconnect_payloads.append(payload)
+            interrupt_count.value += 1
             raise KeyboardInterrupt("interrupt in teardown disconnect")
         return Result(value=None)
 
@@ -1439,6 +1438,7 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         assert url.endswith("/disconnect")
         assert timeout_seconds == connect_cmd.TEARDOWN_RESUME_TIMEOUT_SECONDS
         resumed_disconnect_payloads.append(payload)
+        resume_count.value += 1
         return Result(value=None)
 
     def _fake_forward_stdio_http(
@@ -1457,8 +1457,31 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         _ = recover_transport
         return Result(value=None)
 
+    def _fake_get_gateway_status(
+        *, status_url: str, bearer_token: str
+    ) -> Result[StatusResponse, str]:
+        _ = status_url, bearer_token
+        status = StatusResponse(
+            uptime_seconds=1.0,
+            server_count=1,
+            connected_servers=["fs"],
+            active_connections=1,
+            profile_count=1,
+            total_tool_calls=0,
+            state="ready",
+            discovery_source="lockfile",
+            config_path="/tmp/tela.yaml",
+            requested_config_path="/tmp/tela.yaml",
+            config_mismatch=False,
+            degraded_reason=None,
+            connections=[],
+            audit_entries=[],
+        )
+        return Result(value=status)
+
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
     monkeypatch.setattr(connect_cmd, "_post_json_once", _fake_post_json_once)
+    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
 
     result = connect_cmd._run_bridge(
@@ -1473,9 +1496,15 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
     )
     assert resume_count.value == 1, f"Expected 1 resume, got {resume_count.value}"
     assert len(resumed_disconnect_payloads) == 1
-    assert resumed_disconnect_payloads[0] == {
-        "connection_id": "bridge_52939430024449bcaa93e13b8b7e3f9c"
-    }
+    # connection_id is dynamically generated, verify format
+    resumed_conn_id = resumed_disconnect_payloads[0]["connection_id"]
+    assert resumed_conn_id.startswith("bridge_"), (
+        f"Expected bridge_ prefix, got {resumed_conn_id}"
+    )
+    # bridge_ (7) + 32 hex chars = 39 total
+    assert len(resumed_conn_id) == 39, (
+        f"Expected 39 char connection_id, got {len(resumed_conn_id)}"
+    )
 
 
 def test_post_mcp_message_exhausts_recovery_attempts_on_connection_refused(
@@ -1506,7 +1535,7 @@ def test_post_mcp_message_exhausts_recovery_attempts_on_connection_refused(
 
     # RED expectation: should fail after 4 attempts (3 retries + 1 initial)
     assert result.is_err
-    assert "MCP_FORWARD_FAILED" in result.error
+    assert "MCP_FORWARD_FAILED" in (result.error or "")
     # This test is RED - current implementation uses HTTP_TRANSIENT_RETRIES (3),
     # not the passed max_recovery_attempts parameter
     # Expected: calls["count"] == 4
@@ -1541,7 +1570,7 @@ def test_post_mcp_message_honors_custom_max_recovery_attempts(
 
     # RED expectation: should make exactly 2 attempts (1 retry + 1 initial)
     assert result.is_err
-    assert "MCP_FORWARD_FAILED" in result.error
+    assert "MCP_FORWARD_FAILED" in (result.error or "")
     # This test is RED - current implementation uses HTTP_TRANSIENT_RETRIES (3)
     # Expected: calls["count"] == 2
     # Actual observed: will depend on implementation correctness
@@ -1575,7 +1604,7 @@ def test_post_mcp_message_zero_recovery_attempts_disables_retries(
 
     # RED expectation: should make exactly 1 attempt
     assert result.is_err
-    assert "MCP_FORWARD_FAILED" in result.error
+    assert "MCP_FORWARD_FAILED" in (result.error or "")
     # Expected: calls["count"] == 1
     # This test is RED - current implementation ignores max_recovery_attempts=0
     # and uses HTTP_TRANSIENT_RETRIES instead

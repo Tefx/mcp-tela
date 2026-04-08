@@ -1125,10 +1125,22 @@ def test_handle_reconnect_calls_enumerate_once(monkeypatch: pytest.MonkeyPatch) 
     server_config = ServerConfig(name="mocked", command="unused")
     handler = downstream._build_downstream_message_handler("mocked", server_config)
 
+    # Precondition: set up runtime config so _get_runtime_server_config("mocked") succeeds
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"mocked": ServerConfig(name="mocked", command="unused")})
+    )
+    # Precondition: register client so reconnect finds it (wait_contended path)
+    downstream._clients["mocked"] = downstream._ClientHandle(
+        session=FakeSession(),  # type: ignore[arg-type]
+        stack=FakeStack(),  # type: ignore[arg-type]
+    )
+
     try:
         asyncio.run(handler(RuntimeError("downstream disconnected")))
     finally:
         downstream._clients.clear()
+        set_runtime_config(old_runtime)
 
     # After fix: enumerate_calls should contain exactly ONE list_tools call
     # from _handle_reconnect's _enumerate_client_tools call.
@@ -1196,10 +1208,22 @@ def test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect(
     server_config = ServerConfig(name="mocked", command="unused")
     handler = downstream._build_downstream_message_handler("mocked", server_config)
 
+    # Precondition: set up runtime config so _get_runtime_server_config("mocked") succeeds
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"mocked": ServerConfig(name="mocked", command="unused")})
+    )
+    # Precondition: register client so reconnect finds it (wait_contended path)
+    downstream._clients["mocked"] = downstream._ClientHandle(
+        session=FakeSession(),  # type: ignore[arg-type]
+        stack=FakeStack(),  # type: ignore[arg-type]
+    )
+
     try:
         asyncio.run(handler(RuntimeError("downstream disconnected")))
     finally:
         downstream._clients.clear()
+        set_runtime_config(old_runtime)
 
     # Verify the tools that were enumerated in _handle_reconnect are
     # correctly passed to on_server_reconnect
@@ -1249,8 +1273,8 @@ def test_handle_reconnect_swaps_client_before_enumeration(
     ) -> Result[downstream._ClientHandle, str]:
         client_handle_order.append(f"open:{server_name}")
         return Result(
-            value=downstream._ClientHandle(  # type: ignore[arg-type]
-                session=FakeSession(server_name),
+            value=downstream._ClientHandle(
+                session=FakeSession(server_name),  # type: ignore[arg-type]
                 stack=FakeStack(),  # type: ignore[arg-type]
             )
         )
@@ -1273,10 +1297,17 @@ def test_handle_reconnect_swaps_client_before_enumeration(
     server_config = ServerConfig(name="mocked", command="unused")
     handler = downstream._build_downstream_message_handler("mocked", server_config)
 
+    # Precondition: set up runtime config so _get_runtime_server_config("mocked") succeeds
+    old_runtime = get_runtime_config().value
+    set_runtime_config(
+        TelaConfig(servers={"mocked": ServerConfig(name="mocked", command="unused")})
+    )
+
     try:
         asyncio.run(handler(RuntimeError("downstream disconnected")))
     finally:
         downstream._clients.clear()
+        set_runtime_config(old_runtime)
 
     # Order should be: open -> swap -> enumerate -> on_server_reconnect
     assert client_handle_order == [
@@ -1313,9 +1344,9 @@ def test_recover_server_client_fails_closed_when_server_removed_mid_recovery(
     ) -> Result[downstream._ClientHandle, str]:
         set_runtime_config(TelaConfig(servers={}))
         return Result(
-            value=downstream._ClientHandle(  # type: ignore[arg-type]
-                session=FakeSession(),
-                stack=FakeStack(),
+            value=downstream._ClientHandle(
+                session=FakeSession(),  # type: ignore[arg-type]
+                stack=FakeStack(),  # type: ignore[arg-type]
             )
         )
 
@@ -1383,9 +1414,9 @@ def test_recover_server_client_config_remove_cleans_stale_client_and_lock(
     )
 
     stale_stack = TrackCloseStack()
-    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
-        session=FakeSession(),
-        stack=stale_stack,
+    downstream._clients["srv"] = downstream._ClientHandle(
+        session=FakeSession(),  # type: ignore[arg-type]
+        stack=stale_stack,  # type: ignore[arg-type]
     )
 
     async def _fake_open_client_for_server(
@@ -1395,9 +1426,9 @@ def test_recover_server_client_config_remove_cleans_stale_client_and_lock(
     ) -> Result[downstream._ClientHandle, str]:
         set_runtime_config(TelaConfig(servers={}))
         return Result(
-            value=downstream._ClientHandle(  # type: ignore[arg-type]
-                session=FakeSession(),
-                stack=TrackCloseStack(),
+            value=downstream._ClientHandle(
+                session=FakeSession(),  # type: ignore[arg-type]
+                stack=TrackCloseStack(),  # type: ignore[arg-type]
             )
         )
 
@@ -1462,9 +1493,9 @@ def test_recover_server_client_releases_registry_lock_around_network_io(
     ) -> Result[downstream._ClientHandle, str]:
         assert not downstream._registry_lock.locked()
         return Result(
-            value=downstream._ClientHandle(  # type: ignore[arg-type]
-                session=FakeSession(),
-                stack=FakeStack(),
+            value=downstream._ClientHandle(
+                session=FakeSession(),  # type: ignore[arg-type]
+                stack=FakeStack(),  # type: ignore[arg-type]
             )
         )
 
@@ -1532,9 +1563,9 @@ def test_recover_server_client_success_closes_replaced_client(
     )
 
     old_stack = TrackCloseStack()
-    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
-        session=FakeSession(),
-        stack=old_stack,
+    downstream._clients["srv"] = downstream._ClientHandle(
+        session=FakeSession(),  # type: ignore[arg-type]
+        stack=old_stack,  # type: ignore[arg-type]
     )
 
     new_stack = TrackCloseStack()
@@ -1545,9 +1576,9 @@ def test_recover_server_client_success_closes_replaced_client(
         message_handler: Any | None = None,
     ) -> Result[downstream._ClientHandle, str]:
         return Result(
-            value=downstream._ClientHandle(  # type: ignore[arg-type]
-                session=FakeSession(),
-                stack=new_stack,
+            value=downstream._ClientHandle(
+                session=FakeSession(),  # type: ignore[arg-type]
+                stack=new_stack,  # type: ignore[arg-type]
             )
         )
 
@@ -1612,9 +1643,9 @@ def test_disconnect_all_cleans_recovery_lock_under_recovery_pressure() -> None:
         downstream._recovery_locks["srv"] = held_lock
 
         stack = TrackCloseStack()
-        downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
-            session=FakeSession(),
-            stack=stack,
+        downstream._clients["srv"] = downstream._ClientHandle(
+            session=FakeSession(),  # type: ignore[arg-type]
+            stack=stack,  # type: ignore[arg-type]
         )
 
         result = await downstream.disconnect_all()
@@ -1647,9 +1678,9 @@ def test_recover_server_client_rejects_material_config_change_before_swap(
         async def list_tools(self, *args: Any, **kwargs: Any) -> Any:
             return None
 
-    stale_handle = downstream._ClientHandle(  # type: ignore[arg-type]
-        session=FakeSession(),
-        stack=FakeStack(),
+    stale_handle = downstream._ClientHandle(
+        session=FakeSession(),  # type: ignore[arg-type]
+        stack=FakeStack(),  # type: ignore[arg-type]
     )
     downstream._clients["srv"] = stale_handle
 
@@ -1667,9 +1698,9 @@ def test_recover_server_client_rejects_material_config_change_before_swap(
             TelaConfig(servers={"srv": ServerConfig(name="srv", command="cmd_b")})
         )
         return Result(
-            value=downstream._ClientHandle(  # type: ignore[arg-type]
-                session=FakeSession(),
-                stack=FakeStack(),
+            value=downstream._ClientHandle(
+                session=FakeSession(),  # type: ignore[arg-type]
+                stack=FakeStack(),  # type: ignore[arg-type]
             )
         )
 
@@ -1776,9 +1807,9 @@ def test_call_tool_stops_after_convergence_rejection(
             return None
 
     failing_session = FailingSession()
-    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
-        session=failing_session,
-        stack=FakeStack(),
+    downstream._clients["srv"] = downstream._ClientHandle(
+        session=failing_session,  # type: ignore[arg-type]
+        stack=FakeStack(),  # type: ignore[arg-type]
     )
 
     async def _fake_recover_server_client(
