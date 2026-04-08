@@ -63005,7 +63005,7 @@ phases:
       Verdict: architecture boundaries remain valid for this remediation tranche.'
   - id: deep_review_gate.spec_conformance
     name: Spec conformance review for remediation behavior
-    status: claimed
+    status: done
     description: Independently review whether the remediation preserves the intended
       external behavior for auth, error semantics, route outcomes, and command token
       precedence.
@@ -63037,6 +63037,27 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-08T16:48:23.109455+00:00'
+    done_at: '2026-04-08T16:54:23.064262+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - No refs for this step.
+
+
+      ## Spec Conformance Report
+
+      - Auth behavior: conforms (middleware + route auth boundaries, constant-time
+      token checks, consistent 401 semantics, separate request-vs-ASGI extractor layers
+      preserved).
+
+      - Route/status behavior: conforms (warming 503 contract shape and retry semantics,
+      lifecycle authority via status facts, route/status outcomes and error-to-http
+      mapping preserved).
+
+      - Token precedence behavior: conforms (shared CLI/env precedence helper extraction
+      with command-specific fallback behavior preserved: serve generated token fallback,
+      connect lockfile fallback).
+
+      - Divergences: none detected in reviewed surfaces.'
   - id: deep_review_gate.final_gate
     name: Final remediation gate
     status: pending
