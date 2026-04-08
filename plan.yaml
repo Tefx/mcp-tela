@@ -62113,7 +62113,7 @@ phases:
       reviewer: vectl-orchestrator
   - id: remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     name: Retest batched static hygiene remediation
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, rerun the exact batched failure scope
       after remediation_integration_verify.fix_batched_static_hygiene_retest_failures.
 
@@ -62188,6 +62188,26 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-08T14:03:20.506869+00:00'
+    done_at: '2026-04-08T14:04:48.241595+00:00'
+    evidence: "## Retest scope\n- Exact failing node IDs reused for retest:\n  - tests/shell/test_connect_cmd.py::test_run_bridge_waits_for_status_ready_before_forwarding\n\
+      \  - tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section\n\
+      \  - tests/shell/test_downstream.py::test_handle_reconnect_calls_enumerate_once\n\
+      \  - tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\n\
+      \  - tests/shell/test_downstream.py::test_handle_reconnect_swaps_client_before_enumeration\n\
+      - Files included in pyright scope:\n  - tests/shell/test_downstream.py\n  -\
+      \ tests/shell/test_connect_cmd.py\n  - src/tela/shell/gateway.py\n\n## Pyright\
+      \ retest\n- Command:\n  uv run pyright tests/shell/test_downstream.py tests/shell/test_connect_cmd.py\
+      \ src/tela/shell/gateway.py\n- Before output reference:\n  prior red run reported\
+      \ 24 errors\n- After output (exact):\n  0 errors, 0 warnings, 0 informations\n\
+      \n## Pytest retest\n- Command:\n  uv run pytest tests/shell/test_connect_cmd.py::test_run_bridge_waits_for_status_ready_before_forwarding\
+      \ tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section\
+      \ tests/shell/test_downstream.py::test_handle_reconnect_calls_enumerate_once\
+      \ tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\
+      \ tests/shell/test_downstream.py::test_handle_reconnect_swaps_client_before_enumeration\
+      \ -v --tb=short\n- Before output reference:\n  prior red run: 5 failed\n- After\
+      \ output (exact):\n  collected 5 items; all 5 PASSED; 5 passed in 2.05s\n\n\
+      ## Outcome\n- Did every previously failing node ID turn green? yes\n- Any drift\
+      \ between recorded failures and retest scope? no\n- Remaining blockers: none"
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
