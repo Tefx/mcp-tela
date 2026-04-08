@@ -62815,7 +62815,7 @@ phases:
   steps:
   - id: remediation_doc_sync.update_docs
     name: Update remediation docs and comments
-    status: claimed
+    status: done
     description: 'Sync comments, notes, and any affected documentation/examples with
       the final remediation outcome.
 
@@ -62851,6 +62851,35 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer
     claimed_at: '2026-04-08T16:35:45.673285+00:00'
+    done_at: '2026-04-08T16:38:10.508442+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - No refs for this step.
+
+
+      ## Doc Sync Report
+
+      - Updated docs/comments: verified documentation already synchronized with remediation
+      outcomes; no content drift requiring edits in this step.
+
+      - Helper ownership clarified: serve/connect shared token precedence helper and
+      auth-layer ownership boundaries are explicitly documented (request-vs-ASGI kept
+      separate).
+
+      - Deferred non-goals documented: downstream recovery-envelope abstraction remains
+      explicitly deferred with rationale in remediation scope register.
+
+
+      Verification notes:
+
+      - docs/remediation_guardrails_scope_register.md contains keep-separate auth-layer
+      constraints and deferred non-goal rationale.
+
+      - src/tela/commands/serve_cmd.py comments/docstrings preserve helper ownership/source-of-truth
+      for token precedence behavior.
+
+      - src/tela/shell/http_auth.py and src/tela/shell/gateway_http_auth.py docstrings
+      reflect boundary separation intent.'
   - id: remediation_doc_sync.gate
     name: Gate remediation doc sync
     status: pending
