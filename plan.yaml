@@ -63910,17 +63910,6 @@ phases:
 
       '
     agent: integration-verifier-tacit
-- id: dup_audit.c1
-  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
-  status: locked
-  depends_on:
-  - dup_audit.c3
-- id: dup_audit.c4
-  name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
-  status: locked
-  depends_on:
-  - dup_audit.c1
-  steps:
   - id: dup_audit.c4.standardize-transient-classifiers
     name: Introduce shared transient exception tuple and align classifier policy
     status: pending
@@ -64022,6 +64011,16 @@ phases:
       ```text\n<paste output>\n```\n- Invar command:\n```text\nuv run invar guard\
       \ --all\n```\n- Invar output:\n```text\n<paste output>\n```\n"
     agent: python-executor
+- id: dup_audit.c1
+  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
+  status: locked
+  depends_on:
+  - dup_audit.c3
+- id: dup_audit.c4
+  name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
+  status: locked
+  depends_on:
+  - dup_audit.c1
 - id: dup_audit.c2
   name: 'Duplicate Audit Remediation C2: HTTP Retry Skeleton Consolidation'
   status: locked
