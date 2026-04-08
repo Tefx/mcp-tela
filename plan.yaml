@@ -62938,7 +62938,7 @@ phases:
       - no stale remediation TODO/FIXME/HACK drift detected'
 - id: deep_review_gate
   name: Deep Review Gate
-  status: in_progress
+  status: done
   gate: Independent wiring, spec, architecture, and gate review confirm remediation
     is complete and scope boundaries were respected.
   depends_on:
@@ -63060,7 +63060,7 @@ phases:
       - Divergences: none detected in reviewed surfaces.'
   - id: deep_review_gate.final_gate
     name: Final remediation gate
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer-tacit), decide whether
       the remediation tranche is ready to close.
 
@@ -63108,3 +63108,99 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer
     claimed_at: '2026-04-08T16:54:43.724755+00:00'
+    done_at: '2026-04-08T17:07:04.166300+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Final Gate Review Report
+
+
+      ### Blocking Criteria Assessment
+
+
+      **1. Request-vs-ASGI auth extractors collapsed?** NO — Two separate extractors
+      remain:
+
+      - `src/tela/shell/http_auth.py:BearerAuthMiddleware._extract_bearer_token(scope:
+      Scope)` — raw ASGI scope level
+
+      - `src/tela/shell/gateway_http_auth.py:extract_bearer_token(request: Request)`
+      — Starlette Request level
+
+      They operate on different boundary objects and lifecycle layers. Import graph
+      confirms no cross-import or merge.
+
+
+      **2. Downstream test seam breakage?** NO — All 83 downstream tests pass (7 xfailed
+      are pre-existing expected failures). No test seam was broken by the remediation.
+
+
+      **3. Shared error semantics still fragmented in scoped files?** NO — Error constants
+      centralized in `core/errors.py`, classification helpers (`is_auth_error`, `error_to_http_status`,
+      etc.) centralized in `core/errors.py`. Shell modules import from core, not duplicate.
+      No fragment-scoped classification logic found.
+
+
+      **4. Token precedence semantics changed unexpectedly?** NO — Shared `CLI > env`
+      precedence helper `_resolve_bearer_token_cli_or_env` in `serve_cmd.py`, with
+      command-specific fallbacks preserved:
+
+      - `serve`: CLI > env > generated token
+
+      - `connect`: CLI > env > lockfile token
+
+      Precedence ordering unchanged from pre-remediation design.
+
+
+      **5. Deferred recovery-envelope work pulled into scope?** NO — `_build_recovery_error`
+      in `downstream.py` remains inline; no abstracted envelope pattern introduced.
+      The scope register''s explicit non-goal ("do not abstract repetitive recovery-envelope
+      construction in downstream.py") was respected.
+
+
+      ### Planned Issues Closed
+
+      - Downstream passthrough wrapper removal ✅
+
+      - Shared error constant/helper centralization ✅
+
+      - Duplicate route/gateway error classification cleanup ✅
+
+      - Shared CLI/env bearer precedence extraction ✅
+
+      - Gateway route auth skeleton extraction ✅
+
+
+      ### Keep-Separate Constraints Preserved
+
+      - Request-vs-ASGI auth extractors remain separate ✅
+
+      - No general auth architecture rewrite ✅
+
+      - Recovery-envelope abstraction remain deferred ✅
+
+
+      ### Deferred Work Still Deferred
+
+      - Recovery-envelope construction in downstream.py still inline, not abstracted
+      ✅
+
+
+      ### Open Blockers
+
+      - None related to remediation scope. Pre-existing test gaps exist (tela prefix
+      rejection, status schema fields, autostart retry count timing) but none were
+      introduced or worsened by this remediation tranche.
+
+
+      ### Test Results
+
+      - 981 passed, 5 failed (all pre-existing gaps), 8 xfailed, 11 xpassed
+
+      - mypy: Success, no issues in 51 source files
+
+
+      ### Decision: OPEN — remediation tranche is complete and scope boundaries were
+      respected.'
