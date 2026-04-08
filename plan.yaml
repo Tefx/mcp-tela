@@ -63517,6 +63517,73 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+  - id: dup_audit.c1.gate
+    name: Gate duplicate-audit C1 remediation
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - security-sensitive header parsing
+
+      - two-layer delegation with adapter-boundary preservation requirements
+
+
+      Gate review: verify the shared bearer-token extraction is preserve-scope, security-safe,
+      and fully evidenced before C4 classifier standardization begins.'
+    verification: '- phase-check protecting dup_audit.c4
+
+      - no unresolved blocker in bearer-header parsing semantics
+
+      - byte decode and Result wrapping ownership preserved
+
+      - `uv run invar guard --all` evidence reviewed'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.c1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.c1.extract-shared-bearer-parser |  |  |  |
+
+      | dup_audit.c1.verify-bearer-parser-extraction |  |  |  |
+
+
+      ### Gate Decision Basis
+
+      - adapter boundaries preserved: yes/no
+
+      - malformed-header behavior preserved: yes/no
+
+      - invar evidence acceptable: yes/no
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      '
+    agent: gate-reviewer-tacit
 - id: dup_audit.c1
   name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
   status: locked
@@ -63729,76 +63796,6 @@ phases:
     depends_on:
     - dup_audit.c1.extract-shared-bearer-parser
     agent: integration-verifier-tacit
-  - id: dup_audit.c1.gate
-    name: Gate duplicate-audit C1 remediation
-    status: pending
-    description: 'step_type: gate
-
-      review_depth: STANDARD
-
-      review_depth_rationale:
-
-      - security-sensitive header parsing
-
-      - two-layer delegation with adapter-boundary preservation requirements
-
-
-      Gate review: verify the shared bearer-token extraction is preserve-scope, security-safe,
-      and fully evidenced before C4 classifier standardization begins.'
-    verification: '- phase-check protecting dup_audit.c4
-
-      - no unresolved blocker in bearer-header parsing semantics
-
-      - byte decode and Result wrapping ownership preserved
-
-      - `uv run invar guard --all` evidence reviewed'
-    evidence_template: '## Gate Review Report
-
-
-      **Reviewer**: gate-reviewer-tacit
-
-      **Phase**: dup_audit.c1
-
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this step:
-
-      - <filename> — key passage or "NOT READ: <reason>"
-
-
-      If no refs were provided, state: "No refs for this step."
-
-
-      ### Step Review
-
-      | Step ID | Status | Evidence Quality | Concerns |
-
-      | --- | --- | --- | --- |
-
-      | dup_audit.c1.extract-shared-bearer-parser |  |  |  |
-
-      | dup_audit.c1.verify-bearer-parser-extraction |  |  |  |
-
-
-      ### Gate Decision Basis
-
-      - adapter boundaries preserved: yes/no
-
-      - malformed-header behavior preserved: yes/no
-
-      - invar evidence acceptable: yes/no
-
-
-      ### Gate Decision
-
-      - OPEN | BLOCKED
-
-      '
-    depends_on:
-    - dup_audit.c1.extract-shared-bearer-parser
-    - dup_audit.c1.verify-bearer-parser-extraction
-    agent: gate-reviewer-tacit
 - id: dup_audit.c4
   name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
   status: locked
