@@ -63536,6 +63536,129 @@ phases:
       \ output>\n```\n- Invar command:\n```text\nuv run invar guard --all\n```\n-\
       \ Invar output:\n```text\n<paste output>\n```\n- Security-preservation note:\n"
     agent: python-executor
+  - id: dup_audit.c1.verify-bearer-parser-extraction
+    name: Verify bearer-token extraction refactor
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C1: duplicate-abstraction audit / Bearer Token Extraction
+
+
+      touch_paths:
+
+      - src/tela/shell/http_auth.py
+
+      - src/tela/shell/gateway_http_auth.py
+
+      - auth test modules
+
+      harness_refs:
+
+      - http auth middleware tests
+
+      - gateway http auth tests
+
+      authoritative_interface: extract_bearer_from_header_value(value: str) -> str
+      | None
+
+
+      As an INDEPENDENT TESTER (`integration-verifier-tacit`), verify that the shared
+      bearer parser extraction preserved security-sensitive behavior across both auth
+      adapters.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - accepted Bearer header happy path
+
+      - rejected malformed / missing header cases
+
+      - preserved ASGI byte decode boundary
+
+      - preserved Result wrapping behavior in gateway auth
+
+
+      Independence Level: L1.'
+    verification: '- phase-check protecting dup_audit.c1.gate
+
+      - independent auth-targeted tests pass
+
+      - independent `uv run invar guard --all` passes
+
+      - evidence explicitly checks malformed-header behavior and adapter-boundary
+      preservation'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: C1 bearer-token extraction
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```text
+
+      <paste exact commands>
+
+      ```
+
+      - Actual output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Coverage Notes
+
+      - malformed header cases checked:
+
+      - ASGI decode boundary checked:
+
+      - Result wrapper path checked:
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - dup_audit.c1.extract-shared-bearer-parser
+    agent: integration-verifier-tacit
 - id: dup_audit.c4
   name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
   status: locked
