@@ -61248,7 +61248,7 @@ phases:
   steps:
   - id: remediation_integration_verify.run_focused_regression_suite
     name: Run focused remediation regression suite
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the remediation branches together.
 
@@ -61291,6 +61291,27 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-08T09:58:41.260179+00:00'
+    done_at: '2026-04-08T09:58:54.960386+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- No refs for this step.\n\n\
+      ## Verification Report\n- Commands executed: focused regression across downstream/runtime\
+      \ connection tests, http auth/routes, token precedence tests, gateway auth boundary\
+      \ checks, and combined suite.\n- Test families covered: downstream monkeypatch-sensitive\
+      \ behavior, route auth/error-path behavior, token precedence behavior, error\
+      \ classification/status mapping behavior.\n- Cross-branch issues found:\n  1)\
+      \ Bridge lifecycle mocks in tests/shell/test_connect_cmd.py missing recover_transport\
+      \ kwarg (TypeError on _fake_forward_stdio_http)\n  2) Reconnect handler tests\
+      \ missing runtime config setup causing Runtime config unavailable\n  3) Doc-contract\
+      \ drift assertions in readiness contract tests\n- Verdict: ISSUES_FOUND (blocker\
+      \ intersections documented)\n\nDisposition mapping:\n- fix_now/batched_fix required:\
+      \ bridge mock signature and reconnect runtime-config setup.\n- non-blocking:\
+      \ selected doc-contract drift assertions tracked by later gate path.\n\nRemediation\
+      \ bridge:\n- Planner remediation path created in this phase:\n  - remediation_integration_verify.fix_focused_regression_blockers\n\
+      \  - remediation_integration_verify.retest_focused_regression_blockers\n- downstream\
+      \ dependencies rewired to force fix+retest before literal fragment audit and\
+      \ gate.\n\nstep_intent: integration_regression_scout\nexpected_result: detect\
+      \ blocker intersections if present\nobserved_result: blockers detected and classified\
+      \ for remediation ownership\nfailure_alignment: aligned with scope; issues surfaced\
+      \ with reproducible failing tests"
   - id: remediation_integration_verify.literal_fragment_audit
     name: Audit remaining fragmented error literals
     status: pending
