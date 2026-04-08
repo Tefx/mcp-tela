@@ -64751,6 +64751,71 @@ phases:
     depends_on:
     - dup_audit.verify.targeted-regression-suite
     agent: integration-verifier-tacit
+  - id: dup_audit.verify.gate
+    name: Gate duplicate-audit consolidated verification
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - post-remediation consolidation before doc-sync and deep review
+
+      - full-plan-check evidence already collected via targeted regression plus invar
+      guard
+
+
+      Gate review: verify the duplicate-audit remediation stream for C1-C4 has consolidated
+      evidence, no unresolved blocker intersecting downstream gates, and is ready
+      for final doc-sync and deep review.'
+    verification: '- phase-check protecting dup_audit.doc_sync
+
+      - targeted regression evidence reviewed
+
+      - full invar evidence reviewed
+
+      - no unresolved blocker intersects remaining required review phases'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.verify
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.verify.targeted-regression-suite |  |  |  |
+
+      | dup_audit.verify.full-invar-guard |  |  |  |
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      - Blocking issues:
+
+      '
+    depends_on:
+    - dup_audit.verify.targeted-regression-suite
+    - dup_audit.verify.full-invar-guard
+    agent: gate-reviewer-tacit
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: locked
