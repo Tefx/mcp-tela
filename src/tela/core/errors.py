@@ -76,6 +76,32 @@ DOWNSTREAM_ERROR: Literal["DOWNSTREAM_ERROR"] = "DOWNSTREAM_ERROR"
 # --------------------------------------------------------------------
 
 
+# --------------------------------------------------------------------
+# HTTP status code mapping for shell/gateway error responses
+# Data-driven classification using shared error-prefix semantics.
+# --------------------------------------------------------------------
+
+# Type alias for error-prefix keys (Literal types from constants above)
+ErrorPrefix = Literal[
+    "AUTH_INVALID_TOKEN",
+    "CONNECTION_NOT_FOUND",
+    "GATEWAY_NOT_STARTED",
+    "ADMISSION_REJECTED_WARMING",
+]
+
+# Canonical mapping from error prefix to HTTP status code
+# Used by shell/gateway._as_error_response to preserve externally visible status outcomes.
+ERROR_TO_HTTP_STATUS: dict[ErrorPrefix, int] = {
+    AUTH_INVALID_TOKEN: 401,
+    CONNECTION_NOT_FOUND: 404,
+    GATEWAY_NOT_STARTED: 503,
+    ADMISSION_REJECTED_WARMING: 503,
+}
+
+# Default HTTP status for unclassified errors
+DEFAULT_HTTP_ERROR_STATUS: int = 400
+
+
 @pre(lambda error: isinstance(error, str))
 def is_auth_error(error: str) -> bool:
     """Return True when an error message has AUTH_INVALID_TOKEN prefix.
@@ -126,3 +152,40 @@ def is_admission_rejected_warming_error(error: str) -> bool:
         False
     """
     return error.startswith(ADMISSION_REJECTED_WARMING)
+
+
+@pre(lambda error: isinstance(error, str))
+def error_to_http_status(error: str) -> int:
+    """Return HTTP status code for an error message using shared classification.
+
+    Preserves the same HTTP status outcomes as the previous ad-hoc mapping
+    in shell/gateway._as_error_response:
+        - AUTH_INVALID_TOKEN → 401
+        - CONNECTION_NOT_FOUND → 404
+        - GATEWAY_NOT_STARTED → 503
+        - ADMISSION_REJECTED_WARMING → 503
+        - <unclassified> → 400 (default)
+
+    Examples:
+        >>> error_to_http_status("AUTH_INVALID_TOKEN: bearer token validation failed")
+        401
+        >>> error_to_http_status("CONNECTION_NOT_FOUND: id=abc")
+        404
+        >>> error_to_http_status("GATEWAY_NOT_STARTED: gateway not ready")
+        503
+        >>> error_to_http_status("ADMISSION_REJECTED_WARMING: too many warming")
+        503
+        >>> error_to_http_status("UNKNOWN_ERROR: something went wrong")
+        400
+    """
+    # Use classification helpers for data-driven mapping
+    # Order matches original gateway._as_error_response for exact equivalence
+    if is_auth_error(error):
+        return ERROR_TO_HTTP_STATUS[AUTH_INVALID_TOKEN]
+    if is_connection_not_found_error(error):
+        return ERROR_TO_HTTP_STATUS[CONNECTION_NOT_FOUND]
+    if is_gateway_not_started_error(error):
+        return ERROR_TO_HTTP_STATUS[GATEWAY_NOT_STARTED]
+    if is_admission_rejected_warming_error(error):
+        return ERROR_TO_HTTP_STATUS[ADMISSION_REJECTED_WARMING]
+    return DEFAULT_HTTP_ERROR_STATUS

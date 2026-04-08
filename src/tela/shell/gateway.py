@@ -30,6 +30,7 @@ from tela.core.errors import (
     CONNECTION_NOT_FOUND,
     DOWNSTREAM_UNAVAILABLE,
     GATEWAY_NOT_STARTED,
+    error_to_http_status,
 )
 from tela.core.models import (
     AuditLevel,
@@ -163,15 +164,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
     )
 
     def _as_error_response(error: str) -> JSONResponse:
-        status_code = 400
-        if error.startswith(AUTH_INVALID_TOKEN):
-            status_code = 401
-        elif error.startswith(CONNECTION_NOT_FOUND):
-            status_code = 404
-        elif error.startswith(GATEWAY_NOT_STARTED):
-            status_code = 503
-        elif error.startswith(ADMISSION_REJECTED_WARMING):
-            status_code = 503
+        status_code = error_to_http_status(error)
         return JSONResponse(status_code=status_code, content={"error": error})
 
     @upstream_server.custom_route("/health", methods=["GET"])
