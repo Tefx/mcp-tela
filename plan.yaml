@@ -63205,8 +63205,11 @@ phases:
       ### Decision: OPEN — remediation tranche is complete and scope boundaries were
       respected.'
 - id: dup_audit.c3
-  name: 'Duplicate Audit Remediation C3: Close Handle Best-Effort'
+  name: Duplicate Audit Low-Risk Cleanup
   status: pending
+  context: Merged low-risk duplicate-abstraction remediation phase covering C3 close-helper
+    cleanup, C1 bearer-token extraction consolidation, and C4 transient-classifier
+    standardization without reducing verification rigor.
   depends_on:
   - deep_review_gate
   steps:
