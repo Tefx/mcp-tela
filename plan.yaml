@@ -62216,7 +62216,7 @@ phases:
       \ between recorded failures and retest scope? no\n- Remaining blockers: none"
   - id: remediation_integration_verify.fix_gate_blockers
     name: Fix gate blockers B1-B4
-    status: pending
+    status: claimed
     description: 'Work type: defect_repair
 
       Step type: implementation
@@ -62375,6 +62375,8 @@ phases:
     - remediation_integration_verify.literal_fragment_audit
     - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-04-08T14:27:37.385183+00:00'
   - id: remediation_integration_verify.retest_gate_precheck
     name: Retest gate blockers and precheck closure
     status: pending
