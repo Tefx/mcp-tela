@@ -65348,12 +65348,6 @@ phases:
 
       '
     agent: wiring-auditor
-- id: dup_audit.doc_sync
-  name: Duplicate Audit Documentation Sync
-  status: locked
-  depends_on:
-  - dup_audit.verify
-  steps:
   - id: dup_audit.doc_sync.review-and-update-docs
     name: Review docs for duplicate-audit drift and update if needed
     status: pending
@@ -65425,6 +65419,11 @@ phases:
 
       '
     agent: doc-reviewer-tacit
+- id: dup_audit.doc_sync
+  name: Duplicate Audit Documentation Sync
+  status: locked
+  depends_on:
+  - dup_audit.verify
 - id: dup_audit.deep_review
   name: Duplicate Audit Deep Review
   status: locked
