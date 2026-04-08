@@ -60466,7 +60466,7 @@ phases:
       - invar guard passed"
 - id: error_classification_unification
   name: Error Classification Unification
-  status: pending
+  status: in_progress
   gate: Route error predicates and gateway HTTP status mapping use unified shared
     semantics with unchanged externally visible outcomes.
   depends_on:
@@ -60474,7 +60474,7 @@ phases:
   steps:
   - id: error_classification_unification.unify_http_routes_helpers
     name: Unify duplicate HTTP route error helpers
-    status: pending
+    status: claimed
     description: 'Replace the near-identical _is_*_error helpers in src/tela/shell/http_routes.py
       with shared error classification helpers from the established foundation.
 
@@ -60502,6 +60502,8 @@ phases:
 
       '
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-08T04:15:57.151434+00:00'
   - id: error_classification_unification.unify_gateway_status_mapping
     name: Unify gateway error-to-status mapping
     status: pending
