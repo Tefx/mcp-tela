@@ -62882,7 +62882,7 @@ phases:
       reflect boundary separation intent.'
   - id: remediation_doc_sync.gate
     name: Gate remediation doc sync
-    status: pending
+    status: claimed
     description: 'Gate review: verify docs/comments are aligned with the remediation
       outcome and do not imply over-refactors that were intentionally deferred.'
     verification: 'phase-check: doc sync is complete, no misleading architecture drift
@@ -62909,6 +62909,8 @@ phases:
     depends_on:
     - remediation_doc_sync.update_docs
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-08T16:38:26.331083+00:00'
 - id: deep_review_gate
   name: Deep Review Gate
   status: locked
