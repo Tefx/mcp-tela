@@ -60143,7 +60143,7 @@ phases:
       Gate Open Allowed: YES'
 - id: downstream_wrapper_removal
   name: Downstream Wrapper Removal
-  status: in_progress
+  status: done
   gate: Pure passthrough wrappers removed without breaking monkeypatch-sensitive tests
     or downstream transport behavior.
   depends_on:
@@ -60256,7 +60256,7 @@ phases:
       \ definitions"
   - id: downstream_wrapper_removal.gate
     name: Gate downstream wrapper removal
-    status: claimed
+    status: done
     description: 'Gate review: verify pure passthrough wrapper removal is complete
       and did not damage test seams or downstream behavior.'
     verification: 'phase-check: no orphaned wrapper definitions remain and evidence
@@ -60286,6 +60286,18 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-08T04:00:21.312358+00:00'
+    done_at: '2026-04-08T04:06:36.619221+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/shell/downstream.py\
+      \ — confirmed wrapper defs removed and direct authoritative imports/calls used.\n\
+      - src/tela/shell/downstream_clients.py — confirmed authoritative definitions\
+      \ for _open_client_for_server and _validate_transport_mode.\n\n## Gate Review\
+      \ Report\n- Wrapper removal complete:\n  - passthrough wrappers removed from\
+      \ downstream.py\n  - downstream.py now directly imports authoritative functions\
+      \ from downstream_clients.py\n- Test seam preserved:\n  - monkeypatch seam via\
+      \ downstream module attributes remains valid for _open_client_for_server/_validate_transport_mode\n\
+      \  - no seam breakage introduced by wrapper removal\n- Decision: OPEN\n\nNotes:\n\
+      - one reconnect-related failing test is pre-existing (documented bug-detection\
+      \ behavior), not introduced by wrapper-removal change."
 - id: error_semantics_foundation
   name: Error Semantics Foundation
   status: in_progress
