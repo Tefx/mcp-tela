@@ -61373,7 +61373,11 @@ phases:
       failing tests plus before/after outputs; authoritative static hygiene retest
       evidence comes only from remediation_integration_verify.retest_batched_static_hygiene_retest_failures
       with exact pyright and pytest before/after outputs plus the failing node list;
-      literal audit evidence is sufficient for doc sync.'
+      gate-precheck evidence comes from remediation_integration_verify.retest_gate_precheck
+      and must include exact before/after outputs for targeted pytest, ruff check
+      src/, pyright src/tela/core/contracts.py, and the invar guard outcome with explicit
+      blocker disposition for any residual B3 item; literal audit evidence is sufficient
+      for doc sync.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -61399,6 +61403,7 @@ phases:
     - remediation_integration_verify.retest_focused_regression_blockers
     - remediation_integration_verify.literal_fragment_audit
     - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
+    - remediation_integration_verify.retest_gate_precheck
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
