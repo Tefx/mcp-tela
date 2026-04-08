@@ -61248,7 +61248,7 @@ phases:
   steps:
   - id: remediation_integration_verify.run_focused_regression_suite
     name: Run focused remediation regression suite
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the remediation branches together.
 
@@ -61289,6 +61289,8 @@ phases:
 
       '
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-08T09:58:41.260179+00:00'
   - id: remediation_integration_verify.literal_fragment_audit
     name: Audit remaining fragmented error literals
     status: pending
