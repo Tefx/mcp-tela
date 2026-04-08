@@ -63588,7 +63588,7 @@ phases:
     claimed_at: '2026-04-08T18:17:11.051702+00:00'
   - id: dup_audit.c1.verify-bearer-parser-extraction
     name: Verify bearer-token extraction refactor
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -63707,6 +63707,8 @@ phases:
 
       '
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-08T18:27:23.453850+00:00'
   - id: dup_audit.c1.extract-shared-bearer-parser
     name: Extract shared bearer-token parser and delegate both auth call sites
     status: claimed
