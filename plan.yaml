@@ -60958,7 +60958,7 @@ phases:
       gate_open_allowed: true'
   - id: gateway_auth_skeleton_refactor.gate
     name: Gate gateway auth skeleton refactor
-    status: claimed
+    status: pending
     description: 'Gate review: verify the shared gateway auth skeleton reduced duplication
       without merging distinct HTTP abstraction layers or altering route-specific
       behavior.'
@@ -60989,8 +60989,6 @@ phases:
     - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     - gateway_auth_skeleton_refactor.route_auth_retest
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-08T08:39:43.632208+00:00'
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
