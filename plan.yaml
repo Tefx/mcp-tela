@@ -61379,7 +61379,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
-    status: pending
+    status: claimed
     description: 'Work type: defect_repair
 
       Step type: implementation
@@ -61489,6 +61489,8 @@ phases:
     depends_on:
     - remediation_integration_verify.run_focused_regression_suite
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-08T09:59:15.037141+00:00'
   - id: remediation_integration_verify.retest_focused_regression_blockers
     name: Retest focused regression blockers
     status: pending
