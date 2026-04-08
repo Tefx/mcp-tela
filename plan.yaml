@@ -63229,3 +63229,8 @@ phases:
   status: locked
   depends_on:
   - dup_audit.c2
+- id: dup_audit.doc_sync
+  name: Duplicate Audit Documentation Sync
+  status: locked
+  depends_on:
+  - dup_audit.verify
