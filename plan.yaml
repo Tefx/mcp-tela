@@ -62024,7 +62024,7 @@ phases:
     agent: integration-verifier-tacit
   - id: remediation_integration_verify.fix_batched_static_hygiene_retest_failures
     name: Fix batched static hygiene retest failures
-    status: pending
+    status: claimed
     description: 'As an IMPLEMENTER, remediate the failures surfaced by remediation_integration_verify.retest_static_hygiene_blockers
       in one batched path.
 
@@ -62100,6 +62100,8 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_static_hygiene_blockers
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-08T12:08:40.991317+00:00'
   - id: remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     name: Retest batched static hygiene remediation
     status: pending
