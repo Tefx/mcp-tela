@@ -61912,7 +61912,7 @@ phases:
       commit: b14edc0d'
   - id: remediation_integration_verify.retest_static_hygiene_blockers
     name: Retest static hygiene blockers
-    status: claimed
+    status: pending
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the static hygiene blocker remediation from a fresh perspective.
 
@@ -62021,8 +62021,6 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_static_hygiene_blockers
     agent: integration-verifier-tacit
-    claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-08T11:58:25.644942+00:00'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
