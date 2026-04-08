@@ -61322,10 +61322,13 @@ phases:
   - id: remediation_integration_verify.gate
     name: Gate remediation integration verification
     status: pending
-    description: 'Gate review: verify all remediation branches compose safely and
-      that any remaining issues have explicit blocker disposition before doc sync.'
+    description: 'Gate review: verify all remediation branches compose safely after
+      the focused blocker retest and that any remaining issues have explicit blocker
+      disposition before doc sync.'
     verification: 'full-plan-check: no unresolved blocker-class intersections remain
-      across the remediation seams and evidence is sufficient for doc sync.'
+      across the remediation seams; focused regression blocker evidence includes exact
+      failing tests plus before/after outputs; literal audit evidence is sufficient
+      for doc sync.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -61348,7 +61351,7 @@ phases:
 
       '
     depends_on:
-    - remediation_integration_verify.run_focused_regression_suite
+    - remediation_integration_verify.retest_focused_regression_blockers
     - remediation_integration_verify.literal_fragment_audit
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
