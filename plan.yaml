@@ -63382,6 +63382,71 @@ phases:
     depends_on:
     - dup_audit.c3.delegate-close-list-helper
     agent: integration-verifier-tacit
+  - id: dup_audit.c3.gate
+    name: Gate duplicate-audit C3 remediation
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: QUICK
+
+      review_depth_rationale:
+
+      - trivial single-file preserve-scope delegation
+
+      - no runtime-surface redesign
+
+      - phase exists primarily to clear low-risk duplication before higher-risk work
+
+
+      Gate review: verify the C3 duplicate-abstraction remediation is complete, evidence
+      is specific, and the phase is ready to unlock C1.'
+    verification: '- phase-check protecting dup_audit.c1
+
+      - implementation and verification evidence reviewed
+
+      - no unresolved blocker in downstream close semantics
+
+      - `uv run invar guard --all` evidence present and acceptable'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.c3
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.c3.delegate-close-list-helper |  |  |  |
+
+      | dup_audit.c3.verify-downstream-close-remediation |  |  |  |
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      - Blocking issues:
+
+      '
+    depends_on:
+    - dup_audit.c3.delegate-close-list-helper
+    - dup_audit.c3.verify-downstream-close-remediation
+    agent: gate-reviewer-tacit
 - id: dup_audit.c1
   name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
   status: locked
