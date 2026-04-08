@@ -60565,7 +60565,7 @@ phases:
       - Merge commit: d6bf830"
   - id: error_classification_unification.gate
     name: Gate error classification unification
-    status: pending
+    status: claimed
     description: 'Gate review: verify duplicate route helpers and fragmented gateway
       status mapping are unified without changing externally visible error behavior.'
     verification: 'phase-check: classification duplication is reduced, status mapping
@@ -60596,6 +60596,8 @@ phases:
     - error_classification_unification.unify_http_routes_helpers
     - error_classification_unification.unify_gateway_status_mapping
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-08T08:25:44.860703+00:00'
 - id: token_precedence_refactor
   name: Token Precedence Refactor
   status: done
