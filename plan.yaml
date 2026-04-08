@@ -65284,3 +65284,92 @@ phases:
     depends_on:
     - dup_audit.deep_review.wiring-audit
     agent: gate-reviewer-tacit
+  - id: dup_audit.deep_review.black-box-verification
+    name: Black-box verify auth, retry, and downstream behavior after consolidation
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - duplicate-audit C1-C4 behavioral claims
+
+
+      touch_paths:
+
+      - auth, downstream, connect, and remote_state public behaviors affected by the
+      remediation
+
+      harness_refs:
+
+      - public test entry points only
+
+      authoritative_interface: NONE PINNED
+
+
+      Using only the externally observable behavior of the touched surfaces, verify
+      that:
+
+      - bearer auth still accepts/rejects headers correctly
+
+      - downstream close paths remain best-effort
+
+      - transient/retry behavior remains coherent after classifier and helper consolidation
+
+      - connect/remote-state behavior still works through their public test entry
+      points
+
+
+      Do not rely on implementation-process knowledge beyond public repository behavior.'
+    verification: '- full-plan-check protecting dup_audit.deep_review.gate
+
+      - evidence uses runnable test/public entry points and reports actual outputs'
+    evidence_template: '## Black-Box Verification Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Executions
+
+      - Commands executed:
+
+      ```text
+
+      <paste exact commands>
+
+      ```
+
+      - Actual output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ## Behavioral Checks
+
+      - bearer auth behavior:
+
+      - downstream close behavior:
+
+      - retry behavior:
+
+      - connect/remote-state public behavior:
+
+      '
+    depends_on:
+    - dup_audit.deep_review.spec-conformance
+    agent: blind-tester-tacit
