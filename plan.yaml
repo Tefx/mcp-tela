@@ -62808,14 +62808,14 @@ phases:
       - No blocker-class findings remained in this precheck run.'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
-  status: pending
+  status: in_progress
   gate: Docs/comments/examples align with final helper ownership and deferred non-goals.
   depends_on:
   - remediation_integration_verify
   steps:
   - id: remediation_doc_sync.update_docs
     name: Update remediation docs and comments
-    status: pending
+    status: claimed
     description: 'Sync comments, notes, and any affected documentation/examples with
       the final remediation outcome.
 
@@ -62849,6 +62849,8 @@ phases:
 
       '
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer-tacit
+    claimed_at: '2026-04-08T16:29:00.226283+00:00'
   - id: remediation_doc_sync.gate
     name: Gate remediation doc sync
     status: pending
