@@ -63788,118 +63788,6 @@ phases:
       \ output>\n```\n- Invar command:\n```text\nuv run invar guard --all\n```\n-\
       \ Invar output:\n```text\n<paste output>\n```\n- Security-preservation note:\n"
     agent: python-executor
-- id: dup_audit.c1
-  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
-  status: locked
-  depends_on:
-  - dup_audit.c3
-- id: dup_audit.c4
-  name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
-  status: locked
-  depends_on:
-  - dup_audit.c1
-  steps:
-  - id: dup_audit.c4.standardize-transient-classifiers
-    name: Introduce shared transient exception tuple and align classifier policy
-    status: pending
-    description: 'step_type: implementation
-
-      work_type: technical_debt_remediation
-
-      agent_source: default
-
-      spec_refs:
-
-      - user audit C4: duplicate-abstraction audit / Transient Error Classifiers
-
-
-      touch_paths:
-
-      - src/tela/shell/transient_types.py
-
-      - src/tela/commands/connect_cmd.py
-
-      - src/tela/shell/downstream.py
-
-      harness_refs:
-
-      - classifier tests in connect command and downstream recovery suites
-
-      authoritative_interface: TRANSIENT_CONNECTION_EXCEPTIONS constant tuple in src/tela/shell/transient_types.py
-
-
-      effective_truth_owner: src/tela/shell/transient_types.py
-
-      consumer_surfaces:
-
-      - connect command retry classifiers
-
-      - downstream recovery eligibility classifier
-
-      state_strata:
-
-      - static classification constants only
-
-      cross_cutting_policy:
-
-      - shared connection-exception truth with layer-specific fallback logic retained
-
-
-      Create `src/tela/shell/transient_types.py` containing the shared `TRANSIENT_CONNECTION_EXCEPTIONS`
-      tuple and update all three existing classifiers to reference it.
-
-
-      Required preserve-scope shape:
-
-      - each classifier keeps its layer-specific logic (URLError errno fallback, RuntimeError
-      message matching, string markers)
-
-      - the shared tuple covers only the common exception truth
-
-      - resolve the `TimeoutError` divergence explicitly and document the chosen policy
-      in code comments/docstrings or nearby reasoning text
-
-
-      ⚠️ KNOWN RISKS (from project history):
-
-      - Error semantics drift across layers: shared constants can hide layer-specific
-      nuance if callers are over-normalized. Preserve per-layer fallback logic.
-
-      - Retry-policy drift: a silent TimeoutError choice would create behavioral inconsistency
-      later in C2. The policy decision must be explicit.
-
-
-      ## Gate Preview (what the gate WILL reject)
-
-      1. A shared constant that swallows layer-specific classifier logic
-
-      2. Unresolved or undocumented TimeoutError divergence
-
-      3. Any change that broadens retry eligibility beyond the named common tuple
-      without evidence
-
-
-      ## Completion Criteria (stub exclusion)
-
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
-    verification: '- local-check protecting dup_audit.c4.gate
-
-      - targeted classifier tests pass across connect and downstream suites
-
-      - `uv run invar guard --all` passes
-
-      - evidence records the explicit TimeoutError policy and how each classifier
-      retains layer-specific logic'
-    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
-      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
-      \ were provided, state: \"No refs for this step.\"\n\n## Implementation Evidence\n\
-      - Files changed:\n- Shared tuple definition:\n- TimeoutError policy chosen:\n\
-      - Classifier-by-classifier update summary:\n  - _is_transient_url_error:\n \
-      \ - _is_recoverable_error:\n  - _is_recovery_eligible_exception:\n- Targeted\
-      \ test command(s):\n```text\n<paste exact commands>\n```\n- Targeted test output:\n\
-      ```text\n<paste output>\n```\n- Invar command:\n```text\nuv run invar guard\
-      \ --all\n```\n- Invar output:\n```text\n<paste output>\n```\n"
-    agent: python-executor
   - id: dup_audit.c4.verify-transient-classifier-standardization
     name: Verify transient classifier standardization and TimeoutError policy
     status: pending
@@ -64021,9 +63909,119 @@ phases:
       - PASS | ISSUES_FOUND | INCOMPLETE
 
       '
-    depends_on:
-    - dup_audit.c4.standardize-transient-classifiers
     agent: integration-verifier-tacit
+- id: dup_audit.c1
+  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
+  status: locked
+  depends_on:
+  - dup_audit.c3
+- id: dup_audit.c4
+  name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
+  status: locked
+  depends_on:
+  - dup_audit.c1
+  steps:
+  - id: dup_audit.c4.standardize-transient-classifiers
+    name: Introduce shared transient exception tuple and align classifier policy
+    status: pending
+    description: 'step_type: implementation
+
+      work_type: technical_debt_remediation
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C4: duplicate-abstraction audit / Transient Error Classifiers
+
+
+      touch_paths:
+
+      - src/tela/shell/transient_types.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/shell/downstream.py
+
+      harness_refs:
+
+      - classifier tests in connect command and downstream recovery suites
+
+      authoritative_interface: TRANSIENT_CONNECTION_EXCEPTIONS constant tuple in src/tela/shell/transient_types.py
+
+
+      effective_truth_owner: src/tela/shell/transient_types.py
+
+      consumer_surfaces:
+
+      - connect command retry classifiers
+
+      - downstream recovery eligibility classifier
+
+      state_strata:
+
+      - static classification constants only
+
+      cross_cutting_policy:
+
+      - shared connection-exception truth with layer-specific fallback logic retained
+
+
+      Create `src/tela/shell/transient_types.py` containing the shared `TRANSIENT_CONNECTION_EXCEPTIONS`
+      tuple and update all three existing classifiers to reference it.
+
+
+      Required preserve-scope shape:
+
+      - each classifier keeps its layer-specific logic (URLError errno fallback, RuntimeError
+      message matching, string markers)
+
+      - the shared tuple covers only the common exception truth
+
+      - resolve the `TimeoutError` divergence explicitly and document the chosen policy
+      in code comments/docstrings or nearby reasoning text
+
+
+      ⚠️ KNOWN RISKS (from project history):
+
+      - Error semantics drift across layers: shared constants can hide layer-specific
+      nuance if callers are over-normalized. Preserve per-layer fallback logic.
+
+      - Retry-policy drift: a silent TimeoutError choice would create behavioral inconsistency
+      later in C2. The policy decision must be explicit.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. A shared constant that swallows layer-specific classifier logic
+
+      2. Unresolved or undocumented TimeoutError divergence
+
+      3. Any change that broadens retry eligibility beyond the named common tuple
+      without evidence
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    verification: '- local-check protecting dup_audit.c4.gate
+
+      - targeted classifier tests pass across connect and downstream suites
+
+      - `uv run invar guard --all` passes
+
+      - evidence records the explicit TimeoutError policy and how each classifier
+      retains layer-specific logic'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Implementation Evidence\n\
+      - Files changed:\n- Shared tuple definition:\n- TimeoutError policy chosen:\n\
+      - Classifier-by-classifier update summary:\n  - _is_transient_url_error:\n \
+      \ - _is_recoverable_error:\n  - _is_recovery_eligible_exception:\n- Targeted\
+      \ test command(s):\n```text\n<paste exact commands>\n```\n- Targeted test output:\n\
+      ```text\n<paste output>\n```\n- Invar command:\n```text\nuv run invar guard\
+      \ --all\n```\n- Invar output:\n```text\n<paste output>\n```\n"
+    agent: python-executor
 - id: dup_audit.c2
   name: 'Duplicate Audit Remediation C2: HTTP Retry Skeleton Consolidation'
   status: locked
