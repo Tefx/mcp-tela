@@ -63005,7 +63005,7 @@ phases:
       Verdict: architecture boundaries remain valid for this remediation tranche.'
   - id: deep_review_gate.spec_conformance
     name: Spec conformance review for remediation behavior
-    status: pending
+    status: claimed
     description: Independently review whether the remediation preserves the intended
       external behavior for auth, error semantics, route outcomes, and command token
       precedence.
@@ -63035,6 +63035,8 @@ phases:
     depends_on:
     - deep_review_gate.architecture_review
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-08T16:48:23.109455+00:00'
   - id: deep_review_gate.final_gate
     name: Final remediation gate
     status: pending
