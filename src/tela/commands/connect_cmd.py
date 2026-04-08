@@ -21,7 +21,6 @@ bridge wiring and does not finalize host rendering text.
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import dataclass
 import signal
 import subprocess
@@ -653,6 +652,7 @@ def _forward_stdio_http(
     return Result(value=None)
 
 
+# @invar:allow shell_result: pure parsing helper returning Optional[str], no I/O.
 def _extract_jsonrpc_method(payload: bytes) -> str | None:
     """Return JSON-RPC method name from payload when present."""
 

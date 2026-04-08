@@ -7,7 +7,6 @@ import logging
 import time
 from dataclasses import dataclass
 from mcp import types as mcp_types
-from mcp.client.session import MessageHandlerFnT
 from mcp.shared.session import RequestResponder
 from typing import Any, Literal, Protocol, TypeAlias
 
@@ -466,12 +465,14 @@ async def disconnect_all() -> Result[None, str]:
     return Result(value=None)
 
 
+# @invar:allow shell_result: pure format helper returning diagnostic text, no I/O.
 def _get_exception_text(exc: Exception) -> str:
     """Return normalized exception text for diagnostics."""
 
     return f"{type(exc).__name__}: {exc}"
 
 
+# @invar:allow shell_result: pure boolean classifier on exception types, no I/O.
 def _is_recovery_eligible_exception(exc: Exception) -> bool:
     """Classify transport failures that are safe for one automatic retry."""
 
@@ -527,6 +528,7 @@ async def _prune_recovery_lock_if_unused(server_name: str) -> None:
         _recovery_locks.pop(server_name, None)
 
 
+# @invar:allow shell_result: pure data constructor returning TelaError, no I/O.
 def _build_recovery_error(
     server_name: str,
     *,

@@ -61,6 +61,7 @@ class _IsStale:
 is_stale = _IsStale()
 
 
+# @invar:allow shell_result: best-effort subprocess inspection returns bool, not a failable boundary.
 def _is_zombie_process(pid: int) -> bool:
     """Return whether ``pid`` is a zombie process according to ``ps``.
 

@@ -93,6 +93,7 @@ def _wait_for_process_exit(pid: int) -> Result[None, str]:
     )
 
 
+# @invar:allow shell_result: best-effort subprocess inspection returns bool, not a failable boundary.
 def _is_zombie_process(pid: int) -> bool:
     """Return whether ``pid`` is a zombie process according to ``ps``."""
 

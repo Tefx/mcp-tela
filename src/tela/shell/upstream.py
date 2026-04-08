@@ -19,7 +19,6 @@ from typing import Mapping, Protocol, runtime_checkable
 
 from tela.core.errors import (
     CONNECTION_NOT_FOUND,
-    DOWNSTREAM_UNAVAILABLE,
     GATEWAY_NOT_STARTED,
 )
 from tela.core.models import (

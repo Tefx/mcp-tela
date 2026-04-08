@@ -11,7 +11,6 @@ import os
 from typing import Mapping
 
 from tela.core.errors import (
-    AUTH_INVALID_TOKEN,
     CONNECTION_NOT_FOUND,
     GATEWAY_NOT_STARTED,
     is_auth_error,
@@ -264,8 +263,6 @@ def handle_connect(
     lifecycle_result = get_lifecycle_status_facts()
     if lifecycle_result.is_err:
         return Result(error=lifecycle_result.error)
-    assert lifecycle_result.value is not None
-    facts = lifecycle_result.value
 
     from datetime import datetime, timezone
 

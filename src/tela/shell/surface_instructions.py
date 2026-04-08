@@ -6,6 +6,7 @@ from tela.core.models import ResolvedTool, ServerConfig
 from tela.shell.config_loader import Result
 
 
+# @invar:allow shell_result: pure data transformation, no I/O - per pm.p1 contract
 def build_manifest_header(
     servers: dict[str, "ServerConfig"],
     connected_names: set[str],
@@ -37,7 +38,6 @@ def build_manifest_header(
     Returns:
         Manifest header string.
     """
-    # @invar:allow shell_result: pure data transformation, no I/O - per pm.p1 contract
     parts = []
     for server_name in sorted(servers.keys()):
         if server_name in connected_names:
