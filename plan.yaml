@@ -60474,7 +60474,7 @@ phases:
   steps:
   - id: error_classification_unification.unify_http_routes_helpers
     name: Unify duplicate HTTP route error helpers
-    status: claimed
+    status: done
     description: 'Replace the near-identical _is_*_error helpers in src/tela/shell/http_routes.py
       with shared error classification helpers from the established foundation.
 
@@ -60504,6 +60504,17 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-08T04:15:57.151434+00:00'
+    done_at: '2026-04-08T04:22:05.427685+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/core/errors.py —\
+      \ canonical classification helpers verified.\n- src/tela/shell/http_routes.py\
+      \ — duplicate _is_*_error helpers and usages reviewed.\n\n## Route Helper Cleanup\
+      \ Report\n- Duplicates removed:\n  - route-local _is_auth_error wrapper\n  -\
+      \ route-local _is_gateway_not_started_error wrapper\n  - route-local _is_connection_not_found_error\
+      \ wrapper\n- Shared helpers used:\n  - tela.core.errors.is_auth_error\n  - tela.core.errors.is_gateway_not_started_error\n\
+      \  - tela.core.errors.is_connection_not_found_error\n- Remaining intentional\
+      \ wrappers:\n  - _is_audit_query_error retained (no canonical helper yet)\n\n\
+      Verification:\n- doctests in touched routes passed\n- invar guard on changed\
+      \ files passed (with pre-existing warnings)\n\nCommit:\n- fab4340e"
   - id: error_classification_unification.unify_gateway_status_mapping
     name: Unify gateway error-to-status mapping
     status: pending
