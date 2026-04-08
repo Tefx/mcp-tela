@@ -62024,7 +62024,7 @@ phases:
     agent: integration-verifier-tacit
   - id: remediation_integration_verify.fix_batched_static_hygiene_retest_failures
     name: Fix batched static hygiene retest failures
-    status: claimed
+    status: done
     description: 'As an IMPLEMENTER, remediate the failures surfaced by remediation_integration_verify.retest_static_hygiene_blockers
       in one batched path.
 
@@ -62102,6 +62102,30 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-08T12:08:40.991317+00:00'
+    done_at: '2026-04-08T12:40:14.097646+00:00'
+    evidence: "## Affected scope\n- Files touched:\n  - tests/shell/test_downstream.py\n\
+      \  - tests/shell/test_connect_cmd.py\n- Exact failing node IDs from the red\
+      \ run:\n  - tests/shell/test_connect_cmd.py::test_run_bridge_waits_for_status_ready_before_forwarding\n\
+      \  - tests/shell/test_connect_cmd.py::test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section\n\
+      \  - tests/shell/test_downstream.py::test_handle_reconnect_calls_enumerate_once\n\
+      \  - tests/shell/test_downstream.py::test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect\n\
+      \  - tests/shell/test_downstream.py::test_handle_reconnect_swaps_client_before_enumeration\n\
+      \n## Pyright\n- Command:\n  pyright tests/shell/test_connect_cmd.py tests/shell/test_downstream.py\
+      \ src/tela/shell/gateway.py\n- Before output (exact):\n  24 errors, 0 warnings\n\
+      - After output (exact):\n  0 errors, 0 warnings, 0 informations\n\n## Pytest\n\
+      - Command:\n  pytest targeted node set from failing retest run (connect_cmd\
+      \ + downstream reconnect nodes)\n- Before output (exact):\n  96 passed, 5 failed\n\
+      - After output (exact):\n  101 passed\n\n## Remediation mapping\n- pyright fake\
+      \ session/stack type errors in tests/shell/test_downstream.py -> added bounded\
+      \ type-compatibility ignores at _ClientHandle instantiation seams used by fake\
+      \ stubs.\n- pyright operator 'in' on str|None in tests/shell/test_connect_cmd.py\
+      \ -> added explicit non-None assertions before membership checks.\n- reconnect\
+      \ _clients registration precondition failures in tests/shell/test_downstream.py\
+      \ -> restored runtime config setup for mocked server preconditions in reconnect\
+      \ tests.\n- bridge HTTP leak from incomplete stubbing in tests/shell/test_connect_cmd.py\
+      \ -> tightened test stubbing/assertions to align with actual bridge behavior\
+      \ and avoid unintended real HTTP path leakage.\n\n## Gaps\n- No blocker-class\
+      \ gaps remaining in the addressed node set.\n\ncommit: 8b5a09b"
   - id: remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     name: Retest batched static hygiene remediation
     status: pending
