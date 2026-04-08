@@ -199,8 +199,10 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
     async def _status_route(request: Request) -> Response:
         auth_result = _build_auth_handoff(request)
         if auth_result.is_err:
+            assert auth_result.error is not None
             error, status_code = auth_result.error
             return JSONResponse(status_code=status_code, content={"error": error})
+        assert auth_result.value is not None
         request_token, expected_token = auth_result.value
 
         status_result = handle_status(request_token, expected_token)
@@ -214,8 +216,10 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
     async def _connect_route(request: Request) -> Response:
         auth_result = _build_auth_handoff(request)
         if auth_result.is_err:
+            assert auth_result.error is not None
             error, status_code = auth_result.error
             return JSONResponse(status_code=status_code, content={"error": error})
+        assert auth_result.value is not None
         request_token, expected_token = auth_result.value
 
         try:
@@ -242,8 +246,10 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
     async def _disconnect_route(request: Request) -> Response:
         auth_result = _build_auth_handoff(request)
         if auth_result.is_err:
+            assert auth_result.error is not None
             error, status_code = auth_result.error
             return JSONResponse(status_code=status_code, content={"error": error})
+        assert auth_result.value is not None
         request_token, expected_token = auth_result.value
 
         try:
