@@ -63452,6 +63452,90 @@ phases:
   status: locked
   depends_on:
   - dup_audit.c3
+  steps:
+  - id: dup_audit.c1.extract-shared-bearer-parser
+    name: Extract shared bearer-token parser and delegate both auth call sites
+    status: pending
+    description: 'step_type: implementation
+
+      work_type: technical_debt_remediation
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C1: duplicate-abstraction audit / Bearer Token Extraction
+
+
+      touch_paths:
+
+      - src/tela/shell/http_auth.py
+
+      - src/tela/shell/gateway_http_auth.py
+
+      harness_refs:
+
+      - http auth middleware tests
+
+      - gateway http auth tests
+
+      authoritative_interface: extract_bearer_from_header_value(value: str) -> str
+      | None
+
+
+      Extract the shared pure bearer parsing logic into `src/tela/shell/http_auth.py`
+      as `extract_bearer_from_header_value(value: str) -> str | None`.
+
+
+      Required preserve-scope shape:
+
+      - ASGI middleware continues decoding header bytes from `Scope` before delegation
+
+      - Starlette request path passes the header string directly
+
+      - `gateway_http_auth.py` keeps its own `Result[str, str]` wrapping at the call
+      site
+
+      - no auth policy broadening, no header-name changes, no side effects
+
+
+      Security-sensitive note: normalize ONLY the existing `Bearer ` prefix parsing
+      logic; do not silently loosen parsing rules.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any change that moves byte-decoding responsibility out of the ASGI adapter
+      without explicit justification
+
+      2. Any change that changes Result-wrapping ownership in `gateway_http_auth.py`
+
+      3. Any parsing broadening beyond the existing Bearer-header semantics'
+    verification: '- local-check protecting dup_audit.c1.gate
+
+      - existing http_auth and gateway_http_auth targeted tests pass
+
+      - `uv run invar guard --all` passes
+
+      - evidence shows both callers now delegate to the shared parser while preserving
+      layer-specific decode/result semantics'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Implementation Evidence\n\
+      - Files changed:\n- Shared helper signature:\n- Caller delegation summary:\n\
+      \  - ASGI scope path:\n  - Starlette request path:\n- Targeted test command(s):\n\
+      ```text\n<paste exact command(s)>\n```\n- Targeted test output:\n```text\n<paste\
+      \ output>\n```\n- Invar command:\n```text\nuv run invar guard --all\n```\n-\
+      \ Invar output:\n```text\n<paste output>\n```\n- Security-preservation note:\n"
+    agent: python-executor
 - id: dup_audit.c4
   name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
   status: locked
