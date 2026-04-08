@@ -63204,3 +63204,8 @@ phases:
 
       ### Decision: OPEN — remediation tranche is complete and scope boundaries were
       respected.'
+- id: dup_audit.c3
+  name: 'Duplicate Audit Remediation C3: Close Handle Best-Effort'
+  status: pending
+  depends_on:
+  - deep_review_gate
