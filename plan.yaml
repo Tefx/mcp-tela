@@ -60992,7 +60992,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
     name: Fix pyright route auth narrowing regressions
-    status: claimed
+    status: done
     description: 'Fix ALL blocker-class pyright type-safety regressions introduced
       by the gateway auth skeleton extraction while preserving existing route behavior.
 
@@ -61077,6 +61077,21 @@ phases:
     agent: python-executor
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-08T08:52:44.006517+00:00'
+    done_at: '2026-04-08T08:57:18.762803+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- No refs for this step.\n\n\
+      ## Pyright Remediation Evidence\n- Files updated: src/tela/shell/gateway.py\
+      \ call sites in _status_route, _connect_route, _disconnect_route where auth_result.error/value\
+      \ are unpacked.\n- Sibling search performed: reviewed all auth_result unpack\
+      \ call sites in gateway route handlers; added explicit narrowing asserts at\
+      \ each affected site.\n\n## Pyright Output Snippets (MANDATORY)\n- Command executed:\n\
+      \  pyright src/tela/shell/gateway.py\n- Output snippet (after fix):\n  0 errors,\
+      \ 0 warnings, 0 informations\n\n## Route-Behavior Preservation Proof (MANDATORY)\n\
+      - Targeted route tests executed:\n  pytest tests/shell/test_http_routes.py (route-focused\
+      \ subset)\n  pytest tests/shell/test_gateway.py\n- Output snippets: 26 http_routes\
+      \ tests passed; 58 gateway tests passed.\n- Mapping from asserts to behavior:\
+      \ asserts only narrow Result typing at existing branches; no status/error mapping\
+      \ logic changed.\n\n## Verdict\n- pyright narrowing regression resolved.\n-\
+      \ route behavior preserved.\n- merge commit: 3f1bb73"
   - id: gateway_auth_skeleton_refactor.retest_pyright_route_auth_narrowing
     name: Retest pyright route auth narrowing and preserved behavior
     status: pending
