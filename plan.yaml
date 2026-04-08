@@ -63215,7 +63215,7 @@ phases:
   steps:
   - id: dup_audit.c3.delegate-close-list-helper
     name: Delegate _close_client_handles to best-effort single-handle helper
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       work_type: technical_debt_remediation
@@ -63279,6 +63279,8 @@ phases:
       \  - exception swallowing remains in `_close_handle_best_effort`\n  - list helper\
       \ now delegates only\n"
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-08T18:36:34.628052+00:00'
   - id: dup_audit.c3.verify-downstream-close-remediation
     name: Verify downstream close helper delegation
     status: pending
