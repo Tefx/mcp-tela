@@ -60862,7 +60862,7 @@ phases:
       \ gateway shell tests passed (58 passed)\n- module import sanity check passed"
   - id: gateway_auth_skeleton_refactor.route_auth_retest
     name: Retest gateway route auth and error paths
-    status: claimed
+    status: pending
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the gateway route auth skeleton refactor from a fresh perspective.
 
@@ -60907,8 +60907,6 @@ phases:
     depends_on:
     - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     agent: integration-verifier-tacit
-    claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-08T05:45:27.376743+00:00'
   - id: gateway_auth_skeleton_refactor.gate
     name: Gate gateway auth skeleton refactor
     status: pending
