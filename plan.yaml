@@ -64511,8 +64511,10 @@ phases:
     - dup_audit.c2.verify-http-retry-consolidation
     agent: gate-reviewer-tacit
 - id: dup_audit.verify
-  name: Duplicate Audit Remediation Verification
+  name: Duplicate Audit Finalization
   status: locked
+  context: Merged finalization phase covering targeted regressions, full invar guard,
+    documentation sync, and deep independent review for duplicate-abstraction remediation.
   depends_on:
   - dup_audit.c2
   steps:
