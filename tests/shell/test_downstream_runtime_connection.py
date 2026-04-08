@@ -545,11 +545,15 @@ def test_message_handler_routes_reconnect_exception(monkeypatch: Any) -> None:
     )
 
     server_config = ServerConfig(name="mocked", command="unused")
+    # Set up runtime config so reconnect handler can resolve server config
+    old_runtime = get_runtime_config()
+    set_runtime_config(TelaConfig(servers={"mocked": server_config}))
     handler = downstream._build_downstream_message_handler("mocked", server_config)
 
     try:
         asyncio.run(handler(RuntimeError("downstream receive loop dropped")))
     finally:
+        set_runtime_config(old_runtime.value if old_runtime.is_ok else None)
         downstream._clients.clear()
 
     assert observed["server_name"] == "mocked"

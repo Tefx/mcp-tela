@@ -19,7 +19,13 @@ import asyncio
 
 import pytest
 
-from tela.core.models import Posture, ResolvedTool, ServerConfig, ToolOverride
+from tela.core.models import (
+    Posture,
+    ResolvedTool,
+    ServerConfig,
+    TelaConfig,
+    ToolOverride,
+)
 from tela.shell.downstream import (
     call_tool,
     connect_all,
@@ -29,6 +35,7 @@ from tela.shell.downstream import (
     get_tool_server,
     re_enumerate,
 )
+from tela.shell.gateway import get_runtime_config, set_runtime_config
 
 
 # --- Fixtures for stdio and SSE server configurations ---
