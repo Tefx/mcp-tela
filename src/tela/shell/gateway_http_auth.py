@@ -6,17 +6,18 @@ from starlette.requests import Request
 
 from tela.core.errors import AUTH_INVALID_TOKEN
 from tela.shell.config_loader import Result
+from tela.shell.http_auth import extract_bearer_from_header_value
 
 
 def extract_bearer_token(request: Request) -> Result[str, str]:
     """Extract bearer token from Authorization header."""
 
     authorization_header = request.headers.get("authorization")
-    if authorization_header is None or not authorization_header.startswith("Bearer "):
+    if authorization_header is None:
         return Result(error=f"{AUTH_INVALID_TOKEN}: bearer token validation failed")
 
-    request_token = authorization_header[len("Bearer ") :].strip()
-    if request_token == "":
+    token = extract_bearer_from_header_value(authorization_header)
+    if token is None:
         return Result(error=f"{AUTH_INVALID_TOKEN}: bearer token validation failed")
 
-    return Result(value=request_token)
+    return Result(value=token)

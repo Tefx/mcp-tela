@@ -24,6 +24,32 @@ Send = Callable[..., Any]
 ASGIApp = Callable[[Scope, Receive, Send], Any]
 
 
+# @shell_orchestration: placed in Shell per authoritative interface spec; no I/O but
+#  kept here to collocate with the ASGI middleware that is its primary caller.
+# @invar:allow shell_result: pure string parser returning str|None by design; callers
+#  wrap in Result at their layer (ASGI scope path / Starlette request path).
+def extract_bearer_from_header_value(value: str) -> str | None:
+    """Extract bearer token from a decoded Authorization header value.
+
+    Parses the ``Bearer <token>`` scheme from a header value string.
+    Returns the token with leading/trailing whitespace stripped, or
+    ``None`` if the value does not start with ``Bearer `` or yields an
+    empty token.
+
+    This function is a pure parser: it performs no I/O, no byte decoding,
+    and returns only the normalised token string or ``None``.
+
+    :param value: A decoded Authorization header value (e.g. ``"Bearer secret"``).
+    :return: The bearer token string, or ``None`` if parsing fails.
+    """
+    if not value.startswith("Bearer "):
+        return None
+    token = value[len("Bearer ") :].strip()
+    if not token:
+        return None
+    return token
+
+
 def validate_bearer_token(request_token: str, expected_token: str) -> Result[None, str]:
     """Validate bearer token using constant-time comparison.
 
@@ -123,11 +149,7 @@ class BearerAuthMiddleware:
         for name, value in headers:
             if name == b"authorization":
                 decoded = value.decode("latin-1")
-                if decoded.startswith("Bearer "):
-                    token = decoded[len("Bearer ") :].strip()
-                    if token:
-                        return token
-                return None
+                return extract_bearer_from_header_value(decoded)
         return None
 
     @staticmethod
