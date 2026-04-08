@@ -64821,6 +64821,78 @@ phases:
   status: locked
   depends_on:
   - dup_audit.verify
+  steps:
+  - id: dup_audit.doc_sync.review-and-update-docs
+    name: Review docs for duplicate-audit drift and update if needed
+    status: pending
+    description: 'step_type: review
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C1-C4 remediation scope only
+
+
+      touch_paths:
+
+      - README.md
+
+      - docs/
+
+      - inline module comments/docstrings near touched helpers
+
+      harness_refs:
+
+      - documentation references to connect retry behavior or auth/transient policy
+
+      authoritative_interface: NONE PINNED
+
+
+      Planner-owned doc-sync step.
+
+
+      Review README/docs and nearby code documentation for any drift introduced by
+      C1-C4 remediation. Update docs only if the remediation changes documented helper
+      ownership, retry policy wording, or transient-classifier semantics. If nothing
+      public or design-facing changed, produce explicit no-doc-drift evidence instead
+      of making unnecessary edits.'
+    verification: '- local-check protecting dup_audit.doc_sync.gate
+
+      - any necessary docs drift is updated, or no-doc-drift is explicitly evidenced
+
+      - if docs changed, `uv run invar guard --all` still passes afterward'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Doc Sync Evidence
+
+      - Docs reviewed:
+
+      - Drift found: yes/no
+
+      - Files changed (if any):
+
+      - If no docs changed, explain why the remediation is documentation-neutral:
+
+      - If docs changed, include exact verification command/output:
+
+      ```text
+
+      <paste command(s) and output>
+
+      ```
+
+      '
+    agent: doc-reviewer-tacit
 - id: dup_audit.deep_review
   name: Duplicate Audit Deep Review
   status: locked
