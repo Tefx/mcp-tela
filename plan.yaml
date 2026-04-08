@@ -65226,3 +65226,61 @@ phases:
     depends_on:
     - dup_audit.deep_review.wiring-audit
     agent: software-architect-tacit
+  - id: dup_audit.deep_review.contract-strength
+    name: Audit contract and doctest strength on touched surfaces
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - repo invar expectations from AGENTS.md
+
+
+      touch_paths:
+
+      - files touched by C1-C4
+
+      harness_refs:
+
+      - invar/contract review
+
+      authoritative_interface: NONE PINNED
+
+
+      Verify that the duplicate-audit remediation did not weaken contract expectations
+      on touched surfaces and did not introduce vacuous or placeholder contract artifacts.
+      This is especially important because new helpers/constants are being introduced
+      in shell/commands modules under the repo''s invar regime.'
+    verification: '- full-plan-check protecting dup_audit.deep_review.gate
+
+      - no new vacuous contract artifact or contract-regime regression appears on
+      touched surfaces'
+    evidence_template: '## Contract Strength Audit
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Findings
+
+      - New contract regressions:
+
+      - Vacuous or placeholder artifacts:
+
+      - Invar-related concerns on touched files:
+
+      '
+    depends_on:
+    - dup_audit.deep_review.wiring-audit
+    agent: gate-reviewer-tacit
