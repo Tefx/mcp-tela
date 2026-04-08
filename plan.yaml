@@ -61074,6 +61074,66 @@ phases:
     depends_on:
     - gateway_auth_skeleton_refactor.route_auth_retest
     agent: python-executor
+  - id: gateway_auth_skeleton_refactor.retest_pyright_route_auth_narrowing
+    name: Retest pyright route auth narrowing and preserved behavior
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
+      that the gateway auth skeleton remediation closed the pyright narrowing regression
+      without changing route behavior.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: local-check
+
+      protected_gates:
+
+      - gateway_auth_skeleton_refactor.gate
+
+
+      Test for:
+
+      - pyright clean result for src/tela/shell/gateway.py after explicit type-narrowing
+      asserts were added
+
+      - targeted gateway route auth/error-path behavior remains unchanged
+
+      - no new route-specific regression was introduced at other auth_result unpack
+      sites
+
+
+      Independence Level: L1
+
+
+      If issues are found, report the exact route path and pyright or test output
+      that demonstrates the regression.'
+    verification: 'local-check: run pyright against src/tela/shell/gateway.py and
+      targeted gateway route tests; expected_result: green. This retest protects gateway_auth_skeleton_refactor.gate
+      by proving both static type safety and route-behavior preservation after remediation.'
+    evidence_template: "## Verification Report\n\n**Tester**: integration-verifier-tacit\
+      \ (independent of implementation)\n**Scope**: gateway route auth narrowing remediation\n\
+      **Independence Level**: L1\n\n### refs Read Confirmation (MANDATORY)\nIf no\
+      \ refs were provided, state: \"No refs for this step.\"\n\n### Pyright Execution\
+      \ (MANDATORY)\n- Command executed:\n  ```\n  pyright src/tela/shell/gateway.py\n\
+      \  ```\n- Actual pyright output snippet:\n  ```\n  <paste pyright output>\n\
+      \  ```\n\n### Targeted Route Test Execution (MANDATORY)\n- Command(s) executed:\n\
+      \  ```\n  <paste exact pytest command(s)>\n  ```\n- Actual pytest output snippet:\n\
+      \  ```\n  <paste relevant pytest output>\n  ```\n\n### Route-Behavior Preservation\
+      \ Assessment\n- Route/auth paths exercised:\n  - <list routes and auth/error\
+      \ paths tested>\n- Evidence that behavior matches pre-remediation expectations:\n\
+      \  - <brief proof>\n\n### Verdict\n- [ ] PASS: pyright clean and route behavior\
+      \ preserved\n- [ ] ISSUES_FOUND: blocker remains or behavior changed\n- [ ]\
+      \ INCOMPLETE: missing pyright or route-test evidence"
+    depends_on:
+    - gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
+    agent: integration-verifier-tacit
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
