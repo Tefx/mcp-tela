@@ -64432,6 +64432,93 @@ phases:
     - dup_audit.c2.extract-retry-http-request-foundation
     - dup_audit.c2.migrate-remaining-http-retry-callers
     agent: integration-verifier-tacit
+  - id: dup_audit.c2.gate
+    name: Gate duplicate-audit C2 remediation
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - highest-impact extraction in the audit scope
+
+      - shared helper introduced across connect bridge and remote-state surfaces
+
+      - medium lifecycle/regression risk plus integration-tagged steps
+
+
+      cross_cutting_focus:
+
+      - request/retry/backoff preservation
+
+      - caller-owned response parsing
+
+      - consistency with C4 transient policy
+
+
+      Gate review: verify the C2 helper extraction closed the duplicate skeleton without
+      introducing lifecycle or retry-policy drift, and confirm the whole remediation
+      stream is ready for consolidated verification/doc-sync/deep review.'
+    verification: '- phase-check protecting dup_audit.verify
+
+      - no unresolved blocker in helper ownership, retry semantics, or lifecycle behavior
+
+      - full-plan-check evidence reviewed
+
+      - `uv run invar guard --all` evidence reviewed and acceptable'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.c2
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.c2.extract-retry-http-request-foundation |  |  |  |
+
+      | dup_audit.c2.migrate-remaining-http-retry-callers |  |  |  |
+
+      | dup_audit.c2.verify-http-retry-consolidation |  |  |  |
+
+
+      ### Gate Decision Basis
+
+      - helper owns skeleton only: yes/no
+
+      - caller parsing preserved: yes/no
+
+      - retry/backoff drift detected: yes/no
+
+      - C4 policy consistent: yes/no
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      '
+    depends_on:
+    - dup_audit.c2.extract-retry-http-request-foundation
+    - dup_audit.c2.migrate-remaining-http-retry-callers
+    - dup_audit.c2.verify-http-retry-consolidation
+    agent: gate-reviewer-tacit
 - id: dup_audit.verify
   name: Duplicate Audit Remediation Verification
   status: locked
