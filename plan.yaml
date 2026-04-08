@@ -62113,7 +62113,7 @@ phases:
       reviewer: vectl-orchestrator
   - id: remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     name: Retest batched static hygiene remediation
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, rerun the exact batched failure scope
       after remediation_integration_verify.fix_batched_static_hygiene_retest_failures.
 
@@ -62186,6 +62186,8 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_batched_static_hygiene_retest_failures
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-08T14:00:36.569659+00:00'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
