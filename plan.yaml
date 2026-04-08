@@ -63209,6 +63209,73 @@ phases:
   status: pending
   depends_on:
   - deep_review_gate
+  steps:
+  - id: dup_audit.c3.delegate-close-list-helper
+    name: Delegate _close_client_handles to best-effort single-handle helper
+    status: pending
+    description: 'step_type: implementation
+
+      work_type: technical_debt_remediation
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C3: duplicate-abstraction audit / Close Handle Best-Effort
+
+
+      touch_paths:
+
+      - src/tela/shell/downstream.py
+
+      harness_refs:
+
+      - tests covering downstream close/teardown behavior
+
+      authoritative_interface: NONE PINNED
+
+
+      Update `src/tela/shell/downstream.py` so `_close_client_handles(handles: list[_ClientHandle])
+      -> None` delegates to `_close_handle_best_effort(handle)` for each handle.
+
+
+      Preserve current best-effort semantics exactly:
+
+      - still await each handle close attempt in order
+
+      - still swallow broad close exceptions inside the single-handle helper
+
+      - no new retry, logging, or policy changes
+
+
+      This is a trivial preserve-scope remediation. Do not widen behavior beyond removing
+      the duplicated try/except body.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      preserves current downstream teardown behavior.'
+    verification: '- local-check protecting dup_audit.c3.gate
+
+      - targeted downstream tests covering close/teardown paths pass
+
+      - `uv run invar guard --all` passes after the change
+
+      - proof shows `_close_client_handles` now delegates to `_close_handle_best_effort`
+      with no behavior expansion'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Implementation Evidence\n\
+      - Files changed:\n- Delegation shape before/after:\n- Targeted test command(s):\n\
+      ```text\n<paste exact command(s)>\n```\n- Targeted test output:\n```text\n<paste\
+      \ output>\n```\n- Invar command:\n```text\nuv run invar guard --all\n```\n-\
+      \ Invar output:\n```text\n<paste output>\n```\n- Preserved behavior notes:\n\
+      \  - exception swallowing remains in `_close_handle_best_effort`\n  - list helper\
+      \ now delegates only\n"
+    agent: python-executor
 - id: dup_audit.c1
   name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
   status: locked
