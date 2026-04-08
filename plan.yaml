@@ -60988,6 +60988,7 @@ phases:
     depends_on:
     - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     - gateway_auth_skeleton_refactor.route_auth_retest
+    - gateway_auth_skeleton_refactor.retest_pyright_route_auth_narrowing
     agent: gate-reviewer-tacit
   - id: gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
     name: Fix pyright route auth narrowing regressions
