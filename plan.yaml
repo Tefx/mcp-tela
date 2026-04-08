@@ -63206,7 +63206,7 @@ phases:
       respected.'
 - id: dup_audit.c3
   name: Duplicate Audit Low-Risk Cleanup
-  status: pending
+  status: in_progress
   context: Merged low-risk duplicate-abstraction remediation phase covering C3 close-helper
     cleanup, C1 bearer-token extraction consolidation, and C4 transient-classifier
     standardization without reducing verification rigor.
@@ -63519,7 +63519,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.c1.gate
     name: Gate duplicate-audit C1 remediation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -63584,6 +63584,8 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-08T18:17:11.051702+00:00'
   - id: dup_audit.c1.verify-bearer-parser-extraction
     name: Verify bearer-token extraction refactor
     status: pending
