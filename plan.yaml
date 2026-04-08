@@ -63286,7 +63286,7 @@ phases:
       tests pass; no behavior expansion.
   - id: dup_audit.c3.verify-downstream-close-remediation
     name: Verify downstream close helper delegation
-    status: claimed
+    status: pending
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -63390,8 +63390,6 @@ phases:
     depends_on:
     - dup_audit.c3.delegate-close-list-helper
     agent: integration-verifier-tacit
-    claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-08T18:48:38.398733+00:00'
   - id: dup_audit.c3.gate
     name: Gate duplicate-audit C3 remediation
     status: pending
