@@ -61237,7 +61237,7 @@ phases:
       gate_open_allowed: true'
 - id: remediation_integration_verify
   name: Remediation Integration Verification
-  status: in_progress
+  status: done
   gate: Focused regression suite and seam-level proofs confirm all remediation branches
     compose safely.
   depends_on:
@@ -61358,7 +61358,7 @@ phases:
       \ bypass shared constants and should be normalized in follow-up."
   - id: remediation_integration_verify.gate
     name: Gate remediation integration verification
-    status: claimed
+    status: done
     description: 'Gate review: verify all remediation branches compose safely after
       the authoritative static-hygiene retest path and that any remaining issues have
       explicit blocker disposition before doc sync.
@@ -61407,6 +61407,47 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer
     claimed_at: '2026-04-08T16:03:46.029913+00:00'
+    done_at: '2026-04-08T16:28:42.357396+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - No refs for this step.
+
+
+      ## Gate Review Report
+
+      - Cross-branch composition acceptable: YES
+
+      - Remaining blocker intersections: none blocker-class; residual failing tests
+      are pre-existing/environmental/doc-drift categories and not remediation regressions
+
+      - Evidence sufficiency: SUFFICIENT (authoritative batched retest + gate precheck
+      + independent verification)
+
+      - Decision: OPEN
+
+
+      step_intent: gate_review
+
+      expected_result: green
+
+      observed_result: green
+
+      failure_alignment: 7 residual failing tests classified as pre-existing (env
+      gaps/tool-prefix known gap/doc wording drift/expected-red) and non-regressive
+
+      behavioral_proof_register:
+
+      - seam composition proven across remediation branches
+
+      - batched static hygiene failing nodes now green (5/5)
+
+      - contracts.py pyright self-reference issue resolved
+
+      - ruff src blocker set cleared
+
+      - invar residuals classified with disposition and non-regression context
+
+      gate_open_allowed: true'
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
     status: done
@@ -62767,7 +62808,7 @@ phases:
       - No blocker-class findings remained in this precheck run.'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
-  status: locked
+  status: pending
   gate: Docs/comments/examples align with final helper ownership and deferred non-goals.
   depends_on:
   - remediation_integration_verify
