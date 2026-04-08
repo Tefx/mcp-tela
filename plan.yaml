@@ -65145,3 +65145,84 @@ phases:
     depends_on:
     - dup_audit.deep_review.wiring-audit
     agent: spec-verifier-tacit
+  - id: dup_audit.deep_review.architecture-review
+    name: Review shell and command boundary placement of new shared abstractions
+    status: pending
+    description: 'step_type: review
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - Core/Shell boundary rules from AGENTS.md
+
+
+      touch_paths:
+
+      - src/tela/shell/http_auth.py
+
+      - src/tela/shell/transient_types.py
+
+      - src/tela/commands/http_client.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      harness_refs:
+
+      - boundary and ownership review
+
+      authoritative_interface: NONE PINNED
+
+
+      Review module boundaries, dependency direction, and placement correctness for
+      the new shared abstractions introduced by the duplicate-audit remediation.
+
+
+      Focus:
+
+      - shell-only shared auth parser remains outside core and free of forbidden I/O
+      migration into core
+
+      - shell transient constant placement is appropriate for the consuming layers
+
+      - command-layer HTTP retry helper stays in commands and does not leak lifecycle
+      interpretation into a lower/shared layer
+
+      - no new ownership confusion is introduced between connect_cmd and remote_state'
+    verification: '- full-plan-check protecting dup_audit.deep_review.gate
+
+      - boundary review explicitly states whether placement and dependency direction
+      are acceptable'
+    evidence_template: '## Architecture Review Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Boundary Checks
+
+      - Core/Shell rule respected:
+
+      - Auth parser placement accepted/rejected:
+
+      - Transient tuple placement accepted/rejected:
+
+      - HTTP retry helper placement accepted/rejected:
+
+      - Dependency direction concerns:
+
+      '
+    depends_on:
+    - dup_audit.deep_review.wiring-audit
+    agent: software-architect-tacit
