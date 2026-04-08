@@ -60794,7 +60794,7 @@ phases:
       \ import)."
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
-  status: in_progress
+  status: done
   gate: Shared request-auth skeleton extracted for gateway routes without merging
     distinct HTTP abstraction layers or altering route-specific behavior.
   depends_on:
@@ -60958,7 +60958,7 @@ phases:
       gate_open_allowed: true'
   - id: gateway_auth_skeleton_refactor.gate
     name: Gate gateway auth skeleton refactor
-    status: claimed
+    status: done
     description: 'Gate review: verify the shared gateway auth skeleton reduced duplication
       without merging distinct HTTP abstraction layers or altering route-specific
       behavior.'
@@ -60992,6 +60992,52 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-08T09:25:25.699999+00:00'
+    done_at: '2026-04-08T09:39:05.023439+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - No refs for this step.
+
+
+      ## Gate Review Report
+
+      - Duplication reduced: PASS. _build_auth_handoff centralizes repeated auth-handoff
+      prep across /status,/connect,/disconnect.
+
+      - Layer separation preserved: PASS. Request extraction remains in gateway_http_auth.py;
+      ASGI bearer extraction remains in http_auth.py.
+
+      - Retest evidence quality: PASS. Independent retest included pyright clean output
+      and targeted route/gateway tests green.
+
+      - Decision: OPEN
+
+
+      step_intent: gate_review
+
+      expected_result: open
+
+      observed_result: open
+
+      failure_alignment: none
+
+      behavioral_proof_register:
+
+      - shared auth handoff used by all authenticated routes: PROVEN
+
+      - request-vs-asgi boundary preserved: PROVEN
+
+      - route-specific behaviors not flattened: PROVEN
+
+      - pyright narrowing regression remediated: PROVEN
+
+      - targeted route auth/error tests preserved: PROVEN
+
+      gate_open_allowed: true
+
+
+      should_fix:
+
+      - remove now-unused gateway.py error-constant imports (lint F401), non-blocking.'
   - id: gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
     name: Fix pyright route auth narrowing regressions
     status: done
@@ -61191,7 +61237,7 @@ phases:
       gate_open_allowed: true'
 - id: remediation_integration_verify
   name: Remediation Integration Verification
-  status: locked
+  status: pending
   gate: Focused regression suite and seam-level proofs confirm all remediation branches
     compose safely.
   depends_on:
