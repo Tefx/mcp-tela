@@ -65373,3 +65373,86 @@ phases:
     depends_on:
     - dup_audit.deep_review.spec-conformance
     agent: blind-tester-tacit
+  - id: dup_audit.deep_review.gate
+    name: Final gate for duplicate-audit remediation
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - final multi-agent closure for four-cluster duplicate-abstraction remediation
+
+      - includes cross-module helper extraction and retry-policy review
+
+
+      cross_cutting_focus:
+
+      - helper ownership boundaries remain clear
+
+      - no duplicate skeleton persists unintentionally
+
+      - retry and transient policies are consistent across layers
+
+
+      Gate review: decide OPEN/BLOCKED for the duplicate-audit remediation after wiring
+      audit, conformance review, architecture review, contract-strength audit, and
+      black-box verification.'
+    verification: '- full-plan-check final gate for duplicate-audit remediation
+
+      - all blocker-class findings from deep review are either closed or explicitly
+      shown non-intersecting
+
+      - final OPEN/BLOCKED recommendation is evidence-backed'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.deep_review
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.deep_review.wiring-audit |  |  |  |
+
+      | dup_audit.deep_review.spec-conformance |  |  |  |
+
+      | dup_audit.deep_review.architecture-review |  |  |  |
+
+      | dup_audit.deep_review.contract-strength |  |  |  |
+
+      | dup_audit.deep_review.black-box-verification |  |  |  |
+
+
+      ### Gate Decision Basis
+
+      - unresolved blocker-class items:
+
+      - non-intersection evidence:
+
+      - final recommendation: OPEN | BLOCKED
+
+      '
+    depends_on:
+    - dup_audit.deep_review.wiring-audit
+    - dup_audit.deep_review.spec-conformance
+    - dup_audit.deep_review.architecture-review
+    - dup_audit.deep_review.contract-strength
+    - dup_audit.deep_review.black-box-verification
+    agent: gate-reviewer-tacit
