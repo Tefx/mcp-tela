@@ -63060,7 +63060,7 @@ phases:
       - Divergences: none detected in reviewed surfaces.'
   - id: deep_review_gate.final_gate
     name: Final remediation gate
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT REVIEWER (gate-reviewer-tacit), decide whether
       the remediation tranche is ready to close.
 
@@ -63106,3 +63106,5 @@ phases:
     - deep_review_gate.architecture_review
     - deep_review_gate.spec_conformance
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer
+    claimed_at: '2026-04-08T16:54:43.724755+00:00'
