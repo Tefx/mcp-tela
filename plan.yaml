@@ -62496,7 +62496,7 @@ phases:
       \ (not in B1-B4 scope)"
   - id: remediation_integration_verify.retest_gate_precheck
     name: Retest gate blockers and precheck closure
-    status: pending
+    status: claimed
     description: 'Work type: defect_repair
 
       Step type: test
@@ -62690,6 +62690,8 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_gate_blockers
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-08T15:35:04.827263+00:00'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
