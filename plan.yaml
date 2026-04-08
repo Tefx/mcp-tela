@@ -64524,6 +64524,131 @@ phases:
   status: locked
   depends_on:
   - dup_audit.c2
+  steps:
+  - id: dup_audit.verify.targeted-regression-suite
+    name: Run targeted duplicate-audit regression suite
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C1-C4 remediation scope only
+
+
+      touch_paths:
+
+      - src/tela/shell/http_auth.py
+
+      - src/tela/shell/gateway_http_auth.py
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/transient_types.py
+
+      - src/tela/commands/http_client.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      harness_refs:
+
+      - auth tests
+
+      - downstream tests
+
+      - connect_cmd tests
+
+      - remote_state tests
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER (`integration-verifier-tacit`), run the consolidated
+      regression suite for duplicate-abstraction clusters C1-C4.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      This is a full-plan-check protecting the remaining doc-sync and deep-review
+      phases. If any broad regression appears, record it with remediation-ready detail
+      rather than collapsing it into a vague failure.
+
+
+      Independence Level: L2.'
+    verification: '- full-plan-check protecting dup_audit.doc_sync and dup_audit.deep_review
+
+      - consolidated targeted suites for C1-C4 pass or produce actionable findings
+
+      - evidence includes exact commands and outputs, not summaries only'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: duplicate-audit targeted regression suite
+
+      **Independence Level**: L2
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```text
+
+      <paste exact commands>
+
+      ```
+
+      - Actual output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Coverage Assessment
+
+      - C3 downstream close path:
+
+      - C1 bearer parsing paths:
+
+      - C4 classifier policy paths:
+
+      - C2 retry helper paths:
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    agent: integration-verifier-tacit
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: locked
