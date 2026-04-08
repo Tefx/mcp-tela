@@ -61358,7 +61358,7 @@ phases:
       \ bypass shared constants and should be normalized in follow-up."
   - id: remediation_integration_verify.gate
     name: Gate remediation integration verification
-    status: claimed
+    status: pending
     description: 'Gate review: verify all remediation branches compose safely after
       the authoritative static-hygiene retest path and that any remaining issues have
       explicit blocker disposition before doc sync.
@@ -61405,8 +61405,6 @@ phases:
     - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     - remediation_integration_verify.retest_gate_precheck
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-08T16:02:47.010326+00:00'
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
     status: done
