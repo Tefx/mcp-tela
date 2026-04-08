@@ -62021,6 +62021,84 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_static_hygiene_blockers
     agent: integration-verifier-tacit
+  - id: remediation_integration_verify.fix_batched_static_hygiene_retest_failures
+    name: Fix batched static hygiene retest failures
+    status: pending
+    description: 'As an IMPLEMENTER, remediate the failures surfaced by remediation_integration_verify.retest_static_hygiene_blockers
+      in one batched path.
+
+
+      Scope all of the following together:
+
+      - pyright arg-type/type compatibility errors in tests/shell/test_downstream.py
+      fake session/stack types
+
+      - pyright operator ''in'' on str|None in tests/shell/test_connect_cmd.py
+
+      - runtime reconnect tests failing due to _clients registration precondition
+      in tests/shell/test_downstream.py
+
+      - runtime bridge tests leaking real HTTP in tests/shell/test_connect_cmd.py
+      due to incomplete stubbing
+
+
+      Keep the remediation tightly scoped to the affected test harnesses/stubs and
+      any directly required shell seams. Preserve production behavior while restoring
+      deterministic test isolation and type compatibility.'
+    verification: '- local-check: targeted pyright passes for the affected files after
+      the fix
+
+      - local-check: targeted pytest passes for the exact previously failing node
+      IDs after the fix
+
+      - Evidence identifies the exact failing node IDs from the red run and maps each
+      failure to the applied remediation
+
+      - Evidence includes exact before/after outputs for pyright and pytest'
+    evidence_template: '## Affected scope
+
+      - Files touched:
+
+      - Exact failing node IDs from the red run:
+
+
+      ## Pyright
+
+      - Command:
+
+      - Before output (exact):
+
+      - After output (exact):
+
+
+      ## Pytest
+
+      - Command:
+
+      - Before output (exact):
+
+      - After output (exact):
+
+
+      ## Remediation mapping
+
+      - pyright fake session/stack type errors in tests/shell/test_downstream.py ->
+
+      - pyright operator ''in'' on str|None in tests/shell/test_connect_cmd.py ->
+
+      - reconnect _clients registration precondition failures in tests/shell/test_downstream.py
+      ->
+
+      - bridge HTTP leak from incomplete stubbing in tests/shell/test_connect_cmd.py
+      ->
+
+
+      ## Gaps
+
+      - Remaining failures or follow-ups:'
+    depends_on:
+    - remediation_integration_verify.fix_static_hygiene_blockers
+    agent: python-executor
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
