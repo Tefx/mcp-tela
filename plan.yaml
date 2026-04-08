@@ -62209,6 +62209,167 @@ phases:
       \ output (exact):\n  collected 5 items; all 5 PASSED; 5 passed in 2.05s\n\n\
       ## Outcome\n- Did every previously failing node ID turn green? yes\n- Any drift\
       \ between recorded failures and retest scope? no\n- Remaining blockers: none"
+  - id: remediation_integration_verify.fix_gate_blockers
+    name: Fix gate blockers B1-B4
+    status: pending
+    description: 'Work type: defect_repair
+
+      Step type: implementation
+
+      Verification scope: phase-check protecting remediation_integration_verify.gate.
+
+      Agent source: project
+
+
+      Fix ALL blocker families reported for remediation_integration_verify.gate in
+      ONE batched remediation step.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      ### B1: recover_transport kwarg mismatch sibling occurrences
+
+      Locations: tests/shell/test_connect_bridge_readiness_gaps_red.py sibling occurrences
+      covering bridge recovery/readiness seams.
+
+      Remediation: align every affected test double/helper invocation so the exercised
+      bridge path accepts and forwards the recover_transport keyword consistently
+      across the sibling nodes, not just the first failing case.
+
+      Grep hint: search the file for recover_transport usage and bridge fake/helper
+      signatures.
+
+
+      ### B2: Ruff src blocker cluster
+
+      Locations: src/tela/shell/connect_cmd.py, src/tela/shell/downstream.py, src/tela/shell/http_routes.py,
+      src/tela/shell/upstream.py.
+
+      Remediation: remove the reported unused imports/unused variable findings only
+      where they are truly dead, preserving runtime behavior and import ordering semantics.
+
+      Grep hint: inspect the exact unused-symbol names from the failing ruff output
+      and clear all five findings together.
+
+
+      ### B3: invar guard blocker family
+
+      Locations: current phase scope intersects escape hatch budget, shell_result
+      budget, and downstream.py size finding.
+
+      Remediation: close every blocker-class issue that intersects remediation_integration_verify.gate
+      within this phase scope, and for any residual issue that cannot be closed in-scope
+      without unauthorized architectural broadening, record an explicit blocker disposition
+      with owner, non-intersection reasoning, and downstream gate impact. Pre-existing
+      or out-of-scope is provenance only, not disposition.
+
+      Command lock: use the exact project command family for this blocker family (invar
+      guard outcome reporting for the scoped check in evidence/retest; do not substitute
+      a different command family in the plan text).
+
+      IMPORTANT: do not apply symptom-only suppressions; explain root cause vs symptom
+      for each retained disposition.
+
+
+      ### B4: pyright self-reference typing issue
+
+      Locations: src/tela/core/contracts.py.
+
+      Remediation: repair the self-reference typing error without widening the public
+      contract beyond the authoritative file-local need.
+
+      Grep hint: target the reported pyright self-reference location and any directly
+      coupled annotations in the same file.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: the phase gate is blocked by a mixed static-analysis/proof-closure
+      cluster spanning sibling test-harness drift, dead-code hygiene debt, a core
+      typing defect, and unresolved invar-guard blocker ownership.
+
+      - Symptom: remediation_integration_verify.gate cannot open because the authoritative
+      precheck path still reports blocker-class intersections.
+
+      - Why this fix is not surface-level: the step must resolve every named blocker
+      family together and produce explicit ownership/disposition for the invar guard
+      family instead of hiding residual blockers behind broad notes.
+
+
+      ## Scope Guardrails
+
+      - Keep edits scoped to the listed files plus any directly required supporting
+      imports/annotations.
+
+      - Do NOT broaden into unrelated doc-sync or deep-review work.
+
+      - If the downstream.py size finding remains after scoped remediation, record
+      why this phase is or is not authorized to shrink/split it now, which later gate
+      would still intersect it, and who owns follow-up if non-intersection cannot
+      be proven.
+
+
+      ## Completion Criteria
+
+      - B1 sibling occurrences are fixed across the targeted readiness-gap tests.
+
+      - All 5 ruff src findings in the listed shell files are cleared.
+
+      - B4 pyright self-reference error is cleared in src/tela/core/contracts.py.
+
+      - B3 has either been remediated in-scope or has an explicit blocker disposition
+      register with gate-intersection reasoning and named ownership.
+
+      - Evidence includes exact before/after outputs and a blocker-to-fix mapping
+      for B1-B4.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic or code-hygiene changes that
+      close the blocker family and vary with the exercised path.'
+    verification: '- phase-check protecting remediation_integration_verify.gate
+
+      - main path: targeted remediation removes the reported B1/B2/B4 failures
+
+      - blocker path: invar guard outcome includes explicit blocker disposition for
+      each remaining B3 item, with owner and gate-intersection reasoning
+
+      - proof: evidence contains exact before/after outputs and blocker-to-fix mapping
+      for B1-B4'
+    evidence_template: "## Blocker-to-Fix Mapping (MANDATORY)\n| Blocker | Root cause\
+      \ | Files changed | Exact fix applied | Residual status |\n| --- | --- | ---\
+      \ | --- | --- |\n| B1 | <root cause> | <files> | <fix> | CLOSED/OPEN |\n| B2\
+      \ | <root cause> | <files> | <fix> | CLOSED/OPEN |\n| B3 | <root cause> | <files>\
+      \ | <fix or disposition> | CLOSED/OPEN |\n| B4 | <root cause> | <files> | <fix>\
+      \ | CLOSED/OPEN |\n\n## refs Read Confirmation (MANDATORY)\nFor each ref in\
+      \ this step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no\
+      \ refs were provided, state: \"No refs for this step.\"\n\n## Before Outputs\
+      \ (exact)\n### B1 targeted pytest before\n```text\n<paste exact failing pytest\
+      \ output for the B1 nodes>\n```\n\n### B2 ruff before\n```text\n<paste exact\
+      \ ruff check src/ output showing the 5 findings>\n```\n\n### B3 invar guard\
+      \ before\n```text\n<paste exact invar guard scoped outcome or blocker excerpt>\n\
+      ```\n\n### B4 pyright before\n```text\n<paste exact pyright src/tela/core/contracts.py\
+      \ output>\n```\n\n## After Outputs (exact)\n### B1 targeted pytest after\n```text\n\
+      <paste exact post-fix pytest output>\n```\n\n### B2 ruff after\n```text\n<paste\
+      \ exact post-fix ruff output>\n```\n\n### B3 invar guard after / disposition\n\
+      ```text\n<paste exact post-fix invar guard outcome or residual blocker excerpt>\n\
+      ```\nDisposition register:\n- issue: <escape hatch budget | shell_result budget\
+      \ | downstream.py size>\n  provenance: <pre-existing|introduced_now|out-of-step-origin>\n\
+      \  disposition: <blocking-now|blocking-later|non-blocking>\n  owner: <step or\
+      \ phase owner>\n  remaining_gate_intersection: <which gate/check still intersects>\n\
+      \  why_not_fixed_here_or_non_intersection: <required>\n\n### B4 pyright after\n\
+      ```text\n<paste exact post-fix pyright output>\n```\n\n## Sibling Search Evidence\n\
+      - B1 sibling search performed: <yes/no + what was searched>\n- B2 symbol cluster\
+      \ search performed: <yes/no + symbols>\n- B3 blocker family search performed:\
+      \ <yes/no + seams>\n- B4 coupled annotation search performed: <yes/no + symbols>\n"
+    depends_on:
+    - remediation_integration_verify.retest_focused_regression_blockers
+    - remediation_integration_verify.literal_fragment_audit
+    - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
+    agent: python-senior
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
