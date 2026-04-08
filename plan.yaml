@@ -63705,12 +63705,6 @@ phases:
 
       '
     agent: integration-verifier-tacit
-- id: dup_audit.c1
-  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
-  status: locked
-  depends_on:
-  - dup_audit.c3
-  steps:
   - id: dup_audit.c1.extract-shared-bearer-parser
     name: Extract shared bearer-token parser and delegate both auth call sites
     status: pending
@@ -63794,6 +63788,11 @@ phases:
       \ output>\n```\n- Invar command:\n```text\nuv run invar guard --all\n```\n-\
       \ Invar output:\n```text\n<paste output>\n```\n- Security-preservation note:\n"
     agent: python-executor
+- id: dup_audit.c1
+  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
+  status: locked
+  depends_on:
+  - dup_audit.c3
 - id: dup_audit.c4
   name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
   status: locked
