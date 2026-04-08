@@ -16,6 +16,7 @@ Tests cover:
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import pytest
 
@@ -1075,7 +1076,6 @@ def test_handle_reconnect_calls_enumerate_once(monkeypatch: pytest.MonkeyPatch) 
     _enumerate_client_tools in _handle_reconnect. The on_server_reconnect
     handler must NOT re-enumerate (no second list_tools call).
     """
-    from typing import Any
     from mcp.types import ListToolsResult, Tool
 
     from tela.shell import downstream
@@ -1146,7 +1146,6 @@ def test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """_handle_reconnect must pass the already-enumerated tools to on_server_reconnect."""
-    from typing import Any
     from mcp.types import ListToolsResult, Tool
 
     from tela.shell import downstream
@@ -1219,7 +1218,6 @@ def test_handle_reconnect_swaps_client_before_enumeration(
     This ensures the new client session is active when tools are enumerated
     after reconnect.
     """
-    from typing import Any
     from mcp.types import ListToolsResult, Tool
 
     from tela.shell import downstream
@@ -1292,12 +1290,8 @@ def test_recover_server_client_fails_closed_when_server_removed_mid_recovery(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Removal from runtime config beats in-flight recovery."""
-    from typing import Any
-
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.config_loader import Result
-    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
     class FakeStack:
         async def aclose(self) -> None:
@@ -1369,12 +1363,8 @@ def test_recover_server_client_config_remove_cleans_stale_client_and_lock(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Config removal during recovery drops stale client and prunes lock."""
-    from typing import Any
-
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.config_loader import Result
-    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
     class TrackCloseStack:
         def __init__(self) -> None:
@@ -1449,12 +1439,8 @@ def test_recover_server_client_releases_registry_lock_around_network_io(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Recovery network awaits run without holding _registry_lock."""
-    from typing import Any
-
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.config_loader import Result
-    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
     class FakeStack:
         async def aclose(self) -> None:
@@ -1526,12 +1512,8 @@ def test_recover_server_client_success_closes_replaced_client(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Successful recovery closes stale client handle after swap."""
-    from typing import Any
-
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.config_loader import Result
-    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
     class TrackCloseStack:
         def __init__(self) -> None:
@@ -1611,8 +1593,6 @@ def test_recover_server_client_success_closes_replaced_client(
 
 def test_disconnect_all_cleans_recovery_lock_under_recovery_pressure() -> None:
     """disconnect_all clears recovery locks even when one is held."""
-    from typing import Any
-
     from tela.shell import downstream
 
     class TrackCloseStack:
@@ -1656,12 +1636,8 @@ def test_recover_server_client_rejects_material_config_change_before_swap(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Material config drift must block stale recovered handle swap."""
-    from typing import Any
-
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.config_loader import Result
-    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
     class FakeStack:
         async def aclose(self) -> None:
@@ -1729,7 +1705,6 @@ def test_recover_server_client_rejects_material_config_change_before_swap(
 
 def test_get_runtime_server_config_uses_runtime_authority_over_hints() -> None:
     """Recovery config lookup must resolve from runtime config, not stale hints."""
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
@@ -1755,7 +1730,6 @@ def test_get_runtime_server_config_uses_runtime_authority_over_hints() -> None:
 
 def test_get_runtime_server_config_fails_when_server_removed_even_with_hint() -> None:
     """Runtime removal must beat stale hint fallback for recovery lookup."""
-    from tela.core.models import TelaConfig
     from tela.shell import downstream
     from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 

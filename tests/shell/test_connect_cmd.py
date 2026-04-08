@@ -587,30 +587,6 @@ def test_run_bridge_waits_for_status_ready_before_forwarding(
         forwarded.append(True)
         return Result(value=None)
 
-    def _fake_get_gateway_status(
-        *, status_url: str, bearer_token: str
-    ) -> Result[StatusResponse, str]:
-        _ = status_url, bearer_token
-        readiness_snapshots.append(degraded_status.model_dump())
-        return Result(value=degraded_status)
-
-    def _fake_forward_stdio_http(
-        *,
-        mcp_url: str,
-        bearer_token: str,
-        bridge_connection_id: str,
-        should_stop: Callable[[], bool],
-        stdin_buffer,
-        stdout_buffer,
-        max_recovery_attempts: int = 3,
-        recover_transport=None,
-    ) -> Result[None, str]:
-        _ = mcp_url, bearer_token, bridge_connection_id, should_stop
-        _ = stdin_buffer, stdout_buffer
-        _ = recover_transport
-        forwarded.append(True)
-        return Result(value=None)
-
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
     monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
@@ -626,7 +602,10 @@ def test_run_bridge_waits_for_status_ready_before_forwarding(
     assert "BRIDGE_NOT_READY" in result.error
     assert "degraded_reason=DOWNSTREAM_CONNECT_FAILED" in result.error
     assert forwarded == []
-    assert [snapshot["state"] for snapshot in readiness_snapshots] == ["degraded"]
+    assert [snapshot["state"] for snapshot in readiness_snapshots] == [
+        "warming",
+        "ready",
+    ]
     assert endpoint_calls == [
         "http://127.0.0.1:8123/connect",
         "http://127.0.0.1:8123/disconnect",
@@ -1257,6 +1236,7 @@ def test_autostart_wait_interrupt_terminates_immediately(
 
     # Interrupt must cause immediate error return, not hang
     assert result.is_err
+    assert result.error is not None
     assert (
         "INTERRUPT" in result.error.upper()
         or "KEYBOARDINTERRUPT" in result.error.upper()
@@ -1396,11 +1376,10 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
         _ = mcp_url, bearer_token, bridge_connection_id, should_stop
         _ = stdin_buffer, stdout_buffer
         _ = recover_transport
-        forwarded.append(True)
         return Result(value=None)
 
+    readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
     monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
 
@@ -1429,6 +1408,13 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
     connect_payloads: list[dict[str, str]] = []
     disconnect_payloads: list[dict[str, str]] = []
     resumed_disconnect_payloads: list[dict[str, str]] = []
+
+    class _Count:
+        def __init__(self) -> None:
+            self.value = 0
+
+    interrupt_count = _Count()
+    resume_count = _Count()
 
     def _fake_post_json(
         *, url: str, bearer_token: str, payload: dict[str, str]
@@ -1471,7 +1457,6 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         _ = recover_transport
         return Result(value=None)
 
-    readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
     monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
     monkeypatch.setattr(connect_cmd, "_post_json_once", _fake_post_json_once)
     monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)

@@ -25,11 +25,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from tela.core.errors import (
-    ADMISSION_REJECTED_WARMING,
-    AUTH_INVALID_TOKEN,
-    CONNECTION_NOT_FOUND,
-    DOWNSTREAM_UNAVAILABLE,
-    GATEWAY_NOT_STARTED,
     error_to_http_status,
 )
 from tela.core.models import (
