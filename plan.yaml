@@ -62496,7 +62496,7 @@ phases:
       \ (not in B1-B4 scope)"
   - id: remediation_integration_verify.retest_gate_precheck
     name: Retest gate blockers and precheck closure
-    status: claimed
+    status: done
     description: 'Work type: defect_repair
 
       Step type: test
@@ -62692,6 +62692,77 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-08T15:35:04.827263+00:00'
+    done_at: '2026-04-08T15:39:51.924509+00:00'
+    evidence: '## Command Transcript Index (MANDATORY)
+
+      1. targeted pytest for B1 nodes
+
+      2. ruff check src/
+
+      3. pyright src/tela/core/contracts.py
+
+      4. invar guard check outcome
+
+
+      ## Before vs After Summary (MANDATORY)
+
+      | Blocker | Before status | After status | Evidence section |
+
+      | --- | --- | --- | --- |
+
+      | B1 | red (recover_transport kwarg mismatch in readiness gaps tests) | green
+      | targeted pytest |
+
+      | B2 | red (5 ruff src findings) | green | ruff check src/ |
+
+      | B3 | red/blocked in prior gate snapshot | green in current scoped precheck
+      output | invar guard |
+
+      | B4 | red (contracts.py pyright self-reference issue) | green | pyright contracts.py
+      |
+
+
+      ## Exact Outputs
+
+      ### 1) targeted pytest for B1 nodes
+
+      #### After
+
+      - collected 5 items
+
+      - all 5 passed
+
+      - 5 passed in 1.54s
+
+
+      ### 2) ruff check src/
+
+      #### After
+
+      - All checks passed
+
+
+      ### 3) pyright src/tela/core/contracts.py
+
+      #### After
+
+      - 0 errors, 0 warnings, 0 informations
+
+
+      ### 4) invar guard
+
+      #### After
+
+      - status passed
+
+      - static passed (0 errors, 0 warnings, 0 infos)
+
+      - doctest passed
+
+
+      ## Residual blocker disposition
+
+      - No blocker-class findings remained in this precheck run.'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
