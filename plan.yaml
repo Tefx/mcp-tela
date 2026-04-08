@@ -61836,6 +61836,117 @@ phases:
     depends_on:
     - remediation_integration_verify.literal_fragment_audit
     agent: python-executor
+  - id: remediation_integration_verify.retest_static_hygiene_blockers
+    name: Retest static hygiene blockers
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
+      the static hygiene blocker remediation from a fresh perspective.
+
+
+      Work type: defect_repair.
+
+      Step type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      Verification scope: local-check protecting remediation_integration_verify.gate.
+
+
+      Re-run the exact affected-node checks for:
+
+      - pyright on tests/shell/test_connect_cmd.py, tests/shell/test_downstream.py,
+      and src/tela/shell/gateway.py
+
+      - ruff on the same affected nodes
+
+      - targeted pytest covering tests/shell/test_connect_cmd.py and tests/shell/test_downstream.py
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+      Document exact command lines, exact before/after outputs, and the affected node
+      list used for retest scope.'
+    verification: '- local-check: pyright, ruff, and targeted pytest all run against
+      the affected nodes
+
+      - expected_result: green for the targeted retest
+
+      - Evidence includes exact commands plus exact output after the fix for each
+      command family
+
+      - Evidence confirms the affected node list matches the fix step scope'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: static hygiene blocker retest
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - tests/shell/test_connect_cmd.py — key passage or "NOT READ: <reason>"
+
+      - tests/shell/test_downstream.py — key passage or "NOT READ: <reason>"
+
+      - src/tela/shell/gateway.py — key passage or "NOT READ: <reason>"
+
+
+      ## Affected Node List (MANDATORY)
+
+      - <file>::<symbol/helper/import block>
+
+
+      ## Exact Commands Run (MANDATORY)
+
+      ```bash
+
+      <pyright command>
+
+      <ruff command>
+
+      <targeted pytest command>
+
+      ```
+
+
+      ## Exact Before/After Error Outputs (MANDATORY)
+
+      ### Before (copied from fix evidence)
+
+      ```text
+
+      <exact pre-fix outputs for pyright / ruff / targeted pytest>
+
+      ```
+
+      ### After (this retest run)
+
+      ```text
+
+      <exact retest outputs for pyright / ruff / targeted pytest>
+
+      ```
+
+
+      ## Verdict
+
+      - [ ] PASS: all targeted checks green
+
+      - [ ] ISSUES_FOUND: list exact residual blockers
+
+      - [ ] INCOMPLETE: explain why
+
+      '
+    depends_on:
+    - remediation_integration_verify.fix_static_hygiene_blockers
+    agent: integration-verifier-tacit
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
