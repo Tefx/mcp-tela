@@ -61379,7 +61379,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
-    status: claimed
+    status: done
     description: 'Work type: defect_repair
 
       Step type: implementation
@@ -61491,6 +61491,62 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-08T09:59:15.037141+00:00'
+    done_at: '2026-04-08T10:28:29.311393+00:00'
+    evidence: '## Fix Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Exact failing tests
+
+      - tests/shell/test_connect_cmd.py::{test_bridge_lifecycle_posts_connect_and_disconnect,test_run_bridge_waits_for_status_ready_before_forwarding,test_bridge_teardown_interrupt_does_not_block_process_exit,test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section}
+
+      - tests/shell/test_downstream_runtime_connection.py::test_message_handler_routes_reconnect_exception
+
+      - tests/shell/test_downstream.py::{test_handle_reconnect_calls_enumerate_once,test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect,test_handle_reconnect_swaps_client_before_enumeration}
+
+
+      ### Before outputs (MANDATORY)
+
+      - TypeError: _fake_forward_stdio_http() got an unexpected keyword argument ''recover_transport''
+
+      - reconnect warnings/failures rooted in Runtime config unavailable setup gap
+
+
+      ### Changes made
+
+      - Bridge lifecycle mock signature update: added recover_transport=None to _fake_forward_stdio_http
+      test doubles in tests/shell/test_connect_cmd.py
+
+      - Runtime-config setup restoration: added set_runtime_config(TelaConfig(...))
+      setup and restore cleanup for selected reconnect tests in tests/shell/test_downstream_runtime_connection.py
+      and tests/shell/test_downstream.py
+
+
+      ### After targeted outputs (MANDATORY)
+
+      - tests/shell/test_connect_cmd.py targeted set: passing
+
+      - tests/shell/test_downstream_runtime_connection.py targeted set: passing
+
+      - tests/shell/test_downstream.py targeted reconnect set: passing
+
+      - consolidated targeted rerun: 111 passed
+
+
+      ### Blocker family closure
+
+      - recover_transport kwarg mismatch closed: YES (mock signature aligned with
+      runtime call contract)
+
+      - Runtime config unavailable setup gap closed: YES (tests establish/restore
+      runtime config around reconnect paths)
+
+
+      merge_commit: 1d5f06e'
   - id: remediation_integration_verify.retest_focused_regression_blockers
     name: Retest focused regression blockers
     status: pending
