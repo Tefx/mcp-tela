@@ -62808,7 +62808,7 @@ phases:
       - No blocker-class findings remained in this precheck run.'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
-  status: in_progress
+  status: done
   gate: Docs/comments/examples align with final helper ownership and deferred non-goals.
   depends_on:
   - remediation_integration_verify
@@ -62882,7 +62882,7 @@ phases:
       reflect boundary separation intent.'
   - id: remediation_doc_sync.gate
     name: Gate remediation doc sync
-    status: claimed
+    status: done
     description: 'Gate review: verify docs/comments are aligned with the remediation
       outcome and do not imply over-refactors that were intentionally deferred.'
     verification: 'phase-check: doc sync is complete, no misleading architecture drift
@@ -62911,9 +62911,34 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-08T16:38:26.331083+00:00'
+    done_at: '2026-04-08T16:44:33.207634+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - No refs for this step.
+
+
+      ## Gate Review Report
+
+      - Docs aligned: yes (token precedence, auth-layer separation, error-centralization
+      references, and helper ownership/source-of-truth notes match implemented behavior)
+
+      - Deferred work represented accurately: yes (recovery-envelope abstraction explicitly
+      deferred with rationale; no misleading over-refactor comments)
+
+      - Decision: OPEN
+
+
+      Additional audit notes:
+
+      - request-vs-ASGI auth-layer separation preserved in docs and module boundaries
+
+      - shared helper ownership for CLI/env token precedence documented and consistent
+      across serve/connect
+
+      - no stale remediation TODO/FIXME/HACK drift detected'
 - id: deep_review_gate
   name: Deep Review Gate
-  status: locked
+  status: pending
   gate: Independent wiring, spec, architecture, and gate review confirm remediation
     is complete and scope boundaries were respected.
   depends_on:
