@@ -65151,6 +65151,99 @@ phases:
 
       '
     agent: software-architect-tacit
+  - id: dup_audit.deep_review.spec-conformance
+    name: Audit duplicate-audit spec and audit-conformance
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit findings C1-C4 as authoritative remediation scope
+
+
+      touch_paths:
+
+      - src/tela/shell/http_auth.py
+
+      - src/tela/shell/gateway_http_auth.py
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/transient_types.py
+
+      - src/tela/commands/http_client.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      harness_refs:
+
+      - plan evidence from prior phases
+
+      authoritative_interface: NONE PINNED
+
+
+      Spec conformance verification via adversarial divergence hunting.
+
+
+      Scope only the duplicate-audit remediation claims:
+
+      - C3: list close helper delegates to single-handle helper
+
+      - C1: shared bearer parser centralizes common string parsing and preserves adapter-local
+      decode/result ownership
+
+      - C4: shared transient tuple exists and TimeoutError policy is explicit
+
+      - C2: shared retry helper owns request/retry/backoff skeleton while callers
+      retain response parsing'
+    verification: '- full-plan-check protecting dup_audit.deep_review.gate
+
+      - verdict table covers each audit claim and whether implementation conforms,
+      diverges, or still needs proof'
+    evidence_template: '## Spec Conformance Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Evidence Table
+
+      | Claim | Implementation refs | Verdict | Notes |
+
+      | --- | --- | --- | --- |
+
+      | C3 delegation |  |  |  |
+
+      | C1 shared bearer parser |  |  |  |
+
+      | C4 shared transient tuple + TimeoutError policy |  |  |  |
+
+      | C2 shared retry helper |  |  |  |
+
+
+      ## Coverage Summary
+
+      - CONFORMS:
+
+      - DIVERGES:
+
+      - NEEDS_TEST:
+
+      '
+    agent: spec-verifier-tacit
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: locked
@@ -65338,98 +65431,3 @@ phases:
 
       '
     agent: wiring-auditor
-  - id: dup_audit.deep_review.spec-conformance
-    name: Audit duplicate-audit spec and audit-conformance
-    status: pending
-    description: 'step_type: verification
-
-      verification_scope: full-plan-check
-
-      agent_source: default
-
-      spec_refs:
-
-      - user audit findings C1-C4 as authoritative remediation scope
-
-
-      touch_paths:
-
-      - src/tela/shell/http_auth.py
-
-      - src/tela/shell/gateway_http_auth.py
-
-      - src/tela/shell/downstream.py
-
-      - src/tela/shell/transient_types.py
-
-      - src/tela/commands/http_client.py
-
-      - src/tela/commands/connect_cmd.py
-
-      - src/tela/commands/remote_state.py
-
-      harness_refs:
-
-      - plan evidence from prior phases
-
-      authoritative_interface: NONE PINNED
-
-
-      Spec conformance verification via adversarial divergence hunting.
-
-
-      Scope only the duplicate-audit remediation claims:
-
-      - C3: list close helper delegates to single-handle helper
-
-      - C1: shared bearer parser centralizes common string parsing and preserves adapter-local
-      decode/result ownership
-
-      - C4: shared transient tuple exists and TimeoutError policy is explicit
-
-      - C2: shared retry helper owns request/retry/backoff skeleton while callers
-      retain response parsing'
-    verification: '- full-plan-check protecting dup_audit.deep_review.gate
-
-      - verdict table covers each audit claim and whether implementation conforms,
-      diverges, or still needs proof'
-    evidence_template: '## Spec Conformance Report
-
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this step:
-
-      - <filename> — key passage or "NOT READ: <reason>"
-
-
-      If no refs were provided, state: "No refs for this step."
-
-
-      ## Evidence Table
-
-      | Claim | Implementation refs | Verdict | Notes |
-
-      | --- | --- | --- | --- |
-
-      | C3 delegation |  |  |  |
-
-      | C1 shared bearer parser |  |  |  |
-
-      | C4 shared transient tuple + TimeoutError policy |  |  |  |
-
-      | C2 shared retry helper |  |  |  |
-
-
-      ## Coverage Summary
-
-      - CONFORMS:
-
-      - DIVERGES:
-
-      - NEEDS_TEST:
-
-      '
-    depends_on:
-    - dup_audit.deep_review.wiring-audit
-    agent: spec-verifier-tacit
