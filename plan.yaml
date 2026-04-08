@@ -60719,7 +60719,7 @@ phases:
       \ import)."
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
-  status: pending
+  status: in_progress
   gate: Shared request-auth skeleton extracted for gateway routes without merging
     distinct HTTP abstraction layers or altering route-specific behavior.
   depends_on:
@@ -60728,7 +60728,7 @@ phases:
   steps:
   - id: gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     name: Extract shared gateway auth skeleton
-    status: pending
+    status: claimed
     description: 'Extract the repeated gateway route auth preparation skeleton used
       by /status, /connect, and /disconnect in src/tela/shell/gateway.py.
 
@@ -60769,6 +60769,8 @@ phases:
 
       '
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-08T04:16:02.364316+00:00'
   - id: gateway_auth_skeleton_refactor.route_auth_retest
     name: Retest gateway route auth and error paths
     status: pending
