@@ -61360,13 +61360,20 @@ phases:
     name: Gate remediation integration verification
     status: pending
     description: 'Gate review: verify all remediation branches compose safely after
-      the focused blocker retest and that any remaining issues have explicit blocker
-      disposition before doc sync.'
+      the authoritative static-hygiene retest path and that any remaining issues have
+      explicit blocker disposition before doc sync.
+
+
+      Authoritative retest path: remediation_integration_verify.retest_batched_static_hygiene_retest_failures.
+
+      Non-authoritative legacy shell: remediation_integration_verify.retest_static_hygiene_blockers
+      is absorbed/deprioritized and must not block or reopen the gate.'
     verification: 'full-plan-check: no unresolved blocker-class intersections remain
       across the remediation seams; focused regression blocker evidence includes exact
-      failing tests plus before/after outputs; static hygiene retest evidence includes
-      exact pyright, ruff, and targeted pytest before/after outputs plus the affected
-      node list; literal audit evidence is sufficient for doc sync.'
+      failing tests plus before/after outputs; authoritative static hygiene retest
+      evidence comes only from remediation_integration_verify.retest_batched_static_hygiene_retest_failures
+      with exact pyright and pytest before/after outputs plus the failing node list;
+      literal audit evidence is sufficient for doc sync.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -61391,7 +61398,6 @@ phases:
     depends_on:
     - remediation_integration_verify.retest_focused_regression_blockers
     - remediation_integration_verify.literal_fragment_audit
-    - remediation_integration_verify.retest_static_hygiene_blockers
     - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
