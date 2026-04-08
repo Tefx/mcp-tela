@@ -182,19 +182,35 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         assert health_result.value is not None
         return JSONResponse(content=health_result.value.model_dump())
 
-    @upstream_server.custom_route("/status", methods=["GET"])
-    async def _status_route(request: Request) -> Response:
+    def _build_auth_handoff(
+        request: Request,
+    ) -> Result[tuple[str, str], tuple[str, int]]:
+        """Shared auth skeleton: extract bearer and retrieve expected runtime token.
+
+        Returns:
+            Result with (request_token, expected_token) on success.
+            Result with (error_message, status_code) on failure, for use with
+            _as_error_response.
+        """
         token_result = extract_bearer_token(request)
         if token_result.is_err:
             assert token_result.error is not None
-            return _as_error_response(token_result.error)
+            return Result(error=(token_result.error, 401))
         assert token_result.value is not None
 
         with _runtime_lock:
             expected_token = _runtime.expected_bearer_token or ""
-        # handle_status computes authoritative lifecycle facts (including connected_servers)
-        # by querying the downstream registry directly, so no separate gateway_status() call needed.
-        status_result = handle_status(token_result.value, expected_token)
+        return Result(value=(token_result.value, expected_token))
+
+    @upstream_server.custom_route("/status", methods=["GET"])
+    async def _status_route(request: Request) -> Response:
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+        request_token, expected_token = auth_result.value
+
+        status_result = handle_status(request_token, expected_token)
         if status_result.is_err:
             assert status_result.error is not None
             return _as_error_response(status_result.error)
@@ -203,11 +219,11 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:
-        token_result = extract_bearer_token(request)
-        if token_result.is_err:
-            assert token_result.error is not None
-            return _as_error_response(token_result.error)
-        assert token_result.value is not None
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+        request_token, expected_token = auth_result.value
 
         try:
             payload = ConnectRequest.model_validate(await request.json())
@@ -217,9 +233,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
                 content={"error": "INVALID_REQUEST: invalid connect payload"},
             )
 
-        with _runtime_lock:
-            expected_token = _runtime.expected_bearer_token or ""
-        connect_result = handle_connect(token_result.value, expected_token, payload)
+        connect_result = handle_connect(request_token, expected_token, payload)
         if connect_result.is_err:
             assert connect_result.error is not None
             return _as_error_response(connect_result.error)
@@ -233,11 +247,11 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
     @upstream_server.custom_route("/disconnect", methods=["POST"])
     async def _disconnect_route(request: Request) -> Response:
-        token_result = extract_bearer_token(request)
-        if token_result.is_err:
-            assert token_result.error is not None
-            return _as_error_response(token_result.error)
-        assert token_result.value is not None
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+        request_token, expected_token = auth_result.value
 
         try:
             payload = DisconnectRequest.model_validate(await request.json())
@@ -247,11 +261,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
                 content={"error": "INVALID_REQUEST: invalid disconnect payload"},
             )
 
-        with _runtime_lock:
-            expected_token = _runtime.expected_bearer_token or ""
-        disconnect_result = handle_disconnect(
-            token_result.value, expected_token, payload
-        )
+        disconnect_result = handle_disconnect(request_token, expected_token, payload)
         if disconnect_result.is_err:
             assert disconnect_result.error is not None
             return _as_error_response(disconnect_result.error)

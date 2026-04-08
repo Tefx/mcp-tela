@@ -14,6 +14,9 @@ from tela.core.errors import (
     AUTH_INVALID_TOKEN,
     CONNECTION_NOT_FOUND,
     GATEWAY_NOT_STARTED,
+    is_auth_error,
+    is_connection_not_found_error,
+    is_gateway_not_started_error,
 )
 from tela.core.models import (
     ConnectRequest,
@@ -39,46 +42,6 @@ from tela.shell.gateway_runtime import (
 from tela.shell.http_auth import validate_bearer_token
 
 logger = logging.getLogger(__name__)
-
-
-def _is_auth_error(result: Result[object, str]) -> bool:
-    """Return True when route failure is an auth-token validation failure."""
-
-    return (
-        result.is_err
-        and isinstance(result.error, str)
-        and result.error.startswith(AUTH_INVALID_TOKEN)
-    )
-
-
-def _is_gateway_not_started_error(result: Result[object, str]) -> bool:
-    """Return True when route failure reports gateway-not-started semantics."""
-
-    return (
-        result.is_err
-        and isinstance(result.error, str)
-        and result.error.startswith(GATEWAY_NOT_STARTED)
-    )
-
-
-def _is_connection_not_found_error(result: Result[object, str]) -> bool:
-    """Return True when disconnect failure reports unknown connection_id."""
-
-    return (
-        result.is_err
-        and isinstance(result.error, str)
-        and result.error.startswith(CONNECTION_NOT_FOUND)
-    )
-
-
-def _is_audit_query_error(result: Result[object, str]) -> bool:
-    """Return True when status failure reports audit query failure."""
-
-    return (
-        result.is_err
-        and isinstance(result.error, str)
-        and result.error.startswith("AUDIT_QUERY_ERROR")
-    )
 
 
 @pre(lambda: True)
@@ -125,9 +88,21 @@ def handle_health() -> Result[HealthResponse, str]:
             and result.value.active_connections == len(result.value.connections)
             and isinstance(result.value.connected_servers, list)
         )
-        or _is_auth_error(result)
-        or _is_gateway_not_started_error(result)
-        or _is_audit_query_error(result)
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_auth_error(result.error)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_gateway_not_started_error(result.error)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and result.error.startswith("AUDIT_QUERY_ERROR")
+        )
     )
 )
 # @shell_complexity: status handler branches on auth/config/uptime/server-list patterns
@@ -233,8 +208,16 @@ def handle_status(
             and isinstance(result.value.get("connection_id"), str)
             and isinstance(result.value.get("profile_name"), str)
         )
-        or _is_auth_error(result)
-        or _is_gateway_not_started_error(result)
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_auth_error(result.error)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_gateway_not_started_error(result.error)
+        )
     )
 )
 def handle_connect(
@@ -327,9 +310,21 @@ def handle_connect(
             and result.value.get("status") == "disconnected"
             and isinstance(result.value.get("connection_id"), str)
         )
-        or _is_auth_error(result)
-        or _is_gateway_not_started_error(result)
-        or _is_connection_not_found_error(result)
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_auth_error(result.error)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_gateway_not_started_error(result.error)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_connection_not_found_error(result.error)
+        )
     )
 )
 def handle_disconnect(
