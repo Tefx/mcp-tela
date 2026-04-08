@@ -61094,7 +61094,7 @@ phases:
       \ route behavior preserved.\n- merge commit: 3f1bb73"
   - id: gateway_auth_skeleton_refactor.retest_pyright_route_auth_narrowing
     name: Retest pyright route auth narrowing and preserved behavior
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       that the gateway auth skeleton remediation closed the pyright narrowing regression
       without changing route behavior.
@@ -61152,6 +61152,8 @@ phases:
     depends_on:
     - gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-08T08:58:09.084773+00:00'
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
