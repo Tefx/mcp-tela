@@ -60517,7 +60517,7 @@ phases:
       \ files passed (with pre-existing warnings)\n\nCommit:\n- fab4340e"
   - id: error_classification_unification.unify_gateway_status_mapping
     name: Unify gateway error-to-status mapping
-    status: claimed
+    status: done
     description: 'Refactor src/tela/shell/gateway.py so HTTP error-prefix to status-code
       mapping uses the shared/data-driven classification basis instead of ad hoc duplicated
       startswith checks.
@@ -60550,6 +60550,19 @@ phases:
     agent: python-executor
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-08T08:13:36.871410+00:00'
+    done_at: '2026-04-08T08:25:25.717706+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- No refs for this step.\n\n\
+      ## Mapping Cleanup Report\n- Previous ad hoc mappings replaced:\n  _as_error_response\
+      \ in gateway.py previously contained startswith checks for AUTH_INVALID_TOKEN,\
+      \ CONNECTION_NOT_FOUND, GATEWAY_NOT_STARTED, ADMISSION_REJECTED_WARMING mapping\
+      \ to hardcoded HTTP status codes.\n\n- Shared/data-driven mapping path:\n  Added\
+      \ ERROR_TO_HTTP_STATUS map and error_to_http_status() helper in src/tela/core/errors.py;\
+      \ gateway now calls error_to_http_status(error) in _as_error_response.\n\n-\
+      \ Preserved status outcomes:\n  AUTH_INVALID_TOKEN → 401; CONNECTION_NOT_FOUND\
+      \ → 404; GATEWAY_NOT_STARTED → 503; ADMISSION_REJECTED_WARMING → 503; fallback\
+      \ → 400.\n\nVerification:\n- All 92 tests pass (8 core + 58 gateway + 26 http_routes)\n\
+      - Doctests pass for error_to_http_status\n- Invar guard passes with no errors\n\
+      - Merge commit: d6bf830"
   - id: error_classification_unification.gate
     name: Gate error classification unification
     status: pending
