@@ -64297,6 +64297,141 @@ phases:
     depends_on:
     - dup_audit.c2.extract-retry-http-request-foundation
     agent: python-senior-tacit
+  - id: dup_audit.c2.verify-http-retry-consolidation
+    name: Verify connect and remote-state HTTP retry consolidation
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C2: duplicate-abstraction audit / HTTP POST Retry Skeleton
+
+
+      touch_paths:
+
+      - src/tela/commands/http_client.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      - connect/remote_state test modules
+
+      harness_refs:
+
+      - connect bridge retry tests
+
+      - gateway status tests
+
+      - remote state fetch tests
+
+      authoritative_interface: retry_http_request in src/tela/commands/http_client.py
+
+
+      tags:
+
+      - integration
+
+
+      As an INDEPENDENT TESTER (`integration-verifier-tacit`), run a full-plan-check
+      over the duplicate-audit remediation with focus on the C2 consolidation and
+      its interaction with prior C1/C4 policy work.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
+
+
+      Test for:
+
+      - helper-level retry/backoff preservation
+
+      - caller-level response parsing still local to each function
+
+      - no connect bridge lifecycle regression
+
+      - no remote-state status fetch regression
+
+      - no policy mismatch with the transient classifier decision from C4
+
+
+      Independence Level: L2.'
+    verification: '- full-plan-check protecting dup_audit.c2.gate and all downstream
+      review phases
+
+      - independent targeted connect_cmd and remote_state regression suite passes
+
+      - independent `uv run invar guard --all` passes
+
+      - evidence states whether C4 transient policy and C2 retry helper behavior are
+      consistent'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: duplicate-audit C2 plus upstream C1/C4 interaction checks
+
+      **Independence Level**: L2
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```text
+
+      <paste exact commands>
+
+      ```
+
+      - Actual output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Integration Evidence
+
+      - Path exercised: caller -> retry_http_request -> urllib request -> caller parsing
+
+      - C4 policy consistency check:
+
+      - Remaining mocks / harness caveats:
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+
+      ### Verdict
+
+      - PASS | ISSUES_FOUND | INCOMPLETE
+
+      '
+    depends_on:
+    - dup_audit.c2.extract-retry-http-request-foundation
+    - dup_audit.c2.migrate-remaining-http-retry-callers
+    agent: integration-verifier-tacit
 - id: dup_audit.verify
   name: Duplicate Audit Remediation Verification
   status: locked
