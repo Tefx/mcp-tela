@@ -61392,6 +61392,7 @@ phases:
     - remediation_integration_verify.retest_focused_regression_blockers
     - remediation_integration_verify.literal_fragment_audit
     - remediation_integration_verify.retest_static_hygiene_blockers
+    - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     agent: gate-reviewer-tacit
   - id: remediation_integration_verify.fix_focused_regression_blockers
     name: Fix focused regression blockers
