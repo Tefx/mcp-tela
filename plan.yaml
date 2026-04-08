@@ -60202,7 +60202,7 @@ phases:
       \ only)"
   - id: downstream_wrapper_removal.update_monkeypatch_tests
     name: Update monkeypatch-sensitive downstream tests
-    status: claimed
+    status: pending
     description: 'Adjust downstream tests so monkeypatch/fake injection targets the
       authoritative open/validate seam after wrapper removal.
 
@@ -60240,8 +60240,6 @@ phases:
     depends_on:
     - downstream_wrapper_removal.remove_passthrough_wrappers
     agent: integration-verifier-tacit
-    claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-07T19:15:24.604896+00:00'
   - id: downstream_wrapper_removal.gate
     name: Gate downstream wrapper removal
     status: pending
