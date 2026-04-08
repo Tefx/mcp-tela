@@ -62938,7 +62938,7 @@ phases:
       - no stale remediation TODO/FIXME/HACK drift detected'
 - id: deep_review_gate
   name: Deep Review Gate
-  status: pending
+  status: in_progress
   gate: Independent wiring, spec, architecture, and gate review confirm remediation
     is complete and scope boundaries were respected.
   depends_on:
@@ -62946,7 +62946,7 @@ phases:
   steps:
   - id: deep_review_gate.architecture_review
     name: Architecture review for remediation boundaries
-    status: pending
+    status: claimed
     description: 'Independently review whether the remediation preserved intended
       module/layer boundaries.
 
@@ -62980,6 +62980,8 @@ phases:
 
       '
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-08T16:44:51.391770+00:00'
   - id: deep_review_gate.spec_conformance
     name: Spec conformance review for remediation behavior
     status: pending
