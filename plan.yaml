@@ -60992,7 +60992,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
     name: Fix pyright route auth narrowing regressions
-    status: pending
+    status: claimed
     description: 'Fix ALL blocker-class pyright type-safety regressions introduced
       by the gateway auth skeleton extraction while preserving existing route behavior.
 
@@ -61075,6 +61075,8 @@ phases:
     depends_on:
     - gateway_auth_skeleton_refactor.route_auth_retest
     agent: python-executor
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-08T08:52:44.006517+00:00'
   - id: gateway_auth_skeleton_refactor.retest_pyright_route_auth_narrowing
     name: Retest pyright route auth narrowing and preserved behavior
     status: pending
