@@ -64013,12 +64013,12 @@ phases:
     agent: python-executor
 - id: dup_audit.c1
   name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
-  status: locked
+  status: done
   depends_on:
   - dup_audit.c3
 - id: dup_audit.c4
   name: 'Duplicate Audit Remediation C4: Transient Error Classifier Standardization'
-  status: locked
+  status: pending
   depends_on:
   - dup_audit.c1
 - id: dup_audit.c2
