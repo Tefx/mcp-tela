@@ -61314,7 +61314,7 @@ phases:
       \ with reproducible failing tests"
   - id: remediation_integration_verify.literal_fragment_audit
     name: Audit remaining fragmented error literals
-    status: claimed
+    status: done
     description: Perform a focused shared-literal audit across the scoped remediation
       files after the focused regression blocker retest is green to confirm shared
       error semantics were actually adopted and any remaining local literals are intentional.
@@ -61344,6 +61344,18 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-08T10:31:38.571834+00:00'
+    done_at: '2026-04-08T10:41:41.949205+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- No refs for this step.\n\n\
+      ## Literal Audit Report\n- Migrated shared literals:\n  AUTH_INVALID_TOKEN,\
+      \ GATEWAY_NOT_STARTED, CONNECTION_NOT_FOUND, ADMISSION_REJECTED_WARMING, DOWNSTREAM_UNAVAILABLE,\
+      \ DOWNSTREAM_CONNECT_FAILED, DOWNSTREAM_ERROR and related core constants are\
+      \ centralized in src/tela/core/errors.py and consumed across gateway/http/downstream\
+      \ modules.\n- Remaining intentional locals:\n  shell-local I/O/startup/audit/lockfile\
+      \ scoped codes (e.g., CONFIG_FILE_READ_ERROR, STARTUP_LOCK_ERROR, AUDIT_*, LOCKFILE_*)\
+      \ remain intentionally local with no cross-module shared semantics.\n- Unexpected\
+      \ fragments:\n  PROFILE_NOT_FOUND hardcoded usages in shell/upstream.py and\
+      \ TOOL_CONFLICT hardcoded usages in shell/downstream.py + shell/reload.py still\
+      \ bypass shared constants and should be normalized in follow-up."
   - id: remediation_integration_verify.gate
     name: Gate remediation integration verification
     status: pending
