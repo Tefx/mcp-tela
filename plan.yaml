@@ -62099,6 +62099,81 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_static_hygiene_blockers
     agent: python-executor
+  - id: remediation_integration_verify.retest_batched_static_hygiene_retest_failures
+    name: Retest batched static hygiene remediation
+    status: pending
+    description: 'As an INDEPENDENT TESTER, rerun the exact batched failure scope
+      after remediation_integration_verify.fix_batched_static_hygiene_retest_failures.
+
+
+      Re-verify the same pyright and pytest scope that previously failed:
+
+      - tests/shell/test_downstream.py fake session/stack type compatibility
+
+      - tests/shell/test_connect_cmd.py operator ''in'' on str|None
+
+      - reconnect tests covering the _clients registration precondition
+
+      - bridge tests covering HTTP isolation/stubbing in tests/shell/test_connect_cmd.py
+
+
+      Use the exact failing node IDs from the prior red run for pytest retest scope,
+      and confirm before/after outputs are preserved in evidence.
+
+
+      Work type: defect_repair.
+
+      Step type: test
+
+      step_intent: retest_green
+
+      expected_result: green'
+    verification: '- local-check: targeted pyright passes for the affected files
+
+      - local-check: targeted pytest passes for the exact failing node IDs from the
+      red run
+
+      - expected_result: green for the targeted retest
+
+      - Evidence confirms the retest node list exactly matches the recorded failing
+      node IDs
+
+      - Evidence includes exact before/after outputs for pyright and pytest'
+    evidence_template: '## Retest scope
+
+      - Exact failing node IDs reused for retest:
+
+      - Files included in pyright scope:
+
+
+      ## Pyright retest
+
+      - Command:
+
+      - Before output reference:
+
+      - After output (exact):
+
+
+      ## Pytest retest
+
+      - Command:
+
+      - Before output reference:
+
+      - After output (exact):
+
+
+      ## Outcome
+
+      - Did every previously failing node ID turn green?
+
+      - Any drift between recorded failures and retest scope?
+
+      - Remaining blockers:'
+    depends_on:
+    - remediation_integration_verify.fix_batched_static_hygiene_retest_failures
+    agent: integration-verifier-tacit
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
