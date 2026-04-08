@@ -60517,7 +60517,7 @@ phases:
       \ files passed (with pre-existing warnings)\n\nCommit:\n- fab4340e"
   - id: error_classification_unification.unify_gateway_status_mapping
     name: Unify gateway error-to-status mapping
-    status: claimed
+    status: pending
     description: 'Refactor src/tela/shell/gateway.py so HTTP error-prefix to status-code
       mapping uses the shared/data-driven classification basis instead of ad hoc duplicated
       startswith checks.
@@ -60548,8 +60548,6 @@ phases:
     depends_on:
     - error_classification_unification.unify_http_routes_helpers
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-04-08T04:23:05.655600+00:00'
   - id: error_classification_unification.gate
     name: Gate error classification unification
     status: pending
