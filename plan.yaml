@@ -65431,6 +65431,6 @@ phases:
   - dup_audit.verify
 - id: dup_audit.deep_review
   name: Duplicate Audit Deep Review
-  status: pending
+  status: done
   depends_on:
   - dup_audit.doc_sync
