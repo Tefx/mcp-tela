@@ -61549,7 +61549,7 @@ phases:
       merge_commit: 1d5f06e'
   - id: remediation_integration_verify.retest_focused_regression_blockers
     name: Retest focused regression blockers
-    status: pending
+    status: claimed
     description: 'Work type: defect_repair
 
       Step type: test
@@ -61636,6 +61636,8 @@ phases:
     depends_on:
     - remediation_integration_verify.fix_focused_regression_blockers
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-08T10:29:07.837072+00:00'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
