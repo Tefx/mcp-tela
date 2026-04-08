@@ -62815,7 +62815,7 @@ phases:
   steps:
   - id: remediation_doc_sync.update_docs
     name: Update remediation docs and comments
-    status: pending
+    status: claimed
     description: 'Sync comments, notes, and any affected documentation/examples with
       the final remediation outcome.
 
@@ -62849,6 +62849,8 @@ phases:
 
       '
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer
+    claimed_at: '2026-04-08T16:35:45.673285+00:00'
   - id: remediation_doc_sync.gate
     name: Gate remediation doc sync
     status: pending
