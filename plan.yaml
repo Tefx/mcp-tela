@@ -61699,7 +61699,7 @@ phases:
       - GREEN: listed tests now pass'
   - id: remediation_integration_verify.fix_static_hygiene_blockers
     name: Fix static hygiene blockers
-    status: pending
+    status: claimed
     description: 'Work type: defect_repair.
 
 
@@ -61838,6 +61838,8 @@ phases:
     depends_on:
     - remediation_integration_verify.literal_fragment_audit
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-08T10:48:30.778984+00:00'
   - id: remediation_integration_verify.retest_static_hygiene_blockers
     name: Retest static hygiene blockers
     status: pending
