@@ -62370,6 +62370,202 @@ phases:
     - remediation_integration_verify.literal_fragment_audit
     - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     agent: python-senior
+  - id: remediation_integration_verify.retest_gate_precheck
+    name: Retest gate blockers and precheck closure
+    status: pending
+    description: 'Work type: defect_repair
+
+      Step type: test
+
+      Step intent: retest_green
+
+      Expected result: green-or-explicitly-classified
+
+      Agent source: project
+
+
+      As an INDEPENDENT TESTER, rerun the authoritative remediation gate-precheck
+      scope after remediation_integration_verify.fix_gate_blockers lands.
+
+
+      Required command set (all required):
+
+      1. targeted pytest for the B1 failing node set in tests/shell/test_connect_bridge_readiness_gaps_red.py
+
+      2. ruff check src/
+
+      3. pyright src/tela/core/contracts.py
+
+      4. invar guard check outcome with explicit blocker disposition
+
+
+      YOUR GOAL IS TO prove the repaired scope is green where expected and to explicitly
+      classify any residual invar blocker rather than silently carrying it forward.
+
+
+      ## Required Retest Assertions
+
+      - B1: the exact previously failing sibling nodes now pass.
+
+      - B2: ruff check src/ no longer reports the five named src findings from connect_cmd.py/downstream.py/http_routes.py/upstream.py.
+
+      - B4: pyright src/tela/core/contracts.py is clean for the self-reference typing
+      issue.
+
+      - B3: invar guard outcome is either clean for this phase scope or includes an
+      explicit blocker disposition register stating whether escape hatch budget, shell_result
+      budget, and downstream.py size still block remediation_integration_verify.gate.
+
+
+      ## Independence Requirement
+
+      This step is independent retest/gate-precheck evidence and must not reuse implementation
+      assertions as proof. Re-run the commands and capture exact outputs.
+
+
+      ## Failure Policy
+
+      If any command remains red, do not soften the result. Capture the exact red
+      output and state which blocker remains open and which gate it blocks.'
+    verification: '- rerun authoritative gate-precheck commands after remediation_integration_verify.fix_gate_blockers
+
+      - preserve exact before/after outputs for targeted pytest, ruff, pyright, and
+      invar guard
+
+      - include explicit blocker disposition for any residual B3 item
+
+      - evidence must be sufficient for remediation_integration_verify.gate to decide
+      closure without reopening legacy retest shells'
+    evidence_template: '## Command Transcript Index (MANDATORY)
+
+      1. targeted pytest for B1 nodes
+
+      2. ruff check src/
+
+      3. pyright src/tela/core/contracts.py
+
+      4. invar guard <exact command used>
+
+
+      ## Before vs After Summary (MANDATORY)
+
+      | Blocker | Before status | After status | Evidence section |
+
+      | --- | --- | --- | --- |
+
+      | B1 | <red> | <green/red> | <section> |
+
+      | B2 | <red> | <green/red> | <section> |
+
+      | B3 | <red/blocked> | <clean/classified residual> | <section> |
+
+      | B4 | <red> | <green/red> | <section> |
+
+
+      ## Exact Outputs
+
+      ### 1) targeted pytest for B1 nodes
+
+      #### Before
+
+      ```text
+
+      <paste exact prior failing pytest output>
+
+      ```
+
+      #### After
+
+      ```text
+
+      <paste exact rerun pytest output>
+
+      ```
+
+
+      ### 2) ruff check src/
+
+      #### Before
+
+      ```text
+
+      <paste exact prior ruff output>
+
+      ```
+
+      #### After
+
+      ```text
+
+      <paste exact rerun ruff output>
+
+      ```
+
+
+      ### 3) pyright src/tela/core/contracts.py
+
+      #### Before
+
+      ```text
+
+      <paste exact prior pyright output>
+
+      ```
+
+      #### After
+
+      ```text
+
+      <paste exact rerun pyright output>
+
+      ```
+
+
+      ### 4) invar guard outcome with explicit blocker disposition
+
+      #### Before
+
+      ```text
+
+      <paste exact prior invar guard blocker output>
+
+      ```
+
+      #### After
+
+      ```text
+
+      <paste exact rerun invar guard outcome>
+
+      ```
+
+      Residual blocker disposition table (required even if empty):
+
+      | Issue | Present after rerun? | Blocks remediation_integration_verify.gate?
+      | Owner | Why |
+
+      | --- | --- | --- | --- | --- |
+
+      | escape hatch budget | yes/no | yes/no | <owner> | <reason> |
+
+      | shell_result budget | yes/no | yes/no | <owner> | <reason> |
+
+      | downstream.py size | yes/no | yes/no | <owner> | <reason> |
+
+
+      ## Gate Recommendation
+
+      - Recommendation: OPEN / HOLD
+
+      - Why: <tie directly to B1-B4 outcomes>
+
+      - Legacy retest shell reopened?: NO unless explicit new evidence proves the
+      authoritative path is insufficient
+
+      '
+    depends_on:
+    - remediation_integration_verify.fix_gate_blockers
+    agent: integration-verifier-tacit
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
