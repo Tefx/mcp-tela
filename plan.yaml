@@ -63450,6 +63450,73 @@ phases:
     - dup_audit.c3.delegate-close-list-helper
     - dup_audit.c3.verify-downstream-close-remediation
     agent: gate-reviewer-tacit
+  - id: dup_audit.c4.gate
+    name: Gate duplicate-audit C4 remediation
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: STANDARD
+
+      review_depth_rationale:
+
+      - cross-module shared truth introduction
+
+      - explicit divergence adjudication required for TimeoutError policy
+
+
+      Gate review: verify the transient classifier standardization is explicit, preserve-scope,
+      and ready to serve as the policy basis for the later C2 retry skeleton consolidation.'
+    verification: '- phase-check protecting dup_audit.c2
+
+      - no unresolved blocker in shared transient error policy
+
+      - TimeoutError divergence explicitly closed
+
+      - `uv run invar guard --all` evidence reviewed'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.c4
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.c4.standardize-transient-classifiers |  |  |  |
+
+      | dup_audit.c4.verify-transient-classifier-standardization |  |  |  |
+
+
+      ### Gate Decision Basis
+
+      - shared tuple introduced correctly: yes/no
+
+      - TimeoutError policy explicit: yes/no
+
+      - layer-specific logic preserved: yes/no
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      '
+    agent: gate-reviewer-tacit
 - id: dup_audit.c1
   name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
   status: locked
@@ -63963,76 +64030,6 @@ phases:
     depends_on:
     - dup_audit.c4.standardize-transient-classifiers
     agent: integration-verifier-tacit
-  - id: dup_audit.c4.gate
-    name: Gate duplicate-audit C4 remediation
-    status: pending
-    description: 'step_type: gate
-
-      review_depth: STANDARD
-
-      review_depth_rationale:
-
-      - cross-module shared truth introduction
-
-      - explicit divergence adjudication required for TimeoutError policy
-
-
-      Gate review: verify the transient classifier standardization is explicit, preserve-scope,
-      and ready to serve as the policy basis for the later C2 retry skeleton consolidation.'
-    verification: '- phase-check protecting dup_audit.c2
-
-      - no unresolved blocker in shared transient error policy
-
-      - TimeoutError divergence explicitly closed
-
-      - `uv run invar guard --all` evidence reviewed'
-    evidence_template: '## Gate Review Report
-
-
-      **Reviewer**: gate-reviewer-tacit
-
-      **Phase**: dup_audit.c4
-
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this step:
-
-      - <filename> — key passage or "NOT READ: <reason>"
-
-
-      If no refs were provided, state: "No refs for this step."
-
-
-      ### Step Review
-
-      | Step ID | Status | Evidence Quality | Concerns |
-
-      | --- | --- | --- | --- |
-
-      | dup_audit.c4.standardize-transient-classifiers |  |  |  |
-
-      | dup_audit.c4.verify-transient-classifier-standardization |  |  |  |
-
-
-      ### Gate Decision Basis
-
-      - shared tuple introduced correctly: yes/no
-
-      - TimeoutError policy explicit: yes/no
-
-      - layer-specific logic preserved: yes/no
-
-
-      ### Gate Decision
-
-      - OPEN | BLOCKED
-
-      '
-    depends_on:
-    - dup_audit.c4.standardize-transient-classifiers
-    - dup_audit.c4.verify-transient-classifier-standardization
-    agent: gate-reviewer-tacit
 - id: dup_audit.c2
   name: 'Duplicate Audit Remediation C2: HTTP Retry Skeleton Consolidation'
   status: locked
