@@ -61549,7 +61549,7 @@ phases:
       merge_commit: 1d5f06e'
   - id: remediation_integration_verify.retest_focused_regression_blockers
     name: Retest focused regression blockers
-    status: claimed
+    status: done
     description: 'Work type: defect_repair
 
       Step type: test
@@ -61638,6 +61638,49 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-08T10:29:07.837072+00:00'
+    done_at: '2026-04-08T10:31:26.347774+00:00'
+    evidence: '## Retest Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Exact rerun command (MANDATORY)
+
+      - uv run pytest tests/shell/test_connect_cmd.py::test_bridge_lifecycle_posts_connect_and_disconnect
+      -xvs
+
+      - uv run pytest tests/shell/test_connect_cmd.py::test_run_bridge_uses_recovered_bearer_token_for_reconnect
+      -xvs
+
+
+      ### Previously failing tests (MANDATORY)
+
+      - tests/shell/test_connect_cmd.py::test_bridge_lifecycle_posts_connect_and_disconnect
+
+      - tests/shell/test_connect_cmd.py::test_run_bridge_uses_recovered_bearer_token_for_reconnect
+
+
+      ### Before outputs (MANDATORY)
+
+      - TypeError on _fake_forward_stdio_http unexpected keyword argument ''recover_transport''
+      (prior to fix)
+
+      - reconnect path failures associated with setup gaps
+
+
+      ### After outputs (MANDATORY)
+
+      - both rerun node IDs passed (1 passed each invocation)
+
+      - no kwarg mismatch error observed
+
+
+      ### Verdict
+
+      - GREEN: listed tests now pass'
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
