@@ -63806,7 +63806,7 @@ phases:
       invar full-scan reports pre-existing unrelated failures.
   - id: dup_audit.c4.verify-transient-classifier-standardization
     name: Verify transient classifier standardization and TimeoutError policy
-    status: claimed
+    status: pending
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -63926,8 +63926,6 @@ phases:
 
       '
     agent: integration-verifier-tacit
-    claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-08T18:48:58.581964+00:00'
   - id: dup_audit.c4.standardize-transient-classifiers
     name: Introduce shared transient exception tuple and align classifier policy
     status: done
