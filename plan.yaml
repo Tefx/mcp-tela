@@ -64884,6 +64884,51 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+  - id: dup_audit.doc_sync.gate
+    name: Gate duplicate-audit doc sync
+    status: pending
+    description: 'step_type: gate
+
+      review_depth: QUICK
+
+      review_depth_rationale:
+
+      - doc-sync is expected to be small or no-op but must still prove no drift
+
+
+      Gate review: verify duplicate-audit doc-sync evidence is explicit and any required
+      documentation updates are complete before deep review.'
+    verification: '- phase-check protecting dup_audit.deep_review
+
+      - no doc drift remains for the duplicate-audit scope
+
+      - evidence is explicit whether docs changed or stayed unchanged'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.doc_sync
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Gate Decision
+
+      - OPEN | BLOCKED
+
+      - Remaining drift:
+
+      '
+    agent: gate-reviewer-tacit
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: locked
@@ -64961,53 +65006,6 @@ phases:
 
       '
     agent: doc-reviewer-tacit
-  - id: dup_audit.doc_sync.gate
-    name: Gate duplicate-audit doc sync
-    status: pending
-    description: 'step_type: gate
-
-      review_depth: QUICK
-
-      review_depth_rationale:
-
-      - doc-sync is expected to be small or no-op but must still prove no drift
-
-
-      Gate review: verify duplicate-audit doc-sync evidence is explicit and any required
-      documentation updates are complete before deep review.'
-    verification: '- phase-check protecting dup_audit.deep_review
-
-      - no doc drift remains for the duplicate-audit scope
-
-      - evidence is explicit whether docs changed or stayed unchanged'
-    evidence_template: '## Gate Review Report
-
-
-      **Reviewer**: gate-reviewer-tacit
-
-      **Phase**: dup_audit.doc_sync
-
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this step:
-
-      - <filename> — key passage or "NOT READ: <reason>"
-
-
-      If no refs were provided, state: "No refs for this step."
-
-
-      ### Gate Decision
-
-      - OPEN | BLOCKED
-
-      - Remaining drift:
-
-      '
-    depends_on:
-    - dup_audit.doc_sync.review-and-update-docs
-    agent: gate-reviewer-tacit
 - id: dup_audit.deep_review
   name: Duplicate Audit Deep Review
   status: locked
