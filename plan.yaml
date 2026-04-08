@@ -61912,46 +61912,20 @@ phases:
 
       commit: b14edc0d'
   - id: remediation_integration_verify.retest_static_hygiene_blockers
-    name: Retest static hygiene blockers
+    name: Legacy static hygiene retest shell (absorbed by batched retest)
     status: pending
-    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
-      the static hygiene blocker remediation from a fresh perspective.
+    description: 'Legacy shell retained for provenance only. This step is no longer
+      an authoritative retest path.
 
 
-      Work type: defect_repair.
-
-      Step type: test
-
-      step_intent: retest_green
-
-      expected_result: green
-
-      Verification scope: local-check protecting remediation_integration_verify.gate.
+      Disposition: absorbed/deprioritized by remediation_integration_verify.retest_batched_static_hygiene_retest_failures.
 
 
-      Re-run the exact affected-node checks for:
-
-      - pyright on tests/shell/test_connect_cmd.py, tests/shell/test_downstream.py,
-      and src/tela/shell/gateway.py
-
-      - ruff on the same affected nodes
-
-      - targeted pytest covering tests/shell/test_connect_cmd.py and tests/shell/test_downstream.py
-
-
-      YOUR GOAL IS TO FIND PROBLEMS, not to confirm it works.
-
-      Document exact command lines, exact before/after outputs, and the affected node
-      list used for retest scope.'
-    verification: '- local-check: pyright, ruff, and targeted pytest all run against
-      the affected nodes
-
-      - expected_result: green for the targeted retest
-
-      - Evidence includes exact commands plus exact output after the fix for each
-      command family
-
-      - Evidence confirms the affected node list matches the fix step scope'
+      Do not use this step to unblock the phase gate. Any remaining static hygiene
+      closure must flow through the authoritative batched retest path so the retry
+      loop is deterministic and single-owned.'
+    verification: 'non-blocking legacy shell: no gate dependency; authoritative closure
+      is recorded only through remediation_integration_verify.retest_batched_static_hygiene_retest_failures'
     evidence_template: '## Verification Report
 
 
@@ -62020,7 +61994,7 @@ phases:
 
       '
     depends_on:
-    - remediation_integration_verify.fix_static_hygiene_blockers
+    - remediation_integration_verify.retest_batched_static_hygiene_retest_failures
     agent: integration-verifier-tacit
   - id: remediation_integration_verify.fix_batched_static_hygiene_retest_failures
     name: Fix batched static hygiene retest failures
