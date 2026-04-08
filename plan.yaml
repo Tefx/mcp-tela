@@ -61699,7 +61699,7 @@ phases:
       - GREEN: listed tests now pass'
   - id: remediation_integration_verify.fix_static_hygiene_blockers
     name: Fix static hygiene blockers
-    status: claimed
+    status: done
     description: 'Work type: defect_repair.
 
 
@@ -61840,6 +61840,76 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-08T11:02:22.422320+00:00'
+    done_at: '2026-04-08T11:17:35.602117+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - tests/shell/test_connect_cmd.py — reviewed duplicate helper and undefined-name
+      sections around bridge test fakes.
+
+      - tests/shell/test_downstream.py — reviewed duplicate import/redefinition sites
+      and undefined Any annotation site.
+
+      - src/tela/shell/gateway.py — reviewed and removed stale unused core error imports.
+
+
+      ## Affected Node List (MANDATORY)
+
+      - src/tela/shell/gateway.py::tela.core.errors import block
+
+      - tests/shell/test_connect_cmd.py::_fake_get_gateway_status (duplicate), _fake_forward_stdio_http
+      (duplicate), bridge teardown local vars/assertions
+
+      - tests/shell/test_downstream.py::module imports + local duplicate imports in
+      reconnect-focused tests + Any annotation site
+
+
+      ## Before Error Outputs (MANDATORY)
+
+      ### pyright/compile class
+
+      - undefined names and redeclarations in tests/shell/test_connect_cmd.py and
+      tests/shell/test_downstream.py (degraded_status/forwarded/readiness_snapshots/interrupt_count/resume_count/Any
+      and duplicate helper/import patterns)
+
+      ### ruff
+
+      - F401 unused imports in src/tela/shell/gateway.py
+
+      - F821/F841 in tests/shell/test_connect_cmd.py
+
+      - F401/F811/F821 in tests/shell/test_downstream.py
+
+
+      ## After Error Outputs (MANDATORY)
+
+      ### ruff
+
+      - uv run ruff check tests/shell/test_connect_cmd.py tests/shell/test_downstream.py
+      src/tela/shell/gateway.py
+
+      - result: all checks passed
+
+      ### compile check
+
+      - uv run python -m py_compile tests/shell/test_connect_cmd.py tests/shell/test_downstream.py
+      src/tela/shell/gateway.py
+
+      - result: compile OK
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: integration edits introduced duplicate helper/import patterns
+      and left stale local references/unused imports.
+
+      - Symptom: static-analysis blocker cluster (undefined names, duplicate declarations/imports,
+      unused imports).
+
+      - Closure: removed duplicate/stale definitions, restored required names/imports
+      minimally, and cleaned gateway unused imports.
+
+
+      commit: b14edc0d'
   - id: remediation_integration_verify.retest_static_hygiene_blockers
     name: Retest static hygiene blockers
     status: pending
