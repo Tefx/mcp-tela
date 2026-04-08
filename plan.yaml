@@ -60989,6 +60989,91 @@ phases:
     - gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     - gateway_auth_skeleton_refactor.route_auth_retest
     agent: gate-reviewer-tacit
+  - id: gateway_auth_skeleton_refactor.fix_pyright_route_auth_narrowing
+    name: Fix pyright route auth narrowing regressions
+    status: pending
+    description: 'Fix ALL blocker-class pyright type-safety regressions introduced
+      by the gateway auth skeleton extraction while preserving existing route behavior.
+
+
+      Required fix pattern:
+
+      - add explicit type-narrowing asserts at gateway route call sites where auth_result.error
+      and auth_result.value are unpacked
+
+      - preserve existing route behavior and route-specific HTTP abstraction boundaries
+
+      - do not merge distinct Request-vs-ASGI handling paths
+
+
+      Scope:
+
+      - src/tela/shell/gateway.py route call sites touched by the shared auth skeleton
+      extraction
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: the extracted auth skeleton widened result handling enough that
+      pyright no longer sees route-local error/value unpacking as safely narrowed
+
+      - Symptom: pyright reports type-safety errors at route call sites in src/tela/shell/gateway.py
+
+      - Why this fix is not surface-level: the route sites must prove the existing
+      control-flow invariants explicitly with asserts rather than changing route behavior
+      or weakening type expectations
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      - pyright type-safety regression in src/tela/shell/gateway.py after auth skeleton
+      extraction
+
+      - any sibling route call site in the same file that unpacks auth_result.error/value
+      without explicit narrowing proof
+
+
+      Search requirement:
+
+      - inspect every route call site in src/tela/shell/gateway.py that branches on
+      auth_result before unpacking error/value
+
+      - add explicit narrowing asserts wherever needed so pyright can prove the current
+      behavior without changing runtime semantics
+
+
+      Out-of-scope guardrail:
+
+      - do not alter route success/error behavior, status mapping, or response payload
+      semantics beyond the explicit type-narrowing asserts needed for static safety'
+    verification: 'local-check: pyright no longer reports route-auth narrowing errors
+      in src/tela/shell/gateway.py, and targeted gateway route tests still prove existing
+      auth-path behavior is preserved.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nIf no refs were provided,\
+      \ state: \"No refs for this step.\"\n\n## Pyright Remediation Evidence\n- Files\
+      \ updated:\n  - src/tela/shell/gateway.py — list each route call site where\
+      \ explicit narrowing asserts were added\n- Sibling search performed:\n  - describe\
+      \ every route call site reviewed for auth_result.error/value unpacking\n\n##\
+      \ Pyright Output Snippets (MANDATORY)\n- Command executed:\n  ```\n  pyright\
+      \ src/tela/shell/gateway.py\n  ```\n- Before/after or final output snippet showing\
+      \ the prior narrowing error is gone:\n  ```\n  <paste pyright output>\n  ```\n\
+      \n## Route-Behavior Preservation Proof (MANDATORY)\n- Targeted route test command(s):\n\
+      \  ```\n  <paste exact pytest command(s)>\n  ```\n- Actual output snippet:\n\
+      \  ```\n  <paste relevant pytest output>\n  ```\n- Brief mapping from each assert\
+      \ insertion to the preserved route behavior it protects\n\n## Verdict\n- [ ]\
+      \ pyright narrowing blocker removed\n- [ ] sibling route call sites checked\n\
+      - [ ] route behavior preserved"
+    depends_on:
+    - gateway_auth_skeleton_refactor.route_auth_retest
+    agent: python-executor
 - id: remediation_integration_verify
   name: Remediation Integration Verification
   status: locked
