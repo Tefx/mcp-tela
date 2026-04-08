@@ -62946,7 +62946,7 @@ phases:
   steps:
   - id: deep_review_gate.architecture_review
     name: Architecture review for remediation boundaries
-    status: claimed
+    status: done
     description: 'Independently review whether the remediation preserved intended
       module/layer boundaries.
 
@@ -62982,6 +62982,27 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-08T16:44:51.391770+00:00'
+    done_at: '2026-04-08T16:47:58.768293+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - No refs for this step.
+
+
+      ## Architecture Review Report
+
+      - Layer separation preserved: request-surface bearer extraction and ASGI middleware
+      extraction remain separate with distinct ownership boundaries.
+
+      - Ownership drift: downstream transport/session primitives remain scoped to
+      downstream_clients; orchestration/registry/recovery remains in downstream; no
+      widened cross-module ownership.
+
+      - Boundary concerns: error semantics centralization remains limited to shared
+      cross-surface semantics; unrelated local semantics remain local; no blocker-class
+      structural regression detected.
+
+
+      Verdict: architecture boundaries remain valid for this remediation tranche.'
   - id: deep_review_gate.spec_conformance
     name: Spec conformance review for remediation behavior
     status: pending
