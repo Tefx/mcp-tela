@@ -64184,6 +64184,119 @@ phases:
 
       '
     agent: python-senior-tacit
+  - id: dup_audit.c2.migrate-remaining-http-retry-callers
+    name: Migrate remaining retry skeleton callers onto shared helper
+    status: pending
+    description: 'step_type: implementation
+
+      work_type: technical_debt_remediation
+
+      agent_source: default
+
+      spec_refs:
+
+      - user audit C2: duplicate-abstraction audit / HTTP POST Retry Skeleton
+
+
+      touch_paths:
+
+      - src/tela/commands/http_client.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      harness_refs:
+
+      - connect_cmd request/retry tests
+
+      - remote_state status-fetch tests
+
+      authoritative_interface: retry_http_request in src/tela/commands/http_client.py
+
+
+      effective_truth_owner: src/tela/commands/http_client.py
+
+      consumer_surfaces:
+
+      - _post_mcp_message
+
+      - _post_json
+
+      - _get_gateway_status
+
+      - _fetch_status_payload
+
+      state_strata:
+
+      - command-layer HTTP request/retry helper only
+
+      cross_cutting_policy:
+
+      - shared retry/backoff/request construction with caller-owned response parsing
+      and validation
+
+
+      Migrate the remaining duplicate skeleton callers to `retry_http_request(...)`
+      after the foundation step is stable.
+
+
+      Required preserve-scope shape:
+
+      - each caller still owns its response parsing / validation / session semantics
+
+      - 503 retry and transient URLError retry behavior stays aligned with the preexisting
+      call sites unless explicitly documented otherwise
+
+      - auth header construction remains caller-visible and unchanged in meaning
+
+      - helper evolution is allowed only to support the remaining callers without
+      absorbing their interpretation logic
+
+
+      ⚠️ KNOWN RISKS (from project history):
+
+      - Connect bridge lifecycle is sensitive to subtle retry timing and status handling
+      drift.
+
+      - Remote-state fetches may rely on slightly different error wording; preserve
+      caller-level error shaping.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any migration that moves response interpretation into the helper
+
+      2. Any silent change to retry counts, backoff timing model, or 503/transient
+      handling without evidence
+
+      3. Any unverified divergence between connect_cmd and remote_state caller behavior
+      after migration
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.'
+    verification: '- local-check protecting dup_audit.c2.gate
+
+      - targeted connect_cmd and remote_state tests pass for all migrated callers
+
+      - `uv run invar guard --all` passes
+
+      - evidence compares migrated callers against preexisting retry/backoff and error-shaping
+      expectations'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Integration Evidence\n\
+      - Files changed:\n- Remaining callers migrated:\n  - _post_mcp_message\n  -\
+      \ _post_json\n  - _get_gateway_status\n  - _fetch_status_payload\n- Helper evolution\
+      \ after foundation step:\n- Caller-owned parsing preserved for each migrated\
+      \ function:\n\n### Test Execution\n```text\n<paste exact command(s)>\n```\n\
+      ```text\n<paste output>\n```\n\n### Invar\n```text\nuv run invar guard --all\n\
+      ```\n```text\n<paste output>\n```\n"
+    depends_on:
+    - dup_audit.c2.extract-retry-http-request-foundation
+    agent: python-senior-tacit
 - id: dup_audit.verify
   name: Duplicate Audit Remediation Verification
   status: locked
