@@ -62004,7 +62004,7 @@ phases:
     agent: integration-verifier-tacit
   - id: remediation_integration_verify.fix_batched_static_hygiene_retest_failures
     name: Fix batched static hygiene retest failures
-    status: rejected
+    status: claimed
     description: 'As an IMPLEMENTER, remediate the failures surfaced by remediation_integration_verify.retest_static_hygiene_blockers
       in one batched path.
 
@@ -62081,7 +62081,7 @@ phases:
     - remediation_integration_verify.fix_static_hygiene_blockers
     agent: python-executor
     claimed_by: python-executor
-    claimed_at: '2026-04-08T12:08:40.991317+00:00'
+    claimed_at: '2026-04-08T13:12:30.443475+00:00'
     done_at: '2026-04-08T12:40:14.097646+00:00'
     rejection_reason: completion evidence invalidated by independent retest; no source
       changes landed
