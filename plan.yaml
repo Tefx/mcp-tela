@@ -61463,6 +61463,95 @@ phases:
     depends_on:
     - remediation_integration_verify.run_focused_regression_suite
     agent: python-executor
+  - id: remediation_integration_verify.retest_focused_regression_blockers
+    name: Retest focused regression blockers
+    status: pending
+    description: 'Work type: defect_repair
+
+      Step type: test
+
+      Step intent: retest_green
+
+      Expected result: green
+
+      Agent source: project
+
+
+      As an INDEPENDENT TESTER (integration-verifier-tacit), rerun the exact focused
+      regression nodes that previously failed in remediation_integration_verify.run_focused_regression_suite
+      after the batched blocker fix lands.
+
+
+      YOUR GOAL IS TO prove the repaired seam now runs green and to surface any remaining
+      blocker intersection immediately.
+
+
+      Scope:
+
+      - bridge lifecycle mock signature path covering `recover_transport`
+
+      - reconnect-handler downstream tests that require runtime-config setup
+
+
+      This retest is post-implementation verification and MUST produce green results
+      for the previously failing tests.'
+    verification: 'phase-check: rerun the exact previously failing focused regression
+      tests after the batched fix and confirm green results with before/after output
+      evidence before audit and gate proceed.'
+    evidence_template: '## Retest Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Exact rerun command (MANDATORY)
+
+      ```text
+
+      <paste the exact pytest command or commands used to rerun the failing nodes>
+
+      ```
+
+
+      ### Previously failing tests (MANDATORY)
+
+      - Test/node 1: <exact pytest node id>
+
+      - Test/node 2: <exact pytest node id>
+
+      - Additional affected nodes: <list or none>
+
+
+      ### Before outputs (MANDATORY)
+
+      ```text
+
+      <paste or reference the exact failing output from before the fix>
+
+      ```
+
+
+      ### After outputs (MANDATORY)
+
+      ```text
+
+      <paste the exact green output for the same tests after the fix>
+
+      ```
+
+
+      ### Verdict
+
+      - [ ] GREEN: all listed tests now pass
+
+      - [ ] ISSUES_FOUND: list any remaining blocker/should_fix findings
+
+      '
+    depends_on:
+    - remediation_integration_verify.fix_focused_regression_blockers
+    agent: integration-verifier-tacit
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
