@@ -60256,7 +60256,7 @@ phases:
       \ definitions"
   - id: downstream_wrapper_removal.gate
     name: Gate downstream wrapper removal
-    status: pending
+    status: claimed
     description: 'Gate review: verify pure passthrough wrapper removal is complete
       and did not damage test seams or downstream behavior.'
     verification: 'phase-check: no orphaned wrapper definitions remain and evidence
@@ -60284,6 +60284,8 @@ phases:
     - downstream_wrapper_removal.remove_passthrough_wrappers
     - downstream_wrapper_removal.update_monkeypatch_tests
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-08T04:00:21.312358+00:00'
 - id: error_semantics_foundation
   name: Error Semantics Foundation
   status: in_progress
