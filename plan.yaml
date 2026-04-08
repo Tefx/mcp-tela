@@ -64945,3 +64945,108 @@ phases:
   status: locked
   depends_on:
   - dup_audit.doc_sync
+  steps:
+  - id: dup_audit.deep_review.wiring-audit
+    name: Audit duplicate-audit wiring completeness
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - duplicate-audit C1-C4 final review scope
+
+
+      touch_paths:
+
+      - src/tela/shell/http_auth.py
+
+      - src/tela/shell/gateway_http_auth.py
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/transient_types.py
+
+      - src/tela/commands/http_client.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/remote_state.py
+
+      harness_refs:
+
+      - import traces and command/test entry points
+
+      authoritative_interface: NONE PINNED
+
+
+      Wiring completeness audit: verify every new shared helper/constant introduced
+      by the duplicate-audit remediation is actually consumed by its intended callers
+      and no duplicate skeleton remains active by accident.
+
+
+      Required checks:
+
+      1. `extract_bearer_from_header_value` is used by both intended call sites
+
+      2. `TRANSIENT_CONNECTION_EXCEPTIONS` is used by all intended classifiers
+
+      3. `retry_http_request` is used by the targeted connect/remote_state callers
+
+      4. no orphan helper or partially migrated duplicate skeleton remains'
+    verification: '- full-plan-check protecting dup_audit.deep_review.gate
+
+      - grep/import-trace style evidence shows new shared abstractions are consumed
+      and old duplication is removed where intended'
+    evidence_template: '## Wiring Audit Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      **Bearer helper consumers**:
+
+      ```text
+
+      <paste evidence>
+
+      ```
+
+      **Transient tuple consumers**:
+
+      ```text
+
+      <paste evidence>
+
+      ```
+
+      **HTTP client helper consumers**:
+
+      ```text
+
+      <paste evidence>
+
+      ```
+
+      **Residual duplicate skeletons**:
+
+      ```text
+
+      <paste evidence or ''none found''>
+
+      ```
+
+      **Verdict**: PASS | ISSUES_FOUND
+
+      '
+    agent: wiring-auditor
