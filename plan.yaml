@@ -60739,7 +60739,7 @@ phases:
   steps:
   - id: gateway_auth_skeleton_refactor.extract_shared_auth_skeleton
     name: Extract shared gateway auth skeleton
-    status: claimed
+    status: done
     description: 'Extract the repeated gateway route auth preparation skeleton used
       by /status, /connect, and /disconnect in src/tela/shell/gateway.py.
 
@@ -60782,6 +60782,20 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-08T04:16:02.364316+00:00'
+    done_at: '2026-04-08T04:22:17.733716+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/shell/gateway.py\
+      \ — reviewed and refactored shared auth-preparation skeleton.\n- src/tela/shell/result.py\
+      \ — Result type contract for helper return shape verified.\n- src/tela/shell/gateway_http_auth.py\
+      \ — extraction function interface consumed unchanged.\n\n## Auth Skeleton Report\n\
+      - Shared skeleton extracted:\n  - _build_auth_handoff(request) consolidates\
+      \ bearer extraction + expected token retrieval + shared error handoff.\n- Route-specific\
+      \ behavior preserved:\n  - /status retains status-specific post-auth flow\n\
+      \  - /connect retains request parsing + connect path + idle-manager increment\
+      \ behavior\n  - /disconnect retains request parsing + disconnect path + idle-manager\
+      \ decrement behavior\n- Proof Request-vs-ASGI layers remain separate:\n  - Request-based\
+      \ extractor usage remains in gateway route layer\n  - ASGI middleware extraction\
+      \ layer untouched; no merging/rewrite across boundaries\n\nVerification:\n-\
+      \ gateway shell tests passed (58 passed)\n- module import sanity check passed"
   - id: gateway_auth_skeleton_refactor.route_auth_retest
     name: Retest gateway route auth and error paths
     status: pending
