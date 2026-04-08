@@ -60202,7 +60202,7 @@ phases:
       \ only)"
   - id: downstream_wrapper_removal.update_monkeypatch_tests
     name: Update monkeypatch-sensitive downstream tests
-    status: claimed
+    status: done
     description: 'Adjust downstream tests so monkeypatch/fake injection targets the
       authoritative open/validate seam after wrapper removal.
 
@@ -60242,6 +60242,18 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-08T03:32:49.609290+00:00'
+    done_at: '2026-04-08T03:59:52.905358+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Test Seam Update Report\n- Updated tests:\n  - no source test edits required;\
+      \ verification confirmed existing monkeypatch seam remains valid after wrapper\
+      \ removal.\n- Old patch targets removed:\n  - none; existing patches to downstream._open_client_for_server\
+      \ remain the correct seam.\n- New authoritative targets:\n  - downstream module-level\
+      \ imported symbols from downstream_clients (`_open_client_for_server`, `_validate_transport_mode`)\
+      \ are authoritative seam endpoints.\n\nVerification:\n- monkeypatch usage audit\
+      \ confirms interception remains effective via downstream module attributes\n\
+      - failing reconnect tests identified as pre-existing/config-setup related and\
+      \ out of scope for this step\n- no critical test depends on removed wrapper\
+      \ definitions"
   - id: downstream_wrapper_removal.gate
     name: Gate downstream wrapper removal
     status: pending
