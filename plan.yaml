@@ -61695,6 +61695,147 @@ phases:
       ### Verdict
 
       - GREEN: listed tests now pass'
+  - id: remediation_integration_verify.fix_static_hygiene_blockers
+    name: Fix static hygiene blockers
+    status: pending
+    description: 'Work type: defect_repair.
+
+
+      Fix the blocker cluster reported after remediation_integration_verify.gate review
+      for the affected nodes only:
+
+      - tests/shell/test_connect_cmd.py — remove undefined names and collapse duplicate
+      helper definitions/import patterns
+
+      - tests/shell/test_downstream.py — resolve undefined Any usage and duplicate
+      imports
+
+      - src/tela/shell/gateway.py — remove unused imports without changing runtime
+      behavior
+
+
+      Step type: implementation
+
+      Verification scope: local-check protecting remediation_integration_verify.gate.
+
+      Agent source: project
+
+      Known risk: keep this as a bounded hygiene repair; do not broaden into unrelated
+      refactors.
+
+
+      Required outputs:
+
+      - affected_node_list covering every edited symbol/test/helper/import block
+
+      - exact before-error outputs for pyright/ruff/targeted pytest failures on these
+      nodes
+
+      - exact after-error outputs showing the blocker family is removed or reduced
+      as expected
+
+
+      Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive edits that eliminate the reported
+      undefined-name / duplicate-helper / unused-import blockers.
+
+      '
+    verification: '- local-check: blocker edits are limited to the affected nodes
+      listed in evidence
+
+      - Exact before/after pyright and ruff outputs are recorded for the affected
+      files
+
+      - Exact before/after targeted pytest output is recorded for the affected tests
+      when applicable
+
+      - Evidence names each affected node changed to close the blocker family'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - tests/shell/test_connect_cmd.py — key passage or "NOT READ: <reason>"
+
+      - tests/shell/test_downstream.py — key passage or "NOT READ: <reason>"
+
+      - src/tela/shell/gateway.py — key passage or "NOT READ: <reason>"
+
+
+      ## Affected Node List (MANDATORY)
+
+      - <file>::<symbol/helper/import block>
+
+
+      ## Before Error Outputs (MANDATORY)
+
+      ### pyright
+
+      ```
+
+      <paste exact pre-fix output>
+
+      ```
+
+      ### ruff
+
+      ```
+
+      <paste exact pre-fix output>
+
+      ```
+
+      ### targeted pytest
+
+      ```
+
+      <paste exact pre-fix output or "NOT RUN: <reason>">
+
+      ```
+
+
+      ## After Error Outputs (MANDATORY)
+
+      ### pyright
+
+      ```
+
+      <paste exact post-fix output>
+
+      ```
+
+      ### ruff
+
+      ```
+
+      <paste exact post-fix output>
+
+      ```
+
+      ### targeted pytest
+
+      ```
+
+      <paste exact post-fix output or "NOT RUN: <reason>">
+
+      ```
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: <why these blockers existed>
+
+      - Symptom: <reported errors>
+
+      - Why this fix closes the blocker family: <one line>
+
+      '
+    depends_on:
+    - remediation_integration_verify.literal_fragment_audit
+    agent: python-executor
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
