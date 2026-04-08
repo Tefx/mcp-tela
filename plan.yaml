@@ -61314,7 +61314,7 @@ phases:
       \ with reproducible failing tests"
   - id: remediation_integration_verify.literal_fragment_audit
     name: Audit remaining fragmented error literals
-    status: pending
+    status: claimed
     description: Perform a focused shared-literal audit across the scoped remediation
       files after the focused regression blocker retest is green to confirm shared
       error semantics were actually adopted and any remaining local literals are intentional.
@@ -61342,6 +61342,8 @@ phases:
     depends_on:
     - remediation_integration_verify.retest_focused_regression_blockers
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-08T10:31:38.571834+00:00'
   - id: remediation_integration_verify.gate
     name: Gate remediation integration verification
     status: pending
