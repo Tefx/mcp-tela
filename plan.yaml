@@ -61351,6 +61351,118 @@ phases:
     - remediation_integration_verify.run_focused_regression_suite
     - remediation_integration_verify.literal_fragment_audit
     agent: gate-reviewer-tacit
+  - id: remediation_integration_verify.fix_focused_regression_blockers
+    name: Fix focused regression blockers
+    status: pending
+    description: 'Work type: defect_repair
+
+      Step type: implementation
+
+      Agent source: default
+
+
+      Fix ALL blockers found by remediation_integration_verify.run_focused_regression_suite
+      in one batched remediation step.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+      1. tests/shell/test_connect_cmd.py bridge lifecycle mock signature mismatch:
+      align the bridge lifecycle test double so `_fake_forward_stdio_http` accepts
+      the `recover_transport` keyword expected by the runtime bridge path.
+
+      2. Reconnect-handler downstream tests missing runtime-config setup: restore
+      the required runtime-config fixture/setup in the selected downstream tests so
+      the exercised reconnect path no longer fails with `Runtime config unavailable`
+      for setup reasons.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: focused regression coverage is failing due to test-harness drift
+      against current bridge/runtime call contracts and missing runtime-config preconditions
+      in downstream reconnect tests.
+
+      - Symptom: the suite fails before meaningful remediation composition can be
+      verified.
+
+      - Why this fix is not surface-level: update the shared test setup and signature
+      expectations at the actual failing seams, not just per-test local assertions.
+
+
+      ## Completion Criteria
+
+      - Both blocker families are fixed in one patch.
+
+      - Exact failing tests identified and updated.
+
+      - Before/after failure output captured for each blocker family.
+
+      - No remaining selected downstream tests fail due to missing runtime-config
+      setup or bridge mock kwarg mismatch.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic or test-harness setup that closes
+      the identified blocker family and varies with the exercised path.'
+    verification: 'local-check: repair the exact focused regression blockers so the
+      downstream rerun can execute the previously failing tests and produce green
+      evidence for both blocker families.'
+    evidence_template: '## Fix Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Exact failing tests
+
+      - Test/node 1: <exact pytest node id>
+
+      - Test/node 2: <exact pytest node id>
+
+      - Additional affected nodes: <list or none>
+
+
+      ### Before outputs (MANDATORY)
+
+      ```text
+
+      <paste the exact failing output for each listed test before the fix>
+
+      ```
+
+
+      ### Changes made
+
+      - Bridge lifecycle mock signature update: <file + summary>
+
+      - Runtime-config setup restoration: <file + summary>
+
+
+      ### After targeted outputs (MANDATORY)
+
+      ```text
+
+      <paste the exact targeted test output after the fix>
+
+      ```
+
+
+      ### Blocker family closure
+
+      - recover_transport kwarg mismatch closed: <how>
+
+      - Runtime config unavailable setup gap closed: <how>
+
+      '
+    depends_on:
+    - remediation_integration_verify.run_focused_regression_suite
+    agent: python-executor
 - id: remediation_doc_sync
   name: Remediation Documentation Sync
   status: locked
