@@ -60300,7 +60300,7 @@ phases:
       \ behavior), not introduced by wrapper-removal change."
 - id: error_semantics_foundation
   name: Error Semantics Foundation
-  status: in_progress
+  status: done
   gate: Shared error constants/helpers established and scoped literals migrated without
     changing external behavior.
   depends_on:
@@ -60418,7 +60418,7 @@ phases:
       \ classifiers (audit query literal etc.) intentionally unchanged"
   - id: error_semantics_foundation.gate
     name: Gate error semantics foundation
-    status: claimed
+    status: done
     description: 'Gate review: verify the scoped shared error-code source and shared
       classification helpers are established cleanly before downstream classification
       cleanup begins.'
@@ -60451,9 +60451,22 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-08T04:07:22.975358+00:00'
+    done_at: '2026-04-08T04:15:31.463538+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- src/tela/core/errors.py —\
+      \ verified centralized constants and classification helpers with contracts/doctests.\n\
+      - src/tela/shell/http_auth.py, gateway_http_auth.py, gateway.py, http_routes.py,\
+      \ upstream.py, downstream.py, downstream_clients.py — verified migration to\
+      \ shared constants.\n\n## Gate Review Report\n- Shared error foundation complete:\n\
+      \  - centralized scoped constants exist in core/errors.py\n  - shared classification\
+      \ helpers implemented with contract coverage\n- Migration coverage acceptable:\n\
+      \  - targeted shell modules migrated to shared constants within phase scope\n\
+      \  - intentionally out-of-scope literals deferred\n- Semantic drift concerns:\n\
+      \  - no blocker-class semantic drift observed; values and behavior preserved\n\
+      - Decision: OPEN\n\nVerification signals:\n- doctests passed for helper coverage\n\
+      - invar guard passed"
 - id: error_classification_unification
   name: Error Classification Unification
-  status: locked
+  status: pending
   gate: Route error predicates and gateway HTTP status mapping use unified shared
     semantics with unchanged externally visible outcomes.
   depends_on:
@@ -60704,7 +60717,7 @@ phases:
       \ import)."
 - id: gateway_auth_skeleton_refactor
   name: Gateway Auth Skeleton Refactor
-  status: locked
+  status: pending
   gate: Shared request-auth skeleton extracted for gateway routes without merging
     distinct HTTP abstraction layers or altering route-specific behavior.
   depends_on:
