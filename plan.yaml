@@ -63209,3 +63209,8 @@ phases:
   status: pending
   depends_on:
   - deep_review_gate
+- id: dup_audit.c1
+  name: 'Duplicate Audit Remediation C1: Bearer Token Extraction'
+  status: locked
+  depends_on:
+  - dup_audit.c3
