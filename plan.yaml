@@ -64735,7 +64735,7 @@ phases:
       \ semantics"
   - id: dup_audit.c2.verify-http-retry-consolidation
     name: Verify connect and remote-state HTTP retry consolidation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -64870,6 +64870,162 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T14:31:25.531210+00:00'
+    done_at: '2026-04-09T14:57:41.444083+00:00'
+    evidence: 'FAIL — C2 consolidation is functionally correct but 7+ test harness
+      regressions and dead code remain
+
+
+      ## Verification Report
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: duplicate-audit C2 plus upstream C1/C4 interaction checks
+
+      **Independence Level**: L2
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      - `src/tela/commands/http_client.py` — full read (191 lines)
+
+      - `src/tela/commands/connect_cmd.py` — full read (1156 lines)
+
+      - `src/tela/commands/remote_state.py` — full read (550 lines)
+
+      - `src/tela/shell/transient_types.py` — full read (83 lines)
+
+      - `tests/shell/test_http_client.py` — full read (1237 lines)
+
+      - `tests/shell/test_connect_recovery_red.py` — full read (388 lines)
+
+      - `tests/repro/test_gate_blocker_regressions.py` — partial (B1 tests)
+
+      - ref check via `invar refs src/tela/commands/http_client.py::retry_http_request`
+      — 24 references across callers and tests
+
+
+      ### Test Execution
+
+
+      **Invar Guard (`uv run invar guard --all`):** FAILED (9 errors, 37 warnings,
+      22 infos)
+
+      - All 9 errors are pre-existing (missing_contract in contracts.py, file_size
+      in downstream.py, escape_hatch budget) — NONE related to C2 consolidation files
+
+      - Standard guard: PASSED
+
+
+      **Core C2 test suite (`test_http_client.py`):** 34 passed, 0 failed, 0 skipped
+
+      **Connect command tests (`test_connect_cmd.py`):** 38 passed, 0 failed, 0 skipped
+
+      **Remote state tests (`test_query_commands_remote_state.py`):** 20 passed, 0
+      failed, 0 skipped
+
+
+      **Full suite:** 1006 passed, 16 failed, 1 skipped, 9 xfailed, 11 xpassed
+
+
+      ### Integration Evidence
+
+
+      **Path exercised:**
+
+      - `retry_http_request` → `_post_json` → connect bridge lifecycle ✓
+
+      - `retry_http_request` → `_post_json_once` → teardown critical section ✓
+
+      - `retry_http_request` → `_post_mcp_message` → MCP forwarding with is_503_retryable
+      predicate ✓
+
+      - `retry_http_request` → `_get_gateway_status` → readiness polling (with retry)
+      ✓
+
+      - `retry_http_request` → `_fetch_status_payload` → remote state (no retry) ✓
+
+
+      **Helper-level retry/backoff preservation:**
+
+      - 503 retry with linear backoff verified: sleep calls [0.5, 1.0] for backoff_seconds=0.5
+      ✓
+
+      - Transient URLError retry with linear backoff verified: same ✓
+
+      - Non-transient URLError not retried ✓
+
+      - `is_503_retryable` callback correctly gates 503 retry ✓
+
+
+      **Caller-level response parsing remains local:**
+
+      - `_post_mcp_message` transforms `HTTP_503: {url}` → `MCP_FORWARD_FAILED: http
+      503` ✓
+
+      - `_post_mcp_message` transforms `HTTP_CONNECT_ERROR: {reason}` → `MCP_FORWARD_FAILED:
+      {reason}` ✓
+
+      - `_fetch_status_payload` transforms `HTTP_503` → `REMOTE_STATUS_QUERY_ERROR:
+      http 503` ✓
+
+      - `_fetch_status_payload` transforms `HTTP_CONNECT_ERROR` → `NO_RUNNING_SERVER`
+      ✓
+
+      - `_post_json` and `_post_json_once` close response body without reading ✓
+
+
+      **C4 transient policy consistency:**
+
+      - `TRANSIENT_CONNECTION_EXCEPTIONS` used by both `http_client._is_transient_url_error`
+      and `connect_cmd._is_transient_url_error` ✓
+
+      - All 11 classification test cases produce identical results between both classifiers
+      ✓
+
+      - String-reason classification now works in http_client (was the gap documented
+      in RED tests) ✓
+
+
+      **Connect bridge lifecycle:** No regression detected — `_post_json`, `_post_json_once`,
+      `_post_mcp_message`, `_get_gateway_status` all delegate correctly through `retry_http_request`
+
+
+      **Remote-state status fetch:** No regression — `_fetch_status_payload` uses
+      max_retries=0 (no retry), GET method, correct error transformation
+
+
+      ### Issues Found
+
+
+      | Severity | Description | Location | Reproduction |
+
+      |----------|-------------|----------|--------------|
+
+      | HIGH | 7 test harness regressions — tests monkeypatch `connect_cmd.urllib_request.urlopen`
+      which no longer exists after C2 extraction to `http_client.py` | `tests/repro/test_gate_blocker_regressions.py`
+      (4 tests), `tests/shell/test_connect_recovery_red.py` (3 tests), `tests/shell/test_connect_bridge_readiness_gaps_red.py`
+      (1 test) | `uv run pytest tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry
+      tests/shell/test_connect_recovery_red.py -v` → `AttributeError: module ''tela.commands.connect_cmd''
+      has no attribute ''urllib_request''` |
+
+      | MEDIUM | Dead code: `connect_cmd._is_transient_url_error` (line 755) returns
+      `Result[bool, str]` but is never called — superseded by `http_client._is_transient_url_error`
+      returning `bool` | `src/tela/commands/connect_cmd.py:755-796` | `rg ''_is_transient_url_error\(''
+      src/tela/commands/connect_cmd.py` returns only definition, no call sites |
+
+      | LOW | Pre-existing: `connect_cmd` still imports `TRANSIENT_CONNECTION_EXCEPTIONS`
+      and `TRANSIENT_ERRNOS` from transient_types (line 48-49), but these are only
+      used by the dead `_is_transient_url_error` function | `src/tela/commands/connect_cmd.py:48-49`
+      | Code inspection |
+
+
+      ### Verdict
+
+      - ISSUES_FOUND — The C2 consolidation is functionally correct (retry/backoff
+      works, caller parsing preserved, C4 policy consistent, no bridge/state regressions).
+      However, there are 7+ broken test harness files that were not updated to monkeypatch
+      the new `http_client.urllib_request.urlopen` location, and a dead-code `_is_transient_url_error`
+      in `connect_cmd.py` that should have been removed during consolidation.'
   - id: dup_audit.c2.gate
     name: Gate duplicate-audit C2 remediation
     status: pending
