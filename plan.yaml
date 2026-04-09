@@ -65773,7 +65773,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.doc_sync.gate
     name: Gate duplicate-audit doc sync
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: QUICK
@@ -65818,6 +65818,17 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T16:48:51.059402+00:00'
+    done_at: '2026-04-09T16:49:00.151866+00:00'
+    evidence: "## Gate Review Report\n\n**Reviewer**: gate-reviewer-tacit\n**Phase**:\
+      \ dup_audit.doc_sync\n\n### refs Read Confirmation (MANDATORY)\nNo refs for\
+      \ this step.\n\n### Gate Decision\n- BLOCKED (with remediation ownership now\
+      \ established in `dup_audit.verify.fix-blockers`)\n- Remaining drift:\n  1)\
+      \ DESIGN.md missing C1 extracted bearer-parser public/dependency updates\n \
+      \ 2) DESIGN.md missing C2 `commands/http_client.py` module/dependency documentation\n\
+      \  3) DESIGN.md missing C4 `shell/transient_types.py` module/policy documentation\n\
+      \nDisposition: gate findings are batched into remediation + retest chain (`dup_audit.verify.fix-blockers`\
+      \ -> `dup_audit.verify.retest-blockers`) and doc gate can reopen after that\
+      \ chain completes."
   - id: dup_audit.deep_review.black-box-verification
     name: Black-box verify auth, retry, and downstream behavior after consolidation
     status: done
