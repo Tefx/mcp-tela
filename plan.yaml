@@ -65959,7 +65959,7 @@ phases:
     claimed_at: '2026-04-09T15:44:51.573490+00:00'
   - id: dup_audit.deep_review.spec-conformance
     name: Audit duplicate-audit spec and audit-conformance
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -66050,6 +66050,8 @@ phases:
 
       '
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-09T16:05:27.285911+00:00'
   - id: dup_audit.deep_review.wiring-audit
     name: Audit duplicate-audit wiring completeness
     status: pending
