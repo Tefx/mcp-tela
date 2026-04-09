@@ -65028,7 +65028,7 @@ phases:
       in `connect_cmd.py` that should have been removed during consolidation.'
   - id: dup_audit.c2.gate
     name: Gate duplicate-audit C2 remediation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -65113,6 +65113,8 @@ phases:
     - dup_audit.c2.migrate-remaining-http-retry-callers
     - dup_audit.c2.verify-http-retry-consolidation
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-09T15:01:58.260213+00:00'
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
   status: locked
