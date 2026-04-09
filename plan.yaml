@@ -63526,7 +63526,7 @@ phases:
       of these represent behavioral regressions or bugs.'
   - id: dup_audit.c3.gate
     name: Gate duplicate-audit C3 remediation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: QUICK
@@ -63591,6 +63591,69 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T04:42:23.580601+00:00'
+    done_at: '2026-04-09T04:47:06.403146+00:00'
+    evidence: "## Gate Review Report: C3 Duplicate Audit — Close Helper Delegation\n\
+      \n**Verdict**: CONDITIONAL PASS\n**Confidence**: High\n**Issue counts**: BLOCKING:\
+      \ 0, SHOULD_FIX: 1, SUGGESTION: 0\n\n### Phase 0: Automated Gates\n- **Type\
+      \ checking (mypy)**: PASS — no issues in downstream.py\n- **Linting (ruff)**:\
+      \ PASS — all checks passed\n- **Test suite**: PASS — 63/63 downstream tests\
+      \ pass; 2 pre-existing integration test failures unrelated to C3 (require running\
+      \ server)\n- **Invar guard**: PASS — no new findings attributable to C3 change\n\
+      - **Wiring audit**: N/A — no new public symbols introduced\n- **Contract audit**:\
+      \ N/A — no @pre/@post contracts touched\n- **Escape hatch audit**: 4 × `@invar:allow\
+      \ shell_result` in downstream.py — all legitimate (pure helpers returning values,\
+      \ not I/O boundary violations)\n- **Runtime authenticity**: N/A — not a runnable\
+      \ surface\n- **Security**: N/A — no trust boundary changes\n\n### Phase 0.5:\
+      \ Cross-Cutting Pattern Scan\n- Pattern: `try: await *.stack.aclose() / except\
+      \ Exception: [continue|pass|return]`\n- Sibling count: 4 locations total, C3\
+      \ fixed 1, **3 remaining**\n- Locations remaining:\n  1. `_close_all_clients_locked`\
+      \ (line 354-358) — `try/except Exception: continue`\n  2. `_swap_client_handle`\
+      \ (line 146-149) — `try/except Exception: return`\n  3. `_connect_server` (line\
+      \ 196-199) — `try/except Exception: pass`\n- All 3 are functionally equivalent\
+      \ to `_close_handle_best_effort()` — no behavioral divergence\n\n### Phase 1:\
+      \ Risk Classification\n- `src/tela/shell/downstream.py`: STANDARD (shell orchestration,\
+      \ business logic)\n- Change scope: 5-line diff (3 removed, 1 added) — trivial\
+      \ refactoring\n\n### Phase 2: Expert Findings\n\n**E1 Spec Alignment**:\n- ✅\
+      \ C3 spec requirement met: `_close_client_handles` delegates to `_close_handle_best_effort`\n\
+      - ✅ Best-effort semantics preserved exactly\n- ✅ No retry, logging, or policy\
+      \ changes\n- ⚠️ 3 remaining inline close patterns not delegated (out of C3's\
+      \ explicit scope)\n\n**E2 Architecture**:\n- ✅ Package boundaries respected\n\
+      - ✅ `_close_handle_best_effort` correctly factored as single-handle close helper\n\
+      - ✅ No circular dependencies introduced\n- ⚠️ 3 remaining inline close patterns\
+      \ = architectural inconsistency (SHOULD-FIX)\n\n**E3 Developer Experience**:\n\
+      - ⚠️ File size pre-existing: 1228 lines (>500 BLOCKING threshold, but pre-existing\
+      \ and not introduced by C3)\n- C3 change itself is clean, trivial, well-documented\n\
+      \n**E4 SE Quality**:\n- ✅ Happy path covered: multiple-handle close in order\n\
+      - ✅ Error path covered: exceptions swallowed per best-effort contract\n- ✅ No\
+      \ new test gaps introduced\n- ⚠️ Pre-existing contract-freeze test failure (unrelated,\
+      \ requires running server)\n\n### Phase 3: Security\n- No trust boundary changes.\
+      \ No credential handling changes. No input validation changes.\n\n### Phase\
+      \ 4: Synthesis\n**Root cause: Incomplete deduplication (3 of 4 inline close\
+      \ patterns remain)**\n- This is an explicitly-scoped C3 step that chose to fix\
+      \ only `_close_client_handles`\n- The verifier already identified this as SHOULD-FIX\n\
+      - The remaining 3 are functionally safe — no behavioral risk\n- Classification:\
+      \ SHOULD-FIX (consistency debt), not BLOCKING\n\n### structured_findings\n```yaml\n\
+      should_fix:\n  - id: S1\n    root_cause: \"3 remaining inline close patterns\
+      \ in downstream.py\"\n    severity: SHOULD_FIX\n    locations:\n      - file:\
+      \ \"src/tela/shell/downstream.py\"\n        line: 146\n        detail: \"_swap_client_handle\
+      \ still inlines try/except instead of delegating to _close_handle_best_effort\"\
+      \n      - file: \"src/tela/shell/downstream.py\"\n        line: 354\n      \
+      \  detail: \"_close_all_clients_locked still inlines try/except instead of delegating\
+      \ to _close_handle_best_effort\"\n      - file: \"src/tela/shell/downstream.py\"\
+      \n        line: 196\n        detail: \"_connect_server still inlines try/except/pass\
+      \ instead of delegating to _close_handle_best_effort\"\n    remediation: \"\
+      Delegate remaining 3 inline close patterns to _close_handle_best_effort for\
+      \ architectural consistency\"\n    grep_hint: \"grep -rn 'stack.aclose' src/tela/shell/downstream.py\"\
+      \n    sibling_count: 3\ntotal_blockers: 0\ntotal_blocking_locations: 0\ntotal_should_fix:\
+      \ 1\n```\n\n### behavioral_proof_register\n- proof_id: P1\n  requirement_ref:\
+      \ \"C3: _close_client_handles delegates to _close_handle_best_effort\"\n  claim:\
+      \ \"List close helper delegates each handle to single-handle helper preserving\
+      \ best-effort semantics\"\n  proof_type: \"unit_test\"\n  evidence_ref: \"tests/shell/test_downstream.py\
+      \ — 63 tests pass including close/teardown paths\"\n  status: PROVEN\n  uncertainty_source:\
+      \ \"\"\n  gate_impact: OPEN_OK\n\n### Gate Decision\n**Gate: OPEN**\nNo blocking\
+      \ issues found. SHOULD-FIX consistency gap (3 remaining inline close patterns)\
+      \ tracked as tech debt.\nThe C3 change is correct, behavior-preserving, and\
+      \ within its explicit scope."
   - id: dup_audit.c4.gate
     name: Gate duplicate-audit C4 remediation
     status: done
