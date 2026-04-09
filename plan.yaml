@@ -65820,7 +65820,7 @@ phases:
     claimed_at: '2026-04-09T15:45:05.287112+00:00'
   - id: dup_audit.deep_review.contract-strength
     name: Audit contract and doctest strength on touched surfaces
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -65874,6 +65874,8 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-09T15:59:40.644484+00:00'
   - id: dup_audit.deep_review.architecture-review
     name: Review shell and command boundary placement of new shared abstractions
     status: claimed
