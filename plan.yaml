@@ -66327,7 +66327,7 @@ phases:
       **Verdict**: PASS'
   - id: dup_audit.doc_sync.review-and-update-docs
     name: Review docs for duplicate-audit drift and update if needed
-    status: claimed
+    status: done
     description: 'step_type: review
 
       agent_source: default
@@ -66398,6 +66398,20 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-09T16:32:58.334823+00:00'
+    done_at: '2026-04-09T16:35:51.778953+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Doc Sync Evidence\n- Docs reviewed:\n  - README.md\n  - docs/INTERFACES.md\n\
+      \  - docs/DESIGN.md\n  - docs/USAGE.md\n  - nearby module docstrings/comments\
+      \ in `http_auth.py`, `gateway_http_auth.py`, `http_client.py`, `connect_cmd.py`,\
+      \ `downstream.py`, `transient_types.py`\n- Drift found: no\n- Files changed:\
+      \ none\n- No-drift rationale:\n  - C1 bearer-parser extraction is documented\
+      \ and consistent across shell auth adapters\n  - C2 retry-helper ownership boundaries\
+      \ are documented in helper/module docs and usage-facing surfaces\n  - C3 best-effort\
+      \ close helper semantics remain documented in design/runtime notes\n  - C4 transient\
+      \ classifier tuple and TimeoutError policy divergence are explicitly documented\n\
+      - If docs changed, include exact verification command/output:\n  - no doc edits\
+      \ required; no change-verification command applicable\n- Commit hash(es): N/A\
+      \ (no changes)"
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: done
