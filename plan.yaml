@@ -63462,7 +63462,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.c4.gate
     name: Gate duplicate-audit C4 remediation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -63529,6 +63529,42 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T04:31:14.053886+00:00'
+    done_at: '2026-04-09T04:33:53.602968+00:00'
+    evidence: "FAIL — invar guard --all has pre-existing structural errors (9 errors\
+      \ unrelated to classifier work). All C4-specific gates PASS.\n\n## Gate Review\
+      \ Report\n\n### C4-Specific Findings\n\n- shared tuple introduced correctly:\
+      \ YES\n  - TRANSIENT_CONNECTION_EXCEPTIONS defined in src/tela/shell/transient_types.py\
+      \ (5 types)\n  - TRANSIENT_ERRNOS frozenset defined (5 errno values)\n  - Backward-compat\
+      \ alias TRANSIENT_CONNECTION_ERRNOS preserved\n  - connect_cmd.py imports from\
+      \ shared module, no inline duplicates remain\n  - Object identity verified at\
+      \ runtime (import is same object, not a copy)\n  - downstream.py intentionally\
+      \ does NOT import shared tuple (layer-specific independence preserved)\n\n-\
+      \ TimeoutError policy explicit: YES\n  - Module-level docstring documents divergence\
+      \ in detail (lines 14-41) with table\n  - Inline comment at line 54 explains\
+      \ inclusion\n  - Runtime verification: connect path returns True for TimeoutError\
+      \ (transient), downstream path returns False (non-transient)\n  - asyncio.TimeoutError\
+      \ also covered: downstream returns False\n\n- layer-specific logic preserved:\
+      \ YES\n  - _is_transient_url_error (connect): uses shared tuple → errno fallback\
+      \ → string markers (3-tier)\n  - _is_recoverable_error (connect): string-based\
+      \ classifier, independent, unchanged\n  - _is_recovery_eligible_exception (downstream):\
+      \ exception-type-based, independent, unchanged, OPPOSITE TimeoutError policy\n\
+      \n### Automated Gates (C4-scoped)\n\n- Type checking (mypy): PASS\n- Linting\
+      \ (ruff): PASS\n- Targeted test suite: 38/38 connect_cmd passed, 15/15 blocker\
+      \ regressions passed, 13/13 downstream recovery passed (7 expected xfails),\
+      \ 2/2 ADR-006 passed\n- invar guard --changed: PASS (0 errors, 0 warnings)\n\
+      - Wiring: PASSED — shared tuple has one runtime consumer (connect_cmd.py), no\
+      \ phantom exports\n- Contract strength: N/A (no @pre/@post in changed files)\n\
+      - No anomalies detected (no pass bodies, identity lambdas, type ignores, dead\
+      \ exports, or stubs)\n\n### Pre-existing Issues (NOT C4-related, NOT blocking\
+      \ this gate)\n\n- invar guard --all: 9 errors (missing_contract on core/contracts.py\
+      \ meta-functions, file_size downstream.py, shell_complexity_debt, escape_hatch_budget)\n\
+      - test_discover_or_autostart_re_autostarts_after_wait_timeout: pre-existing\
+      \ failure, unrelated to classifiers\n\n### Expert Findings\n\n- E1 (Spec Alignment):\
+      \ C4 spec requires (a) shared tuple replacing duplicates, (b) explicit TimeoutError\
+      \ policy, (c) layer-specific preservation. All three verified PASS.\n- E3 (DX):\
+      \ Module is 83 lines, well-documented, single responsibility. PASS.\n- E4 (SE\
+      \ Quality): No stubs, no vacuous contracts, no type lies. Retained fallback\
+      \ paths tested. PASS.\n\n- Decision: OPEN"
   - id: dup_audit.c1.gate
     name: Gate duplicate-audit C1 remediation
     status: claimed
