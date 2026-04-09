@@ -65158,6 +65158,34 @@ phases:
       - Remaining non-blocking issues:'
     depends_on:
     - dup_audit.c2.gate
+  - id: dup_audit.c2.retest-gate-blockers
+    name: Retest C2 gate blockers batch
+    status: pending
+    description: 'step_type: verification
+
+      work_type: retest
+
+      origin: dup_audit.c2.fix-gate-blockers
+
+
+      Independently retest that all gate-blocking findings from dup_audit.c2.gate
+      are resolved and no new regressions were introduced.'
+    verification: '- C2 blocker repro tests now pass
+
+      - targeted C2 integration suites pass
+
+      - invar evidence reviewed for no new blocker-class debt in touched seams'
+    evidence_template: '## Retest Evidence
+
+      - Repro commands and outputs:
+
+      - Targeted suites and outputs:
+
+      - Regression assessment:
+
+      - Verdict: PASS|FAIL'
+    depends_on:
+    - dup_audit.c2.fix-gate-blockers
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
   status: locked
