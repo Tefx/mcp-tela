@@ -65180,7 +65180,7 @@ phases:
       per protocol.'
   - id: dup_audit.c2.fix-gate-blockers
     name: Fix C2 gate blockers (stale monkeypatch targets and dead-code cleanup)
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       work_type: batched_fix
@@ -65221,6 +65221,8 @@ phases:
       - Remaining non-blocking issues:'
     depends_on:
     - dup_audit.c2.gate
+    claimed_by: python-senior
+    claimed_at: '2026-04-09T15:14:03.022094+00:00'
   - id: dup_audit.c2.retest-gate-blockers
     name: Retest C2 gate blockers batch
     status: pending
