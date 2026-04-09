@@ -64389,7 +64389,7 @@ phases:
   - dup_audit.c1
 - id: dup_audit.c2
   name: 'Duplicate Audit Remediation C2: HTTP Retry Skeleton Consolidation'
-  status: in_progress
+  status: done
   context: High-risk duplicate-abstraction remediation phase reserved for HTTP retry
     skeleton consolidation. Kept separate to preserve incremental migration and stronger
     gate scrutiny.
@@ -65243,7 +65243,7 @@ phases:
       \ - pre-existing full-scan invar debt remains\n- Commit hash(es):\n  - `adb964ad8699f5e48027b0f1a3c32a35ad057668`"
   - id: dup_audit.c2.retest-gate-blockers
     name: Retest C2 gate blockers batch
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       work_type: retest
@@ -65271,9 +65271,44 @@ phases:
     - dup_audit.c2.fix-gate-blockers
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T15:32:08.456381+00:00'
+    done_at: '2026-04-09T15:42:48.069995+00:00'
+    evidence: "## Retest Evidence\n\n### C2 Blocker Repro Tests\n- **Command**: `uv\
+      \ run python -m pytest tests/repro/test_gate_blocker_regressions.py -v`\n- **Result**:\
+      \ 15 passed, 0 failed, 0 skipped (0.78s)\n- All B1 (transient retry), B2 (lockfile\
+      \ PID binding), and B3 (soak pipefail) blocker regressions pass.\n\n### Targeted\
+      \ C2 Integration Suite\n- **Command**: `uv run python -m pytest tests/shell/test_connect_recovery_red.py\
+      \ -v`\n- **Result**: 7 passed, 1 failed\n- **Failure**: `test_discover_or_autostart_re_autostarts_after_wait_timeout`\
+      \ — **PRE-EXISTING RED TEST** (documents known feature gap). Verified identical\
+      \ failure at pre-fix commit `c09e007`. NOT a C2 regression.\n\n### Full Targeted\
+      \ Suite (165 tests)\n- **Command**: `uv run python -m pytest tests/repro/ tests/shell/test_connect_recovery_red.py\
+      \ -v`\n- **Result**: 159 passed, 5 failed, 1 skipped (78.56s)\n- All 5 failures\
+      \ are **pre-existing** — verified by running same tests at pre-fix commit:\n\
+      \  - `test_status_schema_fields` — requires running server (environmental, pre-existing)\n\
+      \  - `test_connections_schema_fields` — requires running server (environmental,\
+      \ pre-existing)\n  - `test_tela_prefix_is_reserved_and_rejected` — known implementation\
+      \ gap (documents unimplemented validation)\n  - `test_tela_prefix_without_dot_also_rejected`\
+      \ — known implementation gap\n  - `test_discover_or_autostart_re_autostarts_after_wait_timeout`\
+      \ — RED test documenting known gap\n\n### C2 Fix Verification\nThe fix updated\
+      \ stale monkeypatch targets from `connect_cmd.urllib_request`/`connect_cmd.time`\
+      \ to the correct `http_client.urllib_request`/`http_client.time`, and removed\
+      \ dead imports (`TRANSIENT_CONNECTION_EXCEPTIONS`, `TRANSIENT_ERRNOS`) and dead\
+      \ code (`_is_transient_url_error` in connect_cmd.py).\n\n- `_is_transient_url_error`:\
+      \ removed from connect_cmd.py, canonical location now http_client.py (returns\
+      \ plain `bool` instead of `Result[bool, str]`)\n- All monkeypatch targets in\
+      \ test_gate_blocker_regressions.py and test_connect_recovery_red.py now point\
+      \ to `http_client` module\n- `FakeResponse.close()` method added to test fixture\
+      \ (was missing `close()` required by `retry_http_request` which calls `response.close()`)\n\
+      \n### Invar Guard Evidence\n- `invar guard --all`: 9 errors, 37 warnings, 22\
+      \ infos — **all pre-existing**\n- `http_client.py` (new C2 module): **0 findings**\
+      \ — clean\n- `connect_cmd.py` findings (5 total): all pre-existing (function_size,\
+      \ shell_pure_logic, shell_too_complex, dead_assign) — none introduced or worsened\
+      \ by C2\n- No new blocker-class debt in touched seams\n\n### Regression Assessment\n\
+      - **0 regressions** introduced by C2 fix\n- All C2 gate blockers resolved\n\
+      - 5 pre-existing failures remain (environmental: 2, known implementation gaps:\
+      \ 3) — out of scope for C2\n\n**Verdict: PASS**"
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
-  status: locked
+  status: pending
   context: Merged finalization phase covering targeted regressions, full invar guard,
     documentation sync, and deep independent review for duplicate-abstraction remediation.
   depends_on:
