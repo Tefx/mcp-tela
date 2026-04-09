@@ -66730,7 +66730,7 @@ phases:
       fix scope.'
   - id: dup_audit.verify.retest-blockers
     name: Retest duplicate-audit blocker batch
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       step_intent: retest_green
@@ -66842,6 +66842,8 @@ phases:
     depends_on:
     - dup_audit.verify.fix-blockers
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-09T16:56:56.386800+00:00'
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: done
