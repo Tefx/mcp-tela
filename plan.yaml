@@ -65180,7 +65180,7 @@ phases:
       per protocol.'
   - id: dup_audit.c2.fix-gate-blockers
     name: Fix C2 gate blockers (stale monkeypatch targets and dead-code cleanup)
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       work_type: batched_fix
@@ -65223,6 +65223,24 @@ phases:
     - dup_audit.c2.gate
     claimed_by: python-senior
     claimed_at: '2026-04-09T15:14:03.022094+00:00'
+    done_at: '2026-04-09T15:31:40.504782+00:00'
+    evidence: "## Batched Fix Evidence\n- Blockers addressed:\n  - stale monkeypatch\
+      \ targets updated from `connect_cmd.urllib_request.urlopen` to canonical helper\
+      \ location under `http_client` in affected regression tests.\n  - dead duplicate\
+      \ transient classifier path removed from `connect_cmd` along with orphaned transient-type\
+      \ imports tied only to that duplicate path.\n- Files changed:\n  - `src/tela/commands/connect_cmd.py`\n\
+      \  - `tests/repro/test_gate_blocker_regressions.py`\n  - `tests/shell/test_connect_recovery_red.py`\n\
+      - Test commands and outputs:\n  - `uv run pytest -q tests/repro/test_gate_blocker_regressions.py\
+      \ tests/shell/test_connect_cmd.py tests/shell/test_http_client.py tests/shell/test_query_commands_remote_state.py\
+      \ tests/repro/test_query_commands_remote_state.py`\n    - `108 passed in 13.88s`\n\
+      \  - `uvx invar-tools guard --all`\n    - failed with pre-existing repo debt\
+      \ (`errors: 9`, `warnings: 37`), no new blocker-class issues attributed to this\
+      \ step's touched seams\n- Behavioral parity notes:\n  - canonical classifier\
+      \ remains `http_client._is_transient_url_error`\n  - helper continues owning\
+      \ request/retry/backoff skeleton only\n  - caller-owned parsing/error shaping\
+      \ in connect/remote-state preserved\n- Remaining non-blocking issues:\n  - unrelated\
+      \ RED expectations in recovery-red tests intentionally left out of scope\n \
+      \ - pre-existing full-scan invar debt remains\n- Commit hash(es):\n  - `adb964ad8699f5e48027b0f1a3c32a35ad057668`"
   - id: dup_audit.c2.retest-gate-blockers
     name: Retest C2 gate blockers batch
     status: pending
