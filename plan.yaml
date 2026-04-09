@@ -63303,7 +63303,7 @@ phases:
       reviewer: vectl-orchestrator
   - id: dup_audit.c3.verify-downstream-close-remediation
     name: Verify downstream close helper delegation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -63409,6 +63409,121 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T04:38:04.043807+00:00'
+    done_at: '2026-04-09T04:41:33.638574+00:00'
+    evidence: 'FAIL — Behavioral equivalence confirmed but 3 of 4 inline close patterns
+      remain un-delegated (SHOULD-FIX consistency gap)
+
+
+      ## Verification Report: C3 Downstream Close Remediation
+
+
+      **Date**: 2026-04-09
+
+      **Verifier**: integration-verifier-tacit
+
+      **Scope**: C3 close helper delegation — `_close_client_handles` deduped to `_close_handle_best_effort`
+
+
+      ### Executive Summary
+
+      The C3 remediation correctly eliminated ONE of FOUR duplicate close bodies.
+      All close paths are **behaviorally equivalent** (they all swallow `Exception`
+      in `aclose()` best-effort). However, 3 close paths still use inline `try/except`
+      instead of delegating to `_close_handle_best_effort`, creating a **consistency
+      gap**.
+
+
+      ### Targeted Close Verification Results
+
+
+      | Test | Result | Evidence |
+
+      |------|--------|----------|
+
+      | Multiple-handle close (3 handles) | PASS | `close_order == [''h0'', ''h1'',
+      ''h2'']` — all closed in order |
+
+      | Swallowed close exceptions (single path) | PASS | RuntimeError, ValueError,
+      OSError, Exception all swallowed by `_close_handle_best_effort` |
+
+      | Swallowed close exceptions (list path) | PASS | All 3 error-raising handles
+      closed, errors swallowed, loop continued |
+
+      | Mixed success/failure in list | PASS | Order: `[''ok0'', ''fail1'', ''ok2'']`
+      — error on index 1 does not abort |
+
+      | No divergence: _close_client_handles → _close_handle_best_effort | PASS |
+      Source confirms delegation: `await _close_handle_best_effort(handle)` |
+
+      | _close_all_clients_locked behavior | PASS | Happy path and error path both
+      work correctly |
+
+      | _swap_client_handle close behavior | PASS | Closes old handle even on error,
+      swaps correctly |
+
+      | disconnect_all cleanup | PASS | Clears clients, recovery locks under pressure
+      |
+
+
+      ### Divergence Audit (SHOULD-FIX)
+
+
+      | Close Path | Uses `_close_handle_best_effort`? | Status |
+
+      |------------|-------------------------------------|--------|
+
+      | `_close_client_handles` | ✅ YES (C3 fix) | FIXED |
+
+      | `_close_all_clients_locked` | ❌ INLINE `try/except Exception: continue` |
+      SHOULD-FIX |
+
+      | `_swap_client_handle` | ❌ INLINE `try/except Exception: return` | SHOULD-FIX
+      |
+
+      | `_connect_server` (L197) | ❌ INLINE `try/except Exception: pass` | SHOULD-FIX
+      |
+
+
+      Behavior is functionally identical across all paths. But the C3 audit''s stated
+      goal was to eliminate duplicate close abstractions, and 3 of 4 remain.
+
+
+      ### Test Suite Results
+
+
+      ```
+
+      tests/shell/test_downstream.py: 63 passed, 0 skipped
+
+      tests/shell/test_downstream_recovery.py: 7 passed + 7 xfailed (known gaps)
+
+      tests/shell/test_connection_lifecycle.py: 1 passed
+
+      Total: 75 passed, 0 failed, 7 xfailed
+
+      ```
+
+
+      ### invar guard --all
+
+
+      - **Status**: failed (9 errors, 37 warnings)
+
+      - **Downstream.py-specific**: file_size (1229L > 700), function_size (_recover_server_client:
+      261L, call_tool: 215L), shell_pure_logic warnings, dead_param, dead_assign
+
+      - **C3-related findings**: NONE — all findings are pre-existing
+
+      - **diff**: Only 5-line change (inline try/except → `_close_handle_best_effort`
+      delegation in `_close_client_handles`)
+
+
+      ### Verdict
+
+      **SHOULD-FIX** (not blocking): The C3 remediation is correct and complete for
+      the single function it targeted. The 3 remaining inline close patterns are functionally
+      safe but stylistically inconsistent with the audit''s deduplication goal. None
+      of these represent behavioral regressions or bugs.'
   - id: dup_audit.c3.gate
     name: Gate duplicate-audit C3 remediation
     status: pending
