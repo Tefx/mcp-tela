@@ -66003,7 +66003,7 @@ phases:
       accreting command-specific semantics'
   - id: dup_audit.deep_review.spec-conformance
     name: Audit duplicate-audit spec and audit-conformance
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -66096,6 +66096,45 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-09T16:05:27.285911+00:00'
+    done_at: '2026-04-09T16:22:35.736426+00:00'
+    evidence: '## Spec Conformance Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Evidence Table
+
+      | Claim | Implementation refs | Verdict | Notes |
+
+      | --- | --- | --- | --- |
+
+      | C3 delegation | `_close_client_handles` delegates to `_close_handle_best_effort`
+      | CONFORMS | residual inline close in `_swap_client_handle` noted as non-blocking/out-of-scope
+      residue |
+
+      | C1 shared bearer parser | `http_auth.extract_bearer_from_header_value` used
+      by middleware and gateway auth adapter | CONFORMS | adapter-local decode/result
+      ownership preserved |
+
+      | C4 shared transient tuple + TimeoutError policy | `shell/transient_types`
+      shared constants consumed by classifier; policy divergence explicitly documented
+      | CONFORMS | no policy contradiction detected |
+
+      | C2 shared retry helper | `commands/http_client.retry_http_request` consumed
+      by connect/remote-state callers with caller-owned parsing/error shaping retained
+      | CONFORMS | helper/caller ownership boundary preserved |
+
+
+      ## Coverage Summary
+
+      - CONFORMS: C1, C2, C3, C4
+
+      - DIVERGES: none
+
+      - NEEDS_TEST: none blocking in this conformance pass'
   - id: dup_audit.deep_review.wiring-audit
     name: Audit duplicate-audit wiring completeness
     status: claimed
