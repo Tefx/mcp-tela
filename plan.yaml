@@ -66512,7 +66512,7 @@ phases:
       \ (no changes)"
   - id: dup_audit.verify.fix-blockers
     name: Batched blocker remediation for targeted regression and doc drift
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: default\nwork_type: defect_repair\n\
       \nFix ALL blockers found by the failed targeted-regression and doc-sync-gate\
       \ evidence for duplicate-audit finalization.\n\n## Scope Guardrail (MANDATORY)\n\
@@ -66631,6 +66631,101 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-09T16:49:19.815959+00:00'
+    done_at: '2026-04-09T16:56:05.456480+00:00'
+    evidence: '## Blocker Remediation Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Exact repro command outputs
+
+      **Before fix command(s):**
+
+      ```text
+
+      uv run pytest tests/shell/test_connect_bridge_readiness_gaps_red.py -v
+
+      ```
+
+      **Before fix output:**
+
+      ```text
+
+      FAILED ... test_post_mcp_message_retries_boundedly_on_transient_503
+
+      AttributeError: module ''tela.commands.connect_cmd'' has no attribute ''urllib_request''
+
+      ```
+
+      **After fix command(s):**
+
+      ```text
+
+      uv run pytest tests/shell/test_connect_bridge_readiness_gaps_red.py tests/repro/test_gate_blocker_regressions.py
+      -v
+
+      ```
+
+      **After fix output:**
+
+      ```text
+
+      20 passed in 0.95s
+
+      ```
+
+
+      ### Monkeypatch target closure
+
+      - Old target observed: yes (`connect_cmd.urllib_request`)
+
+      - New target observed: yes (`http_client.urllib_request`)
+
+      - File/line updated: `tests/shell/test_connect_bridge_readiness_gaps_red.py`
+      (import + monkeypatch target line)
+
+
+      ### DESIGN.md drift closure
+
+      - C1 section updated: `http_auth.py` section now includes extracted bearer parser
+      API/dependency notes
+
+      - C2 section updated: commands module boundaries now include `http_client.py`
+      and retry-helper ownership/dependency chain
+
+      - C4 section updated: shell transient-types module and TimeoutError policy rationale
+      documented
+
+      - Dependency/public-API changes captured: yes (C1/C2/C4 doc-gate drift items
+      addressed)
+
+
+      ### Verification
+
+      - Commands and outputs:
+
+      ```text
+
+      uv run pytest tests/shell/test_connect_bridge_readiness_gaps_red.py tests/repro/test_gate_blocker_regressions.py
+      -v
+
+      20 passed in 0.95s
+
+      ```
+
+
+      ### Commit hash(es)
+
+      - `5c249a68622f6858d492a788b43cb6c9e7f0b585`
+
+
+      ### Gaps/Notes
+
+      - unrelated pre-existing failures were intentionally not pulled into this batched
+      fix scope.'
   - id: dup_audit.verify.retest-blockers
     name: Retest duplicate-audit blocker batch
     status: pending
