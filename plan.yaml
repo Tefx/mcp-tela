@@ -66527,6 +66527,120 @@ phases:
     - dup_audit.verify.targeted-regression-suite
     - dup_audit.doc_sync.gate
     agent: python-executor
+  - id: dup_audit.verify.retest-blockers
+    name: Retest duplicate-audit blocker batch
+    status: pending
+    description: 'step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      agent_source: default
+
+      verification_scope: phase-check
+
+
+      As an INDEPENDENT TESTER (`integration-verifier-tacit`), retest the exact blocker
+      batch closed by `dup_audit.verify.fix-blockers`.
+
+
+      YOUR GOAL IS TO PROVE the scoped blocker family is now closed without scope
+      expansion.
+
+
+      Retest focus:
+
+      - rerun the exact targeted regression command(s) that exposed the stale monkeypatch
+      target
+
+      - verify the updated DESIGN.md evidence closes the C1/C2/C4 drift called out
+      by the doc gate
+
+      - confirm no unrelated pre-existing repro failures were pulled into this remediation
+      batch
+
+
+      Independence Level: L1.'
+    verification: '- phase-check protecting dup_audit.verify.gate and dup_audit.deep_review.gate
+
+      - exact targeted regression repro command(s) now pass green
+
+      - DESIGN.md evidence shows explicit closure for C1, C2, and C4 drift
+
+      - no unrelated pre-existing repro failures were absorbed into this batch'
+    evidence_template: '## Retest Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: duplicate-audit blocker batch
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Exact repro command outputs
+
+      **Command(s) executed:**
+
+      ```
+
+      <paste exact targeted regression and doc-check commands>
+
+      ```
+
+      **Actual output:**
+
+      ```
+
+      <paste exact stdout/stderr; do not summarize>
+
+      ```
+
+
+      ### Blocker closure table
+
+      | Blocker | Evidence | Status |
+
+      | --- | --- | --- |
+
+      | stale monkeypatch target | <file:line plus passing repro output ref> | CLOSED/OPEN
+      |
+
+      | C1 DESIGN.md drift | <heading/line ref> | CLOSED/OPEN |
+
+      | C2 DESIGN.md drift | <heading/line ref> | CLOSED/OPEN |
+
+      | C4 DESIGN.md drift | <heading/line ref> | CLOSED/OPEN |
+
+
+      ### Scope guardrail check
+
+      - Unrelated pre-existing repro failures included in this retest: none | <list>
+
+      - If any appeared, explain why they remain out-of-batch: <text>
+
+
+      ### Verdict
+
+      - [ ] PASS
+
+      - [ ] ISSUES_FOUND
+
+      - [ ] INCOMPLETE'
+    depends_on:
+    - dup_audit.verify.fix-blockers
+    agent: integration-verifier-tacit
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: done
