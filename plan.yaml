@@ -66730,7 +66730,7 @@ phases:
       fix scope.'
   - id: dup_audit.verify.retest-blockers
     name: Retest duplicate-audit blocker batch
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: retest_green
@@ -66844,6 +66844,64 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T16:56:56.386800+00:00'
+    done_at: '2026-04-09T17:11:36.996717+00:00'
+    evidence: '## Retest Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: duplicate-audit blocker batch
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Exact repro command outputs
+
+      - `uv run pytest tests/shell/test_connect_bridge_readiness_gaps_red.py -v --tb=short`
+      → 5 passed
+
+      - runtime stale-target validation confirms `connect_cmd.urllib_request` absent
+      and fixed tests now target canonical helper module
+
+      - `uv run pytest tests/repro/test_gate_blocker_regressions.py -v --tb=short`
+      → 15 passed
+
+      - focused regression sweeps show blocker family closed; unrelated known pre-existing
+      failures remain out-of-scope
+
+
+      ### Blocker closure table
+
+      | Blocker | Evidence | Status |
+
+      | --- | --- | --- |
+
+      | stale monkeypatch target | readiness gaps + gate blocker regressions passing
+      after target update | CLOSED |
+
+      | C1 DESIGN.md drift | bearer parser extraction documented in DESIGN.md | CLOSED
+      |
+
+      | C2 DESIGN.md drift | http_client module/ownership documented in DESIGN.md
+      | CLOSED |
+
+      | C4 DESIGN.md drift | transient_types + TimeoutError policy rationale documented
+      in DESIGN.md | CLOSED |
+
+
+      ### Scope guardrail check
+
+      - remediation remained scoped to blocker family; no unrelated feature work absorbed
+
+
+      ### Verdict
+
+      - PASS'
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: done
