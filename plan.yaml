@@ -63215,7 +63215,7 @@ phases:
   steps:
   - id: dup_audit.c3.delegate-close-list-helper
     name: Delegate _close_client_handles to best-effort single-handle helper
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       work_type: technical_debt_remediation
@@ -63279,6 +63279,8 @@ phases:
       \  - exception swallowing remains in `_close_handle_best_effort`\n  - list helper\
       \ now delegates only\n"
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-09T04:35:54.113656+00:00'
     done_at: '2026-04-08T18:48:05.224226+00:00'
     rejection_reason: verification found remediation not implemented; completion evidence
       contradicted current code
