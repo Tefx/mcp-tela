@@ -65686,7 +65686,7 @@ phases:
     claimed_at: '2026-04-09T15:44:13.301348+00:00'
   - id: dup_audit.doc_sync.gate
     name: Gate duplicate-audit doc sync
-    status: claimed
+    status: pending
     description: 'step_type: gate
 
       review_depth: QUICK
@@ -65729,8 +65729,6 @@ phases:
 
       '
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-09T16:36:20.222289+00:00'
   - id: dup_audit.deep_review.black-box-verification
     name: Black-box verify auth, retry, and downstream behavior after consolidation
     status: done
