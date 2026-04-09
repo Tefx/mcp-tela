@@ -65874,7 +65874,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.deep_review.architecture-review
     name: Review shell and command boundary placement of new shared abstractions
-    status: pending
+    status: claimed
     description: 'step_type: review
 
       verification_scope: full-plan-check
@@ -65951,6 +65951,8 @@ phases:
 
       '
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-09T15:44:51.573490+00:00'
   - id: dup_audit.deep_review.spec-conformance
     name: Audit duplicate-audit spec and audit-conformance
     status: pending
