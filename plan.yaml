@@ -65308,7 +65308,7 @@ phases:
       \ 3) — out of scope for C2\n\n**Verdict: PASS**"
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
-  status: pending
+  status: in_progress
   context: Merged finalization phase covering targeted regressions, full invar guard,
     documentation sync, and deep independent review for duplicate-abstraction remediation.
   depends_on:
@@ -65607,7 +65607,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.deep_review.gate
     name: Final gate for duplicate-audit remediation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -65682,6 +65682,8 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-09T15:44:13.301348+00:00'
   - id: dup_audit.doc_sync.gate
     name: Gate duplicate-audit doc sync
     status: pending
