@@ -172,10 +172,7 @@ async def _close_client_handles(handles: list[_ClientHandle]) -> None:
     """Close temporary client handles best-effort before registry publish."""
 
     for handle in handles:
-        try:
-            await handle.stack.aclose()
-        except Exception:
-            continue
+        await _close_handle_best_effort(handle)
 
 
 async def _connect_server(
