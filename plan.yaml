@@ -65607,7 +65607,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.deep_review.gate
     name: Final gate for duplicate-audit remediation
-    status: claimed
+    status: pending
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -65682,8 +65682,6 @@ phases:
 
       '
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-09T15:44:13.301348+00:00'
   - id: dup_audit.doc_sync.gate
     name: Gate duplicate-audit doc sync
     status: pending
