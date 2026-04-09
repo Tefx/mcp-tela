@@ -63811,7 +63811,7 @@ phases:
       invar full-scan reports pre-existing unrelated failures.
   - id: dup_audit.c4.verify-transient-classifier-standardization
     name: Verify transient classifier standardization and TimeoutError policy
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -63933,6 +63933,56 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T04:25:36.397674+00:00'
+    done_at: '2026-04-09T04:29:44.021514+00:00'
+    evidence: "FAIL — invar guard --all has 9 pre-existing errors (none classifier-related),\
+      \ and 1 pre-existing test failure (test_discover_or_autostart_re_autostarts_after_wait_timeout,\
+      \ unrelated to classifiers). All classifier-specific verifications PASS.\n\n\
+      ## Verification Report: C4 Transient Classifier Standardization\n\n**Date**:\
+      \ 2026-04-09\n**Verifier**: integration-verifier-tacit\n**Scope**: shared tuple,\
+      \ TimeoutError policy, layer-specific fallbacks, targeted classifier tests,\
+      \ invar guard\n\n### 1. Shared Tuple Presence/Use ✅\n- `TRANSIENT_CONNECTION_EXCEPTIONS`\
+      \ defined in `src/tela/shell/transient_types.py` (line 58)\n- Contains 5 types:\
+      \ `ConnectionRefusedError, ConnectionResetError, ConnectionAbortedError, BrokenPipeError,\
+      \ TimeoutError`\n- `connect_cmd.py` imports from `transient_types` (line 47-50),\
+      \ NOT inline\n- Object identity verified: `connect_cmd.TRANSIENT_CONNECTION_EXCEPTIONS\
+      \ is transient_types.TRANSIENT_CONNECTION_EXCEPTIONS` → `True`\n- `TRANSIENT_ERRNOS`\
+      \ frozenset includes `ECONNREFUSED, ECONNRESET, ECONNABORTED, EPIPE, ETIMEDOUT`\n\
+      - Backward-compat alias `TRANSIENT_CONNECTION_ERRNOS = TRANSIENT_ERRNOS` present\n\
+      \n### 2. Explicit TimeoutError Policy and Rationale ✅\n- Docstring in `transient_types.py`\
+      \ (lines 14-41) explicitly documents the divergence:\n  - Shell (connect): `TimeoutError`\
+      \ = TRANSIENT — gateway may be warming\n  - Core/downstream: `TimeoutError`\
+      \ = NON-TRANSIENT — mid-flight ambiguity, retry unsafe\n- Inline comment at\
+      \ line 54: `# NOTE: TimeoutError is included here (not in NON_TRANSIENT_TYPES)\
+      \ because...`\n- Connect-path runtime verification: `_is_transient_url_error(URLError(TimeoutError()))`\
+      \ → `True` ✅\n- Downstream-path runtime verification: `_is_recovery_eligible_exception(TimeoutError())`\
+      \ → `False` ✅\n- Same for `asyncio.TimeoutError` → `False` ✅\n\n### 3. Layer-Specific\
+      \ Fallbacks Preserved ✅\n- `connect_cmd._is_transient_url_error`: Uses `TRANSIENT_CONNECTION_EXCEPTIONS`\
+      \ (type-based) → `TRANSIENT_ERRNOS` (errno fallback) → string reason markers\n\
+      - `downstream._is_recovery_eligible_exception`: Independent classifier with\
+      \ OPPOSITE TimeoutError policy (NOT recovery-eligible) + `BrokenPipeError`/`ConnectionResetError`\
+      \ also NOT eligible + only specific `RuntimeError` messages ARE eligible\n-\
+      \ Both classifiers run correctly at runtime (verified with 11 programmatic checks)\n\
+      - No tuple shadowing or copying — identity check passed\n\n### 4. Targeted Classifier\
+      \ Tests ✅\n- `tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry`\
+      \ — 8/8 PASSED (4 classifier + 4 retry)\n- `tests/repro/issue_adr006_black_box_ambiguous_fail_closed.py`\
+      \ — 2/2 PASSED (TimeoutError fails closed, BrokenPipe fails closed)\n- `tests/shell/test_upstream.py`\
+      \ — 5/5 ADR-006 recovery eligibility tests PASSED\n- `tests/shell/test_downstream_recovery.py`\
+      \ — 11 passed, 7 xfailed (xfails correctly mark post-impl gap closures)\n- **Total\
+      \ classifier-specific: 26 passed, 0 failed, 7 xfailed (all intentional)**\n\n\
+      ### 5. `uv run invar guard --all` Outcome ⚠️\n- **Status**: `failed` (9 errors,\
+      \ 37 warnings, 23 infos)\n- **Errors are ALL pre-existing, NONE relate to classifier\
+      \ standardization**:\n  - 4x `missing_contract` on `core/contracts.py` meta-functions\n\
+      \  - 1x `file_size` on `downstream.py` (1232 lines, max 700)\n  - 1x `shell_complexity_debt`\
+      \ (14 warnings, limit 5)\n  - 3x `escape_hatch_budget` violations (54/19 budget)\n\
+      - **Doctest**: PASSED\n- **Crosshair/property tests**: SKIPPED (due to prior\
+      \ static failures)\n\n### Pre-existing Test Failure (NOT classifier-related)\n\
+      - `tests/shell/test_connect_recovery_red.py::test_discover_or_autostart_re_autostarts_after_wait_timeout`\
+      \ — FAILS\n- Root cause: Expects ≥2 autostart attempts after lockfile wait timeout,\
+      \ code only does 1\n- This is a recovery-red test (intentionally documents a\
+      \ gap), NOT a classifier issue\n\n### Verdict: FAIL (invar guard has pre-existing\
+      \ errors)\nClassifier standardization itself is CORRECT and VERIFIED. The `invar\
+      \ guard --all` failure is due to pre-existing structural issues unrelated to\
+      \ the classifier changes."
   - id: dup_audit.c4.standardize-transient-classifiers
     name: Introduce shared transient exception tuple and align classifier policy
     status: done
