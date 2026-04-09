@@ -65316,7 +65316,7 @@ phases:
   steps:
   - id: dup_audit.verify.targeted-regression-suite
     name: Run targeted duplicate-audit regression suite
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -65440,6 +65440,84 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T16:48:29.219763+00:00'
+    done_at: '2026-04-09T16:48:44.389347+00:00'
+    evidence: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: duplicate-audit targeted regression suite
+
+      **Independence Level**: L2
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```text
+
+      uv run pytest tests/shell/test_http_auth.py tests/shell/test_bearer_token.py
+      tests/shell/test_http_client.py tests/shell/test_downstream.py tests/shell/test_connect_cmd.py
+      tests/shell/test_downstream_recovery.py tests/shell/test_downstream_runtime_connection.py
+      tests/shell/test_connection_lifecycle.py tests/shell/test_connect_recovery_red.py
+      tests/shell/test_connect_bridge_readiness_gaps_red.py tests/shell/test_connect_bridge_readiness_contract_freeze.py
+      tests/integration/test_mcp_auth_wire.py tests/repro/test_disconnect_cleanup.py
+      tests/repro/test_adr006_runtime_hardening_probes.py tests/core/test_classification.py
+      -v --tb=short
+
+      ```
+
+      - Actual output:
+
+      ```text
+
+      229 passed, 4 failed, 1 skipped, 7 xfailed
+
+      ```
+
+
+      ### Coverage Assessment
+
+      - C3 downstream close path: exercised; no new regression
+
+      - C1 bearer parsing paths: exercised; no new regression
+
+      - C4 classifier policy paths: exercised; no new regression
+
+      - C2 retry helper paths: exercised; found one medium blocker in stale test monkeypatch
+      target
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+      | MEDIUM | stale monkeypatch target after C2 extraction (`connect_cmd.urllib_request`
+      no longer authoritative patch point) | `tests/shell/test_connect_bridge_readiness_gaps_red.py`
+      | run failing case in file |
+
+      | LOW | known red-gap re-autostart-after-timeout behavior | `tests/shell/test_connect_recovery_red.py`
+      | run targeted red test |
+
+      | LOW | doc wording drift tests in readiness contract freeze file | `tests/shell/test_connect_bridge_readiness_contract_freeze.py`
+      | run file |
+
+
+      ### Verdict
+
+      - ISSUES_FOUND
+
+
+      Disposition: findings are routed into batched remediation chain (`dup_audit.verify.fix-blockers`
+      and `dup_audit.verify.retest-blockers`).'
   - id: dup_audit.verify.full-invar-guard
     name: Run full invar guard for duplicate-audit remediation
     status: pending
