@@ -65308,7 +65308,7 @@ phases:
       \ 3) — out of scope for C2\n\n**Verdict: PASS**"
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
-  status: in_progress
+  status: done
   context: Merged finalization phase covering targeted regressions, full invar guard,
     documentation sync, and deep independent review for duplicate-abstraction remediation.
   depends_on:
@@ -65803,7 +65803,7 @@ phases:
       this remediation seam'
   - id: dup_audit.deep_review.gate
     name: Final gate for duplicate-audit remediation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -65888,6 +65888,61 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T17:12:40.647236+00:00'
+    done_at: '2026-04-09T17:26:46.778168+00:00'
+    evidence: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.deep_review
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.deep_review.wiring-audit | done | good | no blocking residual duplicate
+      skeletons |
+
+      | dup_audit.deep_review.spec-conformance | done | good | C1-C4 conformant |
+
+      | dup_audit.deep_review.architecture-review | done | good | placement and dependency
+      direction acceptable |
+
+      | dup_audit.deep_review.contract-strength | done | good | no new contract-strength
+      regressions in touched seams |
+
+      | dup_audit.deep_review.black-box-verification | done | good | auth/downstream/retry/connect
+      behavior verified; known pre-existing gap documented |
+
+      | dup_audit.verify.fix-blockers | done | good | stale monkeypatch + doc drift
+      closures applied |
+
+      | dup_audit.verify.retest-blockers | done | good | blocker closures independently
+      validated |
+
+
+      ### Gate Decision Basis
+
+      - unresolved blocker-class items: none
+
+      - non-intersection evidence: remaining repo-wide invar budget debt and unrelated
+      pre-existing repro failures are outside duplicate-audit seam and were not introduced
+      by this remediation
+
+      - final recommendation: OPEN
+
+
+      ### Gate Decision
+
+      - OPEN'
   - id: dup_audit.doc_sync.gate
     name: Gate duplicate-audit doc sync
     status: done
