@@ -521,7 +521,7 @@ def test_post_json_once_delegates_to_retry_http_request_success(
         url: str,
         method: str,
         headers: dict[str, str],
-        data: bytes | None,
+        data: bytes | None = None,
         max_retries: int,
         timeout_seconds: float,
         backoff_seconds: float = 0.5,
@@ -578,7 +578,7 @@ def test_post_json_once_delegates_error_from_retry_http_request(
         url: str,
         method: str,
         headers: dict[str, str],
-        data: bytes | None,
+        data: bytes | None = None,
         max_retries: int,
         timeout_seconds: float,
         backoff_seconds: float = 0.5,
@@ -724,3 +724,514 @@ def test_retry_http_request_zero_retries_single_attempt(
 
     assert result.is_err
     assert calls["count"] == 1
+
+
+# =============================================================================
+# is_503_retryable callback tests
+# =============================================================================
+
+
+def test_retry_http_request_is_503_retryable_callback_rejects_non_contract_503(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When is_503_retryable returns False, 503 must NOT be retried."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.HTTPError(
+            "http://127.0.0.1:8123/test",
+            503,
+            "Service Unavailable",
+            Message(),
+            io.BytesIO(b"not a contract response"),
+        )
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    def _reject_all(exc: urllib_error.HTTPError) -> bool:
+        _ = exc
+        return False
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer token"},
+        max_retries=3,
+        retry_on_503=True,
+        retry_on_transient=False,
+        is_503_retryable=_reject_all,
+    )
+
+    assert result.is_err
+    assert "HTTP_503" in result.error
+    # Must not retry when predicate returns False
+    assert calls["count"] == 1
+
+
+def test_retry_http_request_is_503_retryable_callback_allows_contract_503(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When is_503_retryable returns True, 503 must be retried."""
+
+    calls = {"count": 0}
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b'{"ok": true}'
+
+        def close(self) -> None:
+            pass
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise urllib_error.HTTPError(
+                "http://127.0.0.1:8123/test",
+                503,
+                "Service Unavailable",
+                Message(),
+                io.BytesIO(b"contract"),
+            )
+        return _FakeResponse()
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr(http_client_mod.time, "sleep", lambda _seconds: None)
+
+    def _accept_all(exc: urllib_error.HTTPError) -> bool:
+        _ = exc
+        return True
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer token"},
+        max_retries=3,
+        retry_on_503=True,
+        retry_on_transient=False,
+        is_503_retryable=_accept_all,
+    )
+
+    assert result.is_ok
+    assert calls["count"] == 2
+
+
+# =============================================================================
+# Migration delegation proof tests: verify callers delegate to
+# retry_http_request while preserving their own semantics.
+# =============================================================================
+
+
+def test_post_json_delegates_to_retry_http_request_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_post_json must delegate to retry_http_request and return None on success."""
+
+    from tela.commands import connect_cmd
+
+    calls: list[dict[str, object]] = []
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b""
+
+        def close(self) -> None:
+            pass
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        from tela.shell.config_loader import Result
+
+        calls.append(
+            {
+                "url": url,
+                "method": method,
+                "headers": headers,
+                "data": data,
+                "max_retries": max_retries,
+                "timeout_seconds": timeout_seconds,
+                "backoff_seconds": backoff_seconds,
+                "retry_on_503": retry_on_503,
+                "retry_on_transient": retry_on_transient,
+            }
+        )
+        return Result(value=_FakeResponse())
+
+    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+
+    result = connect_cmd._post_json(
+        url="http://127.0.0.1:8123/connect",
+        bearer_token="test-token",
+        payload={"connection_id": "bridge_test"},
+    )
+
+    assert result.is_ok
+    assert len(calls) == 1
+    assert calls[0]["url"] == "http://127.0.0.1:8123/connect"
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["headers"]["Authorization"] == "Bearer test-token"
+    assert calls[0]["max_retries"] == connect_cmd.HTTP_TRANSIENT_RETRIES
+    assert calls[0]["retry_on_503"] is True
+    assert calls[0]["retry_on_transient"] is True
+
+
+def test_post_json_delegates_error_from_retry_http_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_post_json must propagate retry_http_request errors."""
+
+    from tela.commands import connect_cmd
+
+    from tela.shell.config_loader import Result
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        return Result(error=f"HTTP_503: {url}")
+
+    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+
+    result = connect_cmd._post_json(
+        url="http://127.0.0.1:8123/connect",
+        bearer_token="test-token",
+        payload={"connection_id": "bridge_test"},
+    )
+
+    assert result.is_err
+    assert "HTTP_503" in result.error
+
+
+def test_get_gateway_status_delegates_to_retry_http_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_get_gateway_status must delegate HTTP to retry_http_request and parse response."""
+
+    from tela.commands import connect_cmd
+    from tela.core.models import StatusResponse
+
+    from tela.shell.config_loader import Result
+
+    calls: list[dict[str, object]] = []
+
+    class _FakeResponse:
+        status = 200
+
+        def __init__(self) -> None:
+            self.headers = {"Content-Type": "application/json"}
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {
+                    "uptime_seconds": 1.0,
+                    "server_count": 1,
+                    "connected_servers": ["fs"],
+                    "active_connections": 1,
+                    "profile_count": 1,
+                    "total_tool_calls": 0,
+                    "state": "ready",
+                    "discovery_source": "lockfile",
+                    "config_path": "/tmp/tela.yaml",
+                    "requested_config_path": "/tmp/tela.yaml",
+                    "config_mismatch": False,
+                    "degraded_reason": None,
+                    "connections": [],
+                    "audit_entries": [],
+                }
+            ).encode("utf-8")
+
+        def close(self) -> None:
+            pass
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        calls.append(
+            {
+                "url": url,
+                "method": method,
+                "headers": headers,
+                "retry_on_503": retry_on_503,
+                "retry_on_transient": retry_on_transient,
+            }
+        )
+        return Result(value=_FakeResponse())
+
+    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+
+    result = connect_cmd._get_gateway_status(
+        status_url="http://127.0.0.1:8123/status",
+        bearer_token="test-token",
+    )
+
+    assert result.is_ok
+    assert isinstance(result.value, StatusResponse)
+    assert result.value.state == "ready"
+    assert len(calls) == 1
+    assert calls[0]["method"] == "GET"
+    assert calls[0]["headers"]["Authorization"] == "Bearer test-token"
+
+
+def test_post_mcp_message_error_format_preserved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_post_mcp_message must transform retry_http_request errors to MCP format."""
+
+    from tela.commands import connect_cmd
+
+    from tela.shell.config_loader import Result
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        return Result(error="HTTP_503: http://127.0.0.1:8123/mcp")
+
+    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+
+    result = connect_cmd._post_mcp_message(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        payload=b'{"jsonrpc":"2.0","id":1}',
+    )
+
+    assert result.is_err
+    assert result.error == "MCP_FORWARD_FAILED: http 503"
+
+    # URLError case
+    def _fake_retry_http_request_connect_error(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        return Result(error="HTTP_CONNECT_ERROR: Connection refused")
+
+    monkeypatch.setattr(
+        connect_cmd, "retry_http_request", _fake_retry_http_request_connect_error
+    )
+
+    result2 = connect_cmd._post_mcp_message(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="token",
+        payload=b'{"jsonrpc":"2.0","id":1}',
+    )
+
+    assert result2.is_err
+    assert result2.error == "MCP_FORWARD_FAILED: Connection refused"
+
+
+def test_fetch_status_payload_delegates_to_retry_http_request_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_fetch_status_payload must delegate HTTP to retry_http_request and parse JSON."""
+
+    from tela.commands import remote_state
+    from tela.core.models import LockfileData
+
+    from tela.shell.config_loader import Result
+
+    calls: list[dict[str, object]] = []
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {
+                    "uptime_seconds": 5.0,
+                    "server_count": 1,
+                    "connected_servers": ["fs"],
+                    "active_connections": 1,
+                    "profile_count": 1,
+                    "total_tool_calls": 0,
+                    "state": "ready",
+                    "discovery_source": "lockfile",
+                    "config_path": "/tmp/tela.yaml",
+                    "requested_config_path": "/tmp/tela.yaml",
+                    "config_mismatch": False,
+                    "degraded_reason": None,
+                    "connections": [],
+                    "audit_entries": [],
+                }
+            ).encode("utf-8")
+
+        def close(self) -> None:
+            pass
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        calls.append(
+            {
+                "url": url,
+                "method": method,
+                "headers": headers,
+                "max_retries": max_retries,
+                "retry_on_503": retry_on_503,
+                "retry_on_transient": retry_on_transient,
+            }
+        )
+        return Result(value=_FakeResponse())
+
+    monkeypatch.setattr(remote_state, "retry_http_request", _fake_retry_http_request)
+
+    lockfile = LockfileData(
+        pid=1234,
+        host="127.0.0.1",
+        port=8123,
+        token="status-token",
+        started_at="2026-03-22T10:00:00Z",
+        config_path="/tmp/tela.yaml",
+        version="0.1.0",
+    )
+
+    result = remote_state._fetch_status_payload(lockfile)
+
+    assert result.is_ok
+    assert isinstance(result.value, dict)
+    assert result.value["state"] == "ready"
+    assert len(calls) == 1
+    assert calls[0]["url"] == "http://127.0.0.1:8123/status"
+    assert calls[0]["method"] == "GET"
+    assert calls[0]["max_retries"] == 0
+    assert calls[0]["retry_on_503"] is False
+    assert calls[0]["retry_on_transient"] is False
+
+
+def test_fetch_status_payload_preserves_error_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_fetch_status_payload must transform retry_http_request errors to remote_state format."""
+
+    from tela.commands import remote_state
+    from tela.core.models import LockfileData
+
+    from tela.shell.config_loader import Result
+
+    def _fake_retry_http_request_http_error(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        return Result(error="HTTP_503: http://127.0.0.1:8123/status")
+
+    monkeypatch.setattr(
+        remote_state, "retry_http_request", _fake_retry_http_request_http_error
+    )
+
+    lockfile = LockfileData(
+        pid=1234,
+        host="127.0.0.1",
+        port=8123,
+        token="status-token",
+        started_at="2026-03-22T10:00:00Z",
+        config_path="/tmp/tela.yaml",
+        version="0.1.0",
+    )
+
+    result = remote_state._fetch_status_payload(lockfile)
+
+    assert result.is_err
+    assert "REMOTE_STATUS_QUERY_ERROR: http 503" in result.error
+
+    # URLError case
+    def _fake_retry_http_request_connect_error(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None = None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+        is_503_retryable: Callable | None = None,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        return Result(error="HTTP_CONNECT_ERROR: Connection refused")
+
+    monkeypatch.setattr(
+        remote_state, "retry_http_request", _fake_retry_http_request_connect_error
+    )
+
+    result2 = remote_state._fetch_status_payload(lockfile)
+
+    assert result2.is_err
+    assert "NO_RUNNING_SERVER" in result2.error
+    assert "Connection refused" in result2.error

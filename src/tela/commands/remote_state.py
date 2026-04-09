@@ -15,9 +15,7 @@ import json
 import subprocess
 from dataclasses import dataclass
 from typing import Literal
-from urllib import error as urllib_error
-from urllib import request as urllib_request
-
+from tela.commands.http_client import retry_http_request
 from tela.core.models import AuditEntry, ConnectionContext, LockfileData, StatusResponse
 from tela.shell.config_loader import Result
 from tela.shell.lockfile import read_lockfile
@@ -453,30 +451,60 @@ def _find_orphaned_serve_processes() -> list[int]:
     return matches
 
 
-# @shell_complexity: HTTP request branches on transport errors, HTTP errors, and JSON-parse.
+# @shell_complexity: HTTP request for status payload — no retry (remote_state
+# callers handle retry at a higher level). Delegates request construction
+# to shared helper; caller retains error-format semantics and response parsing.
 def _fetch_status_payload(lockfile: LockfileData) -> Result[dict[str, object], str]:
-    """Fetch ``GET /status`` payload from lockfile endpoint."""
+    """Fetch ``GET /status`` payload from lockfile endpoint.
 
-    request = urllib_request.Request(
-        f"http://{lockfile.host}:{lockfile.port}/status",
+    Delegates the HTTP request to ``retry_http_request`` with no retry
+    (``max_retries=0``), consistent with the pre-existing single-attempt
+    behavior. Error format is transformed to preserve the caller-owned
+    ``REMOTE_STATUS_QUERY_ERROR`` / ``NO_RUNNING_SERVER`` semantics.
+    """
+
+    result = retry_http_request(
+        url=f"http://{lockfile.host}:{lockfile.port}/status",
         method="GET",
         headers={
             "Authorization": f"Bearer {lockfile.token}",
             "Accept": "application/json",
         },
+        max_retries=0,
+        timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        retry_on_503=False,
+        retry_on_transient=False,
     )
-    try:
-        with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS) as response:
-            decoded = response.read().decode("utf-8")
-    except urllib_error.HTTPError as exc:
-        return Result(error=f"REMOTE_STATUS_QUERY_ERROR: http {exc.code}")
-    except urllib_error.URLError as exc:
-        return Result(
-            error=(
-                "NO_RUNNING_SERVER: no running tela server found via "
-                f"~/.tela/gateway.lock (endpoint unreachable: {exc.reason})"
+    if result.is_err:
+        error = result.error or ""
+        # Transform retry_http_request error format to remote_state semantics.
+        # NOTE: HTTP_CONNECT_ERROR must be matched before generic HTTP_ because
+        # it also starts with "HTTP_".
+        if error.startswith("HTTP_CONNECT_ERROR: "):
+            reason = error[len("HTTP_CONNECT_ERROR: ") :]
+            return Result(
+                error=(
+                    "NO_RUNNING_SERVER: no running tela server found via "
+                    f"~/.tela/gateway.lock (endpoint unreachable: {reason})"
+                )
             )
-        )
+        if error.startswith("HTTP_"):
+            # HTTP_{code}: {url} → REMOTE_STATUS_QUERY_ERROR: http {code}
+            code_end = error.index(":")
+            code = error[len("HTTP_") : code_end]
+            return Result(error=f"REMOTE_STATUS_QUERY_ERROR: http {code}")
+        return Result(error=error)
+    assert result.value is not None
+
+    try:
+        decoded = result.value.read().decode("utf-8")
+    except Exception as exc:
+        return Result(error=f"REMOTE_STATUS_QUERY_ERROR: {exc}")
+    finally:
+        try:
+            result.value.close()
+        except OSError:
+            pass
 
     try:
         parsed = json.loads(decoded)

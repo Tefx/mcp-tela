@@ -1104,6 +1104,9 @@ def test_post_mcp_message_retries_only_for_transient_contract_signal(
         def read(self) -> bytes:
             return self._body
 
+        def close(self) -> None:
+            pass
+
     transient_payload = {
         "error": "ADMISSION_REJECTED_WARMING: gateway not ready for MCP admission",
         "code": "ADMISSION_REJECTED_WARMING",
@@ -1131,8 +1134,10 @@ def test_post_mcp_message_retries_only_for_transient_contract_signal(
             )
         return _FakeResponse(b'{"jsonrpc":"2.0","id":1,"result":{}}')
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr("tela.commands.http_client.time.sleep", lambda _seconds: None)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1162,7 +1167,9 @@ def test_post_mcp_message_does_not_retry_on_plain_503_without_contract(
             io.BytesIO(b'{"error":"unstructured 503"}'),
         )
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1523,8 +1530,10 @@ def test_post_mcp_message_exhausts_recovery_attempts_on_connection_refused(
         calls["count"] += 1
         raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr("tela.commands.http_client.time.sleep", lambda _seconds: None)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1558,8 +1567,10 @@ def test_post_mcp_message_honors_custom_max_recovery_attempts(
         calls["count"] += 1
         raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr("tela.commands.http_client.time.sleep", lambda _seconds: None)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1592,8 +1603,10 @@ def test_post_mcp_message_zero_recovery_attempts_disables_retries(
         calls["count"] += 1
         raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr("tela.commands.http_client.time.sleep", lambda _seconds: None)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",

@@ -30,7 +30,6 @@ import time
 from types import FrameType
 from typing import BinaryIO, Callable
 from urllib import error as urllib_error
-from urllib import request as urllib_request
 import uuid
 
 from tela.core.models import LockfileData, StatusResponse
@@ -858,7 +857,9 @@ def _recover_gateway(
     )
 
 
-# @shell_complexity: HTTP POST with transient retry and SSE/JSON content-type dispatch.
+# @shell_complexity: HTTP POST with MCP-specific 503 contract retry and SSE/JSON
+# content-type dispatch. Delegates retry/backoff to shared helper; caller
+# retains response interpretation, session management, and MCP error semantics.
 def _post_mcp_message(
     *,
     mcp_url: str,
@@ -873,6 +874,12 @@ def _post_mcp_message(
     errors (connection refused, reset, broken pipe) that occur when the
     gateway is still starting up. Non-transient errors are returned immediately.
 
+    503 responses are retried only when the response body matches the MCP
+    transient warming contract (``_is_mcp_transient_warming_error``); other
+    503 responses fail immediately. This preserves the caller-owned contract
+    interpretation while delegating request/retry/backoff to the shared
+    ``retry_http_request`` helper.
+
     Returns ``(content_type, body, session_id)`` where *session_id* is the
     ``mcp-session-id`` returned by the server (may be ``None``).
     """
@@ -885,43 +892,63 @@ def _post_mcp_message(
     if session_id is not None:
         headers["mcp-session-id"] = session_id
 
-    last_error: str = ""
-    for attempt in range(max_recovery_attempts + 1):
-        request = urllib_request.Request(
-            mcp_url,
-            data=payload,
-            method="POST",
-            headers=headers,
-        )
+    def _mcp_error_from(helper_error: str) -> str:
+        """Transform ``retry_http_request`` error format to MCP-specific format.
+
+        ``retry_http_request`` returns ``HTTP_{code}: {url}`` for HTTP errors
+        and ``HTTP_CONNECT_ERROR: {reason}`` for connection errors. MCP
+        forwarding uses ``MCP_FORWARD_FAILED: http {code}`` and
+        ``MCP_FORWARD_FAILED: {reason}`` respectively — these are caller-owned
+        error semantics that must not leak into the shared helper.
+
+        The ``HTTP_CONNECT_ERROR`` check MUST precede the generic ``HTTP_``
+        check because ``HTTP_CONNECT_ERROR`` also starts with ``HTTP_``.
+        """
+        if helper_error.startswith("HTTP_CONNECT_ERROR: "):
+            # HTTP_CONNECT_ERROR: {reason} → MCP_FORWARD_FAILED: {reason}
+            reason = helper_error[len("HTTP_CONNECT_ERROR: ") :]
+            return f"MCP_FORWARD_FAILED: {reason}"
+        if helper_error.startswith("HTTP_"):
+            # HTTP_{code}: {url} → MCP_FORWARD_FAILED: http {code}
+            # Extract HTTP code between "HTTP_" and ":"
+            code_end = helper_error.index(":")
+            code = helper_error[len("HTTP_") : code_end]
+            return f"MCP_FORWARD_FAILED: http {code}"
+        return f"MCP_FORWARD_FAILED: {helper_error}"
+
+    result = retry_http_request(
+        url=mcp_url,
+        method="POST",
+        headers=headers,
+        data=payload,
+        max_retries=max_recovery_attempts,
+        timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        backoff_seconds=HTTP_TRANSIENT_BACKOFF_SECONDS,
+        retry_on_503=True,
+        retry_on_transient=True,
+        is_503_retryable=lambda exc: _is_mcp_transient_warming_error(exc).value is True,
+    )
+    if result.is_err:
+        return Result(error=_mcp_error_from(result.error or ""))
+    assert result.value is not None
+
+    try:
+        content_type = result.value.headers.get("Content-Type", "")
+        resp_session_id = result.value.headers.get("mcp-session-id")
+        response_body = result.value.read()
+    except Exception as exc:
+        return Result(error=f"MCP_FORWARD_FAILED: {exc}")
+    finally:
         try:
-            with urllib_request.urlopen(
-                request, timeout=HTTP_TIMEOUT_SECONDS
-            ) as response:
-                content_type = response.headers.get("Content-Type", "")
-                resp_session_id = response.headers.get("mcp-session-id")
-                return Result(value=(content_type, response.read(), resp_session_id))
-        except urllib_error.HTTPError as exc:
-            if (
-                exc.code == 503
-                and attempt < max_recovery_attempts
-                and _is_mcp_transient_warming_error(exc).value
-            ):
-                time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
-                continue
-            return Result(error=f"MCP_FORWARD_FAILED: http {exc.code}")
-        except urllib_error.URLError as exc:
-            last_error = f"MCP_FORWARD_FAILED: {exc.reason}"
-            if (
-                not _is_transient_url_error(exc).value
-                or attempt == max_recovery_attempts
-            ):
-                return Result(error=last_error)
-            time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
+            result.value.close()
+        except OSError:
+            pass
 
-    return Result(error=last_error)
+    return Result(value=(content_type, response_body, resp_session_id))
 
 
-# @shell_complexity: HTTP POST with transient retry and backoff on connection errors.
+# @shell_complexity: HTTP POST with transient retry — delegates retry/backoff to
+# shared helper; caller retains lifecycle semantics (no body read on success).
 def _post_json(
     *, url: str, bearer_token: str, payload: dict[str, str]
 ) -> Result[None, str]:
@@ -929,40 +956,35 @@ def _post_json(
 
     Retries transient connection errors (connection refused, reset, broken pipe)
     that can occur when the gateway process is still binding or shutting down.
+    Delegates request construction and retry/backoff to ``retry_http_request``.
+    Response body is not read — the caller only needs confirmation of success.
     """
 
     body = json.dumps(payload).encode("utf-8")
-    last_error: str = ""
-
-    for attempt in range(HTTP_TRANSIENT_RETRIES + 1):
-        request = urllib_request.Request(
-            url,
-            data=body,
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {bearer_token}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        )
-        try:
-            with urllib_request.urlopen(request, timeout=HTTP_TIMEOUT_SECONDS):
-                return Result(value=None)
-        except urllib_error.HTTPError as exc:
-            if exc.code == 503 and attempt < HTTP_TRANSIENT_RETRIES:
-                time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
-                continue
-            return Result(error=f"HTTP_{exc.code}: {url}")
-        except urllib_error.URLError as exc:
-            last_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
-            if (
-                not _is_transient_url_error(exc).value
-                or attempt == HTTP_TRANSIENT_RETRIES
-            ):
-                return Result(error=last_error)
-            time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
-
-    return Result(error=last_error)
+    result = retry_http_request(
+        url=url,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {bearer_token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        data=body,
+        max_retries=HTTP_TRANSIENT_RETRIES,
+        timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        backoff_seconds=HTTP_TRANSIENT_BACKOFF_SECONDS,
+        retry_on_503=True,
+        retry_on_transient=True,
+    )
+    if result.is_err:
+        return Result(error=result.error)
+    assert result.value is not None
+    # _post_json does not read the response body; close the response.
+    try:
+        result.value.close()
+    except OSError:
+        pass
+    return Result(value=None)
 
 
 def _post_json_once(
@@ -1052,45 +1074,44 @@ def _wait_for_gateway_readiness(
     return Result(error="BRIDGE_NOT_READY: bounded readiness wait exhausted")
 
 
+# @shell_complexity: gateway status fetch delegates retry/backoff to shared helper;
+# caller retains response parsing and StatusResponse validation.
 def _get_gateway_status(
     *, status_url: str, bearer_token: str
 ) -> Result[StatusResponse, str]:
-    """Fetch and validate ``GET /status`` gateway readiness payload."""
+    """Fetch and validate ``GET /status`` gateway readiness payload.
 
-    decoded = ""
-    last_connect_error = ""
-    for attempt in range(HTTP_TRANSIENT_RETRIES + 1):
-        request = urllib_request.Request(
-            status_url,
-            method="GET",
-            headers={
-                "Authorization": f"Bearer {bearer_token}",
-                "Accept": "application/json",
-            },
-        )
+    Delegates request construction and retry/backoff to
+    ``retry_http_request``. Response parsing and StatusResponse validation
+    remain caller-owned.
+    """
+
+    result = retry_http_request(
+        url=status_url,
+        method="GET",
+        headers={
+            "Authorization": f"Bearer {bearer_token}",
+            "Accept": "application/json",
+        },
+        max_retries=HTTP_TRANSIENT_RETRIES,
+        timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        backoff_seconds=HTTP_TRANSIENT_BACKOFF_SECONDS,
+        retry_on_503=True,
+        retry_on_transient=True,
+    )
+    if result.is_err:
+        return Result(error=result.error)
+    assert result.value is not None
+
+    try:
+        decoded = result.value.read().decode("utf-8")
+    except Exception as exc:
+        return Result(error=f"INVALID_STATUS_PAYLOAD: {exc}")
+    finally:
         try:
-            with urllib_request.urlopen(
-                request, timeout=HTTP_TIMEOUT_SECONDS
-            ) as response:
-                decoded = response.read().decode("utf-8")
-            break
-        except urllib_error.HTTPError as exc:
-            if exc.code == 503 and attempt < HTTP_TRANSIENT_RETRIES:
-                time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
-                continue
-            return Result(error=f"HTTP_{exc.code}: {status_url}")
-        except urllib_error.URLError as exc:
-            last_connect_error = f"HTTP_CONNECT_ERROR: {exc.reason}"
-            if (
-                not _is_transient_url_error(exc).value
-                or attempt == HTTP_TRANSIENT_RETRIES
-            ):
-                return Result(error=last_connect_error)
-            time.sleep(HTTP_TRANSIENT_BACKOFF_SECONDS * (attempt + 1))
-    else:
-        if last_connect_error:
-            return Result(error=last_connect_error)
-        return Result(error=f"HTTP_CONNECT_ERROR: {status_url}")
+            result.value.close()
+        except OSError:
+            pass
 
     try:
         parsed = json.loads(decoded)
