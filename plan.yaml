@@ -65520,7 +65520,7 @@ phases:
       and `dup_audit.verify.retest-blockers`).'
   - id: dup_audit.verify.full-invar-guard
     name: Run full invar guard for duplicate-audit remediation
-    status: claimed
+    status: pending
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -65620,8 +65620,6 @@ phases:
     depends_on:
     - dup_audit.verify.targeted-regression-suite
     agent: integration-verifier-tacit
-    claimed_by: integration-verifier-tacit
-    claimed_at: '2026-04-09T16:56:26.356863+00:00'
   - id: dup_audit.verify.gate
     name: Gate duplicate-audit consolidated verification
     status: pending
