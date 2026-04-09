@@ -38,6 +38,7 @@ from tela.commands.connect_transport import (
     extract_response_messages,
     inject_bridge_connection_id,
 )
+from tela.commands.http_client import retry_http_request
 from tela.commands.serve_cmd import _resolve_bearer_token_cli_or_env
 from tela.shell.config_loader import Result
 from tela.shell.lockfile import delete_lockfile, read_lockfile
@@ -974,26 +975,35 @@ def _post_json_once(
     """POST JSON once with a caller-supplied timeout and no retry.
 
     Used for bounded teardown-critical-section resume attempts.
+    Delegates to ``retry_http_request`` with ``max_retries=0`` (single
+    attempt, no retry/backoff). Response body is not read — this
+    function only needs to confirm the request succeeded.
     """
 
     body = json.dumps(payload).encode("utf-8")
-    request = urllib_request.Request(
-        url,
-        data=body,
+    result = retry_http_request(
+        url=url,
         method="POST",
         headers={
             "Authorization": f"Bearer {bearer_token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         },
+        data=body,
+        max_retries=0,
+        timeout_seconds=timeout_seconds,
+        retry_on_503=False,
+        retry_on_transient=False,
     )
+    if result.is_err:
+        return Result(error=result.error)
+    assert result.value is not None
+    # _post_json_once does not read the response body; close the response.
     try:
-        with urllib_request.urlopen(request, timeout=timeout_seconds):
-            return Result(value=None)
-    except urllib_error.HTTPError as exc:
-        return Result(error=f"HTTP_{exc.code}: {url}")
-    except urllib_error.URLError as exc:
-        return Result(error=f"HTTP_CONNECT_ERROR: {exc.reason}")
+        result.value.close()
+    except OSError:
+        pass
+    return Result(value=None)
 
 
 def _wait_for_gateway_readiness(

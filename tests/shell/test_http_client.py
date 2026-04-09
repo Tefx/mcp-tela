@@ -1,0 +1,726 @@
+"""Tests for ``tela.commands.http_client`` retry skeleton.
+
+Verifies that ``retry_http_request`` correctly centralizes the
+request→retry→backoff→Result pattern and that ``_post_json_once`` delegates
+to it while preserving existing error semantics.
+"""
+
+from __future__ import annotations
+
+from email.message import Message
+import http.client
+import io
+import json
+from urllib import error as urllib_error
+
+import pytest
+
+from tela.commands import http_client as http_client_mod
+from tela.commands.http_client import retry_http_request, _is_transient_url_error
+
+
+# =============================================================================
+# _is_transient_url_error classification tests
+# =============================================================================
+
+
+def test_is_transient_url_error_connection_refused() -> None:
+    """ConnectionRefusedError must be classified as transient."""
+    exc = urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_connection_reset() -> None:
+    """ConnectionResetError must be classified as transient."""
+    exc = urllib_error.URLError(ConnectionResetError("Connection reset"))
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_timeout() -> None:
+    """TimeoutError must be classified as transient (gateway convergence)."""
+    exc = urllib_error.URLError(TimeoutError("timed out"))
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_broken_pipe() -> None:
+    """BrokenPipeError must be classified as transient."""
+    exc = urllib_error.URLError(BrokenPipeError("broken pipe"))
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_errno_econnrefused() -> None:
+    """OSError with errno=ECONNREFUSED must be classified as transient."""
+    import errno
+
+    exc = urllib_error.URLError(OSError(errno.ECONNREFUSED, "Connection refused"))
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_errno_etimedout() -> None:
+    """OSError with errno=ETIMEDOUT must be classified as transient."""
+    import errno
+
+    exc = urllib_error.URLError(OSError(errno.ETIMEDOUT, "Operation timed out"))
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_non_transient_oserror() -> None:
+    """Generic OSError with non-transient errno must NOT be classified transient."""
+    exc = urllib_error.URLError(OSError(9999, "Unknown error"))
+    assert _is_transient_url_error(exc) is False
+
+
+def test_is_transient_url_error_string_reason_transient() -> None:
+    """String reason containing transient markers must be classified transient."""
+    exc = urllib_error.URLError("Connection refused")
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_string_reason_timed_out() -> None:
+    """String reason 'Timed out' must be classified as transient."""
+    exc = urllib_error.URLError("Timed out")
+    assert _is_transient_url_error(exc) is True
+
+
+def test_is_transient_url_error_string_reason_non_transient() -> None:
+    """String reason without transient markers must NOT be classified transient."""
+    exc = urllib_error.URLError("SSL: CERTIFICATE_VERIFY_FAILED")
+    assert _is_transient_url_error(exc) is False
+
+
+def test_is_transient_url_error_unknown_reason() -> None:
+    """URLError with unknown reason type must NOT be classified transient."""
+    exc = urllib_error.URLError(42)  # type: ignore[arg-type]
+    assert _is_transient_url_error(exc) is False
+
+
+# =============================================================================
+# retry_http_request: single attempt (max_retries=0)
+# =============================================================================
+
+
+def test_retry_http_request_success_no_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Successful request with max_retries=0 must return response."""
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b'{"ok": true}'
+
+        def close(self) -> None:
+            pass
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        return _FakeResponse()
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=0,
+        timeout_seconds=5.0,
+        retry_on_503=False,
+        retry_on_transient=False,
+    )
+
+    assert result.is_ok
+    assert result.value is not None
+    body = result.value.read()
+    assert json.loads(body) == {"ok": True}
+    result.value.close()
+
+
+def test_retry_http_request_http_error_no_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """HTTPError with max_retries=0 must return error immediately."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.HTTPError(
+            "http://127.0.0.1:8123/test",
+            404,
+            "Not Found",
+            Message(),
+            io.BytesIO(b"not found"),
+        )
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=0,
+        retry_on_503=False,
+        retry_on_transient=False,
+    )
+
+    assert result.is_err
+    assert "HTTP_404" in result.error
+    assert calls["count"] == 1
+
+
+def test_retry_http_request_url_error_no_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """URLError with max_retries=0 and retry_on_transient=False must fail."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=0,
+        retry_on_transient=False,
+    )
+
+    assert result.is_err
+    assert "HTTP_CONNECT_ERROR" in result.error
+    assert calls["count"] == 1
+
+
+# =============================================================================
+# retry_http_request: retry on 503
+# =============================================================================
+
+
+def test_retry_http_request_retries_on_503_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """retry_on_503=True must retry on 503 and succeed after transient 503."""
+
+    calls = {"count": 0}
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b'{"ok": true}'
+
+        def close(self) -> None:
+            pass
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise urllib_error.HTTPError(
+                "http://127.0.0.1:8123/test",
+                503,
+                "Service Unavailable",
+                Message(),
+                io.BytesIO(b"unavailable"),
+            )
+        return _FakeResponse()
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr(http_client_mod.time, "sleep", lambda _seconds: None)
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=3,
+        timeout_seconds=5.0,
+        retry_on_503=True,
+        retry_on_transient=False,
+    )
+
+    assert result.is_ok
+    assert calls["count"] == 2
+
+
+def test_retry_http_request_no_retry_on_503_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """retry_on_503=False must NOT retry on 503."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.HTTPError(
+            "http://127.0.0.1:8123/test",
+            503,
+            "Service Unavailable",
+            Message(),
+            io.BytesIO(b"unavailable"),
+        )
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=3,
+        retry_on_503=False,
+        retry_on_transient=False,
+    )
+
+    assert result.is_err
+    assert "HTTP_503" in result.error
+    assert calls["count"] == 1
+
+
+def test_retry_http_request_exhausts_retries_on_persistent_503(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Persistent 503 with retry_on_503=True must exhaust all retries."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.HTTPError(
+            "http://127.0.0.1:8123/test",
+            503,
+            "Service Unavailable",
+            Message(),
+            io.BytesIO(b"unavailable"),
+        )
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr(http_client_mod.time, "sleep", lambda _seconds: None)
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=2,
+        retry_on_503=True,
+        retry_on_transient=False,
+    )
+
+    assert result.is_err
+    assert "HTTP_503" in result.error
+    # max_retries=2 means 3 total attempts (1 initial + 2 retries)
+    assert calls["count"] == 3
+
+
+# =============================================================================
+# retry_http_request: retry on transient URLError
+# =============================================================================
+
+
+def test_retry_http_request_retries_on_transient_url_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Transient URLError must be retried when retry_on_transient=True."""
+
+    calls = {"count": 0}
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b'{"ok": true}'
+
+        def close(self) -> None:
+            pass
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+        return _FakeResponse()
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr(http_client_mod.time, "sleep", lambda _seconds: None)
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=3,
+        timeout_seconds=5.0,
+        retry_on_503=True,
+        retry_on_transient=True,
+    )
+
+    assert result.is_ok
+    assert calls["count"] == 2
+
+
+def test_retry_http_request_no_retry_on_non_transient_url_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-transient URLError must NOT be retried."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.URLError("SSL: CERTIFICATE_VERIFY_FAILED")
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=3,
+        retry_on_503=True,
+        retry_on_transient=True,
+    )
+
+    assert result.is_err
+    assert "HTTP_CONNECT_ERROR" in result.error
+    assert calls["count"] == 1
+
+
+def test_retry_http_request_exhausts_retries_on_persistent_transient(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Persistent transient URLError must exhaust all retries then fail."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+    monkeypatch.setattr(http_client_mod.time, "sleep", lambda _seconds: None)
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        data=b"test",
+        max_retries=2,
+        retry_on_503=True,
+        retry_on_transient=True,
+    )
+
+    assert result.is_err
+    assert "HTTP_CONNECT_ERROR" in result.error
+    # max_retries=2 means 3 total attempts (1 initial + 2 retries)
+    assert calls["count"] == 3
+
+
+# =============================================================================
+# retry_http_request: backoff timing
+# =============================================================================
+
+
+def test_retry_http_request_backoff_increases_per_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Backoff must be linear: backoff_seconds * (attempt + 1)."""
+
+    sleep_calls: list[float] = []
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b"ok"
+
+        def close(self) -> None:
+            pass
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+
+    monkeypatch.setattr(http_client_mod.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(
+        http_client_mod.time,
+        "sleep",
+        lambda seconds: sleep_calls.append(seconds),
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer test-token"},
+        max_retries=3,
+        backoff_seconds=0.5,
+        retry_on_503=True,
+        retry_on_transient=True,
+    )
+
+    assert result.is_err
+    # 3 retries = 3 sleep calls: 0.5*1, 0.5*2, 0.5*3
+    assert sleep_calls == [0.5, 1.0, 1.5]
+
+
+# =============================================================================
+# retry_http_request: _post_json_once migration proof
+# =============================================================================
+
+
+def test_post_json_once_delegates_to_retry_http_request_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_post_json_once must delegate to retry_http_request and succeed."""
+
+    from tela.commands import connect_cmd
+
+    calls: list[dict[str, object]] = []
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b""
+
+        def close(self) -> None:
+            pass
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        from tela.shell.config_loader import Result
+
+        calls.append(
+            {
+                "url": url,
+                "method": method,
+                "headers": headers,
+                "data": data,
+                "max_retries": max_retries,
+                "timeout_seconds": timeout_seconds,
+                "retry_on_503": retry_on_503,
+                "retry_on_transient": retry_on_transient,
+            }
+        )
+        return Result(value=_FakeResponse())
+
+    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+
+    result = connect_cmd._post_json_once(
+        url="http://127.0.0.1:8123/disconnect",
+        bearer_token="test-token",
+        payload={"connection_id": "bridge_abc123"},
+        timeout_seconds=1.0,
+    )
+
+    assert result.is_ok
+    assert len(calls) == 1
+    assert calls[0]["url"] == "http://127.0.0.1:8123/disconnect"
+    assert calls[0]["method"] == "POST"
+    assert calls[0]["headers"]["Authorization"] == "Bearer test-token"
+    assert calls[0]["max_retries"] == 0
+    assert calls[0]["timeout_seconds"] == 1.0
+    assert calls[0]["retry_on_503"] is False
+    assert calls[0]["retry_on_transient"] is False
+
+
+def test_post_json_once_delegates_error_from_retry_http_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_post_json_once must propagate retry_http_request errors."""
+
+    from tela.commands import connect_cmd
+
+    from tela.shell.config_loader import Result
+
+    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
+        *,
+        url: str,
+        method: str,
+        headers: dict[str, str],
+        data: bytes | None,
+        max_retries: int,
+        timeout_seconds: float,
+        backoff_seconds: float = 0.5,
+        retry_on_503: bool = True,
+        retry_on_transient: bool = True,
+    ) -> "Result[http.client.HTTPResponse, str]":
+        return Result(error="HTTP_503: http://127.0.0.1:8123/disconnect")
+
+    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+
+    result = connect_cmd._post_json_once(
+        url="http://127.0.0.1:8123/disconnect",
+        bearer_token="test-token",
+        payload={"connection_id": "bridge_abc123"},
+        timeout_seconds=1.0,
+    )
+
+    assert result.is_err
+    assert "HTTP_503" in result.error
+
+
+# =============================================================================
+# retry_http_request: preserves Bearer header semantics
+# =============================================================================
+
+
+def test_retry_http_request_preserves_bearer_header(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Caller-constructed headers (including Bearer) must pass through unchanged."""
+
+    captured_headers: dict[str, str] = {}
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b"ok"
+
+        def close(self) -> None:
+            pass
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        nonlocal captured_headers
+        captured_headers = dict(request.headers)
+        return _FakeResponse()
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/mcp",
+        method="POST",
+        headers={
+            "Authorization": "Bearer secret-token",
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        },
+        data=b'{"jsonrpc":"2.0","id":1}',
+        max_retries=0,
+        timeout_seconds=5.0,
+        retry_on_503=False,
+        retry_on_transient=False,
+    )
+
+    assert result.is_ok
+    assert captured_headers.get("Authorization") == "Bearer secret-token"
+    assert captured_headers.get("Content-type") == "application/json"
+    assert captured_headers.get("Accept") == "application/json, text/event-stream"
+
+
+# =============================================================================
+# retry_http_request: caller closes response
+# =============================================================================
+
+
+def test_retry_http_request_caller_must_close_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Returned response must be closeable by the caller."""
+
+    close_calls = {"count": 0}
+
+    class _FakeResponse:
+        status = 200
+
+        def read(self) -> bytes:
+            return b'{"status": "ready"}'
+
+        def close(self) -> None:
+            close_calls["count"] += 1
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        return _FakeResponse()
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/status",
+        method="GET",
+        headers={"Authorization": "Bearer token"},
+        max_retries=0,
+        timeout_seconds=5.0,
+        retry_on_503=False,
+        retry_on_transient=False,
+    )
+
+    assert result.is_ok
+    assert result.value is not None
+    body = result.value.read()
+    assert json.loads(body) == {"status": "ready"}
+    result.value.close()
+    assert close_calls["count"] == 1
+
+
+def test_retry_http_request_zero_retries_single_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """max_retries=0 must make exactly one attempt with no retries."""
+
+    calls = {"count": 0}
+
+    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
+        _ = request, timeout
+        calls["count"] += 1
+        raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+
+    monkeypatch.setattr(
+        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
+    )
+
+    result = retry_http_request(
+        url="http://127.0.0.1:8123/test",
+        method="POST",
+        headers={"Authorization": "Bearer token"},
+        max_retries=0,
+        retry_on_transient=True,
+    )
+
+    assert result.is_err
+    assert calls["count"] == 1
