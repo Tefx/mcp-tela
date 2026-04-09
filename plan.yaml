@@ -64735,7 +64735,7 @@ phases:
       \ semantics"
   - id: dup_audit.c2.verify-http-retry-consolidation
     name: Verify connect and remote-state HTTP retry consolidation
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -64868,6 +64868,8 @@ phases:
     - dup_audit.c2.extract-retry-http-request-foundation
     - dup_audit.c2.migrate-remaining-http-retry-callers
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-09T14:31:25.531210+00:00'
   - id: dup_audit.c2.gate
     name: Gate duplicate-audit C2 remediation
     status: pending
