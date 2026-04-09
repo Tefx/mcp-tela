@@ -65689,7 +65689,7 @@ phases:
       recorded for governance visibility.'
   - id: dup_audit.verify.gate
     name: Gate duplicate-audit consolidated verification
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -65753,6 +65753,8 @@ phases:
     - dup_audit.verify.full-invar-guard
     - dup_audit.verify.retest-blockers
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-09T17:13:08.665665+00:00'
   - id: dup_audit.deep_review.gate
     name: Final gate for duplicate-audit remediation
     status: claimed
