@@ -66512,7 +66512,7 @@ phases:
       \ (no changes)"
   - id: dup_audit.verify.fix-blockers
     name: Batched blocker remediation for targeted regression and doc drift
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: default\nwork_type: defect_repair\n\
       \nFix ALL blockers found by the failed targeted-regression and doc-sync-gate\
       \ evidence for duplicate-audit finalization.\n\n## Scope Guardrail (MANDATORY)\n\
@@ -66629,6 +66629,8 @@ phases:
     - dup_audit.verify.targeted-regression-suite
     - dup_audit.doc_sync.gate
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-09T16:49:19.815959+00:00'
   - id: dup_audit.verify.retest-blockers
     name: Retest duplicate-audit blocker batch
     status: pending
