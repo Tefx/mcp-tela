@@ -63761,7 +63761,7 @@ phases:
       \ paths tested. PASS.\n\n- Decision: OPEN"
   - id: dup_audit.c1.gate
     name: Gate duplicate-audit C1 remediation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -63826,6 +63826,8 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-09T04:48:38.432059+00:00'
   - id: dup_audit.c1.verify-bearer-parser-extraction
     name: Verify bearer-token extraction refactor
     status: done
