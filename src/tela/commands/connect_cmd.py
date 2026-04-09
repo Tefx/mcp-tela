@@ -44,6 +44,10 @@ from tela.shell.lockfile import delete_lockfile, read_lockfile
 from tela.shell.startup_coordinator import (
     discover_or_autostart as _coordinator_discover_or_autostart,
 )
+from tela.shell.transient_types import (
+    TRANSIENT_CONNECTION_EXCEPTIONS,
+    TRANSIENT_ERRNOS,
+)
 
 
 LOCKFILE_WAIT_TIMEOUT_SECONDS = 5.0
@@ -768,28 +772,12 @@ def _is_transient_url_error(exc: urllib_error.URLError) -> Result[bool, str]:
         # (ConnectionRefusedError, ConnectionResetError, etc.) may carry
         # errno=None when constructed with only a message string — which is
         # the common pattern in both production urllib and test fixtures.
-        transient_types = (
-            ConnectionRefusedError,
-            ConnectionResetError,
-            ConnectionAbortedError,
-            BrokenPipeError,
-            TimeoutError,
-        )
-        if isinstance(reason, transient_types):
+        if isinstance(reason, TRANSIENT_CONNECTION_EXCEPTIONS):
             return Result(value=True)
 
         # Fallback: errno check for generic OSError instances raised by the
         # OS with a numeric errno but no dedicated exception subclass.
-        import errno
-
-        transient_errnos = {
-            errno.ECONNREFUSED,
-            errno.ECONNRESET,
-            errno.ECONNABORTED,
-            errno.EPIPE,
-            errno.ETIMEDOUT,
-        }
-        return Result(value=reason.errno in transient_errnos)
+        return Result(value=reason.errno in TRANSIENT_ERRNOS)
     if isinstance(reason, str):
         normalized_reason = reason.lower()
         transient_reason_markers = (
