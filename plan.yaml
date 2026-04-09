@@ -66408,6 +66408,125 @@ phases:
       - If docs changed, include exact verification command/output:\n  - no doc edits\
       \ required; no change-verification command applicable\n- Commit hash(es): N/A\
       \ (no changes)"
+  - id: dup_audit.verify.fix-blockers
+    name: Batched blocker remediation for targeted regression and doc drift
+    status: pending
+    description: "step_type: implementation\nagent_source: default\nwork_type: defect_repair\n\
+      \nFix ALL blockers found by the failed targeted-regression and doc-sync-gate\
+      \ evidence for duplicate-audit finalization.\n\n## Scope Guardrail (MANDATORY)\n\
+      - ONLY address the scoped findings below.\n- Do NOT pull unrelated pre-existing\
+      \ repro failures or other duplicate-audit residues into this batch.\n- If any\
+      \ unrelated failure appears while fixing these blockers, record it as out-of-batch\
+      \ evidence rather than expanding this step.\n\n## Blockers to Fix (ALL of these,\
+      \ not just the first)\n\n### B1: stale monkeypatch target after C2 extraction\n\
+      - Severity: MEDIUM\n- File: `tests/shell/test_connect_bridge_readiness_gaps_red.py`\n\
+      - Root cause: the test still patches `connect_cmd.urllib_request` even though\
+      \ the retry/request skeleton was extracted into `commands/http_client.py`.\n\
+      - Symptom: targeted regression no longer exercises the real C2 seam because\
+      \ the monkeypatch target is stale.\n- Remediation: retarget the monkeypatch\
+      \ to `http_client.urllib_request` so the test follows the post-extraction ownership\
+      \ boundary.\n- Grep hint: `rg -n \"urllib_request\" tests/shell/test_connect_bridge_readiness_gaps_red.py\
+      \ src/tela/commands/connect_cmd.py src/tela/commands/http_client.py`\n\n###\
+      \ B2: DESIGN.md drift for C1/C2/C4\n- Severity: LOW but gate-blocking for doc\
+      \ gate\n- File: `docs/DESIGN.md`\n- Root cause: final design docs lag the implemented\
+      \ duplicate-audit consolidation.\n- Required closures:\n  1. document public\
+      \ API / dependency updates for shared bearer parser extraction (C1)\n  2. document\
+      \ `commands/http_client.py` and its dependency chain / caller-owned parsing\
+      \ boundary (C2)\n  3. document `shell/transient_types.py` and the policy-rationale\
+      \ mention for shared transient classification (C4)\n- Grep hint: `rg -n \"http_auth|http_client|transient_types|bearer|transient\"\
+      \ docs/DESIGN.md src/tela/shell src/tela/commands`\n\n## Completion Criteria\
+      \ (stub exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is\
+      \ NOT acceptable.\nEach deliverable MUST contain substantive edits that close\
+      \ the listed blockers.\n\n## Evidence Expectations\n- paste exact before/after\
+      \ repro command outputs for the stale monkeypatch fix\n- cite exact DESIGN.md\
+      \ sections added/updated for C1, C2, and C4\n- explicitly state that no unrelated\
+      \ pre-existing repro failures were pulled into scope"
+    verification: '- local-check protecting dup_audit.verify.retest-blockers and dup_audit.verify.gate
+
+      - stale monkeypatch target is corrected to the C2 extraction seam
+
+      - DESIGN.md explicitly documents C1/C2/C4 closure points listed above
+
+      - no unrelated pre-existing repro failure is fixed or absorbed in this batch'
+    evidence_template: '## Blocker Remediation Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Exact repro command outputs
+
+      **Before fix command(s):**
+
+      ```
+
+      <paste exact targeted regression or focused repro command>
+
+      ```
+
+      **Before fix output:**
+
+      ```
+
+      <paste exact stdout/stderr>
+
+      ```
+
+      **After fix command(s):**
+
+      ```
+
+      <paste exact command rerun after edits>
+
+      ```
+
+      **After fix output:**
+
+      ```
+
+      <paste exact stdout/stderr>
+
+      ```
+
+
+      ### Monkeypatch target closure
+
+      - Old target observed: `connect_cmd.urllib_request` | yes/no
+
+      - New target observed: `http_client.urllib_request` | yes/no
+
+      - File/line updated: <file:line>
+
+
+      ### DESIGN.md drift closure
+
+      - C1 section updated: <heading/line range>
+
+      - C2 section updated: <heading/line range>
+
+      - C4 section updated: <heading/line range>
+
+      - Dependency/public-API chain documented: yes/no
+
+      - Policy rationale mention added for transient types: yes/no
+
+
+      ### Scope guardrail confirmation
+
+      - Unrelated pre-existing repro failures touched: none | <list with justification>
+
+      - Why scope remained bounded: <one sentence>'
+    depends_on:
+    - dup_audit.verify.targeted-regression-suite
+    - dup_audit.doc_sync.gate
+    agent: python-executor
 - id: dup_audit.doc_sync
   name: Duplicate Audit Documentation Sync
   status: done
