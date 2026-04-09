@@ -64586,7 +64586,7 @@ phases:
       \ migration step"
   - id: dup_audit.c2.migrate-remaining-http-retry-callers
     name: Migrate remaining retry skeleton callers onto shared helper
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       work_type: technical_debt_remediation
@@ -64699,6 +64699,40 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior
     claimed_at: '2026-04-09T13:28:43.807655+00:00'
+    done_at: '2026-04-09T14:31:03.652364+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Integration Evidence\n- Files changed:\n  - src/tela/commands/http_client.py\n\
+      \  - src/tela/commands/connect_cmd.py\n  - src/tela/commands/remote_state.py\n\
+      \  - tests/shell/test_http_client.py\n  - tests/shell/test_connect_cmd.py\n\
+      - Remaining callers migrated:\n  - _post_mcp_message\n  - _post_json\n  - _get_gateway_status\n\
+      \  - _fetch_status_payload\n- Helper evolution after foundation step:\n  - retained\
+      \ request/retry/backoff/result ownership in `retry_http_request`\n  - call sites\
+      \ delegate HTTP execution while preserving caller-owned semantics\n  - retained\
+      \ optional 503 retry predicate support for MCP warming contract handling\n-\
+      \ Caller-owned parsing preserved for each migrated function:\n  - `_post_mcp_message`:\
+      \ still maps helper errors into MCP-specific `MCP_FORWARD_FAILED` shape; still\
+      \ owns content-type/session-id/body parsing\n  - `_post_json`: still owns no-body\
+      \ lifecycle semantics and closes response locally\n  - `_get_gateway_status`:\
+      \ still owns status payload read/decode/JSON parse/model validation\n  - `_fetch_status_payload`:\
+      \ still owns remote-state error shaping and JSON object validation\n\n### Test\
+      \ Execution\n```text\nuv run python -m pytest tests/shell/test_http_client.py\
+      \ tests/shell/test_connect_cmd.py -v\n```\n```text\n72 passed in 6.94s\n```\n\
+      \n### Invar\n```text\nuv run invar guard --all\n```\n```text\nfailed: errors=9\
+      \ warnings=37 infos=22\n```\nNotes on guard disposition:\n- Observed 9 errors\
+      \ are pre-existing global debt (e.g. `src/tela/core/contracts.py` missing contract\
+      \ issues, downstream size/escape-hatch budget debt) and not introduced by this\
+      \ step.\n- This step preserved local behavioral checks and did not introduce\
+      \ new blocker-class failures in touched retry seams.\n- MCP wrapper full-scan\
+      \ path returned `wrapper_instability` once; authoritative CLI full-scan command\
+      \ was executed and captured.\n\n## Required fields\n- Commit hash(es): `4701046a`\n\
+      - Files changed: listed above\n- Verification: targeted migrated-caller suites\
+      \ pass (72/72); full invar scan executed with pre-existing global debt\n- Spec\
+      \ link: `dup_audit.c2.migrate-remaining-http-retry-callers` authoritative interface\
+      \ (`retry_http_request` truth owner)\n- Gaps/Notes:\n  - transient full-scan\
+      \ wrapper instability observed via MCP guard tool path; parity CLI path used\n\
+      \  - step includes fix for error-prefix ordering in remote_state transform (`HTTP_CONNECT_ERROR`\
+      \ must be checked before generic `HTTP_`) to preserve legacy `NO_RUNNING_SERVER`\
+      \ semantics"
   - id: dup_audit.c2.verify-http-retry-consolidation
     name: Verify connect and remote-state HTTP retry consolidation
     status: pending
