@@ -17,6 +17,7 @@ from typing import Any
 import pytest
 
 import tela.commands.connect_cmd as connect_cmd
+import tela.commands.http_client as http_client
 from tela.core.models import StatusResponse
 from tela.shell.config_loader import Result
 
@@ -183,7 +184,7 @@ class TestBridgeReadinessBehavior:
                 fp=BytesIO(transient_body),
             )
 
-        monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
+        monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
         monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
 
         result = connect_cmd._post_mcp_message(

@@ -357,12 +357,43 @@ Downstream (gateway → MCP servers):
 - `command`: stdio subprocess
 - `url`: Streamable HTTP (default) or SSE (`transport: sse`)
 
+#### `transient_types.py`
+
+**Responsibility:** Shared transient connection failure classifiers for gateway retry decisions.
+
+**Public API:**
+- `TRANSIENT_CONNECTION_EXCEPTIONS` — tuple of exception types classified as transient: `ConnectionRefusedError`, `ConnectionResetError`, `ConnectionAbortedError`, `BrokenPipeError`, `TimeoutError`
+- `TRANSIENT_ERRNOS` — frozenset of numeric errno values for transient failures
+
+**TimeoutError Policy Divergence (C4):** `TimeoutError` is treated as TRANSIENT in the Shell retry path because connection-timeout during gateway convergence is recoverable (the server may still be starting). This differs from Core layer classification where `TimeoutError` may indicate a downstream service timeout that should propagate as permanent failure. The divergence is intentional and reflects different failure modes at each layer.
+
+| Layer | TimeoutError | Rationale |
+|-------|-------------|-----------|
+| Shell (connect) | TRANSIENT | Gateway may be warming |
+| Core (MCP tool) | NON-TRANSIENT | Service timeout |
+
+**Dependencies:** None (stdlib only). Consumed by `http_client.py` for transient classification.
+
 ### `commands/`
 
 CLI entrypoints only:
 - `connect_cmd.py`: client entry (auto-discover, auto-start, bridge)
 - `serve_cmd.py`: server entry (HTTP gateway, lockfile, idle shutdown)
 - `status_cmd.py`, `connections_cmd.py`, `audit_cmd.py`, `profiles_cmd.py`: query commands
+
+#### `http_client.py`
+
+**Responsibility:** Shared HTTP request retry/backoff skeleton — centralizes urllib request construction, transient retry, and 503 retry logic for connect bridge HTTP call sites.
+
+**Public API:**
+- `retry_http_request(...) -> Result[HTTPResponse, str]` — execute HTTP request with configurable retry on transient connection errors and 503 responses
+- `_is_transient_url_error(exc: urllib_error.URLError) -> bool` — classify URLError as transient (connection refused/reset/broken pipe) or non-transient
+
+**Ownership:** Owns only request/retry/backoff/result skeleton. Response parsing, bearer header construction, session management, and error semantics remain caller responsibilities.
+
+**Dependencies:**
+- Upstream: `urllib.request`, `urllib.error`, `http.client`, `time`
+- Downstream: consumed by `connect_cmd.py` for `_post_mcp_message` and `_post_json` transient retry paths
 
 ## Auth Layers
 
@@ -826,17 +857,20 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 
 ### `http_auth.py`
 
-**Responsibility:** HTTP bearer token authentication — constant-time token validation and raw ASGI middleware that enforces bearer auth on all routes except `GET /health`.
+**Responsibility:** HTTP bearer token authentication — constant-time token validation, raw bearer string parsing, and raw ASGI middleware that enforces bearer auth on all routes except `GET /health`.
 
 **Public API:**
+- `extract_bearer_from_header_value(value: str) -> str | None` — parse `Bearer <token>` from an `Authorization` header value; returns token string or `None` if not present/invalid
 - `validate_bearer_token(request_token: str, expected_token: str) -> Result[None, str]`
 - `BearerAuthMiddleware(app: ASGIApp, get_expected_token: Callable[[], str | None])` — raw ASGI middleware class.
+
+**Bearer parsing (C1):** `extract_bearer_from_header_value` is the canonical shared bearer parser. It centralizes common string parsing logic (split on whitespace, validate prefix, return token) and preserves adapter-local error handling at each extraction point.
 
 **Ownership:** Stateless (middleware instance holds references to app and token getter but no mutable state).
 
 **Dependencies:**
 - Upstream: `hmac` (stdlib), `tela.shell.result.Result`.
-- Downstream: none. Consumed by `serve_cmd.py` (middleware wrapping) and `http_routes.py` (direct validation).
+- Downstream: none. Consumed by `serve_cmd.py` (middleware wrapping), `http_routes.py` (direct validation), and `gateway_http_auth.py` (Starlette adapter).
 
 **Concurrency:** `validate_bearer_token` is a pure function. `BearerAuthMiddleware` is stateless per-request — safe for concurrent ASGI invocation. `get_expected_token` callback must be thread-safe (satisfied by `gateway_runtime.get_expected_bearer_token`).
 
