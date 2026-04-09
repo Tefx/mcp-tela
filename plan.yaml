@@ -65604,6 +65604,7 @@ phases:
     depends_on:
     - dup_audit.verify.targeted-regression-suite
     - dup_audit.verify.full-invar-guard
+    - dup_audit.verify.retest-blockers
     agent: gate-reviewer-tacit
   - id: dup_audit.deep_review.gate
     name: Final gate for duplicate-audit remediation
