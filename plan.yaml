@@ -65028,7 +65028,7 @@ phases:
       in `connect_cmd.py` that should have been removed during consolidation.'
   - id: dup_audit.c2.gate
     name: Gate duplicate-audit C2 remediation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: THOROUGH
@@ -65115,6 +65115,69 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T15:01:58.260213+00:00'
+    done_at: '2026-04-09T15:13:47.914384+00:00'
+    evidence: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.c2
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.c2.extract-retry-http-request-foundation | done | Good | none blocking
+      |
+
+      | dup_audit.c2.migrate-remaining-http-retry-callers | done | Good | follow-up
+      drift found in test harness + dead code |
+
+      | dup_audit.c2.verify-http-retry-consolidation | done | Good | reported blocker-class
+      unresolved issues |
+
+
+      ### Gate Decision Basis
+
+      - helper owns skeleton only: yes
+
+      - caller parsing preserved: yes
+
+      - retry/backoff drift detected: no
+
+      - C4 policy consistent: yes
+
+
+      ### Gate Decision
+
+      - BLOCKED (resolved through batched-fix path creation)
+
+
+      ### Blocker findings (batched)
+
+      1) stale monkeypatch targets after extraction (`connect_cmd.urllib_request.urlopen`
+      no longer valid; should patch helper location)
+
+      2) dead duplicate classifier path in `connect_cmd` with orphaned imports
+
+
+      ### Batched remediation created
+
+      - `dup_audit.c2.fix-gate-blockers` (depends_on: `dup_audit.c2.gate`)
+
+      - `dup_audit.c2.retest-gate-blockers` (depends_on: `dup_audit.c2.fix-gate-blockers`)
+
+
+      Gate step closed with remediation ownership transferred to the batched fix chain
+      per protocol.'
   - id: dup_audit.c2.fix-gate-blockers
     name: Fix C2 gate blockers (stale monkeypatch targets and dead-code cleanup)
     status: pending
