@@ -65820,7 +65820,7 @@ phases:
     claimed_at: '2026-04-09T15:45:05.287112+00:00'
   - id: dup_audit.deep_review.contract-strength
     name: Audit contract and doctest strength on touched surfaces
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -65876,6 +65876,17 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T15:59:40.644484+00:00'
+    done_at: '2026-04-09T16:22:25.606513+00:00'
+    evidence: "## Contract Strength Audit\n\n### refs Read Confirmation (MANDATORY)\n\
+      No refs for this step.\n\n## Findings\n- New contract regressions: NONE on C1-C4\
+      \ touched surfaces\n- Vacuous or placeholder artifacts: NONE on touched files\n\
+      - Invar-related concerns on touched files:\n  - no new blocker-class invar regressions\
+      \ introduced by duplicate-audit remediation seams\n  - touched files remain\
+      \ in shell/commands zones where core @pre/@post regime is not directly applicable\n\
+      \  - existing @invar:allow annotations in touched files are justified for documented\
+      \ shell-result/file-size contexts\n\n## Summary\nContract/doctest strength for\
+      \ touched remediation surfaces is stable with no newly introduced contract-quality\
+      \ regressions."
   - id: dup_audit.deep_review.architecture-review
     name: Review shell and command boundary placement of new shared abstractions
     status: done
