@@ -66137,7 +66137,7 @@ phases:
       - NEEDS_TEST: none blocking in this conformance pass'
   - id: dup_audit.deep_review.wiring-audit
     name: Audit duplicate-audit wiring completeness
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -66241,6 +66241,50 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-09T16:14:08.112911+00:00'
+    done_at: '2026-04-09T16:22:46.663693+00:00'
+    evidence: '## Wiring Audit Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      **Bearer helper consumers**:
+
+      - `extract_bearer_from_header_value` is live at both intended call sites (middleware
+      extraction and gateway auth adapter)
+
+      - `validate_bearer_token` remains consumed by auth middleware/routes; no duplicate
+      active bearer parser skeleton remains
+
+
+      **Transient tuple consumers**:
+
+      - shared transient constants are consumed by canonical transient classifier
+      in `commands/http_client.py`
+
+      - no active duplicate transient classifier path remains in `connect_cmd`
+
+
+      **HTTP client helper consumers**:
+
+      - `retry_http_request` consumed by intended `connect_cmd` and `remote_state`
+      caller surfaces
+
+      - consumer set matches migration scope and preserves caller-owned interpretation
+      boundaries
+
+
+      **Residual duplicate skeletons**:
+
+      - none blocking found
+
+      - non-blocking residues: backward-compat aliases with no runtime duplication
+      impact
+
+
+      **Verdict**: PASS'
   - id: dup_audit.doc_sync.review-and-update-docs
     name: Review docs for duplicate-audit drift and update if needed
     status: pending
