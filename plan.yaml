@@ -64586,7 +64586,7 @@ phases:
       \ migration step"
   - id: dup_audit.c2.migrate-remaining-http-retry-callers
     name: Migrate remaining retry skeleton callers onto shared helper
-    status: claimed
+    status: pending
     description: 'step_type: implementation
 
       work_type: technical_debt_remediation
@@ -64697,8 +64697,6 @@ phases:
     depends_on:
     - dup_audit.c2.extract-retry-http-request-foundation
     agent: python-senior-tacit
-    claimed_by: python-senior-tacit
-    claimed_at: '2026-04-09T10:11:29.258890+00:00'
   - id: dup_audit.c2.verify-http-retry-consolidation
     name: Verify connect and remote-state HTTP retry consolidation
     status: pending
