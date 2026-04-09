@@ -63462,7 +63462,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: dup_audit.c4.gate
     name: Gate duplicate-audit C4 remediation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -63527,6 +63527,8 @@ phases:
 
       '
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-09T04:31:14.053886+00:00'
   - id: dup_audit.c1.gate
     name: Gate duplicate-audit C1 remediation
     status: claimed
