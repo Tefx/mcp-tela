@@ -44,10 +44,6 @@ from tela.shell.lockfile import delete_lockfile, read_lockfile
 from tela.shell.startup_coordinator import (
     discover_or_autostart as _coordinator_discover_or_autostart,
 )
-from tela.shell.transient_types import (
-    TRANSIENT_CONNECTION_EXCEPTIONS,
-    TRANSIENT_ERRNOS,
-)
 
 
 LOCKFILE_WAIT_TIMEOUT_SECONDS = 5.0
@@ -750,50 +746,6 @@ def _write_framed_message(
     except OSError as exc:
         return Result(error=f"BRIDGE_WRITE_FAILED: {exc}")
     return Result(value=None)
-
-
-def _is_transient_url_error(exc: urllib_error.URLError) -> Result[bool, str]:
-    """Classify whether a URLError is a transient connection failure.
-
-    Transient failures (connection refused, reset, broken pipe) can occur when
-    the gateway HTTP server is still starting up or temporarily unreachable.
-    Non-transient failures (DNS, SSL, etc.) should not be retried.
-
-    Args:
-        exc: The URLError to classify.
-
-    Returns:
-        Result with True if the underlying error is a transient connection
-        failure, False otherwise.
-    """
-    reason = exc.reason
-    if isinstance(reason, OSError):
-        # Prefer type-based classification: Python's builtin subclasses
-        # (ConnectionRefusedError, ConnectionResetError, etc.) may carry
-        # errno=None when constructed with only a message string — which is
-        # the common pattern in both production urllib and test fixtures.
-        if isinstance(reason, TRANSIENT_CONNECTION_EXCEPTIONS):
-            return Result(value=True)
-
-        # Fallback: errno check for generic OSError instances raised by the
-        # OS with a numeric errno but no dedicated exception subclass.
-        return Result(value=reason.errno in TRANSIENT_ERRNOS)
-    if isinstance(reason, str):
-        normalized_reason = reason.lower()
-        transient_reason_markers = (
-            "connection refused",
-            "connection reset",
-            "connection aborted",
-            "broken pipe",
-            "timed out",
-            "temporarily unavailable",
-        )
-        return Result(
-            value=any(
-                marker in normalized_reason for marker in transient_reason_markers
-            )
-        )
-    return Result(value=False)
 
 
 def _is_recoverable_error(error: str) -> Result[bool, str]:

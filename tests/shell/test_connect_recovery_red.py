@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 
 import tela.commands.connect_cmd as connect_cmd
+import tela.commands.http_client as http_client
 from tela.core.models import LockfileData, StatusResponse
 from tela.shell.config_loader import Result
 
@@ -52,8 +53,8 @@ def test_post_mcp_message_retries_on_connection_refused_string_reason(
         calls["count"] += 1
         raise urllib.error.URLError("Connection refused")
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(http_client.time, "sleep", lambda _seconds: None)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -87,7 +88,7 @@ def test_get_gateway_status_retries_on_connection_refused(
         calls["count"] += 1
         raise urllib.error.URLError("Connection refused")
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
 
     result = connect_cmd._get_gateway_status(
         status_url="http://127.0.0.1:8123/status",
@@ -121,8 +122,8 @@ def test_post_json_retries_on_connection_refused_string_reason(
         calls["count"] += 1
         raise urllib.error.URLError("Connection refused")
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(http_client.time, "sleep", lambda _seconds: None)
 
     result = connect_cmd._post_json(
         url="http://127.0.0.1:8123/connect",
@@ -166,7 +167,7 @@ def test_discover_or_autostart_handles_stale_lockfile_via_coordinator(
 
     # The coordinator handles stale lockfiles - this is not a gap
     # Gap is in _get_gateway_status and _post_json retry logic
-    assert hasattr(connect_cmd, "_is_transient_url_error")
+    assert hasattr(http_client, "_is_transient_url_error")
     # This test passes to document expected behavior
 
 
@@ -309,8 +310,8 @@ def test_recovery_attempt_limit_honors_custom_retry_count(
         calls["count"] += 1
         raise urllib.error.URLError(ConnectionRefusedError("Connection refused"))
 
-    monkeypatch.setattr(connect_cmd.urllib_request, "urlopen", _fake_urlopen)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
+    monkeypatch.setattr(http_client.time, "sleep", lambda _seconds: None)
 
     # Test with max_recovery_attempts=1 (should make 2 attempts: initial + 1 retry)
     result = connect_cmd._post_mcp_message(

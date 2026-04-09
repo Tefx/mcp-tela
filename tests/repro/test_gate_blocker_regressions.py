@@ -18,11 +18,11 @@ import pytest
 from tela.commands.connect_cmd import (
     HTTP_TRANSIENT_RETRIES,
     _autostart_serve,
-    _is_transient_url_error,
     _post_json,
     _post_mcp_message,
     _wait_for_live_lockfile,
 )
+from tela.commands.http_client import _is_transient_url_error
 from tela.core.models import LockfileData
 from tela.shell import lockfile
 
@@ -39,28 +39,24 @@ class TestB1TransientRetry:
         """ConnectionRefusedError must be classified as transient."""
         inner = ConnectionRefusedError("Connection refused")
         exc = urllib_error.URLError(inner)
-        result = _is_transient_url_error(exc)
-        assert result.is_ok and result.value is True
+        assert _is_transient_url_error(exc) is True
 
     def test_is_transient_url_error_connection_reset(self) -> None:
         """ConnectionResetError must be classified as transient."""
         inner = ConnectionResetError("Connection reset")
         exc = urllib_error.URLError(inner)
-        result = _is_transient_url_error(exc)
-        assert result.is_ok and result.value is True
+        assert _is_transient_url_error(exc) is True
 
     def test_is_transient_url_error_broken_pipe(self) -> None:
         """BrokenPipeError must be classified as transient."""
         inner = BrokenPipeError("Broken pipe")
         exc = urllib_error.URLError(inner)
-        result = _is_transient_url_error(exc)
-        assert result.is_ok and result.value is True
+        assert _is_transient_url_error(exc) is True
 
     def test_is_transient_url_error_non_transient(self) -> None:
         """Non-connection errors must NOT be classified as transient."""
         exc = urllib_error.URLError("unknown host")
-        result = _is_transient_url_error(exc)
-        assert result.is_ok and result.value is False
+        assert _is_transient_url_error(exc) is False
 
     def test_post_mcp_message_retries_on_transient_error(self) -> None:
         """_post_mcp_message must retry on transient URLError, then succeed."""
@@ -72,6 +68,9 @@ class TestB1TransientRetry:
             def read(self) -> bytes:
                 return b'{"result": "ok"}'
 
+            def close(self) -> None:
+                return None
+
             def __enter__(self) -> "FakeResponse":
                 return self
 
@@ -82,11 +81,15 @@ class TestB1TransientRetry:
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+                raise urllib_error.URLError(
+                    ConnectionRefusedError("Connection refused")
+                )
             return FakeResponse()
 
-        with patch("tela.commands.connect_cmd.urllib_request.urlopen", mock_urlopen), \
-             patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01):
+        with (
+            patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
+            patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
+        ):
             result = _post_mcp_message(
                 mcp_url="http://127.0.0.1:9999/mcp",
                 bearer_token="test-token",
@@ -94,7 +97,9 @@ class TestB1TransientRetry:
             )
 
         assert result.is_ok, f"Expected success after retries, got: {result.error}"
-        assert call_count == 3, f"Expected 3 attempts (2 retries + 1 success), got {call_count}"
+        assert call_count == 3, (
+            f"Expected 3 attempts (2 retries + 1 success), got {call_count}"
+        )
 
     def test_post_mcp_message_fails_after_max_retries(self) -> None:
         """_post_mcp_message must fail after exhausting retries."""
@@ -105,8 +110,10 @@ class TestB1TransientRetry:
             call_count += 1
             raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
 
-        with patch("tela.commands.connect_cmd.urllib_request.urlopen", mock_urlopen), \
-             patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01):
+        with (
+            patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
+            patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
+        ):
             result = _post_mcp_message(
                 mcp_url="http://127.0.0.1:9999/mcp",
                 bearer_token="test-token",
@@ -125,10 +132,14 @@ class TestB1TransientRetry:
             nonlocal call_count
             call_count += 1
             raise urllib_error.HTTPError(
-                "http://test/mcp", 500, "Server Error", {}, None  # type: ignore[arg-type]
+                "http://test/mcp",
+                500,
+                "Server Error",
+                {},
+                None,  # type: ignore[arg-type]
             )
 
-        with patch("tela.commands.connect_cmd.urllib_request.urlopen", mock_urlopen):
+        with patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen):
             result = _post_mcp_message(
                 mcp_url="http://127.0.0.1:9999/mcp",
                 bearer_token="test-token",
@@ -149,15 +160,22 @@ class TestB1TransientRetry:
             def __exit__(self, *args: object) -> None:
                 pass
 
+            def close(self) -> None:
+                return None
+
         def mock_urlopen(req: object, timeout: float = 0) -> FakeResponse:
             nonlocal call_count
             call_count += 1
             if call_count <= 1:
-                raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+                raise urllib_error.URLError(
+                    ConnectionRefusedError("Connection refused")
+                )
             return FakeResponse()
 
-        with patch("tela.commands.connect_cmd.urllib_request.urlopen", mock_urlopen), \
-             patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01):
+        with (
+            patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
+            patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
+        ):
             result = _post_json(
                 url="http://127.0.0.1:9999/connect",
                 bearer_token="test-token",
