@@ -65243,7 +65243,7 @@ phases:
       \ - pre-existing full-scan invar debt remains\n- Commit hash(es):\n  - `adb964ad8699f5e48027b0f1a3c32a35ad057668`"
   - id: dup_audit.c2.retest-gate-blockers
     name: Retest C2 gate blockers batch
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       work_type: retest
@@ -65269,6 +65269,8 @@ phases:
       - Verdict: PASS|FAIL'
     depends_on:
     - dup_audit.c2.fix-gate-blockers
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-09T15:32:08.456381+00:00'
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
   status: locked
