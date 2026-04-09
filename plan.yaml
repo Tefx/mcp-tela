@@ -63933,7 +63933,7 @@ phases:
     agent: integration-verifier-tacit
   - id: dup_audit.c4.standardize-transient-classifiers
     name: Introduce shared transient exception tuple and align classifier policy
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       work_type: technical_debt_remediation
@@ -64034,7 +64034,25 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-09T04:20:44.667707+00:00'
-    done_at: '2026-04-09T04:13:21.235408+00:00'
+    done_at: '2026-04-09T04:25:17.803674+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- No refs for this step.\n\n\
+      ## Implementation Evidence\n- Files changed:\n  - src/tela/shell/transient_types.py\
+      \ (new authoritative shared transient tuple/errnos and policy docs)\n  - src/tela/commands/connect_cmd.py\
+      \ (_is_transient_url_error now imports shared tuple+errnos)\n\n- Shared tuple\
+      \ definition:\n  - TRANSIENT_CONNECTION_EXCEPTIONS in src/tela/shell/transient_types.py\n\
+      \  - TRANSIENT_ERRNOS in src/tela/shell/transient_types.py\n\n- TimeoutError\
+      \ policy chosen:\n  - retriable/transient in connect-layer URL connection establishment\
+      \ classifier\n  - documented divergence vs stricter non-retry policy in MCP\
+      \ downstream in transient_types module comments/table\n\n- Classifier-by-classifier\
+      \ update summary:\n  - _is_transient_url_error: consumes shared tuple/errnos\
+      \ while preserving URL-layer fallback behavior.\n  - _is_recoverable_error:\
+      \ left layer-specific, unchanged by design.\n  - _is_recovery_eligible_exception:\
+      \ intentionally not broadened in this patch; policy divergence documented as\
+      \ explicit boundary decision.\n\n- Targeted test command(s):\n  - uv run pytest\
+      \ tests/shell/test_connect_cmd.py -v --tb=short\n- Targeted test output:\n \
+      \ - 38 passed\n\n- Invar command:\n  - uv run invar guard --changed\n- Invar\
+      \ output:\n  - passed with 0 errors (warnings/infos pre-existing)\n\ncommit:\
+      \ 4d47491"
     rejection_reason: 'verification reported phantom completion: shared transient
       tuple module missing and TimeoutError policy not explicitly documented'
     rejection_history:
