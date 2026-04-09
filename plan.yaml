@@ -65689,7 +65689,7 @@ phases:
       recorded for governance visibility.'
   - id: dup_audit.verify.gate
     name: Gate duplicate-audit consolidated verification
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -65755,6 +65755,52 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T17:13:08.665665+00:00'
+    done_at: '2026-04-09T17:26:30.360314+00:00'
+    evidence: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: dup_audit.verify
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | dup_audit.verify.targeted-regression-suite | done | good | issues found were
+      routed into batched fix chain |
+
+      | dup_audit.verify.full-invar-guard | done | adequate | full-guard findings
+      remain pre-existing global repo debt |
+
+      | dup_audit.verify.fix-blockers | done | good | stale monkeypatch + C1/C2/C4
+      DESIGN drift fixed |
+
+      | dup_audit.verify.retest-blockers | done | good | blocker family independently
+      retested and closed |
+
+
+      ### Gate Decision
+
+      - OPEN
+
+      - Blocking issues: none intersecting duplicate-audit seam after fix+retest chain
+
+
+      ### Notes
+
+      - targeted regression blockers are closed via explicit fix/retest evidence
+
+      - full invar guard continues to report longstanding global debt families outside
+      this remediation seam'
   - id: dup_audit.deep_review.gate
     name: Final gate for duplicate-audit remediation
     status: claimed
