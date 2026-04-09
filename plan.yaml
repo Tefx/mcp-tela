@@ -65878,7 +65878,7 @@ phases:
     claimed_at: '2026-04-09T15:59:40.644484+00:00'
   - id: dup_audit.deep_review.architecture-review
     name: Review shell and command boundary placement of new shared abstractions
-    status: claimed
+    status: done
     description: 'step_type: review
 
       verification_scope: full-plan-check
@@ -65957,6 +65957,39 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-09T15:44:51.573490+00:00'
+    done_at: '2026-04-09T16:22:13.948916+00:00'
+    evidence: '## Architecture Review Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Boundary Checks
+
+      - Core/Shell rule respected: YES
+
+      - Auth parser placement accepted/rejected: ACCEPTED (`extract_bearer_from_header_value`
+      remains in shell auth adapter seam)
+
+      - Transient tuple placement accepted/rejected: ACCEPTED (`transient_types` models
+      runtime retry policy divergence and remains shell-owned)
+
+      - HTTP retry helper placement accepted/rejected: ACCEPTED (`commands/http_client.py`
+      owns transport skeleton only)
+
+      - Dependency direction concerns: no new reverse dependency/cycle detected; ownership
+      between `connect_cmd` and `remote_state` remains clear
+
+
+      ## Notes
+
+      - helper boundaries remain clean: helper owns request/retry/backoff while callers
+      own parsing/error semantics
+
+      - minor caution only: keep `http_client` focused on transport policy and avoid
+      accreting command-specific semantics'
   - id: dup_audit.deep_review.spec-conformance
     name: Audit duplicate-audit spec and audit-conformance
     status: claimed
