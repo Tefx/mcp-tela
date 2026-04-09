@@ -65682,6 +65682,14 @@ phases:
       - final recommendation: OPEN | BLOCKED
 
       '
+    depends_on:
+    - dup_audit.doc_sync.gate
+    - dup_audit.deep_review.wiring-audit
+    - dup_audit.deep_review.spec-conformance
+    - dup_audit.deep_review.architecture-review
+    - dup_audit.deep_review.contract-strength
+    - dup_audit.deep_review.black-box-verification
+    - dup_audit.verify.retest-blockers
     agent: gate-reviewer-tacit
   - id: dup_audit.doc_sync.gate
     name: Gate duplicate-audit doc sync
