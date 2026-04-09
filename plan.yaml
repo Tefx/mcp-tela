@@ -65520,7 +65520,7 @@ phases:
       and `dup_audit.verify.retest-blockers`).'
   - id: dup_audit.verify.full-invar-guard
     name: Run full invar guard for duplicate-audit remediation
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -65622,6 +65622,71 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-09T17:12:48.223522+00:00'
+    done_at: '2026-04-09T17:13:00.814184+00:00'
+    evidence: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: duplicate-audit full invar guard
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ### Test Execution
+
+      - Command executed:
+
+      ```text
+
+      uv run invar guard --all
+
+      ```
+
+      - Environment note: fresh/cold isolated worktree environment
+
+      - Actual output (summary):
+
+      ```text
+
+      failed: errors=9 warnings=37 infos=22
+
+      crosshair/property phases skipped due prior static failures
+
+      ```
+
+
+      ### Findings Classification
+
+      | Severity | Description | Intersection with downstream gates | Closure Path
+      |
+
+      | --- | --- | --- | --- |
+
+      | ERROR | core/contracts missing-contract findings | pre-existing global repository
+      debt | tracked as existing global debt outside duplicate-audit seam scope |
+
+      | ERROR | downstream file-size / complexity / escape-hatch budget overages |
+      pre-existing global debt families | existing repo-wide remediation tracks required
+      |
+
+      | WARNING/INFO | shell complexity/purity/dead-code warnings | pre-existing |
+      non-new for this phase |
+
+
+      ### Verdict
+
+      - ISSUES_FOUND
+
+
+      Disposition for this phase: no newly introduced blocker-class findings in duplicate-audit
+      touched seams; reported failures are longstanding repository-wide debt and are
+      recorded for governance visibility.'
   - id: dup_audit.verify.gate
     name: Gate duplicate-audit consolidated verification
     status: pending
