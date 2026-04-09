@@ -63206,7 +63206,7 @@ phases:
       respected.'
 - id: dup_audit.c3
   name: Duplicate Audit Low-Risk Cleanup
-  status: in_progress
+  status: done
   context: Merged low-risk duplicate-abstraction remediation phase covering C3 close-helper
     cleanup, C1 bearer-token extraction consolidation, and C4 transient-classifier
     standardization without reducing verification rigor.
@@ -63761,7 +63761,7 @@ phases:
       \ paths tested. PASS.\n\n- Decision: OPEN"
   - id: dup_audit.c1.gate
     name: Gate duplicate-audit C1 remediation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       review_depth: STANDARD
@@ -63828,6 +63828,35 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T04:48:38.432059+00:00'
+    done_at: '2026-04-09T04:57:44.373318+00:00'
+    evidence: "## Gate Review Report\n\n**Reviewer**: gate-reviewer-tacit\n**Phase**:\
+      \ dup_audit.c1\n\n### refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- `src/tela/shell/http_auth.py` — READ: extracted shared parser `extract_bearer_from_header_value(value:\
+      \ str) -> str | None`; ASGI middleware `_extract_bearer_token` delegates to\
+      \ shared parser; `@invar:allow shell_result` justified.\n- `src/tela/shell/gateway_http_auth.py`\
+      \ — READ: `extract_bearer_token(request: Request) -> Result[str, str]` delegates\
+      \ to shared parser; Result wrapping preserved.\n\n### Step Review\n| Step ID\
+      \ | Status | Evidence Quality | Concerns |\n| --- | --- | --- | --- |\n| dup_audit.c1.extract-shared-bearer-parser\
+      \ | ✓ done | Semantic equivalence verified; behavioral tests pass | No direct\
+      \ unit tests for `extract_bearer_from_header_value` |\n| dup_audit.c1.verify-bearer-parser-extraction\
+      \ | ✓ done | 30 auth tests pass including integration coverage | Verification\
+      \ summary minimal in prior report |\n\n### Gate Decision Basis\n- adapter boundaries\
+      \ preserved: yes\n- malformed-header behavior preserved: yes\n- invar evidence\
+      \ acceptable: yes (with caveat that full-scan failures are pre-existing/unrelated;\
+      \ changed-files scan clean)\n\n### Gate Decision\n- OPEN\n\n### Verification\
+      \ evidence\n- auth-focused tests pass (30)\n- semantic checks confirm identical\
+      \ malformed-header behavior handling\n- ASGI decode ownership and gateway Result\
+      \ wrapping ownership preserved\n- `invar guard --changed` clean; `--all` contains\
+      \ unrelated pre-existing debt\n\n### Test/gate semantic reporting\n- step_intent:\
+      \ gate verification for C1 preserve-scope and security safety before C4 progression\n\
+      - expected_result: OPEN if no unresolved blocker in bearer parsing semantics\
+      \ and boundary ownership\n- observed_result: OPEN; criteria satisfied\n- failure_alignment:\
+      \ N/A\n- whether any product implementation files were modified: yes (C1 deliverable\
+      \ under review), no gate-step mutations required\n\n### Behavioral proof summary\n\
+      - behavioral_proof_register:\n  - P1: shared parser returns equivalent outcomes\
+      \ for valid/malformed bearer inputs (PROVEN)\n  - P2: adapter boundary ownership\
+      \ preserved (PROVEN)\n  - P3: no auth-policy broadening from extraction (PROVEN)\n\
+      - gate_open_allowed: true\n- uncertainty sources: none"
   - id: dup_audit.c1.verify-bearer-parser-extraction
     name: Verify bearer-token extraction refactor
     status: done
@@ -64360,7 +64389,7 @@ phases:
   - dup_audit.c1
 - id: dup_audit.c2
   name: 'Duplicate Audit Remediation C2: HTTP Retry Skeleton Consolidation'
-  status: locked
+  status: pending
   context: High-risk duplicate-abstraction remediation phase reserved for HTTP retry
     skeleton consolidation. Kept separate to preserve incremental migration and stronger
     gate scrutiny.
