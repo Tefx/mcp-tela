@@ -65115,6 +65115,49 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-09T15:01:58.260213+00:00'
+  - id: dup_audit.c2.fix-gate-blockers
+    name: Fix C2 gate blockers (stale monkeypatch targets and dead-code cleanup)
+    status: pending
+    description: 'step_type: implementation
+
+      work_type: batched_fix
+
+      origin: dup_audit.c2.gate blocker findings
+
+
+      Address all blocker/should-fix findings from dup_audit.c2.gate in one batch:
+
+      - Update stale monkeypatch targets from `connect_cmd.urllib_request.urlopen`
+      to the canonical helper location after extraction (`http_client.urllib_request.urlopen`)
+      across affected test files.
+
+      - Resolve dead-code drift by removing or consolidating obsolete `connect_cmd._is_transient_url_error`
+      and any orphaned imports tied only to that duplicate path.
+
+      - Keep C2 preserve-scope semantics intact (caller-owned parsing, helper-owned
+      request/retry/backoff skeleton).
+
+
+      Do not broaden scope beyond gate-identified findings.'
+    verification: '- previously failing C2-related test files pass
+
+      - targeted connect_cmd/http_client/remote_state suites pass
+
+      - evidence demonstrates no retry/backoff or error-shaping drift introduced by
+      cleanup'
+    evidence_template: '## Batched Fix Evidence
+
+      - Blockers addressed:
+
+      - Files changed:
+
+      - Test commands and outputs:
+
+      - Behavioral parity notes:
+
+      - Remaining non-blocking issues:'
+    depends_on:
+    - dup_audit.c2.gate
 - id: dup_audit.verify
   name: Duplicate Audit Finalization
   status: locked
