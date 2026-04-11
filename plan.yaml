@@ -67604,3 +67604,74 @@ phases:
     depends_on:
     - arch_refactor.dissolve.result_imports_commands
     agent: architectural-demolitionist-tacit
+  - id: arch_refactor.dissolve.retire_start_surface
+    name: Retire the deprecated start command surface
+    status: pending
+    description: 'Delete the deprecated `tela start` compatibility surface once tests
+      and docs stop depending on it.
+
+
+      target_kill_list:
+
+      - src/tela/commands/start.py
+
+      - tests that still treat `start_command` as a supported production path
+
+      - stale docs that describe `start_command` as current architecture instead of
+      legacy compatibility
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#4-import-and-compatibility-residue-is-still-present
+
+      - README.md#two-commands
+
+      - docs/DESIGN.md#two-entry-points
+
+      - docs/INTERFACES.md#2-cli-surface
+
+
+      touch_paths:
+
+      - src/tela/commands/start.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/integration/test_end_to_end.py
+
+      - tests/integration/test_open_mode.py
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - README.md
+
+
+      expected_negative_delta:
+
+      - roughly -80 to -140 lines from code/doc legacy surface removal
+
+      - 1 deprecated file deletion
+
+
+      constraints:
+
+      - do not remove gateway internals that are still valid production/runtime APIs.
+
+      - replace legacy start-path tests with connect/serve or direct gateway lifecycle
+      coverage, not with a new wrapper command.'
+    verification: Run `uv run pytest -q tests/shell/test_cli_wiring.py tests/shell/test_gateway.py
+      tests/integration/test_end_to_end.py tests/integration/test_open_mode.py` and
+      `uvx invar-tools guard --all`.
+    evidence_template: '- File deletion proof for src/tela/commands/start.py
+
+      - Tests/docs migrated away from start_command
+
+      - Net line delta
+
+      - Confirmation that connect/serve remain the only supported CLI entry surfaces'
+    depends_on:
+    - arch_refactor.dissolve.remove_result_reexport
+    agent: architectural-demolitionist-tacit
