@@ -67602,6 +67602,88 @@ phases:
     - arch_refactor.structural_collapse.runtime_truth_collapse
     - arch_refactor.structural_collapse.reload_indirection_demolition
     agent: blind-tester-tacit
+  - id: arch_refactor.structural_collapse.gate
+    name: Gate structural collapse
+    status: pending
+    description: 'Gate review for the structural collapse phase.
+
+
+      step_type: gate
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - This phase deletes abstractions and moves runtime ownership in runnable surfaces.
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - review completion of runtime truth ownership collapse
+
+      - review completion of reload fake-abstraction removal
+
+
+      Block if state ownership is still split ambiguously, if fake abstractions survived
+      without justification, or if runnable surfaces lost evidence.'
+    verification: '- Runtime truth owner is singular enough to explain clearly
+
+      - Reload fake abstractions are removed or justified
+
+      - Black-box runtime evidence is sufficient to proceed to file splits'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Structural Collapse Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | runtime_truth_collapse |  |  |  |
+
+      | reload_indirection_demolition |  |  |  |
+
+      | runtime_liveness_probe |  |  |  |
+
+
+      ## Gate Decision
+
+      - OPEN or BLOCKED
+
+      - Remaining split-truth concerns:
+
+      - Remaining fake-abstraction concerns:'
+    depends_on:
+    - arch_refactor.structural_collapse.runtime_truth_collapse
+    - arch_refactor.structural_collapse.reload_indirection_demolition
+    - arch_refactor.structural_collapse.runtime_liveness_probe
+    agent: gate-reviewer-tacit
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
