@@ -68577,3 +68577,96 @@ phases:
 
       - PASS | PASS_WITH_DEBT | FAIL'
     agent: blind-tester-tacit
+  - id: arch_refactor.finalization.gate
+    name: Final gate for architecture refactor
+    status: pending
+    description: 'Final gate review for the architecture refactor plan.
+
+
+      step_type: gate
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - This gate decides whether the demolition-oriented refactor truly reduced complexity
+      while preserving runnable behavior.
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - confirm stale docs, stale re-exports, stale import hubs, and stale fake abstractions
+      are all gone or explicitly justified
+
+
+      Open only if docs, wiring, spec conformance, architecture review, and black-box
+      runtime validation all support the claim that the architecture is smaller, clearer,
+      and still deployable.'
+    verification: '- Docs are synced
+
+      - Wiring is intact
+
+      - Specs still match behavior
+
+      - Architecture review says complexity actually fell
+
+      - Black-box runtime validation is acceptable'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Final Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | doc_sync |  |  |  |
+
+      | wiring_audit |  |  |  |
+
+      | spec_conformance |  |  |  |
+
+      | architecture_review |  |  |  |
+
+      | black_box_runtime |  |  |  |
+
+
+      ## Gate Decision
+
+      - OPEN or BLOCKED
+
+      - Residual simplification debt:
+
+      - Residual runtime risk:'
+    depends_on:
+    - arch_refactor.finalization.doc_sync
+    - arch_refactor.finalization.wiring_audit
+    - arch_refactor.finalization.spec_conformance
+    - arch_refactor.finalization.architecture_review
+    - arch_refactor.finalization.black_box_runtime
+    agent: gate-reviewer-tacit
