@@ -67089,6 +67089,113 @@ phases:
     behavior is snapshotted for refactor protection.
   depends_on:
   - dup_audit.deep_review
+  steps:
+  - id: arch_refactor.characterization.guard_baseline
+    name: Baseline full guard and targeted regression suites
+    status: pending
+    description: 'Verification scope: full-plan-check protecting all downstream demolition
+      phases.
+
+
+      Establish the pre-refactor baseline for architecture simplification.
+
+
+      step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#verified-findings
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/DESIGN.md#module-boundaries
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - src/tela/shell/downstream.py oversized surface inventory
+
+      - src/tela/commands/connect_cmd.py oversized surface inventory
+
+      - src/tela/shell/gateway.py oversized surface inventory
+
+      - src/tela/shell/reload.py: SingleServerConvergenceKernel
+
+      - src/tela/shell/reload.py: ConvergencePolicyConsumer
+
+      - src/tela/shell/downstream.py: EventEntryAdapter
+
+      - src/tela/shell/config_loader.py: Result re-export residue
+
+      - src/tela/shell/gateway.py: backward-compat re-export block
+
+      - src/tela/shell/gateway.py: _startup_manifest global
+
+      - src/tela/shell/upstream.py: _session_registry ownership split
+
+
+      Run the current full guard and the key adversary suites to freeze the starting
+      point. Record current file-size debt, shell-complexity debt, and the exact runtime-critical
+      suites that must stay green through demolition.'
+    verification: '- Run `uvx invar-tools guard --all`
+
+      - Run targeted shell/integration/repro suites covering gateway, downstream,
+      connect, reload, runtime immutability, startup coordination, and connect liveness
+
+      - Record the exact baseline findings that the refactor is intended to reduce
+      without changing behavior'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Baseline Commands
+
+      - `uvx invar-tools guard --all`
+
+      - `<targeted pytest commands>`
+
+
+      ## Baseline Findings
+
+      - Guard errors/warnings:
+
+      - Oversized files observed:
+
+      - Shared-state ownership hotspots observed:
+
+      - Fake abstraction inventory observed:
+
+
+      ## Protected Suites
+
+      - <suite> — PASS/FAIL
+
+
+      ## Downstream Gates Protected
+
+      - arch_refactor.structural_collapse.gate
+
+      - arch_refactor.layer_dissolution.full_plan_check
+
+      - arch_refactor.finalization.gate'
+    agent: integration-verifier-tacit
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
   status: locked
