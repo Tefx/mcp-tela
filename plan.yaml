@@ -67375,6 +67375,92 @@ phases:
     is consolidated, and preserved runtime surfaces are re-proven.
   depends_on:
   - arch_refactor.characterization
+  steps:
+  - id: arch_refactor.structural_collapse.runtime_truth_collapse
+    name: Collapse split runtime truth ownership
+    status: pending
+    description: 'Implementation scope: technical-debt remediation with hardened acceptance.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+
+      touch_paths:
+
+      - src/tela/shell/gateway_runtime.py
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/upstream.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/shell/test_upstream.py
+
+      - tests/repro/test_runtime_boundary_immutability.py
+
+
+      target_kill_list:
+
+      - src/tela/shell/upstream.py:_session_registry
+
+      - src/tela/shell/upstream.py:_session_registry_lock
+
+      - src/tela/shell/gateway.py:_reaper
+
+      - src/tela/shell/gateway.py:_converge_event
+
+      - duplicate runtime-truth ownership split across gateway.py and upstream.py
+
+
+      Collapse runtime/session truth into `gateway_runtime.py` so lifecycle/readiness/session
+      facts have a single authority. Preserve the existing public behavior of `tela
+      serve`, `tela connect`, `/status`, and session notification flow.
+
+
+      Failure-mode checklist:
+
+      - readiness truth must not fall back to lockfile presence
+
+      - session capture/release semantics must remain stable
+
+      - moving state ownership must not break reaper lifecycle or startup/shutdown
+      ordering
+
+      - no new runtime singleton may be introduced outside `gateway_runtime.py`
+
+
+      Out-of-scope guardrail:
+
+      - do not redesign public HTTP or CLI contracts in this step'
+    verification: '- Targeted gateway/upstream/runtime tests pass
+
+      - Runtime immutability and session-binding behavior remain green
+
+      - No code path uses lockfile as readiness truth
+
+      - Evidence shows each target_kill_list item was removed, moved, or intentionally
+      retained with reason'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Changed Files\n- <file>\n\
+      \n## target_kill_list Outcome\n- <item> — removed|moved|retained-with-reason\n\
+      \n## Verification\n- Commands:\n  - `<pytest command>`\n- Outputs:\n  - <key\
+      \ output>\n\n## Runtime Truth Notes\n- readiness authority after change:\n-\
+      \ session authority after change:\n- reaper/converge-event ownership after change:\n\
+      \n## Non-Regression Statement\n- connect/serve/status/session behavior preserved:\
+      \ YES/NO"
+    agent: python-senior-tacit
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
