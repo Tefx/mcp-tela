@@ -67691,6 +67691,79 @@ phases:
     compatibility residue is removed, and a full-plan verification proves non-regression.
   depends_on:
   - arch_refactor.structural_collapse
+  steps:
+  - id: arch_refactor.layer_dissolution.downstream_contraction
+    name: Contract downstream.py by concrete responsibility
+    status: pending
+    description: 'Implementation scope: technical-debt remediation with hardened acceptance.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+      - docs/DESIGN.md#runtime-architecture
+
+
+      touch_paths:
+
+      - src/tela/shell/downstream.py
+
+      - src/tela/shell/downstream_clients.py
+
+      - src/tela/shell/downstream_registry.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/repro/test_startup_coord_liveness.py
+
+
+      target_kill_list:
+
+      - src/tela/shell/downstream.py: EventEntryAdapter
+
+      - src/tela/shell/downstream.py wrapper bulk that only forwards to concrete downstream
+      responsibilities
+
+      - oversized mixed-responsibility regions in downstream.py that can be split
+      into startup/connect-disconnect vs recovery/call paths
+
+
+      Shrink `downstream.py` by concrete responsibility only. Keep `downstream.py`
+      as the public downstream authority, but move internal bulk out where needed.
+      Do not add new protocol forests or abstraction packages.
+
+
+      Failure-mode checklist:
+
+      - registry authority must remain singular
+
+      - recovery locks must still serialize per-server recovery
+
+      - reconnect and re-enumeration semantics must remain intact
+
+      - public downstream functions must remain callable from existing consumers'
+    verification: '- Downstream unit/regression tests pass
+
+      - Recovery and convergence behavior stay green
+
+      - target_kill_list items are removed, split, or justified
+
+      - No new abstraction layer is introduced'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Changed Files\n- <file>\n\
+      \n## target_kill_list Outcome\n- <item> — removed|split|retained-with-reason\n\
+      \n## Verification\n- Commands:\n  - `<pytest command>`\n- Outputs:\n  - <key\
+      \ output>\n\n## Authority Check\n- downstream authority still singular: YES/NO\n\
+      - recovery serialization preserved: YES/NO"
+    agent: python-senior-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
