@@ -67389,6 +67389,69 @@ phases:
     depends_on:
     - arch_refactor.collapse.dead_protocols
     agent: architectural-demolitionist-tacit
+  - id: arch_refactor.collapse.verify
+    name: Verify structural collapse without behavioral drift
+    status: pending
+    description: 'Independently verify that protocol deletions and singleton collapse
+      reduced indirection without changing runtime behavior.
+
+
+      target_kill_list:
+
+      - verifies deletion of src/tela/shell/downstream.py::EventEntryAdapter
+
+      - verifies deletion of src/tela/shell/reload.py::ConvergencePolicyConsumer
+
+      - verifies deletion/collapse of src/tela/shell/reload.py::SingleServerConvergenceKernel
+
+      - verifies deletion of src/tela/shell/gateway.py::_startup_manifest / _reaper
+      / _converge_event if completed in prior step
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#phase-1-delete-fake-abstractions
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#phase-2-centralize-state-ownership
+
+
+      touch_paths:
+
+      - tests/shell/test_reload.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/repro/test_runtime_boundary_immutability.py
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+
+      expected_negative_delta:
+
+      - no new edits in this step; verifies earlier negative deltas are real and stable.
+
+
+      focus:
+
+      - confirm no replacement abstraction forest was introduced.
+
+      - confirm simplification evidence is visible in diff shape and guard output.'
+    verification: Run the structural-collapse adversary suites plus `uvx invar-tools
+      guard --all`; inspect diff/evidence for net-negative simplification.
+    evidence_template: '- Commands run
+
+      - Pass/fail by suite
+
+      - Guard deltas compared with characterization baseline
+
+      - Confirmation that deleted symbols stayed deleted
+
+      - Any residual complexity debt explicitly deferred'
+    depends_on:
+    - arch_refactor.collapse.runtime_ownership
+    agent: blind-tester-tacit
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
