@@ -67737,3 +67737,73 @@ phases:
     depends_on:
     - arch_refactor.dissolve.retire_start_surface
     agent: architectural-demolitionist-tacit
+  - id: arch_refactor.dissolve.final_verify
+    name: Run full adversary verification after layer dissolution
+    status: pending
+    description: 'Independently verify that the compatibility-shim deletions and legacy
+      surface removals preserved behavior and produced real simplification.
+
+
+      target_kill_list:
+
+      - verifies removal of config_loader Result re-export shim
+
+      - verifies removal of src/tela/commands/start.py if retired
+
+      - verifies removal of gateway.py backward-compat runtime re-export block if
+      retired
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#working-rule-for-follow-up-changes
+
+
+      touch_paths:
+
+      - tests/shell/test_connect_cmd.py
+
+      - tests/shell/test_serve_cmd.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/shell/test_reload.py
+
+      - tests/integration/test_end_to_end.py
+
+      - tests/repro/test_runtime_boundary_immutability.py
+
+      - tests/repro/test_startup_coord_liveness.py
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+
+      expected_negative_delta:
+
+      - no edits in this step; verifies prior net deletions are preserved and behavior
+      is stable.
+
+
+      focus:
+
+      - confirm the codebase is simpler, not merely rearranged.
+
+      - compare guard/diff evidence against the characterization baseline.'
+    verification: Run the full targeted adversary suite plus `uvx invar-tools guard
+      --all`; compare results against the characterization baseline evidence.
+    evidence_template: '- Commands run
+
+      - Pass/fail by suite
+
+      - Guard delta vs characterization baseline
+
+      - Net deleted files/symbols/lines
+
+      - Residual debt explicitly deferred'
+    depends_on:
+    - arch_refactor.dissolve.trim_gateway_reexports
+    agent: integration-verifier-tacit
