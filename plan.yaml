@@ -67320,6 +67320,75 @@ phases:
 
       - Any docs updated to remove deleted protocol vocabulary'
     agent: architectural-demolitionist-tacit
+  - id: arch_refactor.collapse.runtime_ownership
+    name: Collapse gateway-local singleton residue into one runtime authority
+    status: pending
+    description: 'Reduce fragmented singleton ownership by removing gateway-local
+      lifecycle residue where one runtime authority can own it directly.
+
+
+      target_kill_list:
+
+      - src/tela/shell/gateway.py::_startup_manifest
+
+      - src/tela/shell/gateway.py::_reaper
+
+      - src/tela/shell/gateway.py::_converge_event
+
+      - direct gateway.py runtime mutations that can be deleted in favor of narrower
+      gateway_runtime helpers
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#3-runtime-state-ownership-is-fragmented
+
+      - docs/DESIGN.md#gateway-runtime-py
+
+      - docs/DESIGN.md#gateway-py
+
+
+      touch_paths:
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/gateway_runtime.py
+
+      - src/tela/shell/connection_reaper.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/repro/test_runtime_boundary_immutability.py
+
+      - docs/DESIGN.md
+
+
+      expected_negative_delta:
+
+      - roughly -30 to -90 lines
+
+      - 3 singleton/global deletions from gateway.py
+
+      - fewer cross-file mutable ownership points
+
+
+      constraints:
+
+      - do not introduce a new manager/facade layer.
+
+      - keep runtime truth boundaries explicit and behaviorally identical.'
+    verification: Run `uv run pytest -q tests/shell/test_gateway.py tests/repro/test_runtime_boundary_immutability.py
+      tests/repro/test_connect_runtime_liveness.py` and `uvx invar-tools guard --all`.
+    evidence_template: '- Globals deleted or narrowed
+
+      - Before/after ownership summary
+
+      - Net line delta
+
+      - Proof that runtime authority and liveness behavior stayed intact'
+    depends_on:
+    - arch_refactor.collapse.dead_protocols
+    agent: architectural-demolitionist-tacit
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
