@@ -68241,3 +68241,80 @@ phases:
     and black-box runtime validation all approve the simplified architecture.
   depends_on:
   - arch_refactor.layer_dissolution
+  steps:
+  - id: arch_refactor.finalization.doc_sync
+    name: Sync docs to the simplified architecture
+    status: pending
+    description: 'Documentation sync after architecture demolition.
+
+
+      step_type: review
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - README.md
+
+
+      touch_paths:
+
+      - README.md
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md
+
+
+      target_kill_list:
+
+      - stale file-responsibility prose
+
+      - stale compatibility-export references
+
+      - stale Result import guidance
+
+      - stale runtime-truth ownership descriptions
+
+
+      Update docs to describe the smaller architecture accurately after the refactor.
+      Remove stale references to deleted abstractions and moved ownership.'
+    verification: '- Docs accurately describe runtime truth ownership, file responsibilities,
+      and preserved surfaces
+
+      - Removed abstractions and import residue are no longer documented as active
+      design elements'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Doc Changes
+
+      - <file> — updated sections
+
+
+      ## target_kill_list Outcome
+
+      - <stale reference> — removed|updated|retained-with-reason
+
+
+      ## Verification
+
+      - Documentation now matches simplified code structure: YES/NO'
+    agent: doc-reviewer-tacit
