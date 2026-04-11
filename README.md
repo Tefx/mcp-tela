@@ -258,6 +258,8 @@ uv run invar guard --all
 
 - `README.md`: project overview and quickstart
 - `docs/USAGE.md`: operator guide and deployment patterns
+- `docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md`: verified architecture debt,
+  simplification targets, and safe refactor order
 - `tela.yaml.example`: commented configuration template
 - `docs/INTERFACES.md`: CLI and config contract surface
 - `docs/DESIGN.md`: architecture and implementation detail
