@@ -67089,3 +67089,10 @@ phases:
     evidence before any abstraction removal begins.
   depends_on:
   - dup_audit.deep_review
+- id: arch_refactor.structural_collapse
+  name: Architecture Refactor Structural Collapse
+  status: locked
+  gate: Unused or single-implementation abstractions are removed, runtime authority
+    is simplified, and no replacement indirection layer is introduced.
+  depends_on:
+  - arch_refactor.characterization
