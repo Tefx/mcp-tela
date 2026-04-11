@@ -68511,3 +68511,69 @@ phases:
 
       - SIMPLIFIED | PARTIAL | NOT_SIMPLIFIED'
     agent: software-architect-tacit
+  - id: arch_refactor.finalization.black_box_runtime
+    name: Black-box validate preserved runtime surfaces
+    status: pending
+    description: 'Independent black-box runtime validation of preserved surfaces.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/INTERFACES.md#2-cli-surface
+
+      - docs/INTERFACES.md#7-2-http-endpoints
+
+      - docs/DESIGN.md#runtime-architecture
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - no new deletions; confirm that the refactor did not damage preserved connect/serve/HTTP
+      behavior
+
+
+      Using only public commands and documented HTTP behavior, verify that the simplified
+      architecture remains runnable and externally coherent.'
+    verification: '- `tela serve` starts
+
+      - `tela connect` still behaves as a bridge client
+
+      - `/status`, `/connect`, and `/disconnect` still behave as documented
+
+      - Runtime remains coherent from a black-box perspective'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Black-Box Runtime Report
+
+      - Commands used:
+
+      - HTTP calls used:
+
+      - Observed outputs/status codes:
+
+      - Regressions found:
+
+
+      ## Headline
+
+      - PASS | PASS_WITH_DEBT | FAIL'
+    agent: blind-tester-tacit
