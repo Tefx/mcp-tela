@@ -67486,3 +67486,35 @@ phases:
 
       - Proof runtime shell imports now point directly at tela.shell.result'
     agent: architectural-demolitionist-tacit
+  - id: arch_refactor.dissolve.result_imports_support_shell
+    name: Replace config_loader Result imports in support shell modules
+    status: pending
+    description: "Delete indirect Result import usage in lower-level support shell\
+      \ modules after the runtime shell slice lands cleanly.\n\ntarget_kill_list:\n\
+      - `from tela.shell.config_loader import Result` in:\n  - src/tela/shell/audit.py\n\
+      \  - src/tela/shell/downstream_clients.py\n  - src/tela/shell/connection_reaper.py\n\
+      \  - src/tela/shell/connection_lifecycle.py\n  - src/tela/shell/gateway_lifecycle.py\n\
+      \  - src/tela/shell/gateway_http_auth.py\n  - src/tela/shell/surface_instructions.py\n\
+      \  - src/tela/shell/startup_coordinator.py\n\nspec_refs:\n- docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#4-import-and-compatibility-residue-is-still-present\n\
+      - docs/DESIGN.md#result-py\n- docs/DESIGN.md#config-loader-py\n\ntouch_paths:\n\
+      - src/tela/shell/audit.py\n- src/tela/shell/downstream_clients.py\n- src/tela/shell/connection_reaper.py\n\
+      - src/tela/shell/connection_lifecycle.py\n- src/tela/shell/gateway_lifecycle.py\n\
+      - src/tela/shell/gateway_http_auth.py\n- src/tela/shell/surface_instructions.py\n\
+      - src/tela/shell/startup_coordinator.py\n- tests/shell/test_audit.py\n- tests/shell/test_connection_reaper.py\n\
+      - tests/shell/test_lockfile.py\n\nexpected_negative_delta:\n- roughly -8 to\
+      \ -25 lines of import indirection\n- 8 import-site cleanups\n\nconstraints:\n\
+      - keep the canonical Result type unchanged.\n- do not leave mixed import styles\
+      \ behind in touched files."
+    verification: Run `uv run pytest -q tests/shell/test_audit.py tests/shell/test_connection_reaper.py
+      tests/shell/test_lockfile.py tests/repro/test_startup_coord_liveness.py` and
+      `uvx invar-tools guard --all`.
+    evidence_template: '- Import sites migrated
+
+      - Net line delta
+
+      - Tests proving support shells still behave the same
+
+      - Remaining config_loader Result import users, if any'
+    depends_on:
+    - arch_refactor.dissolve.result_imports_runtime_shell
+    agent: architectural-demolitionist-tacit
