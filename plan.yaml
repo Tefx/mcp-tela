@@ -67994,6 +67994,79 @@ phases:
     - arch_refactor.layer_dissolution.connect_facade_shrink
     - arch_refactor.layer_dissolution.serve_facade_shrink
     agent: python-refactor-master-tacit
+  - id: arch_refactor.layer_dissolution.full_plan_check
+    name: Run full-plan verification after layer dissolution
+    status: pending
+    description: 'Verification scope: full-plan-check protecting finalization and
+      final gate.
+
+
+      step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/DESIGN.md#runtime-architecture
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - no new deletions; verify that prior target_kill_list items remain removed
+      and no broad regressions were introduced
+
+
+      Run the nearest broad verification boundary after the structural file reductions
+      and compatibility cleanup. This step must surface repo-wide debt now, not wait
+      until final review.'
+    verification: '- Run `uvx invar-tools guard --all`
+
+      - Run targeted shell/integration/repro suites for all touched runtime surfaces
+
+      - Record any remaining blocker-class debt now'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Full-Plan Commands
+
+      - `uvx invar-tools guard --all`
+
+      - `<targeted pytest commands>`
+
+
+      ## Results
+
+      - Guard status:
+
+      - Test status:
+
+      - Remaining blocker-class debt:
+
+      - Remaining non-blocking debt:
+
+
+      ## Protected Final Gate
+
+      - arch_refactor.finalization.gate'
+    depends_on:
+    - arch_refactor.layer_dissolution.gateway_compat_collapse
+    agent: integration-verifier-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
