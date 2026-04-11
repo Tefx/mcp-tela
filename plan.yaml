@@ -67103,3 +67103,10 @@ phases:
     compatibility residue is removed, and a full-plan verification proves non-regression.
   depends_on:
   - arch_refactor.structural_collapse
+- id: arch_refactor.finalization
+  name: Architecture Refactor Finalization
+  status: locked
+  gate: Phase closes only after docs, wiring, spec conformance, architecture review,
+    and black-box runtime validation all approve the simplified architecture.
+  depends_on:
+  - arch_refactor.layer_dissolution
