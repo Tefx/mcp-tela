@@ -68134,6 +68134,106 @@ phases:
     depends_on:
     - arch_refactor.layer_dissolution.gateway_compat_collapse
     agent: blind-tester-tacit
+  - id: arch_refactor.layer_dissolution.gate
+    name: Gate layer dissolution
+    status: pending
+    description: 'Gate review for the layer dissolution phase.
+
+
+      step_type: gate
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - This phase shrinks oversized runnable modules and removes compatibility residue
+      across shared writable surfaces.
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - review completion of downstream/connect/serve contraction
+
+      - review completion of gateway compatibility collapse
+
+      - review confirmation that broad verification already ran
+
+
+      Block if the architecture is still oversized without measurable simplification,
+      if compatibility residue remains unexplained, or if broad verification surfaced
+      unresolved blocker-class debt.'
+    verification: '- Oversized file contraction is evidenced
+
+      - Compatibility residue removal is evidenced
+
+      - Full-plan-check and runtime probe are both acceptable
+
+      - Proceed only if finalization is now a review/sync phase, not a hidden rework
+      phase'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Layer Dissolution Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | downstream_contraction |  |  |  |
+
+      | connect_facade_shrink |  |  |  |
+
+      | serve_facade_shrink |  |  |  |
+
+      | gateway_compat_collapse |  |  |  |
+
+      | full_plan_check |  |  |  |
+
+      | runtime_probe |  |  |  |
+
+
+      ## Gate Decision
+
+      - OPEN or BLOCKED
+
+      - Remaining oversized surfaces:
+
+      - Remaining residue:
+
+      - Remaining blocker debt:'
+    depends_on:
+    - arch_refactor.layer_dissolution.downstream_contraction
+    - arch_refactor.layer_dissolution.connect_facade_shrink
+    - arch_refactor.layer_dissolution.serve_facade_shrink
+    - arch_refactor.layer_dissolution.gateway_compat_collapse
+    - arch_refactor.layer_dissolution.full_plan_check
+    - arch_refactor.layer_dissolution.runtime_probe
+    agent: gate-reviewer-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
