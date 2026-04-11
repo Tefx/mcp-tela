@@ -67096,3 +67096,10 @@ phases:
     is simplified, and no replacement indirection layer is introduced.
   depends_on:
   - arch_refactor.characterization
+- id: arch_refactor.layer_dissolution
+  name: Architecture Refactor Layer Dissolution
+  status: locked
+  gate: Compatibility residue is either deleted or explicitly deferred with evidence;
+    final review confirms net simplification and preserved behavior.
+  depends_on:
+  - arch_refactor.structural_collapse
