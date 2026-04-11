@@ -68067,6 +68067,73 @@ phases:
     depends_on:
     - arch_refactor.layer_dissolution.gateway_compat_collapse
     agent: integration-verifier-tacit
+  - id: arch_refactor.layer_dissolution.runtime_probe
+    name: Black-box probe runtime surfaces after file contraction
+    status: pending
+    description: 'Verification scope: phase-check on preserved runnable surfaces.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/INTERFACES.md#2-cli-surface
+
+      - docs/INTERFACES.md#7-2-http-endpoints
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - no new deletions; verify that connect/serve/status/connect/disconnect still
+      work after file contraction and compatibility cleanup
+
+
+      Use only public surfaces to prove that the architecture got smaller without
+      turning runnable behaviors into hidden helper-only behavior.'
+    verification: '- Black-box verify `tela serve`, `tela connect`, `/status`, `/connect`,
+      `/disconnect`
+
+      - Confirm no public behavior drift from file contraction
+
+      - Confirm readiness/discovery split still holds externally'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Runtime Probe
+
+      - Commands:
+
+      - Status outputs:
+
+      - Behavior drift observed:
+
+      - Readiness/discovery distinction observed:
+
+
+      ## Protected Finalization
+
+      - finalization.black_box_runtime'
+    depends_on:
+    - arch_refactor.layer_dissolution.gateway_compat_collapse
+    agent: blind-tester-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
