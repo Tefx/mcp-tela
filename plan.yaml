@@ -67914,6 +67914,86 @@ phases:
       \ launches from CLI: YES/NO\n- lockfile ordering preserved: YES/NO\n- watcher/idle\
       \ lifecycle preserved: YES/NO"
     agent: python-senior-tacit
+  - id: arch_refactor.layer_dissolution.gateway_compat_collapse
+    name: Collapse gateway compatibility residue and import hubs
+    status: pending
+    description: 'Implementation scope: serial integration step for shared writable
+      surfaces.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#verified-findings
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+
+      touch_paths:
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/config_loader.py
+
+      - src/tela/shell/result.py
+
+      - src/tela/commands/start.py
+
+      - repo-wide shell/command imports
+
+      - tests/shell/test_gateway.py
+
+      - tests/integration/test_end_to_end.py
+
+
+      target_kill_list:
+
+      - src/tela/shell/gateway.py backward-compat re-export block
+
+      - src/tela/shell/gateway.py:_startup_manifest global
+
+      - src/tela/shell/config_loader.py Result re-export
+
+      - legacy import residue that still points to config_loader for Result
+
+      - internal dependency on src/tela/commands/start.py when direct connect/serve
+      surfaces can be used instead
+
+
+      This is the serial join step after downstream/connect/serve contraction. Remove
+      stale compatibility residue and make direct ownership/import paths obvious.
+      Preserve the legacy `start.py` surface only if tests or external compatibility
+      still require it; otherwise reduce it to the thinnest supported wrapper.
+
+
+      Out-of-scope guardrail:
+
+      - do not redesign public CLI semantics here'
+    verification: '- Direct Result imports are used where migration scope allows
+
+      - Gateway compatibility exports are reduced or justified
+
+      - Startup manifest global is removed or localized
+
+      - Legacy start wrapper is minimized without breaking covered behavior'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Changed Files\n- <file>\n\
+      \n## target_kill_list Outcome\n- <item> — removed|localized|retained-with-reason\n\
+      \n## Verification\n- Commands:\n  - `<pytest command>`\n  - `<grep or guard\
+      \ evidence>`\n- Outputs:\n  - <key output>\n\n## Compatibility Notes\n- direct\
+      \ Result import status:\n- gateway re-export reduction status:\n- start.py retention\
+      \ rationale (if any):"
+    depends_on:
+    - arch_refactor.layer_dissolution.downstream_contraction
+    - arch_refactor.layer_dissolution.connect_facade_shrink
+    - arch_refactor.layer_dissolution.serve_facade_shrink
+    agent: python-refactor-master-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
