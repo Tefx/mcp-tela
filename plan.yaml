@@ -67461,6 +67461,80 @@ phases:
       \n## Non-Regression Statement\n- connect/serve/status/session behavior preserved:\
       \ YES/NO"
     agent: python-senior-tacit
+  - id: arch_refactor.structural_collapse.reload_indirection_demolition
+    name: Remove reload indirection with no second implementation
+    status: pending
+    description: 'Implementation scope: technical-debt remediation focused on negative
+      line delta.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#verified-findings
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+
+      touch_paths:
+
+      - src/tela/shell/reload.py
+
+      - src/tela/shell/downstream.py
+
+      - tests/shell/test_reload.py
+
+      - tests/shell/test_downstream.py
+
+
+      target_kill_list:
+
+      - src/tela/shell/reload.py: SingleServerConvergenceKernel
+
+      - src/tela/shell/reload.py: ConvergencePolicyConsumer
+
+      - src/tela/shell/reload.py: _RegistrySingleServerConvergenceKernel indirection
+      shell
+
+
+      Delete or inline reload abstractions that have no real polymorphism value. Keep
+      reload behavior, conflict rollback, and reconnect semantics intact, but stop
+      paying interface tax for a single implementation.
+
+
+      Known risks:
+
+      - conflict rollback must remain atomic
+
+      - reconnect and tools/list_changed paths must still use the same convergence
+      semantics
+
+      - deleting protocol shells must not blur downstream ownership into gateway ownership
+
+
+      Out-of-scope guardrail:
+
+      - do not invent replacement interfaces or extension points'
+    verification: '- Reload and downstream regression tests pass
+
+      - Conflict detection and rollback behavior remain green
+
+      - Each target_kill_list item is removed or inlined with evidence'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Changed Files\n- <file>\n\
+      \n## target_kill_list Outcome\n- <item> — removed|inlined|retained-with-reason\n\
+      \n## Verification\n- Commands:\n  - `<pytest command>`\n- Outputs:\n  - <key\
+      \ output>\n\n## Convergence Notes\n- conflict rollback still works: YES/NO\n\
+      - reconnect path still shares convergence semantics: YES/NO"
+    agent: python-refactor-master-tacit
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
