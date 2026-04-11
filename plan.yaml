@@ -67089,3 +67089,10 @@ phases:
     behavior is snapshotted for refactor protection.
   depends_on:
   - dup_audit.deep_review
+- id: arch_refactor.structural_collapse
+  name: Architecture Refactor Structural Collapse
+  status: locked
+  gate: Phase closes only after fake abstractions are removed, runtime truth ownership
+    is consolidated, and preserved runtime surfaces are re-proven.
+  depends_on:
+  - arch_refactor.characterization
