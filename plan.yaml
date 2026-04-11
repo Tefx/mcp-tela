@@ -67807,3 +67807,33 @@ phases:
     depends_on:
     - arch_refactor.dissolve.trim_gateway_reexports
     agent: integration-verifier-tacit
+  - id: arch_refactor.dissolve.final_gate
+    name: Gate review for architecture simplification closure
+    status: pending
+    description: "Review the entire demolition slice and reject it if the work added\
+      \ fresh abstraction, deferred critical cleanup without evidence, or failed to\
+      \ achieve a net simplification.\n\ntarget_kill_list:\n- final confirmation of\
+      \ deletions for:\n  - src/tela/shell/downstream.py::EventEntryAdapter\n  - src/tela/shell/reload.py::ConvergencePolicyConsumer\n\
+      \  - src/tela/shell/reload.py::SingleServerConvergenceKernel indirection\n \
+      \ - src/tela/shell/config_loader.py::Result re-export shim\n  - src/tela/commands/start.py\n\
+      \  - src/tela/shell/gateway.py::gateway_runtime backward-compat re-export block\n\
+      \nspec_refs:\n- docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md\n- docs/DESIGN.md\n\
+      - docs/INTERFACES.md\n\ntouch_paths:\n- plan evidence only; review the full\
+      \ affected slice across src/tela, tests/, README.md, docs/DESIGN.md, and docs/INTERFACES.md.\n\
+      \nexpected_negative_delta:\n- no edits in this step; confirm the completed work\
+      \ produced a net-negative architectural diff and fewer compatibility seams.\n\
+      \nreview_rules:\n- reject new replacement interfaces or strategy layers.\n-\
+      \ reject widened blast radius without matching characterization evidence.\n\
+      - reject zero-net-simplification patches that only move code around."
+    verification: Review prior evidence, diff shape, and verification results; only
+      pass if simplification is concrete, measured, and behaviorally preserved.
+    evidence_template: '- Review verdict
+
+      - Confirmed deletions and net line delta
+
+      - Any rejected follow-ups and why
+
+      - Residual debt accepted for later, with evidence'
+    depends_on:
+    - arch_refactor.dissolve.final_verify
+    agent: gate-reviewer-tacit
