@@ -67096,3 +67096,10 @@ phases:
     is consolidated, and preserved runtime surfaces are re-proven.
   depends_on:
   - arch_refactor.characterization
+- id: arch_refactor.layer_dissolution
+  name: Architecture Refactor Layer Dissolution
+  status: locked
+  gate: Phase closes only after oversized files are reduced by concrete responsibility,
+    compatibility residue is removed, and a full-plan verification proves non-regression.
+  depends_on:
+  - arch_refactor.structural_collapse
