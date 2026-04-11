@@ -68441,3 +68441,73 @@ phases:
 
       - Verdict: CONFORMS | PARTIAL | DIVERGES'
     agent: spec-verifier-tacit
+  - id: arch_refactor.finalization.architecture_review
+    name: Review whether the architecture is genuinely smaller
+    status: pending
+    description: 'Independent architecture review focused on negative complexity reduction.
+
+
+      step_type: review
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md
+
+      - docs/DESIGN.md
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - residual split-truth ownership
+
+      - residual fake abstractions
+
+      - residual compatibility hubs
+
+      - any new abstraction layer added during refactor
+
+
+      Review whether the refactor actually simplified the architecture instead of
+      merely relocating complexity. Block if the code is still carrying the same indirection
+      under new names.'
+    verification: '- Runtime truth ownership is singular enough to explain clearly
+
+      - Oversized module pressure is materially reduced
+
+      - No replacement abstraction forest was introduced
+
+      - Remaining technical debt is explicit'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Architecture Review
+
+      - Residual split-truth ownership:
+
+      - Residual fake abstractions:
+
+      - Residual compatibility hubs:
+
+      - New abstraction debt introduced:
+
+
+      ## Headline
+
+      - SIMPLIFIED | PARTIAL | NOT_SIMPLIFIED'
+    agent: software-architect-tacit
