@@ -67535,6 +67535,73 @@ phases:
       \ output>\n\n## Convergence Notes\n- conflict rollback still works: YES/NO\n\
       - reconnect path still shares convergence semantics: YES/NO"
     agent: python-refactor-master-tacit
+  - id: arch_refactor.structural_collapse.runtime_liveness_probe
+    name: Probe runtime surfaces after structural collapse
+    status: pending
+    description: 'Verification scope: phase-check on runtime-bearing surfaces after
+      truth-owner collapse.
+
+
+      step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/INTERFACES.md#7-2-http-endpoints
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - no new deletions; verify that removed ownership shells and reload indirections
+      did not regress external behavior
+
+
+      Black-box verify that `tela serve`, `tela connect`, `/status`, and lifecycle
+      registration still behave correctly after runtime truth consolidation and reload
+      indirection demolition.'
+    verification: '- Run black-box runtime checks for connect/serve/status
+
+      - Confirm readiness remains separate from discovery
+
+      - Confirm structural simplification did not narrow the external runtime contract'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Runtime Probe
+
+      - Command(s):
+
+      - Status outputs:
+
+      - Readiness/discovery distinction observed:
+
+      - Regressions found:
+
+
+      ## Protected Next Phase
+
+      - arch_refactor.layer_dissolution'
+    depends_on:
+    - arch_refactor.structural_collapse.runtime_truth_collapse
+    - arch_refactor.structural_collapse.reload_indirection_demolition
+    agent: blind-tester-tacit
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
