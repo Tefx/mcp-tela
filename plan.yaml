@@ -67518,3 +67518,36 @@ phases:
     depends_on:
     - arch_refactor.dissolve.result_imports_runtime_shell
     agent: architectural-demolitionist-tacit
+  - id: arch_refactor.dissolve.result_imports_commands
+    name: Replace config_loader Result imports in command surfaces
+    status: pending
+    description: "Delete indirect Result import usage in command and transport entry\
+      \ surfaces so the config_loader shim can be removed cleanly.\n\ntarget_kill_list:\n\
+      - `from tela.shell.config_loader import Result` in:\n  - src/tela/commands/connect_cmd.py\n\
+      \  - src/tela/commands/remote_state.py\n  - src/tela/commands/http_client.py\n\
+      \  - src/tela/commands/stop_cmd.py\n  - src/tela/commands/serve_cmd.py\n  -\
+      \ src/tela/commands/start.py\n  - src/tela/commands/status_cmd.py\n  - src/tela/commands/profiles_cmd.py\n\
+      \  - src/tela/commands/audit_cmd.py\n  - src/tela/commands/connections_cmd.py\n\
+      \  - src/tela/commands/connect_transport.py\n\nspec_refs:\n- docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#4-import-and-compatibility-residue-is-still-present\n\
+      - docs/DESIGN.md#commands\n\ntouch_paths:\n- src/tela/commands/connect_cmd.py\n\
+      - src/tela/commands/serve_cmd.py\n- src/tela/commands/start.py\n- src/tela/commands/status_cmd.py\n\
+      - src/tela/commands/profiles_cmd.py\n- src/tela/commands/audit_cmd.py\n- src/tela/commands/connections_cmd.py\n\
+      - src/tela/commands/http_client.py\n- src/tela/commands/connect_transport.py\n\
+      - tests/shell/test_cli_wiring.py\n- tests/shell/test_connect_cmd.py\n- tests/shell/test_serve_cmd.py\n\
+      - tests/integration/test_end_to_end.py\n\nexpected_negative_delta:\n- roughly\
+      \ -10 to -30 lines of import indirection\n- 11 import-site cleanups\n\nconstraints:\n\
+      - keep command behavior identical.\n- do not reintroduce a new command-local\
+      \ Result alias layer."
+    verification: Run `uv run pytest -q tests/shell/test_cli_wiring.py tests/shell/test_connect_cmd.py
+      tests/shell/test_serve_cmd.py tests/shell/test_status_truth_verification.py
+      tests/integration/test_end_to_end.py` and `uvx invar-tools guard --all`.
+    evidence_template: '- Import sites migrated
+
+      - Net line delta
+
+      - Commands/tests proving surface behavior stayed intact
+
+      - Remaining command-side config_loader Result import users, if any'
+    depends_on:
+    - arch_refactor.dissolve.result_imports_support_shell
+    agent: architectural-demolitionist-tacit
