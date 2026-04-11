@@ -67281,6 +67281,93 @@ phases:
 
       - arch_refactor.finalization.black_box_runtime'
     agent: blind-tester-tacit
+  - id: arch_refactor.characterization.gate
+    name: Gate characterization baseline
+    status: pending
+    description: 'Gate review for the characterization phase.
+
+
+      step_type: gate
+
+      verification_scope: phase-check
+
+      agent_source: default
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - This gate freezes the demolition baseline for runtime-bearing surfaces.
+
+      - Later phases remove abstractions and move runtime state ownership.
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#verified-findings
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      target_kill_list:
+
+      - none directly; approve the inventory and protected behavior baseline before
+      deletion work starts
+
+
+      Confirm that the project now has a trusted baseline for guard debt, adversary
+      suites, and black-box runtime behavior. Block progress if the evidence is too
+      weak to support safe demolition.'
+    verification: '- Baseline guard debt is recorded clearly
+
+      - Protected runtime suites are named and evidenced
+
+      - Black-box runtime snapshot is specific enough to catch regressions in later
+      phases
+
+      - Proceed only if structural_collapse can run without guessing current behavior'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Characterization Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | guard_baseline |  |  |  |
+
+      | runtime_snapshot |  |  |  |
+
+
+      ## Gate Decision Basis
+
+      - Baseline sufficient for demolition: YES/NO
+
+      - Missing evidence:
+
+      - Blocking concerns:
+
+
+      ## Gate Decision
+
+      - OPEN or BLOCKED'
+    depends_on:
+    - arch_refactor.characterization.guard_baseline
+    - arch_refactor.characterization.runtime_snapshot
+    agent: gate-reviewer-tacit
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
   status: locked
