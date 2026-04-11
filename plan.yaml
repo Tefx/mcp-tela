@@ -67764,6 +67764,81 @@ phases:
       \ output>\n\n## Authority Check\n- downstream authority still singular: YES/NO\n\
       - recovery serialization preserved: YES/NO"
     agent: python-senior-tacit
+  - id: arch_refactor.layer_dissolution.connect_facade_shrink
+    name: Shrink connect_cmd facade and extract bridge runtime bulk
+    status: pending
+    description: 'Implementation scope: technical-debt remediation with runnable-surface
+      preservation.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/INTERFACES.md#2-cli-surface
+
+
+      touch_paths:
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/http_client.py
+
+      - target: src/tela/commands/connect_bridge.py
+
+      - tests/shell/test_connect_cmd.py
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+      - tests/integration/test_end_to_end.py
+
+
+      target_kill_list:
+
+      - src/tela/commands/connect_cmd.py bridge-runtime bulk
+
+      - src/tela/commands/connect_cmd.py framed-message read/write bulk
+
+      - src/tela/commands/connect_cmd.py forwarding/recovery loop bulk that does not
+      belong in the CLI entry facade
+
+
+      Keep `connect_cmd.py` as the CLI entry surface for endpoint resolution, token
+      selection, and autostart decisions. Move stdio framing, MCP forwarding, readiness
+      polling, and bounded recovery loop into a concrete helper module without changing
+      `tela connect` behavior.
+
+
+      Known risks:
+
+      - connect must remain a runnable surface, not just a helper collection
+
+      - readiness must still come from `/status`, not local cache
+
+      - autostart/discovery flow must remain intact
+
+      - recovery loop must preserve current bounded semantics'
+    verification: '- Connect command tests and liveness repros pass
+
+      - Entry facade remains runnable from CLI
+
+      - target_kill_list bulk is moved out or deleted without introducing behavior
+      drift'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Changed Files\n- <file>\n\
+      \n## target_kill_list Outcome\n- <item> — removed|moved|retained-with-reason\n\
+      \n## Verification\n- Commands:\n  - `<pytest command>`\n  - `<liveness command>`\n\
+      - Outputs:\n  - <key output>\n\n## Runnable Surface Check\n- `tela connect`\
+      \ still launches from CLI: YES/NO\n- `/status` remains readiness authority:\
+      \ YES/NO"
+    agent: python-senior-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
