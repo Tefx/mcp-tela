@@ -67459,3 +67459,30 @@ phases:
     final review confirms net simplification and preserved behavior.
   depends_on:
   - arch_refactor.structural_collapse
+  steps:
+  - id: arch_refactor.dissolve.result_imports_runtime_shell
+    name: Replace config_loader Result imports in runtime shell modules
+    status: pending
+    description: "Delete indirect Result import usage in the highest-churn runtime\
+      \ shell modules and switch them to the canonical source.\n\ntarget_kill_list:\n\
+      - `from tela.shell.config_loader import Result` in:\n  - src/tela/shell/downstream.py\n\
+      \  - src/tela/shell/upstream.py\n  - src/tela/shell/http_routes.py\n  - src/tela/shell/gateway.py\n\
+      \  - src/tela/shell/reload.py\n\nspec_refs:\n- docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#4-import-and-compatibility-residue-is-still-present\n\
+      - docs/DESIGN.md#result-py\n- docs/DESIGN.md#config-loader-py\n\ntouch_paths:\n\
+      - src/tela/shell/downstream.py\n- src/tela/shell/upstream.py\n- src/tela/shell/http_routes.py\n\
+      - src/tela/shell/gateway.py\n- src/tela/shell/reload.py\n- tests/shell/test_gateway.py\n\
+      - tests/shell/test_downstream.py\n- tests/shell/test_reload.py\n\nexpected_negative_delta:\n\
+      - small but real: roughly -5 to -20 lines of indirection/noise\n- 5 import-site\
+      \ cleanups\n\nconstraints:\n- no behavior changes.\n- no new shared shim to\
+      \ replace the old one."
+    verification: Run `uv run pytest -q tests/shell/test_gateway.py tests/shell/test_downstream.py
+      tests/shell/test_reload.py tests/shell/test_http_routes.py` and `uvx invar-tools
+      guard --all`.
+    evidence_template: '- Import sites migrated
+
+      - Net line delta
+
+      - Why no behavior changed
+
+      - Proof runtime shell imports now point directly at tela.shell.result'
+    agent: architectural-demolitionist-tacit
