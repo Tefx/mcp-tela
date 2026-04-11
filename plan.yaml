@@ -67089,6 +67089,95 @@ phases:
     evidence before any abstraction removal begins.
   depends_on:
   - dup_audit.deep_review
+  steps:
+  - id: arch_refactor.char.freeze_hotspots
+    name: Freeze connect/gateway/downstream/reload behavior before deletions
+    status: pending
+    description: 'Create or tighten characterization tests around the refactor hotspots
+      before any code removal.
+
+
+      target_kill_list:
+
+      - src/tela/shell/downstream.py::EventEntryAdapter
+
+      - src/tela/shell/reload.py::ConvergencePolicyConsumer
+
+      - src/tela/shell/reload.py::SingleServerConvergenceKernel
+
+      - src/tela/shell/config_loader.py::Result re-export shim
+
+      - src/tela/commands/start.py
+
+      - src/tela/shell/gateway.py::gateway_runtime backward-compat re-export block
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#verified-findings
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+      - docs/INTERFACES.md#7-mcp-surface
+
+
+      touch_paths:
+
+      - tests/shell/test_connect_cmd.py
+
+      - tests/shell/test_serve_cmd.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/shell/test_downstream.py
+
+      - tests/shell/test_reload.py
+
+      - tests/repro/test_runtime_boundary_immutability.py
+
+      - tests/repro/test_startup_coord_liveness.py
+
+      - tests/repro/test_connect_runtime_liveness.py
+
+
+      expected_negative_delta:
+
+      - 0 lines in this step; its purpose is to protect later deletions totaling roughly
+      -150 to -400 lines and 5-8 symbol removals.
+
+
+      characterization_harness_setup:
+
+      - lock current behavior for bridge readiness, reload convergence, runtime snapshot
+      ownership, downstream recovery, and legacy import/entry surfaces that will later
+      be removed or collapsed.
+
+      - add focused assertions for import paths and failure semantics that would regress
+      if compat shims are deleted too early.
+
+
+      constraints:
+
+      - do not broaden behavior.
+
+      - do not add new abstraction layers while writing tests.'
+    verification: 'Run targeted characterization suites before and after each later
+      demolition slice: `uv run pytest -q tests/shell/test_connect_cmd.py tests/shell/test_serve_cmd.py
+      tests/shell/test_gateway.py tests/shell/test_downstream.py tests/shell/test_reload.py
+      tests/repro/test_runtime_boundary_immutability.py tests/repro/test_startup_coord_liveness.py
+      tests/repro/test_connect_runtime_liveness.py` and `uvx invar-tools guard --all`.'
+    evidence_template: '- Commands run
+
+      - New or tightened characterization tests
+
+      - Behaviors frozen (readiness, reload, runtime ownership, recovery, compat imports)
+
+      - Remaining uncharacterized gaps
+
+      - Why this harness is sufficient for upcoming deletions'
+    agent: architectural-demolitionist-tacit
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
   status: locked
