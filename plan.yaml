@@ -67839,6 +67839,81 @@ phases:
       \ still launches from CLI: YES/NO\n- `/status` remains readiness authority:\
       \ YES/NO"
     agent: python-senior-tacit
+  - id: arch_refactor.layer_dissolution.serve_facade_shrink
+    name: Shrink serve_cmd facade and extract runtime loop bulk
+    status: pending
+    description: 'Implementation scope: technical-debt remediation with runnable-surface
+      preservation.
+
+
+      step_type: implementation
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#recommended-refactor-order
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/INTERFACES.md#2-cli-surface
+
+
+      touch_paths:
+
+      - src/tela/commands/serve_cmd.py
+
+      - target: src/tela/commands/serve_runtime.py
+
+      - src/tela/shell/lockfile.py
+
+      - src/tela/shell/idle_shutdown.py
+
+      - tests/shell/test_serve_cmd.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/repro/test_startup_coord_liveness.py
+
+
+      target_kill_list:
+
+      - src/tela/commands/serve_cmd.py HTTP server launch/stop bulk
+
+      - src/tela/commands/serve_cmd.py signal/watcher/idle task bulk
+
+      - src/tela/commands/serve_cmd.py rollback helper bulk that belongs in a concrete
+      runtime loop module
+
+
+      Keep `serve_cmd.py` as the CLI/config/token entry facade. Move the runtime loop,
+      bind/stop, watcher tasks, idle tasks, and rollback path into a concrete runtime
+      helper while preserving `tela serve` startup ordering and lockfile behavior.
+
+
+      Known risks:
+
+      - lockfile publication order must remain correct
+
+      - serve must remain runnable from CLI
+
+      - watcher and idle shutdown tasks must keep current lifecycle semantics
+
+      - shutdown path must not regress cleanup ordering'
+    verification: '- Serve command and gateway lifecycle tests pass
+
+      - Startup coordination and liveness repros pass
+
+      - target_kill_list bulk is moved out or deleted with no startup/shutdown regression'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Changed Files\n- <file>\n\
+      \n## target_kill_list Outcome\n- <item> — removed|moved|retained-with-reason\n\
+      \n## Verification\n- Commands:\n  - `<pytest command>`\n  - `<liveness command>`\n\
+      - Outputs:\n  - <key output>\n\n## Runnable Surface Check\n- `tela serve` still\
+      \ launches from CLI: YES/NO\n- lockfile ordering preserved: YES/NO\n- watcher/idle\
+      \ lifecycle preserved: YES/NO"
+    agent: python-senior-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
