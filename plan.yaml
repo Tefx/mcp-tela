@@ -67082,3 +67082,10 @@ phases:
   status: done
   depends_on:
   - dup_audit.doc_sync
+- id: arch_refactor.characterization
+  name: Architecture Refactor Characterization
+  status: pending
+  gate: Behavior around targeted deletions is frozen with explicit characterization
+    evidence before any abstraction removal begins.
+  depends_on:
+  - dup_audit.deep_review
