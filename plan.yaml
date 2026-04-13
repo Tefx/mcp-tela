@@ -68105,7 +68105,7 @@ phases:
       - bridge readiness contract freeze wording alignment follow-up'
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
-  status: pending
+  status: in_progress
   gate: Phase closes only after oversized files are reduced by concrete responsibility,
     compatibility residue is removed, and a full-plan verification proves non-regression.
   depends_on:
@@ -68185,7 +68185,7 @@ phases:
     agent: python-senior-tacit
   - id: arch_refactor.layer_dissolution.connect_facade_shrink
     name: Shrink connect_cmd facade and extract bridge runtime bulk
-    status: pending
+    status: claimed
     description: 'Implementation scope: technical-debt remediation with runnable-surface
       preservation.
 
@@ -68258,6 +68258,8 @@ phases:
       \ still launches from CLI: YES/NO\n- `/status` remains readiness authority:\
       \ YES/NO"
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-13T18:46:07.099397+00:00'
   - id: arch_refactor.layer_dissolution.serve_facade_shrink
     name: Shrink serve_cmd facade and extract runtime loop bulk
     status: pending
