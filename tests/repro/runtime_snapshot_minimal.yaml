@@ -1,0 +1,10 @@
+# Minimal config for runtime characterization snapshot.
+# No downstream servers to avoid convergence delays.
+# Open mode auth with a default profile per open-mode requirements.
+auth:
+  mode: open
+profiles:
+  dev:
+    default: true
+    capabilities: {}
+servers: {}
