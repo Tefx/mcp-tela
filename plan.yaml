@@ -67861,7 +67861,7 @@ phases:
       \ hash(es): 2abc729"
   - id: arch_refactor.structural_collapse.runtime_liveness_probe
     name: Probe runtime surfaces after structural collapse
-    status: pending
+    status: claimed
     description: 'Verification scope: phase-check on runtime-bearing surfaces after
       truth-owner collapse.
 
@@ -67926,6 +67926,8 @@ phases:
     - arch_refactor.structural_collapse.runtime_truth_collapse
     - arch_refactor.structural_collapse.reload_indirection_demolition
     agent: blind-tester-tacit
+    claimed_by: blind-tester-tacit
+    claimed_at: '2026-04-13T18:16:06.670066+00:00'
   - id: arch_refactor.structural_collapse.gate
     name: Gate structural collapse
     status: pending
