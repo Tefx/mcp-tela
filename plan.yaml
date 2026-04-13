@@ -67861,7 +67861,7 @@ phases:
       \ hash(es): 2abc729"
   - id: arch_refactor.structural_collapse.runtime_liveness_probe
     name: Probe runtime surfaces after structural collapse
-    status: claimed
+    status: done
     description: 'Verification scope: phase-check on runtime-bearing surfaces after
       truth-owner collapse.
 
@@ -67928,6 +67928,40 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-13T18:16:06.670066+00:00'
+    done_at: '2026-04-13T18:28:00.555668+00:00'
+    evidence: "status: SUCCESS\n## refs Read Confirmation (MANDATORY)\nNo refs for\
+      \ this step.\n\n## Runtime Probe\n- Commands:\n  - `.venv/bin/python tests/repro/runtime_snapshot.py`\
+      \ (13/13 pass)\n  - `.venv/bin/python tests/repro/spec_verify_structural_collapse_liveness.py`\
+      \ (12/12 pass)\n  - `.venv/bin/python -m pytest tests/repro/test_liveness.py\
+      \ -v -x` (4/4 pass)\n  - `.venv/bin/python -m pytest tests/repro/test_connect_runtime_liveness.py\
+      \ -v -x` (6/6 pass)\n  - `.venv/bin/python -m pytest tests/repro/test_seam_convergence_proof.py\
+      \ tests/repro/test_runtime_boundary_immutability.py tests/repro/test_startup_coord_liveness.py\
+      \ -v -x` (31/31 pass)\n  - `.venv/bin/python -m pytest tests/repro/test_adr006_runtime_hardening_probes.py\
+      \ tests/repro/test_gate_blocker_regressions.py -v -x` (29 pass, 1 skip)\n  -\
+      \ `.venv/bin/python -m pytest tests/repro/ -v --ignore=tests/repro/test_conn_v2_blackbox.py\
+      \ -x` (143 pass, 1 skip, 1 known pre-existing gap)\n- Status outputs:\n  - `tela\
+      \ serve` alive, lockfile written, health 200\n  - `GET /status` auth=200 with\
+      \ readiness payload; unauth=401\n  - `POST /connect` returns connected and registers\
+      \ lifecycle\n  - `POST /disconnect` returns disconnected and removes lifecycle\
+      \ registration\n  - `tela connect` bridge registers and cleans up\n  - `tela\
+      \ status` reports readiness from /status authority\n  - `/mcp` endpoint responds\
+      \ (non-404 protocol response)\n- Readiness/discovery distinction observed:\n\
+      \  - lockfile contains discovery fields only (`pid,host,port,token,started_at,config_path,version`)\n\
+      \  - `/status` contains readiness fields (`state,active_connections,connected_servers,connections`)\n\
+      \  - zero overlap for readiness fields in lockfile\n- Regressions found:\n \
+      \ - none attributable to structural collapse\n  - one pre-existing known-gap\
+      \ test unrelated to this collapse\n\n## Protected Next Phase\n- arch_refactor.layer_dissolution\n\
+      \nstep_intent: verify runtime-bearing external surfaces after structural collapse\n\
+      expected_result: external runtime contract preserved and readiness/discovery\
+      \ separation intact\nobserved_result: targeted runtime probes and repro suites\
+      \ pass; separation preserved; no narrowing detected\nfailure_alignment: no new\
+      \ failures; only known pre-existing gaps\nproduct_implementation_files_modified:\
+      \ no (test evidence script added)\n\nbehavioral_proof_register: liveness, auth,\
+      \ lifecycle registration, readiness authority, discovery/readiness separation,\
+      \ and bridge cleanup all confirmed by black-box probes\ngate_open_allowed: true\n\
+      explicit_uncertainty_sources: one pre-existing tool-prefix known gap; one known\
+      \ test-infra isolation issue in ignored conn_v2 blackbox case; warming-path\
+      \ 503 not directly exercised in zero-downstream fast-converge setup."
   - id: arch_refactor.structural_collapse.gate
     name: Gate structural collapse
     status: pending
