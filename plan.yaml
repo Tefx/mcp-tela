@@ -68113,7 +68113,7 @@ phases:
   steps:
   - id: arch_refactor.layer_dissolution.downstream_contraction
     name: Contract downstream.py by concrete responsibility
-    status: claimed
+    status: done
     description: 'Implementation scope: technical-debt remediation with hardened acceptance.
 
 
@@ -68185,6 +68185,65 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-13T19:47:06.623265+00:00'
+    done_at: '2026-04-13T20:38:24.959620+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Changed Files
+
+      - src/tela/shell/downstream.py (1228 -> 412 lines)
+
+      - src/tela/shell/_downstream_recovery.py (new)
+
+      - tests/shell/test_downstream.py (targeted patch path update)
+
+
+      ## target_kill_list Outcome
+
+      - EventEntryAdapter — removed
+
+      - EventEntryKind — removed
+
+      - EnumerationFreshness — removed
+
+      - STARTUP_BEHAVIORAL_NOTES — removed
+
+      - DOWNSTREAM_CONVERGENCE_BEHAVIORAL_NOTES — removed
+
+      - _swap_client_handle — removed
+
+      - Oversized mixed regions — split: recovery/call-path extracted to _downstream_recovery.py
+
+      - Wrapper bulk retained where it defines public downstream authority surface
+      (documented rationale)
+
+
+      ## Verification
+
+      - `uv run pytest tests/shell/test_downstream.py tests/shell/test_downstream_recovery.py
+      tests/shell/test_downstream_runtime_connection.py -q` -> `83 passed, 7 xfailed`
+
+      - `uv run pytest tests/shell/test_reload.py tests/shell/test_gateway.py tests/shell/test_upstream.py
+      tests/shell/test_notification_forwarding.py tests/integration/test_hot_reload.py
+      tests/repro/test_adr006_runtime_hardening_probes.py tests/repro/test_seam_convergence_proof.py
+      tests/repro/test_blockers.py -q` -> `219 passed, 1 skipped`
+
+      - `uv run ruff check src/tela/shell/downstream.py src/tela/shell/_downstream_recovery.py`
+      -> pass
+
+      - `uv run mypy src/tela/shell/downstream.py src/tela/shell/_downstream_recovery.py`
+      -> pass
+
+
+      ## Authority Check
+
+      - downstream authority still singular: YES
+
+      - recovery serialization preserved: YES'
   - id: arch_refactor.layer_dissolution.connect_facade_shrink
     name: Shrink connect_cmd facade and extract bridge runtime bulk
     status: done
