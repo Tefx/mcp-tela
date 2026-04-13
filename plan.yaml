@@ -67729,7 +67729,7 @@ phases:
     claimed_at: '2026-04-13T17:45:38.333629+00:00'
   - id: arch_refactor.structural_collapse.reload_indirection_demolition
     name: Remove reload indirection with no second implementation
-    status: claimed
+    status: done
     description: 'Implementation scope: technical-debt remediation focused on negative
       line delta.
 
@@ -67803,6 +67803,26 @@ phases:
     agent: python-refactor-master-tacit
     claimed_by: python-refactor-master-tacit
     claimed_at: '2026-04-13T17:45:31.509958+00:00'
+    done_at: '2026-04-13T18:15:05.890992+00:00'
+    evidence: "status: SUCCESS\n## refs Read Confirmation (MANDATORY)\nNo refs for\
+      \ this step.\n\n## Changed Files\n- src/tela/shell/reload.py\n\n## target_kill_list\
+      \ Outcome\n- src/tela/shell/reload.py: SingleServerConvergenceKernel — removed\n\
+      - src/tela/shell/reload.py: ConvergencePolicyConsumer — removed\n- src/tela/shell/reload.py:\
+      \ _RegistrySingleServerConvergenceKernel indirection shell — inlined\n\n## Verification\n\
+      - Commands:\n  - `./.venv/bin/python -m pytest tests/shell/test_reload.py tests/shell/test_notification_forwarding.py\
+      \ -q`\n  - `./.venv/bin/python -m py_compile src/tela/shell/reload.py`\n  -\
+      \ `./.venv/bin/python -m pytest tests/shell/test_reload.py tests/shell/test_notification_forwarding.py\
+      \ tests/shell/test_downstream.py tests/shell/test_downstream_runtime_connection.py\
+      \ tests/shell/test_downstream_recovery.py tests/shell/test_gateway.py -q`\n\
+      \  - `invar guard --changed`\n- Outputs:\n  - `50 passed in 1.71s`\n  - `py_compile:\
+      \ success`\n  - `191 passed, 7 xfailed, 1 warning in 2.11s`\n  - `invar guard:\
+      \ passed, 0 errors, 0 warnings`\n\n## Convergence Notes\n- conflict rollback\
+      \ still works: YES\n- reconnect path still shares convergence semantics: YES\n\
+      \nstep_intent: remove reload indirection without behavior change\nexpected_result:\
+      \ target indirections removed while rollback/reconnect semantics preserved\n\
+      observed_result: indirections removed and target regression suites passed\n\
+      failure_alignment: none\nproduct_implementation_files_modified: yes\n\nCommit\
+      \ hash(es): 2abc729"
   - id: arch_refactor.structural_collapse.runtime_liveness_probe
     name: Probe runtime surfaces after structural collapse
     status: pending
