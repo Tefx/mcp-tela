@@ -19,6 +19,8 @@ from tela.shell.gateway import (
     set_runtime_running,
     set_upstream_server,
 )
+from tela.shell import serve_runtime
+from tela.shell.serve_runtime import HttpServerHandle
 
 
 def test_serve_subcommand_exists() -> None:
@@ -85,13 +87,13 @@ def test_serve_lockfile_written_then_deleted(
 
     async def _fake_launch_streamable_http_server(
         *, upstream_app: object, upstream_log_level: str, host: str, requested_port: int
-    ) -> Result[serve_cmd._HttpServerHandle, str]:
+    ) -> Result[HttpServerHandle, str]:
         _ = upstream_app
         _ = upstream_log_level
         _ = host
         task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
         return Result(
-            value=serve_cmd._HttpServerHandle(
+            value=HttpServerHandle(
                 task=task,
                 bound_port=requested_port,
                 request_shutdown=lambda: None,
@@ -168,14 +170,14 @@ def test_serve_lockfile_written_then_deleted(
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
     monkeypatch.setattr(
         serve_cmd,
-        "_launch_streamable_http_server",
+        "launch_streamable_http_server",
         _fake_launch_streamable_http_server,
     )
     monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
     monkeypatch.setattr(serve_cmd, "delete_lockfile", _fake_delete_lockfile)
-    monkeypatch.setattr(serve_cmd, "_watch_config_changes", _fake_watch_config_changes)
-    monkeypatch.setattr(serve_cmd, "_idle_shutdown_watch", _fake_idle_shutdown_watch)
-    monkeypatch.setattr(serve_cmd, "_package_version", lambda: Result(value="0.1.0"))
+    monkeypatch.setattr(serve_cmd, "watch_config_changes", _fake_watch_config_changes)
+    monkeypatch.setattr(serve_cmd, "idle_shutdown_watch", _fake_idle_shutdown_watch)
+    monkeypatch.setattr(serve_cmd, "package_version", lambda: Result(value="0.1.0"))
 
     result = serve_cmd.serve_command(
         config_path=str(tmp_path / "tela.yaml"),
@@ -235,14 +237,14 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
 
     async def _fake_launch_streamable_http_server(
         *, upstream_app: object, upstream_log_level: str, host: str, requested_port: int
-    ) -> Result[serve_cmd._HttpServerHandle, str]:
+    ) -> Result[HttpServerHandle, str]:
         _ = upstream_app
         _ = upstream_log_level
         _ = host
         assert requested_port == 0
         task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
         return Result(
-            value=serve_cmd._HttpServerHandle(
+            value=HttpServerHandle(
                 task=task,
                 bound_port=published_port,
                 request_shutdown=lambda: None,
@@ -307,14 +309,14 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
     monkeypatch.setattr(
         serve_cmd,
-        "_launch_streamable_http_server",
+        "launch_streamable_http_server",
         _fake_launch_streamable_http_server,
     )
     monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
     monkeypatch.setattr(serve_cmd, "delete_lockfile", lambda: Result(value=None))
-    monkeypatch.setattr(serve_cmd, "_watch_config_changes", _fake_watch_config_changes)
-    monkeypatch.setattr(serve_cmd, "_idle_shutdown_watch", _fake_idle_shutdown_watch)
-    monkeypatch.setattr(serve_cmd, "_package_version", lambda: Result(value="0.1.0"))
+    monkeypatch.setattr(serve_cmd, "watch_config_changes", _fake_watch_config_changes)
+    monkeypatch.setattr(serve_cmd, "idle_shutdown_watch", _fake_idle_shutdown_watch)
+    monkeypatch.setattr(serve_cmd, "package_version", lambda: Result(value="0.1.0"))
 
     result = serve_cmd.serve_command(
         config_path=str(tmp_path / "tela.yaml"),
@@ -379,10 +381,12 @@ def test_serve_command_reaper_cli_overrides_win_over_config(
 def test_idle_shutdown_sets_stop_event_when_connections_stay_idle() -> None:
     """Idle watcher must request shutdown when no active connections exist."""
 
+    from tela.shell.serve_runtime import idle_shutdown_watch
+
     async def _scenario() -> bool:
         stop_event = asyncio.Event()
         clear_runtime_connections()
-        await serve_cmd._idle_shutdown_watch(
+        await idle_shutdown_watch(
             idle_timeout_seconds=1,
             stop_event=stop_event,
             poll_interval_seconds=0.01,
@@ -419,7 +423,7 @@ def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
 
     async def _fake_launch_streamable_http_server(
         *, upstream_app: object, upstream_log_level: str, host: str, requested_port: int
-    ) -> Result[serve_cmd._HttpServerHandle, str]:
+    ) -> Result[HttpServerHandle, str]:
         _ = upstream_app
         _ = upstream_log_level
         _ = host
@@ -427,7 +431,7 @@ def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
         observed.append("bind")
         task: asyncio.Task[None] = asyncio.create_task(asyncio.sleep(0.01))
         return Result(
-            value=serve_cmd._HttpServerHandle(
+            value=HttpServerHandle(
                 task=task,
                 bound_port=8123,
                 request_shutdown=lambda: None,
@@ -451,7 +455,7 @@ def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
         discovery["published"] = False
         return Result(value=None)
 
-    async def _fake_stop_http_server(server: serve_cmd._HttpServerHandle) -> None:
+    async def _fake_stop_http_server(server: HttpServerHandle) -> None:
         _ = server
         observed.append("teardown_http")
 
@@ -468,7 +472,7 @@ def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
     )
     monkeypatch.setattr(
         serve_cmd,
-        "_launch_streamable_http_server",
+        "launch_streamable_http_server",
         _fake_launch_streamable_http_server,
     )
     monkeypatch.setattr(serve_cmd, "write_lockfile", _fake_write_lockfile)
@@ -477,9 +481,19 @@ def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
         "gateway_converge_startup",
         _fake_gateway_converge_startup,
     )
+    # Patch delete_lockfile on both serve_cmd and serve_runtime:
+    # rollback_after_post_bind_convergence_failure calls delete_lockfile
+    # from its own (serve_runtime) module-level import.
     monkeypatch.setattr(serve_cmd, "delete_lockfile", _fake_delete_lockfile)
-    monkeypatch.setattr(serve_cmd, "_stop_http_server", _fake_stop_http_server)
+    monkeypatch.setattr(serve_runtime, "delete_lockfile", _fake_delete_lockfile)
+    # Patch stop_http_server on both serve_cmd and serve_runtime:
+    # rollback_after_post_bind_convergence_failure calls stop_http_server
+    # from its own (serve_runtime) module-level import.
+    monkeypatch.setattr(serve_cmd, "stop_http_server", _fake_stop_http_server)
+    monkeypatch.setattr(serve_runtime, "stop_http_server", _fake_stop_http_server)
+    # Patch gateway_shutdown on both serve_cmd and serve_runtime:
     monkeypatch.setattr(serve_cmd, "gateway_shutdown", _fake_gateway_shutdown)
+    monkeypatch.setattr(serve_runtime, "gateway_shutdown", _fake_gateway_shutdown)
     monkeypatch.setattr(
         serve_cmd,
         "is_upstream_server_initialized",
@@ -491,7 +505,7 @@ def test_post_bind_convergence_failure_rolls_back_discovery_and_runtime(
     monkeypatch.setattr(
         serve_cmd, "get_upstream_log_level", lambda: Result(value="info")
     )
-    monkeypatch.setattr(serve_cmd, "_package_version", lambda: Result(value="0.1.0"))
+    monkeypatch.setattr(serve_cmd, "package_version", lambda: Result(value="0.1.0"))
 
     result = serve_cmd.serve_command(
         config_path=str(tmp_path / "tela.yaml"),
