@@ -68345,7 +68345,7 @@ phases:
       failure_alignment: none\nproduct_implementation_files_modified: yes"
   - id: arch_refactor.layer_dissolution.serve_facade_shrink
     name: Shrink serve_cmd facade and extract runtime loop bulk
-    status: claimed
+    status: done
     description: 'Implementation scope: technical-debt remediation with runnable-surface
       preservation.
 
@@ -68420,6 +68420,57 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-13T19:47:28.033141+00:00'
+    done_at: '2026-04-13T20:38:37.042393+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Changed Files
+
+      - src/tela/shell/serve_runtime.py (new)
+
+      - src/tela/commands/serve_cmd.py (658 -> 331 lines)
+
+      - tests/shell/test_serve_cmd.py
+
+      - tests/shell/test_cli_wiring.py
+
+
+      ## target_kill_list Outcome
+
+      - serve_cmd HTTP server launch/stop bulk — moved to serve_runtime.py
+
+      - serve_cmd signal/watcher/idle task bulk — moved to serve_runtime.py
+
+      - serve_cmd rollback helper bulk — moved to serve_runtime.py
+
+      - serve_cmd misc runtime helpers moved to serve_runtime.py
+
+
+      ## Verification
+
+      - `.venv/bin/python -m pytest tests/shell/test_serve_cmd.py tests/shell/test_cli_wiring.py
+      -v` -> `8 passed`
+
+      - `.venv/bin/python -m pytest tests/shell/ tests/core/ --ignore=tests/shell/test_connect_recovery_red.py
+      --ignore=tests/shell/test_connect_bridge_readiness_contract_freeze.py --ignore=tests/repro
+      -q` -> `768 passed`
+
+      - `.venv/bin/invar guard` -> `0 errors`
+
+      - `.venv/bin/python -m tela serve --help` exits 0 with expected flags
+
+
+      ## Runnable Surface Check
+
+      - `tela serve` still launches from CLI: YES
+
+      - lockfile ordering preserved: YES
+
+      - watcher/idle lifecycle preserved: YES'
   - id: arch_refactor.layer_dissolution.gateway_compat_collapse
     name: Collapse gateway compatibility residue and import hubs
     status: pending
