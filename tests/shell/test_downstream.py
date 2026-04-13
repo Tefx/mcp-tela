@@ -1791,6 +1791,7 @@ def test_call_tool_stops_after_convergence_rejection(
     """Convergence rejection is terminal for the original call."""
     from tela.core.models import TelaError
     from tela.shell import downstream
+    from tela.shell import _downstream_recovery
     from tela.shell.config_loader import Result
 
     class FailingSession:
@@ -1833,7 +1834,7 @@ def test_call_tool_stops_after_convergence_rejection(
         )
 
     monkeypatch.setattr(
-        downstream,
+        _downstream_recovery,
         "_recover_server_client",
         _fake_recover_server_client,
     )
