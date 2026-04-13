@@ -67634,7 +67634,7 @@ phases:
       runtime_snapshot pytest assertion style.'
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
-  status: in_progress
+  status: done
   gate: Phase closes only after fake abstractions are removed, runtime truth ownership
     is consolidated, and preserved runtime surfaces are re-proven.
   depends_on:
@@ -67964,7 +67964,7 @@ phases:
       \ 503 not directly exercised in zero-downstream fast-converge setup."
   - id: arch_refactor.structural_collapse.gate
     name: Gate structural collapse
-    status: claimed
+    status: done
     description: 'Gate review for the structural collapse phase.
 
 
@@ -68046,9 +68046,66 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-13T18:28:28.545295+00:00'
+    done_at: '2026-04-13T18:45:23.053028+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Structural Collapse Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | runtime_truth_collapse | PASS | High; runtime truth centralized and verified
+      | should-fix direct _runtime field access pattern in gateway.py |
+
+      | reload_indirection_demolition | PASS | High; fake reload abstractions removed/inlined
+      with regressions green | none blocking |
+
+      | runtime_liveness_probe | PASS | High; black-box runtime probe covers serve/connect/status/discovery-readiness
+      boundary | none blocking |
+
+
+      ## Gate Decision
+
+      - OPEN
+
+      - Remaining split-truth concerns: none blocking
+
+      - Remaining fake-abstraction concerns: none
+
+
+      headline: PASS_WITH_DEBT
+
+      blocking_status: CLOSED
+
+      proof_gap_status: NON_BLOCKING
+
+      behavioral_proof_register: ADR-005 boundary preserved, runtime truth singularity
+      proven, convergence kernel proven, liveness surfaces proven.
+
+      gate_open_allowed: true
+
+      explicit_uncertainty_sources: environment-dependent blackbox failures and wording-drift
+      tests are pre-existing/non-structural.
+
+
+      Should-fix debt captured:
+
+      - gateway.py direct `_runtime` field access sites should eventually route through
+      accessor API
+
+      - retry-location expectation mismatch in coordinator-level test should be updated
+      to caller-layer retry design
+
+      - bridge readiness contract freeze wording alignment follow-up'
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
-  status: locked
+  status: pending
   gate: Phase closes only after oversized files are reduced by concrete responsibility,
     compatibility residue is removed, and a full-plan verification proves non-regression.
   depends_on:
