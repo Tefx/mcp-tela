@@ -67084,7 +67084,7 @@ phases:
   - dup_audit.doc_sync
 - id: arch_refactor.characterization
   name: Architecture Refactor Characterization
-  status: pending
+  status: in_progress
   gate: Phase closes only after full guard debt is baselined and black-box runtime
     behavior is snapshotted for refactor protection.
   depends_on:
@@ -67092,7 +67092,7 @@ phases:
   steps:
   - id: arch_refactor.characterization.guard_baseline
     name: Baseline full guard and targeted regression suites
-    status: pending
+    status: claimed
     description: 'Verification scope: full-plan-check protecting all downstream demolition
       phases.
 
@@ -67196,6 +67196,8 @@ phases:
 
       - arch_refactor.finalization.gate'
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-13T17:17:25.364660+00:00'
   - id: arch_refactor.characterization.runtime_snapshot
     name: Capture black-box runtime behavior snapshot
     status: pending
