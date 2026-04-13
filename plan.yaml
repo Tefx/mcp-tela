@@ -67634,7 +67634,7 @@ phases:
       runtime_snapshot pytest assertion style.'
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
-  status: pending
+  status: in_progress
   gate: Phase closes only after fake abstractions are removed, runtime truth ownership
     is consolidated, and preserved runtime surfaces are re-proven.
   depends_on:
@@ -67727,7 +67727,7 @@ phases:
     agent: python-senior-tacit
   - id: arch_refactor.structural_collapse.reload_indirection_demolition
     name: Remove reload indirection with no second implementation
-    status: pending
+    status: claimed
     description: 'Implementation scope: technical-debt remediation focused on negative
       line delta.
 
@@ -67799,6 +67799,8 @@ phases:
       \ output>\n\n## Convergence Notes\n- conflict rollback still works: YES/NO\n\
       - reconnect path still shares convergence semantics: YES/NO"
     agent: python-refactor-master-tacit
+    claimed_by: python-refactor-master-tacit
+    claimed_at: '2026-04-13T17:45:31.509958+00:00'
   - id: arch_refactor.structural_collapse.runtime_liveness_probe
     name: Probe runtime surfaces after structural collapse
     status: pending
