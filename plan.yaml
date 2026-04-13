@@ -67964,7 +67964,7 @@ phases:
       \ 503 not directly exercised in zero-downstream fast-converge setup."
   - id: arch_refactor.structural_collapse.gate
     name: Gate structural collapse
-    status: pending
+    status: claimed
     description: 'Gate review for the structural collapse phase.
 
 
@@ -68044,6 +68044,8 @@ phases:
     - arch_refactor.structural_collapse.reload_indirection_demolition
     - arch_refactor.structural_collapse.runtime_liveness_probe
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-13T18:28:28.545295+00:00'
 - id: arch_refactor.layer_dissolution
   name: Architecture Refactor Layer Dissolution
   status: locked
