@@ -67319,7 +67319,7 @@ phases:
       Commit hash(es): 1d5b752'
   - id: arch_refactor.characterization.runtime_snapshot
     name: Capture black-box runtime behavior snapshot
-    status: pending
+    status: claimed
     description: 'Verification scope: phase-check protecting structural collapse and
       layer dissolution.
 
@@ -67402,6 +67402,8 @@ phases:
 
       - arch_refactor.finalization.black_box_runtime'
     agent: blind-tester-tacit
+    claimed_by: blind-tester-tacit
+    claimed_at: '2026-04-13T17:31:55.210986+00:00'
   - id: arch_refactor.characterization.gate
     name: Gate characterization baseline
     status: pending
