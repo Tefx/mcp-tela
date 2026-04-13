@@ -68185,7 +68185,7 @@ phases:
     agent: python-senior-tacit
   - id: arch_refactor.layer_dissolution.connect_facade_shrink
     name: Shrink connect_cmd facade and extract bridge runtime bulk
-    status: claimed
+    status: done
     description: 'Implementation scope: technical-debt remediation with runnable-surface
       preservation.
 
@@ -68260,6 +68260,28 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-13T18:46:07.099397+00:00'
+    done_at: '2026-04-13T19:46:44.409349+00:00'
+    evidence: "status: SUCCESS\n## refs Read Confirmation (MANDATORY)\nNo refs for\
+      \ this step.\n\n## Changed Files\n- src/tela/commands/connect_bridge.py (new)\n\
+      - src/tela/commands/connect_cmd.py (facade-only refactor)\n- tests/repro/test_gate_blocker_regressions.py\n\
+      - tests/shell/test_connect_bridge_readiness_gaps_red.py\n- tests/shell/test_connect_cmd.py\n\
+      - tests/shell/test_connect_recovery_red.py\n- tests/shell/test_http_client.py\n\
+      \n## target_kill_list Outcome\n- connect_cmd bridge-runtime bulk — moved to\
+      \ connect_bridge.py (`run_bridge`)\n- connect_cmd framed-message read/write\
+      \ bulk — moved (`BridgeMessage`, `read_framed_message`, `write_framed_message`,\
+      \ `extract_jsonrpc_method`)\n- connect_cmd forwarding/recovery loop bulk — moved\
+      \ (`forward_stdio_http`, `is_recoverable_error`, `recover_gateway`)\n- readiness\
+      \ polling helpers moved (`wait_for_gateway_readiness`, `get_gateway_status`)\n\
+      \n## Verification\n- Commands:\n  - `.venv/bin/python -m pytest tests/shell/test_connect_cmd.py\
+      \ tests/shell/test_http_client.py tests/repro/test_gate_blocker_regressions.py\
+      \ tests/shell/test_connect_bridge_readiness_gaps_red.py -v`\n  - `.venv/bin/python\
+      \ -m tela connect --help`\n- Outputs:\n  - `92 passed`\n  - connect CLI help\
+      \ surface preserved\n\n## Runnable Surface Check\n- `tela connect` still launches\
+      \ from CLI: YES\n- `/status` remains readiness authority: YES\n\nstep_intent:\
+      \ shrink connect facade and extract runtime bridge bulk\nexpected_result: CLI\
+      \ surface unchanged with runtime bulk moved to concrete helper module\nobserved_result:\
+      \ bulk moved to connect_bridge.py and targeted regression/liveness suites passed\n\
+      failure_alignment: none\nproduct_implementation_files_modified: yes"
   - id: arch_refactor.layer_dissolution.serve_facade_shrink
     name: Shrink serve_cmd facade and extract runtime loop bulk
     status: pending
