@@ -67477,7 +67477,7 @@ phases:
       Commit hash(es): (runtime snapshot worktree commits)'
   - id: arch_refactor.characterization.gate
     name: Gate characterization baseline
-    status: pending
+    status: claimed
     description: 'Gate review for the characterization phase.
 
 
@@ -67562,6 +67562,8 @@ phases:
     - arch_refactor.characterization.guard_baseline
     - arch_refactor.characterization.runtime_snapshot
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-13T17:32:39.077529+00:00'
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
   status: locked
