@@ -68473,7 +68473,7 @@ phases:
       - watcher/idle lifecycle preserved: YES'
   - id: arch_refactor.layer_dissolution.gateway_compat_collapse
     name: Collapse gateway compatibility residue and import hubs
-    status: pending
+    status: claimed
     description: 'Implementation scope: serial integration step for shared writable
       surfaces.
 
@@ -68551,6 +68551,8 @@ phases:
     - arch_refactor.layer_dissolution.connect_facade_shrink
     - arch_refactor.layer_dissolution.serve_facade_shrink
     agent: python-refactor-master-tacit
+    claimed_by: python-refactor-master-tacit
+    claimed_at: '2026-04-13T20:40:12.961311+00:00'
   - id: arch_refactor.layer_dissolution.full_plan_check
     name: Run full-plan verification after layer dissolution
     status: pending
