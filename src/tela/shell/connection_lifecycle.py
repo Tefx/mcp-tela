@@ -9,8 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tela.shell.config_loader import Result
-from tela.shell.gateway_runtime import remove_runtime_connection
-from tela.shell.upstream import release_session
+from tela.shell.gateway_runtime import release_session, remove_runtime_connection
 
 
 @dataclass(frozen=True)

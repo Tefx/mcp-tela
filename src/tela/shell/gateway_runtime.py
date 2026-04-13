@@ -9,7 +9,8 @@ Authoritative runtime boundary policy (applies to ALL public accessors):
                  may freely read or discard the returned value; it
                  shares no mutable state with the runtime.
                  Applies to: get_runtime_config, get_runtime_secrets,
-                 get_runtime_connections_snapshot.
+                 get_runtime_connections_snapshot,
+                 get_session_registry_snapshot.
 
   SNAPSHOT:      Frozen dataclass with deep-copied Pydantic models and
                  containers.  No shallow alias survives the boundary.
@@ -23,15 +24,31 @@ Authoritative runtime boundary policy (applies to ALL public accessors):
                  is_upstream_server_initialized.
 
   WRITE:         Locked mutators (set_*, add_*, remove_*, clear_*,
-                 increment_*) that acquire ``_runtime_lock`` for the
-                 full mutation.
+                 increment_*, capture_*, release_*) that acquire
+                 ``_runtime_lock`` for the full mutation.
+
+Session registry authority:
+  The session registry (connection_id -> UpstreamSession mapping) is
+  owned by GatewayRuntime under ``_runtime.session_registry``.  All
+  session capture/release/lookup operations are locked accessors in
+  this module.  upstream.py provides MCP-handler-level convenience
+  wrappers that delegate here.
+
+Reaper and converge-event authority:
+  The ConnectionReaper instance and asyncio.Event for downstream
+  convergence are owned by GatewayRuntime under ``_runtime.reaper``
+  and ``_runtime.converge_event``.  Their lifecycle (start/stop/set)
+  is managed through locked accessors in this module.
 """
+
+# @invar:allow file_size: Single authority for all runtime/session state — session registry, reaper, and converge event were consolidated here from upstream.py and gateway.py to eliminate split runtime-truth ownership. Splitting would re-introduce the dual-ownership problem this consolidation resolves.
 
 from __future__ import annotations
 
+import asyncio
 import threading
 from dataclasses import dataclass, field
-from typing import Callable, Literal, TypeVar
+from typing import Any, Callable, Literal, Protocol, TypeVar, runtime_checkable
 
 from mcp.server.fastmcp import FastMCP
 from starlette.applications import Starlette
@@ -40,6 +57,19 @@ from tela.core.models import ConnectionContext, TelaConfig
 from tela.shell.result import Result
 
 _T = TypeVar("_T")
+
+
+# --- Session Capture Protocol (authority: gateway_runtime.py) ---
+
+
+@runtime_checkable
+class UpstreamSession(Protocol):
+    """Upstream MCP session that can receive tool-list-changed notifications."""
+
+    async def send_tool_list_changed(self) -> None:
+        """Send ``notifications/tools/list_changed`` to the upstream client."""
+        ...
+
 
 RuntimeTruthPlane = Literal[
     "discovery",
@@ -117,7 +147,13 @@ RUNTIME_TRUTH_BEHAVIORAL_NOTES: tuple[str, ...] = (
 
 @dataclass
 class GatewayRuntime:
-    """Mutable gateway runtime state."""
+    """Mutable gateway runtime state.
+
+    Single authority for all runtime/session truth.  Session registry,
+    reaper instance, and converge event are co-located with config,
+    connections, and server references so that ``_runtime_lock`` covers
+    all mutable state transitions atomically.
+    """
 
     config: TelaConfig | None = None
     startup_config: object | None = None
@@ -128,6 +164,12 @@ class GatewayRuntime:
     upstream_server: FastMCP | None = None
     expected_bearer_token: str | None = None
     secrets: list[str] = field(default_factory=list)
+    # Session registry: connection_id -> UpstreamSession
+    session_registry: dict[str, UpstreamSession] = field(default_factory=dict)
+    # Connection reaper instance (lifecycle managed via locked accessors)
+    reaper: Any = None  # ConnectionReaper | None (lazy to avoid import cycle)
+    # asyncio.Event signalling downstream convergence is complete
+    converge_event: asyncio.Event | None = None
 
 
 _runtime = GatewayRuntime()
@@ -572,3 +614,228 @@ def get_expected_bearer_token() -> Result[str | None, str]:
     """
     with _runtime_lock:
         return Result(value=_runtime.expected_bearer_token)
+
+
+# --- Session Registry Accessors (authority: gateway_runtime.py) ---
+
+
+def capture_session(connection_id: str, session: UpstreamSession) -> Result[None, str]:
+    """Register an upstream MCP session for a connection.
+
+    First-binding semantics: re-capturing the *same* session is idempotent.
+    A *different* session on an already-bound connection_id returns error.
+    Thread-safe: acquires ``_runtime_lock``.
+
+    Examples:
+        >>> from tela.shell.gateway_runtime import capture_session, release_session
+        >>> class S:
+        ...     async def send_tool_list_changed(self) -> None: ...
+        >>> r = capture_session("conn_abc", S())
+        >>> r.is_ok
+        True
+        >>> _ = release_session("conn_abc")
+
+    Args:
+        connection_id: The connection identifier from ``ConnectionContext``.
+        session: The upstream MCP session implementing ``UpstreamSession``.
+
+    Returns:
+        Result[None, str] on success, error if empty or already bound.
+    """
+    if not connection_id:
+        return Result(error="SESSION_CAPTURE_FAILED: connection_id must not be empty")
+    with _runtime_lock:
+        existing = _runtime.session_registry.get(connection_id)
+        if existing is not None:
+            if existing is session:
+                return Result(value=None)  # idempotent re-capture
+            return Result(
+                error=f"SESSION_ALREADY_BOUND: connection '{connection_id}' already has a session"
+            )
+        _runtime.session_registry[connection_id] = session
+    return Result(value=None)
+
+
+def release_session(connection_id: str) -> Result[None, str]:
+    """Remove a captured session for a disconnected connection.
+
+    Idempotent: silently succeeds if not in registry.
+    Thread-safe: acquires ``_runtime_lock``.
+
+    Examples:
+        >>> from tela.shell.gateway_runtime import release_session
+        >>> r = release_session("nonexistent")
+        >>> r.is_ok
+        True
+
+    Args:
+        connection_id: The connection identifier to release.
+
+    Returns:
+        Result[None, str] always succeeds.
+    """
+    with _runtime_lock:
+        _runtime.session_registry.pop(connection_id, None)
+    return Result(value=None)
+
+
+def get_captured_session(connection_id: str) -> Result[UpstreamSession, str]:
+    """Look up a captured session by connection ID.
+
+    Returns the session if found, or an error string if no session
+    is registered for the given connection.
+
+    Thread-safe: acquires ``_runtime_lock``.
+
+    Examples:
+        >>> from tela.shell.gateway_runtime import get_captured_session
+        >>> r = get_captured_session("nonexistent")
+        >>> r.is_err
+        True
+        >>> "not found" in r.error
+        True
+
+    Args:
+        connection_id: The connection identifier to look up.
+
+    Returns:
+        Result[UpstreamSession, str] with the session or error.
+    """
+    with _runtime_lock:
+        session = _runtime.session_registry.get(connection_id)
+    if session is None:
+        return Result(
+            error=f"SESSION_NOT_FOUND: session for '{connection_id}' not found"
+        )
+    return Result(value=session)
+
+
+def get_connection_id_for_session(session: UpstreamSession) -> Result[str, str]:
+    """Reverse-lookup: find the connection_id bound to a session.
+
+    Thread-safe: acquires ``_runtime_lock``.
+
+    Examples:
+        >>> from tela.shell.gateway_runtime import (
+        ...     capture_session, get_connection_id_for_session, release_session,
+        ... )
+        >>> class S:
+        ...     async def send_tool_list_changed(self) -> None: ...
+        >>> s = S()
+        >>> _ = capture_session("c", s)
+        >>> r = get_connection_id_for_session(s)
+        >>> r.is_ok and r.value == "c"
+        True
+        >>> _ = release_session("c")
+
+    Args:
+        session: The upstream session object to look up.
+
+    Returns:
+        Result[str, str] with connection_id, or error if not registered.
+    """
+    with _runtime_lock:
+        for conn_id, registered in _runtime.session_registry.items():
+            if registered is session:
+                return Result(value=conn_id)
+    return Result(error="SESSION_NOT_REGISTERED: session has no binding")
+
+
+def get_session_registry_snapshot() -> Result[dict[str, UpstreamSession], str]:
+    """Return a shallow copy of the session registry under lock.
+
+    The returned dict is a snapshot; mutations to it do not affect runtime.
+    Session objects themselves are not copied (they are live references).
+
+    Examples:
+        >>> r = get_session_registry_snapshot()
+        >>> r.is_ok
+        True
+        >>> isinstance(r.value, dict)
+        True
+
+    Returns:
+        Result with a copy of the session registry dict.
+    """
+    with _runtime_lock:
+        return Result(value=dict(_runtime.session_registry))
+
+
+def clear_session_registry() -> None:
+    """Remove all captured sessions from the registry under lock.
+
+    Examples:
+        >>> clear_session_registry()
+        >>> get_session_registry_snapshot().value
+        {}
+    """
+    with _runtime_lock:
+        _runtime.session_registry.clear()
+
+
+# --- Reaper Accessors (authority: gateway_runtime.py) ---
+
+
+def get_runtime_reaper() -> Result[Any, str]:
+    """Return the ConnectionReaper instance under lock, or None.
+
+    Operation accessor: the reaper reference does not escape as a
+    mutable alias.  Returns the reaper for lifecycle calls (start/stop)
+    under the caller's control.
+
+    Examples:
+        >>> r = get_runtime_reaper()
+        >>> r.is_ok
+        True
+
+    Returns:
+        Result with the reaper instance or None.
+    """
+    with _runtime_lock:
+        return Result(value=_runtime.reaper)
+
+
+def set_runtime_reaper(reaper: Any) -> None:
+    """Replace the runtime reaper instance under lock.
+
+    Used during gateway startup (create) and shutdown (set None).
+
+    Examples:
+        >>> set_runtime_reaper(None)
+        >>> get_runtime_reaper().value is None
+        True
+    """
+    with _runtime_lock:
+        _runtime.reaper = reaper
+
+
+# --- Converge Event Accessors (authority: gateway_runtime.py) ---
+
+
+def get_runtime_converge_event() -> Result[asyncio.Event | None, str]:
+    """Return the converge event under lock, or None.
+
+    Examples:
+        >>> r = get_runtime_converge_event()
+        >>> r.is_ok
+        True
+
+    Returns:
+        Result with the asyncio.Event or None.
+    """
+    with _runtime_lock:
+        return Result(value=_runtime.converge_event)
+
+
+def set_runtime_converge_event(event: asyncio.Event | None) -> None:
+    """Replace the runtime converge event under lock.
+
+    Used during gateway startup (create) and shutdown (set None).
+
+    Examples:
+        >>> set_runtime_converge_event(None)
+        >>> get_runtime_converge_event().value is None
+        True
+    """
+    with _runtime_lock:
+        _runtime.converge_event = event

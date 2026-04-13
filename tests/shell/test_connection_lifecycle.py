@@ -6,11 +6,12 @@ from tela.core.models import ConnectionContext, TelaConfig
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
+    capture_session,
     clear_runtime_connections,
+    get_captured_session,
     set_runtime_config,
     set_runtime_running,
 )
-from tela.shell.upstream import capture_session, get_captured_session
 
 
 class _StubSession:

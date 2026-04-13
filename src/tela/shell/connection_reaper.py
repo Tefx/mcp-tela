@@ -16,11 +16,11 @@ from tela.core.models import TelaConfig
 from tela.shell.config_loader import Result
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.gateway_runtime import (
+    get_captured_session,
     get_runtime_config,
     get_runtime_connections_snapshot,
 )
 from tela.shell.idle_shutdown import get_idle_manager
-from tela.shell.upstream import get_captured_session
 
 logger = logging.getLogger(__name__)
 

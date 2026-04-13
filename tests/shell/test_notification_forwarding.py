@@ -30,15 +30,15 @@ from tela.shell.gateway import (
     get_runtime_connections_snapshot,
     set_runtime_config,
 )
-from tela.shell.reload import on_tools_changed, set_notify_callback
-from tela.shell.upstream import (
-    _session_registry,
-    _session_registry_lock,
+from tela.shell.gateway_runtime import (
     capture_session,
+    clear_session_registry,
     get_captured_session,
-    notify_tools_changed,
+    get_session_registry_snapshot,
     release_session,
 )
+from tela.shell.reload import on_tools_changed, set_notify_callback
+from tela.shell.upstream import notify_tools_changed
 
 
 # --- Test fixtures ---
@@ -68,17 +68,18 @@ class FailingSession:
 
 def _clear_all_sessions() -> None:
     """Clear all captured sessions from registry."""
-    with _session_registry_lock:
-        _session_registry.clear()
+    clear_session_registry()
 
 
 def _setup_runtime_for_notifications() -> None:
     """Setup runtime config for notification tests."""
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.OPEN),
-        resolved_default_profile="dev",
-        profiles={"dev": ProfileConfig(name="dev", default=True)},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+        )
+    )
 
 
 def _teardown_runtime() -> None:
@@ -616,10 +617,7 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
         # Simulate _notify_all_connections behavior
         async def _notify_all_connections(tools_digest: str) -> None:
             """Simulated gateway notification iteration."""
-            import threading
-
-            with threading.RLock():
-                conns = get_runtime_connections_snapshot().value
+            conns = get_runtime_connections_snapshot().value or []
             for conn in conns:
                 await notify_tools_changed(conn, tools_digest)
 
@@ -762,16 +760,12 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
         assert "SESSION_ALREADY_BOUND" in (cross_bind.error or "")
 
         # Notifications reach the correct session
-        result_notify_a = asyncio.run(
-            notify_tools_changed(conn_a, "sha256:aaa")
-        )
+        result_notify_a = asyncio.run(notify_tools_changed(conn_a, "sha256:aaa"))
         assert result_notify_a.is_ok
         assert len(session_a.calls) == 1
         assert len(session_b.calls) == 0  # session_b not notified
 
-        result_notify_b = asyncio.run(
-            notify_tools_changed(conn_b, "sha256:bbb")
-        )
+        result_notify_b = asyncio.run(notify_tools_changed(conn_b, "sha256:bbb"))
         assert result_notify_b.is_ok
         assert len(session_b.calls) == 1  # now notified
 

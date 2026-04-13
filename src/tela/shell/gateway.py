@@ -66,24 +66,35 @@ from tela.shell.surface_instructions import (
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
 from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
+    UpstreamSession,
     _runtime,
     _runtime_lock,
     RuntimeStatusSnapshot,
     add_runtime_connection,
+    capture_session,
     clear_runtime_connections,
+    clear_session_registry,
+    get_captured_session,
+    get_connection_id_for_session,
     get_expected_bearer_token,
     get_runtime_config,
     get_runtime_connections_snapshot,
+    get_runtime_converge_event,
+    get_runtime_reaper,
     get_runtime_secrets,
     get_runtime_status_snapshot,
+    get_session_registry_snapshot,
     get_upstream_http_app,
     get_upstream_log_level,
     get_upstream_server,
     increment_tool_calls,
     is_runtime_running,
     is_upstream_server_initialized,
+    release_session,
     remove_runtime_connection,
     set_runtime_config,
+    set_runtime_converge_event,
+    set_runtime_reaper,
     set_runtime_running,
     set_runtime_secrets,
     set_runtime_total_tool_calls,
@@ -96,8 +107,6 @@ logger = logging.getLogger(__name__)
 
 # Module-level manifest snapshot built at prepare_startup time.
 _startup_manifest: str | None = None
-_reaper: ConnectionReaper | None = None
-_converge_event: asyncio.Event | None = None
 
 
 @dataclass(frozen=True)
@@ -409,9 +418,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     from mcp.server.lowlevel.server import request_ctx
 
     from tela.shell.upstream import (
-        capture_session,
         find_connection_for_session,
-        get_captured_session,
         handle_initialize,
         handle_tools_call,
         handle_tools_list,
@@ -490,8 +497,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         # Wait for downstream convergence before listing tools.
         # Without this, bridges connecting during warming get an empty tool list
         # and the bridge transport cannot receive tools/list_changed push.
-        if _converge_event is not None:
-            await _converge_event.wait()
+        converge = get_runtime_converge_event().value
+        if converge is not None:
+            await converge.wait()
 
         # Capture upstream MCP session for notification delivery.
         try:
@@ -537,8 +545,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
         connection = await _ensure_connection()
         # Wait for convergence before calling downstream tools.
-        if _converge_event is not None:
-            await _converge_event.wait()
+        converge = get_runtime_converge_event().value
+        if converge is not None:
+            await converge.wait()
         result = await handle_tools_call(connection, tool_name, dict(arguments))
         if result.is_err:
             assert result.error is not None
@@ -813,8 +822,8 @@ async def gateway_prepare_startup(
 ) -> Result[None, str]:
     """Prepare runtime state and upstream server before downstream convergence."""
 
-    global _startup_manifest, _converge_event
-    _converge_event = asyncio.Event()
+    global _startup_manifest
+    set_runtime_converge_event(asyncio.Event())
 
     effective_config = tela_config or TelaConfig()
 
@@ -871,11 +880,11 @@ async def gateway_converge_startup(
     if audit_result.is_err:
         return Result(error=audit_result.error)
 
-    global _reaper
-    _reaper = ConnectionReaper(
+    reaper = ConnectionReaper(
         ReaperConfig.from_tela_config(runtime_config), use_runtime_config=True
     )
-    await _reaper.start()
+    set_runtime_reaper(reaper)
+    await reaper.start()
 
     # Notify bridges that connected during warming — tools are now available.
     from tela.shell.upstream import notify_tools_changed
@@ -892,8 +901,9 @@ async def gateway_converge_startup(
             await notify_tools_changed(conn, digest)
 
     # Signal that downstream convergence is complete — tools are available.
-    if _converge_event is not None:
-        _converge_event.set()
+    converge = get_runtime_converge_event().value
+    if converge is not None:
+        converge.set()
     return Result(value=None)
 
 
@@ -910,12 +920,12 @@ async def gateway_shutdown() -> Result[None, str]:
         Result[None, str] always succeeds.
     """
 
-    global _reaper, _converge_event
-    if _reaper is not None:
-        await _reaper.stop()
-        _reaper = None
+    reaper = get_runtime_reaper().value
+    if reaper is not None:
+        await reaper.stop()
+    set_runtime_reaper(None)
 
-    _converge_event = None
+    set_runtime_converge_event(None)
     disconnect_result = await disconnect_all()
     audit_close_result = await audit_close()
     if audit_close_result.is_err:

@@ -28,13 +28,14 @@ from tela.shell.connection_reaper import (
 )
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
+    capture_session,
     clear_runtime_connections,
     get_runtime_connections_snapshot,
+    release_session,
     set_runtime_config,
     set_runtime_running,
     touch_connection_activity,
 )
-from tela.shell.upstream import capture_session, release_session
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,11 @@ Implements initialize, tools/list, and tools/call with enforcement, and tracks
 captured sessions for tools/list_changed notifications. Tool-prefix contract:
 upstream uses exposed names from the resolved registry; downstream routing stays
 bound to ``ResolvedTool.raw_name`` rather than prefix-stripping at call time.
+
+Session registry authority: all session capture/release/lookup state is owned
+by ``gateway_runtime.py`` (``_runtime.session_registry``).  The convenience
+wrappers here delegate to locked accessors there.  Direct access to the
+registry dict or its lock is no longer available from this module.
 """
 
 # @invar:allow file_size: touch_connection_activity wiring adds fire-and-forget calls to handle_tools_list and handle_tools_call; splitting these handlers into separate modules would break cohesion of the upstream MCP handler group.
@@ -11,11 +16,10 @@ bound to ``ResolvedTool.raw_name`` rather than prefix-stripping at call time.
 from __future__ import annotations
 
 import logging
-import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Mapping, Protocol, runtime_checkable
+from typing import Mapping
 
 from tela.core.errors import (
     CONNECTION_NOT_FOUND,
@@ -39,11 +43,18 @@ from tela.shell.downstream import (
     get_registry,
 )
 from tela.shell.gateway_runtime import (
+    UpstreamSession,
     add_runtime_connection,
+    capture_session,
+    clear_session_registry,
+    get_captured_session,
+    get_connection_id_for_session,
     get_runtime_config,
     get_runtime_connections_snapshot,
     get_runtime_secrets,
+    get_session_registry_snapshot,
     increment_tool_calls,
+    release_session,
     set_runtime_config,  # noqa: F401 — used in doctests
     touch_connection_activity,
 )
@@ -59,145 +70,11 @@ logger = logging.getLogger(__name__)
 _BRIDGE_CONNECTION_ID_KEY = "tela_bridge_connection_id"
 
 
-# --- Session Capture Protocol ---
-@runtime_checkable
-class UpstreamSession(Protocol):
-    """Upstream MCP session that can receive tool-list-changed notifications."""
-
-    async def send_tool_list_changed(self) -> None:
-        """Send ``notifications/tools/list_changed`` to the upstream client."""
-        ...
-
-
-# Module-level session registry: connection_id -> UpstreamSession
-_session_registry: dict[str, UpstreamSession] = {}
-_session_registry_lock = threading.Lock()
-
-
-def capture_session(connection_id: str, session: UpstreamSession) -> Result[None, str]:
-    """Register an upstream MCP session for a connection.
-
-    First-binding semantics: re-capturing the *same* session is idempotent.
-    A *different* session on an already-bound connection_id returns error.
-    Thread-safe: acquires ``_session_registry_lock``.
-
-    Examples:
-        >>> from tela.shell.upstream import capture_session, release_session
-        >>> class S:
-        ...     async def send_tool_list_changed(self) -> None: ...
-        >>> r = capture_session("conn_abc", S())
-        >>> r.is_ok
-        True
-        >>> _ = release_session("conn_abc")
-
-    Args:
-        connection_id: The connection identifier from ``ConnectionContext``.
-        session: The upstream MCP session implementing ``UpstreamSession``.
-
-    Returns:
-        Result[None, str] on success, error if empty or already bound.
-    """
-    if not connection_id:
-        return Result(error="SESSION_CAPTURE_FAILED: connection_id must not be empty")
-    with _session_registry_lock:
-        existing = _session_registry.get(connection_id)
-        if existing is not None:
-            if existing is session:
-                return Result(value=None)  # idempotent re-capture
-            logger.warning(
-                "Session already captured for %s, preserving first binding",
-                connection_id,
-            )
-            return Result(
-                error=f"SESSION_ALREADY_BOUND: connection '{connection_id}' already has a session"
-            )
-        _session_registry[connection_id] = session
-    return Result(value=None)
-
-
-def release_session(connection_id: str) -> Result[None, str]:
-    """Remove a captured session for a disconnected connection.
-
-    Idempotent: silently succeeds if not in registry.
-    Thread-safe: acquires ``_session_registry_lock``.
-
-    Examples:
-        >>> from tela.shell.upstream import release_session
-        >>> r = release_session("nonexistent")
-        >>> r.is_ok
-        True
-
-    Args:
-        connection_id: The connection identifier to release.
-
-    Returns:
-        Result[None, str] always succeeds.
-    """
-    with _session_registry_lock:
-        _session_registry.pop(connection_id, None)
-    return Result(value=None)
-
-
-def get_captured_session(connection_id: str) -> Result[UpstreamSession, str]:
-    """Look up a captured session by connection ID.
-
-    Returns the session if found, or an error string if no session
-    is registered for the given connection.
-
-    Thread-safe: acquires ``_session_registry_lock``.
-
-    Examples:
-        >>> from tela.shell.upstream import get_captured_session
-        >>> r = get_captured_session("nonexistent")
-        >>> r.is_err
-        True
-        >>> "not found" in r.error
-        True
-
-    Args:
-        connection_id: The connection identifier to look up.
-
-    Returns:
-        Result[UpstreamSession, str] with the session or error.
-    """
-    with _session_registry_lock:
-        session = _session_registry.get(connection_id)
-    if session is None:
-        return Result(
-            error=f"SESSION_NOT_FOUND: session for '{connection_id}' not found"
-        )
-    return Result(value=session)
-
-
-def get_connection_id_for_session(session: UpstreamSession) -> Result[str, str]:
-    """Reverse-lookup: find the connection_id bound to a session.
-
-    Thread-safe: acquires ``_session_registry_lock``.
-
-    Examples:
-        >>> from tela.shell.upstream import (
-        ...     capture_session, get_connection_id_for_session, release_session,
-        ... )
-        >>> class S:
-        ...     async def send_tool_list_changed(self) -> None: ...
-        >>> s = S()
-        >>> _ = capture_session("c", s)
-        >>> r = get_connection_id_for_session(s)
-        >>> r.is_ok and r.value == "c"
-        True
-        >>> _ = release_session("c")
-
-    Args:
-        session: The upstream session object to look up.
-
-    Returns:
-        Result[str, str] with connection_id, or error if not registered.
-    """
-    with _session_registry_lock:
-        for conn_id, registered in _session_registry.items():
-            if registered is session:
-                return Result(value=conn_id)
-    return Result(error="SESSION_NOT_REGISTERED: session has no binding")
+# --- Session Capture Protocol (re-exported from gateway_runtime) ---
+# UpstreamSession is now defined in gateway_runtime.py as the single authority.
+# Re-export for backward compatibility so that existing callers importing
+# from tela.shell.upstream still resolve the protocol.
+# (Already imported above from gateway_runtime)
 
 
 def find_connection_for_session(

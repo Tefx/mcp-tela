@@ -25,15 +25,15 @@ from tela.shell.gateway import (
     set_runtime_config,
     set_runtime_running,
 )
-from tela.shell.http_routes import handle_disconnect
-from tela.shell.upstream import (
-    _session_registry,
-    _session_registry_lock,
+from tela.shell.gateway_runtime import (
     capture_session,
+    clear_session_registry,
     get_captured_session,
-    notify_tools_changed,
+    get_session_registry_snapshot,
     release_session,
 )
+from tela.shell.http_routes import handle_disconnect
+from tela.shell.upstream import notify_tools_changed
 
 
 # --- Test fixtures ---
@@ -50,13 +50,11 @@ class StubSession:
 
 
 def _clear_sessions() -> None:
-    with _session_registry_lock:
-        _session_registry.clear()
+    clear_session_registry()
 
 
 def _session_registry_size() -> int:
-    with _session_registry_lock:
-        return len(_session_registry)
+    return len(get_session_registry_snapshot().value or {})
 
 
 def _setup_runtime() -> None:
@@ -101,7 +99,9 @@ def test_handle_disconnect_releases_captured_session() -> None:
         assert get_captured_session(conn_id).is_ok
 
         # Disconnect
-        result = handle_disconnect("tok", "tok", DisconnectRequest(connection_id=conn_id))
+        result = handle_disconnect(
+            "tok", "tok", DisconnectRequest(connection_id=conn_id)
+        )
         assert result.is_ok
 
         # Session must be released
@@ -125,7 +125,9 @@ def test_handle_disconnect_without_captured_session_succeeds() -> None:
         add_runtime_connection(ctx)
 
         # No session captured for this connection
-        result = handle_disconnect("tok", "tok", DisconnectRequest(connection_id=conn_id))
+        result = handle_disconnect(
+            "tok", "tok", DisconnectRequest(connection_id=conn_id)
+        )
         assert result.is_ok
     finally:
         _teardown_runtime()
@@ -244,7 +246,10 @@ def test_notification_reaches_live_sessions_after_peer_disconnect() -> None:
         live_session = StubSession()
         dead_session = StubSession()
 
-        for conn_id, session in [("live-conn", live_session), ("dead-conn", dead_session)]:
+        for conn_id, session in [
+            ("live-conn", live_session),
+            ("dead-conn", dead_session),
+        ]:
             ctx = ConnectionContext(
                 connection_id=conn_id,
                 profile_name="dev",
