@@ -67092,7 +67092,7 @@ phases:
   steps:
   - id: arch_refactor.characterization.guard_baseline
     name: Baseline full guard and targeted regression suites
-    status: claimed
+    status: done
     description: 'Verification scope: full-plan-check protecting all downstream demolition
       phases.
 
@@ -67198,6 +67198,125 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-13T17:17:25.364660+00:00'
+    done_at: '2026-04-13T17:31:14.783046+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#verified-findings — READ. Verified
+      findings include oversized shell files, weak abstractions, fragmented runtime
+      state ownership, import residue, and strong test safety net.
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria — READ. Exit
+      criteria include no shell file exceeding guard limit, unused protocols deleted,
+      single-impl indirections collapsed, direct Result imports, reduced backward-compat
+      exports, full guard + adversary tests pass.
+
+      - docs/DESIGN.md#module-boundaries — READ. core is pure logic, shell is I/O/process
+      edge, commands are CLI entrypoints.
+
+      - docs/DESIGN.md#shell-module-responsibilities — READ. Confirmed module contracts
+      for runtime/session/clients/startup ownership surfaces.
+
+
+      ## Baseline Commands
+
+      - `uvx invar-tools guard --all`
+
+      - `.venv/bin/python -m pytest tests/shell/test_gateway.py -v --tb=short`
+
+      - `.venv/bin/python -m pytest tests/shell/test_downstream.py -v --tb=short`
+
+      - `.venv/bin/python -m pytest tests/shell/test_connect_cmd.py -v --tb=short`
+
+      - `.venv/bin/python -m pytest tests/shell/test_reload.py -v --tb=short`
+
+      - `.venv/bin/python -m pytest tests/integration/test_end_to_end.py -v --tb=short`
+
+      - `.venv/bin/python -m pytest tests/repro/test_runtime_boundary_immutability.py
+      -v --tb=short`
+
+      - `.venv/bin/python -m pytest tests/repro/test_startup_coord_liveness.py -v
+      --tb=short`
+
+      - `.venv/bin/python -m pytest tests/repro/test_connect_runtime_liveness.py -v
+      --tb=short`
+
+      - `.venv/bin/python -m pytest tests/shell/ tests/core/ tests/integration/ tests/repro/
+      tests/black_box/ --tb=short -q`
+
+
+      ## Baseline Findings
+
+      - Guard: 9 errors, 37 warnings, 22 infos; budget 57/19 exceeded.
+
+      - Oversized files observed: downstream.py 1228/700, gateway.py 973/700, upstream.py
+      724/700, connect_cmd.py 1108 (escape hatch), serve_cmd.py 658 (warning), gateway_runtime.py
+      574 (warning).
+
+      - Shared-state ownership hotspots: gateway_runtime _runtime; upstream _session_registry;
+      downstream _clients/_registry/_server_instructions/_recovery_locks; gateway
+      _startup_manifest/_reaper/_converge_event.
+
+      - Fake abstraction inventory observed: EventEntryAdapter (unused), ConvergencePolicyConsumer
+      (unused), SingleServerConvergenceKernel (single concrete impl).
+
+
+      ## Protected Suites
+
+      - tests/shell/test_gateway.py — PASS
+
+      - tests/shell/test_downstream.py — PASS
+
+      - tests/shell/test_connect_cmd.py — PASS
+
+      - tests/shell/test_reload.py — PASS
+
+      - tests/integration/test_end_to_end.py — PASS
+
+      - tests/repro/test_runtime_boundary_immutability.py — PASS
+
+      - tests/repro/test_startup_coord_liveness.py — PASS
+
+      - tests/repro/test_connect_runtime_liveness.py — PASS with one intermittent
+      timing-race fail on one run
+
+      - Full suite aggregate: 1015 passed, 7 failed (pre-existing/non-blocking), 1
+      skipped, 9 xfailed, 11 xpassed
+
+
+      ## Downstream Gates Protected
+
+      - arch_refactor.structural_collapse.gate
+
+      - arch_refactor.layer_dissolution.full_plan_check
+
+      - arch_refactor.finalization.gate
+
+
+      step_intent: test_define_baseline
+
+      expected_result: baseline snapshot collected with known red debt and protected
+      green suites
+
+      observed_result: baseline captured and protected suites green
+
+      failure_alignment: pre-existing failures classified non-blocking for this characterization
+      step
+
+      product_implementation_files_modified: none
+
+
+      behavioral_proof_register: Baseline guard + adversary evidence captured and
+      committed in worktree artifact file.
+
+      gate_open_allowed: true
+
+      uncertainty_sources: intermittent connect liveness timing race; orphaned PID
+      test-env isolation in known blackbox tests.
+
+
+      Commit hash(es): 1d5b752'
   - id: arch_refactor.characterization.runtime_snapshot
     name: Capture black-box runtime behavior snapshot
     status: pending
