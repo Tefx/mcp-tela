@@ -9,7 +9,7 @@ import pytest
 from tela.cli import main
 from tela.commands.stop_cmd import stop_command
 from tela.core.models import LockfileData
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 def test_stop_subcommand_exists() -> None:

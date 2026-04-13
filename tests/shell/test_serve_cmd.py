@@ -10,10 +10,10 @@ import pytest
 from tela.cli import main
 from tela.commands import serve_cmd
 from tela.core.models import AuthConfig, AuthMode, TelaConfig
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from starlette.applications import Starlette
 
-from tela.shell.gateway import (
+from tela.shell.gateway_runtime import (
     clear_runtime_connections,
     is_runtime_running,
     set_runtime_running,
@@ -103,7 +103,7 @@ def test_serve_lockfile_written_then_deleted(
     async def _fake_gateway_shutdown() -> Result[None, str]:
         set_upstream_server(None)
         set_runtime_running(False)
-        from tela.shell.gateway import clear_runtime_connections
+        from tela.shell.gateway_runtime import clear_runtime_connections
 
         clear_runtime_connections()
         return Result(value=None)
@@ -230,7 +230,7 @@ def test_serve_port_zero_writes_actual_bound_port_to_lockfile(
     async def _fake_gateway_shutdown() -> Result[None, str]:
         set_upstream_server(None)
         set_runtime_running(False)
-        from tela.shell.gateway import clear_runtime_connections
+        from tela.shell.gateway_runtime import clear_runtime_connections
 
         clear_runtime_connections()
         return Result(value=None)

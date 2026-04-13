@@ -183,7 +183,7 @@ def test_handle_initialize_returns_connection_context() -> None:
     """handle_initialize creates a connection context when gateway is started."""
     import asyncio
     from tela.shell.upstream import handle_initialize
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
 
     # Without gateway started, should return error
     set_runtime_config(None)
@@ -203,8 +203,8 @@ def test_handle_initialize_uses_profile_binding_resolver(
         ProfileConfig,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_initialize
 
     calls: list[InitializeContext] = []
@@ -251,11 +251,11 @@ def test_handle_initialize_reuses_existing_bridge_connection() -> None:
     import asyncio
 
     from tela.core.models import AuthConfig, AuthMode, ConnectionContext, TelaConfig
-    from tela.shell.gateway import (
-        add_runtime_connection,
-        clear_runtime_connections,
-        set_runtime_config,
-    )
+    from tela.shell.gateway_runtime import (
+    add_runtime_connection,
+    clear_runtime_connections,
+    set_runtime_config,
+)
     from tela.shell.idle_shutdown import (
         _reset_idle_manager,
         get_idle_manager,
@@ -307,7 +307,7 @@ def test_handle_initialize_rejects_open_mode_without_resolved_profile() -> None:
     import asyncio
 
     from tela.core.models import AuthConfig, AuthMode, TelaConfig
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_initialize
 
     set_runtime_config(
@@ -328,7 +328,7 @@ def test_handle_tools_list_returns_empty_when_no_gateway() -> None:
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import handle_tools_list
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
 
     set_runtime_config(None)
     conn = ConnectionContext(
@@ -345,7 +345,7 @@ def test_handle_tools_call_returns_error_when_no_gateway() -> None:
     import asyncio
     from tela.core.models import ConnectionContext
     from tela.shell.upstream import handle_tools_call
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
 
     set_runtime_config(None)
     conn = ConnectionContext(
@@ -358,7 +358,7 @@ def test_handle_tools_call_returns_error_when_no_gateway() -> None:
 def test_handle_profiles_list_returns_empty_when_no_gateway() -> None:
     """handle_profiles_list returns empty list when gateway not started."""
     from tela.shell.upstream import handle_profiles_list
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
 
     set_runtime_config(None)
     result = handle_profiles_list()
@@ -376,7 +376,7 @@ def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
         ProfileConfig,
         TelaConfig,
     )
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
     from tela.shell.upstream import handle_profiles_list
 
     set_runtime_config(
@@ -894,8 +894,8 @@ def test_handle_tools_list_includes_title_in_output_dict() -> None:
         ResolvedTool,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -961,8 +961,8 @@ def test_handle_tools_list_includes_output_schema_in_output_dict() -> None:
         ResolvedTool,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -1026,8 +1026,8 @@ def test_handle_tools_list_includes_annotations_in_output_dict() -> None:
         ResolvedTool,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -1091,8 +1091,8 @@ def test_handle_tools_list_metadata_absent_fields_not_included() -> None:
         ResolvedTool,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_tools_list, handle_initialize
 
     registry = DownstreamRegistry()
@@ -1161,8 +1161,8 @@ def test_handle_tools_list_exposes_distinct_prefixed_names() -> None:
         ServerConfig,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config, clear_runtime_connections
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config, clear_runtime_connections
     from tela.shell.upstream import handle_initialize, handle_tools_list
 
     registry = DownstreamRegistry()
@@ -1251,8 +1251,8 @@ def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
         ServerConfig,
         TelaConfig,
     )
-    from tela.shell.config_loader import Result
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.result import Result
+    from tela.shell.gateway_runtime import set_runtime_config
     from tela.shell.upstream import handle_tools_call
 
     registry = DownstreamRegistry()

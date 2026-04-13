@@ -22,8 +22,8 @@ import pytest
 import tela.commands.connect_cmd as connect_cmd
 import tela.commands.connect_bridge as connect_bridge
 import tela.commands.http_client as http_client
-from tela.core.models import LockfileData, StatusResponse
-from tela.shell.config_loader import Result
+from tela.core.models import LockfileData
+from tela.shell.result import Result
 
 
 # Mapping: connect_cmd alias -> connect_bridge public name for dual monkeypatching.
@@ -389,7 +389,7 @@ def test_forward_stdio_http_passes_max_recovery_attempts_to_post_mcp(
         connect_cmd, "_write_framed_message", _fake_write_framed_message
     )
 
-    result = connect_cmd._forward_stdio_http(
+    connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
         bearer_token="token",
         bridge_connection_id="bridge_test",

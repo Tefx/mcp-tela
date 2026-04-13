@@ -34,7 +34,7 @@ from tela.commands.connect_transport import (
     inject_bridge_connection_id,
 )
 from tela.commands.http_client import retry_http_request
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # ---------------------------------------------------------------------------

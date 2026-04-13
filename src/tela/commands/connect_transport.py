@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # @invar:allow shell_result: pure payload rewrite helper used inside bridge forwarding.

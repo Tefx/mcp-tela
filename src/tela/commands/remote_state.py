@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Literal
 from tela.commands.http_client import retry_http_request
 from tela.core.models import AuditEntry, ConnectionContext, LockfileData, StatusResponse
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.lockfile import read_lockfile
 
 

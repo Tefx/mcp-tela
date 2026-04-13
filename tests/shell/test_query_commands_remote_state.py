@@ -15,7 +15,7 @@ from tela.commands.audit_cmd import audit_command
 from tela.commands.connections_cmd import connections_command
 from tela.commands import remote_state
 from tela.commands.status_cmd import status_command
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 @contextmanager

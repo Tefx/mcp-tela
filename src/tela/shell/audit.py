@@ -21,7 +21,7 @@ from tela.core.models import (
     EnforcementResult,
     MetaField,
 )
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 def _compute_param_hash(arguments: dict) -> Result[str, str]:

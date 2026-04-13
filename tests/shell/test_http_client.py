@@ -11,12 +11,14 @@ from email.message import Message
 import http.client
 import io
 import json
+from typing import Callable
 from urllib import error as urllib_error
 
 import pytest
 
 from tela.commands import http_client as http_client_mod
 from tela.commands.http_client import retry_http_request, _is_transient_url_error
+from tela.shell.result import Result
 
 
 # =============================================================================
@@ -528,7 +530,7 @@ def test_post_json_once_delegates_to_retry_http_request_success(
         retry_on_503: bool = True,
         retry_on_transient: bool = True,
     ) -> "Result[http.client.HTTPResponse, str]":
-        from tela.shell.config_loader import Result
+        from tela.shell.result import Result
 
         calls.append(
             {
@@ -571,7 +573,7 @@ def test_post_json_once_delegates_error_from_retry_http_request(
 
     from tela.commands import connect_bridge
 
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     def _fake_retry_http_request(  # type: ignore[no-untyped-def]
         *,
@@ -862,7 +864,7 @@ def test_post_json_delegates_to_retry_http_request_success(
         retry_on_transient: bool = True,
         is_503_retryable: Callable | None = None,
     ) -> "Result[http.client.HTTPResponse, str]":
-        from tela.shell.config_loader import Result
+        from tela.shell.result import Result
 
         calls.append(
             {
@@ -904,7 +906,7 @@ def test_post_json_delegates_error_from_retry_http_request(
 
     from tela.commands import connect_bridge
 
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     def _fake_retry_http_request(  # type: ignore[no-untyped-def]
         *,
@@ -941,7 +943,7 @@ def test_get_gateway_status_delegates_to_retry_http_request(
     from tela.commands import connect_bridge
     from tela.core.models import StatusResponse
 
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     calls: list[dict[str, object]] = []
 
@@ -1020,7 +1022,7 @@ def test_post_mcp_message_error_format_preserved(
 
     from tela.commands import connect_bridge
 
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     def _fake_retry_http_request(  # type: ignore[no-untyped-def]
         *,
@@ -1086,7 +1088,7 @@ def test_fetch_status_payload_delegates_to_retry_http_request_success(
     from tela.commands import remote_state
     from tela.core.models import LockfileData
 
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     calls: list[dict[str, object]] = []
 
@@ -1174,7 +1176,7 @@ def test_fetch_status_payload_preserves_error_format(
     from tela.commands import remote_state
     from tela.core.models import LockfileData
 
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     def _fake_retry_http_request_http_error(  # type: ignore[no-untyped-def]
         *,

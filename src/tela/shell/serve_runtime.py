@@ -11,7 +11,6 @@ All public functions return ``Result[T, E]`` per Shell convention.
 from __future__ import annotations
 
 import asyncio
-import os
 import signal
 import sys
 import time
@@ -23,17 +22,13 @@ from pathlib import Path
 
 from starlette.applications import Starlette
 
-from tela.core.models import LockfileData
-from tela.shell.config_loader import Result
-from tela.shell.gateway import gateway_converge_startup, gateway_shutdown
+from tela.shell.result import Result
+from tela.shell.gateway import gateway_shutdown
 from tela.shell.gateway_runtime import (
     get_expected_bearer_token,
-    get_upstream_http_app,
-    get_upstream_log_level,
-    is_upstream_server_initialized,
 )
 from tela.shell.idle_shutdown import init_idle_manager, shutdown_idle_manager
-from tela.shell.lockfile import delete_lockfile, write_lockfile
+from tela.shell.lockfile import delete_lockfile
 
 
 HTTP_SERVER_BIND_TIMEOUT_SECONDS = 5.0

@@ -20,9 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 # Public API surface imports ONLY
-from tela.core.models import TelaError
 from tela.shell import downstream
-from tela.shell.config_loader import Result
 
 
 @pytest.fixture(autouse=True)

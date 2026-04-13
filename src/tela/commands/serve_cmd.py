@@ -17,7 +17,8 @@ import sys
 from pathlib import Path
 
 from tela.core.models import AuthMode, GatewayTransport, LockfileData, TelaConfig
-from tela.shell.config_loader import Result, load_config
+from tela.shell.config_loader import load_config
+from tela.shell.result import Result
 from tela.shell.gateway import (
     GatewayStartupConfig,
     apply_reaper_overrides,
@@ -32,7 +33,6 @@ from tela.shell.gateway_runtime import (
 )
 from tela.shell.lockfile import delete_lockfile, generate_bearer_token, write_lockfile
 from tela.shell.serve_runtime import (
-    HttpServerHandle,
     await_task,
     idle_shutdown_watch,
     install_signal_handlers,

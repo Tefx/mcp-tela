@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from tela.shell.serve_runtime import watch_config_changes
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 def test_watch_config_changes_routes_reload_to_gateway_callback(

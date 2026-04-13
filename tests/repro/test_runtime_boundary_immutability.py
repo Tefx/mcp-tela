@@ -12,7 +12,7 @@ rather than merely wrapped.
 from __future__ import annotations
 
 from tela.core.models import ConnectionContext, TelaConfig
-from tela.shell.gateway import (
+from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,
     get_runtime_config,
@@ -45,7 +45,7 @@ class TestB1LockSafeWriteHelpers:
     def test_set_runtime_running_flag(self) -> None:
         """set_runtime_running must atomically set running flag."""
         set_runtime_running(True)
-        from tela.shell.gateway import is_runtime_running
+        from tela.shell.gateway_runtime import is_runtime_running
 
         assert is_runtime_running().value is True
         set_runtime_running(False)

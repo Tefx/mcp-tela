@@ -9,7 +9,7 @@ from datetime import datetime
 
 from tela.core.models import AuditEntry
 from tela.commands.remote_state import query_remote_state
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 def audit_command(

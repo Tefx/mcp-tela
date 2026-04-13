@@ -36,7 +36,7 @@ from tela.core.models import (
     TelaError,
 )
 from tela.core.token import resolve_token_init_binding
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.downstream import (
     call_tool,
     get_all_tools,
@@ -45,14 +45,11 @@ from tela.shell.downstream import (
 from tela.shell.gateway_runtime import (
     UpstreamSession,
     add_runtime_connection,
-    capture_session,
-    clear_session_registry,
     get_captured_session,
     get_connection_id_for_session,
     get_runtime_config,
     get_runtime_connections_snapshot,
     get_runtime_secrets,
-    get_session_registry_snapshot,
     increment_tool_calls,
     release_session,
     set_runtime_config,  # noqa: F401 — used in doctests

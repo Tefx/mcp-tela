@@ -25,7 +25,7 @@ from tela.core.models import (
     StatusResponse,
 )
 from tela.core.contracts import post, pre
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.audit import audit_query, get_audit_entries  # noqa: F401 — audit_query wired for dead_export
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts

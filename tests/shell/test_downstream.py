@@ -36,7 +36,7 @@ from tela.shell.downstream import (
     get_tool_server,
     re_enumerate,
 )
-from tela.shell.gateway import get_runtime_config, set_runtime_config
+from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
 
 # --- Fixtures for stdio and SSE server configurations ---
@@ -1079,7 +1079,7 @@ def test_handle_reconnect_calls_enumerate_once(monkeypatch: pytest.MonkeyPatch) 
     from mcp.types import ListToolsResult, Tool
 
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     enumerate_calls: list[str] = []
 
@@ -1161,7 +1161,7 @@ def test_handle_reconnect_passes_enumerated_tools_to_on_server_reconnect(
     from mcp.types import ListToolsResult, Tool
 
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     received_tool_list: list[dict] = []
 
@@ -1245,7 +1245,7 @@ def test_handle_reconnect_swaps_client_before_enumeration(
     from mcp.types import ListToolsResult, Tool
 
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     client_handle_order: list[str] = []
 
@@ -1322,7 +1322,7 @@ def test_recover_server_client_fails_closed_when_server_removed_mid_recovery(
 ) -> None:
     """Removal from runtime config beats in-flight recovery."""
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     class FakeStack:
         async def aclose(self) -> None:
@@ -1395,7 +1395,7 @@ def test_recover_server_client_config_remove_cleans_stale_client_and_lock(
 ) -> None:
     """Config removal during recovery drops stale client and prunes lock."""
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     class TrackCloseStack:
         def __init__(self) -> None:
@@ -1471,7 +1471,7 @@ def test_recover_server_client_releases_registry_lock_around_network_io(
 ) -> None:
     """Recovery network awaits run without holding _registry_lock."""
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     class FakeStack:
         async def aclose(self) -> None:
@@ -1544,7 +1544,7 @@ def test_recover_server_client_success_closes_replaced_client(
 ) -> None:
     """Successful recovery closes stale client handle after swap."""
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     class TrackCloseStack:
         def __init__(self) -> None:
@@ -1668,7 +1668,7 @@ def test_recover_server_client_rejects_material_config_change_before_swap(
 ) -> None:
     """Material config drift must block stale recovered handle swap."""
     from tela.shell import downstream
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     class FakeStack:
         async def aclose(self) -> None:
@@ -1792,7 +1792,7 @@ def test_call_tool_stops_after_convergence_rejection(
     from tela.core.models import TelaError
     from tela.shell import downstream
     from tela.shell import _downstream_recovery
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     class FailingSession:
         call_count = 0

@@ -6,7 +6,7 @@ Provides the ``tela connections`` command for listing active upstream connection
 from __future__ import annotations
 import json
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.commands.remote_state import query_remote_state
 
 

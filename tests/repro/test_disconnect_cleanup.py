@@ -19,7 +19,7 @@ from tela.core.models import (
     ProfileConfig,
     TelaConfig,
 )
-from tela.shell.gateway import (
+from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,
     set_runtime_config,

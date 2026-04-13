@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tela.shell.config_loader import Result, load_config
+from tela.shell.config_loader import load_config
+from tela.shell.result import Result
 
 
 def test_result_is_generic_type() -> None:

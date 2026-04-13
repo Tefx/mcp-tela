@@ -15,7 +15,7 @@ from tela.core.models import (
     ProfileConfig,
     ResolvedTool,
 )
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # --- tools/list filtering ---

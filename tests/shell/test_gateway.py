@@ -25,7 +25,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.commands.start import start_command
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.connection_lifecycle import ConnectionCleanupOutcome
 from tela.shell.downstream import DOWNSTREAM_CONVERGENCE_CONTRACT
 from tela.shell.gateway import (
@@ -36,6 +36,8 @@ from tela.shell.gateway import (
     gateway_shutdown,
     gateway_start,
     gateway_status,
+)
+from tela.shell.gateway_runtime import (
     is_runtime_running,
     is_upstream_server_initialized,
     with_upstream_server,
@@ -486,7 +488,7 @@ def test_gateway_reload_config_from_disk_routes_through_reload_callback(
 
     async def _fake_on_config_changed(new_config: TelaConfig):
         captured.append(new_config)
-        from tela.shell.config_loader import Result
+        from tela.shell.result import Result
 
         return Result(value=None)
 
@@ -527,7 +529,7 @@ def test_gateway_reload_config_from_disk_applies_reaper_cli_overrides(
 
     async def _fake_on_config_changed(new_config: TelaConfig):
         captured.append(new_config)
-        from tela.shell.config_loader import Result
+        from tela.shell.result import Result
 
         return Result(value=None)
 

@@ -24,7 +24,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.downstream import connect_all, disconnect_all, get_tool_server
-from tela.shell.gateway import (
+from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,
     get_runtime_connections_snapshot,
@@ -34,7 +34,6 @@ from tela.shell.gateway_runtime import (
     capture_session,
     clear_session_registry,
     get_captured_session,
-    get_session_registry_snapshot,
     release_session,
 )
 from tela.shell.reload import on_tools_changed, set_notify_callback

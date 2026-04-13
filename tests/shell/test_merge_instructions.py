@@ -18,7 +18,7 @@ from tela.core.models import (
     ServerConfig,
     TelaConfig,
 )
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell import gateway as gateway_module
 from tela.shell import surface_instructions
 

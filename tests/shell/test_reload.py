@@ -39,13 +39,13 @@ def _teardown() -> None:
 
 
 def _get_config():
-    from tela.shell.gateway import get_runtime_config
+    from tela.shell.gateway_runtime import get_runtime_config
 
     return get_runtime_config().value
 
 
 def _set_config(config):
-    from tela.shell.gateway import set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
 
     set_runtime_config(config)
 
@@ -630,7 +630,7 @@ def test_on_server_reconnect_reuses_passed_tool_list(
     tool_list directly.
     """
     from typing import Any
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     re_enumerate_called = []
 
@@ -684,7 +684,7 @@ def test_on_server_reconnect_does_not_trigger_duplicate_enumeration(
     proving no duplicate enumeration occurs.
     """
     from typing import Any
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     enumerate_count = []
 
@@ -758,7 +758,7 @@ def test_on_server_reconnect_notify_callback_fired_once(
 
     # Disable re_enumerate to prevent duplicate enumeration affecting test
     async def _no_op_re_enumerate(server_name: str):
-        from tela.shell.config_loader import Result
+        from tela.shell.result import Result
 
         return Result(value=[])
 
@@ -836,7 +836,7 @@ def test_reconnect_does_not_trigger_list_tools_via_on_server_reconnect(
     detecting the duplicate re_enumerate/list_tools bug.
     """
     from typing import Any
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     downstream_list_tools_calls: list[str] = []
 

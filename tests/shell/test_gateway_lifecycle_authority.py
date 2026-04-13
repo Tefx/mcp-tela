@@ -13,7 +13,7 @@ from tela.core.models import (
     ServerConfig,
     TelaConfig,
 )
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.gateway import gateway_status
 from tela.shell.gateway_runtime import (
     add_runtime_connection,

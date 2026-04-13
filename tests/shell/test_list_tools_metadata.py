@@ -18,9 +18,9 @@ from tela.core.models import (
     ResolvedTool,
     TelaConfig,
 )
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.downstream_registry import DownstreamRegistry
-from tela.shell.gateway import clear_runtime_connections, set_runtime_config
+from tela.shell.gateway_runtime import clear_runtime_connections, set_runtime_config
 from tela.shell.upstream import handle_tools_list, handle_initialize
 
 

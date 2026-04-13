@@ -26,9 +26,7 @@ This test module proves that:
 from __future__ import annotations
 
 import asyncio
-import json
 import os
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -43,7 +41,7 @@ from tela.core.models import (
     StatusResponse,
     TelaConfig,
 )
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.gateway import gateway_status
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,

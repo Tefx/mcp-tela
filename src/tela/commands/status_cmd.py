@@ -9,7 +9,7 @@ wording or state derivations.
 
 from __future__ import annotations
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.commands.remote_state import query_remote_state
 
 

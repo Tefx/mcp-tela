@@ -15,7 +15,7 @@ from tela.commands import connect_cmd
 from tela.commands import connect_bridge
 from tela.commands.connect_transport import inject_bridge_connection_id
 from tela.core.models import LockfileData, StatusResponse
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # Mapping: connect_cmd underscore alias -> connect_bridge public name.

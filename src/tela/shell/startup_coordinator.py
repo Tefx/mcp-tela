@@ -19,7 +19,7 @@ import time
 from typing import IO, Callable
 
 from tela.core.models import LockfileData
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.lockfile import delete_lockfile
 
 

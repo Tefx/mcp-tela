@@ -29,7 +29,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.audit import audit_write, build_audit_entry
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 from tela.shell.downstream import (
     _registry_lock,

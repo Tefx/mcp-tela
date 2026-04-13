@@ -40,7 +40,8 @@ from tela.core.models import (
     RuntimeBindingContract,
     TelaConfig,
 )
-from tela.shell.config_loader import Result, load_config
+from tela.shell.config_loader import load_config
+from tela.shell.result import Result
 from tela.shell.audit import audit_close, audit_init, build_audit_entry, audit_write
 from tela.shell.builtin_tools import (
     BUILTIN_TOOLS,
@@ -65,49 +66,9 @@ from tela.shell.surface_instructions import (
 
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
-from tela.shell.gateway_runtime import (  # noqa: F401 — re-export for backward compat
-    UpstreamSession,
-    _runtime,
-    _runtime_lock,
-    RuntimeStatusSnapshot,
-    add_runtime_connection,
-    capture_session,
-    clear_runtime_connections,
-    clear_session_registry,
-    get_captured_session,
-    get_connection_id_for_session,
-    get_expected_bearer_token,
-    get_runtime_config,
-    get_runtime_connections_snapshot,
-    get_runtime_converge_event,
-    get_runtime_reaper,
-    get_runtime_secrets,
-    get_runtime_status_snapshot,
-    get_session_registry_snapshot,
-    get_upstream_http_app,
-    get_upstream_log_level,
-    get_upstream_server,
-    increment_tool_calls,
-    is_runtime_running,
-    is_upstream_server_initialized,
-    release_session,
-    remove_runtime_connection,
-    set_runtime_config,
-    set_runtime_converge_event,
-    set_runtime_reaper,
-    set_runtime_running,
-    set_runtime_secrets,
-    set_runtime_total_tool_calls,
-    set_upstream_server,
-    touch_connection_activity,
-    with_upstream_server,
-)
+from tela.shell import gateway_runtime
 
 logger = logging.getLogger(__name__)
-
-# Module-level manifest snapshot built at prepare_startup time.
-_startup_manifest: str | None = None
-
 
 @dataclass(frozen=True)
 class GatewayStartupConfig:
@@ -195,8 +156,8 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
             return Result(error=(token_result.error, 401))
         assert token_result.value is not None
 
-        with _runtime_lock:
-            expected_token = _runtime.expected_bearer_token or ""
+        with gateway_runtime._runtime_lock:
+            expected_token = gateway_runtime._runtime.expected_bearer_token or ""
         return Result(value=(token_result.value, expected_token))
 
     @upstream_server.custom_route("/status", methods=["GET"])
@@ -348,6 +309,7 @@ def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str
 def _create_upstream_server(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
+    startup_manifest: str | None,
 ) -> Result[FastMCP, str]:
     """Create FastMCP server instance from gateway transport config.
 
@@ -363,7 +325,7 @@ def _create_upstream_server(
     if downstream_result.is_err:
         return Result(error=downstream_result.error)
 
-    gateway_result = get_gateway_surface_instructions(_startup_manifest)
+    gateway_result = get_gateway_surface_instructions(startup_manifest)
     if gateway_result.is_err:
         return Result(error=gateway_result.error)
     assert gateway_result.value is not None
@@ -428,13 +390,13 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         # Session-aware: return existing connection, or create new one.
         # Use locked snapshot to prevent observing torn/stale connections.
         try:
-            with _runtime_lock:
-                connections_snapshot = list(_runtime.connections)
+            with gateway_runtime._runtime_lock:
+                connections_snapshot = list(gateway_runtime._runtime.connections)
             conn_r = find_connection_for_session(
                 request_ctx.get().session, connections_snapshot
             )
             if conn_r.is_ok and conn_r.value is not None:
-                touch_r = touch_connection_activity(
+                touch_r = gateway_runtime.touch_connection_activity(
                     conn_r.value.connection_id, datetime.now(timezone.utc).isoformat()
                 )
                 if touch_r.is_err:
@@ -451,17 +413,17 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         # MCP session is not captured until the first list_tools/call_tool.
         try:
             current_session = request_ctx.get().session
-            with _runtime_lock:
-                candidates = list(_runtime.connections)
+            with gateway_runtime._runtime_lock:
+                candidates = list(gateway_runtime._runtime.connections)
             for candidate in candidates:
                 if not candidate.connection_id.startswith("bridge_"):
                     continue
-                probe = get_captured_session(candidate.connection_id)
+                probe = gateway_runtime.get_captured_session(candidate.connection_id)
                 if probe.is_err:
                     # Unbound bridge — adopt it for this session
-                    capture_session(candidate.connection_id, current_session)
+                    gateway_runtime.capture_session(candidate.connection_id, current_session)
                     now_iso = datetime.now(timezone.utc).isoformat()
-                    touch_connection_activity(candidate.connection_id, now_iso)
+                    gateway_runtime.touch_connection_activity(candidate.connection_id, now_iso)
                     logger.debug(
                         "Adopted unbound bridge %s for session", candidate.connection_id
                     )
@@ -472,7 +434,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         if init_result.is_err:
             raise RuntimeError(init_result.error or "INITIALIZE_REJECTED")
         assert init_result.value is not None
-        touch_r = touch_connection_activity(
+        touch_r = gateway_runtime.touch_connection_activity(
             init_result.value.connection_id, datetime.now(timezone.utc).isoformat()
         )
         if touch_r.is_err:
@@ -497,13 +459,13 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         # Wait for downstream convergence before listing tools.
         # Without this, bridges connecting during warming get an empty tool list
         # and the bridge transport cannot receive tools/list_changed push.
-        converge = get_runtime_converge_event().value
+        converge = gateway_runtime.get_runtime_converge_event().value
         if converge is not None:
             await converge.wait()
 
         # Capture upstream MCP session for notification delivery.
         try:
-            capture_session(connection.connection_id, request_ctx.get().session)
+            gateway_runtime.capture_session(connection.connection_id, request_ctx.get().session)
         except LookupError:
             pass  # No request context (e.g. stdio without session capture)
 
@@ -545,7 +507,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
         connection = await _ensure_connection()
         # Wait for convergence before calling downstream tools.
-        converge = get_runtime_converge_event().value
+        converge = gateway_runtime.get_runtime_converge_event().value
         if converge is not None:
             await converge.wait()
         result = await handle_tools_call(connection, tool_name, dict(arguments))
@@ -582,8 +544,8 @@ async def _handle_builtin_call(
         latency_ms = (time.time() - start_time) * 1000
 
         # L2 audit entry for builtin tool calls (if connection available)
-        with _runtime_lock:
-            connections = list(_runtime.connections)
+        with gateway_runtime._runtime_lock:
+            connections = list(gateway_runtime._runtime.connections)
         if connections:
             connection = connections[0]
             audit_entry_result = build_audit_entry(
@@ -606,8 +568,8 @@ async def _handle_builtin_call(
     except Exception as e:
         latency_ms = (time.time() - start_time) * 1000
         # L2 audit entry for failed builtin tool call (if connection available)
-        with _runtime_lock:
-            connections = list(_runtime.connections)
+        with gateway_runtime._runtime_lock:
+            connections = list(gateway_runtime._runtime.connections)
         if connections:
             connection = connections[0]
             audit_entry_result = build_audit_entry(
@@ -635,8 +597,8 @@ def _wire_reload_notifications() -> None:
     from tela.shell.upstream import notify_tools_changed
 
     async def _notify_all_connections(tools_digest: str) -> None:
-        with _runtime_lock:
-            connections = list(_runtime.connections)
+        with gateway_runtime._runtime_lock:
+            connections = list(gateway_runtime._runtime.connections)
         for connection in connections:
             await notify_tools_changed(connection, tools_digest)
 
@@ -822,8 +784,7 @@ async def gateway_prepare_startup(
 ) -> Result[None, str]:
     """Prepare runtime state and upstream server before downstream convergence."""
 
-    global _startup_manifest
-    set_runtime_converge_event(asyncio.Event())
+    gateway_runtime.set_runtime_converge_event(asyncio.Event())
 
     effective_config = tela_config or TelaConfig()
 
@@ -831,11 +792,11 @@ async def gateway_prepare_startup(
     connected_result = await get_connected_server_names()
     connected_names = connected_result.value or set()
     tools_by_server = get_registry().get_all_tools()
-    _startup_manifest = build_manifest_header(
+    startup_manifest = build_manifest_header(
         effective_config.servers, connected_names, tools_by_server
     )
 
-    upstream_server_result = _create_upstream_server(config, effective_config)
+    upstream_server_result = _create_upstream_server(config, effective_config, startup_manifest)
     if upstream_server_result.is_err:
         return Result(error=upstream_server_result.error)
     assert upstream_server_result.value is not None
@@ -846,15 +807,15 @@ async def gateway_prepare_startup(
     _register_profiles_resource(upstream_server)
     _wire_reload_notifications()
 
-    with _runtime_lock:
-        _runtime.total_tool_calls = 0
-        _runtime.config = effective_config
-        _runtime.startup_config = config
-        _runtime.start_time = time.monotonic()
-        _runtime.running = True
-        _runtime.upstream_server = upstream_server
-        _runtime.expected_bearer_token = expected_bearer_token
-        _runtime.secrets = list(effective_config.auth.secrets)
+    with gateway_runtime._runtime_lock:
+        gateway_runtime._runtime.total_tool_calls = 0
+        gateway_runtime._runtime.config = effective_config
+        gateway_runtime._runtime.startup_config = config
+        gateway_runtime._runtime.start_time = time.monotonic()
+        gateway_runtime._runtime.running = True
+        gateway_runtime._runtime.upstream_server = upstream_server
+        gateway_runtime._runtime.expected_bearer_token = expected_bearer_token
+        gateway_runtime._runtime.secrets = list(effective_config.auth.secrets)
 
     _ = await gateway_status()
     _ = await gateway_connections()
@@ -866,8 +827,8 @@ async def gateway_converge_startup(
 ) -> Result[None, str]:
     """Converge downstream registry after startup preparation."""
 
-    with _runtime_lock:
-        runtime_config = _runtime.config
+    with gateway_runtime._runtime_lock:
+        runtime_config = gateway_runtime._runtime.config
 
     if runtime_config is None:
         return Result(error="STARTUP_NOT_PREPARED: runtime config unavailable")
@@ -883,15 +844,14 @@ async def gateway_converge_startup(
     reaper = ConnectionReaper(
         ReaperConfig.from_tela_config(runtime_config), use_runtime_config=True
     )
-    set_runtime_reaper(reaper)
+    gateway_runtime.set_runtime_reaper(reaper)
     await reaper.start()
 
     # Notify bridges that connected during warming — tools are now available.
     from tela.shell.upstream import notify_tools_changed
-    from tela.shell.gateway_runtime import get_runtime_connections_snapshot
     from tela.shell.downstream import get_registry
 
-    snap = get_runtime_connections_snapshot()
+    snap = gateway_runtime.get_runtime_connections_snapshot()
     if snap.is_ok and snap.value:
         registry = get_registry()
         digest = str(
@@ -901,7 +861,7 @@ async def gateway_converge_startup(
             await notify_tools_changed(conn, digest)
 
     # Signal that downstream convergence is complete — tools are available.
-    converge = get_runtime_converge_event().value
+    converge = gateway_runtime.get_runtime_converge_event().value
     if converge is not None:
         converge.set()
     return Result(value=None)
@@ -920,34 +880,34 @@ async def gateway_shutdown() -> Result[None, str]:
         Result[None, str] always succeeds.
     """
 
-    reaper = get_runtime_reaper().value
+    reaper = gateway_runtime.get_runtime_reaper().value
     if reaper is not None:
         await reaper.stop()
-    set_runtime_reaper(None)
+    gateway_runtime.set_runtime_reaper(None)
 
-    set_runtime_converge_event(None)
+    gateway_runtime.set_runtime_converge_event(None)
     disconnect_result = await disconnect_all()
     audit_close_result = await audit_close()
     if audit_close_result.is_err:
         return audit_close_result
     _set_reload_notify_callback(None)
 
-    with _runtime_lock:
-        connection_ids = [c.connection_id for c in _runtime.connections]
+    with gateway_runtime._runtime_lock:
+        connection_ids = [c.connection_id for c in gateway_runtime._runtime.connections]
     for cid in connection_ids:
         cleanup_result = cleanup_connection_by_id(cid)
         if cleanup_result.is_err:
             return Result(error=cleanup_result.error)
-    with _runtime_lock:
-        _runtime.config = None
-        _runtime.startup_config = None
-        _runtime.upstream_server = None
-        _runtime.running = False
-        _runtime.start_time = None
-        _runtime.total_tool_calls = 0
-        _runtime.connections.clear()
-        _runtime.expected_bearer_token = None
-        _runtime.secrets = []
+    with gateway_runtime._runtime_lock:
+        gateway_runtime._runtime.config = None
+        gateway_runtime._runtime.startup_config = None
+        gateway_runtime._runtime.upstream_server = None
+        gateway_runtime._runtime.running = False
+        gateway_runtime._runtime.start_time = None
+        gateway_runtime._runtime.total_tool_calls = 0
+        gateway_runtime._runtime.connections.clear()
+        gateway_runtime._runtime.expected_bearer_token = None
+        gateway_runtime._runtime.secrets = []
     return disconnect_result
 
 
@@ -980,4 +940,4 @@ async def gateway_status() -> Result[GatewayStatus, str]:
 
 async def gateway_connections() -> Result[list[ConnectionContext], str]:
     """Return active upstream connections via runtime snapshot accessor."""
-    return get_runtime_connections_snapshot()
+    return gateway_runtime.get_runtime_connections_snapshot()

@@ -12,9 +12,9 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell import http_routes
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.connection_lifecycle import ConnectionCleanupOutcome
-from tela.shell.gateway import (
+from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,
     get_runtime_connections_snapshot,

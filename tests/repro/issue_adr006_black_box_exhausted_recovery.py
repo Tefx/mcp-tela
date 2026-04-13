@@ -20,9 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 # Public API surface imports ONLY
-from tela.core.models import TelaError
 from tela.shell import downstream
-from tela.shell.config_loader import Result
 
 
 @pytest.fixture(autouse=True)
@@ -175,7 +173,7 @@ def test_black_box_exhausted_recovery_no_new_error_code() -> None:
         f"Got: {details_no_recovery}"
     )
 
-    print(f"PASS: No new error code - both return DOWNSTREAM_UNAVAILABLE")
+    print("PASS: No new error code - both return DOWNSTREAM_UNAVAILABLE")
 
 
 if __name__ == "__main__":

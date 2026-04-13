@@ -17,7 +17,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 from tela.core.errors import DOWNSTREAM_CONNECT_FAILED
 from tela.core.models import ServerConfig
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 @dataclass

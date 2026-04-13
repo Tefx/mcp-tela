@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
 
 from starlette.testclient import TestClient
 
@@ -25,13 +24,9 @@ from tela.shell.gateway import (
     GatewayStartupConfig,
     gateway_prepare_startup,
     gateway_shutdown,
-    with_upstream_server,
 )
+from tela.shell.gateway_runtime import with_upstream_server
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
-from tela.shell.gateway_runtime import (
-    clear_runtime_connections,
-    get_upstream_http_app,
-)
 from tela.core.models import GatewayTransport, AuthMode
 
 

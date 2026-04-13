@@ -27,11 +27,11 @@ import time
 from tela.core.models import LockfileData
 from tela.commands.connect_bridge import (
     BRIDGE_READINESS_MAX_POLLS,
+    BridgeMessage,
     HTTP_TIMEOUT_SECONDS,
     HTTP_TRANSIENT_BACKOFF_SECONDS,
     HTTP_TRANSIENT_RETRIES,
     TEARDOWN_RESUME_TIMEOUT_SECONDS,
-    BridgeMessage,
     _emit_bridge_diagnostic,
     _get_gateway_status,
     _wait_for_gateway_readiness,
@@ -47,6 +47,12 @@ from tela.commands.connect_bridge import (
     run_bridge,
     write_framed_message,
 )
+from tela.commands.serve_cmd import _resolve_bearer_token_cli_or_env
+from tela.shell.result import Result
+from tela.shell.lockfile import delete_lockfile, read_lockfile
+from tela.shell.startup_coordinator import (
+    discover_or_autostart as _coordinator_discover_or_autostart,
+)
 
 # Backward-compatible aliases — tests reference these underscore-prefixed names
 # from connect_cmd. They now delegate to connect_bridge.
@@ -55,6 +61,9 @@ _read_framed_message = read_framed_message
 _write_framed_message = write_framed_message
 _extract_jsonrpc_method = extract_jsonrpc_method
 _is_recoverable_error = is_recoverable_error
+_emit_bridge_diagnostic = _emit_bridge_diagnostic
+_get_gateway_status = _get_gateway_status
+_wait_for_gateway_readiness = _wait_for_gateway_readiness
 _forward_stdio_http = forward_stdio_http
 _recover_gateway = recover_gateway
 _post_json = post_json
@@ -62,12 +71,11 @@ _post_json_once = post_json_once
 _post_mcp_message = post_mcp_message
 _run_bridge = run_bridge
 _is_mcp_transient_warming_error = is_mcp_transient_warming_error
-from tela.commands.serve_cmd import _resolve_bearer_token_cli_or_env
-from tela.shell.config_loader import Result
-from tela.shell.lockfile import delete_lockfile, read_lockfile
-from tela.shell.startup_coordinator import (
-    discover_or_autostart as _coordinator_discover_or_autostart,
-)
+BRIDGE_READINESS_MAX_POLLS = BRIDGE_READINESS_MAX_POLLS
+HTTP_TIMEOUT_SECONDS = HTTP_TIMEOUT_SECONDS
+HTTP_TRANSIENT_BACKOFF_SECONDS = HTTP_TRANSIENT_BACKOFF_SECONDS
+HTTP_TRANSIENT_RETRIES = HTTP_TRANSIENT_RETRIES
+TEARDOWN_RESUME_TIMEOUT_SECONDS = TEARDOWN_RESUME_TIMEOUT_SECONDS
 
 
 LOCKFILE_WAIT_TIMEOUT_SECONDS = 5.0

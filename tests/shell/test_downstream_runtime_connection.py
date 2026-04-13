@@ -12,8 +12,8 @@ from mcp.types import ListToolsResult, Tool
 
 from tela.core.models import ServerConfig, TelaConfig
 from tela.shell import downstream
-from tela.shell.config_loader import Result
-from tela.shell.gateway import get_runtime_config, set_runtime_config
+from tela.shell.result import Result
+from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
 
 def test_connect_all_enumerates_real_stdio_server() -> None:
@@ -431,7 +431,7 @@ def test_re_enumerate_updates_tool_list_from_session(monkeypatch: Any) -> None:
 
 def test_message_handler_routes_tools_changed_notification(monkeypatch: Any) -> None:
     """Downstream notifications/tools/list_changed triggers reload on_tools_changed."""
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     observed: dict[str, Any] = {}
 
@@ -493,7 +493,7 @@ def test_message_handler_routes_tools_changed_notification(monkeypatch: Any) -> 
 
 def test_message_handler_routes_reconnect_exception(monkeypatch: Any) -> None:
     """Downstream exception path attempts reconnect and triggers reload reconnect."""
-    from tela.shell.config_loader import Result
+    from tela.shell.result import Result
 
     observed: dict[str, Any] = {}
 

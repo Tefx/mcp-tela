@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from tela.core.models import ResolvedTool, ServerConfig
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # @invar:allow shell_result: pure data transformation, no I/O - per pm.p1 contract

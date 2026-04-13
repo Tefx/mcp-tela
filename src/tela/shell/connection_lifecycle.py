@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.gateway_runtime import release_session, remove_runtime_connection
 
 

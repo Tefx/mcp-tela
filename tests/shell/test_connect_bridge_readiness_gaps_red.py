@@ -20,7 +20,7 @@ import tela.commands.connect_cmd as connect_cmd
 import tela.commands.connect_bridge as connect_bridge
 import tela.commands.http_client as http_client
 from tela.core.models import StatusResponse
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # Mapping: connect_cmd alias -> connect_bridge public name for dual monkeypatching.

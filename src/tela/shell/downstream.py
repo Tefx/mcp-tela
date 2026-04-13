@@ -25,7 +25,7 @@ from tela.shell.downstream_clients import (
     _validate_transport_mode,
 )
 from tela.shell.downstream_registry import DownstreamRegistry
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.gateway_runtime import get_runtime_config
 
 # Recovery constants and functions live in _downstream_recovery.

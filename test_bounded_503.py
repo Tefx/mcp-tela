@@ -8,8 +8,8 @@ from tela.shell.gateway import (
     GatewayStartupConfig,
     gateway_prepare_startup,
     gateway_shutdown,
-    with_upstream_server,
 )
+from tela.shell.gateway_runtime import with_upstream_server
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.http_auth import BearerAuthMiddleware
 
@@ -67,7 +67,7 @@ def main():
             headers={"Authorization": "Bearer test-token"},
         )
 
-        print(f"\nPOST /mcp response (warming state):")
+        print("\nPOST /mcp response (warming state):")
         print(f"Status: {response.status_code}")
         print(f"Body:\n{json.dumps(response.json(), indent=2)}")
 
@@ -125,7 +125,7 @@ def main():
             headers={"Authorization": "Bearer test-token"},
         )
 
-        print(f"\nPOST /mcp response (ready state):")
+        print("\nPOST /mcp response (ready state):")
         print(f"Status: {response.status_code}")
 
         # Verify NOT 503

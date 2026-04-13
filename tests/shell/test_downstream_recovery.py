@@ -41,7 +41,7 @@ import pytest
 
 from tela.core.models import ServerConfig, TelaError
 from tela.shell import downstream
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 
 # --- Fixtures ---
@@ -281,7 +281,7 @@ def test_gap_one_retry_maximum_not_enforced(
     downstream._clients["test_server"] = fake_client_handle
     fake_client_handle.session.call_tool = count_calls
 
-    result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
+    asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
 
     # GAP: Current behavior = 1 call, immediate failure
     # Expected behavior = 2 calls (original + 1 retry after recovery)
@@ -318,7 +318,7 @@ def test_gap_second_retry_forbidden(
     downstream._clients["test_server"] = fake_client_handle
     fake_client_handle.session.call_tool = always_fail
 
-    result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
+    asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
 
     # GAP: Current = 1 call. Expected = 2 calls max (original + 1 retry),
     # then terminal DOWNSTREAM_UNAVAILABLE. No third retry should occur.
@@ -589,7 +589,6 @@ def test_gap_timeout_budget_not_tracked(
     # but currently there's no recovery_stage tracking at all
     assert result.is_ok, "Call should succeed without recovery timeout enforcement"
 
-    details = result.value if result.is_ok else {}
     # GAP: No recovery_stage in successful call details either
     # The error details test covers the failure case
 
@@ -688,7 +687,7 @@ def test_gap_reload_wins_over_inflight_recovery(
 
     This test will FAIL until reload-wins mechanism is implemented.
     """
-    from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
+    from tela.shell.gateway_runtime import set_runtime_config
     from tela.core.models import TelaConfig
 
     # Setup: server exists in config
@@ -706,7 +705,7 @@ def test_gap_reload_wins_over_inflight_recovery(
     # No mechanism for config reload to interrupt in-flight recovery
 
     # Simulate config reload removing the server during "recovery"
-    new_config = TelaConfig(servers={})  # Server removed
+    _ = TelaConfig(servers={})  # Server removed
     # GAP: No on_config_changed call would trigger recovery abort
 
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
@@ -750,7 +749,6 @@ def test_gap_convergence_rejection_returns_downstream_unavailable(
 
     This test will FAIL until convergence rejection handling is implemented.
     """
-    from tela.shell import reload
 
     # Track if recovery path was triggered
     recovery_called = False

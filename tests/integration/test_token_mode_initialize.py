@@ -23,7 +23,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.core.token import compute_signature
-from tela.shell.gateway import (
+from tela.shell.gateway_runtime import (
     clear_runtime_connections,
     get_runtime_connections_snapshot,
     set_runtime_config,

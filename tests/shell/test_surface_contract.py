@@ -21,7 +21,7 @@ import re
 
 import pytest
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell import gateway as gateway_module
 from tela.shell import surface_instructions
 from tela.core.models import (
@@ -279,7 +279,7 @@ class TestTelaProfilesResourceBehavior:
         This tests the existing handle_profiles_list behavior to ensure it
         continues to emit JSON-serializable data for the resource read.
         """
-        from tela.shell.gateway import set_runtime_config
+        from tela.shell.gateway_runtime import set_runtime_config
         from tela.shell.upstream import handle_profiles_list
         from tela.core.models import TelaConfig, ProfileConfig, Posture
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from starlette.requests import Request
 
 from tela.core.errors import AUTH_INVALID_TOKEN
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.http_auth import extract_bearer_from_header_value
 
 

@@ -7,7 +7,7 @@ import signal
 import time
 import subprocess
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.lockfile import delete_lockfile, read_lockfile
 
 

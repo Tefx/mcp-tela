@@ -17,7 +17,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from tela.core.models import GatewayTransport, RuntimeBindingContract
-from tela.shell.config_loader import Result, load_config
+from tela.shell.config_loader import load_config
+from tela.shell.result import Result
 from tela.shell.gateway import bind_gateway_startup
 
 __all__ = ["start_command", "bind_gateway_startup"]

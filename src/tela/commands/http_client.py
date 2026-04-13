@@ -37,7 +37,7 @@ from typing import Callable
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 from tela.shell.transient_types import (
     TRANSIENT_CONNECTION_EXCEPTIONS,
     TRANSIENT_ERRNOS,

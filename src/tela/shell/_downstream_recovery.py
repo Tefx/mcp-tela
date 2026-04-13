@@ -18,7 +18,7 @@ from typing import Any, Literal
 
 from tela.core.errors import DOWNSTREAM_ERROR, DOWNSTREAM_UNAVAILABLE
 from tela.core.models import ServerConfig, TelaError
-from tela.shell.config_loader import Result
+from tela.shell.result import Result
 
 # Recovery constants
 _RECOVERY_TIMEOUT_SECONDS = 15.0
