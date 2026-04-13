@@ -69155,6 +69155,152 @@ phases:
     depends_on:
     - arch_refactor.layer_dissolution.full_plan_check
     agent: python-senior-tacit
+  - id: arch_refactor.layer_dissolution.retest_blockers
+    name: Retest full-plan boundary after batched blocker remediation
+    status: pending
+    description: 'Post-remediation retest for blocker-class failures from `arch_refactor.layer_dissolution.full_plan_check`.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: full-plan-check
+
+      agent_source: default
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - INVAR.md
+
+
+      touch_paths:
+
+      - plan/evidence only
+
+
+      harness_refs:
+
+      - uvx invar-tools guard --all
+
+      - tests/shell/test_upstream.py
+
+      - tests/shell/test_connect_bridge_readiness_contract_freeze.py
+
+      - tests/shell/test_downstream_recovery.py
+
+
+      authoritative_interface: NONE PINNED
+
+
+      As an INDEPENDENT TESTER, rerun the nearest full-plan boundary after batched
+      remediation. Your goal is to prove the blocker family is now green, or to surface
+      any remaining blocker-class debt immediately.
+
+
+      Required retest scope:
+
+      1. `uvx invar-tools guard --all`
+
+      2. Targeted suites covering upstream re-export, connect-bridge readiness contract
+      freeze, and downstream recovery timeout/autostart behavior
+
+      3. Any focused targeted tests needed to prove the missing core-contract coverage
+      now satisfies guard expectations
+
+
+      This retest protects `arch_refactor.layer_dissolution.gate` and prevents finalization
+      from starting on stale blocker evidence.
+
+
+      If symbolic/invar evidence is gathered, use a fresh/cold environment for the
+      broad retest.'
+    verification: '- Run `uvx invar-tools guard --all` and require green
+
+      - Run targeted suites for `tests/shell/test_upstream.py`, `tests/shell/test_connect_bridge_readiness_contract_freeze.py`,
+      and the recovery timeout/autostart coverage
+
+      - Record whether any blocker-class debt remains and why it blocks or does not
+      intersect the gate'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: Batched blocker retest after layer dissolution remediation
+
+      **Independence Level**: L1
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```text
+
+      uvx invar-tools guard --all
+
+      <targeted suite commands>
+
+      ```
+
+      - Fresh/cold environment confirmation: <how confirmed>
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | B1 | capture_session re-export reachable | targeted upstream suite green |
+      <ref> | PROVEN/UNPROVEN | <text> | <text> |
+
+      | B2 | readiness wording freeze aligned | freeze suite green | <ref> | PROVEN/UNPROVEN
+      | <text> | <text> |
+
+      | B3 | wait-timeout re-autostart behavior aligned | targeted recovery test green
+      | <ref> | PROVEN/UNPROVEN | <text> | <text> |
+
+      | B4-B6 | broad invar/core blocker family closed | guard all green + focused
+      evidence | <ref> | PROVEN/UNPROVEN | <text> | <text> |
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+      | blocker | <issue or none> | <location> | <steps> |
+
+
+      ### Headline
+
+      - [ ] PASS: All blocker-class retests green
+
+      - [ ] FAIL: Remaining blocker-class debt still intersects the phase gate'
+    depends_on:
+    - arch_refactor.layer_dissolution.fix_blockers
+    agent: integration-verifier-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
