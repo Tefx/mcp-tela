@@ -68630,7 +68630,7 @@ phases:
       commit: 8705fba'
   - id: arch_refactor.layer_dissolution.full_plan_check
     name: Run full-plan verification after layer dissolution
-    status: claimed
+    status: done
     description: 'Verification scope: full-plan-check protecting finalization and
       final gate.
 
@@ -68703,6 +68703,51 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-13T20:52:24.201201+00:00'
+    done_at: '2026-04-13T21:09:34.100868+00:00'
+    evidence: 'status: FAIL_DETECTED_AND_BATCHED
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Full-Plan Commands
+
+      - `uvx invar-tools guard --all`
+
+      - broad runtime shell/integration/repro suites
+
+
+      ## Results
+
+      - Guard status: failed with blocker-class errors (core contracts missing, file-size/shell_result
+      violations, complexity/hatch budget blockers)
+
+      - Test status: blocker-class failures detected (upstream capture_session re-export
+      break; connect-bridge readiness doc contract drift; recovery timeout expectation
+      mismatch)
+
+      - Remaining blocker-class debt: present and intersects next required gate
+
+      - Remaining non-blocking debt: additional warnings/info and known environment-dependent
+      flakes
+
+
+      ## Batched Remediation Routing
+
+      - Planner remediation applied: added `arch_refactor.layer_dissolution.fix_blockers`
+      and `arch_refactor.layer_dissolution.retest_blockers`
+
+      - Gate dependency updated: `arch_refactor.layer_dissolution.gate` now requires
+      `arch_refactor.layer_dissolution.retest_blockers`
+
+      - This step is completed as a detection-and-routing boundary; blocker ownership
+      transferred to batched fix path.
+
+
+      ## Protected Final Gate
+
+      - arch_refactor.finalization.gate'
   - id: arch_refactor.layer_dissolution.runtime_probe
     name: Black-box probe runtime surfaces after file contraction
     status: done
