@@ -68630,7 +68630,7 @@ phases:
       commit: 8705fba'
   - id: arch_refactor.layer_dissolution.full_plan_check
     name: Run full-plan verification after layer dissolution
-    status: pending
+    status: claimed
     description: 'Verification scope: full-plan-check protecting finalization and
       final gate.
 
@@ -68701,6 +68701,8 @@ phases:
     depends_on:
     - arch_refactor.layer_dissolution.gateway_compat_collapse
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-13T20:52:24.201201+00:00'
   - id: arch_refactor.layer_dissolution.runtime_probe
     name: Black-box probe runtime surfaces after file contraction
     status: pending
