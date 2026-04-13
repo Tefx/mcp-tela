@@ -67642,7 +67642,7 @@ phases:
   steps:
   - id: arch_refactor.structural_collapse.runtime_truth_collapse
     name: Collapse split runtime truth ownership
-    status: claimed
+    status: done
     description: 'Implementation scope: technical-debt remediation with hardened acceptance.
 
 
@@ -67727,6 +67727,42 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-13T17:45:38.333629+00:00'
+    done_at: '2026-04-13T18:15:27.235156+00:00'
+    evidence: "status: SUCCESS\n## refs Read Confirmation (MANDATORY)\nNo refs for\
+      \ this step.\n\n## Changed Files\n- src/tela/shell/gateway_runtime.py\n- src/tela/shell/upstream.py\n\
+      - src/tela/shell/gateway.py\n- src/tela/shell/connection_lifecycle.py\n- src/tela/shell/connection_reaper.py\n\
+      - tests/shell/test_notification_forwarding.py\n- tests/repro/test_disconnect_cleanup.py\n\
+      - tests/shell/test_connection_lifecycle.py\n- tests/shell/test_connection_reaper.py\n\
+      - tests/black_box/test_reaper_black_box.py\n\n## target_kill_list Outcome\n\
+      - src/tela/shell/upstream.py:_session_registry — removed (moved to gateway_runtime\
+      \ runtime state)\n- src/tela/shell/upstream.py:_session_registry_lock — removed\n\
+      - src/tela/shell/gateway.py:_reaper — removed (moved to gateway_runtime)\n-\
+      \ src/tela/shell/gateway.py:_converge_event — removed (moved to gateway_runtime)\n\
+      - duplicate runtime-truth ownership split across gateway.py and upstream.py\
+      \ — removed\n\n## Verification\n- Commands:\n  - `.venv/bin/python -m pytest\
+      \ tests/shell/test_notification_forwarding.py tests/repro/test_disconnect_cleanup.py\
+      \ tests/shell/test_connection_reaper.py tests/shell/test_connection_lifecycle.py\
+      \ tests/repro/test_runtime_boundary_immutability.py tests/shell/test_upstream.py\
+      \ tests/shell/test_gateway.py tests/black_box/test_reaper_black_box.py tests/shell/test_gateway_lifecycle_authority.py\
+      \ tests/shell/test_status_truth_verification.py tests/shell/test_mcp_readiness_gate.py\
+      \ tests/shell/test_http_routes.py tests/shell/test_reload.py tests/shell/test_idle_shutdown.py\
+      \ tests/shell/test_serve_cmd.py tests/shell/test_builtin_tools.py tests/shell/test_list_tools_metadata.py\
+      \ tests/shell/test_surface_contract.py tests/shell/test_downstream.py tests/shell/test_downstream_runtime_connection.py\
+      \ tests/integration/test_end_to_end.py tests/integration/test_open_mode.py tests/integration/test_token_mode_initialize.py\
+      \ tests/shell/test_lockfile.py -v`\n  - `.venv/bin/python -m pytest --doctest-modules\
+      \ src/tela/shell/gateway_runtime.py src/tela/shell/upstream.py`\n  - `invar\
+      \ guard --changed`\n- Outputs:\n  - `529 passed, 1 warning`\n  - `38 doctests\
+      \ passed`\n  - `invar guard: 0 errors, 17 warnings`\n\n## Runtime Truth Notes\n\
+      - readiness authority after change: RuntimeStatusSnapshot via gateway_runtime;\
+      \ lockfile not used as readiness truth\n- session authority after change: gateway_runtime\
+      \ `_runtime.session_registry` with locked accessors\n- reaper/converge-event\
+      \ ownership after change: gateway_runtime `_runtime.reaper` and `_runtime.converge_event`\n\
+      \n## Non-Regression Statement\n- connect/serve/status/session behavior preserved:\
+      \ YES\n\nstep_intent: collapse runtime/session truth to single authority in\
+      \ gateway_runtime\nexpected_result: mutable runtime truth no longer split across\
+      \ gateway.py and upstream.py\nobserved_result: ownership collapsed into gateway_runtime\
+      \ with regression suites green\nfailure_alignment: none\nproduct_implementation_files_modified:\
+      \ yes\n\nCommit hash(es): (recorded in worktree branch history)"
   - id: arch_refactor.structural_collapse.reload_indirection_demolition
     name: Remove reload indirection with no second implementation
     status: done
