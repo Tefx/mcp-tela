@@ -68920,6 +68920,241 @@ phases:
     - arch_refactor.layer_dissolution.full_plan_check
     - arch_refactor.layer_dissolution.runtime_probe
     agent: gate-reviewer-tacit
+  - id: arch_refactor.layer_dissolution.fix_blockers
+    name: Batched blocker remediation after full-plan check
+    status: pending
+    description: 'Batched remediation step for blocker-class failures discovered in
+      `arch_refactor.layer_dissolution.full_plan_check`.
+
+
+      work_type: technical_debt_remediation
+
+      step_type: implementation
+
+      agent_source: default
+
+      symbolic_testing: true
+
+      verification_scope: phase-check
+
+      prior_loop:
+
+      - arch_refactor.layer_dissolution.full_plan_check
+
+      remaining_blocker: blocker-class full-plan failures in layer dissolution boundary
+
+      why_new_loop: The broad verifier exposed multiple intersecting blocker families
+      across export wiring, doc-contract freeze surfaces, recovery behavior, invar
+      guard budgets, and core contract coverage. A single batched remediation step
+      is required so the next broad retest can evaluate one coherent repaired state.
+
+
+      spec_refs:
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md#suggested-exit-criteria
+
+      - docs/DESIGN.md#runtime-architecture
+
+      - docs/DESIGN.md#shell-module-responsibilities
+
+      - INVAR.md
+
+
+      touch_paths:
+
+      - src/tela/shell/upstream.py
+
+      - tests/shell/test_upstream.py
+
+      - tests/shell/test_connect_bridge_readiness_contract_freeze.py
+
+      - tests/shell/test_downstream_recovery*.py
+
+      - src/tela/shell/_downstream_recovery.py
+
+      - src/tela/commands/connect_bridge.py
+
+      - src/tela/core/contracts.py
+
+      - docs/**
+
+
+      harness_refs:
+
+      - tests/shell/test_upstream.py
+
+      - tests/shell/test_connect_bridge_readiness_contract_freeze.py
+
+      - tests/shell/test_downstream_recovery.py
+
+      - uvx invar-tools guard --all
+
+
+      authoritative_interface: NONE PINNED
+
+
+      UPSTREAM ARTIFACTS:
+
+      - `arch_refactor.layer_dissolution.full_plan_check` failure set is AUTHORITATIVE
+      for blocker scope.
+
+      - Existing runtime contraction outputs from this phase are PROTECTED; repair
+      blockers without undoing file-responsibility separation.
+
+
+      YOUR SCOPE: Repair ALL blocker items below in one coherent change set. Search
+      for sibling instances beyond the named failing lines. Do not treat any item
+      as pre-existing/non-blocking because they intersect the remaining phase gate
+      and finalization gate.
+
+
+      ## Blockers to Fix (ALL of these, not just the first)
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: layer dissolution left the repo in a broad-gate failing state
+      where public re-export wiring, contract-freeze wording, runtime recovery expectation
+      alignment, shell/result architecture budgets, and core contract annotations
+      are inconsistent with the phase''s claimed closure.
+
+      - Symptom: targeted suites and `uvx invar-tools guard --all` fail at the nearest
+      full-plan boundary.
+
+      - Why this fix is not surface-level: it must close the blocker family across
+      code, docs, tests, and invar obligations together so the next full-plan retest
+      can go green.
+
+      - Command lock: use the exact retest command family `uvx invar-tools guard --all`
+      for parity with the failing boundary; do not substitute another broad verifier
+      in evidence.
+
+
+      ### B1: Import wire break in upstream re-export
+
+      Locations: `src/tela/shell/upstream.py`, `tests/shell/test_upstream.py`
+
+      Remediation: restore or correctly re-home the `capture_session` public re-export
+      so the documented/tested upstream surface remains reachable after the refactor.
+
+      Grep hint: `rg -n "capture_session" src/tela tests/shell`
+
+
+      ### B2: Doc-contract freeze wording drift
+
+      Locations: `tests/shell/test_connect_bridge_readiness_contract_freeze.py`, affected
+      docs/readiness text surfaces
+
+      Remediation: align doc/readiness wording surfaces with the authoritative contract
+      freeze expectation or update the freeze expectation only if the authoritative
+      doc changed intentionally; record which wording source is authoritative.
+
+      Grep hint: `rg -n "readiness|contract freeze|connect bridge" docs src/tela tests/shell/test_connect_bridge_readiness_contract_freeze.py`
+
+
+      ### B3: Recovery behavior expectation mismatch
+
+      Locations: `test_discover_or_autostart_re_autostarts_after_wait_timeout`, downstream
+      recovery implementation/tests
+
+      Remediation: reconcile implementation and expectation for re-autostart-after-timeout
+      behavior, preserving the ADR-006/runtime authority rather than papering over
+      the test.
+
+      Grep hint: `rg -n "re_autostarts_after_wait_timeout|wait timeout|autostart"
+      src/tela tests/shell`
+
+
+      ### B4: invar guard blockers in changed area
+
+      Locations: `src/tela/shell/_downstream_recovery.py`, `src/tela/commands/connect_bridge.py`,
+      changed-area shell/result architecture findings
+
+      Remediation: reduce oversized files by concrete responsibility, eliminate shell_result
+      violations in `_downstream_recovery.py`, and close blocker-class changed-area
+      guard findings without regressing runtime behavior.
+
+      Grep hint: `rg -n "Result\[|shell_result|_downstream_recovery|connect_bridge"
+      src/tela`
+
+
+      ### B5: Broad shell complexity and escape-hatch budget blockers
+
+      Locations: project broad gate outputs affecting this phase''s changed area
+
+      Remediation: remove or justify blocker-class budget offenders intersecting this
+      phase so the broad gate can open; do not defer without explicit non-intersection
+      proof.
+
+      Grep hint: `rg -n "@invar:allow|shell_complexity_debt|escape_hatch" src tests
+      docs`
+
+
+      ### B6: Missing core contracts
+
+      Locations: `src/tela/core/contracts.py` (`_meta_pre`, `_meta_post`, `pre`, `post`)
+
+      Remediation: add the missing contracts/doctest-ready contract coverage required
+      by project invariants for core code.
+
+      Grep hint: `rg -n "def (_meta_pre|_meta_post|pre|post)" src/tela/core/contracts.py`
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic or authoritative wording/contract
+      updates that vary based on the blocker being fixed. Mere TODOs, compatibility
+      shims without closure, or blanket test rewrites do not satisfy this step.
+
+
+      ## Failure-mode and non-regression guardrails
+
+      - Preserve the phase''s file-responsibility split; do not collapse extracted
+      code back into oversized hubs.
+
+      - For recovery behavior, prove the main path and timeout/re-autostart failure
+      path are both addressed.
+
+      - For doc freeze repair, identify stale-doc vs stale-test precedence explicitly.
+
+      - For core contract repair, ensure added contracts are non-vacuous and aligned
+      with Invar rules.
+
+      - For budget fixes, record any remaining residual debt that is demonstrably
+      non-blocking to the next broad gate.
+
+      '
+    verification: '- Use targeted edits/tests to close all listed blocker families
+
+      - Preserve layer-dissolution structure while fixing export, docs, recovery,
+      invar, and core-contract blockers
+
+      - Produce focused evidence for each blocker family plus sibling-search results
+
+      - Prepare the repo for a must-green broad retest with `uvx invar-tools guard
+      --all`'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\nIf no refs\
+      \ were provided, state: \"No refs for this step.\"\n\n## Batched Blocker Remediation\
+      \ Report\n- blocker_fingerprint: arch_refactor.layer_dissolution.full_plan_check\
+      \ blocker family\n- files changed: <list>\n- sibling_searches:\n  - B1 import\
+      \ wire: <command + findings>\n  - B2 wording drift: <command + findings>\n \
+      \ - B3 recovery behavior: <command + findings>\n  - B4 changed-area invar blockers:\
+      \ <command + findings>\n  - B5 budget blockers: <command + findings>\n  - B6\
+      \ core contracts: <command + findings>\n\n## Root Cause vs Symptom\n- root_cause_hypothesis:\
+      \ <text>\n- symptom_closed: <text>\n\n## Main Path / Failure Path Evidence\n\
+      - main_path: <what normal behavior now does>\n- highest_risk_failure_path: <timeout/re-autostart\
+      \ or budget failure path evidence>\n\n## Residual Debt Disposition\n- blocking_now:\
+      \ <none or list>\n- blocking_later: <list with owner, if any>\n- non_blocking:\
+      \ <list with non-intersection justification>\n\n## Changed Commands / Targeted\
+      \ Tests\n```text\n<paste exact targeted commands run>\n```\n\n## Notes\n- Explain\
+      \ how file-size/shell-result repairs preserved the layer-dissolution split.\n\
+      - Explain any doc/test authority decision for wording freeze alignment."
+    depends_on:
+    - arch_refactor.layer_dissolution.full_plan_check
+    agent: python-senior-tacit
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
