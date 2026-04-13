@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Literal, Protocol, TypeAlias
+from typing import Awaitable, Callable, Literal, TypeAlias
 
 from tela.core.conflict import detect_conflicts
 from tela.core.family import resolve_tools
@@ -73,28 +73,6 @@ class SingleServerConvergenceResult:
     conflicts: tuple[ConvergenceConflictNote, ...] = ()
 
 
-class SingleServerConvergenceKernel(Protocol):
-    """Resolve/register/conflict/rollback boundary for one server update."""
-
-    async def converge(
-        self,
-        server_name: str,
-        server_config: ServerConfig,
-        raw_tools: list[dict],
-        *,
-        trigger: ConvergenceTrigger,
-    ) -> Result[SingleServerConvergenceResult, str]: ...
-
-
-class ConvergencePolicyConsumer(Protocol):
-    """Adapter/orchestrator policy surface consuming kernel facts."""
-
-    async def handle_result(
-        self,
-        outcome: SingleServerConvergenceResult,
-    ) -> Result[None, str]: ...
-
-
 CONVERGENCE_BEHAVIORAL_NOTES: tuple[str, ...] = (
     "Entry adapters own reconnect, reload, watcher, and manual re-enumeration triggers.",
     "The single-server convergence kernel is limited to resolve/register/conflict/rollback semantics for one server update.",
@@ -142,67 +120,105 @@ RELOAD_BEHAVIORAL_NOTES: tuple[str, ...] = (
 )
 
 
-@dataclass(frozen=True)
-class _RegistrySingleServerConvergenceKernel:
-    """Registry-backed implementation of the single-server convergence kernel."""
+async def _converge_single_server_update(
+    server_name: str,
+    server_config: ServerConfig,
+    raw_tools: list[dict],
+    *,
+    trigger: ConvergenceTrigger,
+) -> Result[SingleServerConvergenceResult, str]:
+    """Apply one server update with resolve/register/conflict/rollback semantics.
 
-    async def converge(
-        self,
-        server_name: str,
-        server_config: ServerConfig,
-        raw_tools: list[dict],
-        *,
-        trigger: ConvergenceTrigger,
-    ) -> Result[SingleServerConvergenceResult, str]:
-        """Apply one server update with resolve/register/conflict/rollback semantics.
+    # NOTE: Acceptance contract only. Resolve/register operates on final
+    # exposed names, while retained ``ResolvedTool.raw_name`` values remain
+    # the authoritative downstream routing names for later call dispatch.
+    """
 
-        # NOTE: Acceptance contract only. Resolve/register operates on final
-        # exposed names, while retained ``ResolvedTool.raw_name`` values remain
-        # the authoritative downstream routing names for later call dispatch.
-        """
+    async with _registry_lock:
+        registry = get_registry()
+        snap = registry.snapshot()
 
-        async with _registry_lock:
-            registry = get_registry()
-            snap = registry.snapshot()
+        resolved = resolve_tools(server_name, server_config, raw_tools)
+        registry.register(server_name, resolved)
 
-            resolved = resolve_tools(server_name, server_config, raw_tools)
-            registry.register(server_name, resolved)
-
-            conflicts = detect_conflicts(registry.get_all_tools())
-            if conflicts:
-                registry.restore(snap)
-                conflict_notes = tuple(
-                    ConvergenceConflictNote(
-                        tool_name=conflict.tool_name,
-                        servers=tuple(conflict.servers),
-                    )
-                    for conflict in conflicts
+        conflicts = detect_conflicts(registry.get_all_tools())
+        if conflicts:
+            registry.restore(snap)
+            conflict_notes = tuple(
+                ConvergenceConflictNote(
+                    tool_name=conflict.tool_name,
+                    servers=tuple(conflict.servers),
                 )
-                return Result(
-                    value=SingleServerConvergenceResult(
-                        disposition="conflict",
-                        trigger=trigger,
-                        server_name=server_name,
-                        rollback_applied=True,
-                        resolved_tool_names=(),
-                        conflicts=conflict_notes,
-                    )
-                )
-
+                for conflict in conflicts
+            )
             return Result(
                 value=SingleServerConvergenceResult(
-                    disposition="applied",
+                    disposition="conflict",
                     trigger=trigger,
                     server_name=server_name,
-                    rollback_applied=False,
-                    resolved_tool_names=tuple(tool.name for tool in resolved),
+                    rollback_applied=True,
+                    resolved_tool_names=(),
+                    conflicts=conflict_notes,
                 )
             )
 
+        return Result(
+            value=SingleServerConvergenceResult(
+                disposition="applied",
+                trigger=trigger,
+                server_name=server_name,
+                rollback_applied=False,
+                resolved_tool_names=tuple(tool.name for tool in resolved),
+            )
+        )
 
-_single_server_kernel: SingleServerConvergenceKernel = (
-    _RegistrySingleServerConvergenceKernel()
-)
+
+async def _emit_conflict_warning(
+    outcome: SingleServerConvergenceResult,
+) -> Result[None, str]:
+    """Write the TOOL_CONFLICT audit entry for a rejected convergence update."""
+
+    conflict_desc = "; ".join(
+        f"{c.tool_name} in [{', '.join(c.servers)}]" for c in outcome.conflicts
+    )
+    warning_entry_result = build_audit_entry(
+        level=AuditLevel.L1,
+        connection=ConnectionContext(
+            connection_id="system",
+            profile_name="system",
+            connected_at="",
+        ),
+        tool_name=outcome.conflicts[0].tool_name,
+        server_name=outcome.server_name,
+        result=EnforcementResult(
+            verdict=EnforcementVerdict.DENY,
+            denied_by="tool_conflict",
+            error_code="TOOL_CONFLICT",
+            error_message=conflict_desc,
+        ),
+    )
+    if warning_entry_result.is_err:
+        return Result(error=warning_entry_result.error)
+    assert warning_entry_result.value is not None
+    _ = await audit_write(warning_entry_result.value)
+    return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+
+
+# @shell_orchestration: reads shell registry state and invokes shell callback side effect.
+async def _notify_registry_tool_digest() -> None:
+    """Notify upstream listeners with a digest of the current exposed tool set."""
+
+    if _notify_callback is None:
+        return
+
+    async with _registry_lock:
+        registry = get_registry()
+        tool_names = sorted(
+            t.name for ts in registry.get_all_tools().values() for t in ts
+        )
+    raw = ":".join(tool_names).encode()
+    digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
+    await _notify_callback(digest)
 
 
 def set_notify_callback(callback: NotifyCallback | None) -> Result[None, str]:
@@ -255,7 +271,7 @@ async def on_tools_changed(
     Returns:
         Result[None, str] on success, or error string if conflict detected.
     """
-    kernel_result = await _single_server_kernel.converge(
+    kernel_result = await _converge_single_server_update(
         server_name,
         server_config,
         new_tool_list,
@@ -267,41 +283,9 @@ async def on_tools_changed(
     outcome = kernel_result.value
 
     if outcome.disposition == "conflict":
-        conflict_desc = "; ".join(
-            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in outcome.conflicts
-        )
+        return await _emit_conflict_warning(outcome)
 
-        warning_entry_result = build_audit_entry(
-            level=AuditLevel.L1,
-            connection=ConnectionContext(
-                connection_id="system",
-                profile_name="system",
-                connected_at="",
-            ),
-            tool_name=outcome.conflicts[0].tool_name,
-            server_name=server_name,
-            result=EnforcementResult(
-                verdict=EnforcementVerdict.DENY,
-                denied_by="tool_conflict",
-                error_code="TOOL_CONFLICT",
-                error_message=conflict_desc,
-            ),
-        )
-        if warning_entry_result.is_err:
-            return Result(error=warning_entry_result.error)
-        assert warning_entry_result.value is not None
-        _ = await audit_write(warning_entry_result.value)
-        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
-
-    if _notify_callback is not None:
-        async with _registry_lock:
-            registry = get_registry()
-            tool_names = sorted(
-                t.name for ts in registry.get_all_tools().values() for t in ts
-            )
-        raw = ":".join(tool_names).encode()
-        digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
-        await _notify_callback(digest)
+    await _notify_registry_tool_digest()
 
     return Result(value=None)
 
@@ -338,7 +322,7 @@ async def on_server_reconnect(
     Returns:
         Result[None, str].
     """
-    kernel_result = await _single_server_kernel.converge(
+    kernel_result = await _converge_single_server_update(
         server_name,
         server_config,
         tool_list,
@@ -350,40 +334,9 @@ async def on_server_reconnect(
     outcome = kernel_result.value
 
     if outcome.disposition == "conflict":
-        conflict_desc = "; ".join(
-            f"{c.tool_name} in [{', '.join(c.servers)}]" for c in outcome.conflicts
-        )
-        warning_entry_result = build_audit_entry(
-            level=AuditLevel.L1,
-            connection=ConnectionContext(
-                connection_id="system",
-                profile_name="system",
-                connected_at="",
-            ),
-            tool_name=outcome.conflicts[0].tool_name,
-            server_name=server_name,
-            result=EnforcementResult(
-                verdict=EnforcementVerdict.DENY,
-                denied_by="tool_conflict",
-                error_code="TOOL_CONFLICT",
-                error_message=conflict_desc,
-            ),
-        )
-        if warning_entry_result.is_err:
-            return Result(error=warning_entry_result.error)
-        assert warning_entry_result.value is not None
-        _ = await audit_write(warning_entry_result.value)
-        return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+        return await _emit_conflict_warning(outcome)
 
-    if _notify_callback is not None:
-        async with _registry_lock:
-            registry = get_registry()
-            tool_names = sorted(
-                t.name for ts in registry.get_all_tools().values() for t in ts
-            )
-        raw = ":".join(tool_names).encode()
-        digest = f"sha256:{hashlib.sha256(raw).hexdigest()}"
-        await _notify_callback(digest)
+    await _notify_registry_tool_digest()
 
     return Result(value=None)
 
