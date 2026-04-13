@@ -67084,7 +67084,7 @@ phases:
   - dup_audit.doc_sync
 - id: arch_refactor.characterization
   name: Architecture Refactor Characterization
-  status: in_progress
+  status: done
   gate: Phase closes only after full guard debt is baselined and black-box runtime
     behavior is snapshotted for refactor protection.
   depends_on:
@@ -67477,7 +67477,7 @@ phases:
       Commit hash(es): (runtime snapshot worktree commits)'
   - id: arch_refactor.characterization.gate
     name: Gate characterization baseline
-    status: claimed
+    status: done
     description: 'Gate review for the characterization phase.
 
 
@@ -67564,9 +67564,77 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-13T17:32:39.077529+00:00'
+    done_at: '2026-04-13T17:44:50.351858+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Characterization Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | guard_baseline | ADEQUATE | HIGH: guard debt, file-size debt, escape budgets,
+      state hotspots, adversary suites captured | none blocking |
+
+      | runtime_snapshot | ADEQUATE | HIGH: 13/13 black-box phases pass; lifecycle/auth/error
+      contracts evidenced | SHOULD_FIX: pytest bool-return pattern weakens regression
+      detection when run under pytest |
+
+
+      ## Gate Decision Basis
+
+      - Baseline sufficient for demolition: YES
+
+      - Missing evidence: none
+
+      - Blocking concerns: none
+
+
+      ## Gate Decision
+
+      - OPEN
+
+
+      headline: PASS_WITH_DEBT
+
+      proof_gap_status: NON_BLOCKING
+
+      blocking_status: CLOSED
+
+      behavioral_proof_register: Guard baseline and runtime snapshot are specific
+      and reproducible for downstream demolition checks.
+
+      gate_open_allowed: true
+
+      explicit_uncertainty_sources: runtime_snapshot.py tests use return-bool pattern
+      under pytest (should migrate to assert/pytest.fail), but CLI path still validates
+      behavior.
+
+
+      Independent verification summary from gate review:
+
+      - Guard: 9 errors, 37 warnings, 22 infos (matches baseline)
+
+      - Primary adversary suites: PASS
+
+      - Integration + repro suites: PASS
+
+      - Runtime snapshot phases: 13/13 PASS
+
+      - Full suite retains only pre-existing known failures; no characterization regressions
+      detected.
+
+
+      Recommendation: proceed to structural_collapse with explicit follow-up to strengthen
+      runtime_snapshot pytest assertion style.'
 - id: arch_refactor.structural_collapse
   name: Architecture Refactor Structural Collapse
-  status: locked
+  status: pending
   gate: Phase closes only after fake abstractions are removed, runtime truth ownership
     is consolidated, and preserved runtime surfaces are re-proven.
   depends_on:
