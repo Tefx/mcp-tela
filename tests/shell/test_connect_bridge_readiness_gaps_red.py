@@ -17,9 +17,30 @@ from typing import Any
 import pytest
 
 import tela.commands.connect_cmd as connect_cmd
+import tela.commands.connect_bridge as connect_bridge
 import tela.commands.http_client as http_client
 from tela.core.models import StatusResponse
 from tela.shell.config_loader import Result
+
+
+# Mapping: connect_cmd alias -> connect_bridge public name for dual monkeypatching.
+_BRIDGE_ALIAS_MAP: dict[str, str] = {
+    "_post_json": "post_json",
+    "_post_json_once": "post_json_once",
+    "_post_mcp_message": "post_mcp_message",
+    "_forward_stdio_http": "forward_stdio_http",
+    "_get_gateway_status": "_get_gateway_status",
+    "_wait_for_gateway_readiness": "_wait_for_gateway_readiness",
+    "_run_bridge": "run_bridge",
+}
+
+
+def _patch_bridge(monkeypatch: pytest.MonkeyPatch, name: str, value: object) -> None:
+    """Monkeypatch both connect_cmd alias and connect_bridge definition."""
+    monkeypatch.setattr(connect_cmd, name, value)
+    bridge_name = _BRIDGE_ALIAS_MAP.get(name)
+    if bridge_name is not None:
+        monkeypatch.setattr(connect_bridge, bridge_name, value)
 
 
 def _status(*, state: str, degraded_reason: str | None = None) -> StatusResponse:
@@ -79,13 +100,11 @@ class TestBridgeReadinessBehavior:
             call_order.append("forward")
             return Result(value=None)
 
-        monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-        monkeypatch.setattr(
-            connect_cmd, "_wait_for_gateway_readiness", _fake_wait_for_gateway_readiness
+        _patch_bridge(monkeypatch, "_post_json", _fake_post_json)
+        _patch_bridge(
+            monkeypatch, "_wait_for_gateway_readiness", _fake_wait_for_gateway_readiness
         )
-        monkeypatch.setattr(
-            connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http
-        )
+        _patch_bridge(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
 
         result = connect_cmd._run_bridge(
             host="127.0.0.1", port=8000, bearer_token="test-token"
@@ -107,10 +126,8 @@ class TestBridgeReadinessBehavior:
             poll_count += 1
             return Result(value=_status(state="warming"))
 
-        monkeypatch.setattr(
-            connect_cmd, "_get_gateway_status", _fake_get_gateway_status
-        )
-        monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+        _patch_bridge(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
+        monkeypatch.setattr(connect_bridge.time, "sleep", lambda _seconds: None)
 
         result = connect_cmd._wait_for_gateway_readiness(
             status_url="http://127.0.0.1:8000/status",
@@ -139,9 +156,7 @@ class TestBridgeReadinessBehavior:
                 )
             )
 
-        monkeypatch.setattr(
-            connect_cmd, "_get_gateway_status", _fake_get_gateway_status
-        )
+        _patch_bridge(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
 
         result = connect_cmd._wait_for_gateway_readiness(
             status_url="http://127.0.0.1:8000/status",
@@ -185,9 +200,9 @@ class TestBridgeReadinessBehavior:
             )
 
         monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
-        monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+        monkeypatch.setattr(connect_bridge.time, "sleep", lambda _seconds: None)
 
-        result = connect_cmd._post_mcp_message(
+        result = connect_bridge.post_mcp_message(
             mcp_url="http://127.0.0.1:8000/mcp",
             bearer_token="test-token",
             payload=b'{"jsonrpc":"2.0","id":1}',
@@ -233,14 +248,10 @@ class TestBridgeReadinessBehavior:
             call_order.append("forward")
             return Result(value=None)
 
-        monkeypatch.setattr(
-            connect_cmd, "_get_gateway_status", _fake_get_gateway_status
-        )
-        monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-        monkeypatch.setattr(
-            connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http
-        )
-        monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
+        _patch_bridge(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
+        _patch_bridge(monkeypatch, "_post_json", _fake_post_json)
+        _patch_bridge(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
+        monkeypatch.setattr(connect_bridge.time, "sleep", lambda _seconds: None)
 
         result = connect_cmd._run_bridge(
             host="127.0.0.1", port=8000, bearer_token="test-token"

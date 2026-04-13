@@ -20,9 +20,26 @@ from typing import Any
 import pytest
 
 import tela.commands.connect_cmd as connect_cmd
+import tela.commands.connect_bridge as connect_bridge
 import tela.commands.http_client as http_client
 from tela.core.models import LockfileData, StatusResponse
 from tela.shell.config_loader import Result
+
+
+# Mapping: connect_cmd alias -> connect_bridge public name for dual monkeypatching.
+_BRIDGE_ALIAS_MAP: dict[str, str] = {
+    "_post_mcp_message": "post_mcp_message",
+    "_read_framed_message": "read_framed_message",
+    "_write_framed_message": "write_framed_message",
+}
+
+
+def _patch_bridge(monkeypatch: pytest.MonkeyPatch, name: str, value: object) -> None:
+    """Monkeypatch both connect_cmd alias and connect_bridge definition."""
+    monkeypatch.setattr(connect_cmd, name, value)
+    bridge_name = _BRIDGE_ALIAS_MAP.get(name)
+    if bridge_name is not None:
+        monkeypatch.setattr(connect_bridge, bridge_name, value)
 
 
 # =============================================================================
@@ -366,8 +383,8 @@ def test_forward_stdio_http_passes_max_recovery_attempts_to_post_mcp(
     ) -> Result[None, str]:
         return Result(value=None)
 
-    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
-    monkeypatch.setattr(connect_cmd, "_read_framed_message", _fake_read_framed_message)
+    _patch_bridge(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
+    _patch_bridge(monkeypatch, "_read_framed_message", _fake_read_framed_message)
     monkeypatch.setattr(
         connect_cmd, "_write_framed_message", _fake_write_framed_message
     )

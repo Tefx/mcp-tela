@@ -12,9 +12,49 @@ import pytest
 
 from tela.cli import main
 from tela.commands import connect_cmd
+from tela.commands import connect_bridge
 from tela.commands.connect_transport import inject_bridge_connection_id
 from tela.core.models import LockfileData, StatusResponse
 from tela.shell.config_loader import Result
+
+
+# Mapping: connect_cmd underscore alias -> connect_bridge public name.
+# Used by _patch_bridge_fn to monkeypatch both modules simultaneously.
+_BRIDGE_ALIAS_MAP: dict[str, str] = {
+    "_post_json": "post_json",
+    "_post_json_once": "post_json_once",
+    "_post_mcp_message": "post_mcp_message",
+    "_forward_stdio_http": "forward_stdio_http",
+    "_get_gateway_status": "_get_gateway_status",
+    "_wait_for_gateway_readiness": "_wait_for_gateway_readiness",
+    "_is_recoverable_error": "is_recoverable_error",
+    "_recover_gateway": "recover_gateway",
+    "_is_mcp_transient_warming_error": "is_mcp_transient_warming_error",
+    "_run_bridge": "run_bridge",
+    "_read_framed_message": "read_framed_message",
+    "_write_framed_message": "write_framed_message",
+    "_BridgeMessage": "BridgeMessage",
+    "_extract_jsonrpc_method": "extract_jsonrpc_method",
+    "_emit_bridge_diagnostic": "_emit_bridge_diagnostic",
+}
+
+
+def _patch_bridge_fn(
+    monkeypatch: pytest.MonkeyPatch,
+    alias_name: str,
+    replacement: object,
+) -> None:
+    """Monkeypatch a bridge function on both connect_cmd and connect_bridge.
+
+    connect_cmd re-exports bridge functions as underscore aliases.
+    connect_bridge owns the original definitions. Tests that patch
+    connect_cmd._X need the patch to also land on connect_bridge.Y
+    where Y is the public name in connect_bridge.
+    """
+    monkeypatch.setattr(connect_cmd, alias_name, replacement)
+    bridge_name = _BRIDGE_ALIAS_MAP.get(alias_name)
+    if bridge_name is not None:
+        monkeypatch.setattr(connect_bridge, bridge_name, replacement)
 
 
 def test_connect_subcommand_exists() -> None:
@@ -82,6 +122,7 @@ def test_connect_server_path_uses_env_token(
         max_recovery_attempts: int = 3,
         recovery_config_path: str | None = None,
         recovery_default_profile: str | None = None,
+        **_kwargs: object,
     ) -> Result[None, str]:
         _ = max_recovery_attempts
         calls.append(
@@ -95,7 +136,7 @@ def test_connect_server_path_uses_env_token(
         )
         return Result(value=None)
 
-    monkeypatch.setattr(connect_cmd, "_run_bridge", _fake_run_bridge)
+    _patch_bridge_fn(monkeypatch, "_run_bridge", _fake_run_bridge)
 
     result = connect_cmd.connect_command(
         config_path="tela.yaml",
@@ -208,6 +249,7 @@ def test_connect_discovery_uses_published_lockfile_port(
         max_recovery_attempts: int = 3,
         recovery_config_path: str | None = None,
         recovery_default_profile: str | None = None,
+        **_kwargs: object,
     ) -> Result[None, str]:
         _ = max_recovery_attempts
         calls.append(
@@ -223,7 +265,7 @@ def test_connect_discovery_uses_published_lockfile_port(
 
     monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
     monkeypatch.setattr(connect_cmd, "read_lockfile", lambda: Result(value=lockfile))
-    monkeypatch.setattr(connect_cmd, "_run_bridge", _fake_run_bridge)
+    _patch_bridge_fn(monkeypatch, "_run_bridge", _fake_run_bridge)
 
     result = connect_cmd.connect_command(
         config_path="tela.yaml",
@@ -269,6 +311,7 @@ def test_connect_discovery_passes_recovery_context_into_bridge(
         max_recovery_attempts: int = 3,
         recovery_config_path: str | None = None,
         recovery_default_profile: str | None = None,
+        **_kwargs: object,
     ) -> Result[None, str]:
         observed.update(
             {
@@ -284,7 +327,7 @@ def test_connect_discovery_passes_recovery_context_into_bridge(
 
     monkeypatch.delenv("TELA_BEARER_TOKEN", raising=False)
     monkeypatch.setattr(connect_cmd, "read_lockfile", lambda: Result(value=lockfile))
-    monkeypatch.setattr(connect_cmd, "_run_bridge", _fake_run_bridge)
+    _patch_bridge_fn(monkeypatch, "_run_bridge", _fake_run_bridge)
 
     result = connect_cmd.connect_command(
         config_path="/tmp/custom-tela.yaml",
@@ -346,14 +389,15 @@ def test_run_bridge_recovery_uses_passed_connect_context(
         bearer_token: str,
         config_path: str | None,
         default_profile: str | None,
+        **_kwargs: object,
     ) -> Result[tuple[str, int, str], str]:
         recovery_calls.append((host, port, bearer_token, config_path, default_profile))
         return Result(value=("127.0.0.1", 9001, "recovered-token"))
 
     readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
-    monkeypatch.setattr(connect_cmd, "_recover_gateway", _fake_recover_gateway)
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(monkeypatch, "_recover_gateway", _fake_recover_gateway)
 
     result = connect_cmd._run_bridge(
         host="127.0.0.1",
@@ -414,10 +458,10 @@ def test_run_bridge_uses_recovered_bearer_token_for_reconnect(
             return Result(error="MCP_FORWARD_FAILED: Connection refused")
         return Result(value=None)
 
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
-    monkeypatch.setattr(
-        connect_cmd,
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(
+        monkeypatch,
         "_recover_gateway",
         lambda **_kwargs: Result(value=("127.0.0.1", 9001, "recovered-token")),
     )
@@ -496,9 +540,9 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
             )
         )
 
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    _patch_bridge_fn(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
 
     result = connect_cmd._run_bridge(
         host="127.0.0.1",
@@ -587,9 +631,9 @@ def test_run_bridge_waits_for_status_ready_before_forwarding(
         forwarded.append(True)
         return Result(value=None)
 
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    _patch_bridge_fn(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
 
     result = connect_cmd._run_bridge(
         host="127.0.0.1",
@@ -818,7 +862,7 @@ def test_forward_stdio_http_preserves_content_length_framing_for_tools_flow(
         _ = session_id
         return Result(value=responses.pop(0))
 
-    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
 
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -876,7 +920,7 @@ def test_forward_stdio_http_preserves_newline_framing_for_tools_flow(
         _ = session_id
         return Result(value=responses.pop(0))
 
-    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
 
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -984,7 +1028,7 @@ def test_forward_stdio_http_returns_error_on_write_failure(
         _ = mcp_url, bearer_token, payload, session_id
         return Result(value=response)
 
-    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
 
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1058,7 +1102,7 @@ def test_forward_stdio_http_replays_inflight_message_after_transport_recovery(
         recover_calls["count"] += 1
         return Result(value=("http://127.0.0.1:9001/mcp", "recovered-token"))
 
-    monkeypatch.setattr(connect_cmd, "_post_mcp_message", _fake_post_mcp_message)
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
 
     result = connect_cmd._forward_stdio_http(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1286,8 +1330,8 @@ def test_active_bridge_interrupt_triggers_immediate_exit_and_cleanup(
         # The loop should exit immediately when should_stop() returns True
         return Result(value=None)
 
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
 
     # Simulate SIGINT being raised
     interrupt_received = Event()
@@ -1343,7 +1387,7 @@ def _mock_gateway_status_ready(
         readiness_snapshots.append(status.model_dump())
         return Result(value=status)
 
-    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
+    _patch_bridge_fn(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
     return readiness_snapshots
 
 
@@ -1384,9 +1428,9 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
         return Result(value=None)
 
     readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd.time, "sleep", lambda _seconds: None)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    monkeypatch.setattr(connect_bridge.time, "sleep", lambda _seconds: None)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
 
     result = connect_cmd._run_bridge(
         host="127.0.0.1",
@@ -1486,10 +1530,10 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         )
         return Result(value=status)
 
-    monkeypatch.setattr(connect_cmd, "_post_json", _fake_post_json)
-    monkeypatch.setattr(connect_cmd, "_post_json_once", _fake_post_json_once)
-    monkeypatch.setattr(connect_cmd, "_get_gateway_status", _fake_get_gateway_status)
-    monkeypatch.setattr(connect_cmd, "_forward_stdio_http", _fake_forward_stdio_http)
+    _patch_bridge_fn(monkeypatch, "_post_json", _fake_post_json)
+    _patch_bridge_fn(monkeypatch, "_post_json_once", _fake_post_json_once)
+    _patch_bridge_fn(monkeypatch, "_get_gateway_status", _fake_get_gateway_status)
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
 
     result = connect_cmd._run_bridge(
         host="127.0.0.1",

@@ -15,8 +15,10 @@ from urllib import error as urllib_error
 
 import pytest
 
-from tela.commands.connect_cmd import (
+from tela.commands.connect_bridge import (
     HTTP_TRANSIENT_RETRIES,
+)
+from tela.commands.connect_cmd import (
     _autostart_serve,
     _post_json,
     _post_mcp_message,
@@ -88,7 +90,7 @@ class TestB1TransientRetry:
 
         with (
             patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
-            patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
+            patch("tela.commands.connect_bridge.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
         ):
             result = _post_mcp_message(
                 mcp_url="http://127.0.0.1:9999/mcp",
@@ -112,7 +114,7 @@ class TestB1TransientRetry:
 
         with (
             patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
-            patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
+            patch("tela.commands.connect_bridge.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
         ):
             result = _post_mcp_message(
                 mcp_url="http://127.0.0.1:9999/mcp",
@@ -174,7 +176,7 @@ class TestB1TransientRetry:
 
         with (
             patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
-            patch("tela.commands.connect_cmd.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
+            patch("tela.commands.connect_bridge.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
         ):
             result = _post_json(
                 url="http://127.0.0.1:9999/connect",

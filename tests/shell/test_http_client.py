@@ -503,7 +503,7 @@ def test_post_json_once_delegates_to_retry_http_request_success(
 ) -> None:
     """_post_json_once must delegate to retry_http_request and succeed."""
 
-    from tela.commands import connect_cmd
+    from tela.commands import connect_bridge
 
     calls: list[dict[str, object]] = []
 
@@ -544,9 +544,9 @@ def test_post_json_once_delegates_to_retry_http_request_success(
         )
         return Result(value=_FakeResponse())
 
-    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
 
-    result = connect_cmd._post_json_once(
+    result = connect_bridge.post_json_once(
         url="http://127.0.0.1:8123/disconnect",
         bearer_token="test-token",
         payload={"connection_id": "bridge_abc123"},
@@ -569,7 +569,7 @@ def test_post_json_once_delegates_error_from_retry_http_request(
 ) -> None:
     """_post_json_once must propagate retry_http_request errors."""
 
-    from tela.commands import connect_cmd
+    from tela.commands import connect_bridge
 
     from tela.shell.config_loader import Result
 
@@ -587,9 +587,9 @@ def test_post_json_once_delegates_error_from_retry_http_request(
     ) -> "Result[http.client.HTTPResponse, str]":
         return Result(error="HTTP_503: http://127.0.0.1:8123/disconnect")
 
-    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
 
-    result = connect_cmd._post_json_once(
+    result = connect_bridge.post_json_once(
         url="http://127.0.0.1:8123/disconnect",
         bearer_token="test-token",
         payload={"connection_id": "bridge_abc123"},
@@ -836,7 +836,7 @@ def test_post_json_delegates_to_retry_http_request_success(
 ) -> None:
     """_post_json must delegate to retry_http_request and return None on success."""
 
-    from tela.commands import connect_cmd
+    from tela.commands import connect_bridge
 
     calls: list[dict[str, object]] = []
 
@@ -879,9 +879,9 @@ def test_post_json_delegates_to_retry_http_request_success(
         )
         return Result(value=_FakeResponse())
 
-    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
 
-    result = connect_cmd._post_json(
+    result = connect_bridge.post_json(
         url="http://127.0.0.1:8123/connect",
         bearer_token="test-token",
         payload={"connection_id": "bridge_test"},
@@ -892,7 +892,7 @@ def test_post_json_delegates_to_retry_http_request_success(
     assert calls[0]["url"] == "http://127.0.0.1:8123/connect"
     assert calls[0]["method"] == "POST"
     assert calls[0]["headers"]["Authorization"] == "Bearer test-token"
-    assert calls[0]["max_retries"] == connect_cmd.HTTP_TRANSIENT_RETRIES
+    assert calls[0]["max_retries"] == connect_bridge.HTTP_TRANSIENT_RETRIES
     assert calls[0]["retry_on_503"] is True
     assert calls[0]["retry_on_transient"] is True
 
@@ -902,7 +902,7 @@ def test_post_json_delegates_error_from_retry_http_request(
 ) -> None:
     """_post_json must propagate retry_http_request errors."""
 
-    from tela.commands import connect_cmd
+    from tela.commands import connect_bridge
 
     from tela.shell.config_loader import Result
 
@@ -921,9 +921,9 @@ def test_post_json_delegates_error_from_retry_http_request(
     ) -> "Result[http.client.HTTPResponse, str]":
         return Result(error=f"HTTP_503: {url}")
 
-    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
 
-    result = connect_cmd._post_json(
+    result = connect_bridge.post_json(
         url="http://127.0.0.1:8123/connect",
         bearer_token="test-token",
         payload={"connection_id": "bridge_test"},
@@ -938,7 +938,7 @@ def test_get_gateway_status_delegates_to_retry_http_request(
 ) -> None:
     """_get_gateway_status must delegate HTTP to retry_http_request and parse response."""
 
-    from tela.commands import connect_cmd
+    from tela.commands import connect_bridge
     from tela.core.models import StatusResponse
 
     from tela.shell.config_loader import Result
@@ -998,9 +998,9 @@ def test_get_gateway_status_delegates_to_retry_http_request(
         )
         return Result(value=_FakeResponse())
 
-    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
 
-    result = connect_cmd._get_gateway_status(
+    result = connect_bridge._get_gateway_status(
         status_url="http://127.0.0.1:8123/status",
         bearer_token="test-token",
     )
@@ -1018,7 +1018,7 @@ def test_post_mcp_message_error_format_preserved(
 ) -> None:
     """_post_mcp_message must transform retry_http_request errors to MCP format."""
 
-    from tela.commands import connect_cmd
+    from tela.commands import connect_bridge
 
     from tela.shell.config_loader import Result
 
@@ -1037,9 +1037,9 @@ def test_post_mcp_message_error_format_preserved(
     ) -> "Result[http.client.HTTPResponse, str]":
         return Result(error="HTTP_503: http://127.0.0.1:8123/mcp")
 
-    monkeypatch.setattr(connect_cmd, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
 
-    result = connect_cmd._post_mcp_message(
+    result = connect_bridge.post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
         bearer_token="token",
         payload=b'{"jsonrpc":"2.0","id":1}',
@@ -1065,10 +1065,10 @@ def test_post_mcp_message_error_format_preserved(
         return Result(error="HTTP_CONNECT_ERROR: Connection refused")
 
     monkeypatch.setattr(
-        connect_cmd, "retry_http_request", _fake_retry_http_request_connect_error
+        connect_bridge, "retry_http_request", _fake_retry_http_request_connect_error
     )
 
-    result2 = connect_cmd._post_mcp_message(
+    result2 = connect_bridge.post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
         bearer_token="token",
         payload=b'{"jsonrpc":"2.0","id":1}',
