@@ -68473,7 +68473,7 @@ phases:
       - watcher/idle lifecycle preserved: YES'
   - id: arch_refactor.layer_dissolution.gateway_compat_collapse
     name: Collapse gateway compatibility residue and import hubs
-    status: claimed
+    status: done
     description: 'Implementation scope: serial integration step for shared writable
       surfaces.
 
@@ -68553,6 +68553,81 @@ phases:
     agent: python-refactor-master-tacit
     claimed_by: python-refactor-master-tacit
     claimed_at: '2026-04-13T20:40:12.961311+00:00'
+    done_at: '2026-04-13T20:51:44.614440+00:00'
+    evidence: 'status: SUCCESS (semantic)
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Changed Files
+
+      - gateway/config/result import surface and related callers updated
+
+      - start wrapper minimized
+
+      - tests/import callsites adjusted for direct Result path
+
+
+      ## target_kill_list Outcome
+
+      - gateway.py backward-compat re-export block — removed
+
+      - gateway.py _startup_manifest global — localized
+
+      - config_loader.py Result re-export — removed
+
+      - legacy imports to config_loader.Result — removed
+
+      - internal src dependency on commands/start.py — removed (test compatibility
+      wrapper retained)
+
+
+      ## Verification
+
+      - `ruff check` on changed files — pass
+
+      - `py_compile` on changed files — pass
+
+      - `pytest tests/shell/test_config_loader.py tests/shell/test_serve_cmd.py tests/shell/test_gateway.py
+      tests/shell/test_http_routes.py tests/integration/test_end_to_end.py` — `115
+      passed`
+
+      - `grep "from tela.shell.config_loader import Result"` — no matches
+
+
+      ## Compatibility Notes
+
+      - direct Result import status: migrated to `tela.shell.result.Result`
+
+      - gateway re-export reduction status: gateway runtime import-hub usage removed/reduced
+
+      - start.py retention rationale: thin compatibility wrapper retained for tests/external
+      compatibility
+
+
+      Non-blocking note for this step:
+
+      - `invar guard --changed` surfaced pre-existing/project-level shell complexity
+      + escape hatch budget debt not introduced by this step; does not invalidate
+      this step''s compatibility-collapse acceptance criteria.
+
+
+      step_intent: collapse compatibility residue/import hubs without changing CLI
+      semantics
+
+      expected_result: direct imports and reduced compatibility residue with behavior
+      preserved
+
+      observed_result: kill-list objectives met and targeted behavioral tests green
+
+      failure_alignment: worker FAIL was due non-step-specific pre-existing guard
+      debt
+
+      product_implementation_files_modified: yes
+
+      commit: 8705fba'
   - id: arch_refactor.layer_dissolution.full_plan_check
     name: Run full-plan verification after layer dissolution
     status: pending
