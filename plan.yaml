@@ -68286,7 +68286,7 @@ phases:
       failure_alignment: none\nproduct_implementation_files_modified: yes"
   - id: arch_refactor.layer_dissolution.serve_facade_shrink
     name: Shrink serve_cmd facade and extract runtime loop bulk
-    status: pending
+    status: claimed
     description: 'Implementation scope: technical-debt remediation with runnable-surface
       preservation.
 
@@ -68359,6 +68359,8 @@ phases:
       \ launches from CLI: YES/NO\n- lockfile ordering preserved: YES/NO\n- watcher/idle\
       \ lifecycle preserved: YES/NO"
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-13T19:47:28.033141+00:00'
   - id: arch_refactor.layer_dissolution.gateway_compat_collapse
     name: Collapse gateway compatibility residue and import hubs
     status: pending
