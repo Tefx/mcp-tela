@@ -67319,7 +67319,7 @@ phases:
       Commit hash(es): 1d5b752'
   - id: arch_refactor.characterization.runtime_snapshot
     name: Capture black-box runtime behavior snapshot
-    status: claimed
+    status: done
     description: 'Verification scope: phase-check protecting structural collapse and
       layer dissolution.
 
@@ -67404,6 +67404,77 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-13T17:31:55.210986+00:00'
+    done_at: '2026-04-13T17:32:07.521825+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Runtime Snapshot
+
+      - `tela serve` command used: `tela serve --config tests/repro/runtime_snapshot_minimal.yaml
+      --port 0 --idle-timeout 0`
+
+      - `tela connect` command used: `tela connect --config tests/repro/runtime_snapshot_minimal.yaml
+      --server 127.0.0.1:<port>` and no-server bounded-exit path tested
+
+      - `GET /status` output/status: 200 with lifecycle snapshot (`state=ready`) with
+      auth; 401 without auth
+
+      - `POST /connect` output/status: 200 with `{status:"connected", connection_id,
+      profile_name}` with auth; 401 without auth
+
+      - `POST /disconnect` output/status: 200 disconnected for existing id; 404 `CONNECTION_NOT_FOUND`
+      for nonexistent id
+
+
+      ## Behavioral Notes
+
+      - Discovery truth observed as: lockfile discovery fields `{pid,host,port,token,started_at,config_path,version}`
+      without readiness state
+
+      - Readiness truth observed as: `/status` provides lifecycle and explicit readiness
+      `state`
+
+      - Any surprising external behavior: none blocking; transition intermediate readiness
+      states not sampled due fast converge
+
+
+      ## Downstream Gates Protected
+
+      - arch_refactor.structural_collapse.runtime_liveness_probe
+
+      - arch_refactor.layer_dissolution.runtime_probe
+
+      - arch_refactor.finalization.black_box_runtime
+
+
+      step_intent: verification_runtime_snapshot
+
+      expected_result: black-box runtime surfaces validated and discovery/readiness
+      distinction proven
+
+      observed_result: 13/13 runtime characterization phases pass
+
+      failure_alignment: no failures observed
+
+      product_implementation_files_modified: none
+
+
+      behavioral_proof_register: Runtime black-box characterization script and evidence
+      document capture serve/connect/status/connect/disconnect contracts and lifecycle
+      observations.
+
+      gate_open_allowed: true
+
+      explicit_uncertainty_sources: auto-discovery path without --server not exercised;
+      additional /connect request fields untested; intermediate readiness transition
+      states not sampled in realtime.
+
+
+      Commit hash(es): (runtime snapshot worktree commits)'
   - id: arch_refactor.characterization.gate
     name: Gate characterization baseline
     status: pending
