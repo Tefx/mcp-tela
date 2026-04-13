@@ -67642,7 +67642,7 @@ phases:
   steps:
   - id: arch_refactor.structural_collapse.runtime_truth_collapse
     name: Collapse split runtime truth ownership
-    status: pending
+    status: claimed
     description: 'Implementation scope: technical-debt remediation with hardened acceptance.
 
 
@@ -67725,6 +67725,8 @@ phases:
       \n## Non-Regression Statement\n- connect/serve/status/session behavior preserved:\
       \ YES/NO"
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-13T17:45:38.333629+00:00'
   - id: arch_refactor.structural_collapse.reload_indirection_demolition
     name: Remove reload indirection with no second implementation
     status: claimed
