@@ -68705,7 +68705,7 @@ phases:
     claimed_at: '2026-04-13T20:52:24.201201+00:00'
   - id: arch_refactor.layer_dissolution.runtime_probe
     name: Black-box probe runtime surfaces after file contraction
-    status: pending
+    status: claimed
     description: 'Verification scope: phase-check on preserved runnable surfaces.
 
 
@@ -68770,6 +68770,8 @@ phases:
     depends_on:
     - arch_refactor.layer_dissolution.gateway_compat_collapse
     agent: blind-tester-tacit
+    claimed_by: blind-tester-tacit
+    claimed_at: '2026-04-13T21:06:27.467117+00:00'
   - id: arch_refactor.layer_dissolution.gate
     name: Gate layer dissolution
     status: pending
