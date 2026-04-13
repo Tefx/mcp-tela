@@ -68870,7 +68870,9 @@ phases:
 
       - Compatibility residue removal is evidenced
 
-      - Full-plan-check and runtime probe are both acceptable
+      - Full-plan-check failure was remediated through `arch_refactor.layer_dissolution.fix_blockers`
+
+      - `arch_refactor.layer_dissolution.retest_blockers` is green and acceptable
 
       - Proceed only if finalization is now a review/sync phase, not a hidden rework
       phase'
@@ -68919,6 +68921,7 @@ phases:
     - arch_refactor.layer_dissolution.gateway_compat_collapse
     - arch_refactor.layer_dissolution.full_plan_check
     - arch_refactor.layer_dissolution.runtime_probe
+    - arch_refactor.layer_dissolution.retest_blockers
     agent: gate-reviewer-tacit
   - id: arch_refactor.layer_dissolution.fix_blockers
     name: Batched blocker remediation after full-plan check
