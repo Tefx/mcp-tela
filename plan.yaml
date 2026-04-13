@@ -68705,7 +68705,7 @@ phases:
     claimed_at: '2026-04-13T20:52:24.201201+00:00'
   - id: arch_refactor.layer_dissolution.runtime_probe
     name: Black-box probe runtime surfaces after file contraction
-    status: claimed
+    status: done
     description: 'Verification scope: phase-check on preserved runnable surfaces.
 
 
@@ -68772,6 +68772,54 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-13T21:06:27.467117+00:00'
+    done_at: '2026-04-13T21:06:39.115221+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Runtime Probe
+
+      - Commands: black-box probes for serve/connect/status/connect/disconnect/mcp
+      plus operator CLI surfaces (`tela status`, `tela profiles`, `tela connections`).
+
+      - Status outputs: all targeted runtime endpoints and CLI probes returned expected
+      contract-compliant statuses (200/401/404/406 where applicable) and successful
+      authenticated initialize path on `/mcp`.
+
+      - Behavior drift observed: none in public runtime surfaces after file contraction.
+
+      - Readiness/discovery distinction observed: `/status` remains readiness authority
+      (`state` present); `/connect` remains lifecycle-only payload; external split
+      preserved.
+
+
+      ## Protected Finalization
+
+      - finalization.black_box_runtime
+
+
+      step_intent: post-contraction black-box runtime verification
+
+      expected_result: runtime public surfaces unchanged and readiness/discovery split
+      intact
+
+      observed_result: probes passed and no public behavior drift detected
+
+      failure_alignment: none
+
+      product_implementation_files_modified: no
+
+
+      behavioral_proof_register: serve alive/lifecycle, status auth contract, connect/disconnect
+      lifecycle semantics, and MCP admission path validated
+
+      gate_open_allowed: true
+
+      explicit_uncertainty_sources: broader suite still has pre-existing non-runtime
+      import/doc wording/env-dependent failures tracked by full-plan-check'
   - id: arch_refactor.layer_dissolution.gate
     name: Gate layer dissolution
     status: pending
