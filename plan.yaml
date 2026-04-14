@@ -69603,7 +69603,7 @@ phases:
       blocker closure and broad guard green (0 errors).'
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
-  status: pending
+  status: in_progress
   gate: Phase closes only after docs, wiring, spec conformance, architecture review,
     and black-box runtime validation all approve the simplified architecture.
   depends_on:
@@ -69810,7 +69810,7 @@ phases:
     agent: spec-verifier-tacit
   - id: arch_refactor.finalization.architecture_review
     name: Review whether the architecture is genuinely smaller
-    status: pending
+    status: claimed
     description: 'Independent architecture review focused on negative complexity reduction.
 
 
@@ -69878,6 +69878,8 @@ phases:
 
       - SIMPLIFIED | PARTIAL | NOT_SIMPLIFIED'
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-14T10:05:41.088019+00:00'
   - id: arch_refactor.finalization.black_box_runtime
     name: Black-box validate preserved runtime surfaces
     status: pending
