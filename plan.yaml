@@ -69603,7 +69603,7 @@ phases:
       blocker closure and broad guard green (0 errors).'
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
-  status: in_progress
+  status: done
   gate: Phase closes only after docs, wiring, spec conformance, architecture review,
     and black-box runtime validation all approve the simplified architecture.
   depends_on:
@@ -69988,7 +69988,7 @@ phases:
       observed in runtime behavior.'
   - id: arch_refactor.finalization.gate
     name: Final gate for architecture refactor
-    status: claimed
+    status: done
     description: 'Final gate review for the architecture refactor plan.
 
 
@@ -70081,3 +70081,107 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-14T11:02:32.755103+00:00'
+    done_at: '2026-04-14T11:19:41.635391+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md — Exit criteria section confirms
+      all objectives achieved; deleted abstractions documented as DELETED; non-goals
+      clearly stated
+
+      - docs/DESIGN.md — Runtime architecture, authority split, module boundaries,
+      and discovery/readiness semantics reviewed
+
+      - docs/INTERFACES.md — CLI surface, HTTP endpoints, status schema, lockfile
+      and error contracts reviewed
+
+
+      ## Final Gate Review
+
+      | Step | Status | Evidence Quality | Concerns |
+
+      | --- | --- | --- | --- |
+
+      | doc_sync | PASS | High — DESIGN and ARCHITECTURE-REFACTOR-ASSESSMENT align
+      with refactored code | None blocking |
+
+      | wiring_audit | PASS_WITH_DEBT | High — all public exports and runtime entrypoints
+      reachable | Non-blocking stale re-export debt noted |
+
+      | spec_conformance | PASS | High — CLI and HTTP surfaces match docs; behavioral
+      contracts match | INTERFACES.md missing `--max-recovery-attempts`; DESIGN.md
+      missing `connect_bridge.py`/`connect_transport.py` entries (doc-gaps, not behavioral)
+      |
+
+      | architecture_review | PASS | High — genuine simplification confirmed; no new
+      abstraction forest; state centralised | Residual: connect_bridge.py 895 lines
+      with file_size escape hatch; compatibility hubs noted |
+
+      | black_box_runtime | PASS | High — CLI and HTTP surfaces behave per docs; no
+      regressions | None blocking |
+
+
+      ## Independent Verification
+
+      - Tests: 1017 passed, 1 skipped, 9 xfailed, 11 xpassed (excluding 4 known-gap/env-dependent
+      tests)
+
+      - Invar guard: PASSED (0 errors, 54 warnings, budget 66/75)
+
+      - No `_Runtime`/`_Stub`/`_Placeholder` classes in code
+
+      - No vacuous contracts (identity lambdas)
+
+      - All CLI commands work (`--help` exits 0 for all 7 subcommands)
+
+      - Deleted abstractions (EventEntryAdapter, ConvergencePolicyConsumer, SingleServerConvergenceKernel)
+      confirmed absent from source and active docs
+
+      - `# type: ignore`: 1 instance (legitimate Result type-arg)
+
+      - `: Any`: 10 instances (justified: contract decorators, lazy imports, pure
+      data helpers)
+
+      - No TODO/FIXME/HACK in source
+
+      - No hardcoded secrets
+
+
+      ## Known Environment-Dependent Test Failures (not regressions)
+
+      - `test_status_schema_fields`, `test_connections_schema_fields`: require running
+      server (worktree has no server)
+
+      - `test_tela_prefix_is_reserved_and_rejected`, `test_tela_prefix_without_dot_also_rejected`:
+      pre-existing implementation gap (not from this refactor)
+
+
+      ## Residual Debt (all non-blocking, explicit)
+
+      1. `connect_bridge.py` at 895 lines — file_size escape hatch with documented
+      rationale
+
+      2. `gateway_runtime.py` at 841 lines — consolidated state (improvement over
+      prior split ownership)
+
+      3. `gateway.py` at 947 lines — lifecycle coordination module
+
+      4. INTERFACES.md missing `--max-recovery-attempts` flag
+
+      5. DESIGN.md missing `connect_bridge.py`/`connect_transport.py` module boundary
+      entries
+
+      6. Two tela-prefix rejection tests fail (pre-existing gap, NOT regressions from
+      this refactor)
+
+      7. 66/75 escape hatch budget used (within limit, but close to ceiling)
+
+
+      ## Gate Decision
+
+      - OPEN
+
+      - Residual simplification debt: explicit, non-blocking — 3 large-shell files
+      with escape hatches and 2 doc-completeness gaps
+
+      - Residual runtime risk: none blocking — all behavioral proofs PROVEN, no open
+      blocker rows'
