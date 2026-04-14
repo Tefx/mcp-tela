@@ -70760,9 +70760,17 @@ phases:
     description: Gate implementation. Open only if the readiness review proves preparation
       is sufficient and no unresolved authority, rollout, or verification blockers
       remain.
-    verification: Gate decision must map each blocker to closed or blocking and must
-      explicitly state whether implementation may start.
-    evidence_template: '## Readiness Gate
+    verification: Gate implementation. OPEN only if the readiness review proves preparation
+      is sufficient, `idle_recovery` is closed, and no unresolved authority, rollout,
+      or verification blockers remain.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Readiness Gate
 
       - Decision: OPEN or BLOCKED
 
