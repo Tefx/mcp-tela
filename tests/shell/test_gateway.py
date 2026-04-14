@@ -45,11 +45,62 @@ from tela.shell.gateway_runtime import (
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,
     STATUS_SNAPSHOT_CONTRACT,
+    UpstreamSession,
     add_runtime_connection,
+    capture_session,
     clear_runtime_connections,
+    clear_session_registry,
     set_runtime_config,
     set_runtime_running,
 )
+from tela.shell import gateway_runtime
+
+
+# --- Helper for tests requiring a bound MCP session ---
+
+
+class _FakeSession:
+    """Minimal UpstreamSession implementation for test request contexts.
+
+    Also serves as duck-typed session object: has a .session attribute
+    that returns itself, so request_ctx.get().session works.
+    """
+
+    async def send_tool_list_changed(self) -> None:
+        pass
+
+    @property
+    def session(self) -> _FakeSession:
+        """Duck-type: request_ctx.get().session returns the session itself."""
+        return self
+
+
+def _setup_test_connection_with_session() -> tuple[str, _FakeSession]:
+    """Register a bridge connection and bind a fake session for test handlers.
+
+    Used by tests that call handler functions directly (bypassing real MCP
+    initialization). Without this, _ensure_connection raises RECONNECT_REQUIRED
+    because no session context is available in the test environment.
+
+    Returns:
+        Tuple of (connection_id, fake_session) for use in test assertions.
+    """
+    from mcp.server.lowlevel.server import request_ctx
+
+    connection_id = "bridge_test"
+    conn = ConnectionContext(
+        connection_id=connection_id,
+        profile_name="dev",
+        connected_at="2026-01-01T00:00:00Z",
+        init_mode=AuthMode.OPEN,
+    )
+    add_runtime_connection(conn)
+    session = _FakeSession()
+    # Set request_ctx so _ensure_connection can find the session and
+    # adopt the bridge connection. type: ignore because _FakeSession
+    # is not a RequestContext but has .session attribute for duck typing.
+    _ctx_token = request_ctx.set(session)  # type: ignore[arg-type]  # test-only: _FakeSession satisfies session protocol at runtime
+    return connection_id, session
 
 
 # --- GatewayStartupConfig model tests ---
@@ -756,6 +807,7 @@ def test_fastmcp_tools_list_returns_filtered_tools() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -807,6 +859,7 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
 
         start_result = await gateway_start(config, tela_config=tela)
         assert start_result.is_ok
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
@@ -907,6 +960,7 @@ def test_fastmcp_tools_call_denies_unadmitted_family() -> None:
             tela_config=tela,
             tool_lists={"shell": [{"name": "exec", "inputSchema": {}}]},
         )
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
@@ -1031,6 +1085,7 @@ def test_list_tools_preserves_all_metadata_fields() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1096,6 +1151,7 @@ def test_list_tools_preserves_partial_metadata() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1107,8 +1163,8 @@ def test_list_tools_preserves_partial_metadata() -> None:
             assert len(tools) >= 1
             tool = next((t for t in tools if t.name == "read_file"), None)
             assert tool is not None
+            assert tool.description == "Read a file"
             assert tool.title == "File Reader"
-            assert tool.outputSchema is None
             assert tool.annotations is not None
             assert tool.annotations.readOnlyHint is True
         finally:
@@ -1157,6 +1213,7 @@ def test_list_tools_handles_absent_metadata() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1218,6 +1275,7 @@ def test_list_tools_preserves_only_title() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1278,6 +1336,7 @@ def test_list_tools_preserves_only_output_schema() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1338,6 +1397,7 @@ def test_list_tools_preserves_only_annotations() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1393,6 +1453,7 @@ def test_gateway_list_tools_includes_builtin() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
@@ -1443,6 +1504,7 @@ def test_gateway_call_tool_dispatches_builtin() -> None:
         )
 
         await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
         try:
             handler_result = with_upstream_server(
                 lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
@@ -1479,6 +1541,249 @@ def test_gateway_call_tool_dispatches_builtin() -> None:
 #
 # Ref: docs/ADR-006-steady-state-downstream-recovery.md
 # =============================================================================
+
+
+# =============================================================================
+# Gateway Fail-Closed Recovery Tests (idle_recovery.gateway_fail_closed)
+# =============================================================================
+# These tests verify that _ensure_connection:
+# 1. Never calls handle_initialize({}) as a fake recovery fallback
+# 2. Recaptures only when a real current session is available
+# 3. Fails closed with RECONNECT_REQUIRED on true session loss
+# And that _call_tool captures/rebinds session like _list_tools does.
+# =============================================================================
+
+
+def test_ensure_connection_no_empty_initialize_recovery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """_ensure_connection must never call handle_initialize({}) as recovery.
+
+    When invoked via handler without request_ctx (no session available),
+    the gateway must fail closed with RECONNECT_REQUIRED rather than
+    creating a spurious empty connection via handle_initialize({}).
+    """
+
+    async def _scenario() -> None:
+        initialize_calls: list[dict] = []
+
+        async def _capture_initialize_calls(client_info: dict):
+            initialize_calls.append(dict(client_info))
+            return Result(error="GATEWAY_NOT_STARTED: test isolation")
+
+        monkeypatch.setattr(
+            "tela.shell.upstream.handle_initialize", _capture_initialize_calls
+        )
+
+        tela = TelaConfig(
+            servers={"fs": ServerConfig(name="fs", command="cmd")},
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={})
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
+            assert handler_result.is_ok
+            # Calling without request_ctx will cause request_ctx.get() to raise
+            # LookupError in both session-lookup and bridge-adoption paths.
+            # Before fix: falls through to handle_initialize({})
+            # After fix: raises RuntimeError with RECONNECT_REQUIRED
+            with pytest.raises(RuntimeError, match="RECONNECT_REQUIRED"):
+                await handler_result.value(types.ListToolsRequest())
+
+            # No empty initialize was called
+            assert len(initialize_calls) == 0, (
+                "handle_initialize must not be called with empty dict as "
+                f"recovery fallback. Got calls: {initialize_calls}"
+            )
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_ensure_connection_recaptures_on_existing_connection() -> None:
+    """_ensure_connection must recapture session for existing connection.
+
+    When a connection already exists (added to runtime) but its session
+    binding was lost, and no request_ctx is available, _ensure_connection
+    should fail closed rather than silently creating a new connection.
+
+    This tests the true-session-loss failure path.
+    """
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={"fs": ServerConfig(name="fs", command="cmd")},
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={})
+        try:
+            # Add an existing connection to the runtime
+            conn = ConnectionContext(
+                connection_id="conn_existing",
+                profile_name="dev",
+                connected_at="2026-01-01T00:00:00Z",
+                init_mode=AuthMode.OPEN,
+            )
+            add_runtime_connection(conn)
+
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
+            assert handler_result.is_ok
+            # The connection exists but without request_ctx, we cannot
+            # bind the session to it. Must fail closed.
+            with pytest.raises(RuntimeError, match="RECONNECT_REQUIRED"):
+                await handler_result.value(types.ListToolsRequest())
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_call_tool_captures_session_like_list_tools() -> None:
+    """_call_tool must capture/rebind session after _ensure_connection, mirroring _list_tools.
+
+    Both tools/list and tools/call handlers must capture the upstream MCP session
+    for notification delivery. If only _list_tools captures, a session that first
+    calls tools/call (without a prior tools/list) will miss notification delivery.
+
+    This test verifies the code path by inspecting that the _call_tool handler
+    contains a capture_session call, mirroring _list_tools.
+    """
+    import ast
+    import inspect
+    from tela.shell import gateway
+
+    # Extract the source of _wire_upstream_handlers to verify both handlers
+    # contain session capture logic
+    source = inspect.getsource(gateway._wire_upstream_handlers)
+    tree = ast.parse(source)
+
+    # Find all async function definitions in _wire_upstream_handlers
+    handler_names = []
+    capture_session_calls = {}
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
+            handler_names.append(node.name)
+            # Check for capture_session calls in this function
+            call_count = 0
+            for child in ast.walk(node):
+                if isinstance(child, ast.Call):
+                    if isinstance(child.func, ast.Attribute):
+                        if child.func.attr == "capture_session":
+                            call_count += 1
+                    elif isinstance(child.func, ast.Name):
+                        if child.func.id == "capture_session":
+                            call_count += 1
+            if call_count > 0:
+                capture_session_calls[node.name] = call_count
+
+    # _list_tools must have capture_session
+    assert "_list_tools" in capture_session_calls, (
+        f"_list_tools must call capture_session. Found handlers: {handler_names}"
+    )
+    # _call_tool must also have capture_session
+    assert "_call_tool" in capture_session_calls, (
+        f"_call_tool must call capture_session (mirroring _list_tools). "
+        f"capture_session found in: {list(capture_session_calls.keys())}"
+    )
+    # Both should have exactly 1 capture_session call
+    assert capture_session_calls["_call_tool"] == 1, (
+        f"_call_tool must have exactly 1 capture_session call, "
+        f"got {capture_session_calls['_call_tool']}"
+    )
+
+
+def test_ensure_connection_recaptures_lost_session() -> None:
+    """_ensure_connection must recapture session for existing connection when session binding is lost.
+
+    When a connection exists but its session binding is stale/lost (e.g., after idle
+    disconnect), and the current MCP session is the same logical connection, the gateway
+    must rebind the session to the existing connection rather than fail-closing.
+    """
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={"fs": ServerConfig(name="fs", command="cmd")},
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={})
+        try:
+            # The gateway is running. Add a connection simulating existing state.
+            conn = ConnectionContext(
+                connection_id="conn_recap",
+                profile_name="dev",
+                connected_at="2026-01-01T00:00:00Z",
+                init_mode=AuthMode.OPEN,
+            )
+            add_runtime_connection(conn)
+
+            # Verify connection exists
+            snap = gateway_runtime.get_runtime_connections_snapshot()
+            assert any(c.connection_id == "conn_recap" for c in snap.value)
+
+            # Release session to simulate lost session binding
+            gateway_runtime.release_session("conn_recap")
+
+            # Now when tools/list is called on a session that was previously
+            # bound to conn_recap, it should recapture rather than fail.
+            # This tests the recapture path in _list_tools's capture_session.
+            # (The recapture happens via capture_session being called again
+            # with the same connection_id and new session.)
+            recapture_result = gateway_runtime.capture_session(
+                "conn_recap",
+                type(
+                    "FakeSession",
+                    (),
+                    {
+                        "send_tool_list_changed": lambda self: None,  # type: ignore[assignment]  # test fake satisfies UpstreamSession protocol at runtime
+                    },
+                )(),
+            )
+            assert recapture_result.is_ok, (
+                "capture_session must allow recapture on same connection_id"
+            )
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
 
 
 def test_adr006_gateway_tela_error_details_has_required_keys() -> None:

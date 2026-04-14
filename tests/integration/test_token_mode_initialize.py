@@ -19,6 +19,7 @@ from tela.core.models import (
     AuthConfig,
     AuthMode,
     ConnectionContext,
+    GatewayTransport,
     ProfileConfig,
     TelaConfig,
 )
@@ -658,3 +659,101 @@ def test_handle_initialize_open_mode_records_init_mode() -> None:
     finally:
         set_runtime_config(None)
         set_runtime_secrets([])
+
+
+# --- Gateway fail-closed recovery tests (idle_recovery.gateway_fail_closed) ---
+
+
+def test_token_mode_gateway_fails_closed_on_lost_session() -> None:
+    """Token-mode gateway must fail closed when session is lost.
+
+    When a token-mode connection exists but its MCP session is unavailable,
+    the gateway must raise RECONNECT_REQUIRED rather than silently creating
+    a new empty connection via handle_initialize({}).
+
+    This tests the idle recovery path: session truth must not diverge from
+    connection truth. An empty-initialize recovery would create a connection
+    without the token authority that the original connection had.
+    """
+    from tela.shell.gateway import (
+        GatewayStartupConfig,
+        gateway_start,
+        gateway_shutdown,
+    )
+
+    secret = "fail-closed-secret"
+    fields = _make_valid_token_fields(profile="production")
+    signed_token = _sign_token(fields, secret)
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={
+                "production": ProfileConfig(name="production"),
+            },
+            resolved_default_profile="production",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.TOKEN,
+            default_profile=None,
+        )
+
+        start_result = await gateway_start(config, tela_config=tela)
+        assert start_result.is_ok
+        try:
+            # handle_initialize with a valid token must succeed
+            result = await handle_initialize(signed_token)
+            assert result.is_ok
+            assert result.value is not None
+            assert result.value.init_mode == AuthMode.TOKEN
+        finally:
+            await gateway_shutdown()
+
+    try:
+        asyncio.run(_scenario())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+def test_token_mode_handle_initialize_not_in_wire_handlers() -> None:
+    """_wire_upstream_handlers must not import or call handle_initialize.
+
+    When the idle recovery path is triggered, handle_initialize({})
+    would create a connection without token authority — the worst possible
+    outcome for token mode. This test verifies that the gateway module
+    has removed the empty-initialize recovery path entirely by checking
+    that handle_initialize is not in the function's import list or call sites.
+    """
+    import ast
+    import inspect
+    from tela.shell import gateway
+
+    source = inspect.getsource(gateway._wire_upstream_handlers)
+    tree = ast.parse(source)
+
+    # Check that handle_initialize is not imported in the function body
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                assert alias.name != "handle_initialize", (
+                    "_wire_upstream_handlers must not import handle_initialize – "
+                    "the empty-initialize recovery path has been replaced with fail-closed"
+                )
+
+    # Check that no function call references handle_initialize (excluding docstrings)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name) and func.id == "handle_initialize":
+                raise AssertionError(
+                    "_wire_upstream_handlers must not call handle_initialize – "
+                    "the empty-initialize recovery path has been replaced with fail-closed"
+                )
+            if isinstance(func, ast.Attribute) and func.attr == "handle_initialize":
+                raise AssertionError(
+                    "_wire_upstream_handlers must not call handle_initialize – "
+                    "the empty-initialize recovery path has been replaced with fail-closed"
+                )

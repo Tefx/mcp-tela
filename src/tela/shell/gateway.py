@@ -70,6 +70,7 @@ from tela.shell import gateway_runtime
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class GatewayStartupConfig:
     """Resolved gateway startup contract consumed by runtime shell.
@@ -382,13 +383,21 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
     from tela.shell.upstream import (
         find_connection_for_session,
-        handle_initialize,
         handle_tools_call,
         handle_tools_list,
     )
 
     async def _ensure_connection() -> ConnectionContext:
-        # Session-aware: return existing connection, or create new one.
+        """Resolve or adopt a connection for the current upstream session.
+
+        Recovery semantics (fail-closed):
+        1. If the current session already has a bound connection, return it.
+        2. If an unbound bridge connection exists, adopt it for this session.
+        3. Otherwise, fail closed with RECONNECT_REQUIRED — never call
+           handle_initialize({}) to create a spurious connection without
+           real session context.
+        """
+        # Path 1: Session already bound to an existing connection.
         # Use locked snapshot to prevent observing torn/stale connections.
         try:
             with gateway_runtime._runtime_lock:
@@ -409,9 +418,10 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 return conn_r.value
         except LookupError:
             pass
-        # Adopt unbound bridge connection before creating a spurious conn_*.
+        # Path 2: Adopt unbound bridge connection before failing closed.
         # Bridge connections are pre-registered via POST /connect but their
         # MCP session is not captured until the first list_tools/call_tool.
+        # Only adopt when a real current session is available.
         try:
             current_session = request_ctx.get().session
             with gateway_runtime._runtime_lock:
@@ -422,29 +432,27 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 probe = gateway_runtime.get_captured_session(candidate.connection_id)
                 if probe.is_err:
                     # Unbound bridge — adopt it for this session
-                    gateway_runtime.capture_session(candidate.connection_id, current_session)
+                    gateway_runtime.capture_session(
+                        candidate.connection_id, current_session
+                    )
                     now_iso = datetime.now(timezone.utc).isoformat()
-                    gateway_runtime.touch_connection_activity(candidate.connection_id, now_iso)
+                    gateway_runtime.touch_connection_activity(
+                        candidate.connection_id, now_iso
+                    )
                     logger.debug(
                         "Adopted unbound bridge %s for session", candidate.connection_id
                     )
                     return candidate
         except LookupError:
             pass
-        init_result = await handle_initialize({})
-        if init_result.is_err:
-            raise RuntimeError(init_result.error or "INITIALIZE_REJECTED")
-        assert init_result.value is not None
-        touch_r = gateway_runtime.touch_connection_activity(
-            init_result.value.connection_id, datetime.now(timezone.utc).isoformat()
+        # Path 3: No session available and no unbound bridge — fail closed.
+        # Never call handle_initialize({}) as a fake recovery path.
+        # An empty-initialize would create a connection without real session
+        # context, causing session/connection truth divergence.
+        raise RuntimeError(
+            "RECONNECT_REQUIRED: no live session or connection available; "
+            "client must re-establish the MCP connection"
         )
-        if touch_r.is_err:
-            logger.warning(
-                "Failed to touch connection activity for %s: %s",
-                init_result.value.connection_id,
-                touch_r.error,
-            )
-        return init_result.value
 
     def _build_tool_annotations(
         annotations: dict | None,
@@ -466,7 +474,9 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
         # Capture upstream MCP session for notification delivery.
         try:
-            gateway_runtime.capture_session(connection.connection_id, request_ctx.get().session)
+            gateway_runtime.capture_session(
+                connection.connection_id, request_ctx.get().session
+            )
         except LookupError:
             pass  # No request context (e.g. stdio without session capture)
 
@@ -511,6 +521,15 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         converge = gateway_runtime.get_runtime_converge_event().value
         if converge is not None:
             await converge.wait()
+        # Capture upstream MCP session for notification delivery.
+        # Mirrors the capture in _list_tools so that tools/call also
+        # establishes session binding (not just tools/list).
+        try:
+            gateway_runtime.capture_session(
+                connection.connection_id, request_ctx.get().session
+            )
+        except LookupError:
+            pass  # No request context (e.g. stdio without session capture)
         result = await handle_tools_call(connection, tool_name, dict(arguments))
         if result.is_err:
             assert result.error is not None
@@ -798,7 +817,9 @@ async def gateway_prepare_startup(
         effective_config.servers, connected_names, tools_by_server
     )
 
-    upstream_server_result = _create_upstream_server(config, effective_config, startup_manifest)
+    upstream_server_result = _create_upstream_server(
+        config, effective_config, startup_manifest
+    )
     if upstream_server_result.is_err:
         return Result(error=upstream_server_result.error)
     assert upstream_server_result.value is not None
