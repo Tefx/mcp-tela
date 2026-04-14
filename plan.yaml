@@ -69752,7 +69752,7 @@ phases:
     agent: wiring-auditor
   - id: arch_refactor.finalization.spec_conformance
     name: Verify spec and design conformance after simplification
-    status: pending
+    status: claimed
     description: 'Independent spec/design conformance audit focused on preserved surfaces.
 
 
@@ -69810,6 +69810,8 @@ phases:
 
       - Verdict: CONFORMS | PARTIAL | DIVERGES'
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-14T10:06:17.454901+00:00'
   - id: arch_refactor.finalization.architecture_review
     name: Review whether the architecture is genuinely smaller
     status: claimed
