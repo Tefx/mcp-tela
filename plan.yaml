@@ -70786,26 +70786,65 @@ phases:
   - hard_cut.readiness
   steps:
   - id: hard_cut.impl_core_vocab
-    name: Implement canonical core vocabulary and token binding
+    name: Cut config and token vocabulary to canonical-only fields
     status: pending
-    description: Core/domain slice. Remove legacy shared vocabulary and token aliasing;
-      make profile_id the only shared identity and token binding field; reject alias
-      token fields fail-closed; keep enforcement logic intact except for canonical
-      naming and validation hardening.
-    verification: Show that tools alias support is removed, CapabilityToken uses canonical
-      profile_id, alias token fields are rejected before authorization, targeted tests
-      pass, and Invar verification passes for changed files.
-    evidence_template: '## Core Vocabulary Verification
+    description: 'Core/domain slice only.
 
-      - Files changed:
 
-      - Legacy surfaces removed:
+      Scope:
+
+      - remove config alias support for `tools` (delete, do not deprecate)
+
+      - make canonical profile identity `profile_id` in core/shared models where the
+      core contract is defined
+
+      - make CapabilityToken bind canonical `profile_id`
+
+      - reject alias token fields fail-closed before authorization
+
+
+      Do NOT handle runtime/audit/shared consumer rewiring here.
+
+      Do NOT implement the canonical profile-list tool/output here.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.'
+    verification: 'Evidence must first prove expected-red, then green: config accepts
+      `capabilities` only, CapabilityToken uses canonical `profile_id`, alias token
+      fields reject before authorization, targeted tests pass, and changed-file Invar
+      verification passes.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Test/contract written first:
+
+      - Command run before implementation:
+
+      - Failing output pasted here:
+
+
+      ## Implementation Proof
+
+      - Legacy alias deletion proof:
+
+      - Canonical `profile_id` binding proof:
 
       - Fail-closed alias rejection proof:
 
       - Targeted test command(s) + output:
 
-      - Invar guard evidence:
+      - Changed-file Invar verification output:
 
       '
     agent: python-senior-tacit
