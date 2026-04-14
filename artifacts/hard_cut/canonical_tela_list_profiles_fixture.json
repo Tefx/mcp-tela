@@ -1,0 +1,18 @@
+[
+  {
+    "profile_id": "developer",
+    "capabilities": {
+      "filesystem": "read_write",
+      "git": "read_only"
+    },
+    "default": true
+  },
+  {
+    "profile_id": "reviewer",
+    "capabilities": {
+      "filesystem": "read_only",
+      "git": "read_only"
+    },
+    "default": false
+  }
+]
