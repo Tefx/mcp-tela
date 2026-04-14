@@ -70813,3 +70813,26 @@ phases:
     depends_on:
     - hard_cut.final_tool_probe
     agent: spec-verifier-tacit
+  - id: hard_cut.final_doc_sync
+    name: Sync local docs and tests to canonical surfaces only
+    status: pending
+    description: Unfreeze local docs, examples, and contract tests from old resource
+      behavior and sync them strictly to the canonical contract. Remove assertions
+      that treat profile_name, tools, families, or tela://profiles as canonical shared
+      surfaces.
+    verification: Show that no local doc, example, or contract test asserts profile_name,
+      tools, families, or tela://profiles as canonical shared surfaces.
+    evidence_template: '## Doc/Test Sync
+
+      - Files changed:
+
+      - Legacy shared-surface assertions removed:
+
+      - Canonical references aligned:
+
+      - Remaining stale docs/tests: none or list
+
+      '
+    depends_on:
+    - hard_cut.final_conformance
+    agent: project-guide
