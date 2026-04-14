@@ -70589,3 +70589,11 @@ phases:
     starts.
   depends_on:
   - idle_recovery
+- id: hard_cut.readiness
+  name: Hard-Cut Readiness Re-Review
+  status: locked
+  gate: Implementation opens only if an independent readiness review reports READY
+    against the latest canonical contract with no unresolved authority or verification
+    blockers.
+  depends_on:
+  - hard_cut.prep
