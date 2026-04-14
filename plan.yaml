@@ -70501,3 +70501,83 @@ phases:
     depends_on:
     - idle_recovery.gateway_fail_closed
     agent: python-senior-tacit
+  - id: idle_recovery.gate
+    name: Gate idle recovery repair
+    status: pending
+    description: 'Gate review: verify the idle_recovery phase preserves live sessions,
+      fails closed on true session loss, and proves long-idle behavior end-to-end.
+
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - phase touches connection lifecycle and runtime truth
+
+      - phase includes integration-sensitive gateway behavior
+
+      - phase changes lifecycle defaults and must reject fake recovery semantics'
+    verification: '- All phase steps completed successfully
+
+      - Evidence collected and reviewed
+
+      - No remaining empty-initialize recovery path
+
+      - tools/call session recapture verified
+
+      - long-idle live-session proof present
+
+      - changed-file invar_guard evidence present
+
+      - Ready for downstream execution'
+    evidence_template: '## Gate Review Report
+
+
+      **Reviewer**: gate-reviewer-tacit (independent of phase implementation)
+
+      **Phase**: idle_recovery
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Step-by-Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      | ------- | ------ | ---------------- | -------- |
+
+      | idle_recovery.state_basis | <...> | <...> | <...> |
+
+      | idle_recovery.gateway_fail_closed | <...> | <...> | <...> |
+
+      | idle_recovery.idle_contract | <...> | <...> | <...> |
+
+
+      ### Gate Decision Basis
+
+      - No empty-initialize recovery remains: YES/NO
+
+      - tools/call session recapture proved: YES/NO
+
+      - long-idle live-session behavior proved: YES/NO
+
+      - process idle shutdown only after zero connections proved: YES/NO
+
+      - unresolved blockers: <list>
+
+
+      ### Gate Decision
+
+      - [ ] OPEN
+
+      - [ ] BLOCKED'
+    depends_on:
+    - idle_recovery.state_basis
+    - idle_recovery.gateway_fail_closed
+    - idle_recovery.idle_contract
+    agent: gate-reviewer-tacit
