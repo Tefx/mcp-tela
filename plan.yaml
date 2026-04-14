@@ -70597,30 +70597,59 @@ phases:
   - id: hard_cut.prep_basis
     name: Freeze canonical basis and deletion-first slices
     status: pending
-    description: 'Freeze the canonical hard-cut basis and slice the work into deletion-first
-      domains: core/shared vocabulary, listing/runtime surface, and verification-assets/docs.
-      Enumerate every legacy shared surface to remove: tools alias, profile_name,
-      tools_profile, tela://profiles, and legacy payload keys. This is preparation
-      only; do not implement product changes here.'
-    verification: Produce a basis artifact that names the exact work slices, touch-path
-      map, deletion inventory, protected canonical interfaces, and an explicit note
-      that no compatibility window is assumed.
-    evidence_template: '## Basis Freeze
+    description: 'Freeze the authoritative hard-cut basis only.
 
-      - Authority refs used:
 
-      - Work slices:
+      Authoritative refs:
 
-      - Touch paths:
+      - /Users/tefx/Projects/opifex/design/final-canonical-contract.md
 
-      - Legacy deletion inventory:
+      - /Users/tefx/Projects/opifex/contracts/capability_token.schema.json
+
+      - /Users/tefx/Projects/opifex/contracts/tela_profile_list.schema.json
+
+      - /Users/tefx/Projects/opifex/design/tela-clean-gateway.md
+
+      - /Users/tefx/Projects/mcp-tela/docs/hard-cutover-canonical-alignment.md
+
+
+      Produce a deletion-first inventory grouped into exactly these domains:
+
+      1. config/token canonical vocabulary
+
+      2. shared runtime/audit/profile_id consumers
+
+      3. canonical profile-list tool and payload
+
+      4. proof assets plus local test/doc freeze inventory
+
+
+      This step is planning only. No product changes.'
+    verification: Evidence must include the exact legacy-surface deletion inventory,
+      touch-path map per domain, protected canonical interfaces (`profile_id`, `capabilities`,
+      `default`, `tela_list_profiles`), and an explicit statement that this prep step
+      is non-implementation and assumes no compatibility window.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Basis Freeze
+
+      - Exact legacy-surface deletion inventory:
+
+      - Touch-path map per domain:
 
       - Protected canonical interfaces:
 
       - Compatibility-window decision: none unless explicitly re-authorized
 
+      - Product code/doc changes made: none
+
       '
-    agent: minimalist-architect-tacit
+    agent: python-senior-tacit
   - id: hard_cut.prep_proof_assets
     name: Prepare proof assets and rollback matrix
     status: pending
