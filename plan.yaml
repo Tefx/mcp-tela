@@ -69689,7 +69689,7 @@ phases:
     claimed_at: '2026-04-14T10:06:11.108739+00:00'
   - id: arch_refactor.finalization.wiring_audit
     name: Audit wiring after architecture simplification
-    status: claimed
+    status: done
     description: 'Independent wiring audit of the simplified architecture.
 
 
@@ -69752,6 +69752,10 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-14T10:06:25.232026+00:00'
+    done_at: '2026-04-14T11:02:11.910094+00:00'
+    evidence: 'Recovered completion after claim-state drift. Prior wiring audit headline
+      PASS_WITH_DEBT: no blocking unreachable preserved public surfaces; only non-blocking
+      stale/compatibility re-export debt noted.'
   - id: arch_refactor.finalization.spec_conformance
     name: Verify spec and design conformance after simplification
     status: done
