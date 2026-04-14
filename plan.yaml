@@ -70187,7 +70187,7 @@ phases:
       blocker rows'
 - id: idle_recovery
   name: Idle session recovery repair
-  status: pending
+  status: in_progress
   gate: Preserve live sessions; fail closed on true session loss; verify long-idle
     behavior.
   depends_on:
@@ -70195,7 +70195,7 @@ phases:
   steps:
   - id: idle_recovery.state_basis
     name: Add authoritative recovery state to ConnectionContext
-    status: pending
+    status: claimed
     description: 'Implement-and-verify the minimum recovery-critical runtime state.
 
 
@@ -70302,6 +70302,8 @@ phases:
 
       - Why this is minimal: <one short paragraph>'
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-14T19:47:15.260075+00:00'
   - id: idle_recovery.gateway_fail_closed
     name: Remove fake initialize recovery and rebind tools call
     status: pending
