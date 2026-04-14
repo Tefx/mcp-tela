@@ -70651,6 +70651,31 @@ phases:
     blockers.
   depends_on:
   - hard_cut.prep
+  steps:
+  - id: hard_cut.readiness_review
+    name: Run fresh readiness review against canonical contract
+    status: pending
+    description: Perform an independent re-review of repo readiness after preparation.
+      Return an explicit READY or BLOCKED judgment against the latest canonical docs/contracts
+      and the known blocker set. Do not invent compatibility rules.
+    verification: Produce a structured blocker register covering tools alias acceptance,
+      profile_name on shared surfaces, token binding field, tela_list_profiles absence,
+      tela://profiles dependency, legacy payload keys, legacy test/doc freezes, and
+      rollback/verification completeness.
+    evidence_template: '## Readiness Review
+
+      - Decision: READY or BLOCKED
+
+      - Blockers still open:
+
+      - Canonical requirements confirmed closed:
+
+      - Evidence paths used:
+
+      - Compatibility rules invented: none
+
+      '
+    agent: spec-verifier-tacit
 - id: hard_cut.impl
   name: Canonical Hard-Cut Implementation
   status: locked
