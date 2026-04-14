@@ -69267,7 +69267,7 @@ phases:
       - No moving pure-logic functions from Shell to Core (out of scope)'
   - id: arch_refactor.layer_dissolution.retest_blockers
     name: Retest full-plan boundary after batched blocker remediation
-    status: claimed
+    status: done
     description: 'Post-remediation retest for blocker-class failures from `arch_refactor.layer_dissolution.full_plan_check`.
 
 
@@ -69413,6 +69413,76 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-14T05:49:07.026277+00:00'
+    done_at: '2026-04-14T05:55:44.070092+00:00'
+    evidence: 'status: SUCCESS
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Verification Report
+
+      Tester: integration-verifier-tacit (independent)
+
+      Scope: post-remediation blocker retest
+
+
+      ### Test Execution
+
+      - `uvx invar-tools guard --all` -> passed, 0 errors, 53 warnings, 14 infos
+
+      - `.venv/bin/python -m pytest tests/shell/test_upstream.py -v` -> 64 passed
+
+      - `.venv/bin/python -m pytest tests/shell/test_connect_bridge_readiness_contract_freeze.py
+      -v` -> 4 passed
+
+      - `.venv/bin/python -m pytest -k "recovery or timeout or autostart" tests/shell/
+      -v` -> 53 passed, xfails pre-existing
+
+      - `.venv/bin/python -m pytest tests/shell/test_connect_recovery_red.py -v` ->
+      7 passed, 1 xfailed (known)
+
+      - `.venv/bin/python -m pytest tests/shell/test_downstream_recovery.py -v` ->
+      11 passed, 7 xfailed (known)
+
+      - `.venv/bin/python -m pytest tests/ -q` -> 1019 passed, 2 failed (pre-existing
+      reserved-prefix repro), 1 skipped, 10 xfailed, 11 xpassed
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | evidence_ref | status |
+
+      |---|---|---|---|
+
+      | B1 | capture_session re-export reachable and upstream suite green | test_upstream.py
+      run | PROVEN |
+
+      | B2 | readiness contract freeze aligned | test_connect_bridge_readiness_contract_freeze.py
+      run | PROVEN |
+
+      | B3 | recovery timeout/autostart behavior retested without new blockers | recovery/timeout
+      suite runs | PROVEN |
+
+
+      headline: PASS_WITH_DEBT
+
+      proof_gap_status: NON_BLOCKING
+
+      blocking_status: CLOSED
+
+      gate_open_allowed: true
+
+
+      Remaining blocker-class debt: none for this remediation family.
+
+      Residual non-blocking debt: pre-existing warning/xfail/repro reserved-prefix
+      gaps outside this blocker family.
+
+
+      Gate decision basis (`arch_refactor.layer_dissolution.gate`): retest confirms
+      blocker closure and broad guard green (0 errors).'
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
