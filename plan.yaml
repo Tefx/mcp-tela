@@ -71072,3 +71072,34 @@ phases:
     depends_on:
     - hard_cut.final_doc_sync
     agent: gate-reviewer-tacit
+  - id: hard_cut.final_test_sync
+    name: Sync local tests to canonical hard-cut surfaces only
+    status: pending
+    description: 'Test-only sync step.
+
+
+      Update local contract and integration tests so they no longer encode legacy
+      shared behavior (`profile_name`, `tools`, `families`, `tela://profiles`) as
+      canonical. Do not update docs here.'
+    verification: Evidence must show no local contract/integration test treats legacy
+      shared vocabulary as canonical and canonical fixtures/assertions now check `profile_id`,
+      `capabilities`, and `default` only.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Test Sync Proof
+
+      - Tests updated:
+
+      - Legacy shared-surface assertions removed:
+
+      - Canonical fixture/assertion proof:
+
+      - Targeted test command(s) + output:
+
+      '
+    agent: python-executor
