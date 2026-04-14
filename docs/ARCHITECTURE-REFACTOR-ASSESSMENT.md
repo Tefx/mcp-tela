@@ -47,7 +47,7 @@ This is a **post-refactor record** of completed changes.
 
 ### Original Shell Module Sizes (Pre-Refactor)
 
-- `src/tela/shell/downstream.py` — ~~1228~~ now 412 lines
+- `src/tela/shell/downstream.py` — ~~1228~~ now ~412 lines
 - `src/tela/commands/connect_cmd.py` — ~~1108~~ now 395 lines (after extraction)
 - `src/tela/shell/gateway.py` — ~~973~~ now 947 lines
 - `src/tela/commands/serve_cmd.py` — ~~658~~ now 331 lines
@@ -68,9 +68,9 @@ New modules created to reduce oversized files:
 
 | Abstraction | Status | Reason |
 |-------------|--------|--------|
-| `EventEntryAdapter` | **REMOVED** | Unused protocol type |
-| `ConvergencePolicyConsumer` | **REMOVED** | Unused protocol type |
-| `SingleServerConvergenceKernel` | **COLLAPSED** | Single implementation |
+| `EventEntryAdapter` | **DELETED** | Unused protocol type (no longer in codebase) |
+| `ConvergencePolicyConsumer` | **DELETED** | Unused protocol type (no longer in codebase) |
+| `SingleServerConvergenceKernel` | **DELETED** | Was a protocol; replaced by concrete `_converge_single_server_update` function |
 
 ### State Ownership Consolidated
 
@@ -86,9 +86,9 @@ New modules created to reduce oversized files:
 - `gateway_runtime.py` — owns `_runtime` singleton with:
   - `_runtime.connections`
   - `_runtime.secrets`
-  - `_runtime.session_registry` (moved from `upstream.py`)
-  - `_runtime.reaper` (moved from `gateway.py`)
-  - `_runtime.converge_event` (moved from `gateway.py`)
+  - `_runtime.session_registry` (moved from `upstream.py` to here)
+  - `_runtime.reaper` (owned here; lifecycle managed via `get_runtime_reaper()`, `set_runtime_reaper()`)
+  - `_runtime.converge_event` (owned here; lifecycle managed via `get_runtime_converge_event()`, `set_runtime_converge_event()`)
   - Plus accessors: `get_runtime_reaper()`, `set_runtime_reaper()`,
     `get_runtime_converge_event()`, `set_runtime_converge_event()`,
     `get_session_registry_snapshot()`, `clear_session_registry()`

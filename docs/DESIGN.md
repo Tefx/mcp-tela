@@ -346,6 +346,11 @@ I/O and process edges:
 - connection reaping (idle/orphan cleanup)
 - HTTP route handlers
 - stdio-HTTP bridge
+- gateway lifecycle state (`gateway_lifecycle.py`)
+- connection lifecycle management (`connection_lifecycle.py`)
+- MCP admission contract types (`mcp_admission_contract.py`)
+- built-in tools for introspection (`builtin_tools.py`)
+- downstream recovery coordination (`_downstream_recovery.py`)
 
 #### Transports
 
@@ -575,6 +580,16 @@ Available tools:
 | `set_upstream_server` | `(server: FastMCP \| None) -> None` | WRITE |
 | `touch_connection_activity` | `(connection_id: str, timestamp: str) -> Result[bool, str]` | WRITE |
 | `get_upstream_server` | `() -> None` | Removed (raises RuntimeError) |
+| `capture_session` | `(connection_id: str, session: UpstreamSession) -> Result[None, str]` | WRITE |
+| `release_session` | `(connection_id: str) -> Result[None, str]` | WRITE |
+| `get_captured_session` | `(connection_id: str) -> Result[UpstreamSession, str]` | OPERATION |
+| `get_connection_id_for_session` | `(session: UpstreamSession) -> Result[str, str]` | OPERATION |
+| `get_session_registry_snapshot` | `() -> Result[dict[str, UpstreamSession], str]` | DATA READ |
+| `clear_session_registry` | `() -> None` | WRITE |
+| `get_runtime_reaper` | `() -> Result[Any, str]` | OPERATION |
+| `set_runtime_reaper` | `(reaper: Any) -> None` | WRITE |
+| `get_runtime_converge_event` | `() -> Result[asyncio.Event \| None, str]` | OPERATION |
+| `set_runtime_converge_event` | `(event: asyncio.Event \| None) -> None` | WRITE |
 
 **Types:**
 - `GatewayRuntime` — mutable dataclass holding all runtime fields.
@@ -631,7 +646,7 @@ FastMCP appears under multiple authorities. This section reconciles those author
 **Dependencies:**
 - Upstream: `tela.core.models`, `mcp.server.fastmcp`, `starlette`.
 - Downstream (delegates to): `downstream.connect_all/disconnect_all`, `upstream.handle_*`, `http_routes.handle_*`, `audit.audit_init/audit_close`, `config_loader.load_config`, `surface_instructions.*`, `reload.set_notify_callback`.
-- Re-exports: all `gateway_runtime` public symbols for backward compatibility.
+
 
 **Concurrency:** Startup and shutdown are single-threaded (called once from CLI entry). HTTP route handlers run in the Starlette/uvicorn event loop and acquire `_runtime_lock` for state access. The `_ensure_connection` callback runs per-request under the MCP server's handler context.
 
@@ -764,13 +779,14 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 - `on_config_changed(new_config: TelaConfig) -> Result[None, str]`
 
 **Types:**
-- `SingleServerConvergenceResult` — frozen dataclass with `disposition`, `trigger`, `server_name`, `rollback_applied`, `resolved_tool_names`, `conflicts`.
+- `SingleServerConvergenceResult` — frozen dataclass with `disposition`, `trigger`, `server_name`, `rollback_applied`, `resolved_tool_names`, `conflicts`. (Note: this was previously an interface protocol; now a concrete result type.)
 - `ConvergenceConflictNote` — frozen dataclass with `tool_name`, `servers`.
 - `ConvergenceTrigger` — literal type: `reconnect | reload | watcher | manual_reenumeration`.
+- `NotifyCallback` — `Callable[[str], Awaitable[None]]` for upstream notification dispatch.
 
 **Ownership:**
 - Mutates: downstream registry (via convergence kernel), runtime config (via `set_runtime_config`).
-- Owns: `_notify_callback` (module-level callback reference), `_single_server_kernel` (registry-backed convergence kernel).
+- Owns: `_notify_callback` (module-level callback reference), `_converge_single_server_update` function (single-server convergence logic).
 
 **Dependencies:**
 - Upstream: `tela.core.conflict`, `tela.core.family`, `tela.core.models`.
@@ -802,14 +818,15 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 - `InitializeContext` — frozen dataclass with `connection_metadata`.
 
 **Ownership:**
-- Mutates: `_session_registry` (module-level `dict[str, UpstreamSession]`), runtime connections (via `add_runtime_connection`), tool call counter (via `increment_tool_calls`).
+- Session registry is owned by `gateway_runtime.py` (not this module); delegates to `capture_session`/`release_session`/`get_captured_session` accessors.
+- Mutates: runtime connections (via `add_runtime_connection`), tool call counter (via `increment_tool_calls`).
 - Reads: runtime config, runtime secrets, downstream registry.
 
 **Dependencies:**
 - Upstream: `tela.core.models`, `tela.core.token.resolve_token_init_binding`.
 - Cross-module: `downstream.call_tool/get_all_tools/get_registry`, `gateway_runtime.*`, `upstream_utils.*`, `idle_shutdown.get_idle_manager`.
 
-**Concurrency:** `_session_registry` protected by `_session_registry_lock` (`threading.Lock`). Session capture uses first-binding semantics — re-capture of the same session is idempotent; a different session on an already-bound connection_id is rejected. All runtime state access goes through locked `gateway_runtime` accessors.
+**Concurrency:** Session registry is protected by `gateway_runtime._runtime_lock`. Session capture uses first-binding semantics — re-capture of the same session is idempotent; a different session on an already-bound connection_id is rejected. All runtime state access goes through locked `gateway_runtime` accessors.
 
 ---
 
