@@ -69882,7 +69882,7 @@ phases:
     claimed_at: '2026-04-14T10:05:41.088019+00:00'
   - id: arch_refactor.finalization.black_box_runtime
     name: Black-box validate preserved runtime surfaces
-    status: pending
+    status: claimed
     description: 'Independent black-box runtime validation of preserved surfaces.
 
 
@@ -69946,6 +69946,8 @@ phases:
 
       - PASS | PASS_WITH_DEBT | FAIL'
     agent: blind-tester-tacit
+    claimed_by: blind-tester-tacit
+    claimed_at: '2026-04-14T10:06:03.490617+00:00'
   - id: arch_refactor.finalization.gate
     name: Final gate for architecture refactor
     status: pending
