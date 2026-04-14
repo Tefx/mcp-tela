@@ -70583,7 +70583,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: hard_cut.prep
   name: Hard-Cut Preparation Slicing
-  status: pending
+  status: in_progress
   gate: Preparation artifacts must freeze the canonical basis, deletion inventory,
     proof-asset targets, and rollback/re-verify matrix before any hard-cut implementation
     starts.
@@ -70596,7 +70596,7 @@ phases:
   steps:
   - id: hard_cut.prep_basis
     name: Freeze canonical basis and deletion-first slices
-    status: pending
+    status: claimed
     description: 'Freeze the authoritative hard-cut basis only.
 
 
@@ -70650,6 +70650,8 @@ phases:
 
       '
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-14T19:46:34.024769+00:00'
   - id: hard_cut.prep_proof_assets
     name: Prepare proof assets and rollback matrix
     status: pending
