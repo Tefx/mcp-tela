@@ -70583,12 +70583,16 @@ phases:
     agent: gate-reviewer-tacit
 - id: hard_cut.prep
   name: Hard-Cut Preparation Slicing
-  status: locked
+  status: pending
   gate: Preparation artifacts must freeze the canonical basis, deletion inventory,
     proof-asset targets, and rollback/re-verify matrix before any hard-cut implementation
     starts.
+  context: Use the latest canonical opifex contract docs plus docs/hard-cutover-canonical-alignment.md
+    as the authority for this slice. Favor deletion-first domain splits. This phase
+    is preparation only and may run before idle_recovery because it does not change
+    product behavior.
   depends_on:
-  - idle_recovery
+  - arch_refactor.finalization
   steps:
   - id: hard_cut.prep_basis
     name: Freeze canonical basis and deletion-first slices
