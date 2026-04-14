@@ -70851,30 +70851,71 @@ phases:
   - id: hard_cut.impl_listing_surface
     name: Implement canonical profile listing surface
     status: pending
-    description: Runtime/shared-surface slice. Replace the shared tela://profiles
-      dependency with builtin tela_list_profiles, normalize output to the canonical
-      schema, delete legacy payload keys, and fail closed on invalid payload or default-state
-      conditions.
-    verification: Show that tela_list_profiles exists as a builtin MCP tool, output
-      is profile_id/capabilities/default only, no shared tela://profiles dependency
-      remains, targeted tests pass, and invalid payload/default-state cases fail closed.
-    evidence_template: '## Listing Surface Verification
+    description: 'Listing/runtime surface slice only.
 
-      - Files changed:
+
+      Replace shared `tela://profiles` and `tela.profiles` dependency with builtin
+      `tela_list_profiles`, and normalize payload to the canonical schema:
+
+      - `profile_id`
+
+      - `capabilities`
+
+      - `default`
+
+
+      Delete legacy payload keys:
+
+      - `profile_name`
+
+      - `families`
+
+      - `tools`
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.'
+    verification: 'Evidence must first prove expected-red, then green: `tela_list_profiles`
+      exists as builtin MCP tool, payload matches the canonical profile-list schema,
+      no shared `tela://profiles` dependency remains, invalid payload/default-state
+      fails closed, targeted tests pass, and changed-file Invar verification passes.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Test/contract written first:
+
+      - Command run before implementation:
+
+      - Failing output pasted here:
+
+
+      ## Listing Surface Proof
 
       - Builtin tool proof:
 
       - Output payload proof:
 
-      - Legacy resource dependency removal proof:
+      - Removal of shared `tela://profiles` / `tela.profiles` dependency:
 
       - Fail-closed invalid-state proof:
 
       - Targeted test command(s) + output:
 
+      - Changed-file Invar verification output:
+
       '
     depends_on:
-    - hard_cut.impl_core_vocab
+    - hard_cut.impl_shared_surfaces
     agent: python-senior-tacit
   - id: hard_cut.impl_shared_surfaces
     name: Cut shared runtime and audit surfaces to profile_id only
