@@ -70192,3 +70192,113 @@ phases:
     behavior.
   depends_on:
   - arch_refactor.finalization
+  steps:
+  - id: idle_recovery.state_basis
+    name: Add authoritative recovery state to ConnectionContext
+    status: pending
+    description: 'Implement-and-verify the minimum recovery-critical runtime state.
+
+
+      Touch paths:
+
+      - src/tela/core/models.py
+
+      - src/tela/shell/upstream.py
+
+      - tests/core/test_models.py
+
+      - tests/shell/test_upstream.py
+
+      - tests/integration/test_token_mode_initialize.py
+
+
+      Add only the minimum authoritative state needed for correct reconnect or explicit
+      re-initialize semantics:
+
+      - auth/init mode
+
+      - initialize client_info snapshot
+
+      - bridge connection id when present
+
+
+      Do not add managers, middleware, or new abstraction layers.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      preserves authoritative state.
+
+      Private stub classes (`_Runtime*`, `_Stub*`, `_Placeholder*`) do not satisfy
+      this requirement.'
+    verification: '- Expected-red first: add failing tests proving token-mode recovery
+      cannot be derived from empty initialize
+
+      - Include at least one property-style or contract-style test for initialize
+      snapshot preservation / required token fields
+
+      - Then targeted tests for touched files pass
+
+      - Run invar_guard on changed files'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Failing test command(s):
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+      - Failing output:
+
+      ```
+
+      <paste failing output>
+
+      ```
+
+      - Exposed gap: token-mode recovery currently depends on missing authoritative
+      initialize state
+
+
+      ## Green Proof
+
+      - Passing targeted test command(s):
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+      - Passing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      - invar_guard command/output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      - Runtime state added: <fields>
+
+      - Why this is minimal: <one short paragraph>'
+    agent: python-senior-tacit
