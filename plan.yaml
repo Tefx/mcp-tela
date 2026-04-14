@@ -69908,7 +69908,7 @@ phases:
       leakage).
   - id: arch_refactor.finalization.black_box_runtime
     name: Black-box validate preserved runtime surfaces
-    status: claimed
+    status: done
     description: 'Independent black-box runtime validation of preserved surfaces.
 
 
@@ -69974,6 +69974,10 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-14T10:06:03.490617+00:00'
+    done_at: '2026-04-14T11:02:01.090989+00:00'
+    evidence: 'Recovered completion after claim-state drift. Prior black-box validation
+      passed: CLI and HTTP preserved surfaces behaved as documented; no regressions
+      observed in runtime behavior.'
   - id: arch_refactor.finalization.gate
     name: Final gate for architecture refactor
     status: pending
