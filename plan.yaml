@@ -70187,7 +70187,7 @@ phases:
       blocker rows'
 - id: idle_recovery
   name: Idle session recovery repair
-  status: in_progress
+  status: done
   gate: Preserve live sessions; fail closed on true session loss; verify long-idle
     behavior.
   depends_on:
@@ -70564,7 +70564,7 @@ phases:
       error: \"\""
   - id: idle_recovery.gate
     name: Gate idle recovery repair
-    status: claimed
+    status: done
     description: 'Gate review: verify the idle_recovery phase preserves live sessions,
       fails closed on true session loss, and proves long-idle behavior end-to-end.
 
@@ -70644,6 +70644,25 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-14T21:37:40.530306+00:00'
+    done_at: '2026-04-14T22:00:12.046184+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## Gate Review Report\n  - gate-reviewer-tacit\
+      \ completed thorough review with headline PASS, proof_gap_status NONE, blocking_status\
+      \ CLOSED, gate_open_allowed true.\n  - Step-by-step review marked idle_recovery.state_basis,\
+      \ idle_recovery.gateway_fail_closed, idle_recovery.idle_contract as done with\
+      \ high-quality evidence.\n  - Gate decision basis all YES: no empty initialize\
+      \ recovery path, tools/call recapture proved, long-idle live-session behavior\
+      \ proved, zero-connection idle shutdown semantics proved.\n\n  ## Behavioral\
+      \ Proof\n  - headline: PASS\n  - proof_gap_status: NONE\n  - blocking_status:\
+      \ CLOSED\n  - gate_open_allowed: true\n  - behavioral_proof_register included\
+      \ and all core claims marked PROVEN.\n\n  ## Independent Liveness/Black-box\
+      \ Verification (blind-tester-tacit Mode D)\n  - 67 tests passed, 8 expected\
+      \ xfails.\n  - Verified session-loss fail-closed behavior, tools/call consistency\
+      \ with tools/list via shared activity touch/capture behavior, long-idle live-session\
+      \ survival under default native TTL 0.0, and explicit nonzero TTL override stale\
+      \ reaping.\n  - Confirmed runtime defaults: sweep=30.0 native_ttl=0.0 bridge_ttl=900.0.\n\
+      \n  ## Notes\n  - Non-blocking documentation drift observed: DESIGN.md mentions\
+      \ old native_idle_ttl_seconds default 120.0 while runtime/ADR-006 use 0.0.\n\
+      error: \"\""
 - id: hard_cut.prep
   name: Hard-Cut Preparation Slicing
   status: done
@@ -70809,7 +70828,7 @@ phases:
       \ 407c123\nerror: \"\""
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
-  status: locked
+  status: pending
   gate: Implementation opens only if an independent readiness review reports READY
     against the latest canonical contract with no unresolved authority or verification
     blockers.
