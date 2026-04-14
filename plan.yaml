@@ -70836,3 +70836,28 @@ phases:
     depends_on:
     - hard_cut.final_conformance
     agent: project-guide
+  - id: hard_cut.final_gate
+    name: Open or block hard-cut completion
+    status: pending
+    description: Final gate for cutover completion. Open only if runtime tool probe,
+      canonical conformance audit, and local doc/test sync all pass with no leftover
+      legacy shared surfaces.
+    verification: Gate must explicitly state whether cutover is complete and must
+      block if any legacy shared vocabulary, dotted shared surface, or tela://profiles
+      dependency remains.
+    evidence_template: '## Final Gate
+
+      - Decision: OPEN or BLOCKED
+
+      - Runtime probe status:
+
+      - Conformance status:
+
+      - Doc/test sync status:
+
+      - Any remaining legacy shared surfaces:
+
+      '
+    depends_on:
+    - hard_cut.final_doc_sync
+    agent: gate-reviewer-tacit
