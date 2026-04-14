@@ -69267,7 +69267,7 @@ phases:
       - No moving pure-logic functions from Shell to Core (out of scope)'
   - id: arch_refactor.layer_dissolution.retest_blockers
     name: Retest full-plan boundary after batched blocker remediation
-    status: pending
+    status: claimed
     description: 'Post-remediation retest for blocker-class failures from `arch_refactor.layer_dissolution.full_plan_check`.
 
 
@@ -69411,6 +69411,8 @@ phases:
     depends_on:
     - arch_refactor.layer_dissolution.fix_blockers
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-14T05:49:07.026277+00:00'
 - id: arch_refactor.finalization
   name: Architecture Refactor Finalization
   status: locked
