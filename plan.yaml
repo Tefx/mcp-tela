@@ -70323,7 +70323,7 @@ phases:
       \ client_info_snapshot, bridge_connection_id.\nerror: \"\""
   - id: idle_recovery.gateway_fail_closed
     name: Remove fake initialize recovery and rebind tools call
-    status: pending
+    status: claimed
     description: 'Implement-and-verify the gateway fail-closed recovery path.
 
 
@@ -70393,6 +70393,8 @@ phases:
     depends_on:
     - idle_recovery.state_basis
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-14T20:17:27.297654+00:00'
   - id: idle_recovery.idle_contract
     name: Preserve long-idle live sessions by default
     status: pending
