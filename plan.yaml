@@ -69754,7 +69754,7 @@ phases:
     claimed_at: '2026-04-14T10:06:25.232026+00:00'
   - id: arch_refactor.finalization.spec_conformance
     name: Verify spec and design conformance after simplification
-    status: claimed
+    status: done
     description: 'Independent spec/design conformance audit focused on preserved surfaces.
 
 
@@ -69814,6 +69814,21 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-14T10:50:59.959580+00:00'
+    done_at: '2026-04-14T11:00:58.920344+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- docs/DESIGN.md — runtime architecture,\
+      \ authority split, module boundaries, recovery semantics reviewed.\n- docs/INTERFACES.md\
+      \ — CLI surface, HTTP endpoints, status schema, lockfile and error contracts\
+      \ reviewed.\n- docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md — deleted abstractions\
+      \ and exit-criteria sections reviewed.\n\n## Conformance Report\n- Surfaces\
+      \ checked: CLI commands/flags, HTTP endpoints and auth/readiness gating, discovery/readiness/convergence\
+      \ authority split, deleted-abstraction removal, module-boundary docs, ADR-006\
+      \ recovery behavior.\n- Divergences found:\n  1) INTERFACES.md CLI surface line\
+      \ omits `--max-recovery-attempts` for `tela connect` (code + DESIGN include\
+      \ it).\n  2) DESIGN module-boundary coverage omits explicit entries for `connect_bridge.py`\
+      \ and `connect_transport.py`.\n- Ambiguous doc areas: no critical ambiguity;\
+      \ authority split and runtime contracts are now coherent.\n- Verdict: CONFORMS\
+      \ (remaining items are documentation-completeness gaps, not behavioral/spec\
+      \ mismatches)."
   - id: arch_refactor.finalization.architecture_review
     name: Review whether the architecture is genuinely smaller
     status: claimed
