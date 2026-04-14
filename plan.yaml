@@ -70876,6 +70876,59 @@ phases:
     depends_on:
     - hard_cut.impl_core_vocab
     agent: python-senior-tacit
+  - id: hard_cut.impl_shared_surfaces
+    name: Cut shared runtime and audit surfaces to profile_id only
+    status: pending
+    description: 'Shared-surface slice only.
+
+
+      Update shared runtime, audit, connection, and tool-facing surfaces so `profile_id`
+      is the only shared profile identity vocabulary. Remove shared `profile_name`
+      usage where it leaks across runtime/audit/tool-facing boundaries.
+
+
+      Do NOT implement the canonical listing tool here.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.'
+    verification: 'Evidence must first prove expected-red, then green: no shared runtime/audit/tool-facing
+      surface still exposes `profile_name`, enforcement and audit bind the same canonical
+      `profile_id`, targeted tests pass, and changed-file Invar verification passes.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Test/contract written first:
+
+      - Command run before implementation:
+
+      - Failing output pasted here:
+
+
+      ## Shared-Surface Proof
+
+      - Surfaces cut from `profile_name` to `profile_id`:
+
+      - Canonical runtime/audit binding proof:
+
+      - Targeted test command(s) + output:
+
+      - Changed-file Invar verification output:
+
+      '
+    depends_on:
+    - hard_cut.impl_core_vocab
+    agent: python-senior-tacit
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
   status: locked
