@@ -70649,7 +70649,7 @@ phases:
       - Product code/doc changes made: none
 
       '
-    agent: python-senior-tacit
+    agent: minimalist-architect-tacit
   - id: hard_cut.prep_proof_assets
     name: Prepare proof assets and rollback matrix
     status: pending
