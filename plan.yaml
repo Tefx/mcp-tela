@@ -70605,3 +70605,10 @@ phases:
     tela://profiles dependency.'
   depends_on:
   - hard_cut.readiness
+- id: hard_cut.finalization
+  name: Hard-Cut Finalization and Conformance
+  status: locked
+  gate: Cutover completes only after independent tool probe, canonical conformance
+    audit, local doc/test sync, and final gate all pass.
+  depends_on:
+  - hard_cut.impl
