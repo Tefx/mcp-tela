@@ -70302,3 +70302,75 @@ phases:
 
       - Why this is minimal: <one short paragraph>'
     agent: python-senior-tacit
+  - id: idle_recovery.gateway_fail_closed
+    name: Remove fake initialize recovery and rebind tools call
+    status: pending
+    description: 'Implement-and-verify the gateway fail-closed recovery path.
+
+
+      Touch paths:
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/upstream.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/integration/test_token_mode_initialize.py
+
+
+      Replace the fake recovery path in `_ensure_connection`:
+
+      - never call `handle_initialize({})` as recovery
+
+      - recapture only when a real current session is available
+
+      - otherwise fail closed with explicit reconnect-required semantics
+
+
+      Also make `_call_tool()` capture/rebind session like `_list_tools()` already
+      does.
+
+
+      ## KNOWN RISKS (from project history)
+
+      - Connection lifecycle bugs regress when session truth and connection truth
+      diverge. Verify both live-session rebind and true-session-loss failure paths.
+
+      - Gateway changes often miss sibling paths. Check both `tools/list` and `tools/call`,
+      not only the failing path.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any remaining empty-initialize recovery path
+
+      2. `tools/call` still lacking session capture while `tools/list` has it
+
+      3. Ambiguous failure semantics on true session loss
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes runtime state
+      and varies behavior based on live-vs-lost session truth.'
+    verification: '- Expected-red first: failing gateway tests for empty-initialize
+      recovery and missing tools/call capture
+
+      - Then targeted gateway/integration tests pass
+
+      - Run invar_guard on changed files'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Expected-Red\
+      \ Proof (MANDATORY)\n- Failing test command(s):\n```\n<paste exact command>\n\
+      ```\n- Failing output:\n```\n<paste failing output>\n```\n- Exposed gaps:\n\
+      \  - empty initialize used as fake recovery\n  - tools/call missing session\
+      \ recapture\n\n## Green Proof\n- Passing targeted test command(s):\n```\n<paste\
+      \ exact command>\n```\n- Passing output:\n```\n<paste output>\n```\n- invar_guard\
+      \ command/output:\n```\n<paste output>\n```\n- Explicit fail-closed behavior\
+      \ on true session loss: <evidence>\n- tools/call recapture evidence: <evidence>"
+    depends_on:
+    - idle_recovery.state_basis
+    agent: python-senior-tacit
