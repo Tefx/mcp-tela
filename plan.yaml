@@ -70731,6 +70731,34 @@ phases:
 
       '
     agent: python-senior-tacit
+  - id: hard_cut.impl_listing_surface
+    name: Implement canonical profile listing surface
+    status: pending
+    description: Runtime/shared-surface slice. Replace the shared tela://profiles
+      dependency with builtin tela_list_profiles, normalize output to the canonical
+      schema, delete legacy payload keys, and fail closed on invalid payload or default-state
+      conditions.
+    verification: Show that tela_list_profiles exists as a builtin MCP tool, output
+      is profile_id/capabilities/default only, no shared tela://profiles dependency
+      remains, targeted tests pass, and invalid payload/default-state cases fail closed.
+    evidence_template: '## Listing Surface Verification
+
+      - Files changed:
+
+      - Builtin tool proof:
+
+      - Output payload proof:
+
+      - Legacy resource dependency removal proof:
+
+      - Fail-closed invalid-state proof:
+
+      - Targeted test command(s) + output:
+
+      '
+    depends_on:
+    - hard_cut.impl_core_vocab
+    agent: python-senior-tacit
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
   status: locked
