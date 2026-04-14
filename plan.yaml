@@ -70676,6 +70676,28 @@ phases:
 
       '
     agent: spec-verifier-tacit
+  - id: hard_cut.readiness_gate
+    name: Gate entry into implementation
+    status: pending
+    description: Gate implementation. Open only if the readiness review proves preparation
+      is sufficient and no unresolved authority, rollout, or verification blockers
+      remain.
+    verification: Gate decision must map each blocker to closed or blocking and must
+      explicitly state whether implementation may start.
+    evidence_template: '## Readiness Gate
+
+      - Decision: OPEN or BLOCKED
+
+      - Closed blockers:
+
+      - Remaining blockers:
+
+      - Why implementation may or may not start:
+
+      '
+    depends_on:
+    - hard_cut.readiness_review
+    agent: gate-reviewer-tacit
 - id: hard_cut.impl
   name: Canonical Hard-Cut Implementation
   status: locked
