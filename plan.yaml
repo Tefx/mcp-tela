@@ -68867,7 +68867,7 @@ phases:
       import/doc wording/env-dependent failures tracked by full-plan-check'
   - id: arch_refactor.layer_dissolution.gate
     name: Gate layer dissolution
-    status: pending
+    status: claimed
     description: 'Gate review for the layer dissolution phase.
 
 
@@ -68968,6 +68968,8 @@ phases:
     - arch_refactor.layer_dissolution.runtime_probe
     - arch_refactor.layer_dissolution.retest_blockers
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-14T05:56:29.319302+00:00'
   - id: arch_refactor.layer_dissolution.fix_blockers
     name: Batched blocker remediation after full-plan check
     status: done
