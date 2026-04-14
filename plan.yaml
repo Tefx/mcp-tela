@@ -70374,3 +70374,130 @@ phases:
     depends_on:
     - idle_recovery.state_basis
     agent: python-senior-tacit
+  - id: idle_recovery.idle_contract
+    name: Preserve long-idle live sessions by default
+    status: pending
+    description: 'Implement-and-verify the long-idle lifecycle contract.
+
+
+      Touch paths:
+
+      - src/tela/shell/connection_reaper.py
+
+      - src/tela/core/reaper_config.py
+
+      - src/tela/commands/serve_cmd.py
+
+      - tests/shell/test_connection_reaper.py
+
+      - tests/shell/test_serve_cmd.py
+
+      - tests/black_box/test_reaper_black_box.py
+
+
+      Lifecycle contract:
+
+      - live sessions are not idle-reaped by default
+
+      - `idle_timeout` still governs process shutdown only after connection count
+      reaches zero
+
+      - explicit operator TTL overrides remain supported
+
+
+      Failure-mode checklist:
+
+      - quiet-but-live session must survive default reaper settings
+
+      - true disconnect / zero connections must still allow idle shutdown
+
+      - explicit nonzero TTL override must still reap stale connections
+
+
+      State semantics:
+
+      - last-writer-wins: runtime activity timestamp updates
+
+      - must preserve exactly: live session survival under default TTL contract
+
+      - backward-compatible behavior: explicit operator TTL overrides still work
+
+
+      Out-of-scope guardrail:
+
+      - Do not add a reconnect manager or speculative background recovery loop
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive lifecycle logic, not only constant/default
+      rewrites.'
+    verification: '- Expected-red first: long-idle repro fails under current defaults
+
+      - Then targeted reaper/serve/black-box tests pass
+
+      - Run invar_guard on changed files'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Failing long-idle command/test:
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+      - Failing output:
+
+      ```
+
+      <paste failing output>
+
+      ```
+
+      - Exposed gap: default lifecycle currently reaps quiet-but-live sessions
+
+
+      ## Green Proof
+
+      - Passing targeted command(s):
+
+      ```
+
+      <paste exact command>
+
+      ```
+
+      - Passing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      - invar_guard command/output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      - Long-idle live-session proof: <evidence>
+
+      - Zero-connection idle shutdown proof: <evidence>
+
+      - Explicit TTL override proof: <evidence>'
+    depends_on:
+    - idle_recovery.gateway_fail_closed
+    agent: python-senior-tacit
