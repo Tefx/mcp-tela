@@ -70195,7 +70195,7 @@ phases:
   steps:
   - id: idle_recovery.state_basis
     name: Add authoritative recovery state to ConnectionContext
-    status: claimed
+    status: done
     description: 'Implement-and-verify the minimum recovery-critical runtime state.
 
 
@@ -70304,6 +70304,23 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-14T19:47:15.260075+00:00'
+    done_at: '2026-04-14T20:16:40.970288+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - src/tela/core/models.py — ConnectionContext now includes init_mode, client_info_snapshot,\
+      \ bridge_connection_id fields.\n  - src/tela/shell/upstream.py — handle_initialize\
+      \ populates all three recovery fields.\n  - tests/core/test_models.py — expected-red\
+      \ gap proofs and recovery contract tests added.\n  - tests/shell/test_upstream.py\
+      \ — initialize recovery field population tests added.\n  - tests/integration/test_token_mode_initialize.py\
+      \ — integration tests for token-mode recovery state added.\n\n  ## Expected-Red\
+      \ Proof (MANDATORY)\n  - Failing test command(s): `.venv/bin/python -m pytest\
+      \ tests/core/test_models.py::TestConnectionContextRecoveryContract -v`\n  -\
+      \ Exposed gap: token-mode recovery currently depends on missing authoritative\
+      \ initialize state.\n\n  ## Green Proof\n  - Passing targeted test command(s):\
+      \ `.venv/bin/python -m pytest tests/core/test_models.py tests/shell/test_upstream.py\
+      \ tests/integration/test_token_mode_initialize.py -v --tb=short`\n  - Passing\
+      \ output: `135 passed in 0.75s`\n  - invar_guard command/output: `.venv/bin/invar\
+      \ guard --all` with status passed, errors 0.\n  - Runtime state added: init_mode,\
+      \ client_info_snapshot, bridge_connection_id.\nerror: \"\""
   - id: idle_recovery.gateway_fail_closed
     name: Remove fake initialize recovery and rebind tools call
     status: pending
