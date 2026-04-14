@@ -71027,26 +71027,37 @@ phases:
   - id: hard_cut.final_doc_sync
     name: Sync local docs and tests to canonical surfaces only
     status: pending
-    description: Unfreeze local docs, examples, and contract tests from old resource
-      behavior and sync them strictly to the canonical contract. Remove assertions
-      that treat profile_name, tools, families, or tela://profiles as canonical shared
+    description: 'Docs-only sync step.
+
+
+      Sync local docs and examples to canonical surfaces only. Do not update tests
+      here. Remove assertions that treat `profile_name`, `tools`, `families`, dotted
+      shared tool names, or `tela://profiles` as canonical shared surfaces.'
+    verification: Show that no local doc or example asserts `profile_name`, `tools`,
+      `families`, dotted shared tool names, or `tela://profiles` as canonical shared
       surfaces.
-    verification: Show that no local doc, example, or contract test asserts profile_name,
-      tools, families, or tela://profiles as canonical shared surfaces.
-    evidence_template: '## Doc/Test Sync
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
-      - Files changed:
+      For each ref in this step:
 
-      - Legacy shared-surface assertions removed:
+      - <filename> — key passage or "NOT READ: <reason>"
 
-      - Canonical references aligned:
 
-      - Remaining stale docs/tests: none or list
+      ## Doc Sync Proof
+
+      - Docs/examples updated:
+
+      - Legacy shared-surface wording removed:
+
+      - Canonical wording added:
+
+      - Remaining stale docs/examples: none or list
 
       '
     depends_on:
     - hard_cut.final_conformance
-    agent: project-guide
+    - hard_cut.final_test_sync
+    agent: doc-reviewer-tacit
   - id: hard_cut.final_gate
     name: Open or block hard-cut completion
     status: pending
