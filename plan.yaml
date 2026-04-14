@@ -70713,15 +70713,37 @@ phases:
   - hard_cut.readiness
   steps:
   - id: hard_cut.impl_core_vocab
-    name: Implement canonical core vocabulary and token binding
+    name: Cut config and token vocabulary to canonical-only fields
     status: pending
-    description: Core/domain slice. Remove legacy shared vocabulary and token aliasing;
-      make profile_id the only shared identity and token binding field; reject alias
-      token fields fail-closed; keep enforcement logic intact except for canonical
-      naming and validation hardening.
-    verification: Show that tools alias support is removed, CapabilityToken uses canonical
-      profile_id, alias token fields are rejected before authorization, targeted tests
-      pass, and Invar verification passes for changed files.
+    description: 'Core/domain slice only.
+
+
+      Scope:
+
+      - remove config alias support for `tools`
+
+      - make `profile_id` the only canonical token/profile identity field in core/shared
+      models
+
+      - make CapabilityToken bind on canonical `profile_id`
+
+      - reject alias token fields fail-closed before authorization
+
+
+      Do NOT handle runtime/audit shared-surface rewiring here.
+
+      Do NOT handle profile-list tool/output here.'
+    verification: 'Evidence must show expected-red first, then green:
+
+      - config accepts `capabilities` only
+
+      - CapabilityToken uses canonical `profile_id`
+
+      - alias token fields reject before authorization
+
+      - targeted tests pass
+
+      - changed-file invar_guard passes'
     evidence_template: '## Core Vocabulary Verification
 
       - Files changed:
