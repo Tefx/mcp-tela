@@ -70693,7 +70693,7 @@ phases:
       \ \"\""
   - id: hard_cut.prep_proof_assets
     name: Prepare proof assets and rollback matrix
-    status: pending
+    status: claimed
     description: 'Prepare proof assets only.
 
 
@@ -70741,6 +70741,8 @@ phases:
     depends_on:
     - hard_cut.prep_basis
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-14T20:17:19.465578+00:00'
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
   status: locked
