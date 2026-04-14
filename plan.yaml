@@ -70416,7 +70416,7 @@ phases:
       \ _list_tools behavior.\nerror: \"\""
   - id: idle_recovery.idle_contract
     name: Preserve long-idle live sessions by default
-    status: pending
+    status: claimed
     description: 'Implement-and-verify the long-idle lifecycle contract.
 
 
@@ -70541,6 +70541,8 @@ phases:
     depends_on:
     - idle_recovery.gateway_fail_closed
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-14T21:15:02.565216+00:00'
   - id: idle_recovery.gate
     name: Gate idle recovery repair
     status: pending
