@@ -67,10 +67,12 @@ def test_handle_initialize_token_mode_valid_token() -> None:
     fields = _make_valid_token_fields(profile="production")
     signed_token = _sign_token(fields, secret)
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={"production": ProfileConfig(name="production")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"production": ProfileConfig(name="production")},
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -100,13 +102,15 @@ def test_handle_initialize_token_mode_binds_profile_from_token() -> None:
     fields = _make_valid_token_fields(profile="staging")
     signed_token = _sign_token(fields, secret)
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={
-            "staging": ProfileConfig(name="staging"),
-            "production": ProfileConfig(name="production", default=True),
-        },
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={
+                "staging": ProfileConfig(name="staging"),
+                "production": ProfileConfig(name="production", default=True),
+            },
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -136,11 +140,15 @@ def test_handle_initialize_token_mode_dual_key_rotation() -> None:
     signed_token = _sign_token(fields, old_secret)
 
     # Gateway has new primary, old secondary
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[new_secret, old_secret]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
-    set_runtime_secrets([new_secret, old_secret])  # Token mode requires secrets in runtime
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[new_secret, old_secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
+    set_runtime_secrets(
+        [new_secret, old_secret]
+    )  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
     async def _run() -> None:
@@ -161,10 +169,12 @@ def test_handle_initialize_token_mode_dual_key_rotation() -> None:
 
 def test_handle_initialize_token_mode_missing_token_fields() -> None:
     """Token mode must reject when required token fields are missing."""
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets(["secret"])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -184,10 +194,12 @@ def test_handle_initialize_token_mode_missing_token_fields() -> None:
 
 def test_handle_initialize_token_mode_missing_signature() -> None:
     """Token mode must reject when signature is missing."""
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets(["secret"])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -220,10 +232,12 @@ def test_handle_initialize_token_mode_invalid_signature() -> None:
     # Sign with WRONG secret
     signed_token = _sign_token(fields, "wrong-secret")
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -252,10 +266,12 @@ def test_handle_initialize_token_mode_expired_token() -> None:
     )
     signed_token = _sign_token(fields, secret)
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -279,10 +295,12 @@ def test_handle_initialize_token_mode_no_secrets_configured() -> None:
     signed_token = _sign_token(fields, "any-secret")
 
     # No secrets means token validation cannot proceed
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets([])  # No secrets in runtime
     clear_runtime_connections()
 
@@ -312,13 +330,15 @@ def test_handle_initialize_token_mode_ignores_profile_hints_in_metadata() -> Non
     fields = _make_valid_token_fields(profile="production")
     signed_token = _sign_token(fields, secret)
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={
-            "production": ProfileConfig(name="production"),
-            "staging": ProfileConfig(name="staging"),
-        },
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={
+                "production": ProfileConfig(name="production"),
+                "staging": ProfileConfig(name="staging"),
+            },
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -356,10 +376,12 @@ def test_handle_initialize_token_mode_preserves_optional_token_fields() -> None:
     sig = compute_signature({k: v for k, v in fields.items() if v is not None}, secret)
     signed_token = {**fields, "signature": sig}
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -385,10 +407,12 @@ def test_handle_initialize_token_mode_registers_connection() -> None:
     fields = _make_valid_token_fields(profile="dev")
     signed_token = _sign_token(fields, secret)
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -415,10 +439,12 @@ def test_handle_initialize_token_mode_connection_id_format() -> None:
     fields = _make_valid_token_fields(profile="dev")
     signed_token = _sign_token(fields, secret)
 
-    set_runtime_config(TelaConfig(
-        auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
-        profiles={"dev": ProfileConfig(name="dev")},
-    ))
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
     set_runtime_secrets([secret])  # Token mode requires secrets in runtime
     clear_runtime_connections()
 
@@ -432,6 +458,200 @@ def test_handle_initialize_token_mode_connection_id_format() -> None:
         suffix = result.value.connection_id[5:]
         assert len(suffix) == 8
         assert all(c in "0123456789abcdef" for c in suffix)
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+# --- Recovery-critical runtime state for token-mode reconnect ---
+
+
+def test_handle_initialize_token_mode_records_init_mode() -> None:
+    """Token-mode handle_initialize must set init_mode=AUTH_TOKEN on ConnectionContext.
+
+    Without init_mode, recovery cannot distinguish TOKEN from OPEN mode
+    during reconnect, preventing correct revalidation path selection.
+    """
+    secret = "recovery-init-mode-key"
+    fields = _make_valid_token_fields(profile="dev")
+    signed_token = _sign_token(fields, secret)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(signed_token)
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.init_mode == AuthMode.TOKEN
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
+    """Token-mode handle_initialize must preserve client_info snapshot on ConnectionContext.
+
+    The snapshot carries the original capability-token fields
+    (token_id, profile_name, issued_at, expires_at, signature)
+    required for revalidation on reconnect.
+    Without the snapshot, recovery cannot reconstruct a CapabilityToken
+    from an empty initialize.
+    """
+    secret = "recovery-snapshot-key"
+    fields = _make_valid_token_fields(profile="production", token_id="tok-recovery-1")
+    signed_token = _sign_token(fields, secret)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"production": ProfileConfig(name="production")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(signed_token)
+        assert result.is_ok
+        ctx = result.value
+        assert ctx is not None
+        assert ctx.client_info_snapshot is not None
+        # All required token fields must be in snapshot
+        assert ctx.client_info_snapshot["token_id"] == "tok-recovery-1"
+        assert ctx.client_info_snapshot["profile_name"] == "production"
+        assert "issued_at" in ctx.client_info_snapshot
+        assert "expires_at" in ctx.client_info_snapshot
+        assert "signature" in ctx.client_info_snapshot
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstruction() -> (
+    None
+):
+    """client_info_snapshot must contain enough data to reconstruct CapabilityToken.
+
+    This is the core recovery contract: the snapshot must carry all fields
+    required by the CapabilityToken constructor so that a recovery path can
+    re-validate the token without requiring the client to re-present it.
+
+    Without this, a connection drop during idle period makes reconnect
+    impossible because the authority state is lost.
+    """
+    secret = "recovery-reconstruct-key"
+    fields = _make_valid_token_fields(
+        profile="staging",
+        token_id="tok-recon-1",
+    )
+    signed_token = _sign_token(fields, secret)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"staging": ProfileConfig(name="staging")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(signed_token)
+        assert result.is_ok
+        ctx = result.value
+        assert ctx is not None
+        assert ctx.init_mode == AuthMode.TOKEN
+        assert ctx.client_info_snapshot is not None
+
+        # Prove snapshot enables CapabilityToken reconstruction
+        for field in (
+            "token_id",
+            "profile_name",
+            "issued_at",
+            "expires_at",
+            "signature",
+        ):
+            assert field in ctx.client_info_snapshot, (
+                f"Recovery-critical field {field!r} missing from client_info_snapshot"
+            )
+
+        # The snapshot values must match the original token fields
+        assert ctx.client_info_snapshot["token_id"] == "tok-recon-1"
+        assert ctx.client_info_snapshot["profile_name"] == "staging"
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+def test_handle_initialize_token_mode_bridge_connection_id_is_none() -> None:
+    """Token-mode non-bridge initialize must have bridge_connection_id=None."""
+    secret = "recovery-no-bridge-key"
+    fields = _make_valid_token_fields(profile="dev")
+    signed_token = _sign_token(fields, secret)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(signed_token)
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.bridge_connection_id is None
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+def test_handle_initialize_open_mode_records_init_mode() -> None:
+    """Open-mode handle_initialize must set init_mode=AUTH_OPEN on ConnectionContext.
+
+    Proves that init_mode recording is not limited to token mode.
+    """
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+        )
+    )
+    set_runtime_secrets([])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize({"client": "desktop"})
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.init_mode == AuthMode.OPEN
+        assert result.value.client_info_snapshot is not None
+        assert result.value.client_info_snapshot["client"] == "desktop"
 
     try:
         asyncio.run(_run())

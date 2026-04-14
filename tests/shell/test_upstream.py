@@ -14,6 +14,7 @@ import pytest
 from tela.core.models import (
     DefaultProfileResolutionStatus,
     InitializeProfileBinding,
+    ProfileConfig,
 )
 from tela.shell.upstream import InitializeContext, resolve_initialize_profile_binding
 from tela.shell.downstream_registry import DownstreamRegistry
@@ -252,10 +253,10 @@ def test_handle_initialize_reuses_existing_bridge_connection() -> None:
 
     from tela.core.models import AuthConfig, AuthMode, ConnectionContext, TelaConfig
     from tela.shell.gateway_runtime import (
-    add_runtime_connection,
-    clear_runtime_connections,
-    set_runtime_config,
-)
+        add_runtime_connection,
+        clear_runtime_connections,
+        set_runtime_config,
+    )
     from tela.shell.idle_shutdown import (
         _reset_idle_manager,
         get_idle_manager,
@@ -1755,3 +1756,219 @@ def test_adr006_structured_diagnostics_event_types() -> None:
         "downstream_recovery_exhausted",
         "downstream_recovery_classifier_unknown",
     }
+
+
+# =============================================================================
+# Recovery-critical runtime state tests
+# =============================================================================
+# These tests verify that handle_initialize populates init_mode,
+# client_info_snapshot, and bridge_connection_id on the returned
+# ConnectionContext — the minimum authoritative state needed for
+# correct reconnect or explicit re-initialize semantics.
+# =============================================================================
+
+
+def test_handle_initialize_populates_init_mode_open() -> None:
+    """Open-mode handle_initialize must set init_mode=AUTH_OPEN on ConnectionContext."""
+    import asyncio
+
+    from tela.core.models import AuthConfig, AuthMode, TelaConfig
+    from tela.shell.gateway_runtime import (
+        clear_runtime_connections,
+        set_runtime_config,
+    )
+    from tela.shell.idle_shutdown import (
+        _reset_idle_manager,
+        get_idle_manager,
+        init_idle_manager,
+    )
+    from tela.shell.upstream import handle_initialize
+
+    async def _run() -> None:
+        _reset_idle_manager()
+
+        async def _shutdown_callback() -> None:
+            return None
+
+        init_result = await init_idle_manager(30.0, _shutdown_callback)
+        assert init_result.is_ok
+
+        set_runtime_config(
+            TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+                profiles={"dev": ProfileConfig(name="dev", default=True)},
+            )
+        )
+        clear_runtime_connections()
+
+        result = await handle_initialize({"client": "desktop"})
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.init_mode == AuthMode.OPEN
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+
+
+def test_handle_initialize_populates_client_info_snapshot_open_mode() -> None:
+    """Open-mode handle_initialize must preserve client_info on ConnectionContext."""
+    import asyncio
+
+    from tela.core.models import AuthConfig, AuthMode, TelaConfig
+    from tela.shell.gateway_runtime import (
+        clear_runtime_connections,
+        set_runtime_config,
+    )
+    from tela.shell.idle_shutdown import (
+        _reset_idle_manager,
+        get_idle_manager,
+        init_idle_manager,
+    )
+    from tela.shell.upstream import handle_initialize
+
+    async def _run() -> None:
+        _reset_idle_manager()
+
+        async def _shutdown_callback() -> None:
+            return None
+
+        init_result = await init_idle_manager(30.0, _shutdown_callback)
+        assert init_result.is_ok
+
+        set_runtime_config(
+            TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+                profiles={"dev": ProfileConfig(name="dev", default=True)},
+            )
+        )
+        clear_runtime_connections()
+
+        result = await handle_initialize({"client": "desktop", "version": "1.0"})
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.client_info_snapshot is not None
+        assert result.value.client_info_snapshot["client"] == "desktop"
+        assert result.value.client_info_snapshot["version"] == "1.0"
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+
+
+def test_handle_initialize_bridge_connection_id_populated() -> None:
+    """Bridge initialize must record bridge_connection_id on ConnectionContext for non-bridge path."""
+    import asyncio
+
+    from tela.core.models import AuthConfig, AuthMode, TelaConfig
+    from tela.shell.gateway_runtime import (
+        clear_runtime_connections,
+        set_runtime_config,
+    )
+    from tela.shell.idle_shutdown import (
+        _reset_idle_manager,
+        get_idle_manager,
+        init_idle_manager,
+    )
+    from tela.shell.upstream import handle_initialize
+
+    async def _run() -> None:
+        _reset_idle_manager()
+
+        async def _shutdown_callback() -> None:
+            return None
+
+        init_result = await init_idle_manager(30.0, _shutdown_callback)
+        assert init_result.is_ok
+
+        set_runtime_config(
+            TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+                profiles={"dev": ProfileConfig(name="dev", default=True)},
+            )
+        )
+        clear_runtime_connections()
+
+        result = await handle_initialize({"client": "test"})
+        assert result.is_ok
+        assert result.value is not None
+        # Non-bridge path: bridge_connection_id should be None
+        assert result.value.bridge_connection_id is None
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+
+
+def test_handle_initialize_bridge_reuse_preserves_init_mode_on_existing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bridge initialize that reuses an existing connection must preserve init_mode."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        TelaConfig,
+    )
+    from tela.shell.gateway_runtime import (
+        add_runtime_connection,
+        clear_runtime_connections,
+        set_runtime_config,
+    )
+    from tela.shell.idle_shutdown import (
+        _reset_idle_manager,
+        get_idle_manager,
+        init_idle_manager,
+    )
+    from tela.shell.upstream import handle_initialize
+
+    async def _scenario() -> None:
+        _reset_idle_manager()
+
+        async def _shutdown_callback() -> None:
+            return None
+
+        init_result = await init_idle_manager(30.0, _shutdown_callback)
+        assert init_result.is_ok
+        manager = get_idle_manager()
+        assert manager is not None
+
+        set_runtime_config(
+            TelaConfig(
+                auth=AuthConfig(mode=AuthMode.OPEN),
+                resolved_default_profile="dev",
+            )
+        )
+        clear_runtime_connections()
+
+        # Pre-register a bridge connection with init_mode already set
+        bridge_connection = ConnectionContext(
+            connection_id="bridge_recovery_1",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.OPEN,
+            bridge_connection_id="bridge_recovery_1",
+        )
+        add_runtime_connection(bridge_connection)
+        increment_result = await manager.increment()
+        assert increment_result.is_ok
+
+        # MCP initialize with bridge connection ID should return the existing context
+        result = await handle_initialize(
+            {"name": "probe", "tela_bridge_connection_id": "bridge_recovery_1"}
+        )
+        assert result.is_ok
+        ctx = result.value
+        assert ctx is not None
+        assert ctx.init_mode == AuthMode.OPEN
+        assert ctx.bridge_connection_id == "bridge_recovery_1"
+
+    asyncio.run(_scenario())

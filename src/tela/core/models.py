@@ -285,13 +285,30 @@ class ProviderInfo(TypedDict):
 
 
 class ConnectionContext(BaseModel):
-    """Per-connection state for an upstream client."""
+    """Per-connection state for an upstream client.
+
+    Recovery-critical fields (idle reconnect / explicit re-initialize):
+    - ``init_mode``: Records which auth path established this connection
+      (TOKEN or OPEN). Cannot be derived from empty initialize — required
+      for correct reconnect semantics.
+    - ``client_info_snapshot``: Preserves the clientInfo dict from MCP
+      initialize. For token mode, carries the original capability-token
+      fields needed for revalidation. Without this snapshot, reconnect
+      cannot re-derive the token validation context.
+    - ``bridge_connection_id``: Records the HTTP /connect bridge
+      connection ID when the upstream client connected via bridge. Allows
+      the gateway to correlate initialized MCP sessions back to their
+      /connect-registration.
+    """
 
     connection_id: str
     profile_name: str
     connected_at: str
     tool_call_count: int = 0
     last_activity: str = ""
+    init_mode: AuthMode | None = None
+    client_info_snapshot: dict[str, str] | None = None
+    bridge_connection_id: str | None = None
 
 
 class EnforcementResult(BaseModel):

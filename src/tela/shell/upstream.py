@@ -311,6 +311,13 @@ async def handle_initialize(
         connection_id=connection_id,
         profile_name=profile_name,
         connected_at=now_iso,
+        init_mode=config.auth.mode,
+        client_info_snapshot={
+            str(key): str(value) for key, value in client_info.items()
+        },
+        bridge_connection_id=(
+            str(bridge_connection_id) if bridge_connection_id is not None else None
+        ),
     )
 
     # Register connection in runtime via locked accessor.

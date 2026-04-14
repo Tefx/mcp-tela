@@ -271,6 +271,8 @@ def handle_connect(
         connection_id=payload.connection_id,
         profile_name=config.resolved_default_profile or "default",
         connected_at=now_iso,
+        init_mode=config.auth.mode,
+        bridge_connection_id=payload.connection_id,
     )
 
     add_runtime_connection(connection_context)

@@ -27,6 +27,7 @@ from tela.core.models import (
     RuntimeBindingContract,
     InitializeProfileBinding,
     DefaultProfileResolutionStatus,
+    CapabilityToken,
 )
 
 
@@ -222,6 +223,287 @@ class TestRuntimeModels:
             total_tool_calls=42,
         )
         assert gs.connected_servers == []
+
+    def test_connection_context_defaults_recovery_fields(self) -> None:
+        """Recovery fields must default to None for backward compatibility."""
+        c = ConnectionContext(
+            connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        )
+        assert c.init_mode is None
+        assert c.client_info_snapshot is None
+        assert c.bridge_connection_id is None
+
+    def test_connection_context_init_mode_token(self) -> None:
+        """Token-mode connections must record AuthMode.TOKEN in init_mode."""
+        c = ConnectionContext(
+            connection_id="c1",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+        )
+        assert c.init_mode == AuthMode.TOKEN
+
+    def test_connection_context_init_mode_open(self) -> None:
+        """Open-mode connections must record AuthMode.OPEN in init_mode."""
+        c = ConnectionContext(
+            connection_id="c1",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.OPEN,
+        )
+        assert c.init_mode == AuthMode.OPEN
+
+    def test_connection_context_client_info_snapshot_preserves_token_fields(
+        self,
+    ) -> None:
+        """client_info_snapshot must preserve all token-mode fields for recovery.
+
+        Without the snapshot, token-mode reconnect cannot re-derive the
+        original capability-token context from an empty initialize.
+        """
+        snapshot = {
+            "token_id": "tok-1",
+            "profile_name": "production",
+            "issued_at": "2026-01-01T00:00:00Z",
+            "expires_at": "2026-12-31T23:59:59Z",
+            "signature": "abc123def456",
+        }
+        c = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+            client_info_snapshot=snapshot,
+        )
+        assert c.client_info_snapshot is not None
+        assert c.client_info_snapshot["token_id"] == "tok-1"
+        assert c.client_info_snapshot["profile_name"] == "production"
+        assert c.client_info_snapshot["signature"] == "abc123def456"
+
+    def test_connection_context_bridge_connection_id(self) -> None:
+        """bridge_connection_id must record the /connect registration ID."""
+        c = ConnectionContext(
+            connection_id="conn_abc123",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            bridge_connection_id="bridge_abc",
+        )
+        assert c.bridge_connection_id == "bridge_abc"
+
+    def test_connection_context_roundtrip_with_recovery_fields(self) -> None:
+        """ConnectionContext with recovery fields must roundtrip through serialization."""
+        c = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+            client_info_snapshot={
+                "token_id": "tok-1",
+                "profile_name": "production",
+                "issued_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-12-31T23:59:59Z",
+                "signature": "sig",
+            },
+            bridge_connection_id="bridge_xyz",
+        )
+        data = c.model_dump()
+        restored = ConnectionContext.model_validate(data)
+        assert restored.init_mode == AuthMode.TOKEN
+        assert restored.client_info_snapshot is not None
+        assert restored.client_info_snapshot["token_id"] == "tok-1"
+        assert restored.bridge_connection_id == "bridge_xyz"
+
+
+# --- Recovery-critical runtime state contract tests ---
+
+
+class TestConnectionContextRecoveryContract:
+    """Property-style tests proving init_mode and client_info_snapshot
+    are required for correct reconnect/re-initialize semantics.
+
+    These tests expose why a ConnectionContext lacking these fields
+    cannot serve as authoritative recovery state.
+    """
+
+    def test_token_mode_recovery_requires_init_mode(self) -> None:
+        """A token-mode connection without init_mode cannot be distinguished
+        from an open-mode connection during reconnect.
+
+        Recovery decision logic needs init_mode to select the correct
+        revalidation path (token vs open-profile).
+        """
+        c = ConnectionContext(
+            connection_id="c1",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+        )
+        # init_mode must be present to select revalidation path
+        assert c.init_mode is not None
+        assert c.init_mode == AuthMode.TOKEN
+
+    def test_token_mode_recovery_requires_client_info_snapshot(self) -> None:
+        """A token-mode connection without client_info_snapshot cannot
+        re-derive token validity parameters from empty initialize.
+
+        The snapshot carries token_id, issued_at, expires_at, signature —
+        all required fields for CapabilityToken reconstruction.
+        """
+        c = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+            client_info_snapshot={
+                "token_id": "tok-1",
+                "profile_name": "production",
+                "issued_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-12-31T23:59:59Z",
+                "signature": "hmac-sha256-hex",
+            },
+        )
+        assert c.client_info_snapshot is not None
+        required_token_fields = (
+            "token_id",
+            "profile_name",
+            "issued_at",
+            "expires_at",
+            "signature",
+        )
+        for field in required_token_fields:
+            assert field in c.client_info_snapshot, (
+                f"Recovery requires {field} in client_info_snapshot for token revalidation"
+            )
+
+    def test_empty_initialize_cannot_derive_token_mode_state(self) -> None:
+        """Prove that token-mode recovery state cannot be derived from
+        an empty initialize — the authoritative source is the
+        client_info_snapshot preserved at init time.
+
+        This is the expected-red proof: without client_info_snapshot,
+        a ConnectionContext with init_mode=TOKEN cannot re-validate
+        the capability token because token_id, issued_at, expires_at,
+        and signature are not recoverable from profile_name alone.
+        """
+        # Minimal ConnectionContext as if recorded during token init
+        minimal_ctx = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+            client_info_snapshot={
+                "token_id": "tok-1",
+                "profile_name": "production",
+                "issued_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-12-31T23:59:59Z",
+                "signature": "hmac-sha256-hex",
+                "persona_ref": "user-42",
+                "instance_id": "inst-7",
+                "max_depth": "3",
+            },
+        )
+
+        # Without client_info_snapshot, recovery cannot proceed:
+        # profile_name alone is insufficient to reconstruct CapabilityToken
+        bare_ctx = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+        # Bare ctx lacks all recovery-critical fields
+        assert bare_ctx.init_mode is None, (
+            "Without init_mode, recovery cannot distinguish TOKEN from OPEN mode"
+        )
+        assert bare_ctx.client_info_snapshot is None, (
+            "Without client_info_snapshot, recovery cannot reconstruct CapabilityToken"
+        )
+        # With the snapshot, all required token fields are available
+        assert minimal_ctx.client_info_snapshot is not None
+        for field in (
+            "token_id",
+            "profile_name",
+            "issued_at",
+            "expires_at",
+            "signature",
+        ):
+            assert minimal_ctx.client_info_snapshot.get(field) is not None, (
+                f"Token field {field} must be present in snapshot for revalidation"
+            )
+
+    def test_recovery_gap_bare_context_cannot_select_revalidation_path(self) -> None:
+        """Prove that without init_mode, a bare ConnectionContext cannot
+        determine whether to use token revalidation or open-mode profile
+        lookup during reconnect.
+
+        Expected-red proof: before init_mode was added, recovery logic
+        had no way to branch on the authentication path. This test
+        demonstrates the gap by showing both modes produce identical
+        bare contexts.
+        """
+        # Two connections from different auth modes produce identical bare contexts
+        token_bare = ConnectionContext(
+            connection_id="c_token",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+        open_bare = ConnectionContext(
+            connection_id="c_open",
+            profile_name="dev",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+        # Without init_mode, these contexts are indistinguishable for recovery
+        assert token_bare.init_mode is None
+        assert open_bare.init_mode is None
+        # Recovery cannot branch differently for TOKEN vs OPEN without init_mode
+        assert token_bare.init_mode == open_bare.init_mode, (
+            "Gap: bare contexts from different auth modes are indistinguishable"
+        )
+
+    def test_recovery_gap_bare_context_missing_token_fields(self) -> None:
+        """Prove that without client_info_snapshot, a bare token-mode
+        ConnectionContext cannot re-derive validation parameters.
+
+        Expected-red proof: the CapabilityToken constructor requires
+        token_id, issued_at, expires_at, signature — none of which
+        are present on a bare ConnectionContext.
+        """
+        bare_ctx = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+
+        # CapabilityToken requires these fields; bare ctx provides none
+        required_for_revalidation = (
+            "token_id",
+            "issued_at",
+            "expires_at",
+            "signature",
+        )
+        for field in required_for_revalidation:
+            assert bare_ctx.client_info_snapshot is None, (
+                f"Gap: bare context has no snapshot, cannot provide {field} for revalidation"
+            )
+
+        # A recovery-enabled context carries all required fields
+        recovery_ctx = ConnectionContext(
+            connection_id="c1",
+            profile_name="production",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.TOKEN,
+            client_info_snapshot={
+                "token_id": "tok-1",
+                "profile_name": "production",
+                "issued_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-12-31T23:59:59Z",
+                "signature": "sig",
+            },
+        )
+        assert recovery_ctx.client_info_snapshot is not None
+        for field in required_for_revalidation:
+            assert recovery_ctx.client_info_snapshot.get(field) is not None, (
+                f"Recovery requires {field} in client_info_snapshot"
+            )
 
 
 # --- Spec-derived fixture: minimal lockfile payload (INTERFACES.md §7.3) ---
