@@ -70699,7 +70699,7 @@ phases:
       '
     depends_on:
     - hard_cut.prep_basis
-    agent: python-senior-tacit
+    agent: minimalist-architect-tacit
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
   status: locked
