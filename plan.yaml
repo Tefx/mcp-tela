@@ -70597,3 +70597,11 @@ phases:
     blockers.
   depends_on:
   - hard_cut.prep
+- id: hard_cut.impl
+  name: Canonical Hard-Cut Implementation
+  status: locked
+  gate: 'Core vocabulary and shared listing surfaces must be canonical-only: profile_id,
+    capabilities, snake_case MCP tool names, no legacy shared aliases, and no shared
+    tela://profiles dependency.'
+  depends_on:
+  - hard_cut.readiness
