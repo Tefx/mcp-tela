@@ -29,17 +29,25 @@ logger = logging.getLogger(__name__)
 class ReaperConfig:
     """Configuration knobs for the connection reaper.
 
+    Lifecycle contract:
+    - By default (native_idle_ttl_seconds=0), live native sessions are
+      never idle-reaped. Only orphaned connections (session gone) are
+      removed during sweeps.
+    - Bridge connections are still subject to bridge_idle_ttl_seconds.
+    - ``idle_timeout`` in serve_cmd governs process shutdown only after
+      the idle manager's connection count reaches zero.
+
     Attributes:
         sweep_interval_seconds: How often the reaper runs a sweep cycle.
         native_idle_ttl_seconds: Max idle time for native (non-bridge)
             connections before they are reaped. Set to 0 to disable
-            native reaping.
+            native reaping (default — only orphaned connections removed).
         bridge_idle_ttl_seconds: Max idle time for bridge connections
             before they are reaped. Set to 0 to disable bridge reaping.
     """
 
     sweep_interval_seconds: float = 30.0
-    native_idle_ttl_seconds: float = 120.0  # 0 = disabled
+    native_idle_ttl_seconds: float = 0.0  # 0 = disabled; live sessions survive
     bridge_idle_ttl_seconds: float = 900.0  # 0 = disabled
 
     @classmethod
@@ -82,10 +90,19 @@ class ConnectionReaper:
     sweep inspects all runtime connections and removes those that are
     orphaned (session gone) or stale (idle TTL exceeded).
 
+    Lifecycle contract:
+    - By default, native live sessions are NOT idle-reaped (native TTL=0).
+    - Only orphaned connections (session gone on conn_* IDs) are removed.
+    - Bridge connections are still subject to bridge_idle_ttl_seconds.
+    - Explicit operator overrides (native TTL > 0) enable native stale
+      reaping.
+
     Examples:
         >>> r = ConnectionReaper()
         >>> r._config.sweep_interval_seconds
         30.0
+        >>> r._config.native_idle_ttl_seconds
+        0.0
     """
 
     def __init__(

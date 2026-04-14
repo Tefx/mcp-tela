@@ -58,7 +58,7 @@ def _runtime_setup():
 
 @pytest.fixture()
 def reaper_config() -> ReaperConfig:
-    """Architecture ADR: ReaperConfig defaults -- sweep_interval_seconds=30.0, native_idle_ttl_seconds=120.0, bridge_idle_ttl_seconds=900.0"""
+    """ReaperConfig defaults -- sweep_interval_seconds=30.0, native_idle_ttl_seconds=0.0, bridge_idle_ttl_seconds=900.0"""
     return ReaperConfig()
 
 
@@ -113,9 +113,10 @@ class TestReaperConfig:
     """Tests for ReaperConfig defaults."""
 
     def test_reaper_config_defaults(self, reaper_config: ReaperConfig) -> None:
-        """Verify ReaperConfig defaults match the Architecture ADR."""
+        """Verify ReaperConfig defaults match the lifecycle contract:
+        native_idle_ttl_seconds=0 (disabled) so live sessions survive."""
         assert reaper_config.sweep_interval_seconds == 30.0
-        assert reaper_config.native_idle_ttl_seconds == 120.0
+        assert reaper_config.native_idle_ttl_seconds == 0.0
         assert reaper_config.bridge_idle_ttl_seconds == 900.0
 
     def test_reaper_config_is_frozen(self) -> None:
@@ -194,7 +195,7 @@ class TestConnectionReaperSweep:
     @pytest.mark.usefixtures("_runtime_setup")
     def test_sweep_detects_stale_connection(self) -> None:
         """Set up a connection with last_activity far in the past (beyond TTL).
-        Run sweep(). Verify it appears in reaped_stale."""
+        With explicit operator TTL > 0, run sweep(). Verify it appears in reaped_stale."""
         conn_id = "conn_stale_1"
         # last_activity is far in the past -- well beyond any TTL
         add_runtime_connection(
@@ -216,7 +217,8 @@ class TestConnectionReaperSweep:
             idle_mgr = IdleShutdownManager(
                 timeout_seconds=30.0, shutdown_callback=_shutdown
             )
-            reaper = ConnectionReaper()
+            # Explicit operator TTL override enables native stale reaping
+            reaper = ConnectionReaper(config=ReaperConfig(native_idle_ttl_seconds=10.0))
 
             outcome_result = asyncio.run(reaper.sweep())
 
@@ -280,5 +282,158 @@ class TestConnectionReaperSweep:
             assert snapshot.is_ok
             assert snapshot.value is not None
             assert any(c.connection_id == conn_id for c in snapshot.value)
+        finally:
+            release_session(conn_id)
+
+
+# --- Long-idle lifecycle contract tests ---
+
+
+class TestLongIdleLifecycleContract:
+    """Tests for the idle recovery lifecycle contract.
+
+    Contract:
+    - live sessions are not idle-reaped by default (native_idle_ttl_seconds=0)
+    - idle_timeout governs process shutdown only after connection count reaches zero
+    - explicit nonzero TTL overrides still reap stale connections
+    """
+
+    @pytest.mark.usefixtures("_runtime_setup")
+    def test_live_session_survives_default_reaper(self) -> None:
+        """A quiet-but-live native session with a captured session must
+        survive the default reaper settings (native_idle_ttl_seconds=0)."""
+        conn_id = "conn_live_idle_1"
+        # Connection created a long time ago with old last_activity
+        add_runtime_connection(
+            ConnectionContext(
+                connection_id=conn_id,
+                profile_name="default",
+                connected_at="2020-01-01T00:00:00Z",
+                last_activity="2020-01-01T00:00:00Z",
+            )
+        )
+        # Session IS captured — this is a live session, just quiet
+        capture_session(conn_id, _StubSession())
+
+        try:
+            reaper = ConnectionReaper()  # Uses default config (native TTL = 0)
+            outcome_result = asyncio.run(reaper.sweep())
+
+            assert outcome_result.is_ok
+            assert outcome_result.value is not None
+            outcome = outcome_result.value
+            # The live session must NOT be reaped as stale
+            assert conn_id not in outcome.reaped_stale, (
+                f"Live session '{conn_id}' must survive default reaper "
+                f"(native_idle_ttl_seconds=0), but was reaped as stale"
+            )
+            # The live session must NOT be reaped as session_gone (it has a session)
+            assert conn_id not in outcome.reaped_session_gone, (
+                f"Live session '{conn_id}' must survive default reaper, "
+                f"but was reaped as session_gone"
+            )
+            # The connection must still be in runtime
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            remaining_ids = [c.connection_id for c in snapshot.value]
+            assert conn_id in remaining_ids, (
+                f"Live session '{conn_id}' must remain in runtime after sweep, "
+                f"but was removed: {remaining_ids}"
+            )
+        finally:
+            release_session(conn_id)
+
+    @pytest.mark.usefixtures("_runtime_setup")
+    def test_explicit_nonzero_ttl_override_reaps_stale(self) -> None:
+        """When an operator explicitly sets native_idle_ttl_seconds > 0,
+        stale native connections (with captured session but old activity)
+        must be reaped."""
+        conn_id = "conn_override_stale_1"
+        add_runtime_connection(
+            ConnectionContext(
+                connection_id=conn_id,
+                profile_name="default",
+                connected_at="2020-01-01T00:00:00Z",
+                last_activity="2020-01-01T00:00:00Z",
+            )
+        )
+        capture_session(conn_id, _StubSession())
+
+        try:
+            # Explicit operator override enables native stale reaping
+            reaper = ConnectionReaper(config=ReaperConfig(native_idle_ttl_seconds=10.0))
+            outcome_result = asyncio.run(reaper.sweep())
+
+            assert outcome_result.is_ok
+            assert outcome_result.value is not None
+            assert conn_id in outcome_result.value.reaped_stale, (
+                f"Stale connection '{conn_id}' with explicit TTL override "
+                f"must be reaped, but was not"
+            )
+        finally:
+            release_session(conn_id)
+
+    @pytest.mark.usefixtures("_runtime_setup")
+    def test_orphaned_session_still_reaped_under_default(self) -> None:
+        """Even with native_idle_ttl_seconds=0, orphaned connections
+        (conn_* without a captured session) are still reaped as
+        session_gone."""
+        conn_id = "conn_orphan_default_1"
+        add_runtime_connection(
+            ConnectionContext(
+                connection_id=conn_id,
+                profile_name="default",
+                connected_at="2026-01-01T00:00:00Z",
+                last_activity="2026-01-01T00:00:00Z",
+            )
+        )
+        # Deliberately do NOT capture a session
+
+        reaper = ConnectionReaper()  # Default config (native TTL = 0)
+        outcome_result = asyncio.run(reaper.sweep())
+
+        assert outcome_result.is_ok
+        assert outcome_result.value is not None
+        assert conn_id in outcome_result.value.reaped_session_gone, (
+            f"Orphaned connection '{conn_id}' must be reaped as "
+            f"session_gone under default settings, but was not"
+        )
+
+    @pytest.mark.usefixtures("_runtime_setup")
+    def test_recent_active_connection_survives_explicit_ttl(self) -> None:
+        """A recently-active native connection (within TTL window) must
+        survive even when native_idle_ttl_seconds > 0."""
+        conn_id = "conn_recent_1"
+        from datetime import datetime, timezone
+
+        recent_ts = datetime.now(timezone.utc).isoformat()
+        add_runtime_connection(
+            ConnectionContext(
+                connection_id=conn_id,
+                profile_name="default",
+                connected_at=recent_ts,
+                last_activity=recent_ts,
+            )
+        )
+        capture_session(conn_id, _StubSession())
+
+        try:
+            reaper = ConnectionReaper(
+                config=ReaperConfig(native_idle_ttl_seconds=120.0)
+            )
+            outcome_result = asyncio.run(reaper.sweep())
+
+            assert outcome_result.is_ok
+            assert outcome_result.value is not None
+            assert conn_id not in outcome_result.value.reaped_stale, (
+                f"Recently-active connection '{conn_id}' must survive "
+                f"within the TTL window, but was reaped"
+            )
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            remaining_ids = [c.connection_id for c in snapshot.value]
+            assert conn_id in remaining_ids
         finally:
             release_session(conn_id)

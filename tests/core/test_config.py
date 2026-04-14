@@ -261,7 +261,9 @@ def test_parse_config_reaper_defaults_are_present() -> None:
     )
 
     assert config.reaper.sweep_interval_seconds == 30.0
-    assert config.reaper.native_idle_ttl_seconds == 120.0
+    assert (
+        config.reaper.native_idle_ttl_seconds == 0.0
+    )  # disabled by default: live sessions survive
     assert config.reaper.bridge_idle_ttl_seconds == 900.0
 
 
