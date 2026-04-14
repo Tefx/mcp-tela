@@ -70598,7 +70598,7 @@ phases:
   steps:
   - id: hard_cut.prep_basis
     name: Freeze canonical basis and deletion-first slices
-    status: claimed
+    status: done
     description: 'Freeze the authoritative hard-cut basis only.
 
 
@@ -70654,6 +70654,26 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-14T19:46:34.024769+00:00'
+    done_at: '2026-04-14T20:16:18.314288+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - final-canonical-contract.md — hard cutover only; no compatibility window;\
+      \ canonical shared surfaces are `profile_id`, `capabilities`, `default`, and\
+      \ MCP tool `tela_list_profiles`; invalid shared vocabulary includes `tools`,\
+      \ `tools_profile`, `profile_name`, `families`, and dotted tool names.\n  - capability_token.schema.json\
+      \ — canonical token requires `profile_id` and forbids extra fields; required\
+      \ fields are `token_id`, `profile_id`, `persona_ref`, `instance_id`, `issued_at`,\
+      \ `expires_at`, `token_version`, `signature`; `max_depth` optional.\n  - tela_profile_list.schema.json\
+      \ — canonical `tela_list_profiles` payload is an array of objects with required\
+      \ `profile_id`, `capabilities`, `default`; no extra fields.\n  - tela-clean-gateway.md\
+      \ — tela consumes only its own profiles plus CapabilityToken `profile_id`; tela\
+      \ enforces profile ceilings and does not own persona/runtime policy.\n  - hard-cutover-canonical-alignment.md\
+      \ — local hard-cut plan says delete `tools` alias support, rename shared identity\
+      \ to `profile_id`, replace `tela://profiles` resource dependency with builtin\
+      \ `tela_list_profiles`, and emit only `profile_id + capabilities + default`.\n\
+      \n  ## Basis Freeze\n  - Exact legacy-surface deletion inventory, touch-path\
+      \ map per domain, protected canonical interfaces, and explicit non-implementation/no-compatibility-window\
+      \ statement were produced.\n  - Product code/doc changes made: none\nerror:\
+      \ \"\""
   - id: hard_cut.prep_proof_assets
     name: Prepare proof assets and rollback matrix
     status: pending
