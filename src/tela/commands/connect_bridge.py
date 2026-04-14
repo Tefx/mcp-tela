@@ -1,3 +1,5 @@
+# @invar:allow file_size: bridge lifecycle module coordinates framing, forwarding,
+# recovery, readiness, and teardown — further splitting would break lifecycle cohesion.
 """Bridge runtime for ``tela connect``: stdio framing, MCP forwarding, recovery.
 
 This module owns the bridge lifecycle after endpoint/token resolution:
@@ -433,6 +435,7 @@ def post_json_once(
     return Result(value=None)
 
 
+# @shell_complexity: readiness polling branches on HTTP statuses, auth, and transient-warming detection
 def _wait_for_gateway_readiness(
     *, status_url: str, bearer_token: str, max_polls: int
 ) -> Result[None, str]:
@@ -532,6 +535,7 @@ def _get_gateway_status(
         return Result(error=f"INVALID_STATUS_PAYLOAD: {exc}")
 
 
+# @shell_complexity: transient-warming error classification branches on HTTP code and body content
 def is_mcp_transient_warming_error(exc: urllib_error.HTTPError) -> Result[bool, str]:
     """Return True when a 503 matches the transient MCP warming contract."""
 

@@ -415,6 +415,7 @@ def query_remote_state() -> Result[RemoteGatewayState, str]:
 
 
 # @invar:allow shell_result: best-effort subprocess inspection returns pid list, not a failable boundary.
+# @shell_complexity: orphan detection walks ps output with per-line filtering across multiple ps formats
 def _find_orphaned_serve_processes() -> list[int]:
     """Return best-effort list of live ``tela serve`` pids without a lockfile."""
 

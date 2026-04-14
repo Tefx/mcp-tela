@@ -48,6 +48,7 @@ class HttpServerHandle:
 # --- HTTP server launch / stop ---
 
 
+# @shell_complexity: server launch branches on port-binding, SSL, and signal-setup pathways
 async def launch_streamable_http_server(
     *,
     upstream_app: Starlette,
@@ -136,6 +137,7 @@ async def launch_streamable_http_server(
     )
 
 
+# @shell_complexity: port extraction walks uvicorn internals with multiple fallback paths
 def extract_bound_port(server: object) -> Result[int | None, str]:
     """Read resolved listen port from uvicorn server sockets."""
 
@@ -205,6 +207,7 @@ def remove_signal_handlers() -> None:
 # --- Config watcher ---
 
 
+# @shell_complexity: config reload watcher branches on profile validation, reaper params, and stop-event handling
 async def watch_config_changes(
     *,
     config_path: Path,

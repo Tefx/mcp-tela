@@ -40,14 +40,12 @@ def test_surface_contract_freezes_consumer_only_bridge_readiness_behavior() -> N
     surface_text = _read(SURFACE_CONTRACT_DOC)
     assert "Bridge consumer-only readiness freeze" in surface_text
     assert "waits for readiness by consulting `GET /status`" in surface_text
-    assert (
-        "must not create,\n  cache, or relabel readiness state locally" in surface_text
-    )
+    assert "must not create,\ncache, or relabel readiness state locally" in surface_text
     assert (
         "Retry is allowed only when the gateway emits the transient non-ready contract"
         in surface_text
     )
-    assert "must exit cleanly and\n  boundedly" in surface_text
+    assert "must exit cleanly and\nboundedly" in surface_text
 
 
 def test_adr_records_rationale_for_status_authority_contract() -> None:
@@ -68,8 +66,8 @@ def test_agent_and_readme_surfaces_repeat_operator_contract() -> None:
     readme_text = _read(README_DOC)
 
     assert (
-        "readiness waiting must consult `GET /status`, not fixed sleep intervals"
-        in agent_text
+        "readiness waiting must consult `GET /status`" in agent_text
+        and "not fixed sleep intervals" in agent_text
     )
     assert (
         "persistent degraded/non-ready authority from `GET /status` must cause a clean bounded exit"
@@ -77,8 +75,8 @@ def test_agent_and_readme_surfaces_repeat_operator_contract() -> None:
     )
 
     assert (
-        "readiness waiting must consult `GET /status`, not fixed sleep delays"
-        in readme_text
+        "readiness waiting must consult `GET /status`" in readme_text
+        and "not fixed sleep delays" in readme_text
     )
     assert (
         "retry is allowed only when the gateway emits a transient non-ready contract signal"

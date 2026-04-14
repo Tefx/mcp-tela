@@ -1,3 +1,5 @@
+# @invar:allow file_size: recovery module extracted from downstream.py in layer-dissolution;
+# further splitting would fragment the ADR-006 recovery sequence coherence.
 """Downstream recovery, call-path, and event-handler coordination.
 
 Extracted from ``tela.shell.downstream`` to keep startup/connect-disconnect
@@ -38,12 +40,14 @@ _ELIGIBLE_RUNTIME_ERRORS: tuple[str, ...] = (
 # --- Pure helpers (no shared state access) ---
 
 
+# @invar:allow shell_result: pure text normalization helper — no I/O, no failable boundary.
 def _get_exception_text(exc: Exception) -> str:
     """Return normalized exception text for diagnostics."""
 
     return f"{type(exc).__name__}: {exc}"
 
 
+# @invar:allow shell_result: pure boolean classification — no I/O, no failable boundary.
 def _is_recovery_eligible_exception(exc: Exception) -> bool:
     """Classify transport failures that are safe for one automatic retry."""
 
@@ -250,6 +254,7 @@ async def _drop_client_for_server(server_name: str) -> None:
 # --- Core recovery ---
 
 
+# @shell_complexity: recovery protocol requires sequential retry/autostart/wait stages across multiple error pathways; 25 branches cover the full downstream lifecycle
 async def _recover_server_client(
     server_name: str,
     *,
@@ -623,6 +628,7 @@ async def _handle_reconnect(
 # --- Public call surface ---
 
 
+# @shell_complexity: dispatch to builtin vs downstream plus retry/recover/timeout/error-mapping branches; 16 branches reflect the full tool-call state machine
 async def call_tool(
     server_name: str,
     tool_name: str,

@@ -306,6 +306,7 @@ def _merge_downstream_instructions(config: TelaConfig) -> Result[str | None, str
     return Result(value="\n\n".join(parts))
 
 
+# @shell_complexity: upstream server creation branches on transport type and TLS config
 def _create_upstream_server(
     startup_config: GatewayStartupConfig,
     tela_config: TelaConfig,
@@ -521,6 +522,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         return mcp_types.CallToolResult.model_validate(result.value)
 
 
+# @shell_complexity: dispatch across builtin tool variants with protocol-contract branching
 # @invar:allow shell_result: _handle_builtin_call is an async MCP callback invoked by FastMCP's call_tool handler; returning mcp_types.CallToolResult directly satisfies the MCP protocol contract. The function delegates to handle_list_providers (Shell) and returns a raw MCP type rather than Result[T, E], which is intentional — the function IS the boundary between Shell and MCP protocol layer.
 async def _handle_builtin_call(
     tool_name: str,
@@ -822,6 +824,7 @@ async def gateway_prepare_startup(
     return Result(value=None)
 
 
+# @shell_complexity: startup convergence iterates downstream connections with per-server error handling and readiness gates
 async def gateway_converge_startup(
     tool_lists: dict[str, list[dict]] | None = None,
 ) -> Result[None, str]:
@@ -867,6 +870,7 @@ async def gateway_converge_startup(
     return Result(value=None)
 
 
+# @shell_complexity: shutdown orchestrates downstream close, upstream stop, and event cleanup
 async def gateway_shutdown() -> Result[None, str]:
     """Graceful shutdown: stop accepting connections, close downstreams.
 

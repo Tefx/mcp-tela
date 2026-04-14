@@ -45,6 +45,7 @@ from tela.shell.downstream import (
 from tela.shell.gateway_runtime import (
     UpstreamSession,
     add_runtime_connection,
+    capture_session,
     get_captured_session,
     get_connection_id_for_session,
     get_runtime_config,

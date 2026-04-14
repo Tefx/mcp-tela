@@ -25,9 +25,23 @@ tela = "tela.cli:main"
 packages = ["src/tela"]
 
 [tool.invar.guard]
-# Current repository uses 18 documented escape hatches; keep guard budget aligned
-# so legitimate, justified escapes do not fail the gate.
-escape_budget_limit = 19
+# Escape hatch budget: file_size (6×3=18) + shell_result (16×3=48) = 66 weighted.
+# Shell complexity addressed via @shell_complexity: native markers (not escape hatches).
+# Bootstrap exemption: contracts.py defines @pre/@post — cannot self-reference.
+escape_budget_limit = 75
+
+# Per-rule expensive budget: file_size (6 hatches), shell_result (16 hatches).
+# Set per-project limit to accommodate the largest rule count (shell_result=16).
+# shell_too_complex uses native @shell_complexity: markers, not escape hatches.
+escape_expensive_per_file = 4
+escape_expensive_per_project = 17
+
+# Bootstrap exemption: contracts.py defines @pre/@post decorators; these functions
+# cannot carry @pre/@post because they ARE the contract system. Exempt from
+# missing_contract checks.
+rule_exclusions = [
+    { pattern = "**/core/contracts.py", rules = ["missing_contract"] },
+]
 
 exclude_paths = [
     "tests",

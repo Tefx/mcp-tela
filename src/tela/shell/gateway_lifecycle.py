@@ -30,6 +30,7 @@ class LifecycleStatusFacts:
     degraded_reason: str | None
 
 
+# @shell_complexity: aggregates facts from runtime + downstream registry + reaper; branching proportional to status dimensions
 def get_lifecycle_status_facts() -> Result[LifecycleStatusFacts, str]:
     """Return authoritative status facts from runtime snapshot + downstream state.
 
