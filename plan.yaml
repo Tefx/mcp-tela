@@ -70828,7 +70828,7 @@ phases:
       \ 407c123\nerror: \"\""
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
-  status: pending
+  status: in_progress
   gate: Implementation opens only if an independent readiness review reports READY
     against the latest canonical contract with no unresolved authority or verification
     blockers.
@@ -70838,7 +70838,7 @@ phases:
   steps:
   - id: hard_cut.readiness_review
     name: Run fresh readiness review against canonical contract
-    status: pending
+    status: claimed
     description: 'Perform an independent readiness review after preparation completes
       and after `idle_recovery` closes.
 
@@ -70880,6 +70880,8 @@ phases:
 
       '
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-14T22:00:30.831963+00:00'
   - id: hard_cut.readiness_gate
     name: Gate entry into implementation
     status: pending
