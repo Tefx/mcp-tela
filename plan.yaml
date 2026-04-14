@@ -70706,6 +70706,31 @@ phases:
     tela://profiles dependency.'
   depends_on:
   - hard_cut.readiness
+  steps:
+  - id: hard_cut.impl_core_vocab
+    name: Implement canonical core vocabulary and token binding
+    status: pending
+    description: Core/domain slice. Remove legacy shared vocabulary and token aliasing;
+      make profile_id the only shared identity and token binding field; reject alias
+      token fields fail-closed; keep enforcement logic intact except for canonical
+      naming and validation hardening.
+    verification: Show that tools alias support is removed, CapabilityToken uses canonical
+      profile_id, alias token fields are rejected before authorization, targeted tests
+      pass, and Invar verification passes for changed files.
+    evidence_template: '## Core Vocabulary Verification
+
+      - Files changed:
+
+      - Legacy surfaces removed:
+
+      - Fail-closed alias rejection proof:
+
+      - Targeted test command(s) + output:
+
+      - Invar guard evidence:
+
+      '
+    agent: python-senior-tacit
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
   status: locked
