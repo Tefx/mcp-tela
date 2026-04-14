@@ -70564,7 +70564,7 @@ phases:
       error: \"\""
   - id: idle_recovery.gate
     name: Gate idle recovery repair
-    status: pending
+    status: claimed
     description: 'Gate review: verify the idle_recovery phase preserves live sessions,
       fails closed on true session loss, and proves long-idle behavior end-to-end.
 
@@ -70642,6 +70642,8 @@ phases:
     - idle_recovery.gateway_fail_closed
     - idle_recovery.idle_contract
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-14T21:37:40.530306+00:00'
 - id: hard_cut.prep
   name: Hard-Cut Preparation Slicing
   status: done
