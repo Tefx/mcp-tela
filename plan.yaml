@@ -70790,3 +70790,26 @@ phases:
 
       '
     agent: integration-verifier-tacit
+  - id: hard_cut.final_conformance
+    name: Audit full conformance to the latest canonical contract
+    status: pending
+    description: Run a final spec-conformance audit against the latest canonical docs/contracts.
+      The audit must cover token shape, identity vocabulary, tool naming, profile-list
+      schema, and the absence of legacy shared vocabulary.
+    verification: Produce a per-requirement evidence table showing that canonical
+      contract requirements are satisfied and no forbidden legacy shared vocabulary
+      remains.
+    evidence_template: '## Final Conformance
+
+      - Requirements checked:
+
+      - Evidence per requirement:
+
+      - Forbidden legacy vocabulary check:
+
+      - Remaining divergences: none or list
+
+      '
+    depends_on:
+    - hard_cut.final_tool_probe
+    agent: spec-verifier-tacit
