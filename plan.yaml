@@ -70995,7 +70995,14 @@ phases:
     verification: Paste actual runtime output from tela_list_profiles, confirm it
       matches canonical keys only, and confirm no shared tela://profiles dependency
       is required.
-    evidence_template: '## Final Tool Probe
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Final Tool Probe
 
       - Launch path used:
 
@@ -71005,7 +71012,7 @@ phases:
 
       - Canonical-key check:
 
-      - tela://profiles dependency check:
+      - `tela://profiles` dependency check:
 
       '
     agent: integration-verifier-tacit
