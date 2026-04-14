@@ -71025,7 +71025,14 @@ phases:
     verification: Produce a per-requirement evidence table showing that canonical
       contract requirements are satisfied and no forbidden legacy shared vocabulary
       remains.
-    evidence_template: '## Final Conformance
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Final Conformance
 
       - Requirements checked:
 
