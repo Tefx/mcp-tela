@@ -70589,6 +70589,34 @@ phases:
     starts.
   depends_on:
   - idle_recovery
+  steps:
+  - id: hard_cut.prep_basis
+    name: Freeze canonical basis and deletion-first slices
+    status: pending
+    description: 'Freeze the canonical hard-cut basis and slice the work into deletion-first
+      domains: core/shared vocabulary, listing/runtime surface, and verification-assets/docs.
+      Enumerate every legacy shared surface to remove: tools alias, profile_name,
+      tools_profile, tela://profiles, and legacy payload keys. This is preparation
+      only; do not implement product changes here.'
+    verification: Produce a basis artifact that names the exact work slices, touch-path
+      map, deletion inventory, protected canonical interfaces, and an explicit note
+      that no compatibility window is assumed.
+    evidence_template: '## Basis Freeze
+
+      - Authority refs used:
+
+      - Work slices:
+
+      - Touch paths:
+
+      - Legacy deletion inventory:
+
+      - Protected canonical interfaces:
+
+      - Compatibility-window decision: none unless explicitly re-authorized
+
+      '
+    agent: minimalist-architect-tacit
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
   status: locked
