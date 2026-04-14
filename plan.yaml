@@ -70617,6 +70617,32 @@ phases:
 
       '
     agent: minimalist-architect-tacit
+  - id: hard_cut.prep_proof_assets
+    name: Prepare proof assets and rollback matrix
+    status: pending
+    description: 'Prepare pre-implementation proof assets only: schema-derived fixtures,
+      expected-red contract/test targets, fail-closed error expectations, and rollback/re-verify
+      matrix. Do not change product behavior in this step.'
+    verification: Evidence must show expected-red targets exist for each audited blocker,
+      canonical fixture fields use profile_id/capabilities/default only, fail-closed
+      error expectations are named, and rollback verification covers revert plus token/profile
+      re-checks.
+    evidence_template: '## Proof Assets
+
+      - Expected-red targets by blocker:
+
+      - Canonical schema-derived fixtures added/prepared:
+
+      - Fail-closed error expectations:
+
+      - Rollback + re-verify checklist:
+
+      - Out-of-scope product code changes: none
+
+      '
+    depends_on:
+    - hard_cut.prep_basis
+    agent: python-senior-tacit
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
   status: locked
