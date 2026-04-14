@@ -70766,3 +70766,27 @@ phases:
     audit, local doc/test sync, and final gate all pass.
   depends_on:
   - hard_cut.impl
+  steps:
+  - id: hard_cut.final_tool_probe
+    name: Probe canonical profile listing through the real MCP path
+    status: pending
+    description: Independently verify the declared shared surface by launching the
+      real entry path and invoking tela_list_profiles. Prove that the canonical MCP
+      tool works and that shared consumers no longer need tela://profiles.
+    verification: Paste actual runtime output from tela_list_profiles, confirm it
+      matches canonical keys only, and confirm no shared tela://profiles dependency
+      is required.
+    evidence_template: '## Final Tool Probe
+
+      - Launch path used:
+
+      - Tool invocation used:
+
+      - Actual output:
+
+      - Canonical-key check:
+
+      - tela://profiles dependency check:
+
+      '
+    agent: integration-verifier-tacit
