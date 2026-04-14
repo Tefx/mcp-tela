@@ -767,7 +767,6 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 - `SingleServerConvergenceResult` — frozen dataclass with `disposition`, `trigger`, `server_name`, `rollback_applied`, `resolved_tool_names`, `conflicts`.
 - `ConvergenceConflictNote` — frozen dataclass with `tool_name`, `servers`.
 - `ConvergenceTrigger` — literal type: `reconnect | reload | watcher | manual_reenumeration`.
-- `SingleServerConvergenceKernel`, `ConvergencePolicyConsumer` — protocol types.
 
 **Ownership:**
 - Mutates: downstream registry (via convergence kernel), runtime config (via `set_runtime_config`).
@@ -1036,3 +1035,82 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 - Downstream: none. Consumed by `gateway.py` during upstream server creation.
 
 **Concurrency:** Pure functions; inherently thread-safe.
+
+---
+
+### `gateway_lifecycle.py`
+
+**Responsibility:** Lifecycle authority surface for status/readiness facts.
+Single authority for lifecycle/discovery/readiness facts consumed by gateway
+status surfaces. This module provides the authoritative status facts that
+bridge consumers query before admitting MCP traffic.
+
+**Public API:**
+- `LifecycleStatusFacts` — frozen dataclass with runtime status snapshot facts.
+- `get_lifecycle_status_facts() -> Result[LifecycleStatusFacts, str]`
+
+**Ownership:**
+- Reads: `gateway_runtime.get_runtime_status_snapshot()`, `downstream.get_all_tools()`.
+- Stateless aggregator — computes status facts from runtime + registry state.
+
+**Dependencies:**
+- Upstream: `tela.shell.gateway_runtime`, `tela.shell.downstream`.
+- Downstream: none. Consumed by `gateway.py` and HTTP routes for status responses.
+
+**Concurrency:** Pure function computing facts from runtime snapshots — inherently thread-safe.
+
+---
+
+### `connection_lifecycle.py`
+
+**Responsibility:** Shared cleanup authority for connection teardown paths.
+Centralizes per-connection runtime/session cleanup so disconnect and shutdown
+callers apply the same cleanup semantics keyed by `connection_id`.
+
+**Public API:**
+- `ConnectionCleanupOutcome` — frozen dataclass with cleanup result.
+- `cleanup_connection_by_id(connection_id: str) -> Result[ConnectionCleanupOutcome, str]`
+
+**Ownership:**
+- Mutates: runtime connections (via `remove_runtime_connection`), session registry (via `release_session`).
+- Idempotent by design — repeated calls for the same ID are safe.
+
+**Dependencies:**
+- Upstream: `tela.shell.gateway_runtime` (release_session, remove_runtime_connection).
+- Downstream: none. Consumed by `http_routes.py`, `gateway.py`, `connection_reaper.py`.
+
+**Concurrency:** Calls locked gateway_runtime accessors — safe for concurrent invocation.
+
+---
+
+### `_downstream_recovery.py`
+
+**Responsibility:** Downstream recovery, call-path, and event-handler coordination.
+Extracted from `tela.shell.downstream` to keep startup/connect-disconnect logic
+below maintainability limits. Recovery functions access shared downstream state
+via lazy imports to avoid circular module dependencies.
+
+This module is an **internal implementation detail** — `tela.shell.downstream`
+re-exports its public entry points (`call_tool`) and internal hooks
+(`_handle_reconnect`, `_handle_tools_list_changed`, `_recover_server_client`).
+
+**Public API (re-exported by downstream.py):**
+- `call_tool(server_name, tool_name, arguments) -> Result[dict, TelaError]`
+- `_recover_server_client(...) -> Result[_ClientHandle, str]` — internal recovery primitive
+- `_handle_reconnect(...) -> None` — reconnect event handler
+- `_handle_tools_list_changed(...) -> None` — tools/list_changed event handler
+
+**Constants:**
+- `_RECOVERY_TIMEOUT_SECONDS = 15.0`
+- Recovery stage strings: `_RECOVERY_STAGE_NOT_ATTEMPTED`, `_RECOVERY_STAGE_RECONNECT_STARTED`, etc.
+
+**Ownership:**
+- Accesses: downstream `_clients`, `_recovery_locks` (via lazy import).
+- Stateless recovery primitives orchestrated by downstream.py event adapters.
+
+**Dependencies:**
+- Upstream: `tela.core.errors`, `tela.core.models`, `tela.shell.result`.
+- Downstream: accessed via lazy import from `tela.shell.downstream` to avoid cycles.
+
+**Concurrency:** Per-server recovery locks serialize concurrent recovery for
+the same server. `_registry_lock` is released before waiting on recovery locks.

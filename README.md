@@ -92,8 +92,8 @@ LAN deployments.
 Claude Code A ──stdio──→ tela connect ──┐
 Claude Code B ──stdio──→ tela connect ──┤── HTTP ──→ tela serve (shared)
 OpenCode C   ──stdio──→ tela connect ──┘              ├──stdio──→ fs (1 copy)
-                                                       ├──stdio──→ git (1 copy)
-                                                       └──stdio──→ larva (1 copy)
+                                                        ├──stdio──→ git (1 copy)
+                                                        └──stdio──→ larva (1 copy)
 ```
 
 Multiple clients share one gateway. Downstream servers are spawned once, not
@@ -258,8 +258,7 @@ uv run invar guard --all
 
 - `README.md`: project overview and quickstart
 - `docs/USAGE.md`: operator guide and deployment patterns
-- `docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md`: verified architecture debt,
-  simplification targets, and safe refactor order
+- `docs/ARCHITECTURE-REFACTOR-ASSESSMENT.md`: completed refactor record, architecture simplification results
 - `tela.yaml.example`: commented configuration template
 - `docs/INTERFACES.md`: CLI and config contract surface
 - `docs/DESIGN.md`: architecture and implementation detail
