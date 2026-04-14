@@ -70581,3 +70581,11 @@ phases:
     - idle_recovery.gateway_fail_closed
     - idle_recovery.idle_contract
     agent: gate-reviewer-tacit
+- id: hard_cut.prep
+  name: Hard-Cut Preparation Slicing
+  status: locked
+  gate: Preparation artifacts must freeze the canonical basis, deletion inventory,
+    proof-asset targets, and rollback/re-verify matrix before any hard-cut implementation
+    starts.
+  depends_on:
+  - idle_recovery
