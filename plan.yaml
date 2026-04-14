@@ -69611,7 +69611,7 @@ phases:
   steps:
   - id: arch_refactor.finalization.doc_sync
     name: Sync docs to the simplified architecture
-    status: pending
+    status: claimed
     description: 'Documentation sync after architecture demolition.
 
 
@@ -69685,6 +69685,8 @@ phases:
 
       - Documentation now matches simplified code structure: YES/NO'
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer-tacit
+    claimed_at: '2026-04-14T10:06:11.108739+00:00'
   - id: arch_refactor.finalization.wiring_audit
     name: Audit wiring after architecture simplification
     status: pending
