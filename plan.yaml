@@ -70713,22 +70713,42 @@ phases:
   - id: hard_cut.readiness_review
     name: Run fresh readiness review against canonical contract
     status: pending
-    description: Perform an independent re-review of repo readiness after preparation.
-      Return an explicit READY or BLOCKED judgment against the latest canonical docs/contracts
-      and the known blocker set. Do not invent compatibility rules.
-    verification: Produce a structured blocker register covering tools alias acceptance,
-      profile_name on shared surfaces, token binding field, tela_list_profiles absence,
-      tela://profiles dependency, legacy payload keys, legacy test/doc freezes, and
-      rollback/verification completeness.
-    evidence_template: '## Readiness Review
+    description: 'Perform an independent readiness review after preparation completes
+      and after `idle_recovery` closes.
+
+
+      Return `READY` or `BLOCKED` only.
+
+      For each known blocker, map:
+
+      - current status
+
+      - owning downstream step
+
+      - why it is safe or unsafe to enter hard-cut implementation
+
+
+      Do not invent compatibility rules or new product requirements.'
+    verification: Produce a blocker register covering `tools` alias acceptance, shared
+      `profile_name` surfaces, CapabilityToken binding field, missing `tela_list_profiles`,
+      `tela://profiles` or `tela.profiles` dependency, legacy profile-list payload
+      keys, local test/doc freezes, and rollback/canonical verification completeness.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Readiness Review
 
       - Decision: READY or BLOCKED
 
       - Blockers still open:
 
-      - Canonical requirements confirmed closed:
+      - Owning downstream step for each blocker:
 
-      - Evidence paths used:
+      - Canonical requirements confirmed closed:
 
       - Compatibility rules invented: none
 
