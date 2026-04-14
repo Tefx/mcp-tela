@@ -70604,7 +70604,7 @@ phases:
     agent: gate-reviewer-tacit
 - id: hard_cut.prep
   name: Hard-Cut Preparation Slicing
-  status: in_progress
+  status: done
   gate: Preparation artifacts must freeze the canonical basis, deletion inventory,
     proof-asset targets, and rollback/re-verify matrix before any hard-cut implementation
     starts.
@@ -70695,7 +70695,7 @@ phases:
       \ \"\""
   - id: hard_cut.prep_proof_assets
     name: Prepare proof assets and rollback matrix
-    status: claimed
+    status: done
     description: 'Prepare proof assets only.
 
 
@@ -70745,6 +70745,26 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-14T20:17:19.465578+00:00'
+    done_at: '2026-04-14T21:14:08.627068+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - contracts/capability_token.schema.json, docs/ADR-007-opifex-canonical-contract-alignment.md,\
+      \ docs/MIGRATION-003-capability-only-profiles.md, docs/INTERFACES.md, docs/DESIGN.md,\
+      \ contracts/errors.yaml, evidence/proof_obligation_contract.md, evidence/normalized_blocker_basis.md,\
+      \ src/tela/core/models.py, src/tela/shell/upstream.py, tests/integration/test_token_mode_initialize.py,\
+      \ tests/shell/test_gateway.py, tests/shell/test_surface_contract.py were reviewed\
+      \ and cited.\n\n  ## Proof Assets\n  - Expected-red targets by blocker family\
+      \ were mapped for TOKEN-PROFILE-ID, PROFILES-SURFACE-NAME, PROFILES-PAYLOAD-CANONICAL-SHAPE,\
+      \ FAIL-CLOSED-LEGACY-ALIASES.\n  - Canonical schema-derived fixtures produced:\n\
+      \    - artifacts/hard_cut/canonical_capability_token_fixture.json\n    - artifacts/hard_cut/canonical_tela_list_profiles_fixture.json\n\
+      \  - Fail-closed error expectations enumerated for initialize rejection, token\
+      \ invalid/expired, missing profile, and config-missing recovery paths.\n  -\
+      \ Rollback + re-verify matrix documented for token hard cut, profile surface\
+      \ rename, payload hard cut, and alias rejection revert.\n  - Legacy test/doc\
+      \ freeze inventory produced with file counts and exhaustive lists in evidence/hard_cut_prep_proof_assets.md.\n\
+      \  - Product code changes made: none.\n\n  Additional evidence:\n  - Created\
+      \ files: evidence/hard_cut_prep_proof_assets.md, artifacts/hard_cut/canonical_capability_token_fixture.json,\
+      \ artifacts/hard_cut/canonical_tela_list_profiles_fixture.json\n  - Commit hash:\
+      \ 407c123\nerror: \"\""
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
   status: locked
