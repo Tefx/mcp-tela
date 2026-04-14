@@ -70185,3 +70185,10 @@ phases:
 
       - Residual runtime risk: none blocking — all behavioral proofs PROVEN, no open
       blocker rows'
+- id: idle_recovery
+  name: Idle session recovery repair
+  status: pending
+  gate: Preserve live sessions; fail closed on true session loss; verify long-idle
+    behavior.
+  depends_on:
+  - arch_refactor.finalization
