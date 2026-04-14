@@ -70416,7 +70416,7 @@ phases:
       \ _list_tools behavior.\nerror: \"\""
   - id: idle_recovery.idle_contract
     name: Preserve long-idle live sessions by default
-    status: claimed
+    status: done
     description: 'Implement-and-verify the long-idle lifecycle contract.
 
 
@@ -70543,6 +70543,25 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-14T21:15:02.565216+00:00'
+    done_at: '2026-04-14T21:37:17.066086+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - connection_reaper, reaper_config, serve_cmd, idle_shutdown, gateway_runtime,\
+      \ gateway, serve_runtime, connection_lifecycle, and targeted tests were read.\n\
+      \n  ## Expected-Red Proof (MANDATORY)\n  - Repro showed old default native_idle_ttl_seconds=120.0\
+      \ reaped quiet-but-live sessions.\n  - Exposed gap: default lifecycle reaped\
+      \ quiet-but-live sessions.\n\n  ## Green Proof\n  - Passing targeted command(s):\
+      \ `.venv/bin/python -m pytest tests/shell/test_connection_reaper.py tests/shell/test_serve_cmd.py\
+      \ tests/black_box/test_reaper_black_box.py tests/core/test_config.py::test_parse_config_reaper_defaults_are_present\
+      \ -v`\n  - Passing output: `45 passed in 1.55s`\n  - invar_guard command/output:\
+      \ passed on changed scan with 0 errors.\n  - Long-idle live-session proof: live\
+      \ sessions survive default reaper when native idle TTL default is 0.0.\n  -\
+      \ Zero-connection idle shutdown proof: idle_timeout still governs process shutdown\
+      \ once connection count is zero.\n  - Explicit TTL override proof: nonzero native\
+      \ TTL override reaps stale connections as expected.\n\n  ## Files Modified\n\
+      \  - src/tela/core/reaper_config.py\n  - src/tela/shell/connection_reaper.py\n\
+      \  - tests/shell/test_connection_reaper.py\n  - tests/shell/test_serve_cmd.py\n\
+      \  - tests/black_box/test_reaper_black_box.py\n  - tests/core/test_config.py\n\
+      error: \"\""
   - id: idle_recovery.gate
     name: Gate idle recovery repair
     status: pending
