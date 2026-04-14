@@ -70655,6 +70655,7 @@ phases:
     blockers.
   depends_on:
   - hard_cut.prep
+  - idle_recovery
   steps:
   - id: hard_cut.readiness_review
     name: Run fresh readiness review against canonical contract
