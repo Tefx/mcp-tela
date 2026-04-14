@@ -70323,7 +70323,7 @@ phases:
       \ client_info_snapshot, bridge_connection_id.\nerror: \"\""
   - id: idle_recovery.gateway_fail_closed
     name: Remove fake initialize recovery and rebind tools call
-    status: claimed
+    status: done
     description: 'Implement-and-verify the gateway fail-closed recovery path.
 
 
@@ -70395,6 +70395,25 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-14T20:17:27.297654+00:00'
+    done_at: '2026-04-14T21:14:37.740499+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - src/tela/shell/gateway.py (_ensure_connection, _list_tools, _call_tool)\n\
+      \  - src/tela/shell/upstream.py (find_connection_for_session, handle_initialize,\
+      \ handle_tools_call)\n  - tests/shell/test_gateway.py\n  - tests/integration/test_token_mode_initialize.py\n\
+      \n  ## Expected-Red Proof (MANDATORY)\n  - Failing test command(s): `.venv/bin/python\
+      \ -m pytest tests/shell/test_gateway.py -q --tb=short -k \"test_ensure_connection_no_empty\
+      \ or test_ensure_connection_recaptures_on_existing or test_call_tool_captures_session\"\
+      `\n  - Failing output before implementation showed: fake initialize recovery\
+      \ path and missing _call_tool session capture.\n  - Exposed gaps:\n    - empty\
+      \ initialize used as fake recovery\n    - tools/call missing session recapture\n\
+      \n  ## Green Proof\n  - Passing targeted test command(s): `.venv/bin/python\
+      \ -m pytest tests/shell/test_gateway.py tests/integration/test_token_mode_initialize.py\
+      \ -v --tb=short`\n  - Passing output: `81 passed, 1 warning in 0.76s`\n  - invar_guard\
+      \ command/output: passed on changed files, errors 0.\n  - Explicit fail-closed\
+      \ behavior on true session loss: _ensure_connection now raises RECONNECT_REQUIRED\
+      \ when no live session/connection exists.\n  - tools/call recapture evidence:\
+      \ _call_tool now captures/rebinds session after _ensure_connection, matching\
+      \ _list_tools behavior.\nerror: \"\""
   - id: idle_recovery.idle_contract
     name: Preserve long-idle live sessions by default
     status: pending
