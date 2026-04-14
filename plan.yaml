@@ -69611,7 +69611,7 @@ phases:
   steps:
   - id: arch_refactor.finalization.doc_sync
     name: Sync docs to the simplified architecture
-    status: claimed
+    status: done
     description: 'Documentation sync after architecture demolition.
 
 
@@ -69687,6 +69687,10 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-14T10:06:11.108739+00:00'
+    done_at: '2026-04-14T11:02:20.437793+00:00'
+    evidence: 'Recovered completion after claim-state drift. Documentation sync updates
+      were applied and merged: DESIGN and ARCHITECTURE-REFACTOR-ASSESSMENT now align
+      with refactor ownership, removed abstractions, and module boundaries.'
   - id: arch_refactor.finalization.wiring_audit
     name: Audit wiring after architecture simplification
     status: done
