@@ -71110,7 +71110,7 @@ phases:
     agent: python-senior-tacit
   - id: hard_cut.impl_shared_surfaces
     name: Cut shared runtime and audit surfaces to profile_id only
-    status: claimed
+    status: done
     description: 'Shared-surface slice only.
 
 
@@ -71163,6 +71163,23 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-15T04:01:18.107729+00:00'
+    done_at: '2026-04-15T04:44:25.406553+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - shared core/runtime/audit/http/CLI surfaces and associated tests were reviewed\
+      \ and migrated to canonical `profile_id` identity.\n\n  ## Expected-Red Proof\
+      \ (MANDATORY)\n  - New tests first: tests/shell/test_hard_cut_shared_surfaces.py\n\
+      \  - Pre-implementation run failed (11/13 failures), proving legacy `profile_name`\
+      \ leakage across shared surfaces.\n\n  ## Shared-Surface Proof\n  - Surfaces\
+      \ cut from `profile_name` to `profile_id`:\n    - ConnectionContext, AuditEntry,\
+      \ TokenInitBinding identity fields\n    - token initialize client_info contract\n\
+      \    - connect response field and profiles list output fields\n    - audit/connection\
+      \ CLI rendering\n  - Canonical runtime/audit binding proof:\n    - ConnectionContext\
+      \ now created with `profile_id`; audit entry binds the same `profile_id`; connect\
+      \ response exposes `profile_id`.\n  - Targeted tests + output:\n    - targeted\
+      \ suite: `202 passed`\n    - broad tests (excluding known unrelated filters):\
+      \ `1077 passed, 1 skipped, 8 xfailed, 11 xpassed`\n    - doctests on changed\
+      \ modules: `61 passed`\n  - Changed-file Invar verification output: passed with\
+      \ 0 errors (warnings pre-existing only).\nerror: \"\""
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
   status: locked
