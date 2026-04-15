@@ -71664,7 +71664,7 @@ phases:
       \""
   - id: hard_cut.final_gate_fix2
     name: Second remediation loop for blocked hard-cut final gate blockers B1+B2
-    status: pending
+    status: claimed
     description: 'Second batched remediation loop for blocked `hard_cut.final_gate`,
       explicitly owning the still-unresolved blockers after the first remediation/reverify
       path.
@@ -71778,6 +71778,8 @@ phases:
     depends_on:
     - hard_cut.final_reverify
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-15T12:48:31.779769+00:00'
   - id: hard_cut.final_reverify2
     name: Second reverify loop for blocked hard-cut final gate residual blockers
     status: pending
