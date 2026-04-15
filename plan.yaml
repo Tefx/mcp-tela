@@ -71430,3 +71430,119 @@ phases:
       \ for removed legacy keys in shared surface tests.\n  - Targeted test commands\
       \ + output:\n    - core/shell/contract suites: `88 passed`\n    - integration\
       \ end-to-end suite: `14 passed`\nerror: \"\""
+  - id: hard_cut.final_gate_fix
+    name: Fix blocked hard-cut final gate blockers B1+B2
+    status: pending
+    description: 'Batched blocker remediation for the blocked `hard_cut.final_gate`.
+
+
+      Failure context being forwarded from the blocked gate:
+
+      - B1 docs/test sync regression in `tests/shell/test_surface_contract.py`: the
+      test still asserts removed `DESIGN.md` phrases after hard-cut wording changed,
+      so local wording contract and test expectations are out of sync.
+
+      - B2 tool-prefix validation gap in `tests/repro/test_tool_prefix_blackbox.py`:
+      the black-box expectation for rejecting plain `tela` prefix is not aligned with
+      current implementation/spec behavior, so this step must either fix implementation
+      behavior or align the test policy explicitly to the authoritative hard-cut spec.
+
+
+      Scope:
+
+      - Fix BOTH blocker families together, not just the first failure.
+
+      - Preserve completed hard-cut artifacts; mutate only the pending/blocked remediation
+      path.
+
+      - Forward non-blocking context for awareness without expanding scope: `INTROSPECTION_TOOLS`
+      completeness (`tela_list_providers` missing) and invar escape-hatch budget at
+      limit are NOT gate blockers for this step.
+
+
+      Required sibling search and remediation coverage:
+
+      - Reconcile local wording contract references across canonical hard-cut doc/test
+      surfaces so removed `DESIGN.md` phrases are no longer asserted where the contract
+      has changed.
+
+      - Audit tool-prefix validation expectations across runtime and repro surfaces
+      so plain `tela` prefix handling matches one authoritative policy.
+
+      - Search for sibling hard-cut runtime/tool output surfaces beyond the two failing
+      tests before claiming done.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic or substantive contract/test-policy
+      alignment that closes the blocker family and preserves canonical hard-cut runtime/tool
+      outputs.'
+    verification: '- B1 closed: updated wording contract/test alignment removes assertions
+      against removed `DESIGN.md` phrases
+
+      - B2 closed: plain `tela` prefix behavior is either implemented or test-policy
+      aligned to the authoritative hard-cut spec, with rationale recorded in evidence
+
+      - Sibling search completed for related hard-cut runtime/tool output surfaces
+
+      - Remaining non-blocking notes are explicitly left out of scope unless they
+      intersect this remediation'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Blocker Remediation Report
+
+      - prior_loop: hard_cut.final_gate
+
+      - blocker_fingerprint: hard_cut finalization blockers B1+B2
+
+      - root_cause_hypothesis: <shared explanation for why doc/test wording and tool-prefix
+      policy drift reached the gate>
+
+      - why_previous_fix_failed: gate exposed unresolved drift after `hard_cut.final_doc_sync`
+      and `hard_cut.final_test_sync`
+
+      - files changed: <list>
+
+
+      ### B1 docs/test sync regression
+
+      - failing family: `tests/shell/test_surface_contract.py`
+
+      - authoritative wording source used: <doc/spec section>
+
+      - remediation summary: <what changed>
+
+
+      ### B2 tool-prefix validation gap
+
+      - failing family: `tests/repro/test_tool_prefix_blackbox.py`
+
+      - authority used for policy decision: <spec/runtime contract>
+
+      - remediation summary: <implementation fix or explicit test-policy alignment>
+
+
+      ### Sibling search evidence
+
+      - searched surfaces: <list>
+
+      - additional regressions found: <none or list>
+
+
+      ### Regression protection
+
+      - commands/tests prepared for downstream reverify: <list>'
+    depends_on:
+    - hard_cut.final_gate
+    agent: python-senior-tacit
