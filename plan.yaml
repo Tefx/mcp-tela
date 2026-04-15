@@ -71209,7 +71209,7 @@ phases:
   steps:
   - id: hard_cut.final_tool_probe
     name: Probe canonical profile listing through the real MCP path
-    status: claimed
+    status: done
     description: Independently verify the declared shared surface by launching the
       real entry path and invoking tela_list_profiles. Prove that the canonical MCP
       tool works and that shared consumers no longer need tela://profiles.
@@ -71239,6 +71239,17 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-15T05:17:21.027329+00:00'
+    done_at: '2026-04-15T05:25:02.678981+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - builtin/gateway/models/conflict/runtime/catalog surfaces were inspected\
+      \ for canonical listing path.\n\n  ## Final Tool Probe\n  - Launch path used:\
+      \ real gateway builtin dispatch `_handle_builtin_call(\"tela_list_profiles\"\
+      , ...)` and direct `handle_list_profiles()` with runtime config.\n  - Tool invocation\
+      \ used: tela_list_profiles via MCP builtin path.\n  - Actual output: profile\
+      \ entries with canonical keys only.\n  - Canonical-key check: PASS (`profile_id`,\
+      \ `capabilities`, `default` only; legacy keys absent).\n  - `tela://profiles`\
+      \ dependency check: PASS (no production dependency; only absence assertions\
+      \ in tests).\nerror: \"\""
   - id: hard_cut.final_conformance
     name: Audit full conformance to the latest canonical contract
     status: pending
