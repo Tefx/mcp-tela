@@ -70949,7 +70949,7 @@ phases:
       \ mapping, readiness READY evidence).\nerror: \"\""
 - id: hard_cut.impl
   name: Canonical Hard-Cut Implementation
-  status: in_progress
+  status: done
   gate: 'Core vocabulary and shared listing surfaces must be canonical-only: profile_id,
     capabilities, snake_case MCP tool names, no legacy shared aliases, and no shared
     tela://profiles dependency.'
@@ -71041,7 +71041,7 @@ phases:
       \ Invar verification output: passed (0 errors, doctest passed).\nerror: \"\""
   - id: hard_cut.impl_listing_surface
     name: Implement canonical profile listing surface
-    status: claimed
+    status: done
     description: 'Listing/runtime surface slice only.
 
 
@@ -71110,6 +71110,23 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-15T04:44:41.274693+00:00'
+    done_at: '2026-04-15T05:12:51.554486+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - builtin tools, gateway registration/removal paths, conflict/surface instructions,\
+      \ and targeted tests/docs evidence files were updated for canonical listing\
+      \ surface.\n\n  ## Expected-Red Proof (MANDATORY)\n  - New test first: assert\
+      \ `tela_list_profiles` exists in builtin tool names.\n  - Pre-implementation\
+      \ run failed with `AssertionError: 'tela_list_profiles' not in {'tela_list_providers'}`.\n\
+      \n  ## Listing Surface Proof\n  - Builtin tool proof: `tela_list_profiles` added\
+      \ to BUILTIN_TOOLS and builtin dispatch.\n  - Output payload proof: list entries\
+      \ emit canonical keys only (`profile_id`, `capabilities`, `default`), with legacy\
+      \ keys removed.\n  - Removal of shared `tela://profiles` / `tela.profiles` dependency:\
+      \ resource registration removed from gateway; conflict/introspection references\
+      \ switched to `tela_list_profiles`.\n  - Fail-closed invalid-state proof: listing\
+      \ handler raises explicit runtime error when config/runtime unavailable.\n \
+      \ - Targeted tests + output: `148 passed` across listing-surface-related suites.\n\
+      \  - Changed-file Invar verification output: `invar guard --all` passed (0 errors).\n\
+      error: \"\""
   - id: hard_cut.impl_shared_surfaces
     name: Cut shared runtime and audit surfaces to profile_id only
     status: done
@@ -71184,7 +71201,7 @@ phases:
       \ 0 errors (warnings pre-existing only).\nerror: \"\""
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
-  status: locked
+  status: pending
   gate: Cutover completes only after independent tool probe, canonical conformance
     audit, local doc/test sync, and final gate all pass.
   depends_on:
