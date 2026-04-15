@@ -71576,7 +71576,7 @@ phases:
       \ left out of scope.\nerror: \"\""
   - id: hard_cut.final_reverify
     name: Reverify hard-cut blocker remediation and canonical runtime outputs
-    status: pending
+    status: claimed
     description: 'Post-remediation reverify step for the blocked `hard_cut.final_gate`
       path.
 
@@ -71644,3 +71644,5 @@ phases:
     depends_on:
     - hard_cut.final_gate_fix
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-15T11:44:33.347521+00:00'
