@@ -70828,7 +70828,7 @@ phases:
       \ 407c123\nerror: \"\""
 - id: hard_cut.readiness
   name: Hard-Cut Readiness Re-Review
-  status: in_progress
+  status: done
   gate: Implementation opens only if an independent readiness review reports READY
     against the latest canonical contract with no unresolved authority or verification
     blockers.
@@ -70902,7 +70902,7 @@ phases:
       \ explicitly none\n  - Compatibility rules invented: none\nerror: \"\""
   - id: hard_cut.readiness_gate
     name: Gate entry into implementation
-    status: claimed
+    status: done
     description: Gate implementation. Open only if the readiness review proves preparation
       is sufficient and no unresolved authority, rollout, or verification blockers
       remain.
@@ -70932,9 +70932,24 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-15T03:12:33.240242+00:00'
+    done_at: '2026-04-15T03:32:09.082138+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - Prep artifacts, normalized blocker basis, behavioral proof register, readiness\
+      \ review evidence, and key local canonical drift files were reviewed.\n\n  ##\
+      \ Readiness Gate\n  - Decision: OPEN\n  - Closed blockers: idle_recovery closed\
+      \ with gate PASS and PROVEN behavioral proofs; hard_cut.prep complete with canonical\
+      \ basis freeze/proof assets; no unresolved authority/rollout/verification blockers.\n\
+      \  - Remaining blockers: only expected pre-hard-cut legacy surfaces, each explicitly\
+      \ mapped to downstream hard_cut.impl slices.\n  - Why implementation may start:\
+      \ readiness conditions satisfied; canonical authority fixed; rollback+reverify\
+      \ matrix prepared; no blocking uncertainty remains.\n\n  ## Behavioral Proof\n\
+      \  - headline: PASS\n  - proof_gap_status: NONE\n  - blocking_status: CLOSED\n\
+      \  - gate_open_allowed: true\n  - behavioral_proof_register: all critical claims\
+      \ PROVEN (idle recovery closure, canonical fixture correctness, blocker ownership\
+      \ mapping, readiness READY evidence).\nerror: \"\""
 - id: hard_cut.impl
   name: Canonical Hard-Cut Implementation
-  status: locked
+  status: pending
   gate: 'Core vocabulary and shared listing surfaces must be canonical-only: profile_id,
     capabilities, snake_case MCP tool names, no legacy shared aliases, and no shared
     tela://profiles dependency.'
