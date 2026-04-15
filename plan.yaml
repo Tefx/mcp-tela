@@ -71975,3 +71975,13 @@ phases:
     fixed or explicitly documented as deferred with rationale.
   depends_on:
   - hard_cut.finalization
+  steps:
+  - id: tech_debt.cleanup_inventory
+    name: Inventory technical debt assertions and stale xfail markers
+    status: pending
+    description: Audit current test debt with focus on xfail markers that now xpass;
+      produce explicit list of files/tests and intended disposition (remove xfail,
+      tighten assertion, or keep with rationale).
+    verification: Evidence includes concrete inventory from current repo state and
+      chosen remediation strategy per item.
+    agent: python-executor
