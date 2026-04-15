@@ -71803,7 +71803,7 @@ phases:
       error: \"\""
   - id: hard_cut.final_reverify2
     name: Second reverify loop for blocked hard-cut final gate residual blockers
-    status: pending
+    status: claimed
     description: 'Second reverify loop for the still-blocked `hard_cut.final_gate`
       after unresolved residual blockers remained following `hard_cut.final_gate_fix`
       and `hard_cut.final_reverify`.
@@ -71885,3 +71885,5 @@ phases:
     depends_on:
     - hard_cut.final_gate_fix2
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-15T12:54:31.930434+00:00'
