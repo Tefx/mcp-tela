@@ -71576,7 +71576,7 @@ phases:
       \ left out of scope.\nerror: \"\""
   - id: hard_cut.final_reverify
     name: Reverify hard-cut blocker remediation and canonical runtime outputs
-    status: claimed
+    status: done
     description: 'Post-remediation reverify step for the blocked `hard_cut.final_gate`
       path.
 
@@ -71646,3 +71646,18 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-15T11:44:33.347521+00:00'
+    done_at: '2026-04-15T11:53:09.150909+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - blocker-family test files, core policy/runtime modules, and canonical contract\
+      \ docs were reviewed.\n\n  ## Targeted blocker-family verification\n  - command_1:\
+      \ `.venv/bin/python -m pytest tests/shell/test_surface_contract.py -v`\n  -\
+      \ result_1: PASS (`31 passed`) against updated hard-cut wording contract.\n\
+      \  - command_2: `.venv/bin/python -m pytest tests/repro/test_tool_prefix_blackbox.py\
+      \ -v`\n  - result_2: PASS (`10 passed`) confirming authoritative plain-`tela`\
+      \ prefix policy handling and reserved-prefix checks.\n\n  ## Canonical runtime/tool\
+      \ output regression check\n  - commands run include shared-surface, builtin-tools,\
+      \ admission-contract suites plus inline runtime assertions around resolve_tools/conflict/payload\
+      \ surfaces.\n  - outputs reviewed: canonical builtin tool surfaces and payload\
+      \ keys remain correct.\n  - regressions found: none.\n\n  ## Gate recommendation\n\
+      \  - ready_for_hard_cut.final_gate: yes\n  - remaining gaps: none\nerror: \"\
+      \""
