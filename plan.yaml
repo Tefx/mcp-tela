@@ -71252,7 +71252,7 @@ phases:
       \ in tests).\nerror: \"\""
   - id: hard_cut.final_conformance
     name: Audit full conformance to the latest canonical contract
-    status: claimed
+    status: done
     description: Run a final spec-conformance audit against the latest canonical docs/contracts.
       The audit must cover token shape, identity vocabulary, tool naming, profile-list
       schema, and the absence of legacy shared vocabulary.
@@ -71282,6 +71282,23 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-15T05:25:22.945990+00:00'
+    done_at: '2026-04-15T05:31:10.962500+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - Canonical docs/contracts and runtime surfaces were audited across core/shell/conflict/builtin/gateway/upstream/admission/instructions\
+      \ files.\n\n  ## Final Conformance\n  - Requirements checked: token shape, identity\
+      \ vocabulary, tool naming, profile-list schema, legacy vocabulary absence.\n\
+      \  - Evidence per requirement:\n    - Runtime/tooling surfaces conform to canonical\
+      \ hard-cut contract (`tela_list_profiles` and `tela_list_providers` builtins,\
+      \ canonical ProfileInfo payload, no `tela://profiles` dependency, canonical\
+      \ `profile_id` identity across token/runtime/audit).\n    - Forbidden legacy\
+      \ shared vocabulary absent in runtime behavior.\n  - Forbidden legacy vocabulary\
+      \ check: PASS in runtime codepaths.\n  - Remaining divergences:\n    - Non-blocking\
+      \ runtime constant completeness note (`INTROSPECTION_TOOLS` lists one builtin).\n\
+      \    - Documentation drift in INTERFACES.md still referencing resource/legacy\
+      \ keys; runtime already canonical.\n    - Additive ProviderInfo field (`tool_prefix`)\
+      \ beyond canonical minimum, non-contradictory.\n  - Disposition: conformance\
+      \ runtime checks passed; remaining divergences routed to final doc sync/final\
+      \ gate review.\nerror: \"\""
   - id: hard_cut.final_doc_sync
     name: Sync local docs and tests to canonical surfaces only
     status: pending
