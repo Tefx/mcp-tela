@@ -123,7 +123,8 @@ With this configuration:
 - `tool_overrides` keys remain raw downstream tool names, not prefixed names
 - Final exposed names (after prefix) are used for conflict detection
 - `tool_prefix: null` (or omitted) preserves backward-compatible behavior (raw names exposed unchanged)
-- `tool_prefix: "tela."` is reserved and rejected at config validation
+- `tool_prefix: "tela."` and `tool_prefix: "tela_"` are reserved and rejected at validation/construction
+- plain `tool_prefix: "tela"` (no `.` or `_`) remains allowed because it does not enter the reserved `tela.`/`tela_` namespaces
 - Changing `tool_prefix` counts as a tool-surface change and triggers `tools/list_changed`
 
 Example with two same-raw-name tools exposed with different prefixes:

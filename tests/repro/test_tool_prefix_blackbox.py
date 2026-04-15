@@ -1,11 +1,13 @@
 """Black-box verification for tool_prefix.deep_review.black_box.
 
-Per docs/USAGE.md §Tool Prefix Configuration and tela.yaml.example:
+Per docs/USAGE.md §Tool Prefix Configuration and the ServerConfig/resolve_tools
+runtime contract:
   - tool_prefix namespace all tools from a server
   - Two servers with same raw tool name can coexist when prefixes differ
   - tool_overrides keys remain raw downstream names (not prefixed)
   - tool_prefix=null (omitted) preserves backward-compatible behavior
-  - tool_prefix="tela." is reserved and must be rejected
+  - tool_prefix values in the reserved `tela.` / `tela_` namespaces are rejected
+  - plain `tool_prefix="tela"` remains allowed because it does not enter those namespaces
 
 Mode A (Indictment) tests use spec-derived fixtures:
   - Fixtures mimic config from YAML examples, not implementation assumptions
@@ -16,7 +18,7 @@ Verification required:
   1. Prefix coexistence: distinct prefixes → distinct exposed names
   2. Prefix routing: exposed name resolves to correct downstream tool
   3. Backward compatibility: omitted prefix → raw name as exposed name
-  4. Reserved prefix: "tela." prefix rejected at config validation
+  4. Reserved prefix: reserved `tela.` / `tela_` namespaces rejected by validation/runtime
 """
 
 from __future__ import annotations
@@ -313,18 +315,15 @@ def test_omitted_tool_prefix_preserves_raw_name_as_exposed():
 
 
 def test_tela_prefix_is_reserved_and_rejected():
-    """tool_prefix="tela." is reserved and must be rejected.
+    """Reserved tela namespaces must be rejected.
 
     Spec: docs/USAGE.md line 126
-      - tool_prefix="tela." is reserved and will be rejected
-
-    Per tela.yaml.example line 64:
-      - Constraint: "tela." is reserved and will be rejected
+      - `tool_prefix="tela."` and `tool_prefix="tela_"` are reserved
 
     Authority: model-level validation in ServerConfig mirrors config-level
     validate_config() and resolve-time reject in resolve_tools().
 
-    Evidence: ServerConfig raises ValidationError for "tela." prefix.
+    Evidence: ServerConfig raises ValidationError for reserved tela prefixes.
     """
     from pydantic import ValidationError
 
@@ -340,7 +339,7 @@ def test_tela_prefix_is_reserved_and_rejected():
 def test_tela_prefix_without_dot_is_accepted():
     """tool_prefix="tela" (without trailing delimiter) is accepted.
 
-    Per authoritative spec (USAGE.md line 126) and runtime implementation
+    Per authoritative spec (USAGE.md tool_prefix contract) and runtime implementation
     (family.py resolve_tools, config.py validate_config), only "tela." and
     "tela_" prefixed values are reserved. Plain "tela" (no delimiter) does
     not produce exposed names in the reserved "tela." or "tela_" namespace

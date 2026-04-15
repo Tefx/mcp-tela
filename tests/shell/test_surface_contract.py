@@ -211,9 +211,10 @@ class TestCanonicalSurfaceMatrix:
         design_text = _read_design_doc()
         assert "operator-facing surfaces (CLI/HTTP)" in design_text
         # Invariants must list the built-in MCP tools explicitly, not
-        # the stale "only one surface" wording from pre-hard-cut.
+        # pre-hard-cut wording that implied a broader or different tela.* set.
         assert "tela_list_profiles" in design_text
         assert "tela_list_providers" in design_text
+        assert "The `tela.` prefix is reserved for built-in surfaces." in design_text
         assert (
             "`tela.` tool prefix is reserved for introspection tools" not in design_text
         )
@@ -722,10 +723,10 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         design_text = _read_design_doc()
         assert _contract_kind("tela.connections") == "absent"
         assert "tela.connections" in contract_text
-        assert (
-            "No built-in `tela.*` MCP tools are currently implemented"
-            not in design_text
-        ) or ("except `tela_list_providers`" in design_text)
+        assert "Built-in MCP tools:" in design_text
+        assert "tela_list_providers" in design_text
+        assert "tela_list_profiles" in design_text
+        assert "The `tela.` prefix is reserved for built-in surfaces." in design_text
 
     def test_tela_admin_not_approved_for_tela_audit(self) -> None:
         """tela_admin MUST NOT be used as current enforcement wording for
