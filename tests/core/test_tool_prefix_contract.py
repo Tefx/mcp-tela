@@ -6,8 +6,7 @@ These tests verify the tool_prefix runtime contract defined in:
 
 Implementation owner: tool_prefix.runtime.*
 
-IMPORTANT: expected_result is RED (tests should fail until runtime wiring exists).
-Tests use pytest.mark.xfail with "pre-implementation" to document the gap.
+These tests are now expected GREEN and enforce post-implementation behavior.
 """
 
 from __future__ import annotations
@@ -44,7 +43,6 @@ MINIMAL_SERVER_SPEC_FIXTURE = {
 }
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_spec_fixture_exercises_documented_server_config_shape() -> None:
     """Spec fixture uses only documented fields from INTERFACES.md §3.1.
 
@@ -77,7 +75,6 @@ def test_spec_fixture_exercises_documented_server_config_shape() -> None:
     assert "command" in MINIMAL_SERVER_SPEC_FIXTURE
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_server_config_accepts_spec_fixture() -> None:
     """ServerConfig validates against the §3.1 spec fixture.
 
@@ -97,12 +94,11 @@ def test_server_config_accepts_spec_fixture() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_omitted_tool_prefix_keeps_raw_name_as_exposed_name() -> None:
     """When tool_prefix is None/omitted, resolve_tools exposes the raw name unchanged.
 
     Ref: ServerConfig.tool_prefix contract (models.py line 112)
-    Expected: red (resolve_tools does not yet apply tool_prefix)
+    Expected: exposed/raw names remain identical when prefix is omitted.
     """
     cfg = ServerConfig(name="fs", command="cmd")  # tool_prefix = None by default
     tools = resolve_tools(
@@ -121,7 +117,6 @@ def test_omitted_tool_prefix_keeps_raw_name_as_exposed_name() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
     """Two servers with the same raw tool name but different prefixes coexist.
 
@@ -130,7 +125,7 @@ def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
     Both should be valid and distinct.
 
     Ref: ServerConfig.tool_prefix contract
-    Expected: red (resolve_tools does not yet apply tool_prefix)
+    Expected: prefixed exposed names remain distinct across servers.
     """
     cfg_a = ServerConfig(name="server_a", command="cmd", tool_prefix="a.")
     cfg_b = ServerConfig(name="server_b", command="cmd", tool_prefix="b.")
@@ -161,7 +156,6 @@ def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_same_prefix_same_raw_name_is_conflict() -> None:
     """Two servers using the same tool_prefix that expose the same tool name conflict.
 
@@ -169,7 +163,7 @@ def test_same_prefix_same_raw_name_is_conflict() -> None:
     produces the same exposed name from different servers, it must be rejected.
 
     Ref: ServerConfig.tool_prefix contract
-    Expected: red (conflict detection not yet implemented)
+    Expected: conflict signal is observable via identical exposed names.
     """
     cfg_a = ServerConfig(name="server_a", command="cmd", tool_prefix="fs.")
     cfg_b = ServerConfig(name="server_b", command="cmd", tool_prefix="fs.")
@@ -198,7 +192,6 @@ def test_same_prefix_same_raw_name_is_conflict() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tool_overrides_match_raw_names_not_prefixed_names() -> None:
     """tool_overrides keys remain raw downstream names even when prefix is set.
 
@@ -231,7 +224,6 @@ def test_tool_overrides_match_raw_names_not_prefixed_names() -> None:
     assert "delete_file" in cfg.tool_overrides
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_prefixed_exposed_name_not_used_for_override_lookup() -> None:
     """Override keys are raw names — prefixed exposed names must NOT match overrides.
 
@@ -261,13 +253,12 @@ def test_prefixed_exposed_name_not_used_for_override_lookup() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_resolved_tool_carries_raw_name_for_downstream_routing() -> None:
     """ResolvedTool.name is the exposed name; raw_name is for downstream routing.
 
     Ref: ResolvedTool contract (models.py lines 288-300)
     Ref: family.py resolve_tools notes (lines 109-110)
-    Expected: red (resolve_tools does not yet populate raw_name with original name)
+    Expected: exposed and raw names are both preserved for routing.
     """
     cfg = ServerConfig(name="fs", command="cmd", tool_prefix="fs.")
     tools = resolve_tools(
@@ -282,12 +273,11 @@ def test_resolved_tool_carries_raw_name_for_downstream_routing() -> None:
     assert tools[0].raw_name == "read_file"
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_resolved_tool_raw_name_none_when_prefix_omitted() -> None:
     """When tool_prefix is omitted, raw_name may be None for backward compat.
 
     Ref: ResolvedTool contract (models.py lines 303-306)
-    Expected: red (raw_name not yet set by resolve_tools)
+    Expected: raw_name carries the downstream name even without prefix.
     """
     cfg = ServerConfig(name="fs", command="cmd")  # no prefix
     tools = resolve_tools(
@@ -305,7 +295,6 @@ def test_resolved_tool_raw_name_none_when_prefix_omitted() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
     """Changing tool_prefix is a tool-surface change requiring tools/list_changed.
 
@@ -314,7 +303,7 @@ def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
 
     Ref: ServerConfig.tool_prefix contract (models.py lines 100-102)
     Ref: docs/USAGE.md §Config hot reload (notifications/tools/list_changed)
-    Expected: red (reload detection not yet implemented)
+    Expected: prefix-only changes alter exposed tool set and are detectable.
     """
     cfg_v1 = ServerConfig(name="fs", command="cmd", tool_prefix=None)
     cfg_v2 = ServerConfig(name="fs", command="cmd", tool_prefix="fs.")
@@ -390,12 +379,11 @@ def test_tela_prefix_without_delimiter_is_accepted() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
 def test_tela_config_with_prefixed_servers() -> None:
     """TelaConfig accepts servers with tool_prefix configured.
 
     Ref: ServerConfig.tool_prefix contract
-    Expected: red (prefix application in resolution not yet wired)
+    Expected: TelaConfig preserves configured tool_prefix values.
     """
     cfg = TelaConfig(
         servers={
