@@ -71433,7 +71433,7 @@ phases:
       \ end-to-end suite: `14 passed`\nerror: \"\""
   - id: hard_cut.final_gate_fix
     name: Fix blocked hard-cut final gate blockers B1+B2
-    status: pending
+    status: claimed
     description: 'Batched blocker remediation for the blocked `hard_cut.final_gate`.
 
 
@@ -71549,6 +71549,8 @@ phases:
     - hard_cut.final_doc_sync
     - hard_cut.final_conformance
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-15T06:00:20.965276+00:00'
   - id: hard_cut.final_reverify
     name: Reverify hard-cut blocker remediation and canonical runtime outputs
     status: pending
