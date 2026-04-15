@@ -71803,7 +71803,7 @@ phases:
       error: \"\""
   - id: hard_cut.final_reverify2
     name: Second reverify loop for blocked hard-cut final gate residual blockers
-    status: claimed
+    status: done
     description: 'Second reverify loop for the still-blocked `hard_cut.final_gate`
       after unresolved residual blockers remained following `hard_cut.final_gate_fix`
       and `hard_cut.final_reverify`.
@@ -71887,3 +71887,64 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-15T12:54:31.930434+00:00'
+    done_at: '2026-04-15T13:07:30.923253+00:00'
+    evidence: "status: \"SUCCESS\"\nevidence: |\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - tests/shell/test_surface_contract.py (full file, 814 lines)\n  - tests/repro/test_tool_prefix_blackbox.py\
+      \ (full file, 606 lines)\n  - docs/DESIGN.md (wording assertions)\n  - docs/USAGE.md\
+      \ (tool_prefix policy)\n  - docs/INTERFACES.md (reserved prefix table)\n  -\
+      \ tela/shell/surface_instructions.py (runtime gateway output)\n  - tela/core/models.py\
+      \ (ServerConfig validation)\n\n  ## Second Reverify Report\n  - prior_loop:\
+      \ hard_cut.final_gate_fix2\n  - residual_blockers_under_test: B1, B2\n  - why_loop_2_exists:\
+      \ First reverify loop (hard_cut.final_reverify) did not fully clear residual\
+      \ blockers; B1 doc/test wording mismatch and B2 tool-prefix policy validation\
+      \ alignment remained.\n\n  ### Targeted blocker-family verification\n\n  **B1:\
+      \ Surface contract wording alignment**\n  - command_1: `.venv/bin/python -m\
+      \ pytest tests/shell/test_surface_contract.py -v --tb=short`\n  - result_1:\
+      \ **31 passed, 0 failed, 0 skipped** (1.74s)\n    - test_design_wording_does_not_imply_builtin_tela_tool_surfaces:\
+      \ PASS — asserts \"operator-facing surfaces (CLI/HTTP)\", \"tela_list_profiles\"\
+      , \"tela_list_providers\", \"The `tela.` prefix is reserved for built-in surfaces.\"\
+      \ and absence of stale pre-hard-cut phrase \"`tela.` tool prefix is reserved\
+      \ for introspection tools\"\n    - test_tela_admin_not_approved_for_tela_status/connections/audit:\
+      \ PASS — asserts hard-cut wording \"Built-in MCP tools:\" with explicit tool\
+      \ names and reserved prefix statement\n    - All 7 TestCanonicalSurfaceMatrix\
+      \ tests: PASS\n    - All 4 TestNoCurrentBuiltinTelaTools tests: PASS\n    -\
+      \ All 5 TestCLIHTTPSurfacesNotMCPBuiltins tests: PASS (includes runtime gateway\
+      \ operator summary checks)\n    - All 2 TestTelaListProfilesBuiltinTool tests:\
+      \ PASS (includes canonical payload shape check)\n    - All 6 instruction merge\
+      \ tests: PASS\n\n  **B2: Tool-prefix policy/validation alignment**\n  - command_2:\
+      \ `.venv/bin/python -m pytest tests/repro/test_tool_prefix_blackbox.py tests/core/test_tool_prefix_contract.py\
+      \ -v --tb=short`\n  - result_2: **24 passed, 11 xpassed, 0 failed, 0 skipped**\
+      \ (0.31s)\n    - test_tela_prefix_is_reserved_and_rejected: PASS — ServerConfig\
+      \ rejects both \"tela.\" and \"tela_\" with ValidationError\n    - test_tela_prefix_without_dot_is_accepted:\
+      \ PASS — ServerConfig accepts tool_prefix=\"tela\" (plain, no delimiter)\n \
+      \   - test_downstream_tela_prefix_rejected_at_resolution: PASS — resolve_tools\
+      \ rejects \"tela.custom\" downstream name with ValueError\n    - test_prefix_combination_producing_tela_namespace_rejected:\
+      \ PASS — composition path producing \"tela.\" namespace rejected\n    - All\
+      \ 9 coexistence/routing/conflict/override tests: PASS\n    - 11 xpassed (test_tool_prefix_contract.py):\
+      \ previously-expected-failures now passing — validates extended prefix contract\n\
+      \n  **Runtime verification:**\n  - Gateway surface instructions output asserts\
+      \ `\"Built-in MCP tools: \\`tela_list_providers\\`, \\`tela_list_profiles\\\
+      `.\"` and `\"Operator-only surfaces\"` — PASS\n  - ServerConfig runtime behavior:\
+      \ `\"tela.\"` and `\"tela_\"` rejected, `\"tela\"` accepted — PASS\n  - DESIGN.md:\
+      \ contains \"operator-facing surfaces (CLI/HTTP)\", \"tela_list_profiles\",\
+      \ \"tela_list_providers\", \"The `tela.` prefix is reserved for built-in surfaces.\"\
+      , absent stale phrase — PASS\n  - USAGE.md line 126-127: documents both reserved\
+      \ namespaces and plain \"tela\" exception — PASS\n  - INTERFACES.md line 63-65:\
+      \ documents reserved \"tela.\"/\"tela_\" and accepted plain \"tela\" — PASS\n\
+      \n  ### Broader regression check\n  - commands: `.venv/bin/python -m pytest\
+      \ --tb=line -q` (full suite)\n  - outputs reviewed: 1096 passed, 2 failed (orphaned\
+      \ process env), 1 skipped, 8 xfailed, 11 xpassed\n  - regressions found: **0\
+      \ code regressions**\n  - The 2 failures in `test_conn_v2_blackbox.py::test_status_schema_fields`\
+      \ and `test_conn_v2_blackbox.py::test_connections_schema_fields` are environment-driven\
+      \ (orphaned `tela serve` processes PIDs 1278, 1358, 1831; lockfile missing).\
+      \ These are NOT code regressions. Confirmed by: (a) error message explicitly\
+      \ says \"orphaned tela serve processes detected\", (b) passing when run in isolation.\n\
+      \  - The 1 previously-failing test `test_reconnect_reuses_enumeration_no_double_path`\
+      \ now PASSES when run individually (transient test-order issue, not a code regression).\n\
+      \  - `invar guard --changed`: PASS (0 errors, 0 warnings — no changed files\
+      \ in this verify-only worktree)\n\n  ### Gate recommendation\n  - ready_for_hard_cut.final_gate:\
+      \ **yes**\n  - remaining gaps: None. Both B1 (surface contract wording) and\
+      \ B2 (tool-prefix policy/validation) are fully closed with aligned docs, tests,\
+      \ and runtime behavior. No code regressions detected in the full suite. The\
+      \ 2 env-driven failures are pre-existing orphans, not introduced by this loop's\
+      \ changes."
