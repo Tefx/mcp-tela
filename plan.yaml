@@ -70838,7 +70838,7 @@ phases:
   steps:
   - id: hard_cut.readiness_review
     name: Run fresh readiness review against canonical contract
-    status: claimed
+    status: done
     description: 'Perform an independent readiness review after preparation completes
       and after `idle_recovery` closes.
 
@@ -70882,6 +70882,24 @@ phases:
     agent: spec-verifier-tacit
     claimed_by: spec-verifier-tacit
     claimed_at: '2026-04-14T22:00:30.831963+00:00'
+    done_at: '2026-04-15T03:12:07.912547+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - Canonical contract and schemas were reviewed (opifex final-canonical-contract.md,\
+      \ capability_token.schema.json, tela_profile_list.schema.json), plus local contracts/docs/code\
+      \ paths and plan phases.\n\n  ## Readiness Review\n  - Decision: READY\n  -\
+      \ Blockers still open: legacy surfaces intentionally remaining pre-hard-cut\
+      \ (`tools` alias acceptance, shared `profile_name` usage, CapabilityToken binding\
+      \ field mismatch, missing `tela_list_profiles`, dependency on `tela://profiles`/`tela.profiles`,\
+      \ legacy payload keys, test/doc freezes).\n  - Owning downstream step for each\
+      \ blocker:\n    - hard_cut.impl_core_vocab: `tools` alias removal, `profile_name`→`profile_id`\
+      \ core/token surfaces\n    - hard_cut.impl_listing_surface: replace `tela://profiles`/`tela.profiles`\
+      \ with `tela_list_profiles`, canonical payload keys only\n    - hard_cut.impl_shared_surfaces:\
+      \ shared runtime/audit/profile_id consumer alignment\n    - hard_cut.final_test_sync\
+      \ / hard_cut.final_doc_sync: frozen legacy tests/docs migration\n  - Canonical\
+      \ requirements confirmed closed:\n    - idle_recovery phase closed with gate\
+      \ OPEN\n    - hard_cut.prep completed with canonical basis freeze, proof assets,\
+      \ expected-red targets, rollback matrix\n    - compatibility window remains\
+      \ explicitly none\n  - Compatibility rules invented: none\nerror: \"\""
   - id: hard_cut.readiness_gate
     name: Gate entry into implementation
     status: pending
