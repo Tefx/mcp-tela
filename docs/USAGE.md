@@ -231,7 +231,7 @@ profiles:
 ```
 
 Built-in surfaces:
-- `tela.profiles` is exposed as an MCP resource (read via resource read, not `tools/call`)
+- `tela_list_profiles` is a built-in MCP tool returning profile list with `profile_id`, `capabilities`, and `default`
 - `tela_list_providers` is a built-in MCP tool returning server status, tool counts, and tool names
 - `tela profiles`, `tela status`, `tela connections`, and `tela audit` are operator-only surfaces accessible via CLI/HTTP
 
@@ -588,10 +588,10 @@ Query commands discover the running server via `~/.tela/gateway.lock`.
 
 ## Built-in surfaces
 
-### MCP Resource
+### MCP Tools
 
-- `tela.profiles` — list configured profiles (MCP resource read via `tela://profiles`)
-  - **Access:** Resource read, not callable via `tools/call`
+- `tela_list_profiles` — built-in MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`
+- `tela_list_providers` — built-in MCP tool returning server status, tool counts, and tool names
 
 ### Operator Surfaces (CLI/HTTP)
 

@@ -10,9 +10,10 @@ This document defines the canonical agent-facing interface for the tela MCP gate
 
 ### 2.1 Supported Built-in MCP Surfaces
 
-| Surface | Kind | Access | URI/Name |
-|---------|------|--------|----------|
-| `tela.profiles` | MCP resource | Resource read | `tela://profiles` (name: `tela.profiles`) |
+| Surface | Kind | Access | Name |
+|---------|------|--------|------|
+| `tela_list_providers` | MCP tool | `tools/call` with `{}` | `tela_list_providers` |
+| `tela_list_profiles` | MCP tool | `tools/call` with `{}` | `tela_list_profiles` |
 
 ### 2.2 Operator Surfaces (Not MCP Built-ins)
 
@@ -31,15 +32,11 @@ The following surfaces are **operator-only** and accessible via CLI/HTTP. They a
 
 ### 3.1 MCP Resources (Read-Only)
 
-MCP resources are read via the MCP protocol's resource read mechanism, not via `tools/call`:
-
-- `tela.profiles`: Returns the list of configured profiles with their capabilities.
-  - Access: MCP resource read of URI `tela://profiles`
-  - **Not callable via `tools/call`**
+There are currently no built-in MCP resources in the `tela.*` namespace. Profile information is available via the `tela_list_profiles` built-in tool.
 
 ### 3.2 MCP Tools
 
-tela exposes one built-in MCP tool under the `tela.*` namespace:
+tela exposes two built-in MCP tools under the `tela.*` namespace:
 
 - `tela_list_providers` — returns a list of configured servers and their runtime status
   - **Input:** empty object `{}`
@@ -49,7 +46,12 @@ tela exposes one built-in MCP tool under the `tela.*` namespace:
     - `tool_count` (int): number of tools exposed by this server after posture filtering
     - `tool_names` (list[str]): post-enforcement-filter exposed tool names
 
-The `tela.` prefix is reserved for built-in surfaces.
+- `tela_list_profiles` — returns a list of configured profiles with their capabilities
+  - **Input:** empty object `{}`
+  - **Output:** list of `ProfileInfo` objects, each containing:
+    - `profile_id` (string): canonical profile identifier
+    - `capabilities` (dict): family → posture mapping
+    - `default` (bool): whether this is the default profile
 
 ## 4. Profile Capability Model
 
@@ -128,8 +130,8 @@ bare `503` status alone.
 
 ## 7. Invariants
 
-- `tela.profiles` is a **resource read**, not a tool call
-- `tela_list_providers` is the only built-in `tela.*` MCP tool
+- `tela_list_profiles` is the **canonical built-in MCP tool** for listing profiles (not a resource)
+- `tela_list_providers` and `tela_list_profiles` are the only built-in `tela.*` MCP tools
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
 - `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice
 - `POST /mcp` warming rejection uses `ADMISSION_REJECTED_WARMING` plus explicit machine-readable transient retry authorization

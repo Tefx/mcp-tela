@@ -180,13 +180,12 @@ Approval and runtime read-only behavior are owned by the runtime layer.
 The upstream MCP surface exposes:
 - filtered `tools/list`
 - authorized `tools/call`
-- resource read: `tela.profiles`
+- built-in tool: `tela_list_profiles`
+- built-in tool: `tela_list_providers`
 
 ### 7.1 MCP Resources
 
-| Resource | Name | Purpose |
-|----------|------|---------|
-| `tela://profiles` | `tela.profiles` | Profile configuration (read via MCP resource read) |
+There are currently no built-in MCP resources in the `tela.*` namespace.
 
 The `tela.` prefix is reserved. Downstream tools with this prefix are rejected
 as conflicts.
@@ -195,8 +194,9 @@ as conflicts.
 
 | Surface | Kind | Access method | Status |
 |---------|------|---------------|--------|
-| `tela.profiles` | MCP resource | `tela://profiles` (resource read) | Supported |
-| `tela profiles` | CLI/HTTP | `tela profiles` or `GET /status` (distinct from MCP resource name `tela.profiles`) | Operator-only (not MCP built-in) |
+| `tela_list_profiles` | MCP tool | `tools/call` with `{}` | Built-in |
+| `tela_list_providers` | MCP tool | `tools/call` with `{}` | Built-in |
+| `tela profiles` | CLI/HTTP | `tela profiles` or `GET /status` | Operator-only (not MCP built-in) |
 | `tela status` | CLI/HTTP | `tela status` or `GET /status` | Operator-only (not MCP built-in) |
 | `tela connections` | CLI/HTTP | `tela connections` or via `/status` | Operator-only (not MCP built-in) |
 | `tela audit` | CLI/HTTP | `tela audit` or via `/status` | Operator-only (not MCP built-in) |
@@ -331,15 +331,13 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 {
   "connection_id": "bridge_abc123",
   "profile_id": "developer",
-  "profile_name": "Developer",
   "connected_at": "2026-03-25T12:00:00Z",
   "tool_call_count": 5,
   "last_activity": "2026-03-25T12:05:00Z"
 }
 ```
 
-`profile_id` is the canonical bound identity. `profile_name`, when present, is
-display-oriented local vocabulary only.
+`profile_id` is the canonical bound identity.
 
 `last_activity` is an ISO-8601 UTC timestamp updated on each client interaction
 (tool calls, tool list requests, connection registration). Empty string when no
@@ -418,9 +416,9 @@ automatically. Remote clients pass it via `--token` or `TELA_BEARER_TOKEN`.
 This bearer token is independent of config `auth.mode` (which controls
 MCP-level profile binding via CapabilityToken).
 
-### `tela.profiles` Resource
+### `tela_list_profiles` Built-in Tool
 
-`access: read` via MCP resource read (not `tools/call`).
+`access: tools/call` with empty input `{}`.
 
 Canonical payload shape:
 
@@ -428,7 +426,6 @@ Canonical payload shape:
 [
   {
     "profile_id": "developer",
-    "profile_name": "Developer",
     "capabilities": {
       "filesystem": "read_write",
       "git": "read_only"
@@ -439,12 +436,7 @@ Canonical payload shape:
 ```
 
 `profile_id` is the stable registry identity that canonical token issuance and
-verification bind. `profile_name`, when present, is a human-facing label and not
-shared authorization vocabulary.
-
-Historical/migration notes:
-- `tools` is emitted only during the migration window for backward compatibility
-- `side_effect_policy` is not part of `tela.profiles` output in the target model
+verification bind.
 
 ### 7.3 Session and Notification Forwarding
 

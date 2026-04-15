@@ -164,10 +164,10 @@ See `tela.yaml.example` for the full commented reference.
 
 ## Built-in Surfaces
 
-### MCP Resource
+### MCP Tools
 
-- `tela.profiles` — list configured profiles (MCP resource read via `tela://profiles`)
-  - **Access:** Resource read, not `tools/call`
+- `tela_list_providers` — returns configured servers and their runtime status
+- `tela_list_profiles` — returns configured profiles with `profile_id`, `capabilities`, and `default` flags
 
 ### Operator Surfaces (CLI/HTTP)
 

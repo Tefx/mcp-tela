@@ -308,17 +308,15 @@ There is no separate workflow-policy layer in gateway authorization.
 
 ### Introspection
 
-Built-in MCP surfaces:
-- `tela.profiles` — exposed as MCP resource (read via `tela://profiles`)
+Built-in MCP tools:
+- `tela_list_profiles` — MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`
 - `tela_list_providers` — MCP tool returning a list of configured servers and their runtime status
 
 Operator surfaces (CLI/HTTP, not MCP):
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`
 
 These are operator-facing surfaces (CLI/HTTP) and are **not** built-in MCP tool
-surfaces. `tela.profiles` remains the only built-in tela MCP surface, and it is
-a resource read surface (not a tool). These do not belong to a `tela_admin`
-capability family.
+surfaces. The `tela.` prefix is reserved for built-in surfaces.
 
 ## Module Boundaries
 

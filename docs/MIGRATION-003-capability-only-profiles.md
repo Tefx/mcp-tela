@@ -111,18 +111,16 @@ When parsing legacy format:
 
 ### Output Format
 
-Canonical `tela.profiles` MCP response shape:
+Canonical `tela_list_profiles` tool output shape:
 
 ```json
 {
   "profile_id": "developer",
-  "profile_name": "Developer",
   "capabilities": { "filesystem": "read_only" }
 }
 ```
 
-`profile_id` is the stable canonical identity. `profile_name`, when present, is
-display-only local vocabulary. Legacy `tools` output is not canonical.
+`profile_id` is the stable canonical identity.
 
 ## tool_overrides Section
 
