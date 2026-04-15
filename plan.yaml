@@ -71544,7 +71544,9 @@ phases:
 
       - commands/tests prepared for downstream reverify: <list>'
     depends_on:
-    - hard_cut.final_gate
+    - hard_cut.final_test_sync
+    - hard_cut.final_doc_sync
+    - hard_cut.final_conformance
     agent: python-senior-tacit
   - id: hard_cut.final_reverify
     name: Reverify hard-cut blocker remediation and canonical runtime outputs
