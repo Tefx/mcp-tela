@@ -178,7 +178,7 @@ class TestRuntimeModels:
 
     def test_connection_context_defaults(self) -> None:
         c = ConnectionContext(
-            connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+            connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
         )
         assert c.tool_call_count == 0
 
@@ -207,7 +207,7 @@ class TestRuntimeModels:
     def test_connection_context_defaults_recovery_fields(self) -> None:
         """Recovery fields must default to None for backward compatibility."""
         c = ConnectionContext(
-            connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+            connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
         )
         assert c.init_mode is None
         assert c.client_info_snapshot is None
@@ -217,7 +217,7 @@ class TestRuntimeModels:
         """Token-mode connections must record AuthMode.TOKEN in init_mode."""
         c = ConnectionContext(
             connection_id="c1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
         )
@@ -227,7 +227,7 @@ class TestRuntimeModels:
         """Open-mode connections must record AuthMode.OPEN in init_mode."""
         c = ConnectionContext(
             connection_id="c1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.OPEN,
         )
@@ -243,28 +243,28 @@ class TestRuntimeModels:
         """
         snapshot = {
             "token_id": "tok-1",
-            "profile_name": "production",
+            "profile_id": "production",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
             "signature": "abc123def456",
         }
         c = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot=snapshot,
         )
         assert c.client_info_snapshot is not None
         assert c.client_info_snapshot["token_id"] == "tok-1"
-        assert c.client_info_snapshot["profile_name"] == "production"
+        assert c.client_info_snapshot["profile_id"] == "production"
         assert c.client_info_snapshot["signature"] == "abc123def456"
 
     def test_connection_context_bridge_connection_id(self) -> None:
         """bridge_connection_id must record the /connect registration ID."""
         c = ConnectionContext(
             connection_id="conn_abc123",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
             bridge_connection_id="bridge_abc",
         )
@@ -274,12 +274,12 @@ class TestRuntimeModels:
         """ConnectionContext with recovery fields must roundtrip through serialization."""
         c = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
                 "token_id": "tok-1",
-                "profile_name": "production",
+                "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
                 "signature": "sig",
@@ -314,7 +314,7 @@ class TestConnectionContextRecoveryContract:
         """
         c = ConnectionContext(
             connection_id="c1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
         )
@@ -331,12 +331,12 @@ class TestConnectionContextRecoveryContract:
         """
         c = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
                 "token_id": "tok-1",
-                "profile_name": "production",
+                "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
                 "signature": "hmac-sha256-hex",
@@ -345,7 +345,7 @@ class TestConnectionContextRecoveryContract:
         assert c.client_info_snapshot is not None
         required_token_fields = (
             "token_id",
-            "profile_name",
+            "profile_id",
             "issued_at",
             "expires_at",
             "signature",
@@ -363,17 +363,17 @@ class TestConnectionContextRecoveryContract:
         This is the expected-red proof: without client_info_snapshot,
         a ConnectionContext with init_mode=TOKEN cannot re-validate
         the capability token because token_id, issued_at, expires_at,
-        and signature are not recoverable from profile_name alone.
+        and signature are not recoverable from profile_id alone.
         """
         # Minimal ConnectionContext as if recorded during token init
         minimal_ctx = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
                 "token_id": "tok-1",
-                "profile_name": "production",
+                "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
                 "signature": "hmac-sha256-hex",
@@ -384,10 +384,10 @@ class TestConnectionContextRecoveryContract:
         )
 
         # Without client_info_snapshot, recovery cannot proceed:
-        # profile_name alone is insufficient to reconstruct CapabilityToken
+        # profile_id alone is insufficient to reconstruct CapabilityToken
         bare_ctx = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
         )
         # Bare ctx lacks all recovery-critical fields
@@ -401,7 +401,7 @@ class TestConnectionContextRecoveryContract:
         assert minimal_ctx.client_info_snapshot is not None
         for field in (
             "token_id",
-            "profile_name",
+            "profile_id",
             "issued_at",
             "expires_at",
             "signature",
@@ -423,12 +423,12 @@ class TestConnectionContextRecoveryContract:
         # Two connections from different auth modes produce identical bare contexts
         token_bare = ConnectionContext(
             connection_id="c_token",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         open_bare = ConnectionContext(
             connection_id="c_open",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         # Without init_mode, these contexts are indistinguishable for recovery
@@ -449,7 +449,7 @@ class TestConnectionContextRecoveryContract:
         """
         bare_ctx = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
         )
 
@@ -468,12 +468,12 @@ class TestConnectionContextRecoveryContract:
         # A recovery-enabled context carries all required fields
         recovery_ctx = ConnectionContext(
             connection_id="c1",
-            profile_name="production",
+            profile_id="production",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
                 "token_id": "tok-1",
-                "profile_name": "production",
+                "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
                 "signature": "sig",
@@ -555,7 +555,7 @@ _STATUS_FIXTURE_MINIMAL = {
     "connections": [
         {
             "connection_id": "bridge_abc123",
-            "profile_name": "developer",
+            "profile_id": "developer",
             "connected_at": "2026-03-25T12:00:00Z",
             "tool_call_count": 5,
         }
@@ -611,7 +611,7 @@ def test_status_response_accepts_spec_fixture() -> None:
         timestamp="2026-03-25T12:00:00Z",
         level=AuditLevel.L2,
         connection_id="bridge_abc123",
-        profile_name="developer",
+        profile_id="developer",
         tool_name="filesystem/read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
@@ -627,7 +627,7 @@ def test_status_response_accepts_spec_fixture() -> None:
         connections=[
             {
                 "connection_id": "bridge_abc123",
-                "profile_name": "developer",
+                "profile_id": "developer",
                 "connected_at": "2026-03-25T12:00:00Z",
                 "tool_call_count": 5,
             }

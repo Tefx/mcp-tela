@@ -61,7 +61,7 @@ def build_audit_entry(
 
     Examples:
         >>> from tela.core.models import AuditLevel, ConnectionContext, EnforcementResult, EnforcementVerdict
-        >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        >>> conn = ConnectionContext(connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z")
         >>> allow = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
         >>> entry_result = build_audit_entry(AuditLevel.L1, conn, "read_file", "fs", allow, latency_ms=5.0)
         >>> entry_result.is_ok
@@ -110,7 +110,7 @@ def build_audit_entry(
             timestamp=now_result.value,
             level=level,
             connection_id=connection.connection_id,
-            profile_name=connection.profile_name,
+            profile_id=connection.profile_id,
             tool_name=tool_name,
             server_name=server_name,
             verdict=result.verdict,
@@ -203,7 +203,7 @@ async def audit_write(entry: AuditEntry) -> Result[None, str]:
         >>> clear_audit_entries()
         >>> entry = AuditEntry(
         ...     timestamp="2026-01-01T00:00:00Z", level=AuditLevel.L1,
-        ...     connection_id="c1", profile_name="dev",
+        ...     connection_id="c1", profile_id="dev",
         ...     tool_name="read_file", server_name="fs",
         ...     verdict=EnforcementVerdict.ALLOW,
         ... )

@@ -68,7 +68,7 @@ def _run_audit_command(
     for entry in entries:
         verdict = entry.verdict.value.upper()
         print(
-            f"[{entry.timestamp}] {verdict} {entry.tool_name} ({entry.server_name}) profile={entry.profile_name}"
+            f"[{entry.timestamp}] {verdict} {entry.tool_name} ({entry.server_name}) profile={entry.profile_id}"
         )
     return Result(value=None)
 

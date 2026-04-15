@@ -15,7 +15,7 @@ from tela.core.models import (
 def sample_connection() -> ConnectionContext:
     return ConnectionContext(
         connection_id="c-test",
-        profile_name="dev",
+        profile_id="dev",
         connected_at="2026-01-01T00:00:00Z",
     )
 

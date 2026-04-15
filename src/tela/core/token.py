@@ -33,7 +33,7 @@ def compute_signature(token_fields: dict, secret: str) -> str:
     with keys in alphabetical order, no whitespace.
 
     Examples:
-        >>> sig = compute_signature({"token_id": "tok_1", "profile_name": "dev"}, "secret")
+        >>> sig = compute_signature({"token_id": "tok_1", "profile_id": "dev"}, "secret")
         >>> isinstance(sig, str) and len(sig) == 64
         True
 
@@ -178,7 +178,7 @@ def resolve_token_init_binding(
         >>> binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
         >>> binding.token_result.verdict
         <EnforcementVerdict.ALLOW: 'allow'>
-        >>> binding.profile_name
+        >>> binding.profile_id
         'dev'
         >>> bad_tok = CapabilityToken(**fields, signature="invalid_sig")
         >>> binding = resolve_token_init_binding(bad_tok, ["secret1"], "2026-06-01T00:00:00Z")
@@ -194,7 +194,7 @@ def resolve_token_init_binding(
         TokenInitBinding with validation result and profile binding.
     """
     token_result = validate_token(token, secrets, now_iso)
-    return TokenInitBinding(token_result=token_result, profile_name=token.profile_id)
+    return TokenInitBinding(token_result=token_result, profile_id=token.profile_id)
 
 
 @pre(

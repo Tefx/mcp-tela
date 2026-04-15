@@ -256,6 +256,10 @@ class ProviderInfo(TypedDict):
 class ConnectionContext(BaseModel):
     """Per-connection state for an upstream client.
 
+    The canonical identity field is ``profile_id``. The legacy ``profile_name``
+    alias has been removed (hard cut): all shared runtime/audit/tool-facing
+    surfaces bind canonical ``profile_id`` only.
+
     Recovery-critical fields (idle reconnect / explicit re-initialize):
     - ``init_mode``: Records which auth path established this connection
       (TOKEN or OPEN). Cannot be derived from empty initialize — required
@@ -270,8 +274,10 @@ class ConnectionContext(BaseModel):
       /connect-registration.
     """
 
+    model_config = {"extra": "forbid"}
+
     connection_id: str
-    profile_name: str
+    profile_id: str
     connected_at: str
     tool_call_count: int = 0
     last_activity: str = ""
@@ -305,12 +311,19 @@ class MetaField(BaseModel):
 
 
 class AuditEntry(BaseModel):
-    """A single audit log entry."""
+    """A single audit log entry.
+
+    The canonical identity field is ``profile_id``. The legacy ``profile_name``
+    field has been removed (hard cut): audit entries bind canonical ``profile_id``
+    only.
+    """
+
+    model_config = {"extra": "forbid"}
 
     timestamp: str
     level: AuditLevel
     connection_id: str
-    profile_name: str
+    profile_id: str
     tool_name: str
     server_name: str
     verdict: EnforcementVerdict
@@ -439,15 +452,19 @@ class TokenInitBinding:
     Binds a capability token validation result to the connection's profile.
     Shell must reject initialization if `token_result.verdict` is DENY.
 
+    The canonical identity field is ``profile_id``. The legacy ``profile_name``
+    field has been removed (hard cut): all shared surfaces bind canonical
+    ``profile_id`` only.
+
     Examples:
         >>> from tela.core.models import EnforcementResult, EnforcementVerdict
         >>> result = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
-        >>> binding = TokenInitBinding(token_result=result, profile_name="dev")
-        >>> binding.profile_name
+        >>> binding = TokenInitBinding(token_result=result, profile_id="dev")
+        >>> binding.profile_id
         'dev'
         >>> binding.token_result.verdict
         <EnforcementVerdict.ALLOW: 'allow'>
     """
 
     token_result: EnforcementResult
-    profile_name: str
+    profile_id: str

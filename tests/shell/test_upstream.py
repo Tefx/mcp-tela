@@ -285,7 +285,7 @@ def test_handle_initialize_reuses_existing_bridge_connection() -> None:
 
         bridge_connection = ConnectionContext(
             connection_id="bridge_abc",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         add_runtime_connection(bridge_connection)
@@ -333,7 +333,7 @@ def test_handle_tools_list_returns_empty_when_no_gateway() -> None:
 
     set_runtime_config(None)
     conn = ConnectionContext(
-        connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
     )
     result = asyncio.run(handle_tools_list(conn))
     assert result.is_err
@@ -350,7 +350,7 @@ def test_handle_tools_call_returns_error_when_no_gateway() -> None:
 
     set_runtime_config(None)
     conn = ConnectionContext(
-        connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
     )
     result = asyncio.run(handle_tools_call(conn, "tool", {}))
     assert result.is_err
@@ -368,8 +368,8 @@ def test_handle_profiles_list_returns_empty_when_no_gateway() -> None:
     assert "GATEWAY_NOT_STARTED" in result.error
 
 
-def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
-    """profiles surface emits profile_name as the canonical external identifier."""
+def test_handle_profiles_list_uses_canonical_profile_id_field() -> None:
+    """profiles surface emits profile_id as the canonical external identifier."""
     from tela.core.models import (
         AuthConfig,
         AuthMode,
@@ -395,10 +395,9 @@ def test_handle_profiles_list_uses_canonical_profile_name_field() -> None:
 
     assert result.value == [
         {
-            "profile_name": "dev",
+            "profile_id": "dev",
             "default": False,
             "capabilities": {"filesystem": "read_only"},
-            "tools": {"filesystem": "read_only"},
         }
     ]
 
@@ -410,7 +409,7 @@ def test_notify_tools_changed_skips_without_session() -> None:
     from tela.shell.upstream import notify_tools_changed
 
     conn = ConnectionContext(
-        connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
     )
     result = asyncio.run(notify_tools_changed(conn, "digest"))
     assert result.is_ok
@@ -434,7 +433,7 @@ def test_notify_tools_changed_sends_via_captured_session() -> None:
 
     conn = ConnectionContext(
         connection_id="c_with_session",
-        profile_name="dev",
+        profile_id="dev",
         connected_at="2026-01-01T00:00:00Z",
     )
     capture_session("c_with_session", StubSession())
@@ -461,7 +460,7 @@ def test_notify_tools_changed_handles_session_send_failure() -> None:
             raise RuntimeError("transport closed")
 
     conn = ConnectionContext(
-        connection_id="c_fail", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="c_fail", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
     )
     capture_session("c_fail", FailingSession())
     try:
@@ -588,11 +587,11 @@ def test_connection_context_model_fields() -> None:
 
     ctx = ConnectionContext(
         connection_id="conn-123",
-        profile_name="production",
+        profile_id="production",
         connected_at="2026-03-17T10:00:00Z",
     )
     assert ctx.connection_id == "conn-123"
-    assert ctx.profile_name == "production"
+    assert ctx.profile_id == "production"
     assert ctx.connected_at == "2026-03-17T10:00:00Z"
     assert ctx.tool_call_count == 0
 
@@ -603,7 +602,7 @@ def test_connection_context_tool_call_counter() -> None:
 
     ctx = ConnectionContext(
         connection_id="conn-1",
-        profile_name="dev",
+        profile_id="dev",
         connected_at="2026-01-01T00:00:00Z",
         tool_call_count=5,
     )
@@ -1317,7 +1316,7 @@ def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
 
     connection = ConnectionContext(
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         connected_at="2026-01-01T00:00:00Z",
     )
 
@@ -1952,7 +1951,7 @@ def test_handle_initialize_bridge_reuse_preserves_init_mode_on_existing(
         # Pre-register a bridge connection with init_mode already set
         bridge_connection = ConnectionContext(
             connection_id="bridge_recovery_1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.OPEN,
             bridge_connection_id="bridge_recovery_1",

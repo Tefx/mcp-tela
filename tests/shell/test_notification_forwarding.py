@@ -220,7 +220,7 @@ def test_notify_tools_changed_calls_send_on_captured_session() -> None:
 
         conn = ConnectionContext(
             connection_id="notify_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
 
@@ -242,7 +242,7 @@ def test_notify_tools_changed_skips_when_no_session() -> None:
     try:
         conn = ConnectionContext(
             connection_id="no_session_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
 
@@ -265,7 +265,7 @@ def test_notify_tools_changed_returns_error_on_send_failure() -> None:
 
         conn = ConnectionContext(
             connection_id="failing_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
 
@@ -300,7 +300,7 @@ def test_stale_session_removed_from_registry() -> None:
         # Now notification should skip gracefully
         conn = ConnectionContext(
             connection_id="stale_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         result = asyncio.run(notify_tools_changed(conn, "sha256:abcd1234"))
@@ -327,7 +327,7 @@ def test_failing_session_does_not_break_other_sessions() -> None:
         # Notify failing session
         conn_failing = ConnectionContext(
             connection_id="failing_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         result = asyncio.run(notify_tools_changed(conn_failing, "sha256:abcd1234"))
@@ -336,7 +336,7 @@ def test_failing_session_does_not_break_other_sessions() -> None:
         # Notify live session
         conn_live = ConnectionContext(
             connection_id="live_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         result = asyncio.run(notify_tools_changed(conn_live, "sha256:abcd1234"))
@@ -605,7 +605,7 @@ def test_gateway_notify_all_connections_iterates_runtime_connections() -> None:
         connections = [
             ConnectionContext(
                 connection_id=f"conn_{i}",
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
             for i in range(3)
@@ -724,7 +724,7 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
         # First session establishes a connection and captures
         conn_a = ConnectionContext(
             connection_id="conn_session_a",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         add_runtime_connection(conn_a)
@@ -734,7 +734,7 @@ def test_ensure_connection_assigns_distinct_connections_per_session() -> None:
         # Second session gets a DIFFERENT connection
         conn_b = ConnectionContext(
             connection_id="conn_session_b",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:01Z",
         )
         add_runtime_connection(conn_b)
@@ -807,7 +807,7 @@ def test_notify_tools_changed_with_empty_digest() -> None:
 
         conn = ConnectionContext(
             connection_id="empty_digest_conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
 

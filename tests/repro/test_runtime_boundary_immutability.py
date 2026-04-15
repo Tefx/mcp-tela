@@ -54,7 +54,7 @@ class TestB1LockSafeWriteHelpers:
     def test_clear_runtime_connections(self) -> None:
         """clear_runtime_connections must atomically remove all connections."""
         ctx = ConnectionContext(
-            connection_id="test-clear", profile_name="p", connected_at="t"
+            connection_id="test-clear", profile_id="p", connected_at="t"
         )
         add_runtime_connection(ctx)
         conns = get_runtime_connections_snapshot().value
@@ -99,7 +99,7 @@ class TestB2SnapshotImmutability:
     def test_connections_snapshot_list_is_detached(self) -> None:
         """Mutating returned connections list must not affect runtime."""
         ctx = ConnectionContext(
-            connection_id="snap-test", profile_name="p", connected_at="t"
+            connection_id="snap-test", profile_id="p", connected_at="t"
         )
         add_runtime_connection(ctx)
 
@@ -119,7 +119,7 @@ class TestB2SnapshotImmutability:
         """ConnectionContext objects in snapshot must be deep copies."""
         ctx = ConnectionContext(
             connection_id="member-test",
-            profile_name="p",
+            profile_id="p",
             connected_at="t",
             tool_call_count=0,
         )
@@ -164,7 +164,7 @@ class TestB2SnapshotImmutability:
         """RuntimeStatusSnapshot.connections must be immutable tuple."""
         set_runtime_config(TelaConfig())
         ctx = ConnectionContext(
-            connection_id="tup-test", profile_name="p", connected_at="t"
+            connection_id="tup-test", profile_id="p", connected_at="t"
         )
         add_runtime_connection(ctx)
 
@@ -180,7 +180,7 @@ class TestB2SnapshotImmutability:
         """ConnectionContext members in status snapshot are deep copies."""
         ctx = ConnectionContext(
             connection_id="stat-member",
-            profile_name="p",
+            profile_id="p",
             connected_at="t",
             tool_call_count=5,
         )

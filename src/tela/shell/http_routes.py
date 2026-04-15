@@ -205,7 +205,7 @@ def handle_status(
             and result.value is not None
             and result.value.get("status") == "connected"
             and isinstance(result.value.get("connection_id"), str)
-            and isinstance(result.value.get("profile_name"), str)
+            and isinstance(result.value.get("profile_id"), str)
         )
         or (
             result.is_err
@@ -269,7 +269,7 @@ def handle_connect(
     now_iso = datetime.now(timezone.utc).isoformat()
     connection_context = ConnectionContext(
         connection_id=payload.connection_id,
-        profile_name=config.resolved_default_profile or "default",
+        profile_id=config.resolved_default_profile or "default",
         connected_at=now_iso,
         init_mode=config.auth.mode,
         bridge_connection_id=payload.connection_id,
@@ -288,7 +288,7 @@ def handle_connect(
     return Result(
         value={
             "connection_id": connection_context.connection_id,
-            "profile_name": connection_context.profile_name,
+            "profile_id": connection_context.profile_id,
             "status": "connected",
         }
     )
@@ -351,7 +351,7 @@ def handle_disconnect(
         >>> clear_runtime_connections()
         >>> ctx = ConnectionContext(
         ...     connection_id="test-disconnect-1",
-        ...     profile_name="default",
+        ...     profile_id="default",
         ...     connected_at="2026-01-01T00:00:00Z"
         ... )
         >>> add_runtime_connection(ctx)

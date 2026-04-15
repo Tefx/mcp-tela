@@ -68,7 +68,7 @@ class TestH2ConcurrentAuditWrites:
                     timestamp=f"2026-01-01T00:00:{i:02d}Z",
                     level=AuditLevel.L1,
                     connection_id=f"c{i}",
-                    profile_name="dev",
+                    profile_id="dev",
                     tool_name=f"tool_{i}",
                     server_name="s1",
                     verdict=EnforcementVerdict.ALLOW,
@@ -112,7 +112,7 @@ class TestH4TokenValidation:
     def test_compute_signature_deterministic(self) -> None:
         from tela.core.token import compute_signature
 
-        fields = {"token_id": "tok_1", "profile_name": "dev"}
+        fields = {"token_id": "tok_1", "profile_id": "dev"}
         sig1 = compute_signature(fields, "secret")
         sig2 = compute_signature(fields, "secret")
         assert sig1 == sig2
@@ -123,7 +123,7 @@ class TestH4TokenValidation:
 
         fields = {
             "token_id": "tok_1",
-            "profile_name": "dev",
+            "profile_id": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
         }
@@ -138,7 +138,7 @@ class TestH4TokenValidation:
 
         token = CapabilityToken(
             token_id="tok_1",
-            profile_name="dev",
+            profile_id="dev",
             issued_at="2026-01-01T00:00:00Z",
             expires_at="2026-12-31T23:59:59Z",
             signature="bad_signature",
@@ -151,7 +151,7 @@ class TestH4TokenValidation:
 
         fields = {
             "token_id": "tok_1",
-            "profile_name": "dev",
+            "profile_id": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-01-02T00:00:00Z",
         }

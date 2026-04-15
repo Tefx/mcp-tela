@@ -162,7 +162,7 @@ class TestB2AuditConfigWiring:
             timestamp="2026-01-01T00:00:00Z",
             level=AuditLevel.L1,
             connection_id="c1",
-            profile_name="dev",
+            profile_id="dev",
             tool_name="t1",
             server_name="s1",
             verdict=EnforcementVerdict.ALLOW,
@@ -186,7 +186,7 @@ class TestB2AuditConfigWiring:
 
         conn = ConnectionContext(
             connection_id="c1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         allow = EnforcementResult(verdict=EnforcementVerdict.ALLOW)

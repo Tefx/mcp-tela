@@ -23,7 +23,7 @@ from tela.shell.audit import (
 
 def _conn() -> ConnectionContext:
     return ConnectionContext(
-        connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
     )
 
 

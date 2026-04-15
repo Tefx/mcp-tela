@@ -49,7 +49,7 @@ def _run_connections_command(json_output: bool) -> Result[None, str]:
     for connection in conns:
         print(
             f"  {connection.connection_id} "
-            f"profile={connection.profile_name} "
+            f"profile={connection.profile_id} "
             f"since={connection.connected_at}"
         )
     return Result(value=None)

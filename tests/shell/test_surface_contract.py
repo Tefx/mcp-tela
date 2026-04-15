@@ -303,8 +303,8 @@ class TestTelaProfilesResourceBehavior:
 
         # Verify JSON-serializable structure
         entry = result.value[0]
-        assert "profile_name" in entry
-        assert entry["profile_name"] == "dev"
+        assert "profile_id" in entry
+        assert entry["profile_id"] == "dev"
         assert "capabilities" in entry
 
         # Cleanup

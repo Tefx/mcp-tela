@@ -92,7 +92,7 @@ def find_connection_for_session(
         ...     async def send_tool_list_changed(self) -> None: ...
         >>> s = S()
         >>> _ = capture_session("c1", s)
-        >>> conn = ConnectionContext(connection_id="c1", profile_name="p", connected_at="t")
+        >>> conn = ConnectionContext(connection_id="c1", profile_id="p", connected_at="t")
         >>> r = find_connection_for_session(s, [conn])
         >>> r.is_ok and r.value is conn
         True
@@ -262,13 +262,13 @@ async def handle_initialize(
             return Result(error=binding_result.error)
 
         assert binding_result.value is not None
-        profile_name = binding_result.value.resolved_default_profile
-        assert profile_name is not None
+        profile_id = binding_result.value.resolved_default_profile
+        assert profile_id is not None
     else:
-        # Token mode: validate capability token and bind to token's profile.
+        # Token mode: validate capability token and bind to token's canonical profile_id.
         required_fields = (
             "token_id",
-            "profile_name",
+            "profile_id",
             "issued_at",
             "expires_at",
             "signature",
@@ -282,7 +282,7 @@ async def handle_initialize(
         try:
             token = CapabilityToken(
                 token_id=str(client_info["token_id"]),
-                profile_name=str(client_info["profile_name"]),
+                profile_id=str(client_info["profile_id"]),
                 issued_at=str(client_info["issued_at"]),
                 expires_at=str(client_info["expires_at"]),
                 signature=str(client_info["signature"]),
@@ -305,11 +305,11 @@ async def handle_initialize(
             error_code = binding.token_result.error_code or "TOKEN_INVALID"
             return Result(error=f"INITIALIZE_REJECTED: {error_code}: {error_msg}")
 
-        profile_name = binding.profile_name
+        profile_id = binding.profile_id
 
     ctx = ConnectionContext(
         connection_id=connection_id,
-        profile_name=profile_name,
+        profile_id=profile_id,
         connected_at=now_iso,
         init_mode=config.auth.mode,
         client_info_snapshot={
@@ -343,7 +343,7 @@ async def handle_tools_list(
         >>> from tela.shell.gateway_runtime import set_runtime_config
         >>> from tela.core.models import ConnectionContext
         >>> set_runtime_config(None)  # Gateway not started
-        >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        >>> conn = ConnectionContext(connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z")
         >>> result = asyncio.run(handle_tools_list(conn))
         >>> result.is_err and "GATEWAY_NOT_STARTED" in result.error
         True
@@ -359,10 +359,10 @@ async def handle_tools_list(
     if config is None:
         return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
-    profile = config.profiles.get(connection.profile_name)
+    profile = config.profiles.get(connection.profile_id)
     if profile is None:
         return Result(
-            error=f"PROFILE_NOT_FOUND: profile '{connection.profile_name}' not found"
+            error=f"PROFILE_NOT_FOUND: profile '{connection.profile_id}' not found"
         )
 
     touch_r = touch_connection_activity(
@@ -425,7 +425,7 @@ async def handle_tools_call(
         >>> from tela.shell.gateway_runtime import set_runtime_config
         >>> from tela.core.models import ConnectionContext
         >>> set_runtime_config(None)  # Gateway not started
-        >>> conn = ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z")
+        >>> conn = ConnectionContext(connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z")
         >>> result = asyncio.run(handle_tools_call(conn, "read_file", {"path": "/tmp"}))
         >>> result.is_err
         True
@@ -469,12 +469,12 @@ async def handle_tools_call(
             )
         )
     routing_name = tool.raw_name or tool.name
-    profile = config.profiles.get(connection.profile_name)
+    profile = config.profiles.get(connection.profile_id)
     if profile is None:
         return Result(
             error=TelaError(
                 code="PROFILE_NOT_FOUND",
-                message=f"Profile '{connection.profile_name}' not found",
+                message=f"Profile '{connection.profile_id}' not found",
             )
         )
 
@@ -533,15 +533,14 @@ def handle_profiles_list() -> Result[list[dict], str]:
     if config is None:
         return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
-    # Migration: emit both 'capabilities' and 'tools' keys per ADR-003.
-    # Canonical external profile identifier field is 'profile_name'.
+    # Canonical external profile identifier field is 'profile_id'.
+    # Legacy 'profile_name' and 'tools' keys are removed (hard cut).
     return Result(
         value=[
             {
-                "profile_name": name,
+                "profile_id": name,
                 "default": p.default,
                 "capabilities": {k: v.value for k, v in p.capabilities.items()},
-                "tools": {k: v.value for k, v in p.capabilities.items()},
             }
             for name, p in config.profiles.items()
         ]
@@ -568,7 +567,7 @@ async def notify_tools_changed(
         >>> import asyncio
         >>> from tela.core.models import ConnectionContext
         >>> r = asyncio.run(notify_tools_changed(
-        ...     ConnectionContext(connection_id="c1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"),
+        ...     ConnectionContext(connection_id="c1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"),
         ...     "digest123",
         ... ))
         >>> r.is_ok

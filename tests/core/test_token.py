@@ -14,14 +14,14 @@ from tela.core.token import (
 
 
 def test_compute_signature_is_deterministic() -> None:
-    fields = {"token_id": "tok_1", "profile_name": "dev"}
+    fields = {"token_id": "tok_1", "profile_id": "dev"}
     sig1 = compute_signature(fields, "secret")
     sig2 = compute_signature(fields, "secret")
     assert sig1 == sig2
 
 
 def test_compute_signature_differs_for_different_secrets() -> None:
-    fields = {"token_id": "tok_1", "profile_name": "dev"}
+    fields = {"token_id": "tok_1", "profile_id": "dev"}
     sig1 = compute_signature(fields, "secret1")
     sig2 = compute_signature(fields, "secret2")
     assert sig1 != sig2
@@ -76,11 +76,11 @@ def test_create_token_profile() -> None:
 
 
 def test_resolve_token_init_binding_valid_token_binds_to_profile() -> None:
-    """Valid token must bind the connection to the token's profile_name."""
+    """Valid token must bind the connection to the token's profile_id."""
     tok = create_token("dev", "secret1")
     binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
     assert binding.token_result.verdict == EnforcementVerdict.ALLOW
-    assert binding.profile_name == "dev"
+    assert binding.profile_id == "dev"
 
 
 def test_resolve_token_init_binding_expired_token_rejected() -> None:
@@ -89,8 +89,8 @@ def test_resolve_token_init_binding_expired_token_rejected() -> None:
     binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
     assert binding.token_result.verdict == EnforcementVerdict.DENY
     assert binding.token_result.error_code == "TOKEN_EXPIRED"
-    # Profile name is still preserved in the binding (for error context)
-    assert binding.profile_name == "dev"
+    # Profile id is still preserved in the binding (for error context)
+    assert binding.profile_id == "dev"
 
 
 def test_resolve_token_init_binding_invalid_signature_rejected() -> None:
@@ -99,15 +99,15 @@ def test_resolve_token_init_binding_invalid_signature_rejected() -> None:
     binding = resolve_token_init_binding(tok, ["wrong_secret"], "2026-06-01T00:00:00Z")
     assert binding.token_result.verdict == EnforcementVerdict.DENY
     assert binding.token_result.error_code == "TOKEN_INVALID"
-    # Profile name is preserved in binding for error context even on DENY
-    assert binding.profile_name == "dev"
+    # Profile id is preserved in binding for error context even on DENY
+    assert binding.profile_id == "dev"
 
 
-def test_resolve_token_init_binding_preserves_profile_name() -> None:
-    """Profile name from token is always carried in the binding."""
+def test_resolve_token_init_binding_preserves_profile_id() -> None:
+    """Profile id from token is always carried in the binding."""
     tok = create_token("production", "secret1")
     binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
-    assert binding.profile_name == "production"
+    assert binding.profile_id == "production"
     assert isinstance(binding, TokenInitBinding)
 
 
@@ -118,7 +118,7 @@ def test_resolve_token_init_binding_dual_key_rotation() -> None:
         tok, ["new_secret", "old_secret"], "2026-06-01T00:00:00Z"
     )
     assert binding.token_result.verdict == EnforcementVerdict.ALLOW
-    assert binding.profile_name == "staging"
+    assert binding.profile_id == "staging"
 
 
 def test_resolve_token_init_binding_returns_binding_type() -> None:
@@ -130,4 +130,4 @@ def test_resolve_token_init_binding_returns_binding_type() -> None:
     # Verify it's a TokenInitBinding
     assert isinstance(binding, TokenInitBinding)
     assert isinstance(binding.token_result, EnforcementResult)
-    assert isinstance(binding.profile_name, str)
+    assert isinstance(binding.profile_id, str)

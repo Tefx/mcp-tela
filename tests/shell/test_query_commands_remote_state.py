@@ -98,7 +98,7 @@ def test_query_commands_use_remote_status_when_lockfile_present(
         "connections": [
             {
                 "connection_id": "bridge_123",
-                "profile_name": "dev",
+                "profile_id": "dev",
                 "connected_at": "2026-03-22T10:00:05Z",
                 "tool_call_count": 0,
             }
@@ -108,7 +108,7 @@ def test_query_commands_use_remote_status_when_lockfile_present(
                 "timestamp": "2026-03-22T10:00:06Z",
                 "level": "L1",
                 "connection_id": "bridge_123",
-                "profile_name": "dev",
+                "profile_id": "dev",
                 "tool_name": "read_file",
                 "server_name": "fs",
                 "verdict": "allow",

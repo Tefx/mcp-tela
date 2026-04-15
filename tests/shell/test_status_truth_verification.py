@@ -234,14 +234,14 @@ def shared_readiness_state(monkeypatch: pytest.MonkeyPatch) -> str:
     add_runtime_connection(
         ConnectionContext(
             connection_id="conn-1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-03-29T12:00:00Z",
         )
     )
     add_runtime_connection(
         ConnectionContext(
             connection_id="conn-2",
-            profile_name="prod",
+            profile_id="prod",
             connected_at="2026-03-29T12:01:00Z",
         )
     )

@@ -44,7 +44,7 @@ class TestStatusPayloadCountSemantics:
         """StatusResponse.connections must be a list, not an int."""
         ctx = ConnectionContext(
             connection_id="bridge_1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-03-25T00:00:00Z",
             tool_call_count=0,
         )
@@ -65,7 +65,7 @@ class TestStatusPayloadCountSemantics:
         """Serialized status payload must expose both fields with correct types."""
         ctx = ConnectionContext(
             connection_id="bridge_abc",
-            profile_name="default",
+            profile_id="default",
             connected_at="2026-03-25T12:00:00Z",
             tool_call_count=3,
         )
@@ -124,7 +124,7 @@ class TestStatusPayloadCountSemantics:
         """
         ctx = ConnectionContext(
             connection_id="bridge_1",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-03-25T00:00:00Z",
             tool_call_count=0,
         )

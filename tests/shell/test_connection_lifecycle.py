@@ -30,7 +30,7 @@ def test_cleanup_connection_by_id_is_idempotent_by_connection_id() -> None:
     add_runtime_connection(
         ConnectionContext(
             connection_id=connection_id,
-            profile_name="default",
+            profile_id="default",
             connected_at="2026-01-01T00:00:00Z",
         )
     )

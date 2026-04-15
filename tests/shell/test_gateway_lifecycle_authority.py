@@ -43,7 +43,7 @@ def status_authority_snapshot(monkeypatch: pytest.MonkeyPatch) -> str:
     add_runtime_connection(
         ConnectionContext(
             connection_id="bridge-shared",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-03-29T12:00:00Z",
         )
     )

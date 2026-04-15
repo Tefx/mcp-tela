@@ -76,7 +76,7 @@ class TestTouchConnectionActivity:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2026-01-01T00:00:00Z",
                 last_activity="",
             )
@@ -170,7 +170,7 @@ class TestConnectionReaperSweep:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2026-01-01T00:00:00Z",
             )
         )
@@ -201,7 +201,7 @@ class TestConnectionReaperSweep:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2020-01-01T00:00:00Z",
                 last_activity="2020-01-01T00:00:00Z",
             )
@@ -236,7 +236,7 @@ class TestConnectionReaperSweep:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2026-01-01T00:00:00Z",
             )
         )
@@ -264,7 +264,7 @@ class TestConnectionReaperSweep:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2020-01-01T00:00:00Z",
                 last_activity="2020-01-01T00:00:00Z",
             )
@@ -307,7 +307,7 @@ class TestLongIdleLifecycleContract:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2020-01-01T00:00:00Z",
                 last_activity="2020-01-01T00:00:00Z",
             )
@@ -353,7 +353,7 @@ class TestLongIdleLifecycleContract:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2020-01-01T00:00:00Z",
                 last_activity="2020-01-01T00:00:00Z",
             )
@@ -383,7 +383,7 @@ class TestLongIdleLifecycleContract:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at="2026-01-01T00:00:00Z",
                 last_activity="2026-01-01T00:00:00Z",
             )
@@ -411,7 +411,7 @@ class TestLongIdleLifecycleContract:
         add_runtime_connection(
             ConnectionContext(
                 connection_id=conn_id,
-                profile_name="default",
+                profile_id="default",
                 connected_at=recent_ts,
                 last_activity=recent_ts,
             )

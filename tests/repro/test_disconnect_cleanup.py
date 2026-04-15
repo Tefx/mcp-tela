@@ -87,7 +87,7 @@ def test_handle_disconnect_releases_captured_session() -> None:
         conn_id = "test-disc-release-1"
         ctx = ConnectionContext(
             connection_id=conn_id,
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         add_runtime_connection(ctx)
@@ -119,7 +119,7 @@ def test_handle_disconnect_without_captured_session_succeeds() -> None:
         conn_id = "test-disc-no-session"
         ctx = ConnectionContext(
             connection_id=conn_id,
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         add_runtime_connection(ctx)
@@ -150,7 +150,7 @@ def test_session_registry_bounded_across_connect_disconnect_cycles() -> None:
             # Simulate connect: add to runtime + capture session
             ctx = ConnectionContext(
                 connection_id=conn_id,
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
             add_runtime_connection(ctx)
@@ -184,7 +184,7 @@ def test_concurrent_connections_bounded_after_disconnect() -> None:
             conn_id = f"concurrent-{i}"
             ctx = ConnectionContext(
                 connection_id=conn_id,
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
             add_runtime_connection(ctx)
@@ -217,7 +217,7 @@ def test_notification_skips_disconnected_session() -> None:
         conn_id = "notif-after-disc"
         ctx = ConnectionContext(
             connection_id=conn_id,
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         add_runtime_connection(ctx)
@@ -252,7 +252,7 @@ def test_notification_reaches_live_sessions_after_peer_disconnect() -> None:
         ]:
             ctx = ConnectionContext(
                 connection_id=conn_id,
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
             add_runtime_connection(ctx)
@@ -264,7 +264,7 @@ def test_notification_reaches_live_sessions_after_peer_disconnect() -> None:
         # Notify live-conn — should succeed
         live_ctx = ConnectionContext(
             connection_id="live-conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         result = asyncio.run(notify_tools_changed(live_ctx, "sha256:test"))
@@ -274,7 +274,7 @@ def test_notification_reaches_live_sessions_after_peer_disconnect() -> None:
         # Notify dead-conn — should skip
         dead_ctx = ConnectionContext(
             connection_id="dead-conn",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-01-01T00:00:00Z",
         )
         result = asyncio.run(notify_tools_changed(dead_ctx, "sha256:test"))
@@ -300,7 +300,7 @@ def test_gateway_shutdown_releases_all_sessions() -> None:
             conn_id = f"shutdown-conn-{i}"
             ctx = ConnectionContext(
                 connection_id=conn_id,
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
             )
             add_runtime_connection(ctx)

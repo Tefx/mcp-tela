@@ -117,7 +117,7 @@ def test_connection_context_survives_registry_update() -> None:
     """
     conn = ConnectionContext(
         connection_id="conn-1",
-        profile_name="dev",
+        profile_id="dev",
         connected_at="2026-01-01T00:00:00Z",
     )
     servers = {"fs": ServerConfig(name="fs", command="cmd")}
@@ -125,7 +125,7 @@ def test_connection_context_survives_registry_update() -> None:
 
     # Connection was created before re-enumeration
     assert conn.connection_id == "conn-1"
-    assert conn.profile_name == "dev"
+    assert conn.profile_id == "dev"
 
     # Re-enumerate (simulate tools/list_changed)
     asyncio.run(connect_all(servers, tool_lists={
@@ -134,7 +134,7 @@ def test_connection_context_survives_registry_update() -> None:
 
     # Connection still valid, profile still bound
     assert conn.connection_id == "conn-1"
-    assert conn.profile_name == "dev"
+    assert conn.profile_id == "dev"
     asyncio.run(disconnect_all())
 
 

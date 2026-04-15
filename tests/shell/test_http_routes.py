@@ -145,7 +145,7 @@ class TestHandleStatusLifecycleSnapshots:
         # Add a connection
         ctx = ConnectionContext(
             connection_id="bridge-test-123",
-            profile_name="dev",
+            profile_id="dev",
             connected_at="2026-03-25T12:00:00Z",
         )
         add_runtime_connection(ctx)
@@ -275,7 +275,7 @@ class TestHandleDisconnect:
         clear_runtime_connections()
         ctx = ConnectionContext(
             connection_id="remove-me",
-            profile_name="default",
+            profile_id="default",
             connected_at="2026-01-01T00:00:00Z",
         )
         add_runtime_connection(ctx)

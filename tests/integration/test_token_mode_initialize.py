@@ -42,7 +42,7 @@ def _make_valid_token_fields(
     """Make token fields dict with computed signature."""
     fields = {
         "token_id": token_id,
-        "profile_name": profile,
+        "profile_id": profile,
         "issued_at": issued_at,
         "expires_at": expires_at,
     }
@@ -83,7 +83,7 @@ def test_handle_initialize_token_mode_valid_token() -> None:
         assert result.value is not None
         assert isinstance(result.value, ConnectionContext)
         # Profile must come from the token, not from config default
-        assert result.value.profile_name == "production"
+        assert result.value.profile_id == "production"
         assert result.value.connection_id.startswith("conn_")
 
     try:
@@ -94,7 +94,7 @@ def test_handle_initialize_token_mode_valid_token() -> None:
 
 
 def test_handle_initialize_token_mode_binds_profile_from_token() -> None:
-    """Token mode must extract profile_name from token, ignoring config defaults.
+    """Token mode must extract profile_id from token, ignoring config defaults.
 
     Proves that the profile binding flows through validate_token ->
     resolve_token_init_binding -> handle_initialize.
@@ -120,7 +120,7 @@ def test_handle_initialize_token_mode_binds_profile_from_token() -> None:
         assert result.is_ok
         assert result.value is not None
         # Profile must be from token, NOT the config's default profile
-        assert result.value.profile_name == "staging"
+        assert result.value.profile_id == "staging"
 
     try:
         asyncio.run(_run())
@@ -156,7 +156,7 @@ def test_handle_initialize_token_mode_dual_key_rotation() -> None:
         result = await handle_initialize(signed_token)
         assert result.is_ok
         assert result.value is not None
-        assert result.value.profile_name == "dev"
+        assert result.value.profile_id == "dev"
 
     try:
         asyncio.run(_run())
@@ -180,7 +180,7 @@ def test_handle_initialize_token_mode_missing_token_fields() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        # Missing: token_id, profile_name, issued_at, expires_at, signature
+        # Missing: token_id, profile_id, issued_at, expires_at, signature
         result = await handle_initialize({"client": "desktop"})
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
@@ -208,7 +208,7 @@ def test_handle_initialize_token_mode_missing_signature() -> None:
         # Has all fields except signature
         token_info = {
             "token_id": "tok-1",
-            "profile_name": "dev",
+            "profile_id": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2099-12-31T23:59:59Z",
         }
@@ -325,7 +325,7 @@ def test_handle_initialize_token_mode_ignores_profile_hints_in_metadata() -> Non
     """Token mode must derive profile from token, not client metadata.
 
     Even if client_info contains profile hints, they must be ignored;
-    the profile comes from the token's profile_name field.
+    the profile comes from the token's profile_id field.
     """
     secret = "key"
     fields = _make_valid_token_fields(profile="production")
@@ -350,7 +350,7 @@ def test_handle_initialize_token_mode_ignores_profile_hints_in_metadata() -> Non
         assert result.is_ok
         assert result.value is not None
         # Profile must be from token, not from metadata
-        assert result.value.profile_name == "production"
+        assert result.value.profile_id == "production"
 
     try:
         asyncio.run(_run())
@@ -367,7 +367,7 @@ def test_handle_initialize_token_mode_preserves_optional_token_fields() -> None:
     secret = "optional-key"
     fields = {
         "token_id": "tok-opt",
-        "profile_name": "dev",
+        "profile_id": "dev",
         "issued_at": "2026-01-01T00:00:00Z",
         "expires_at": "2099-12-31T23:59:59Z",
         "persona_ref": "user-123",
@@ -390,7 +390,7 @@ def test_handle_initialize_token_mode_preserves_optional_token_fields() -> None:
         result = await handle_initialize(signed_token)
         assert result.is_ok
         assert result.value is not None
-        assert result.value.profile_name == "dev"
+        assert result.value.profile_id == "dev"
 
     try:
         asyncio.run(_run())
@@ -506,7 +506,7 @@ def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
     """Token-mode handle_initialize must preserve client_info snapshot on ConnectionContext.
 
     The snapshot carries the original capability-token fields
-    (token_id, profile_name, issued_at, expires_at, signature)
+    (token_id, profile_id, issued_at, expires_at, signature)
     required for revalidation on reconnect.
     Without the snapshot, recovery cannot reconstruct a CapabilityToken
     from an empty initialize.
@@ -532,7 +532,7 @@ def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
         assert ctx.client_info_snapshot is not None
         # All required token fields must be in snapshot
         assert ctx.client_info_snapshot["token_id"] == "tok-recovery-1"
-        assert ctx.client_info_snapshot["profile_name"] == "production"
+        assert ctx.client_info_snapshot["profile_id"] == "production"
         assert "issued_at" in ctx.client_info_snapshot
         assert "expires_at" in ctx.client_info_snapshot
         assert "signature" in ctx.client_info_snapshot
@@ -583,7 +583,7 @@ def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstr
         # Prove snapshot enables CapabilityToken reconstruction
         for field in (
             "token_id",
-            "profile_name",
+            "profile_id",
             "issued_at",
             "expires_at",
             "signature",
@@ -594,7 +594,7 @@ def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstr
 
         # The snapshot values must match the original token fields
         assert ctx.client_info_snapshot["token_id"] == "tok-recon-1"
-        assert ctx.client_info_snapshot["profile_name"] == "staging"
+        assert ctx.client_info_snapshot["profile_id"] == "staging"
 
     try:
         asyncio.run(_run())

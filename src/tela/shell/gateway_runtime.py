@@ -257,7 +257,7 @@ def add_runtime_connection(ctx: ConnectionContext) -> None:
     """Append a connection to the runtime connections list under lock.
 
     Examples:
-        >>> c = ConnectionContext(connection_id="test", profile_name="p", connected_at="t")
+        >>> c = ConnectionContext(connection_id="test", profile_id="p", connected_at="t")
         >>> add_runtime_connection(c)
         >>> get_runtime_connections_snapshot().value  # doctest: +ELLIPSIS
         [ConnectionContext(...)]
@@ -310,7 +310,7 @@ def touch_connection_activity(connection_id: str, timestamp: str) -> Result[bool
         False
 
         >>> from tela.core.models import ConnectionContext
-        >>> add_runtime_connection(ConnectionContext(connection_id="doc1", profile_name="p", connected_at="t"))
+        >>> add_runtime_connection(ConnectionContext(connection_id="doc1", profile_id="p", connected_at="t"))
         >>> r = touch_connection_activity("doc1", "2026-03-31T12:00:00Z")
         >>> r.value
         True

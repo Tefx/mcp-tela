@@ -161,7 +161,7 @@ def test_status_schema_fields():
     # Validate connection schema
     if data.get("connections"):
         conn = data["connections"][0]
-        conn_fields = ["connection_id", "profile_name", "connected_at"]
+        conn_fields = ["connection_id", "profile_id", "connected_at"]
         for field in conn_fields:
             assert field in conn, f"Connection entry missing field: {field}"
         print(f"  PASS: Connection schema valid with fields: {conn_fields}")
@@ -190,7 +190,7 @@ def test_connections_schema_fields():
 
     if data:
         conn = data[0]
-        conn_fields = ["connection_id", "profile_name", "connected_at"]
+        conn_fields = ["connection_id", "profile_id", "connected_at"]
         for field in conn_fields:
             assert field in conn, f"Connection entry missing field: {field}"
         print(f"  PASS: Connection schema valid with fields: {conn_fields}")

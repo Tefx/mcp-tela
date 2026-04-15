@@ -73,10 +73,10 @@ async def handle_list_providers() -> list["ProviderInfo"]:
         server_default_postures[sname] = scfg.default_posture
 
     # Get active profile (use resolved_default_profile from config)
-    profile_name = config.resolved_default_profile
+    profile_id = config.resolved_default_profile
     profile: ProfileConfig | None = None
-    if profile_name and profile_name in config.profiles:
-        profile = config.profiles[profile_name]
+    if profile_id and profile_id in config.profiles:
+        profile = config.profiles[profile_id]
 
     providers: list[ProviderInfo] = []
 

@@ -20,7 +20,7 @@ from tela.core.models import (
 
 def _make_connection() -> ConnectionContext:
     return ConnectionContext(
-        connection_id="conn-1", profile_name="dev", connected_at="2026-01-01T00:00:00Z"
+        connection_id="conn-1", profile_id="dev", connected_at="2026-01-01T00:00:00Z"
     )
 
 
@@ -46,7 +46,7 @@ def test_l1_entry_carries_tool_verdict_latency() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L1,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
@@ -63,7 +63,7 @@ def test_l1_entry_omits_param_hash_and_content() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L1,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
@@ -82,7 +82,7 @@ def test_l2_entry_carries_param_hash() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L2,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
@@ -101,7 +101,7 @@ def test_l3_entry_carries_full_content() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L3,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="write_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
@@ -125,7 +125,7 @@ def test_meta_recorded_at_all_levels() -> None:
             timestamp="2026-01-01T00:00:00Z",
             level=level,
             connection_id="c1",
-            profile_name="dev",
+            profile_id="dev",
             tool_name="tool",
             server_name="srv",
             verdict=EnforcementVerdict.ALLOW,
@@ -144,7 +144,7 @@ def test_denied_call_has_no_response_content() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L1,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="exec_cmd",
         server_name="shell",
         verdict=EnforcementVerdict.DENY,
@@ -162,7 +162,7 @@ def test_denied_call_latency_is_enforcement_only() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L1,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="exec_cmd",
         server_name="shell",
         verdict=EnforcementVerdict.DENY,
@@ -179,7 +179,7 @@ def test_allowed_success_carries_response_at_l3() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L3,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
@@ -194,7 +194,7 @@ def test_allowed_downstream_error_carries_error_response() -> None:
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L3,
         connection_id="c1",
-        profile_name="dev",
+        profile_id="dev",
         tool_name="read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,

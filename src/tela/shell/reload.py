@@ -185,7 +185,7 @@ async def _emit_conflict_warning(
         level=AuditLevel.L1,
         connection=ConnectionContext(
             connection_id="system",
-            profile_name="system",
+            profile_id="system",
             connected_at="",
         ),
         tool_name=outcome.conflicts[0].tool_name,

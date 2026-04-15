@@ -90,7 +90,7 @@ def _setup_test_connection_with_session() -> tuple[str, _FakeSession]:
     connection_id = "bridge_test"
     conn = ConnectionContext(
         connection_id=connection_id,
-        profile_name="dev",
+        profile_id="dev",
         connected_at="2026-01-01T00:00:00Z",
         init_mode=AuthMode.OPEN,
     )
@@ -698,14 +698,14 @@ def test_gateway_shutdown_uses_shared_cleanup_authority(
     add_runtime_connection(
         ConnectionContext(
             connection_id="shutdown-cleanup-1",
-            profile_name="default",
+            profile_id="default",
             connected_at="2026-01-01T00:00:00Z",
         )
     )
     add_runtime_connection(
         ConnectionContext(
             connection_id="shutdown-cleanup-2",
-            profile_name="default",
+            profile_id="default",
             connected_at="2026-01-01T00:00:00Z",
         )
     )
@@ -927,7 +927,7 @@ def test_fastmcp_profiles_resource_registered() -> None:
         assert contents_result.is_ok
         contents = contents_result.value
         payload = json.loads(contents[0].content)  # type: ignore[index]  # contents is indexable at runtime
-        assert payload[0]["profile_name"] == "dev"
+        assert payload[0]["profile_id"] == "dev"
     finally:
         asyncio.run(gateway_shutdown())
 
@@ -1645,7 +1645,7 @@ def test_ensure_connection_recaptures_on_existing_connection() -> None:
             # Add an existing connection to the runtime
             conn = ConnectionContext(
                 connection_id="conn_existing",
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
                 init_mode=AuthMode.OPEN,
             )
@@ -1749,7 +1749,7 @@ def test_ensure_connection_recaptures_lost_session() -> None:
             # The gateway is running. Add a connection simulating existing state.
             conn = ConnectionContext(
                 connection_id="conn_recap",
-                profile_name="dev",
+                profile_id="dev",
                 connected_at="2026-01-01T00:00:00Z",
                 init_mode=AuthMode.OPEN,
             )
