@@ -71995,3 +71995,13 @@ phases:
     depends_on:
     - tech_debt.cleanup_inventory
     agent: python-senior-tacit
+  - id: tech_debt.cleanup_verify
+    name: Verify debt cleanup and regression safety
+    status: pending
+    description: Run targeted suites and quality checks to confirm debt cleanup is
+      complete and behavior remains green.
+    verification: Targeted test suites pass and invar guard on changed files passes;
+      evidence includes exact commands and outputs.
+    depends_on:
+    - tech_debt.cleanup_fix
+    agent: integration-verifier-tacit
