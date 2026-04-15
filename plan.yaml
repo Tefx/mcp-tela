@@ -71777,3 +71777,87 @@ phases:
     depends_on:
     - hard_cut.final_reverify
     agent: python-senior-tacit
+  - id: hard_cut.final_reverify2
+    name: Second reverify loop for blocked hard-cut final gate residual blockers
+    status: pending
+    description: 'Second reverify loop for the still-blocked `hard_cut.final_gate`
+      after unresolved residual blockers remained following `hard_cut.final_gate_fix`
+      and `hard_cut.final_reverify`.
+
+
+      Failure context that must be revalidated explicitly:
+
+      - B1 doc/test wording mismatch in `tests/shell/test_surface_contract.py` triggered
+      by `DESIGN.md` phrase removals and lingering stale assertions.
+
+      - B2 tool-prefix policy/validation mismatch in `tests/repro/test_tool_prefix_blackbox.py`
+      where black-box expectations and authoritative hard-cut validation policy were
+      still not conclusively aligned.
+
+      - final-gate context: this step must prove that the second remediation loop
+      actually closes the residual blockers and does not reintroduce regression in
+      canonical hard-cut runtime/tool outputs.
+
+
+      This step exists to re-establish final-gate readiness after the first loop proved
+      insufficient. It must distinguish targeted residual-blocker retests from broader
+      runtime/tool-output revalidation.'
+    verification: '- B1 retest passes with evidence that wording assertions now match
+      the post-removal hard-cut wording contract
+
+      - B2 retest passes with evidence that tool-prefix black-box expectations match
+      the authoritative validation policy/behavior
+
+      - Failure context is explicit in the evidence: this is the second loop because
+      the first reverify did not fully clear the blocked-gate residuals
+
+      - Broader hard-cut canonical runtime/tool outputs are spot-checked or rerun
+      with no regression after fix2'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Second Reverify Report
+
+      - prior_loop: hard_cut.final_gate_fix2
+
+      - residual_blockers_under_test: B1, B2
+
+      - why_loop_2_exists: <required explicit statement>
+
+
+      ### Targeted blocker-family verification
+
+      - command_1: <B1 targeted command>
+
+      - result_1: <outcome>
+
+      - command_2: <B2 targeted command>
+
+      - result_2: <outcome>
+
+
+      ### Broader regression check
+
+      - commands: <list>
+
+      - outputs reviewed: <summary>
+
+      - regressions found: <none or list>
+
+
+      ### Gate recommendation
+
+      - ready_for_hard_cut.final_gate: <yes/no>
+
+      - remaining gaps: <none or explicit list>'
+    depends_on:
+    - hard_cut.final_gate_fix2
+    agent: integration-verifier-tacit
