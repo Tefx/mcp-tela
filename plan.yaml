@@ -71970,7 +71970,7 @@ phases:
       \ changes."
 - id: tech_debt.cleanup
   name: Technical Debt Cleanup Closure
-  status: pending
+  status: in_progress
   gate: All identified non-blocking technical debt in current release slice is either
     fixed or explicitly documented as deferred with rationale.
   depends_on:
@@ -71978,13 +71978,15 @@ phases:
   steps:
   - id: tech_debt.cleanup_inventory
     name: Inventory technical debt assertions and stale xfail markers
-    status: pending
+    status: claimed
     description: Audit current test debt with focus on xfail markers that now xpass;
       produce explicit list of files/tests and intended disposition (remove xfail,
       tighten assertion, or keep with rationale).
     verification: Evidence includes concrete inventory from current repo state and
       chosen remediation strategy per item.
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-15T16:41:53.031982+00:00'
   - id: tech_debt.cleanup_fix
     name: Implement technical debt fixes for stale xfail markers
     status: pending
