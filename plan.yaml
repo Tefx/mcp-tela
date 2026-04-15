@@ -71661,3 +71661,119 @@ phases:
       \ keys remain correct.\n  - regressions found: none.\n\n  ## Gate recommendation\n\
       \  - ready_for_hard_cut.final_gate: yes\n  - remaining gaps: none\nerror: \"\
       \""
+  - id: hard_cut.final_gate_fix2
+    name: Second remediation loop for blocked hard-cut final gate blockers B1+B2
+    status: pending
+    description: 'Second batched remediation loop for blocked `hard_cut.final_gate`,
+      explicitly owning the still-unresolved blockers after the first remediation/reverify
+      path.
+
+
+      Failure context forwarded from the blocked gate and prior loop:
+
+      - B1 doc/test wording mismatch in `tests/shell/test_surface_contract.py`: tests
+      still carry wording expectations that drifted after `DESIGN.md` phrase removals,
+      so the local contract/assertion language remains inconsistent at the final gate
+      boundary.
+
+      - B2 tool-prefix policy/validation mismatch in `tests/repro/test_tool_prefix_blackbox.py`:
+      the black-box expectation and the authoritative hard-cut tool-prefix policy/validation
+      behavior are still not fully aligned, so final gate evidence remains blocked.
+
+      - why_previous_fix_failed: the first remediation loop improved local alignment,
+      but final-gate evidence shows residual mismatch remains in both the wording-contract
+      family and the tool-prefix policy/validation family.
+
+
+      Scope:
+
+      - Fix BOTH blocker families together, not just the first observed failure.
+
+      - Preserve all completed steps as immutable evidence; mutate only the new remediation
+      path required to close the blocked gate.
+
+      - Search sibling wording/policy surfaces beyond the two named tests before claiming
+      closure.
+
+
+      Required outputs:
+
+      - B1: remove or update stale phrase assertions so `tests/shell/test_surface_contract.py`
+      matches the authoritative post-removal wording contract.
+
+      - B2: reconcile runtime/spec/test behavior for plain `tela` / reserved-prefix
+      validation so `tests/repro/test_tool_prefix_blackbox.py` reflects one authoritative
+      policy with explicit rationale.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive blocker-family closure for both B1
+      and B2, with explicit root-cause evidence and sibling-search coverage.'
+    verification: '- B1 closed: `tests/shell/test_surface_contract.py` no longer asserts
+      removed `DESIGN.md` phrases and now matches the authoritative hard-cut wording
+      contract
+
+      - B2 closed: `tests/repro/test_tool_prefix_blackbox.py` and the underlying tool-prefix
+      policy/validation behavior are explicitly aligned to one authoritative hard-cut
+      rule
+
+      - Failure context is addressed directly: evidence explains why the first remediation
+      loop left residual blockers and what changed in loop 2
+
+      - Sibling search completed for related wording/policy surfaces before claiming
+      done'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Blocker Remediation Report
+
+      - prior_loop: hard_cut.final_gate_fix, hard_cut.final_reverify
+
+      - blocker_fingerprint: hard_cut finalization residual blockers B1+B2
+
+      - root_cause_hypothesis: <why wording drift and tool-prefix policy drift persisted>
+
+      - why_previous_fix_failed: <required>
+
+      - files changed: <list>
+
+
+      ### B1 residual wording mismatch
+
+      - authoritative wording source: <doc/section>
+
+      - stale assertion removed or updated: <summary>
+
+      - sibling search evidence: <summary>
+
+
+      ### B2 residual tool-prefix mismatch
+
+      - authoritative policy source: <doc/spec/test authority>
+
+      - runtime/test alignment performed: <summary>
+
+      - sibling search evidence: <summary>
+
+
+      ### Verification
+
+      - targeted blocker-family results: <commands and outcomes>
+
+      - broader residual-risk check: <what else was checked>
+
+      - remaining gaps: <none or explicit list>'
+    depends_on:
+    - hard_cut.final_reverify
+    agent: python-senior-tacit
