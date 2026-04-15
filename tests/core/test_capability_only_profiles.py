@@ -19,49 +19,27 @@ from tela.core.models import (
 )
 from tela.core.enforcement import enforce
 from tela.core.config import parse_config
+from tela.core.errors import ConfigContractError
 from tela.core.catalog import BUILTIN_PROFILES, get_builtin_profile
 
 
 # ==============================================================================
-# (a) ProfileConfig accepts both tools= and capabilities=
+# (a) ProfileConfig accepts capabilities= only (tools= is hard-cut removed)
 # ==============================================================================
 
 
-class TestDualFieldAcceptance:
-    """Tests that ProfileConfig accepts both tools= and capabilities= kwargs."""
-
-    def test_tools_kwarg_sets_capabilities(self) -> None:
-        """ProfileConfig(tools={...}) should set capabilities field."""
-        p = ProfileConfig(name="dev", tools={"filesystem": Posture.READ_WRITE})  # type: ignore[call-arg]  # validation_alias accepts tools
-        # After migration, tools is an alias for capabilities
-        assert p.capabilities["filesystem"] == Posture.READ_WRITE
+class TestCapabilitiesOnly:
+    """Tests that ProfileConfig accepts only capabilities= (tools= is rejected)."""
 
     def test_capabilities_kwarg_sets_capabilities(self) -> None:
         """ProfileConfig(capabilities={...}) should set capabilities field."""
         p = ProfileConfig(name="dev", capabilities={"filesystem": Posture.READ_ONLY})
         assert p.capabilities["filesystem"] == Posture.READ_ONLY
 
-    def test_tools_and_capabilities_match_accepted(self) -> None:
-        """When both provided with same values, should be accepted."""
-        p = ProfileConfig(
-            name="dev",
-            tools={"filesystem": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
-            capabilities={"filesystem": Posture.READ_ONLY},
-        )
-        assert p.capabilities["filesystem"] == Posture.READ_ONLY
-
-    def test_tools_and_capabilities_conflict_rejected(self) -> None:
-        """When both provided with different values, should raise ValueError."""
-        with pytest.raises(ValidationError) as exc_info:
-            ProfileConfig(
-                name="dev",
-                tools={"filesystem": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
-                capabilities={"filesystem": Posture.READ_WRITE},
-            )
-        # The root error should be a ValueError about mismatch
-        root_error = exc_info.value.errors()[0]["ctx"]["error"]
-        assert isinstance(root_error, ValueError)
-        assert "must match" in str(root_error).lower()
+    def test_tools_kwarg_rejected(self) -> None:
+        """ProfileConfig(tools={...}) must raise ValidationError (hard cut)."""
+        with pytest.raises(ValidationError):
+            ProfileConfig(name="dev", tools={"filesystem": Posture.READ_WRITE})  # type: ignore[call-arg]
 
 
 # ==============================================================================
@@ -72,18 +50,16 @@ class TestDualFieldAcceptance:
 class TestCanonicalOutput:
     """Tests that capabilities (not tools) is canonical in model output."""
 
-    def test_model_dump_includes_capabilities_not_tools(self) -> None:
-        """model_dump() should include 'capabilities', not 'tools'."""
+    def test_model_dump_includes_capabilities(self) -> None:
+        """model_dump() should include 'capabilities'."""
         p = ProfileConfig(name="dev", capabilities={"filesystem": Posture.READ_WRITE})
         data = p.model_dump()
         assert "capabilities" in data
-        # tools should not be in the canonical output (only capabilities)
-        # During migration, both may be emitted; after migration, only capabilities
         assert data.get("capabilities", {}).get("filesystem") == "read_write"
 
-    def test_model_dump_with_tools_input_still_outputs_capabilities(self) -> None:
-        """Profile created with tools= must output capabilities in model_dump()."""
-        p = ProfileConfig(name="dev", tools={"filesystem": Posture.READ_ONLY})  # type: ignore[call-arg]  # validation_alias accepts tools
+    def test_model_dump_with_capabilities_input(self) -> None:
+        """Profile created with capabilities= must output capabilities in model_dump()."""
+        p = ProfileConfig(name="dev", capabilities={"filesystem": Posture.READ_ONLY})
         data = p.model_dump()
         assert "capabilities" in data
         assert data["capabilities"]["filesystem"] == "read_only"
@@ -307,12 +283,12 @@ class TestBuiltinProfilesCapabilities:
 
 
 # ==============================================================================
-# (g) config parser handles both YAML formats with deprecation warning
+# (g) config parser accepts capabilities only (tools key is hard-cut rejected)
 # ==============================================================================
 
 
-class TestConfigParserDualFormat:
-    """Tests for config parser handling both legacy and new formats."""
+class TestConfigParserCanonicalFormat:
+    """Tests for config parser: capabilities only, tools key is rejected."""
 
     def test_new_format_capabilities_only(self) -> None:
         """New format with capabilities only should parse cleanly."""
@@ -329,8 +305,8 @@ class TestConfigParserDualFormat:
         assert "dev" in config.profiles
         assert config.profiles["dev"].capabilities["filesystem"] == Posture.READ_WRITE
 
-    def test_legacy_format_tools_accepted(self) -> None:
-        """Legacy format with tools should be accepted as capabilities alias."""
+    def test_legacy_format_tools_key_rejected(self) -> None:
+        """Legacy format with tools key must be rejected (hard cut)."""
         raw_config = {
             "profiles": {
                 "dev": {
@@ -340,12 +316,11 @@ class TestConfigParserDualFormat:
             },
             "auth": {"mode": "open"},
         }
-        config = parse_config(raw_config, {})
-        assert "dev" in config.profiles
-        assert config.profiles["dev"].capabilities["filesystem"] == Posture.READ_ONLY
+        with pytest.raises((ConfigContractError, ValidationError)):
+            parse_config(raw_config, {})
 
-    def test_dual_format_tools_and_capabilities_match(self) -> None:
-        """Both fields with matching values should be accepted."""
+    def test_tools_and_capabilities_together_rejected(self) -> None:
+        """Both tools and capabilities keys must be rejected (tools is forbidden)."""
         raw_config = {
             "profiles": {
                 "dev": {
@@ -356,22 +331,21 @@ class TestConfigParserDualFormat:
             },
             "auth": {"mode": "open"},
         }
-        config = parse_config(raw_config, {})
-        assert config.profiles["dev"].capabilities["filesystem"] == Posture.READ_WRITE
+        with pytest.raises((ConfigContractError, ValidationError)):
+            parse_config(raw_config, {})
 
-    def test_dual_format_tools_and_capabilities_mismatch_raises(self) -> None:
-        """Both fields with mismatching values should raise error."""
+    def test_capabilities_mismatch_with_self_raises(self) -> None:
+        """Capabilities-only configs with invalid posture values should still raise."""
         raw_config = {
             "profiles": {
                 "dev": {
                     "name": "dev",
-                    "tools": {"filesystem": "read_only"},
-                    "capabilities": {"filesystem": "read_write"},
+                    "capabilities": {"filesystem": "invalid_posture"},
                 }
             },
             "auth": {"mode": "open"},
         }
-        with pytest.raises(Exception):
+        with pytest.raises((ConfigContractError, ValidationError)):
             parse_config(raw_config, {})
 
 

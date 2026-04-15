@@ -6,7 +6,6 @@ already-provided data and enforce deterministic validation contracts.
 
 from __future__ import annotations
 
-import warnings
 from typing import Mapping
 
 from tela.core.contracts import pre, post
@@ -153,17 +152,6 @@ def parse_config(raw: Mapping[str, object], env_vars: Mapping[str, str]) -> Tela
                     if isinstance(value, dict):
                         if "name" not in value:
                             value["name"] = key
-        # Emit deprecation warning for legacy 'tools:' key if present
-        profiles_section = expanded.get("profiles", {})
-        if isinstance(profiles_section, dict):
-            for profile_name, profile_data in profiles_section.items():
-                if isinstance(profile_data, dict) and "tools" in profile_data:
-                    warnings.warn(
-                        f"Profile '{profile_name}': 'tools:' is deprecated. "
-                        "Use 'capabilities:' instead.",
-                        DeprecationWarning,
-                        stacklevel=2,
-                    )
         config = TelaConfig.model_validate(expanded)
         # Wire in builtin profiles when user provides none
         if not config.profiles:

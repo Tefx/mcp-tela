@@ -68,7 +68,7 @@ def test_validate_token_dual_key_rotation() -> None:
 
 def test_create_token_profile() -> None:
     tok = create_token("production", "secret")
-    assert tok.profile_name == "production"
+    assert tok.profile_id == "production"
     assert tok.token_id == "tok_auto"
 
 

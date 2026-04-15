@@ -9,14 +9,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Mapping, TypedDict
+from typing import TypedDict
 
 from typing import Literal
 
-from pydantic import AliasChoices, BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from tela.core.contracts import post, pre
-from tela.core.profile_aliases import normalize_profile_config_aliases
 from tela.core.reaper_config import ReaperPolicyConfig
 
 
@@ -138,8 +137,8 @@ class ProfileToolOverrides(BaseModel):
 class ProfileConfig(BaseModel):
     """Contract shape for a single profile configuration.
 
-    Migration contract: ``capabilities`` is canonical. ``tools`` remains an
-    accepted alias during migration.
+    ``capabilities`` is the canonical field for tool-family posture ceilings.
+    The legacy ``tools`` alias has been removed (hard cut).
 
     `default` marks the profile as the open-mode fallback candidate when the
     CLI does not supply `--default-profile`.
@@ -147,48 +146,14 @@ class ProfileConfig(BaseModel):
     Examples:
         >>> ProfileConfig(name="dev", capabilities={"fs": Posture.READ_ONLY}).capabilities["fs"]
         <Posture.READ_ONLY: 'read_only'>
-        >>> ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE}).capabilities["fs"]
-        <Posture.READ_WRITE: 'read_write'>
     """
 
+    model_config = {"extra": "forbid"}
+
     name: str
-    capabilities: dict[str, Posture] = Field(
-        default_factory=dict,
-        validation_alias=AliasChoices("capabilities", "tools"),
-    )
+    capabilities: dict[str, Posture] = Field(default_factory=dict)
     tool_overrides: dict[str, ProfileToolOverrides] = Field(default_factory=dict)
     default: bool = False
-
-    @model_validator(mode="before")
-    @classmethod
-    @pre(
-        lambda cls, data: (
-            cls is ProfileConfig
-            and (
-                data is None
-                or isinstance(data, Mapping)
-                or isinstance(data, dict)
-                or isinstance(data, object)
-            )
-        )
-    )
-    @post(lambda result: result is not None)
-    def _normalize_aliases(cls, data: Any) -> Any:
-        if isinstance(data, Mapping) or data is None:
-            return normalize_profile_config_aliases(data)
-        return data
-
-    @property
-    @post(lambda result: isinstance(result, dict))
-    def tools(self) -> dict[str, Posture]:
-        """Backward-compatible alias for ``capabilities`` during migration.
-
-        Examples:
-            >>> ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE}).tools["fs"]
-            <Posture.READ_WRITE: 'read_write'>
-        """
-
-        return self.capabilities
 
 
 # --- Auth and Audit Configuration ---
@@ -225,14 +190,18 @@ class TelaConfig(BaseModel):
 class CapabilityToken(BaseModel):
     """Token presented by upstream client at connection time.
 
+    The canonical identity field is ``profile_id``. The legacy ``profile_name``
+    alias is rejected fail-closed: tokens bearing ``profile_name`` instead of
+    ``profile_id`` will be rejected before authorization.
+
     Examples:
-        >>> tok = CapabilityToken(token_id="tok_1", profile_name="dev", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", signature="abc")
-        >>> tok.profile_name
+        >>> tok = CapabilityToken(token_id="tok_1", profile_id="dev", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", signature="abc")
+        >>> tok.profile_id
         'dev'
     """
 
     token_id: str
-    profile_name: str
+    profile_id: str
     persona_ref: str | None = None
     instance_id: str | None = None
     max_depth: int | None = None

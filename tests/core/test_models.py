@@ -43,38 +43,18 @@ class TestProfileConfig:
         p = ProfileConfig(name="dev", default=True)
         assert p.default is True
 
-    def test_tools_default_empty(self) -> None:
+    def test_capabilities_default_empty(self) -> None:
         p = ProfileConfig(name="dev")
-        assert p.tools == {}
-
-    def test_tools_with_posture(self) -> None:
-        p = ProfileConfig(name="dev", tools={"read_file": Posture.READ_ONLY})  # type: ignore[call-arg]  # validation_alias accepts tools
-        assert p.tools["read_file"] == Posture.READ_ONLY
+        assert p.capabilities == {}
 
     def test_capabilities_with_posture(self) -> None:
         p = ProfileConfig(name="dev", capabilities={"read_file": Posture.READ_WRITE})
         assert p.capabilities["read_file"] == Posture.READ_WRITE
 
-    def test_matching_tools_and_capabilities_are_accepted(self) -> None:
-        p = ProfileConfig(
-            name="dev",
-            tools={"read_file": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
-            capabilities={"read_file": Posture.READ_ONLY},
-        )
-        assert p.capabilities["read_file"] == Posture.READ_ONLY
-
-    def test_conflicting_tools_and_capabilities_raise_value_error(self) -> None:
-        with pytest.raises(
-            ValidationError, match="must match when both are provided"
-        ) as exc_info:
-            ProfileConfig(
-                name="dev",
-                tools={"read_file": Posture.READ_ONLY},  # type: ignore[call-arg]  # validation_alias accepts tools
-                capabilities={"read_file": Posture.READ_WRITE},
-            )
-
-        root_error = exc_info.value.errors()[0]["ctx"]["error"]
-        assert isinstance(root_error, ValueError)
+    def test_tools_kwarg_rejected_after_hard_cut(self) -> None:
+        """Hard cut: ProfileConfig must reject the legacy `tools` keyword."""
+        with pytest.raises(ValidationError):
+            ProfileConfig(name="dev", tools={"read_file": Posture.READ_ONLY})  # type: ignore[call-arg]
 
     def test_name_required(self) -> None:
         with pytest.raises(ValidationError):

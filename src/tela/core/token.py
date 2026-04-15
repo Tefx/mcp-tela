@@ -60,7 +60,9 @@ def is_expired(expires_at: str, now_iso: str) -> bool:
     """Check if a token has expired.
 
     Examples:
-        >>> is_expired("2026-02-28T10:00:00Z", "2026-02-28T10:30:00Z")
+        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> sig = compute_signature(fields, "secret")
+        >>> isinstance(sig, str) and len(sig) == 64
         True
         >>> is_expired("2026-02-28T11:00:00Z", "2026-02-28T10:30:00Z")
         False
@@ -97,7 +99,7 @@ def validate_token(
     Tries each secret (dual-key rotation). Checks HMAC signature, then expiry.
 
     Examples:
-        >>> fields = {"token_id": "tok_1", "profile_name": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
         >>> sig = compute_signature(fields, "secret1")
         >>> tok = CapabilityToken(**fields, signature=sig)
         >>> r = validate_token(tok, ["secret1"], "2026-06-01T00:00:00Z")
@@ -149,7 +151,7 @@ def validate_token(
     lambda token, secrets, now_iso: (
         isinstance(token, CapabilityToken)
         and len(token.token_id) > 0
-        and len(token.profile_name) > 0
+        and len(token.profile_id) > 0
         and len(token.signature) > 0
         and isinstance(secrets, list)
         and len(secrets) > 0
@@ -170,7 +172,7 @@ def resolve_token_init_binding(
     has `token_result.verdict == DENY`.
 
     Examples:
-        >>> fields = {"token_id": "tok_1", "profile_name": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
         >>> sig = compute_signature(fields, "secret1")
         >>> tok = CapabilityToken(**fields, signature=sig)
         >>> binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
@@ -192,7 +194,7 @@ def resolve_token_init_binding(
         TokenInitBinding with validation result and profile binding.
     """
     token_result = validate_token(token, secrets, now_iso)
-    return TokenInitBinding(token_result=token_result, profile_name=token.profile_name)
+    return TokenInitBinding(token_result=token_result, profile_name=token.profile_id)
 
 
 @pre(
@@ -221,14 +223,14 @@ def create_token(
 
     Examples:
         >>> tok = create_token("dev", "secret1")
-        >>> tok.profile_name
+        >>> tok.profile_id
         'dev'
         >>> r = validate_token(tok, ["secret1"], "2026-06-01T00:00:00Z")
         >>> r.verdict
         <EnforcementVerdict.ALLOW: 'allow'>
 
     Args:
-        profile: Profile name bound by the capability token.
+        profile: Profile identifier bound by the capability token.
         secret: HMAC secret key.
         token_id: Token identifier.
         expires_at: Expiration time (ISO-8601).
@@ -239,14 +241,14 @@ def create_token(
     """
     fields: dict[str, str] = {
         "token_id": token_id,
-        "profile_name": profile,
+        "profile_id": profile,
         "issued_at": issued_at,
         "expires_at": expires_at,
     }
     sig = compute_signature(fields, secret)
     return CapabilityToken(
         token_id=token_id,
-        profile_name=profile,
+        profile_id=profile,
         issued_at=issued_at,
         expires_at=expires_at,
         signature=sig,
