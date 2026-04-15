@@ -13,7 +13,7 @@ from typing import TypedDict
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from tela.core.contracts import post, pre
 from tela.core.reaper_config import ReaperPolicyConfig
@@ -123,6 +123,24 @@ class ServerConfig(BaseModel):
     # downstream-advertised inventory.
     default_posture: Posture = Posture.NONE
     instructions: bool | str | None = None
+
+    @field_validator("tool_prefix")
+    @classmethod
+    def _reject_reserved_prefix(cls, v: str | None) -> str | None:
+        """Reject tool_prefix values that use the reserved tela namespace.
+
+        Per USAGE.md §Tool Prefix Configuration and ServerConfig contract:
+        tool_prefix starting with "tela." or "tela_" is reserved for
+        built-in surfaces and must be rejected at construction time.
+        This model-level validation mirrors the config-level check in
+        validate_config() (config.py) and the resolve-time check in
+        resolve_tools() (family.py) for defense in depth.
+        """
+        if v is not None and (v.startswith("tela.") or v.startswith("tela_")):
+            raise ValueError(
+                f"ServerConfig.tool_prefix '{v}' uses reserved 'tela.'/'tela_' namespace"
+            )
+        return v
 
 
 # --- Profile Configuration ---

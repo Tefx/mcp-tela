@@ -210,7 +210,10 @@ class TestCanonicalSurfaceMatrix:
         """Design doc must avoid wording that implies built-in tela.* tools."""
         design_text = _read_design_doc()
         assert "operator-facing surfaces (CLI/HTTP)" in design_text
-        assert "only built-in tela MCP surface" in design_text
+        # Invariants must list the built-in MCP tools explicitly, not
+        # the stale "only one surface" wording from pre-hard-cut.
+        assert "tela_list_profiles" in design_text
+        assert "tela_list_providers" in design_text
         assert (
             "`tela.` tool prefix is reserved for introspection tools" not in design_text
         )
@@ -700,7 +703,10 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         assert _contract_kind("tela.status") == "absent"
         assert "not approved as current-runtime contract wording" in contract_text
         assert "tela.status" in contract_text
-        assert "These do not belong to a `tela_admin`" in design_text
+        # DESIGN.md explicitly marks operator surfaces as non-MCP and
+        # reserves the tela. prefix for built-in surfaces only.
+        assert "operator-facing surfaces (CLI/HTTP)" in design_text
+        assert "**not** built-in MCP tool" in design_text
         assert gateway_summary.is_ok
         assert gateway_summary.value is not None
         assert (

@@ -507,8 +507,8 @@ Available tools:
 - classification is concrete-provider aware
 - unclassified access is handled conservatively
 - approval semantics do not appear in gateway profiles
-- `tela.` MCP surface names are tela-owned; currently `tela.profiles` is the only
-  built-in tela MCP surface (resource)
+- `tela.` MCP surface names are tela-owned; built-in MCP tools are
+  `tela_list_profiles` and `tela_list_providers`
 - each server instance stamps audit entries with a unique `instance_id`
 - tool metadata (`annotations`, `title`, `output_schema`) is preserved from downstream through upstream
 

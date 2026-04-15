@@ -338,38 +338,51 @@ def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
-def test_tela_prefix_is_reserved_and_rejected() -> None:
-    """tool_prefix="tela." is reserved and must be rejected at config validation.
+def test_tela_prefix_dot_is_reserved_and_rejected() -> None:
+    """tool_prefix="tela." is reserved and must be rejected at model level.
 
     The "tela." prefix is used for built-in MCP surfaces (tela_list_providers,
     tela_list_profiles, etc.) per INTERFACES.md §7.1.
 
-    Ref: ServerConfig.tool_prefix contract (models.py line 99)
+    Ref: ServerConfig.tool_prefix contract (models.py line 100)
     Ref: INTERFACES.md §7.1 (tela.* prefix is reserved for built-in surfaces)
-    Expected: red (rejection not yet implemented in model validator)
+    Ref: USAGE.md §Tool Prefix Configuration line 126
     """
     from pydantic import ValidationError
 
-    # Reserved prefix must be rejected at ServerConfig construction time
+    # Reserved prefix "tela." must be rejected at ServerConfig construction
     with pytest.raises(ValidationError, match="[Tt]ela"):
         ServerConfig(name="fs", command="cmd", tool_prefix="tela.")
 
+
+def test_tela_prefix_underscore_is_reserved_and_rejected() -> None:
+    """tool_prefix="tela_" is also reserved and must be rejected at model level.
+
+    Per config.py validate_config() and family.py resolve_tools(),
+    "tela_" is a reserved namespace prefix alongside "tela.".
+
+    Ref: ServerConfig.tool_prefix contract (models.py line 100)
+    Ref: config.py SERVER_RESERVED_PREFIX validation
+    """
+    from pydantic import ValidationError
+
     with pytest.raises(ValidationError, match="[Tt]ela"):
-        ServerConfig(name="fs", command="cmd", tool_prefix="tela")
+        ServerConfig(name="fs", command="cmd", tool_prefix="tela_")
 
 
-@pytest.mark.xfail(reason="pre-implementation: tool_prefix not yet wired")
-def test_tela_prefix_rejected_even_with_trailing_dot() -> None:
-    """tool_prefix="tela." (with trailing dot) is still the tela prefix.
+def test_tela_prefix_without_delimiter_is_accepted() -> None:
+    """tool_prefix="tela" (without delimiter) is accepted per authoritative policy.
+
+    Per USAGE.md line 126 and runtime implementation (family.py, config.py),
+    only "tela." and "tela_" are reserved namespace prefixes. Plain "tela"
+    (no delimiter) produces exposed names like "telaread_file" which do not
+    collide with the "tela." reserved namespace and is therefore accepted.
 
     Ref: ServerConfig.tool_prefix contract
-    Expected: red (rejection not yet implemented)
     """
-    from pydantic import ValidationError
-
-    with pytest.raises(ValidationError, match="[Tt]ela"):
-        ServerConfig(name="fs", command="cmd", tool_prefix="tela.")
+    # Plain "tela" (no delimiter) is accepted
+    cfg = ServerConfig(name="fs", command="cmd", tool_prefix="tela")
+    assert cfg.tool_prefix == "tela"
 
 
 # ---------------------------------------------------------------------------

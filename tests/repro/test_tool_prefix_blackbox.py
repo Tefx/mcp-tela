@@ -321,61 +321,38 @@ def test_tela_prefix_is_reserved_and_rejected():
     Per tela.yaml.example line 64:
       - Constraint: "tela." is reserved and will be rejected
 
-    STATUS: IMPLEMENTATION GAP - tela prefix rejection NOT YET IMPLEMENTED
-    The xfail tests in test_tool_prefix_contract.py confirm this gap.
+    Authority: model-level validation in ServerConfig mirrors config-level
+    validate_config() and resolve-time reject in resolve_tools().
 
-    Evidence: This test documents the EXPECTED behavior (rejection)
-    but currently FAILS because validation is not yet implemented.
+    Evidence: ServerConfig raises ValidationError for "tela." prefix.
     """
     from pydantic import ValidationError
 
-    # "tela." with trailing dot should be rejected
-    # CURRENT STATUS: NOT IMPLEMENTED - ServerConfig accepts "tela." prefix
-    # This is a known implementation gap tracked in test_tool_prefix_contract.py
-    try:
-        cfg = ServerConfig(name="fs", command="cmd", tool_prefix="tela.")
-        # If we reach here, the validation is NOT implemented
-        # Document the gap but don't fail the entire verification
-        print(
-            f"GAP DOCUMENTED: tool_prefix='tela.' was accepted but should be rejected"
-        )
-        print(f"  Created config with tool_prefix={cfg.tool_prefix!r}")
-        print(f"  Expected: ValidationError with 'tela' in message")
-        print(f"  Actual: No error raised")
-        raise AssertionError(
-            "Issue RESERVED_PREFIX: tool_prefix='tela.' should be rejected per USAGE.md line 126. "
-            f"This is a known implementation gap - see test_tool_prefix_contract.py xfail tests."
-        )
-    except ValidationError as e:
-        # Correct behavior - rejection
-        print(f"PASS: tool_prefix='tela.' rejected with: {e}")
-        return
+    # "tela." with trailing dot must be rejected at construction
+    with pytest.raises(ValidationError, match="[Tt]ela"):
+        ServerConfig(name="fs", command="cmd", tool_prefix="tela.")
 
-    # If we reach here without ValidationError, the gap is confirmed
+    # "tela_" prefix (underscore form) is also reserved
+    with pytest.raises(ValidationError, match="[Tt]ela"):
+        ServerConfig(name="fs", command="cmd", tool_prefix="tela_")
 
 
-def test_tela_prefix_without_dot_also_rejected():
-    """tool_prefix="tela" (without trailing dot) is also reserved.
+def test_tela_prefix_without_dot_is_accepted():
+    """tool_prefix="tela" (without trailing delimiter) is accepted.
 
-    The reserved prefix "tela." should be rejected in both forms.
+    Per authoritative spec (USAGE.md line 126) and runtime implementation
+    (family.py resolve_tools, config.py validate_config), only "tela." and
+    "tela_" prefixed values are reserved. Plain "tela" (no delimiter) does
+    not produce exposed names in the reserved "tela." or "tela_" namespace
+    and is therefore accepted.
 
-    STATUS: IMPLEMENTATION GAP - tela prefix rejection NOT YET IMPLEMENTED
+    Contrast: tool_prefix="tela" produces names like "telaread_file", which
+    does not collide with the "tela." namespace used by built-in tools such
+    as tela_list_profiles and tela_list_providers.
     """
-    from pydantic import ValidationError
-
-    # "tela" without trailing dot should also be rejected
-    # CURRENT STATUS: NOT IMPLEMENTED
-    try:
-        cfg = ServerConfig(name="fs", command="cmd", tool_prefix="tela")
-        print(f"GAP DOCUMENTED: tool_prefix='tela' was accepted but should be rejected")
-        print(f"  Created config with tool_prefix={cfg.tool_prefix!r}")
-        raise AssertionError(
-            "Issue RESERVED_PREFIX: tool_prefix='tela' should be rejected. "
-            "This is a known implementation gap."
-        )
-    except ValidationError as e:
-        print(f"PASS: tool_prefix='tela' (no dot) rejected with: {e}")
-        return
+    # Plain "tela" (no dot, no underscore) is accepted
+    cfg = ServerConfig(name="fs", command="cmd", tool_prefix="tela")
+    assert cfg.tool_prefix == "tela"
 
 
 # ---------------------------------------------------------------------------
@@ -580,7 +557,7 @@ def main():
         ("prefix_routing", test_resolved_tool_carries_raw_name_for_downstream_routing),
         ("backward_compat", test_omitted_tool_prefix_preserves_raw_name_as_exposed),
         ("reserved_prefix_dot", test_tela_prefix_is_reserved_and_rejected),
-        ("reserved_prefix_no_dot", test_tela_prefix_without_dot_also_rejected),
+        ("reserved_prefix_no_dot_accepted", test_tela_prefix_without_dot_is_accepted),
         ("tool_overrides", test_tool_overrides_match_raw_names_not_prefixed_names),
         ("conflict_detection", test_conflict_detection_keys_off_exposed_name),
         ("reserved_downstream", test_downstream_tela_prefix_rejected_at_resolution),
