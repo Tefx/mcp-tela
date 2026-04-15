@@ -71110,7 +71110,7 @@ phases:
     agent: python-senior-tacit
   - id: hard_cut.impl_shared_surfaces
     name: Cut shared runtime and audit surfaces to profile_id only
-    status: pending
+    status: claimed
     description: 'Shared-surface slice only.
 
 
@@ -71161,6 +71161,8 @@ phases:
     depends_on:
     - hard_cut.impl_core_vocab
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-15T04:01:18.107729+00:00'
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
   status: locked
