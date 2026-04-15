@@ -71433,7 +71433,7 @@ phases:
       \ end-to-end suite: `14 passed`\nerror: \"\""
   - id: hard_cut.final_gate_fix
     name: Fix blocked hard-cut final gate blockers B1+B2
-    status: claimed
+    status: done
     description: 'Batched blocker remediation for the blocked `hard_cut.final_gate`.
 
 
@@ -71551,6 +71551,29 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-15T06:00:20.965276+00:00'
+    done_at: '2026-04-15T11:44:08.907533+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - hard-cut gate failure context and affected docs/tests/runtime policy files\
+      \ were reviewed and remediated.\n\n  ## Blocker Remediation Report\n  - prior_loop:\
+      \ hard_cut.final_gate\n  - blocker_fingerprint: hard_cut finalization blockers\
+      \ B1+B2\n  - root_cause_hypothesis: doc/test wording drift plus tool-prefix\
+      \ policy/implementation mismatch surfaced at final gate.\n  - why_previous_fix_failed:\
+      \ final_doc_sync changed wording without synchronizing dependent assertions;\
+      \ tool-prefix behavior lacked model-level validation and policy-aligned tests.\n\
+      \  - files changed: DESIGN.md, ServerConfig validation in models, surface contract\
+      \ tests, repro and contract tool-prefix tests.\n\n  ### B1 docs/test sync regression\n\
+      \  - failing family: tests/shell/test_surface_contract.py\n  - authoritative\
+      \ wording source used: updated hard-cut DESIGN/CONFIRMED contract wording.\n\
+      \  - remediation summary: updated stale wording references and aligned assertions\
+      \ to current canonical wording.\n\n  ### B2 tool-prefix validation gap\n  -\
+      \ failing family: tests/repro/test_tool_prefix_blackbox.py\n  - authority used\
+      \ for policy decision: USAGE/config/family validation policy (`tela.` and `tela_`\
+      \ reserved; plain `tela` policy aligned explicitly).\n  - remediation summary:\
+      \ added model-level validator and aligned repro/contract tests to authoritative\
+      \ policy.\n\n  ### Verification\n  - targeted results: blocker families pass;\
+      \ broader suites pass (`843 passed, 0 failed`, plus expected xfail/xpass accounting).\n\
+      \  - sibling search performed; non-blocking INTROSPECTION_TOOLS completeness\
+      \ left out of scope.\nerror: \"\""
   - id: hard_cut.final_reverify
     name: Reverify hard-cut blocker remediation and canonical runtime outputs
     status: pending
