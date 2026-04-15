@@ -71041,7 +71041,7 @@ phases:
       \ Invar verification output: passed (0 errors, doctest passed).\nerror: \"\""
   - id: hard_cut.impl_listing_surface
     name: Implement canonical profile listing surface
-    status: pending
+    status: claimed
     description: 'Listing/runtime surface slice only.
 
 
@@ -71108,6 +71108,8 @@ phases:
     depends_on:
     - hard_cut.impl_shared_surfaces
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-15T04:44:41.274693+00:00'
   - id: hard_cut.impl_shared_surfaces
     name: Cut shared runtime and audit surfaces to profile_id only
     status: done
