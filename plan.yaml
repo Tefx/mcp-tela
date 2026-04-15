@@ -71252,7 +71252,7 @@ phases:
       \ in tests).\nerror: \"\""
   - id: hard_cut.final_conformance
     name: Audit full conformance to the latest canonical contract
-    status: pending
+    status: claimed
     description: Run a final spec-conformance audit against the latest canonical docs/contracts.
       The audit must cover token shape, identity vocabulary, tool naming, profile-list
       schema, and the absence of legacy shared vocabulary.
@@ -71280,6 +71280,8 @@ phases:
     depends_on:
     - hard_cut.final_tool_probe
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-15T05:25:22.945990+00:00'
   - id: hard_cut.final_doc_sync
     name: Sync local docs and tests to canonical surfaces only
     status: pending
