@@ -71664,7 +71664,7 @@ phases:
       \""
   - id: hard_cut.final_gate_fix2
     name: Second remediation loop for blocked hard-cut final gate blockers B1+B2
-    status: claimed
+    status: done
     description: 'Second batched remediation loop for blocked `hard_cut.final_gate`,
       explicitly owning the still-unresolved blockers after the first remediation/reverify
       path.
@@ -71780,6 +71780,27 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-15T12:48:31.779769+00:00'
+    done_at: '2026-04-15T12:54:01.051972+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - authoritative design/surface/prefix policy docs and runtime policy files\
+      \ were read; affected blocker families reviewed.\n\n  ## Blocker Remediation\
+      \ Report\n  - prior_loop: hard_cut.final_gate_fix, hard_cut.final_reverify\n\
+      \  - blocker_fingerprint: hard_cut finalization residual blockers B1+B2\n  -\
+      \ root_cause_hypothesis: residual doc/assertion drift and policy wording mismatch\
+      \ persisted after first loop.\n  - why_previous_fix_failed: prior loop left\
+      \ stale phrase/policy references unaligned with authoritative wording.\n  -\
+      \ files changed: tests/shell/test_surface_contract.py, tests/repro/test_tool_prefix_blackbox.py,\
+      \ docs/USAGE.md, docs/INTERFACES.md.\n\n  ### B1 residual wording mismatch\n\
+      \  - authoritative wording source: DESIGN.md and CONFIRMED-SURFACE-CONTRACT.md\
+      \ canonical wording.\n  - stale assertions updated to assert post-hard-cut wording\
+      \ and explicit built-in tools.\n  - sibling search completed across related\
+      \ docs/tests.\n\n  ### B2 residual tool-prefix mismatch\n  - authoritative policy\
+      \ source: USAGE/INTERFACES + config/family runtime checks.\n  - aligned docs/tests\
+      \ to policy: reserve `tela.`/`tela_`, allow plain `tela`.\n  - sibling search\
+      \ completed and aligned.\n\n  ### Verification\n  - targeted blocker families:\
+      \ PASS\n  - broader no-regression suites: PASS\n  - changed-file invar: PASS\
+      \ (0 errors)\n  - isolated branch commit: abed90606c46fd8795d559ac4d210be96c0b677e\n\
+      error: \"\""
   - id: hard_cut.final_reverify2
     name: Second reverify loop for blocked hard-cut final gate residual blockers
     status: pending
