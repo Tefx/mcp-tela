@@ -71968,3 +71968,10 @@ phases:
       \ and runtime behavior. No code regressions detected in the full suite. The\
       \ 2 env-driven failures are pre-existing orphans, not introduced by this loop's\
       \ changes."
+- id: tech_debt.cleanup
+  name: Technical Debt Cleanup Closure
+  status: pending
+  gate: All identified non-blocking technical debt in current release slice is either
+    fixed or explicitly documented as deferred with rationale.
+  depends_on:
+  - hard_cut.finalization
