@@ -3,22 +3,25 @@
 ### Decision basis
 
 - [Proven] The current implementation (`evidence/surface_audit_actual_surface.md`) confirms:
-  - Only `tela.profiles` is registered as an MCP resource (not an MCP tool)
+  - `tela_list_providers` and `tela_list_profiles` are registered as MCP builtin tools
   - `tela.status`, `tela.connections`, and `tela.audit` exist as CLI/HTTP operator surfaces only
-  - No `tela.*` MCP tools are currently registered
+  - No MCP resources in the `tela.*` namespace (former `tela.profiles` resource removed)
 
 - [Proven] The authoritative confirmed contract (`docs/CONFIRMED-SURFACE-CONTRACT.md`) specifies:
-  - `tela.profiles` exact kind: `resource` (MCP resource read via `tela://profiles`)
+  - `tela_list_profiles` exact kind: `tool` (MCP builtin tool callable via `tools/call`)
+  - `tela_list_providers` exact kind: `tool` (MCP builtin tool callable via `tools/call`)
   - `tela.status`, `tela.connections`, `tela.audit` exact kind: `absent` (not MCP tools/resources)
+  - `tela.profiles` exact kind: `absent` (former resource removed, replaced by `tela_list_profiles`)
 
 - [Proven] Capability control is generic family/posture-based in `src/tela/core/models.py` and `src/tela/core/catalog.py`.
   - `tela_admin` is not a runtime-enforced capability string in the current source.
 
 ### Confirmed taxonomy
 
-1. `tela.profiles` confirmed kind: MCP resource (read-only, not callable tool)
-   - Access: MCP resource read of `tela://profiles`
-   - # SPEC QUESTION: Future work may consider promoting to MCP tool if needed; currently resource-only
+1. `tela_list_profiles` confirmed kind: MCP builtin tool (callable via tools/call)
+   - Access: MCP `tools/call` with `{}` input
+   - Returns list of `{profile_id, capabilities, default}` entries
+   - Former `tela.profiles` resource has been removed and replaced by this builtin tool
 
 2. `tela.status` confirmed kind: operator-only surface
    - Access: CLI `tela status` or HTTP `GET /status`

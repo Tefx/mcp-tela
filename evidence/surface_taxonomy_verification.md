@@ -14,8 +14,8 @@ Surface taxonomy remains aligned across runtime, docs, and repro coverage.
 
 ## Runtime Surface Classification
 
-- MCP resource: `tela.profiles` via `tela://profiles` (registered in `src/tela/shell/gateway.py`).
-- MCP built-in tools: none in the `tela.*` namespace.
+- MCP built-in tools: `tela_list_providers` and `tela_list_profiles` (registered in `src/tela/shell/builtin_tools.py` and dispatched in `src/tela/shell/gateway.py`).
+- MCP resources: none in the `tela.*` namespace (former `tela.profiles` resource replaced by `tela_list_profiles` builtin tool).
 - Operator-only surfaces: `tela profiles`, `tela status`, `tela connections`, `tela audit`, and `GET /status`.
 
 ---
@@ -29,9 +29,10 @@ Surface taxonomy remains aligned across runtime, docs, and repro coverage.
 
 ## Doc/Runtime Consistency Checks
 
-- `tela.profiles` remains a resource read surface (not callable through `tools/call`).
+- `tela_list_profiles` is a builtin MCP tool callable through `tools/call`.
+- Former `tela.profiles` resource has been removed; profiles are now listed via `tela_list_profiles` tool.
 - Operator surfaces remain CLI/HTTP companions and are not registered as MCP built-ins.
-- Instruction text still states resource-vs-tool boundary correctly.
+- Instruction text correctly lists builtin tools.
 
 ---
 
@@ -41,28 +42,32 @@ Surface taxonomy remains aligned across runtime, docs, and repro coverage.
 |-----|---------|
 | `uv run pytest -q tests/shell/test_surface_contract.py` | `30 passed` |
 | `uv run pytest -q tests/shell/test_merge_instructions.py` | `14 passed` |
-| `uv run pytest -q tests/shell/test_gateway.py::test_fastmcp_profiles_resource_registered` | `1 passed` |
+| `uv run pytest -q tests/shell/test_hard_cut_shared_surfaces.py` | `25 passed` |
+| `uv run pytest -q tests/shell/test_builtin_tools.py` | `6 passed` |
 | `uv run pytest -q tests/repro/test_loop4_remediation.py` | `4 passed` |
 
-**Total:** 49 passed, 0 failed.
+**Total:** 79 passed, 0 failed.
 
 ---
 
 ## Evidence Notes
 
-- CLI surfaces observed: `tela profiles`, `tela status`, `tela connections`, `tela audit`.
-- HTTP surfaces observed: `GET /health`, `GET /status`, `POST /connect`, `POST /disconnect`, `POST /mcp`.
-- README and runtime operator-surface wording now use consistent naming for `tela profiles`.
+- MCP builtin tools observed: `tela_list_providers`, `tela_list_profiles`.
+- MCP resources observed: none in tela.* namespace.
+- CLI surfaces observed: tela profiles, tela status, tela connections, tela audit.
+- HTTP surfaces observed: GET /health, GET /status, POST /connect, POST /disconnect, POST /mcp.
+- README consistency: operator summary includes tela profiles and keeps CLI/HTTP naming distinct from MCP builtin tool naming.
+- Doc/runtime mismatches found: none.
 
 ---
 
 status: "SUCCESS"
 evidence: |
   Independent verification:
-  - MCP tools observed: none (zero built-in tela.* MCP tools)
-  - MCP resources observed: tela.profiles (via tela://profiles)
+  - MCP builtin tools observed: tela_list_providers, tela_list_profiles
+  - MCP resources observed: none in tela.* namespace (former tela.profiles resource replaced by tela_list_profiles builtin tool)
   - CLI surfaces observed: tela profiles, tela status, tela connections, tela audit
   - HTTP surfaces observed: GET /health, GET /status, POST /connect, POST /disconnect, POST /mcp
-  - README consistency: operator summary includes tela profiles and keeps CLI/HTTP naming distinct from tela.profiles resource naming
+  - README consistency: operator summary includes tela profiles and keeps CLI/HTTP naming distinct from tela_list_profiles builtin tool naming
   - Doc/runtime mismatches found: none
 error: ""

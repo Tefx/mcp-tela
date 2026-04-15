@@ -889,8 +889,8 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
     asyncio.run(_scenario())
 
 
-def test_fastmcp_profiles_resource_registered() -> None:
-    """tela.profiles MCP resource is registered and readable."""
+def test_fastmcp_profiles_resource_not_registered() -> None:
+    """tela.profiles MCP resource must NOT be registered (replaced by builtin tool)."""
 
     tela = TelaConfig(
         profiles={
@@ -918,16 +918,61 @@ def test_fastmcp_profiles_resource_registered() -> None:
             lambda s: asyncio.run(s.list_resources())
         )
         assert resources_result.is_ok
-        resources = resources_result.value
-        assert any(resource.name == "tela.profiles" for resource in resources)
-
-        contents_result = with_upstream_server(
-            lambda s: asyncio.run(s.read_resource("tela://profiles"))
+        # tela.profiles resource must NOT appear (replaced by tela_list_profiles tool)
+        assert not any(
+            resource.name == "tela.profiles" for resource in resources_result.value
         )
-        assert contents_result.is_ok
-        contents = contents_result.value
-        payload = json.loads(contents[0].content)  # type: ignore[index]  # contents is indexable at runtime
-        assert payload[0]["profile_id"] == "dev"
+    finally:
+        asyncio.run(gateway_shutdown())
+
+
+def test_fastmcp_list_profiles_builtin_tool() -> None:
+    """tela_list_profiles builtin tool must be callable and return canonical payload."""
+
+    tela = TelaConfig(
+        profiles={
+            "dev": ProfileConfig(
+                name="dev",
+                default=True,
+                capabilities={"fs": Posture.READ_WRITE},
+            ),
+            "reviewer": ProfileConfig(
+                name="reviewer",
+                default=False,
+                capabilities={"fs": Posture.READ_ONLY},
+            ),
+        },
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+    )
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
+    )
+
+    asyncio.run(gateway_start(config, tela_config=tela, tool_lists={}))
+    try:
+        from tela.shell.builtin_tools import handle_list_profiles
+
+        result = handle_list_profiles()
+        assert isinstance(result, list)
+        assert len(result) == 2
+
+        dev_entry = next(e for e in result if e["profile_id"] == "dev")
+        assert dev_entry["default"] is True
+        assert dev_entry["capabilities"] == {"fs": "read_write"}
+
+        rev_entry = next(e for e in result if e["profile_id"] == "reviewer")
+        assert rev_entry["default"] is False
+        assert rev_entry["capabilities"] == {"fs": "read_only"}
+
+        # Verify legacy keys are absent
+        for entry in result:
+            assert "profile_name" not in entry
+            assert "families" not in entry
+            assert "tools" not in entry
     finally:
         asyncio.run(gateway_shutdown())
 

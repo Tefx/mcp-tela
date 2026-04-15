@@ -7,8 +7,7 @@ agent-facing surface classification.
 Contract source: docs/CONFIRMED-SURFACE-CONTRACT.md
 
 Coverage:
-- MCP resource checks: tela.profiles must be a resource, not a tool
-- MCP tool checks: one confirmed built-in tela.* MCP tool: tela_list_providers
+- MCP tool checks: confirmed built-in tela.* MCP tools: tela_list_providers, tela_list_profiles
 - CLI/HTTP checks: operator surfaces are not MCP built-ins
 - Instruction-merge checks: ordering and conflict handling
 - Negative assertions guarding unsupported surface claims
@@ -130,13 +129,18 @@ def _interfaces_builtin_summary_surfaces() -> set[str]:
 class TestCanonicalSurfaceMatrix:
     """Regression tests for the canonical surface matrix."""
 
-    def test_tela_profiles_is_resource_not_tool(self) -> None:
-        """tela.profiles must be a resource, NOT a tool."""
+    def test_tela_list_profiles_is_builtin_tool(self) -> None:
+        """tela_list_profiles must be a builtin MCP tool (not a resource)."""
         gateway_source = _read_gateway_source()
-        assert _contract_kind("tela.profiles") == "resource"
-        assert "tela://profiles" in gateway_source
-        assert 'name="tela.profiles"' in gateway_source
-        assert '@upstream_server.tool("tela.profiles")' not in gateway_source
+        assert _contract_kind("tela_list_profiles") == "tool"
+        assert "tela_list_profiles" in gateway_source
+        assert '@upstream_server.resource("tela_list_profiles")' not in gateway_source
+
+    def test_tela_profiles_resource_removed(self) -> None:
+        """tela.profiles resource registration must be removed (replaced by tela_list_profiles tool)."""
+        gateway_source = _read_gateway_source()
+        assert "tela://profiles" not in gateway_source
+        assert "_register_profiles_resource" not in gateway_source
 
     def test_tela_status_is_absent_as_mcp_surface(self) -> None:
         """tela.status must NOT be claimed as current MCP tool or resource."""
@@ -246,41 +250,40 @@ class TestNoCurrentBuiltinTelaTools:
     def test_no_tela_profiles_mcp_tool_registration(self) -> None:
         """tela.profiles MUST NOT be registered as an MCP tool.
 
-        tela.profiles is a resource, not a tool. This test ensures we never
-        accidentally register it as a tool-call surface.
+        tela.profiles is no longer present at all — replaced by tela_list_profiles
+        builtin tool. This test ensures we never accidentally re-register it.
         """
         gateway_source = _read_gateway_source()
-        assert _contract_kind("tela.profiles") == "resource"
+        assert _contract_kind("tela.profiles") == "absent"
         assert '@upstream_server.tool("tela.profiles")' not in gateway_source
-        assert 'name="tela.profiles"' in gateway_source
+        assert (
+            "@upstream_server.resource" not in gateway_source
+            or "tela.profiles" not in gateway_source
+        )
 
 
 # =============================================================================
-# Section 3: MCP resource behavior (tela.profiles is a resource)
+# Section 3: tela_list_profiles builtin tool behavior
 # =============================================================================
 
 
-class TestTelaProfilesResourceBehavior:
-    """tela.profiles MCP resource behavior regressions."""
+class TestTelaListProfilesBuiltinTool:
+    """tela_list_profiles builtin tool behavior regressions."""
 
-    def test_tela_profiles_is_resource_not_tool_in_contract(self) -> None:
-        """Contract must classify tela.profiles as 'resource'.
+    def test_tela_list_profiles_is_builtin_tool_in_contract(self) -> None:
+        """Contract must classify tela_list_profiles as 'tool'."""
+        assert _contract_kind("tela_list_profiles") == "tool"
 
-        This is a regression guard against accidentally changing the contract
-        or misclassifying profiles as a tool.
-        """
-        assert _contract_kind("tela.profiles") == "resource"
-
-    def test_profiles_resource_handler_returns_json(
+    def test_profiles_list_tool_returns_canonical_payload(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """tela.profiles resource handler must return valid JSON list.
+        """tela_list_profiles builtin tool must return canonical profile-list payload.
 
-        This tests the existing handle_profiles_list behavior to ensure it
-        continues to emit JSON-serializable data for the resource read.
+        This tests the existing handle_list_profiles behavior to ensure it
+        continues to emit canonical profile_id + capabilities + default only.
         """
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.upstream import handle_profiles_list
+        from tela.shell.builtin_tools import handle_list_profiles
         from tela.core.models import TelaConfig, ProfileConfig, Posture
 
         set_runtime_config(
@@ -295,17 +298,21 @@ class TestTelaProfilesResourceBehavior:
             )
         )
 
-        result = handle_profiles_list()
-        assert result.is_ok
-        assert result.value is not None
-        assert isinstance(result.value, list)
-        assert len(result.value) >= 1
+        result = handle_list_profiles()
+        assert isinstance(result, list)
+        assert len(result) >= 1
 
-        # Verify JSON-serializable structure
-        entry = result.value[0]
+        # Verify canonical schema
+        entry = result[0]
         assert "profile_id" in entry
         assert entry["profile_id"] == "dev"
         assert "capabilities" in entry
+        assert "default" in entry
+
+        # Verify legacy keys are absent
+        assert "profile_name" not in entry
+        assert "families" not in entry
+        assert "tools" not in entry
 
         # Cleanup
         set_runtime_config(None)
@@ -575,10 +582,11 @@ class TestInstructionConflictHandling:
         assert composed_result.value is not None
 
         composed = composed_result.value
-        assert "Built-in MCP tools: `tela_list_providers`." in composed
+        assert "`tela_list_providers`" in composed
+        assert "`tela_list_profiles`" in composed
         assert "Built-in MCP tools: use tela.status from tools/call." in composed
         assert composed.index(
-            "Built-in MCP tools: `tela_list_providers`."
+            "Built-in MCP tools: `tela_list_providers`, `tela_list_profiles`."
         ) < composed.index("## fs")
 
 
@@ -597,7 +605,8 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
         interfaces_surfaces = _interfaces_builtin_summary_surfaces()
 
         assert _contract_kind("tela profiles") == "CLI"
-        assert _contract_kind("tela.profiles") == "resource"
+        # tela.profiles resource has been removed; tela_list_profiles is a builtin tool
+        assert _contract_kind("tela_list_profiles") == "tool"
         assert "tela profiles" in runtime_operator_surfaces
         assert "tela profiles" in agent_interface_operator_surfaces
         assert "tela profiles" in interfaces_surfaces
@@ -694,7 +703,10 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         assert "These do not belong to a `tela_admin`" in design_text
         assert gateway_summary.is_ok
         assert gateway_summary.value is not None
-        assert "Built-in MCP tools: `tela_list_providers`." in gateway_summary.value
+        assert (
+            "Built-in MCP tools: `tela_list_providers`, `tela_list_profiles`."
+            in gateway_summary.value
+        )
 
     def test_tela_admin_not_approved_for_tela_connections(self) -> None:
         """tela_admin MUST NOT be used as current enforcement wording for

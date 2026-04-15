@@ -253,6 +253,18 @@ class ProviderInfo(TypedDict):
     tool_names: list[str]  # post-enforcement-filter exposed names
 
 
+class ProfileInfo(TypedDict):
+    """Per-profile summary returned by tela_list_profiles.
+
+    Canonical schema (hard cut): ``profile_id``, ``capabilities``, ``default``.
+    Legacy keys ``profile_name``, ``families``, and ``tools`` are removed.
+    """
+
+    profile_id: str
+    capabilities: dict[str, str]
+    default: bool
+
+
 class ConnectionContext(BaseModel):
     """Per-connection state for an upstream client.
 

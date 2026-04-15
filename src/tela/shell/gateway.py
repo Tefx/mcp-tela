@@ -9,7 +9,6 @@ Transport startup (stdio/SSE/HTTP) is wired via CLI in tela.cli.
 
 from __future__ import annotations
 
-import json
 import asyncio
 import logging
 import time
@@ -46,6 +45,7 @@ from tela.shell.audit import audit_close, audit_init, build_audit_entry, audit_w
 from tela.shell.builtin_tools import (
     BUILTIN_TOOLS,
     BUILTIN_TOOL_NAMES,
+    handle_list_profiles,
     handle_list_providers,
 )
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
@@ -355,26 +355,6 @@ def _create_upstream_server(
     return Result(value=server)
 
 
-# @shell_orchestration: registers FastMCP resource endpoint for profile introspection.
-def _register_profiles_resource(upstream_server: FastMCP) -> None:
-    """Register tela.profiles resource on the upstream FastMCP server."""
-
-    from tela.shell.upstream import handle_profiles_list
-
-    @upstream_server.resource(
-        "tela://profiles",
-        name="tela.profiles",
-        description="List configured tela profiles.",
-        mime_type="application/json",
-    )
-    def _profiles_resource() -> str:
-        result = handle_profiles_list()
-        if result.is_err:
-            raise RuntimeError(result.error or "PROFILE_LIST_REJECTED")
-        assert result.value is not None
-        return json.dumps(result.value)
-
-
 # @shell_complexity: wiring composes initialize/list/call adapters for FastMCP boundary.
 def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     """Wire upstream handlers into FastMCP request handling."""
@@ -542,7 +522,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
 
 # @shell_complexity: dispatch across builtin tool variants with protocol-contract branching
-# @invar:allow shell_result: _handle_builtin_call is an async MCP callback invoked by FastMCP's call_tool handler; returning mcp_types.CallToolResult directly satisfies the MCP protocol contract. The function delegates to handle_list_providers (Shell) and returns a raw MCP type rather than Result[T, E], which is intentional — the function IS the boundary between Shell and MCP protocol layer.
+# @invar:allow shell_result: _handle_builtin_call is an async MCP callback invoked by FastMCP's call_tool handler; returning mcp_types.CallToolResult directly satisfies the MCP protocol contract. The function delegates to handle_list_providers/handle_list_profiles (Shell) and returns a raw MCP type rather than Result[T, E], which is intentional — the function IS the boundary between Shell and MCP protocol layer.
 async def _handle_builtin_call(
     tool_name: str,
     arguments: dict[str, object] | None,
@@ -561,7 +541,14 @@ async def _handle_builtin_call(
     """
     start_time = time.time()
     try:
-        providers_result = await handle_list_providers()
+        if tool_name == "tela_list_profiles":
+            profiles_result = handle_list_profiles()
+            call_result = [dict(p) for p in profiles_result]  # type: ignore[arg-type]
+        else:
+            # Default: tela_list_providers
+            providers_result = await handle_list_providers()
+            call_result = [dict(p) for p in providers_result]  # type: ignore[arg-type]
+
         latency_ms = (time.time() - start_time) * 1000
 
         # L2 audit entry for builtin tool calls (if connection available)
@@ -581,9 +568,9 @@ async def _handle_builtin_call(
             if audit_entry_result.is_ok and audit_entry_result.value is not None:
                 await audit_write(audit_entry_result.value)
 
-        # Convert ProviderInfo (TypedDict) to plain dict for JSON serialization
+        # Convert TypedDict results to plain dict for JSON serialization
         return mcp_types.CallToolResult(
-            content=[mcp_types.TextContent(type="text", text=str(providers_result))],
+            content=[mcp_types.TextContent(type="text", text=str(call_result))],
             isError=False,
         )
     except Exception as e:
@@ -827,7 +814,6 @@ async def gateway_prepare_startup(
 
     _wire_upstream_handlers(upstream_server)
     _register_http_routes(upstream_server)
-    _register_profiles_resource(upstream_server)
     _wire_reload_notifications()
 
     with gateway_runtime._runtime_lock:

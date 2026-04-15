@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from tela.core.models import Posture, ProviderInfo, ProfileConfig
+from tela.core.models import Posture, ProfileConfig, ProfileInfo, ProviderInfo
 from tela.shell.downstream import (
     get_all_tools,
     get_attempted_servers,
@@ -19,6 +19,11 @@ BUILTIN_TOOLS: list[dict] = [
     {
         "name": "tela_list_providers",
         "description": "List connected downstream providers with their status and tool counts.",
+        "inputSchema": {"type": "object", "properties": {}, "required": []},
+    },
+    {
+        "name": "tela_list_profiles",
+        "description": "List configured profiles with their capabilities and default status.",
         "inputSchema": {"type": "object", "properties": {}, "required": []},
     },
 ]
@@ -127,3 +132,39 @@ async def handle_list_providers() -> list["ProviderInfo"]:
         )
 
     return providers
+
+
+# @invar:allow shell_result: builtin tools follow FastMCP @tool pattern (raise on error, not Result wrap)
+# @shell_complexity: gateway runtime config access is indirect I/O; function is a Shell boundary adapter
+def handle_list_profiles() -> list["ProfileInfo"]:
+    """Return per-profile summary from live runtime config.
+
+    Reads configured profiles and emits canonical payload:
+    ``profile_id``, ``capabilities``, ``default`` only.
+    Legacy keys ``profile_name``, ``families``, ``tools`` are never emitted.
+
+    Raises:
+        RuntimeError: if runtime config is not available (gateway not started).
+
+    Returns:
+        List of ProfileInfo dicts, one per configured profile.
+    """
+    config_result = get_runtime_config()
+    if config_result.is_err or config_result.value is None:
+        raise RuntimeError(
+            f"handle_list_profiles requires a valid runtime config: "
+            f"{config_result.error!r}"
+        )
+    config = config_result.value
+
+    profiles: list[ProfileInfo] = []
+    for name, p in config.profiles.items():
+        profiles.append(
+            ProfileInfo(
+                profile_id=name,
+                capabilities={k: v.value for k, v in p.capabilities.items()},
+                default=p.default,
+            )
+        )
+
+    return profiles

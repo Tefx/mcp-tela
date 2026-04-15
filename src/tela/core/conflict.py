@@ -33,7 +33,7 @@ class ToolConflict(BaseModel):
 RESERVED_PREFIX = "tela."
 """Prefix reserved for tela-owned surfaces."""
 
-INTROSPECTION_TOOLS = ("tela.profiles",)
+INTROSPECTION_TOOLS = ("tela_list_profiles",)
 """Currently supported built-in tela MCP surface names."""
 
 

@@ -23,11 +23,12 @@ SurfaceContract := {
 
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
-| `tela.profiles` | `resource` | MCP resource read of `tela://profiles` / `tela.profiles` | Confirmed supported MCP built-in surface. |
 | `tela_list_providers` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}`. |
+| `tela_list_profiles` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}`. |
 | `tela.status` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 | `tela.connections` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 | `tela.audit` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
+| `tela.profiles` | `absent` | N/A | Former MCP resource removed; replaced by `tela_list_profiles` builtin tool. Do not re-register as MCP resource. |
 
 ### 1.2 Operator companion surfaces
 
@@ -89,12 +90,17 @@ completes; endpoint discoverability does not imply readiness.
 
 - A surface is a `tool` only if it is callable through MCP `tools/call` as an
   explicitly supported built-in tela surface.
-- This contract confirms **one current built-in `tela.*` MCP tool**:
-  `tela_list_providers`.
-- Input: empty object `{}`
-- Output: list of `ProviderInfo` objects, each containing `name` (server name),
-  `status` (`"connected"` | `"disconnected"` | `"failed"`), `tool_count` (int),
-  and `tool_names` (list of post-enforcement-filter exposed tool names).
+- This contract confirms **two current built-in `tela.*` MCP tools**:
+  `tela_list_providers` and `tela_list_profiles`.
+- `tela_list_providers` input: empty object `{}`
+- `tela_list_providers` output: list of `ProviderInfo` objects, each containing
+  `name` (server name), `status` (`"connected"` | `"disconnected"` | `"failed"`),
+  `tool_count` (int), and `tool_names` (list of post-enforcement-filter exposed
+  tool names).
+- `tela_list_profiles` input: empty object `{}`
+- `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
+  `profile_id` (str), `capabilities` (dict of family→posture string), and
+  `default` (bool).
 - Therefore docs, tests, and runtime work must not claim that `tela.status`,
   `tela.connections`, `tela.audit`, or `tela.profiles` are current MCP tools.
 
@@ -102,9 +108,9 @@ completes; endpoint discoverability does not imply readiness.
 
 - A surface is a `resource` only if it is readable as an MCP resource and is
   explicitly registered under a tela-owned resource name/URI.
-- This contract confirms **exactly one current built-in tela MCP resource**:
-  `tela.profiles`.
-- `tela.profiles` is a resource read surface, not a tool-call surface.
+- This contract confirms **zero current built-in tela MCP resources**.
+  The former `tela.profiles` resource has been replaced by the
+  `tela_list_profiles` builtin tool.
 
 ### 2.3 CLI and HTTP surfaces
 

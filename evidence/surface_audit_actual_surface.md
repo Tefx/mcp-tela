@@ -8,20 +8,21 @@ Authoritative review-only audit of actual tela agent-facing surfaces in the curr
 
 | Surface | MCP resource | MCP tool | CLI command | HTTP endpoint | Present today? | Source-backed notes |
 |---|---|---|---|---|---|---|
-| `tela.profiles` | Yes | No explicit registration found | `tela profiles` | No dedicated `tela.profiles` HTTP endpoint | Verified present | Registered via `@upstream_server.resource("tela://profiles", name="tela.profiles", ...)` in `src/tela/shell/gateway.py:317-323`; enabled during startup in `src/tela/shell/gateway.py:586-588`. CLI command exists in `src/tela/cli.py:120-133,215-224`. |
+| `tela_list_providers` | No | Yes (builtin) | No | No | Verified present | Registered in `src/tela/shell/builtin_tools.py` BUILTIN_TOOLS list; dispatched in `src/tela/shell/gateway.py` `_handle_builtin_call`. |
+| `tela_list_profiles` | No | Yes (builtin) | No | No | Verified present | Registered in `src/tela/shell/builtin_tools.py` BUILTIN_TOOLS list; implementation in `handle_list_profiles()`; dispatched in `src/tela/shell/gateway.py` `_handle_builtin_call`. |
 | `tela.status` | No explicit registration found | No explicit registration found | `tela status` | `GET /status` | Present only as CLI + HTTP, not verified as MCP surface | No `name="tela.status"`, no `@...resource`, and no explicit MCP tool registration were found in `src/**/*.py`; `GET /status` is mounted in `src/tela/shell/gateway.py:129-145`; CLI command is wired in `src/tela/cli.py:110-119,182-188`. |
-| `tela.connections` | No explicit registration found | No explicit registration found | `tela connections` | No dedicated `tela.connections` HTTP endpoint; data piggybacks on `GET /status` | Present only as CLI, not verified as MCP surface | No `name="tela.connections"` or explicit MCP registration found in `src/**/*.py`; CLI command is wired in `src/tela/cli.py:135-145,225-231`; command reads `connections` from `/status` payload in `src/tela/commands/connections_cmd.py:36-55` and `src/tela/commands/remote_state.py:57-123`. |
-| `tela.audit` | No explicit registration found | No explicit registration found | `tela audit` | No dedicated `tela.audit` HTTP endpoint; data piggybacks on `GET /status` | Present only as CLI, not verified as MCP surface | No `name="tela.audit"` or explicit MCP registration found in `src/**/*.py`; CLI command is wired in `src/tela/cli.py:147-166,232-240`; command reads `audit_entries` from `/status` payload in `src/tela/commands/audit_cmd.py:48-73` and `src/tela/commands/remote_state.py:93-123`. |
+| `tela.connections` | No explicit registration found | No explicit registration found | `tela connections` | No dedicated `tela.connections` HTTP endpoint; data piggybacks on `GET /status` | Present only as CLI, not verified as MCP surface | No `name="tela.connections"` or explicit MCP registration found in `src/**/*.py`; CLI command is wired in `src/tela/cli.py:135-145,225-231`; command reads `connections` from `/status` payload. |
+| `tela.audit` | No explicit registration found | No explicit registration found | `tela audit` | No dedicated `tela.audit` HTTP endpoint; data piggybacks on `GET /status` | Present only as CLI, not verified as MCP surface | No `name="tela.audit"` or explicit MCP registration found in `src/**/*.py`; CLI command is wired in `src/tela/cli.py:147-166,232-240`. |
 
 ### MCP resources verified
 
-- `tela.profiles` only.
-- Proof: `src/tela/shell/gateway.py:317-323` registers resource URI `tela://profiles` with MCP resource name `tela.profiles`.
+- None in the `tela.*` namespace. The former `tela.profiles` resource has been replaced by the `tela_list_profiles` builtin tool.
 
 ### MCP tools verified
 
-- No explicit built-in `tela.*` MCP tool registrations were found.
-- Upstream MCP wiring currently exposes generic `tools/list` and `tools/call` handlers in `src/tela/shell/gateway.py:372-412`, but these proxy downstream tools rather than registering built-in `tela.status`, `tela.connections`, or `tela.audit` tools.
+- `tela_list_providers` — builtin tool in `src/tela/shell/builtin_tools.py`, dispatched in `src/tela/shell/gateway.py`.
+- `tela_list_profiles` — builtin tool in `src/tela/shell/builtin_tools.py`, dispatched in `src/tela/shell/gateway.py`.
+- Upstream MCP wiring currently exposes generic `tools/list` and `tools/call` handlers for proxied downstream tools.
 
 ### CLI-only surfaces verified
 
@@ -30,7 +31,7 @@ Authoritative review-only audit of actual tela agent-facing surfaces in the curr
 - `tela connections` (`src/tela/cli.py:135-145,225-231`; implementation in `src/tela/commands/connections_cmd.py:13-55`)
 - `tela audit` (`src/tela/cli.py:147-166,232-240`; implementation in `src/tela/commands/audit_cmd.py:15-95`)
 
-`tela profiles` is additionally verified as an MCP resource.
+`tela profiles` is additionally verified as a CLI operator surface (not an MCP resource).
 
 ### HTTP-only/operator surfaces verified
 
@@ -45,7 +46,7 @@ Authoritative review-only audit of actual tela agent-facing surfaces in the curr
 - `tela.status` as MCP tool/resource: unverified/absent in current source audit.
 - `tela.connections` as MCP tool/resource: unverified/absent in current source audit.
 - `tela.audit` as MCP tool/resource: unverified/absent in current source audit.
-- No dedicated HTTP endpoints named for `tela.profiles`, `tela.connections`, or `tela.audit` were found.
+- No dedicated HTTP endpoints named for `tela_list_profiles`, `tela.connections`, or `tela.audit` were found.
 
 ### Capability string audit (`tela_admin` or replacement)
 
