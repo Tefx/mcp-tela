@@ -70949,7 +70949,7 @@ phases:
       \ mapping, readiness READY evidence).\nerror: \"\""
 - id: hard_cut.impl
   name: Canonical Hard-Cut Implementation
-  status: pending
+  status: in_progress
   gate: 'Core vocabulary and shared listing surfaces must be canonical-only: profile_id,
     capabilities, snake_case MCP tool names, no legacy shared aliases, and no shared
     tela://profiles dependency.'
@@ -70958,7 +70958,7 @@ phases:
   steps:
   - id: hard_cut.impl_core_vocab
     name: Cut config and token vocabulary to canonical-only fields
-    status: pending
+    status: claimed
     description: 'Core/domain slice only.
 
 
@@ -71019,6 +71019,8 @@ phases:
 
       '
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-15T03:32:23.992748+00:00'
   - id: hard_cut.impl_listing_surface
     name: Implement canonical profile listing surface
     status: pending
