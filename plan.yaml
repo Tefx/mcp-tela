@@ -71385,6 +71385,7 @@ phases:
     - hard_cut.final_test_sync
     - hard_cut.final_doc_sync
     - hard_cut.final_reverify
+    - hard_cut.final_reverify2
     agent: gate-reviewer-tacit
   - id: hard_cut.final_test_sync
     name: Sync local tests to canonical hard-cut surfaces only
