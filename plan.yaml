@@ -71301,7 +71301,7 @@ phases:
       \ gate review.\nerror: \"\""
   - id: hard_cut.final_doc_sync
     name: Sync local docs and tests to canonical surfaces only
-    status: claimed
+    status: done
     description: 'Docs-only sync step.
 
 
@@ -71335,6 +71335,18 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-15T05:31:47.129427+00:00'
+    done_at: '2026-04-15T05:42:42.710525+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - README.md, docs/AGENT_INTERFACE.md, docs/DESIGN.md, docs/INTERFACES.md,\
+      \ docs/USAGE.md, docs/MIGRATION-003-capability-only-profiles.md were synced.\n\
+      \n  ## Doc Sync Proof\n  - Docs/examples updated to canonical surfaces: `tela_list_profiles`/`tela_list_providers`\
+      \ builtin MCP tools, canonical `profile_id` identity.\n  - Legacy shared-surface\
+      \ wording removed from canonical docs (`tela://profiles`, `tela.profiles` as\
+      \ canonical resource, `profile_name` as canonical payload identity).\n  - Canonical\
+      \ wording added: no builtin `tela.*` MCP resources; canonical profile-list payload\
+      \ keys are `profile_id`, `capabilities`, `default`.\n  - Remaining stale docs/examples:\
+      \ only intentional migration/ADR/evidence historical references and tests asserting\
+      \ removals.\nerror: \"\""
   - id: hard_cut.final_gate
     name: Open or block hard-cut completion
     status: pending
