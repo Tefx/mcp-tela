@@ -72023,7 +72023,7 @@ phases:
       \ --changed` -> passed (0 errors)."
   - id: tech_debt.cleanup_verify
     name: Verify debt cleanup and regression safety
-    status: pending
+    status: claimed
     description: Run targeted suites and quality checks to confirm debt cleanup is
       complete and behavior remains green.
     verification: Targeted test suites pass and invar guard on changed files passes;
@@ -72031,3 +72031,5 @@ phases:
     depends_on:
     - tech_debt.cleanup_fix
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-15T16:43:58.827529+00:00'
