@@ -70902,7 +70902,7 @@ phases:
       \ explicitly none\n  - Compatibility rules invented: none\nerror: \"\""
   - id: hard_cut.readiness_gate
     name: Gate entry into implementation
-    status: pending
+    status: claimed
     description: Gate implementation. Open only if the readiness review proves preparation
       is sufficient and no unresolved authority, rollout, or verification blockers
       remain.
@@ -70930,6 +70930,8 @@ phases:
     depends_on:
     - hard_cut.readiness_review
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-15T03:12:33.240242+00:00'
 - id: hard_cut.impl
   name: Canonical Hard-Cut Implementation
   status: locked
