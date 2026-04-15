@@ -70958,7 +70958,7 @@ phases:
   steps:
   - id: hard_cut.impl_core_vocab
     name: Cut config and token vocabulary to canonical-only fields
-    status: claimed
+    status: done
     description: 'Core/domain slice only.
 
 
@@ -71021,6 +71021,24 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-15T03:32:23.992748+00:00'
+    done_at: '2026-04-15T04:00:56.580120+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - core models/token/config/aliases and targeted core tests were read and\
+      \ updated for canonical vocabulary enforcement.\n\n  ## Expected-Red Proof (MANDATORY)\n\
+      \  - New test file created first: tests/core/test_hard_cut_vocab.py\n  - Pre-implementation\
+      \ command: `.venv/bin/python -m pytest tests/core/test_hard_cut_vocab.py -v\
+      \ --tb=short`\n  - Result before implementation: 7 failed, proving legacy `tools`\
+      \ alias support and `profile_name` token binding still existed.\n\n  ## Implementation\
+      \ Proof\n  - Legacy alias deletion proof: deleted src/tela/core/profile_aliases.py;\
+      \ removed alias normalization/deprecation handling; removed `tools` property\
+      \ and alias validators.\n  - Canonical `profile_id` binding proof: CapabilityToken\
+      \ field switched to `profile_id`; token creation/signature/validation paths\
+      \ updated accordingly.\n  - Fail-closed alias rejection proof: ProfileConfig\
+      \ now forbids extra fields; `tools` rejected; CapabilityToken rejects `profile_name`\
+      \ alias.\n  - Targeted test command(s) + output:\n    - `.venv/bin/python -m\
+      \ pytest tests/core/ -v --tb=short` → `215 passed, 2 xfailed, 11 xpassed`\n\
+      \    - doctest modules on changed core files → `32 passed`\n  - Changed-file\
+      \ Invar verification output: passed (0 errors, doctest passed).\nerror: \"\""
   - id: hard_cut.impl_listing_surface
     name: Implement canonical profile listing surface
     status: pending
