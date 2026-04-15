@@ -71546,3 +71546,73 @@ phases:
     depends_on:
     - hard_cut.final_gate
     agent: python-senior-tacit
+  - id: hard_cut.final_reverify
+    name: Reverify hard-cut blocker remediation and canonical runtime outputs
+    status: pending
+    description: 'Post-remediation reverify step for the blocked `hard_cut.final_gate`
+      path.
+
+
+      Failure context being forwarded from the blocked gate and fix step:
+
+      - Recheck the docs/test sync regression family in `tests/shell/test_surface_contract.py`
+      against the UPDATED hard-cut wording contract so the suite no longer depends
+      on removed `DESIGN.md` phrases.
+
+      - Recheck the tool-prefix validation family in `tests/repro/test_tool_prefix_blackbox.py`
+      so expectations around rejecting plain `tela` prefix are satisfied, either because
+      implementation behavior now matches the spec or because the test policy was
+      explicitly aligned to the authoritative hard-cut contract.
+
+      - Reconfirm there is NO regression in canonical hard-cut runtime/tool outputs
+      after B1+B2 remediation.
+
+
+      This step exists to gate rerun readiness: it must validate the specific blocker
+      families and then probe broader hard-cut canonical runtime/tool surfaces before
+      `hard_cut.final_gate` may open.'
+    verification: '- `tests/shell/test_surface_contract.py` passes against the updated
+      wording contract
+
+      - `tests/repro/test_tool_prefix_blackbox.py` satisfies the chosen authoritative
+      policy for plain `tela` prefix handling
+
+      - Hard-cut canonical runtime/tool outputs show no regression after blocker remediation
+
+      - Evidence distinguishes blocker-family retest results from broader runtime/tool
+      output revalidation'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Targeted blocker-family verification
+
+      - command_1: <exact command for `tests/shell/test_surface_contract.py`>
+
+      - result_1: <pass/fail + salient assertion outcome>
+
+      - command_2: <exact command for `tests/repro/test_tool_prefix_blackbox.py`>
+
+      - result_2: <pass/fail + salient policy outcome>
+
+
+      ## Canonical runtime/tool output regression check
+
+      - commands: <list>
+
+      - outputs reviewed: <list>
+
+      - regressions found: <none or list>
+
+
+      ## Gate recommendation
+
+      - ready_for_hard_cut.final_gate: yes|no
+
+      - remaining gaps: <none or list>'
+    depends_on:
+    - hard_cut.final_gate_fix
+    agent: integration-verifier-tacit
