@@ -71301,7 +71301,7 @@ phases:
       \ gate review.\nerror: \"\""
   - id: hard_cut.final_doc_sync
     name: Sync local docs and tests to canonical surfaces only
-    status: pending
+    status: claimed
     description: 'Docs-only sync step.
 
 
@@ -71333,6 +71333,8 @@ phases:
     - hard_cut.final_conformance
     - hard_cut.final_test_sync
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer-tacit
+    claimed_at: '2026-04-15T05:31:47.129427+00:00'
   - id: hard_cut.final_gate
     name: Open or block hard-cut completion
     status: pending
