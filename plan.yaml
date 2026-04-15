@@ -71209,7 +71209,7 @@ phases:
   steps:
   - id: hard_cut.final_tool_probe
     name: Probe canonical profile listing through the real MCP path
-    status: pending
+    status: claimed
     description: Independently verify the declared shared surface by launching the
       real entry path and invoking tela_list_profiles. Prove that the canonical MCP
       tool works and that shared consumers no longer need tela://profiles.
@@ -71237,6 +71237,8 @@ phases:
 
       '
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-15T05:17:21.027329+00:00'
   - id: hard_cut.final_conformance
     name: Audit full conformance to the latest canonical contract
     status: pending
