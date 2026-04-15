@@ -72002,7 +72002,7 @@ phases:
       \ (not stale)."
   - id: tech_debt.cleanup_fix
     name: Implement technical debt fixes for stale xfail markers
-    status: claimed
+    status: done
     description: Apply code/test changes to remove stale xfail markers and align tests
       with current authoritative behavior, without broad scope expansion.
     verification: All targeted stale-xfail debt items are fixed in code/tests and
@@ -72012,6 +72012,15 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-15T16:43:32.855246+00:00'
+    done_at: '2026-04-15T16:43:45.657700+00:00'
+    evidence: "Implemented stale-xfail debt cleanup.\n- File changed: `tests/core/test_tool_prefix_contract.py`.\n\
+      - Changes made:\n  - Removed 11 stale `@pytest.mark.xfail(reason=\"pre-implementation:\
+      \ tool_prefix not yet wired\")` decorators.\n  - Updated module/test docstrings/comments\
+      \ from pre-implementation RED language to current post-implementation GREEN\
+      \ expectations.\n  - Kept test logic intact (debt cleanup without behavior expansion).\n\
+      - Verification run:\n  - `.venv/bin/python -m pytest tests/core/test_tool_prefix_contract.py\
+      \ tests/repro/test_tool_prefix_blackbox.py -q` -> `24 passed`.\n  - `invar guard\
+      \ --changed` -> passed (0 errors)."
   - id: tech_debt.cleanup_verify
     name: Verify debt cleanup and regression safety
     status: pending
