@@ -71351,12 +71351,12 @@ phases:
     name: Open or block hard-cut completion
     status: pending
     description: Final gate for cutover completion. Open only if runtime tool probe,
-      canonical conformance audit, and local doc/test sync all pass with no leftover
-      legacy shared surfaces.
+      canonical conformance audit, local doc/test sync, and the blocked-gate remediation
+      reverify all pass with no leftover legacy shared surfaces.
     verification: Gate must explicitly open or block cutover completion. It blocks
-      if any runtime probe, canonical conformance, local test sync, or local doc sync
-      artifact is incomplete, or if any legacy shared vocabulary, dotted shared surface,
-      or `tela://profiles` dependency remains.
+      if any runtime probe, canonical conformance, local test sync, local doc sync,
+      or remediation reverify artifact is incomplete, or if any legacy shared vocabulary,
+      dotted shared surface, or `tela://profiles` dependency remains.
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -71384,6 +71384,7 @@ phases:
     - hard_cut.final_conformance
     - hard_cut.final_test_sync
     - hard_cut.final_doc_sync
+    - hard_cut.final_reverify
     agent: gate-reviewer-tacit
   - id: hard_cut.final_test_sync
     name: Sync local tests to canonical hard-cut surfaces only
