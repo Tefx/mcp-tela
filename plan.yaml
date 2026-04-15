@@ -71978,7 +71978,7 @@ phases:
   steps:
   - id: tech_debt.cleanup_inventory
     name: Inventory technical debt assertions and stale xfail markers
-    status: claimed
+    status: done
     description: Audit current test debt with focus on xfail markers that now xpass;
       produce explicit list of files/tests and intended disposition (remove xfail,
       tighten assertion, or keep with rationale).
@@ -71987,6 +71987,19 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-15T16:41:53.031982+00:00'
+    done_at: '2026-04-15T16:42:36.962717+00:00'
+    evidence: "Inventory completed.\n- Searched test tree for xfail markers:\n  -\
+      \ command: `grep pattern=xfail include=tests/**/*.py`\n  - result: 21 matches\
+      \ across 4 files.\n- Audited stale candidates:\n  - command: `.venv/bin/python\
+      \ -m pytest tests/core/test_tool_prefix_contract.py -q`\n  - result: `3 passed,\
+      \ 11 xpassed` (stale xfail markers confirmed in this file).\n- Audited remaining\
+      \ xfail families for legitimacy:\n  - command: `.venv/bin/python -m pytest tests/shell/test_connect_recovery_red.py\
+      \ tests/shell/test_downstream_recovery.py tests/repro/test_adr006_runtime_hardening_probes.py\
+      \ -q`\n  - result: `32 passed, 1 skipped, 8 xfailed` (no xpass; markers currently\
+      \ behaving as expected).\n- Remediation strategy:\n  - Remove/convert stale\
+      \ xfail decorators only in `tests/core/test_tool_prefix_contract.py`.\n  - Keep\
+      \ other xfail markers untouched in this pass because they are still active xfails\
+      \ (not stale)."
   - id: tech_debt.cleanup_fix
     name: Implement technical debt fixes for stale xfail markers
     status: pending
