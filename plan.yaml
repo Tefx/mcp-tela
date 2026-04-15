@@ -71349,7 +71349,7 @@ phases:
       \ removals.\nerror: \"\""
   - id: hard_cut.final_gate
     name: Open or block hard-cut completion
-    status: pending
+    status: claimed
     description: Final gate for cutover completion. Open only if runtime tool probe,
       canonical conformance audit, and local doc/test sync all pass with no leftover
       legacy shared surfaces.
@@ -71385,6 +71385,8 @@ phases:
     - hard_cut.final_test_sync
     - hard_cut.final_doc_sync
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-15T05:43:03.719953+00:00'
   - id: hard_cut.final_test_sync
     name: Sync local tests to canonical hard-cut surfaces only
     status: done
