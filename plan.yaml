@@ -72002,7 +72002,7 @@ phases:
       \ (not stale)."
   - id: tech_debt.cleanup_fix
     name: Implement technical debt fixes for stale xfail markers
-    status: pending
+    status: claimed
     description: Apply code/test changes to remove stale xfail markers and align tests
       with current authoritative behavior, without broad scope expansion.
     verification: All targeted stale-xfail debt items are fixed in code/tests and
@@ -72010,6 +72010,8 @@ phases:
     depends_on:
     - tech_debt.cleanup_inventory
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-15T16:43:32.855246+00:00'
   - id: tech_debt.cleanup_verify
     name: Verify debt cleanup and regression safety
     status: pending
