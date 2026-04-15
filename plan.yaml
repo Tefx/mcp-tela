@@ -71201,7 +71201,7 @@ phases:
       \ 0 errors (warnings pre-existing only).\nerror: \"\""
 - id: hard_cut.finalization
   name: Hard-Cut Finalization and Conformance
-  status: in_progress
+  status: done
   gate: Cutover completes only after independent tool probe, canonical conformance
     audit, local doc/test sync, and final gate all pass.
   depends_on:
@@ -71349,7 +71349,7 @@ phases:
       \ removals.\nerror: \"\""
   - id: hard_cut.final_gate
     name: Open or block hard-cut completion
-    status: claimed
+    status: done
     description: Final gate for cutover completion. Open only if runtime tool probe,
       canonical conformance audit, local doc/test sync, and the blocked-gate remediation
       reverify all pass with no leftover legacy shared surfaces.
@@ -71389,6 +71389,24 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-15T13:11:57.687897+00:00'
+    done_at: '2026-04-15T13:23:28.579983+00:00'
+    evidence: "status: SUCCESS\nevidence:\n  ## refs Read Confirmation (MANDATORY)\n\
+      \  - core canonical identity/runtime tool surfaces, canonical docs, blocker-family\
+      \ tests, and full-suite verification outputs were audited.\n\n  ## Final Gate\n\
+      \  - Decision: OPEN\n  - Runtime probe status: PASS (`tela_list_profiles`/`tela_list_providers`\
+      \ present; canonical payload keys only; no `tela://profiles` dependency).\n\
+      \  - Canonical conformance status: PASS (`profile_id` canonical identity across\
+      \ core/shell; no forbidden legacy shared surfaces in production behavior).\n\
+      \  - Test sync status: PASS (`1098 passed, 0 failed`; blocker-family tests pass).\n\
+      \  - Doc sync status: PASS (DESIGN/USAGE/INTERFACES aligned to hard-cut wording\
+      \ and policy).\n  - Remaining legacy shared surfaces: none.\n  - B1/B2 remediation\
+      \ loops: closed and verified by hard_cut.final_reverify + hard_cut.final_reverify2.\n\
+      \n  ## Behavioral Proof\n  - headline: PASS_WITH_DEBT\n  - proof_gap_status:\
+      \ NONE\n  - blocking_status: CLOSED\n  - gate_open_allowed: true\n  - behavioral_proof_register:\n\
+      \    - canonical listing payload correctness: PROVEN\n    - reserved-prefix\
+      \ policy alignment: PROVEN\n    - legacy shared surface removal: PROVEN\n  \
+      \  - blocked-gate residual closure after loop-2: PROVEN\n    - stale xfail markers:\
+      \ PROVEN non-blocking debt\nerror: \"\""
   - id: hard_cut.final_test_sync
     name: Sync local tests to canonical hard-cut surfaces only
     status: done
