@@ -71985,3 +71985,13 @@ phases:
     verification: Evidence includes concrete inventory from current repo state and
       chosen remediation strategy per item.
     agent: python-executor
+  - id: tech_debt.cleanup_fix
+    name: Implement technical debt fixes for stale xfail markers
+    status: pending
+    description: Apply code/test changes to remove stale xfail markers and align tests
+      with current authoritative behavior, without broad scope expansion.
+    verification: All targeted stale-xfail debt items are fixed in code/tests and
+      no new debt markers introduced in touched files.
+    depends_on:
+    - tech_debt.cleanup_inventory
+    agent: python-senior-tacit
