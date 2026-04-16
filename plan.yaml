@@ -72145,3 +72145,48 @@ phases:
     depends_on:
     - hard_cut.closeout.surface_enforcement
     agent: python-executor
+  - id: hard_cut.closeout.verify
+    name: Verify hard-cut closeout shared surfaces
+    status: pending
+    description: As an INDEPENDENT TESTER, adversarially verify the hard-cut closeout
+      behavior from the external/shared-surface perspective. Your job is to find drift,
+      especially accidental over-hardening of the top-level envelope or hidden compatibility
+      acceptance.
+    verification: 'phase-check protecting hard_cut.closeout.gate.
+
+      Independent verifier must confirm:
+
+      - non-reserved top-level client_info hints are accepted/ignored
+
+      - reserved-key conflicts and alias fields are rejected
+
+      - capability_token extra fields are rejected fail-closed
+
+      - canonical capability_token validation matches vendored mirror behavior
+
+      - vendored mirrors match ../opifex exactly
+
+      - shared MCP tool names are snake_case only
+
+      - authoritative targeted tests and parity tests pass'
+    evidence_template: "## Verification Report\n\n## refs Read Confirmation (MANDATORY)\n\
+      For each ref in this step:\n- <filename> — key passage or \"NOT READ: <reason>\"\
+      \n\n## Commands Executed\n```bash\n<commands>\n```\n\n## Behavioral Proof Register\n\
+      - requirement_ref: top-level non-reserved hints allowed/ignored\n  behavior_claim:\
+      \ <result>\n  evidence_ref: <test/output>\n  status: PROVEN|UNPROVEN\n  closure_path:\
+      \ <if needed>\n  gate_decision_basis: <one line>\n\n- requirement_ref: reserved-key\
+      \ / alias conflicts rejected\n  behavior_claim: <result>\n  evidence_ref: <test/output>\n\
+      \  status: PROVEN|UNPROVEN\n  closure_path: <if needed>\n  gate_decision_basis:\
+      \ <one line>\n\n- requirement_ref: capability_token fail-closed extras rejected\n\
+      \  behavior_claim: <result>\n  evidence_ref: <test/output>\n  status: PROVEN|UNPROVEN\n\
+      \  closure_path: <if needed>\n  gate_decision_basis: <one line>\n\n- requirement_ref:\
+      \ vendored mirror parity with ../opifex\n  behavior_claim: <result>\n  evidence_ref:\
+      \ <test/output>\n  status: PROVEN|UNPROVEN\n  closure_path: <if needed>\n  gate_decision_basis:\
+      \ <one line>\n\n- requirement_ref: shared MCP tool naming snake_case\n  behavior_claim:\
+      \ <result>\n  evidence_ref: <test/output>\n  status: PROVEN|UNPROVEN\n  closure_path:\
+      \ <if needed>\n  gate_decision_basis: <one line>\n\n## Headline\n- PASS | PASS_WITH_DEBT\
+      \ | FAIL"
+    depends_on:
+    - hard_cut.closeout.surface_enforcement
+    - hard_cut.closeout.vendor_schema_parity
+    agent: integration-verifier-tacit
