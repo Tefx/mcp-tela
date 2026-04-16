@@ -72045,7 +72045,7 @@ phases:
       \  - `invar guard --changed` -> passed (0 errors, 0 warnings)."
 - id: hard_cut.closeout
   name: Hard-Cut Canonical Alignment Closeout
-  status: pending
+  status: in_progress
   gate: Open only when strict capability_token enforcement, read-only vendored schema
     parity, and snake_case shared MCP surface rules are independently verified with
     fail-closed behavior and no envelope over-tightening.
@@ -72054,7 +72054,7 @@ phases:
   steps:
   - id: hard_cut.closeout.surface_enforcement
     name: Close shared-surface canonical enforcement
-    status: pending
+    status: claimed
     description: 'Implement and verify the remaining shared-surface hard-cut rules.
 
 
@@ -72109,6 +72109,8 @@ phases:
       \ command:\n  ```bash\n  <command>\n  ```\n- Actual output:\n  ```text\n  <paste\
       \ output>\n  ```"
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-16T13:46:46.296747+00:00'
   - id: hard_cut.closeout.vendor_schema_parity
     name: Add read-only opifex schema mirrors and parity enforcement
     status: pending
