@@ -72359,7 +72359,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: hard_cut.closeout.fix_capability_token_parity
     name: Batched remediation for capability_token parity blockers
-    status: pending
+    status: claimed
     description: 'Fix ALL blocker findings from hard_cut.closeout.verify for canonical
       capability_token handling.
 
@@ -72452,6 +72452,8 @@ phases:
     depends_on:
     - hard_cut.closeout.verify
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-16T14:45:40.677551+00:00'
   - id: hard_cut.closeout.retest_capability_token_parity
     name: Retest hard-cut closeout capability_token blockers
     status: pending
