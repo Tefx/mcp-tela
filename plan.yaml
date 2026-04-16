@@ -72316,3 +72316,98 @@ phases:
     - hard_cut.closeout.vendor_schema_parity
     - hard_cut.closeout.verify
     agent: gate-reviewer-tacit
+  - id: hard_cut.closeout.fix_capability_token_parity
+    name: Batched remediation for capability_token parity blockers
+    status: pending
+    description: 'Fix ALL blocker findings from hard_cut.closeout.verify for canonical
+      capability_token handling.
+
+
+      Work type: defect_repair
+
+      step_type: implementation
+
+
+      Blockers to close:
+
+      1. Add token_version to src/tela/core/models.py::CapabilityToken so canonical
+      validation and signature recomputation preserve the vendored opifex-required
+      field.
+
+      2. Enforce fail-closed extra-field rejection on CapabilityToken with extra="forbid"
+      to match other core models and canonical schema expectations.
+
+      3. Verify _CANONICAL_TOKEN_FIELDS / model serialization / signature inputs stay
+      aligned so opifex-compliant tokens no longer HMAC-mismatch after model round-trip.
+
+
+      Non-blocking debt handling:
+
+      - persona_ref / instance_id requiredness mismatch is NOT gate-blocking for this
+      remediation slice.
+
+      - If still present after blocker repair, record it explicitly as residual schema-parity
+      debt rather than broadening the fix scope.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: the core CapabilityToken model is weaker than the vendored canonical
+      schema, so required canonical fields are dropped and unknown extras are not
+      fail-closed.
+
+      - Symptom: opifex-compliant tokens lose token_version on parse/recompute, producing
+      HMAC mismatch and soft extra-field acceptance.
+
+      - Why this fix is not surface-level: align model shape, extra-field policy,
+      and signature input preservation together instead of patching only one failing
+      assertion.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      preserves canonical token semantics across parse and signature recomputation.
+
+      '
+    verification: '- Targeted tests cover token_version-preserving parse/serialize/signature
+      recomputation path
+
+      - Regression covers extra-field rejection fail-closed on CapabilityToken
+
+      - Evidence states whether persona_ref / instance_id remains residual non-blocking
+      debt or was absorbed safely
+
+      - Remaining changes stay within hard-cut closeout blocker scope'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Blocker Remediation Evidence
+
+      - blocker_fingerprint: capability_token canonical parity / extra-field enforcement
+
+      - root_cause_hypothesis: <why model/schema drift caused mismatch>
+
+      - files changed: <list>
+
+      - targeted tests or checks added/updated: <list>
+
+      - highest-risk failure path covered: token_version round-trip + HMAC recomputation
+
+      - residual debt note: persona_ref / instance_id requiredness <open|closed with
+      reason>
+
+      - command/output summary: <paste relevant targeted verification output>'
+    depends_on:
+    - hard_cut.closeout.verify
+    agent: python-senior-tacit
