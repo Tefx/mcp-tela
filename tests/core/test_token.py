@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 
+import pytest
+from pydantic import ValidationError
+
 from tela.core.models import EnforcementVerdict, TokenInitBinding
 from tela.core.token import (
     compute_signature,
@@ -66,10 +69,78 @@ def test_validate_token_dual_key_rotation() -> None:
     assert result.verdict == EnforcementVerdict.ALLOW
 
 
+def test_validate_token_preserves_token_version_in_signature_round_trip() -> None:
+    from tela.core.models import CapabilityToken
+
+    fields = {
+        "token_id": "tok_1",
+        "profile_id": "dev",
+        "persona_ref": "persona.dev",
+        "instance_id": "inst-1",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-12-31T23:59:59Z",
+        "token_version": "0.1.0",
+    }
+    signature = compute_signature(fields, "secret1")
+
+    token = CapabilityToken.model_validate(fields | {"signature": signature})
+
+    assert (
+        token.model_dump(exclude={"signature"}, exclude_none=True)["token_version"]
+        == "0.1.0"
+    )
+    result = validate_token(token, ["secret1"], "2026-06-01T00:00:00Z")
+    assert result.verdict == EnforcementVerdict.ALLOW
+
+
+def test_validate_token_rejects_signature_missing_token_version() -> None:
+    from tela.core.models import CapabilityToken
+
+    token_fields = {
+        "token_id": "tok_1",
+        "profile_id": "dev",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-12-31T23:59:59Z",
+        "token_version": "0.1.0",
+    }
+    signature_without_token_version = compute_signature(
+        {key: value for key, value in token_fields.items() if key != "token_version"},
+        "secret1",
+    )
+
+    token = CapabilityToken.model_validate(
+        token_fields | {"signature": signature_without_token_version}
+    )
+
+    result = validate_token(token, ["secret1"], "2026-06-01T00:00:00Z")
+    assert result.verdict == EnforcementVerdict.DENY
+    assert result.error_code == "TOKEN_INVALID"
+
+
+def test_capability_token_rejects_unknown_extra_field() -> None:
+    from tela.core.models import CapabilityToken
+
+    with pytest.raises(ValidationError) as exc_info:
+        CapabilityToken.model_validate(
+            {
+                "token_id": "tok_1",
+                "profile_id": "dev",
+                "issued_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-12-31T23:59:59Z",
+                "token_version": "0.1.0",
+                "signature": "abc",
+                "unexpected_field": "nope",
+            }
+        )
+
+    assert "unexpected_field" in str(exc_info.value)
+
+
 def test_create_token_profile() -> None:
     tok = create_token("production", "secret")
     assert tok.profile_id == "production"
     assert tok.token_id == "tok_auto"
+    assert tok.token_version == "0.1.0"
 
 
 # --- resolve_token_init_binding tests ---

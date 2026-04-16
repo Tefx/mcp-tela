@@ -66,6 +66,7 @@ class TestCapabilityTokenCanonicalProfileId:
             profile_id="dev",
             issued_at="2026-01-01T00:00:00Z",
             expires_at="2026-12-31T23:59:59Z",
+            token_version="0.1.0",
             signature="abc",
         )
         assert tok.profile_id == "dev"
@@ -123,6 +124,7 @@ class TestTokenFunctionsUseProfileId:
             "profile_id": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
+            "token_version": "0.1.0",
         }
         sig = compute_signature(fields, "secret1")
         assert isinstance(sig, str) and len(sig) == 64

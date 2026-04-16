@@ -60,7 +60,7 @@ def is_expired(expires_at: str, now_iso: str) -> bool:
     """Check if a token has expired.
 
     Examples:
-        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z", "token_version": "0.1.0"}
         >>> sig = compute_signature(fields, "secret")
         >>> isinstance(sig, str) and len(sig) == 64
         True
@@ -99,7 +99,7 @@ def validate_token(
     Tries each secret (dual-key rotation). Checks HMAC signature, then expiry.
 
     Examples:
-        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z", "token_version": "0.1.0"}
         >>> sig = compute_signature(fields, "secret1")
         >>> tok = CapabilityToken(**fields, signature=sig)
         >>> r = validate_token(tok, ["secret1"], "2026-06-01T00:00:00Z")
@@ -172,7 +172,7 @@ def resolve_token_init_binding(
     has `token_result.verdict == DENY`.
 
     Examples:
-        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z"}
+        >>> fields = {"token_id": "tok_1", "profile_id": "dev", "issued_at": "2026-01-01T00:00:00Z", "expires_at": "2026-12-31T23:59:59Z", "token_version": "0.1.0"}
         >>> sig = compute_signature(fields, "secret1")
         >>> tok = CapabilityToken(**fields, signature=sig)
         >>> binding = resolve_token_init_binding(tok, ["secret1"], "2026-06-01T00:00:00Z")
@@ -244,6 +244,7 @@ def create_token(
         "profile_id": profile,
         "issued_at": issued_at,
         "expires_at": expires_at,
+        "token_version": "0.1.0",
     }
     sig = compute_signature(fields, secret)
     return CapabilityToken(
@@ -251,5 +252,6 @@ def create_token(
         profile_id=profile,
         issued_at=issued_at,
         expires_at=expires_at,
+        token_version=fields["token_version"],
         signature=sig,
     )
