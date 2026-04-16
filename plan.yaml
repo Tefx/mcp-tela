@@ -72240,7 +72240,7 @@ phases:
       \ opifex schema mirrors with CI parity enforcement`\n\n## NOT Done\n- none"
   - id: hard_cut.closeout.verify
     name: Verify hard-cut closeout shared surfaces
-    status: claimed
+    status: done
     description: As an INDEPENDENT TESTER, adversarially verify the hard-cut closeout
       behavior from the external/shared-surface perspective. Your job is to find drift,
       especially accidental over-hardening of the top-level envelope or hidden compatibility
@@ -72285,6 +72285,46 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-16T14:20:41.740773+00:00'
+    done_at: '2026-04-16T14:45:17.047575+00:00'
+    evidence: "## Verification Report\n\nstep_intent: verify_gate_adversarial\nexpected_result:\
+      \ green\nobserved_result: fail_with_blockers\nfailure_alignment: blocking parity\
+      \ drift found; batched remediation required\nproduct_implementation_files_modified:\
+      \ none\n\n## refs Read Confirmation (MANDATORY)\n- src/tela/core/models.py —\
+      \ CapabilityToken missing token_version and lacks extra=forbid\n- src/tela/core/token.py\
+      \ — signature recomputation path affected by model shape\n- src/tela/shell/upstream.py\
+      \ — canonical extraction accepts token_version field\n- vendor/opifex/contracts/capability_token.schema.json\
+      \ — requires token_version const\n- /Users/tefx/Projects/opifex/contracts/capability_token.schema.json\
+      \ — source schema parity basis\n- tests/test_vendor_schema_parity.py and hard-cut\
+      \ test suites — executed for proof\n\n## Commands Executed\n```bash\n.venv/bin/python\
+      \ -m pytest tests/shell/test_shared_surface_runtime_hard_cut.py tests/integration/test_token_mode_initialize.py\
+      \ tests/test_vendor_schema_parity.py -q\n```\n\n## Behavioral Proof Register\n\
+      - requirement_ref: non-reserved top-level hints allowed/ignored\n  behavior_claim:\
+      \ confirmed\n  evidence_ref: verifier targeted executions\n  status: PROVEN\n\
+      \  closure_path: n/a\n  gate_decision_basis: acceptance path preserved\n- requirement_ref:\
+      \ reserved-key/alias conflicts rejected\n  behavior_claim: confirmed\n  evidence_ref:\
+      \ verifier targeted executions\n  status: PROVEN\n  closure_path: n/a\n  gate_decision_basis:\
+      \ fail-closed rejection proven\n- requirement_ref: capability_token extra fields\
+      \ rejected fail-closed\n  behavior_claim: extraction layer rejects extras\n\
+      \  evidence_ref: verifier targeted executions\n  status: PROVEN\n  closure_path:\
+      \ n/a\n  gate_decision_basis: extraction behavior pass\n- requirement_ref: canonical\
+      \ capability_token validation matches vendored mirror\n  behavior_claim: mismatch\
+      \ found (token_version dropped at model layer)\n  evidence_ref: verifier failure\
+      \ evidence\n  status: UNPROVEN\n  closure_path: hard_cut.closeout.fix_capability_token_parity\
+      \ + hard_cut.closeout.retest_capability_token_parity\n  gate_decision_basis:\
+      \ BLOCKING\n- requirement_ref: vendored mirrors match ../opifex\n  behavior_claim:\
+      \ confirmed\n  evidence_ref: parity tests\n  status: PROVEN\n  closure_path:\
+      \ n/a\n  gate_decision_basis: file parity pass\n- requirement_ref: shared MCP\
+      \ tool names snake_case only\n  behavior_claim: confirmed\n  evidence_ref: verifier\
+      \ targeted executions\n  status: PROVEN\n  closure_path: n/a\n  gate_decision_basis:\
+      \ naming enforcement pass\n\ngate_open_allowed: false\n\n## Disposition\n- blocker:\
+      \ CapabilityToken/opifex schema parity mismatch (`token_version` handling and\
+      \ signature parity)\n- blocker: CapabilityToken defense-in-depth gap (`extra=\"\
+      forbid\"` missing)\n- should_fix/non_blocking note: persona_ref/instance_id\
+      \ strictness parity note\n\n## Remediation Ownership\nPlanner remediation applied:\n\
+      - hard_cut.closeout.fix_capability_token_parity\n- hard_cut.closeout.retest_capability_token_parity\n\
+      - hard_cut.closeout.gate rewired to depend on retest\n\n## Outcome\nVerification\
+      \ step completed as detection/reporting owner with blockers promoted into batched\
+      \ remediation chain."
   - id: hard_cut.closeout.gate
     name: Gate hard-cut canonical alignment closeout
     status: pending
