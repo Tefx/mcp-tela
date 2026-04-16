@@ -36,7 +36,7 @@ def filter_tools_for_profile(
     Examples:
         >>> from tela.core.models import Posture, ProfileConfig, ResolvedTool
         >>> tools = {"fs": [ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)]}
-        >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
         >>> result = filter_tools_for_profile(tools, profile, {"fs": Posture.NONE})
         >>> len(result.value)
         1
@@ -112,7 +112,7 @@ def enforce_tool_call(
     Examples:
         >>> from tela.core.models import ResolvedTool, ProfileConfig, Posture
         >>> tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
-        >>> profile = ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})
+        >>> profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
         >>> enforce_tool_call("read_file", tool, profile, Posture.NONE).value.verdict
         <EnforcementVerdict.ALLOW: 'allow'>
 
