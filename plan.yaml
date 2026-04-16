@@ -72695,7 +72695,7 @@ phases:
       \ not modified."
   - id: hard_cut.closeout.retest_capability_token_parity_round2
     name: Retest hard-cut closeout capability_token blockers (round 2)
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, re-run the hard_cut.closeout verification
       assertions relevant to capability_token schema parity after the second batched
       remediation.
@@ -72787,3 +72787,5 @@ phases:
     depends_on:
     - hard_cut.closeout.fix_capability_token_parity_round2
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-16T15:15:43.568464+00:00'
