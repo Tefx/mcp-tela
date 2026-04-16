@@ -72109,3 +72109,39 @@ phases:
       \ command:\n  ```bash\n  <command>\n  ```\n- Actual output:\n  ```text\n  <paste\
       \ output>\n  ```"
     agent: python-senior-tacit
+  - id: hard_cut.closeout.vendor_schema_parity
+    name: Add read-only opifex schema mirrors and parity enforcement
+    status: pending
+    description: "Implement and verify local read-only vendored schema mirrors without\
+      \ creating a second canonical source.\n\nREQUIRED BEHAVIOR:\n- Mirror into a\
+      \ local vendor path such as vendor/opifex/contracts or schemas/vendor/opifex.\n\
+      - Vendored files must explicitly state:\n  - source of truth is ../opifex\n\
+      \  - do not edit manually\n  - read-only mirror\n- Mirror at least capability_token.schema.json\
+      \ and tela_profile_list.schema.json.\n- CI/parity tests must fail if any vendored\
+      \ mirror diverges from ../opifex.\n\nThis step is for shared-schema closeout\
+      \ only; no unrelated cleanup.\n## Completion Criteria (stub exclusion)\nThis\
+      \ is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\nEach deliverable\
+      \ MUST contain substantive logic that processes its inputs and produces outputs\
+      \ that vary based on those inputs."
+    verification: "local-check protecting downstream full-plan-check and phase gate.\n\
+      Executor must:\n- first add expected-red parity tests that fail when vendored\
+      \ mirrors diverge from ../opifex\n- vendor read-only mirror files for at least:\n\
+      \  - capability_token.schema.json\n  - tela_profile_list.schema.json\n- mark\
+      \ mirrors explicitly as read-only and sourced from ../opifex\n- add CI/test-path\
+      \ parity enforcement so divergence fails\n- run targeted green tests plus invar\
+      \ guard on changed files"
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Expected-Red\
+      \ Proof (MANDATORY)\n- Parity test(s) added:\n  - <test ids>\n- Exact command\
+      \ run before implementation:\n  ```bash\n  <command>\n  ```\n- Failing output\
+      \ showing missing/divergent mirror enforcement:\n  ```text\n  <paste output>\n\
+      \  ```\n\n## Mirror Inventory\n- Vendor location: <path>\n- Mirrored files:\n\
+      \  - capability_token.schema.json\n  - tela_profile_list.schema.json\n  - <others\
+      \ if added>\n- Read-only/source-of-truth banner text:\n  ```text\n  <paste banner/header/comment\
+      \ strategy>\n  ```\n\n## Green Proof\n- Parity/CI command(s):\n  ```bash\n \
+      \ <command>\n  ```\n- Actual output:\n  ```text\n  <paste output>\n  ```\n\n\
+      ## Guard Proof\n- invar/guard command:\n  ```bash\n  <command>\n  ```\n- Actual\
+      \ output:\n  ```text\n  <paste output>\n  ```"
+    depends_on:
+    - hard_cut.closeout.surface_enforcement
+    agent: python-executor
