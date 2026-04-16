@@ -72634,3 +72634,97 @@ phases:
     depends_on:
     - hard_cut.closeout.retest_capability_token_parity
     agent: python-senior-tacit
+  - id: hard_cut.closeout.retest_capability_token_parity_round2
+    name: Retest hard-cut closeout capability_token blockers (round 2)
+    status: pending
+    description: 'As an INDEPENDENT TESTER, re-run the hard_cut.closeout verification
+      assertions relevant to capability_token schema parity after the second batched
+      remediation.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: phase-check
+
+
+      Re-check all blocker-class closeout assertions:
+
+      - integration helper generated tokens validate with signatures recomputed from
+      token_version-inclusive canonical inputs
+
+      - canonical capability_token validation matches vendored mirror behavior for
+      required persona_ref and instance_id
+
+      - capability_token extra fields remain rejected fail-closed
+
+      - vendored parity assertions covering the repaired surfaces pass
+
+
+      This is a phase-check protecting hard_cut.closeout.gate.'
+    verification: '- expected_result: green
+
+      - Re-run authoritative targeted closeout verification assertions for capability_token
+      parity
+
+      - Confirm helper/runtime token signature parity now passes
+
+      - Confirm persona_ref / instance_id requiredness now matches canonical schema
+      without reopening any parity drift'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: hard_cut.closeout capability_token blocker retest round 2
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Test Execution
+
+      - Commands executed:
+
+      ```bash
+
+      <paste actual test commands>
+
+      ```
+
+      - Output summary: <key results>
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+      | blocker | <issue or none> | <location> | <steps> |
+
+
+      ### Headline
+
+      - [ ] PASS
+
+      - [ ] PASS_WITH_DEBT
+
+      - [ ] FAIL
+
+      '
+    depends_on:
+    - hard_cut.closeout.fix_capability_token_parity_round2
+    agent: integration-verifier-tacit
