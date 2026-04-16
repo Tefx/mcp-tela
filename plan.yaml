@@ -72169,7 +72169,7 @@ phases:
       \ contract enforcement."
   - id: hard_cut.closeout.vendor_schema_parity
     name: Add read-only opifex schema mirrors and parity enforcement
-    status: claimed
+    status: done
     description: "Implement and verify local read-only vendored schema mirrors without\
       \ creating a second canonical source.\n\nREQUIRED BEHAVIOR:\n- Mirror into a\
       \ local vendor path such as vendor/opifex/contracts or schemas/vendor/opifex.\n\
@@ -72205,6 +72205,39 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-16T14:01:15.442628+00:00'
+    done_at: '2026-04-16T14:20:14.916387+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- `/Users/tefx/Projects/opifex/contracts/capability_token.schema.json`\
+      \ — canonical CapabilityToken schema with `profile_id`, `token_version`, canonical\
+      \ vocabulary\n- `/Users/tefx/Projects/opifex/contracts/tela_profile_list.schema.json`\
+      \ — canonical TelaProfileList schema (array of profile_id + capabilities + default)\n\
+      - `tests/test_vendor_schema_parity.py` — CI parity test file (155 lines, 8 tests)\n\
+      - `vendor/opifex/contracts/capability_token.schema.json` — vendored mirror with\
+      \ `$comment` banner\n- `vendor/opifex/contracts/tela_profile_list.schema.json`\
+      \ — vendored mirror with `$comment` banner\n\n## Expected-Red Proof (MANDATORY)\n\
+      - Parity test(s) added:\n  - `tests/test_vendor_schema_parity.py::TestVendorMirrorParity::test_vendor_mirror_exists[capability_token.schema.json]`\n\
+      \  - `tests/test_vendor_schema_parity.py::TestVendorMirrorParity::test_vendor_mirror_exists[tela_profile_list.schema.json]`\n\
+      \  - `tests/test_vendor_schema_parity.py::TestVendorMirrorParity::test_vendor_mirror_matches_opifex_source[capability_token.schema.json]`\n\
+      \  - `tests/test_vendor_schema_parity.py::TestVendorMirrorParity::test_vendor_mirror_matches_opifex_source[tela_profile_list.schema.json]`\n\
+      \  - `tests/test_vendor_schema_parity.py::TestVendorMirrorParity::test_vendor_mirror_has_readonly_banner[...]`\
+      \ (×2)\n  - `tests/test_vendor_schema_parity.py::TestVendorMirrorReadOnlyContract::test_vendor_root_has_no_write_gitattrs`\n\
+      \  - `tests/test_vendor_schema_parity.py::TestVendorMirrorReadOnlyContract::test_opifex_root_accessible`\n\
+      - Exact command run before implementation:\n  ```bash\n  .venv/bin/python -m\
+      \ pytest tests/test_vendor_schema_parity.py -v\n  ```\n- Failing output showing\
+      \ missing/divergent mirror enforcement:\n  ```text\n  FAILED: Vendor mirror\
+      \ missing (pre-implementation), and parity mismatch failure when intentionally\
+      \ diverged.\n  ```\n\n## Mirror Inventory\n- Vendor location: `vendor/opifex/contracts/`\n\
+      - Mirrored files:\n  - `capability_token.schema.json`\n  - `tela_profile_list.schema.json`\n\
+      - Read-only/source-of-truth banner text:\n  ```json\n  {\"$comment\": \"READ-ONLY\
+      \ MIRROR — DO NOT EDIT MANUALLY. Source of truth: ../opifex/contracts/capability_token.schema.json\"\
+      }\n  ```\n\n## Green Proof\n- Parity/CI command(s):\n  ```bash\n  .venv/bin/python\
+      \ -m pytest tests/test_vendor_schema_parity.py -v\n  ```\n- Actual output:\n\
+      \  ```text\n  8 passed in 0.07s\n  ```\n- Targeted green tests:\n  ```bash\n\
+      \  .venv/bin/python -m pytest tests/shell/test_shared_surface_runtime_hard_cut.py\
+      \ tests/integration/test_token_mode_initialize.py -q\n  ```\n  ```text\n  34\
+      \ passed in 0.34s\n  ```\n\n## Guard Proof\n- invar/guard command:\n  ```bash\n\
+      \  .venv/bin/invar guard vendor/\n  ```\n- Actual output:\n  ```text\n  status=passed,\
+      \ errors=0, warnings=0\n  ```\n\n## Commits\n- `feat(vendor): add read-only\
+      \ opifex schema mirrors with CI parity enforcement`\n\n## NOT Done\n- none"
   - id: hard_cut.closeout.verify
     name: Verify hard-cut closeout shared surfaces
     status: pending
