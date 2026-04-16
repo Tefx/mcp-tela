@@ -72356,6 +72356,7 @@ phases:
     - hard_cut.closeout.vendor_schema_parity
     - hard_cut.closeout.verify
     - hard_cut.closeout.retest_capability_token_parity
+    - hard_cut.closeout.retest_capability_token_parity_round2
     agent: gate-reviewer-tacit
   - id: hard_cut.closeout.fix_capability_token_parity
     name: Batched remediation for capability_token parity blockers
