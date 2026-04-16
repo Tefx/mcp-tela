@@ -72411,3 +72411,63 @@ phases:
     depends_on:
     - hard_cut.closeout.verify
     agent: python-senior-tacit
+  - id: hard_cut.closeout.retest_capability_token_parity
+    name: Retest hard-cut closeout capability_token blockers
+    status: pending
+    description: 'As an INDEPENDENT TESTER, re-run the hard_cut.closeout verification
+      assertions relevant to capability_token schema parity after batched remediation.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Re-check all blocker-class closeout assertions:
+
+      - canonical capability_token validation matches vendored mirror behavior
+
+      - token_version survives model parse/recompute/signature inputs
+
+      - capability_token extra fields are rejected fail-closed
+
+      - vendored parity assertions covering the repaired surface pass
+
+
+      Also record whether persona_ref / instance_id requiredness remains a non-blocking
+      debt note without reopening the gate unless new intersection evidence appears.
+
+
+      This is a phase-check protecting hard_cut.closeout.gate.'
+    verification: '- expected_result: green
+
+      - Re-run authoritative targeted closeout verification assertions for capability_token
+      parity
+
+      - Confirm blocker-class assertions now pass
+
+      - Record residual non-blocking debt note status for persona_ref / instance_id
+      if still present'
+    evidence_template: "## Verification Report\n\n**Tester**: integration-verifier-tacit\
+      \ (independent of implementation)\n**Scope**: hard_cut.closeout capability_token\
+      \ blocker retest\n**Independence Level**: L1\n\n### refs Read Confirmation (MANDATORY)\n\
+      For each ref in this step:\n- <filename> — key passage or \"NOT READ: <reason>\"\
+      \n\nIf no refs were provided, state: \"No refs for this step.\"\n\n### Test\
+      \ Execution\n- Commands executed:\n  ```\n  <actual targeted verification commands>\n\
+      \  ```\n- Output summary: <key results>\n\n### Behavioral Proof Register\n-\
+      \ requirement_ref: canonical capability_token parity\n  behavior_claim: model\
+      \ preserves token_version and signature inputs\n  runtime_proof_expected: targeted\
+      \ parity assertions pass green\n  evidence_ref: <test output>\n  status: PROVEN|UNPROVEN\n\
+      \  closure_path: hard_cut.closeout.gate\n  gate_decision_basis: blocker if UNPROVEN\n\
+      - requirement_ref: fail-closed extra rejection\n  behavior_claim: CapabilityToken\
+      \ rejects unknown extra fields\n  runtime_proof_expected: rejection assertion\
+      \ passes green\n  evidence_ref: <test output>\n  status: PROVEN|UNPROVEN\n \
+      \ closure_path: hard_cut.closeout.gate\n  gate_decision_basis: blocker if UNPROVEN\n\
+      \n### Residual Debt Note\n- persona_ref / instance_id requiredness: <open non-blocking\
+      \ debt|closed>\n- intersection with remaining gate: <none explained|blocking\
+      \ with reason>\n\n### Headline\n- [ ] PASS\n- [ ] PASS_WITH_DEBT\n- [ ] FAIL"
+    depends_on:
+    - hard_cut.closeout.fix_capability_token_parity
+    agent: integration-verifier-tacit
