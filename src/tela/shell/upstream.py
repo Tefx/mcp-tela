@@ -16,6 +16,7 @@ registry dict or its lock is no longer available from this module.
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -66,6 +67,118 @@ from tela.shell.upstream_utils import (
 logger = logging.getLogger(__name__)
 
 _BRIDGE_CONNECTION_ID_KEY = "tela_bridge_connection_id"
+_CAPABILITY_TOKEN_KEY = "capability_token"
+_SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+_CANONICAL_TOKEN_FIELDS = frozenset(
+    {
+        "token_id",
+        "profile_id",
+        "persona_ref",
+        "instance_id",
+        "max_depth",
+        "issued_at",
+        "expires_at",
+        "token_version",
+        "signature",
+    }
+)
+_TOKEN_ALIAS_FIELDS = frozenset({"profile_name", "tools_profile"})
+
+
+# @invar:allow shell_result: pure validator used only inside shell-bound initialize handler.
+def _invalid_reserved_client_info_key(
+    client_info: Mapping[object, object],
+) -> str | None:
+    """Return the first reserved top-level key that must be rejected.
+
+    Source: opifex/final-canonical-contract.md requires capability-token fields
+    to remain canonical-only on the shared token surface and forbids alias keys;
+    this shell boundary therefore rejects conflicting top-level semantics instead
+    of reinterpreting them.
+    """
+
+    for key in client_info:
+        key_str = str(key)
+        if key_str in _CANONICAL_TOKEN_FIELDS or key_str in _TOKEN_ALIAS_FIELDS:
+            return key_str
+        if key_str == _BRIDGE_CONNECTION_ID_KEY or key_str == _CAPABILITY_TOKEN_KEY:
+            continue
+        if key_str.startswith("tela_") or key_str.startswith("opifex_"):
+            return key_str
+    return None
+
+
+# @invar:allow shell_result: pure snapshot helper used only inside shell-bound initialize handler.
+def _build_client_info_snapshot(
+    client_info: Mapping[object, object],
+    token: CapabilityToken | None,
+) -> dict[str, str]:
+    """Preserve accepted clientInfo hints while flattening canonical token fields."""
+
+    snapshot = {
+        str(key): str(value)
+        for key, value in client_info.items()
+        if str(key) != _CAPABILITY_TOKEN_KEY
+    }
+    if token is not None:
+        snapshot.update(
+            {
+                key: str(value)
+                for key, value in token.model_dump(exclude_none=True).items()
+            }
+        )
+    return snapshot
+
+
+def _extract_capability_token(
+    client_info: Mapping[object, object],
+) -> Result[CapabilityToken, str]:
+    """Extract the nested canonical capability token from MCP clientInfo."""
+
+    invalid_key = _invalid_reserved_client_info_key(client_info)
+    if invalid_key is not None:
+        return Result(
+            error=(
+                "INITIALIZE_REJECTED: top-level client_info key "
+                f"'{invalid_key}' is reserved; use client_info.capability_token"
+            )
+        )
+
+    token_payload = client_info.get(_CAPABILITY_TOKEN_KEY)
+    if not isinstance(token_payload, dict):
+        return Result(
+            error=(
+                "INITIALIZE_REJECTED: token mode requires client_info."
+                "capability_token object"
+            )
+        )
+
+    extra_fields = sorted(
+        str(key) for key in token_payload if str(key) not in _CANONICAL_TOKEN_FIELDS
+    )
+    if extra_fields:
+        return Result(
+            error=(
+                "INITIALIZE_REJECTED: invalid capability_token fields: "
+                + ", ".join(extra_fields)
+            )
+        )
+
+    try:
+        return Result(value=CapabilityToken(**token_payload))
+    except Exception as exc:
+        return Result(
+            error=f"INITIALIZE_REJECTED: invalid capability_token fields: {exc}"
+        )
+
+
+# @invar:allow shell_result: pure validator used only inside shared MCP surface emission.
+def _invalid_shared_tool_name(tool_name: str) -> str | None:
+    """Return the tool name when it violates shared snake_case naming."""
+
+    if _SHARED_TOOL_NAME_PATTERN.fullmatch(tool_name) is None:
+        return tool_name
+    return None
 
 
 # --- Session Capture Protocol (re-exported from gateway_runtime) ---
@@ -241,6 +354,7 @@ async def handle_initialize(
 
     connection_id = f"conn_{uuid.uuid4().hex[:8]}"
     now_iso = datetime.now(timezone.utc).isoformat()
+    token: CapabilityToken | None = None
 
     if config.auth.mode == AuthMode.OPEN:
         status = (
@@ -266,32 +380,11 @@ async def handle_initialize(
         assert profile_id is not None
     else:
         # Token mode: validate capability token and bind to token's canonical profile_id.
-        required_fields = (
-            "token_id",
-            "profile_id",
-            "issued_at",
-            "expires_at",
-            "signature",
-        )
-        missing = [f for f in required_fields if f not in client_info]
-        if missing:
-            return Result(
-                error=f"INITIALIZE_REJECTED: token mode requires client_info fields: {', '.join(missing)}"
-            )
-
-        try:
-            token = CapabilityToken(
-                token_id=str(client_info["token_id"]),
-                profile_id=str(client_info["profile_id"]),
-                issued_at=str(client_info["issued_at"]),
-                expires_at=str(client_info["expires_at"]),
-                signature=str(client_info["signature"]),
-                persona_ref=client_info.get("persona_ref"),
-                instance_id=client_info.get("instance_id"),
-                max_depth=client_info.get("max_depth"),
-            )
-        except Exception as e:
-            return Result(error=f"INITIALIZE_REJECTED: invalid token fields: {e}")
+        token_result = _extract_capability_token(client_info)
+        if token_result.is_err:
+            return Result(error=token_result.error)
+        assert token_result.value is not None
+        token = token_result.value
 
         secrets = get_runtime_secrets().value
         if not secrets:
@@ -312,9 +405,10 @@ async def handle_initialize(
         profile_id=profile_id,
         connected_at=now_iso,
         init_mode=config.auth.mode,
-        client_info_snapshot={
-            str(key): str(value) for key, value in client_info.items()
-        },
+        client_info_snapshot=_build_client_info_snapshot(
+            client_info,
+            token if config.auth.mode == AuthMode.TOKEN else None,
+        ),
         bridge_connection_id=(
             str(bridge_connection_id) if bridge_connection_id is not None else None
         ),
@@ -391,6 +485,15 @@ async def handle_tools_list(
         return Result(error=permitted_result.error)
     assert permitted_result.value is not None
     permitted = permitted_result.value
+    for tool in permitted:
+        invalid_name = _invalid_shared_tool_name(tool.name)
+        if invalid_name is not None:
+            return Result(
+                error=(
+                    "INVALID_TOOL_NAME: shared MCP tool names must be snake_case; "
+                    f"got '{invalid_name}'"
+                )
+            )
     return Result(
         value=[
             {

@@ -14,6 +14,7 @@ This is the dedicated token-mode counterpart to test_open_mode.py.
 from __future__ import annotations
 
 import asyncio
+from typing import Mapping
 
 from tela.core.models import (
     AuthConfig,
@@ -55,6 +56,13 @@ def _sign_token(fields: dict, secret: str) -> dict:
     return {**fields, "signature": sig}
 
 
+def _wrap_client_info(
+    capability_token: Mapping[str, object], **hints: object
+) -> dict[str, object]:
+    """Wrap a canonical capability token in the MCP clientInfo envelope."""
+    return {**hints, "capability_token": capability_token}
+
+
 # --- Token-mode handle_initialize success cases ---
 
 
@@ -78,7 +86,7 @@ def test_handle_initialize_token_mode_valid_token() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         assert isinstance(result.value, ConnectionContext)
@@ -116,7 +124,7 @@ def test_handle_initialize_token_mode_binds_profile_from_token() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         # Profile must be from token, NOT the config's default profile
@@ -153,7 +161,7 @@ def test_handle_initialize_token_mode_dual_key_rotation() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         assert result.value.profile_id == "dev"
@@ -180,11 +188,11 @@ def test_handle_initialize_token_mode_missing_token_fields() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        # Missing: token_id, profile_id, issued_at, expires_at, signature
+        # Missing: nested capability_token object carrying canonical token fields
         result = await handle_initialize({"client": "desktop"})
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
-        assert "token_id" in (result.error or "").lower()
+        assert "capability_token" in (result.error or "").lower()
 
     try:
         asyncio.run(_run())
@@ -212,7 +220,7 @@ def test_handle_initialize_token_mode_missing_signature() -> None:
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2099-12-31T23:59:59Z",
         }
-        result = await handle_initialize(token_info)
+        result = await handle_initialize(_wrap_client_info(token_info))
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
 
@@ -243,7 +251,7 @@ def test_handle_initialize_token_mode_invalid_signature() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
         assert "TOKEN_INVALID" in (result.error or "")
@@ -278,7 +286,7 @@ def test_handle_initialize_token_mode_expired_token() -> None:
 
     async def _run() -> None:
         # Current time is after expiry
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
         assert "TOKEN_EXPIRED" in (result.error or "")
@@ -306,7 +314,7 @@ def test_handle_initialize_token_mode_no_secrets_configured() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
         assert "secrets" in (result.error or "").lower()
@@ -345,7 +353,10 @@ def test_handle_initialize_token_mode_ignores_profile_hints_in_metadata() -> Non
 
     async def _run() -> None:
         # Add a profile hint in metadata that should be IGNORED
-        token_with_hint = {**signed_token, "profile": "should-be-ignored"}
+        token_with_hint = _wrap_client_info(
+            signed_token,
+            profile="should-be-ignored",
+        )
         result = await handle_initialize(token_with_hint)
         assert result.is_ok
         assert result.value is not None
@@ -387,7 +398,7 @@ def test_handle_initialize_token_mode_preserves_optional_token_fields() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         assert result.value.profile_id == "dev"
@@ -418,11 +429,14 @@ def test_handle_initialize_token_mode_registers_connection() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        initial_count = len(get_runtime_connections_snapshot().value)
-        result = await handle_initialize(signed_token)
+        initial_connections = get_runtime_connections_snapshot().value
+        assert initial_connections is not None
+        initial_count = len(initial_connections)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         # Connection must be registered
         conns = get_runtime_connections_snapshot().value
+        assert conns is not None
         assert len(conns) == initial_count + 1
         # Last connection must match returned context
         assert conns[-1] == result.value
@@ -450,7 +464,7 @@ def test_handle_initialize_token_mode_connection_id_format() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         # Connection ID format: conn_<hex8>
@@ -490,7 +504,7 @@ def test_handle_initialize_token_mode_records_init_mode() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         assert result.value.init_mode == AuthMode.TOKEN
@@ -525,7 +539,7 @@ def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         ctx = result.value
         assert ctx is not None
@@ -573,7 +587,7 @@ def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstr
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         ctx = result.value
         assert ctx is not None
@@ -619,7 +633,7 @@ def test_handle_initialize_token_mode_bridge_connection_id_is_none() -> None:
     clear_runtime_connections()
 
     async def _run() -> None:
-        result = await handle_initialize(signed_token)
+        result = await handle_initialize(_wrap_client_info(signed_token))
         assert result.is_ok
         assert result.value is not None
         assert result.value.bridge_connection_id is None
@@ -704,7 +718,7 @@ def test_token_mode_gateway_fails_closed_on_lost_session() -> None:
         assert start_result.is_ok
         try:
             # handle_initialize with a valid token must succeed
-            result = await handle_initialize(signed_token)
+            result = await handle_initialize(_wrap_client_info(signed_token))
             assert result.is_ok
             assert result.value is not None
             assert result.value.init_mode == AuthMode.TOKEN

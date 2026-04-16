@@ -1,6 +1,7 @@
 """Built-in tools owned by tela gateway (not downstream servers)."""
 
 from __future__ import annotations
+import re
 from typing import TYPE_CHECKING
 
 from tela.core.models import Posture, ProfileConfig, ProfileInfo, ProviderInfo
@@ -14,6 +15,19 @@ from tela.shell.upstream_utils import filter_tools_for_profile
 
 if TYPE_CHECKING:
     pass
+
+_SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def _raise_if_invalid_shared_tool_name(tool_name: str) -> None:
+    """Reject non-canonical shared MCP tool names on emitted surfaces."""
+
+    if _SHARED_TOOL_NAME_PATTERN.fullmatch(tool_name) is None:
+        raise RuntimeError(
+            "INVALID_TOOL_NAME: shared MCP tool names must be snake_case; "
+            f"got '{tool_name}'"
+        )
+
 
 BUILTIN_TOOLS: list[dict] = [
     {
@@ -29,6 +43,9 @@ BUILTIN_TOOLS: list[dict] = [
 ]
 
 BUILTIN_TOOL_NAMES: set[str] = {t["name"] for t in BUILTIN_TOOLS}
+
+for _tool in BUILTIN_TOOLS:
+    _raise_if_invalid_shared_tool_name(_tool["name"])
 
 
 # @invar:allow shell_result: builtin tools follow FastMCP @tool pattern (raise on error, not Result wrap)
@@ -113,6 +130,8 @@ async def handle_list_providers() -> list["ProviderInfo"]:
                 # filter_tools_for_profile returns flat list
                 filtered_tools = filtered_result.value
                 tool_names = [t.name for t in filtered_tools]
+                for tool_name in tool_names:
+                    _raise_if_invalid_shared_tool_name(tool_name)
                 tool_count = len(tool_names)
             else:
                 tool_names = []
