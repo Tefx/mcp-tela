@@ -72359,7 +72359,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: hard_cut.closeout.fix_capability_token_parity
     name: Batched remediation for capability_token parity blockers
-    status: claimed
+    status: done
     description: 'Fix ALL blocker findings from hard_cut.closeout.verify for canonical
       capability_token handling.
 
@@ -72454,6 +72454,34 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-16T14:45:40.677551+00:00'
+    done_at: '2026-04-16T14:51:31.248778+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Blocker Remediation Evidence\n- blocker_fingerprint: capability_token canonical\
+      \ parity / extra-field enforcement\n- root_cause_hypothesis: `src/tela/core/models.py::CapabilityToken`\
+      \ drifted from canonical schema (missing `token_version`, non-fail-closed extras),\
+      \ causing signature recomputation mismatch after parse/model_dump.\n- source\
+      \ citations:\n  - vendor/opifex/contracts/capability_token.schema.json requires\
+      \ token_version and fail-closed additionalProperties\n- files changed:\n  -\
+      \ src/tela/core/models.py\n  - src/tela/core/token.py\n  - tests/core/test_token.py\n\
+      \  - tests/core/test_hard_cut_vocab.py\n- targeted tests or checks added/updated:\n\
+      \  - tests/core/test_token.py::test_validate_token_preserves_token_version_in_signature_round_trip\n\
+      \  - tests/core/test_token.py::test_validate_token_rejects_signature_missing_token_version\n\
+      \  - tests/core/test_token.py::test_capability_token_rejects_unknown_extra_field\n\
+      \  - updated token/create-token coverage to assert token_version\n- highest-risk\
+      \ failure path covered: token_version round-trip + HMAC recomputation\n- residual\
+      \ debt note: persona_ref / instance_id requiredness remains open by design (non-blocking\
+      \ for this slice)\n\n## Substantive Implementation\n- Added CapabilityToken.token_version\
+      \ and preserved through serialization/signature pathways\n- Enforced CapabilityToken\
+      \ fail-closed extras via `model_config = {\"extra\": \"forbid\"}`\n- Updated\
+      \ create_token signature input/emission to include canonical token_version\n\
+      \n## Verification Commands and Output\n```bash\nPYTHONPATH=src ./.venv/bin/python\
+      \ -m pytest tests/core/test_token.py tests/core/test_hard_cut_vocab.py -q\n\
+      ```\n```text\n32 passed in 0.30s\n```\n\n## Guard Note\n- invar guard run reported\
+      \ only pre-existing models.py file-size/contract findings outside this blocker\
+      \ slice; no new capability-token parity regression reported.\n\n## Commit\n\
+      - 542d09d — fix(token): preserve capability token version\n\n## NOT Done\n-\
+      \ Did not broaden scope to persona_ref/instance_id requiredness.\n- Did not\
+      \ modify opifex canonical schema artifacts."
   - id: hard_cut.closeout.retest_capability_token_parity
     name: Retest hard-cut closeout capability_token blockers
     status: pending
