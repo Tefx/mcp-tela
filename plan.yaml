@@ -72572,7 +72572,7 @@ phases:
       \ detection/reporting owner; blockers promoted into batched remediation ownership."
   - id: hard_cut.closeout.fix_capability_token_parity_round2
     name: Batched remediation for capability_token parity blockers (round 2)
-    status: claimed
+    status: done
     description: "Fix ALL blocker findings from hard_cut.closeout.retest_capability_token_parity.\n\
       \nWork type: defect_repair\nstep_type: implementation\nprior_loop:\n  - hard_cut.closeout.fix_capability_token_parity\n\
       \  - hard_cut.closeout.retest_capability_token_parity\nremaining_blocker: integration\
@@ -72662,6 +72662,37 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-16T15:04:42.526183+00:00'
+    done_at: '2026-04-16T15:15:23.745771+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n##\
+      \ Blocker Remediation Evidence\n- blocker_fingerprint: helper/runtime signature\
+      \ parity drift on token_version + schema requiredness drift on persona_ref/instance_id\n\
+      - root_cause_hypothesis: helper signing inputs and runtime validation inputs\
+      \ diverged; CapabilityToken requiredness previously weaker than canonical schema\n\
+      - why_previous_fix_failed: prior fix handled runtime token_version preservation\
+      \ but left helper fixtures/signing and persona_ref/instance_id requiredness\
+      \ unresolved\n- files changed:\n  - src/tela/core/token.py\n  - src/tela/core/models.py\n\
+      \  - tests/integration/test_token_mode_initialize.py\n  - tests/shell/test_shared_surface_runtime_hard_cut.py\n\
+      \  - tests/core/test_token.py\n  - tests/core/test_hard_cut_vocab.py\n  - tests/core/test_models.py\n\
+      \  - tests/repro/test_high.py\n  - contracts/capability_token.schema.json\n\
+      \  - artifacts/hard_cut/canonical_capability_token_fixture.json\n- sibling search\
+      \ evidence: helper/signature paths and requiredness occurrences were scanned;\
+      \ both helper fixture/signing paths updated to canonical field set including\
+      \ token_version/persona_ref/instance_id.\n- targeted tests/checks updated: integration\
+      \ helper parity, core token/hard-cut vocab/models coverage, shared-surface runtime\
+      \ assertions, repro high tests.\n- highest-risk failure path covered: helper-generated\
+      \ tokens now validate through handle_initialize/extract/validate path without\
+      \ signature mismatch; omission of required fields now fails.\n- residual blocker\
+      \ status: no remaining gate-blocking parity drift in targeted surface.\n\n##\
+      \ Verification Commands and Output\n```bash\n.venv/bin/python -m pytest -q tests/integration/test_token_mode_initialize.py\
+      \ tests/core/test_token.py tests/core/test_hard_cut_vocab.py tests/repro/test_high.py\
+      \ tests/core/test_models.py tests/shell/test_shared_surface_runtime_hard_cut.py\
+      \ tests/test_vendor_schema_parity.py\n```\n```text\n132 passed in 0.43s\n```\n\
+      \n## Guard Proof\n```bash\ninvar_guard(path=/Users/tefx/Projects/mcp-tela/.vectl/worktrees/hard_cut.closeout.fix_capability_token_parity_round2,\
+      \ changed=true, strict=false)\n```\n```text\nstatus: passed, errors: 0, warnings:\
+      \ 1 (security-sensitive review_suggested)\n```\n\n## Commit\n- 6b7c84f — fix:\
+      \ restore capability token parity\n\n## NOT Done\n- Vendor mirror schema files\
+      \ unchanged (already canonical).\n- Unrelated optional instance_id outside CapabilityToken\
+      \ not modified."
   - id: hard_cut.closeout.retest_capability_token_parity_round2
     name: Retest hard-cut closeout capability_token blockers (round 2)
     status: pending
