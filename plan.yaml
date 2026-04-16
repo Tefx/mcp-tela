@@ -72485,7 +72485,7 @@ phases:
       \ modify opifex canonical schema artifacts."
   - id: hard_cut.closeout.retest_capability_token_parity
     name: Retest hard-cut closeout capability_token blockers
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, re-run the hard_cut.closeout verification
       assertions relevant to capability_token schema parity after batched remediation.
 
@@ -72545,6 +72545,31 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-16T14:51:54.597789+00:00'
+    done_at: '2026-04-16T15:04:17.964912+00:00'
+    evidence: "## Verification Report\n\nstep_intent: retest_green\nexpected_result:\
+      \ green\nobserved_result: fail_with_blockers\nfailure_alignment: blocker-class\
+      \ failures remain after first remediation\nproduct_implementation_files_modified:\
+      \ none\n\n## refs Read Confirmation (MANDATORY)\nNo refs for this step.\n\n\
+      ## Behavioral Proof Register\n- requirement_ref: canonical capability_token\
+      \ validation matches vendored mirror behavior\n  behavior_claim: still mismatched\n\
+      \  evidence_ref: jsonschema parity checks vs model requiredness\n  status: UNPROVEN\n\
+      \  closure_path: hard_cut.closeout.fix_capability_token_parity_round2 + hard_cut.closeout.retest_capability_token_parity_round2\n\
+      \  gate_decision_basis: BLOCKING\n- requirement_ref: token_version survives\
+      \ parse/recompute/signature inputs\n  behavior_claim: core path pass; integration\
+      \ helper/signing seam still red\n  evidence_ref: integration test failures (13)\
+      \ TOKEN_INVALID signature mismatch\n  status: UNPROVEN\n  closure_path: round2\
+      \ fix + retest\n  gate_decision_basis: BLOCKING\n- requirement_ref: fail-closed\
+      \ extra rejection\n  behavior_claim: pass\n  evidence_ref: verifier checks\n\
+      \  status: PROVEN\n  closure_path: n/a\n  gate_decision_basis: pass\n- requirement_ref:\
+      \ vendored parity assertions\n  behavior_claim: pass\n  evidence_ref: parity\
+      \ tests\n  status: PROVEN\n  closure_path: n/a\n  gate_decision_basis: pass\n\
+      \ngate_open_allowed: false\n\n## Blockers\n1. Integration helper/signature seam\
+      \ mismatch leaves 13 failing integration tests (`TOKEN_INVALID`).\n2. `persona_ref`\
+      \ / `instance_id` requiredness parity with canonical schema remains unresolved\
+      \ and intersects gate acceptance.\n\n## Planner Remediation Created\n- hard_cut.closeout.fix_capability_token_parity_round2\n\
+      - hard_cut.closeout.retest_capability_token_parity_round2\n- hard_cut.closeout.gate\
+      \ rewired to depend on round2 retest\n\n## Outcome\nRetest step completed as\
+      \ detection/reporting owner; blockers promoted into batched remediation ownership."
   - id: hard_cut.closeout.fix_capability_token_parity_round2
     name: Batched remediation for capability_token parity blockers (round 2)
     status: pending
