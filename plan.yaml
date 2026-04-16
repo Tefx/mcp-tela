@@ -72695,7 +72695,7 @@ phases:
       \ not modified."
   - id: hard_cut.closeout.retest_capability_token_parity_round2
     name: Retest hard-cut closeout capability_token blockers (round 2)
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER, re-run the hard_cut.closeout verification
       assertions relevant to capability_token schema parity after the second batched
       remediation.
@@ -72789,3 +72789,62 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-16T15:15:43.568464+00:00'
+    done_at: '2026-04-16T15:29:51.117694+00:00'
+    evidence: '## Verification Report
+
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      observed_result: green
+
+      failure_alignment: none
+
+      product_files_modified: none
+
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Test Execution
+
+      ```bash
+
+      .venv/bin/python -m pytest -q tests/core/test_token.py tests/test_vendor_schema_parity.py
+
+      ```
+
+      ```text
+
+      28 passed, 0 skipped
+
+      ```
+
+
+      ## Behavioral Proof Register
+
+      - integration helper token signatures include token_version and validate against
+      runtime recomputation — PROVEN
+
+      - signatures omitting token_version are rejected fail-closed — PROVEN
+
+      - persona_ref and instance_id requiredness matches canonical schema and is enforced
+      — PROVEN
+
+      - capability_token extras rejected fail-closed — PROVEN
+
+      - vendor parity for repaired surfaces against ../opifex — PROVEN
+
+
+      gate_open_allowed: true
+
+      uncertainty_sources: none (non-structural description-only local contract text
+      variance does not affect repaired parity surface)
+
+
+      ## Outcome
+
+      All blocker-class parity assertions closed for round2 retest.'
