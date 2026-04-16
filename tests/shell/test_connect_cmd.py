@@ -1126,6 +1126,134 @@ def test_forward_stdio_http_replays_inflight_message_after_transport_recovery(
     assert '"ok": true' in output.lower()
 
 
+@pytest.mark.parametrize(
+    ("error_message", "expected"),
+    [
+        (
+            "RECONNECT_REQUIRED: no live session or connection available; client must re-establish the MCP connection",
+            True,
+        ),
+        (
+            "CONNECTION_NOT_FOUND: bridge initialize requires pre-registered connection 'bridge_test'",
+            True,
+        ),
+        ("DOWNSTREAM_UNAVAILABLE: downstream server 'fs' is not connected", False),
+    ],
+)
+def test_response_requires_bridge_recovery_only_for_bridge_session_loss(
+    error_message: str,
+    expected: bool,
+) -> None:
+    """Bridge recovery should trigger only for stale bridge-session errors."""
+
+    payload = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": {"code": -32000, "message": error_message},
+        }
+    ).encode("utf-8")
+
+    assert connect_bridge._response_requires_bridge_recovery([payload]) is expected
+
+
+def test_forward_stdio_http_recovers_when_response_requests_bridge_reconnect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Protocol-level reconnect-required responses must trigger bridge recovery."""
+
+    initialize_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    tools_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+    stdin_buffer = io.BytesIO(initialize_request + b"\n" + tools_request + b"\n")
+    stdout_buffer = io.BytesIO()
+    post_calls: list[tuple[str, str, str | None]] = []
+    recover_calls = {"count": 0}
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+        max_recovery_attempts: int = 3,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = payload, max_recovery_attempts
+        post_calls.append((mcp_url, bearer_token, session_id))
+        if len(post_calls) == 1:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "session-1",
+                )
+            )
+        if len(post_calls) == 2:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": 2,
+                            "error": {
+                                "code": -32000,
+                                "message": "RECONNECT_REQUIRED: no live session or connection available; client must re-establish the MCP connection",
+                            },
+                        }
+                    ).encode("utf-8"),
+                    "session-1",
+                )
+            )
+        if len(post_calls) == 3:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "recovered-session",
+                )
+            )
+        return Result(
+            value=(
+                "application/json",
+                json.dumps({"jsonrpc": "2.0", "id": 2, "result": {"tools": []}}).encode(
+                    "utf-8"
+                ),
+                "recovered-session",
+            )
+        )
+
+    def _fake_recover_transport() -> Result[tuple[str, str], str]:
+        recover_calls["count"] += 1
+        return Result(value=("http://127.0.0.1:9001/mcp", "recovered-token"))
+
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="old-token",
+        bridge_connection_id="bridge_test",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=stdout_buffer,
+        recover_transport=_fake_recover_transport,
+    )
+
+    assert result.is_ok
+    assert recover_calls["count"] == 1
+    assert post_calls == [
+        ("http://127.0.0.1:8123/mcp", "old-token", None),
+        ("http://127.0.0.1:8123/mcp", "old-token", "session-1"),
+        ("http://127.0.0.1:9001/mcp", "recovered-token", None),
+        ("http://127.0.0.1:9001/mcp", "recovered-token", "recovered-session"),
+    ]
+    output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
+    assert '"tools": []' in output
+
+
 def test_post_mcp_message_retries_only_for_transient_contract_signal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

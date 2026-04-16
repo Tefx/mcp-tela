@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import subprocess
 import sys
 import tempfile
@@ -32,9 +33,14 @@ import pytest
 pytestmark = pytest.mark.runtime_liveness
 
 
-def _write_test_config(tmp_dir: str) -> str:
+def _write_test_config(
+    tmp_dir: str,
+    *,
+    bridge_idle_ttl_seconds: float | None = None,
+    sweep_interval_seconds: float | None = None,
+) -> str:
     """Write a minimal open-mode config for testing."""
-    config = {
+    config: dict[str, object] = {
         "profiles": {
             "test_profile": {
                 "capabilities": {
@@ -51,6 +57,13 @@ def _write_test_config(tmp_dir: str) -> str:
             "output": os.path.join(tmp_dir, "audit.jsonl"),
         },
     }
+    if bridge_idle_ttl_seconds is not None or sweep_interval_seconds is not None:
+        reaper: dict[str, float] = {}
+        if bridge_idle_ttl_seconds is not None:
+            reaper["bridge_idle_ttl_seconds"] = bridge_idle_ttl_seconds
+        if sweep_interval_seconds is not None:
+            reaper["sweep_interval_seconds"] = sweep_interval_seconds
+        config["reaper"] = reaper
     import yaml
 
     path = os.path.join(tmp_dir, "tela.yaml")
@@ -105,6 +118,74 @@ def _clean_lockfile():
                 lockfile.unlink()
         except (OSError, KeyError):
             pass
+
+
+def _query_status_json(token: str) -> dict[str, object]:
+    """Query ``tela status --json`` using the discovered bearer token."""
+
+    status_result = subprocess.run(
+        [sys.executable, "-m", "tela", "status", "--json"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        env={**os.environ, "TELA_BEARER_TOKEN": token},
+    )
+    assert status_result.returncode == 0, (
+        f"Mode D: status query failed. stderr={status_result.stderr}"
+    )
+    return json.loads(status_result.stdout)
+
+
+def _read_jsonrpc_line(
+    process: subprocess.Popen[bytes], timeout: float
+) -> dict[str, object]:
+    """Read one newline-delimited JSON-RPC response from ``tela connect``."""
+
+    assert process.stdout is not None
+    stdout = process.stdout
+    ready, _, _ = select.select([stdout], [], [], timeout)
+    assert ready, f"Mode D: Bridge did not respond within {timeout} seconds"
+    response_line = stdout.readline().decode("utf-8", errors="replace")
+
+    json_response: dict[str, object] | None = None
+    for line in response_line.strip().split("\n"):
+        stripped_line = line.strip()
+        if not stripped_line.startswith("{"):
+            continue
+        try:
+            candidate = json.loads(stripped_line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(candidate, dict):
+            json_response = candidate
+            break
+
+    assert json_response is not None, (
+        f"Mode D: No valid JSON-RPC response. Raw: {response_line!r}"
+    )
+    return json_response
+
+
+def _send_jsonrpc_line(
+    process: subprocess.Popen[bytes], request: dict[str, object], timeout: float = 10.0
+) -> dict[str, object]:
+    """Send one newline-delimited JSON-RPC request and return the response."""
+
+    assert process.stdin is not None
+    stdin = process.stdin
+    stdin.write((json.dumps(request) + "\n").encode())
+    stdin.flush()
+    return _read_jsonrpc_line(process, timeout=timeout)
+
+
+def _active_connection_count(status_payload: dict[str, object]) -> int:
+    """Return validated ``active_connections`` from a status payload."""
+
+    active_connections = status_payload.get("active_connections", 0)
+    assert isinstance(active_connections, int), (
+        f"Mode D: status payload has non-integer active_connections: {status_payload!r}"
+    )
+    return active_connections
 
 
 def test_serve_ephemeral_bind_publishes_lockfile():
@@ -466,6 +547,160 @@ def test_bridge_handles_mcp_initialize_and_tools_list():
                     connect_proc.wait()
 
         finally:
+            serve_proc.terminate()
+            try:
+                serve_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                serve_proc.kill()
+                serve_proc.wait()
+
+            _clean_lockfile()
+
+
+def test_bridge_recovers_after_idle_bridge_reap(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A long-idle bridge must self-recover on the next MCP request.
+
+    Source:
+    - User bug report: provider becomes unavailable after long idle.
+    - docs/USAGE.md bridge recovery contract: recovery should re-discover,
+      re-register, and resume forwarding after recoverable bridge/runtime loss.
+
+    This black-box test proves three distinct states via documented surfaces:
+    1. bridge establishes and serves MCP
+    2. runtime reaper removes the idle bridge connection
+    3. the existing ``tela connect`` process self-recovers on the next MCP call
+    """
+
+    fake_home = str(tmp_path / "home")
+    os.makedirs(fake_home, exist_ok=True)
+    monkeypatch.setenv("HOME", fake_home)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        config_path = _write_test_config(
+            tmp_dir,
+            bridge_idle_ttl_seconds=1.0,
+            sweep_interval_seconds=0.2,
+        )
+
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+                "--idle-timeout",
+                "30",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        connect_proc: subprocess.Popen[bytes] | None = None
+        try:
+            lockfile_data = _wait_for_lockfile(timeout=10.0)
+            assert lockfile_data is not None, "Server did not write lockfile"
+            token = lockfile_data["token"]
+            assert isinstance(token, str)
+
+            connect_proc = subprocess.Popen(
+                [sys.executable, "-m", "tela", "connect", "--config", config_path],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            time.sleep(1.0)
+            assert connect_proc.poll() is None, (
+                "Connect exited before MCP traffic began"
+            )
+
+            initialize_response = _send_jsonrpc_line(
+                connect_proc,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "idle-recovery-test", "version": "0.1"},
+                    },
+                },
+            )
+            assert "result" in initialize_response, (
+                f"Mode D: initialize failed before idle test. response={initialize_response!r}"
+            )
+
+            first_tools_response = _send_jsonrpc_line(
+                connect_proc,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/list",
+                    "params": {},
+                },
+            )
+            assert "result" in first_tools_response or "error" in first_tools_response
+
+            status_before_idle = _query_status_json(token)
+            active_before_idle = _active_connection_count(status_before_idle)
+            assert active_before_idle >= 1, (
+                "Mode D: bridge never registered before idle recovery test. "
+                f"status={status_before_idle!r}"
+            )
+
+            time.sleep(2.5)
+
+            status_after_reap = _query_status_json(token)
+            active_after_reap = _active_connection_count(status_after_reap)
+            assert active_after_reap == 0, (
+                "Mode D: idle reaper did not remove the quiet bridge connection, "
+                "so recovery path was not exercised. "
+                f"status={status_after_reap!r}"
+            )
+
+            second_tools_response = _send_jsonrpc_line(
+                connect_proc,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/list",
+                    "params": {},
+                },
+            )
+            assert "result" in second_tools_response, (
+                "Mode D: bridge did not self-recover after idle reap. "
+                f"response={second_tools_response!r}"
+            )
+
+            status_after_recovery = _query_status_json(token)
+            active_after_recovery = _active_connection_count(status_after_recovery)
+            assert active_after_recovery >= 1, (
+                "Mode D: bridge request recovered only superficially; runtime did not "
+                f"re-register connection. status={status_after_recovery!r}"
+            )
+            assert connect_proc.poll() is None, (
+                "Mode D: connect process exited after recovery instead of remaining alive"
+            )
+
+        finally:
+            if connect_proc is not None:
+                if connect_proc.stdin is not None:
+                    connect_proc.stdin.close()
+                connect_proc.terminate()
+                try:
+                    connect_proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    connect_proc.kill()
+                    connect_proc.wait()
+
             serve_proc.terminate()
             try:
                 serve_proc.wait(timeout=5)
