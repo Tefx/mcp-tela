@@ -72169,7 +72169,7 @@ phases:
       \ contract enforcement."
   - id: hard_cut.closeout.vendor_schema_parity
     name: Add read-only opifex schema mirrors and parity enforcement
-    status: pending
+    status: claimed
     description: "Implement and verify local read-only vendored schema mirrors without\
       \ creating a second canonical source.\n\nREQUIRED BEHAVIOR:\n- Mirror into a\
       \ local vendor path such as vendor/opifex/contracts or schemas/vendor/opifex.\n\
@@ -72203,6 +72203,8 @@ phases:
     depends_on:
     - hard_cut.closeout.surface_enforcement
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-16T14:01:15.442628+00:00'
   - id: hard_cut.closeout.verify
     name: Verify hard-cut closeout shared surfaces
     status: pending
