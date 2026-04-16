@@ -1,0 +1,30 @@
+{
+  "$comment": "READ-ONLY MIRROR — DO NOT EDIT MANUALLY. Source of truth: ../opifex/contracts/tela_profile_list.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TelaProfileList",
+  "description": "Canonical shared payload for tela_list_profiles.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["profile_id", "capabilities", "default"],
+    "properties": {
+      "profile_id": {
+        "type": "string",
+        "description": "Stable tela profile registry identity."
+      },
+      "capabilities": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "enum": ["none", "read_only", "read_write", "destructive"]
+        },
+        "description": "Capability ceiling map by family."
+      },
+      "default": {
+        "type": "boolean",
+        "description": "Open-mode fallback marker. Zero true entries is valid; more than one is invalid at the tela boundary."
+      }
+    },
+    "additionalProperties": false
+  }
+}
