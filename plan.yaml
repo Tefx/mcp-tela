@@ -72484,7 +72484,7 @@ phases:
       \ modify opifex canonical schema artifacts."
   - id: hard_cut.closeout.retest_capability_token_parity
     name: Retest hard-cut closeout capability_token blockers
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER, re-run the hard_cut.closeout verification
       assertions relevant to capability_token schema parity after batched remediation.
 
@@ -72542,3 +72542,5 @@ phases:
     depends_on:
     - hard_cut.closeout.fix_capability_token_parity
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-16T14:51:54.597789+00:00'
