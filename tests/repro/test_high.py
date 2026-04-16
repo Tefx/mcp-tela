@@ -124,8 +124,11 @@ class TestH4TokenValidation:
         fields = {
             "token_id": "tok_1",
             "profile_id": "dev",
+            "persona_ref": "persona.dev",
+            "instance_id": "inst-1",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
+            "token_version": "0.1.0",
         }
         sig = compute_signature(fields, "my_secret")
 
@@ -139,8 +142,11 @@ class TestH4TokenValidation:
         token = CapabilityToken(
             token_id="tok_1",
             profile_id="dev",
+            persona_ref="persona.dev",
+            instance_id="inst-1",
             issued_at="2026-01-01T00:00:00Z",
             expires_at="2026-12-31T23:59:59Z",
+            token_version="0.1.0",
             signature="bad_signature",
         )
         result = validate_token(token, ["my_secret"], "2026-06-15T12:00:00Z")
@@ -152,8 +158,11 @@ class TestH4TokenValidation:
         fields = {
             "token_id": "tok_1",
             "profile_id": "dev",
+            "persona_ref": "persona.dev",
+            "instance_id": "inst-1",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-01-02T00:00:00Z",
+            "token_version": "0.1.0",
         }
         sig = compute_signature(fields, "my_secret")
 

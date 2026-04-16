@@ -444,8 +444,9 @@ class TestConnectionContextRecoveryContract:
         ConnectionContext cannot re-derive validation parameters.
 
         Expected-red proof: the CapabilityToken constructor requires
-        token_id, issued_at, expires_at, signature — none of which
-        are present on a bare ConnectionContext.
+        token_id, persona_ref, instance_id, issued_at, expires_at,
+        token_version, signature — none of which are present on a bare
+        ConnectionContext.
         """
         bare_ctx = ConnectionContext(
             connection_id="c1",
@@ -456,8 +457,11 @@ class TestConnectionContextRecoveryContract:
         # CapabilityToken requires these fields; bare ctx provides none
         required_for_revalidation = (
             "token_id",
+            "persona_ref",
+            "instance_id",
             "issued_at",
             "expires_at",
+            "token_version",
             "signature",
         )
         for field in required_for_revalidation:
@@ -474,8 +478,11 @@ class TestConnectionContextRecoveryContract:
             client_info_snapshot={
                 "token_id": "tok-1",
                 "profile_id": "production",
+                "persona_ref": "persona.production",
+                "instance_id": "inst-production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
+                "token_version": "0.1.0",
                 "signature": "sig",
             },
         )
@@ -625,12 +632,12 @@ def test_status_response_accepts_spec_fixture() -> None:
         profile_count=2,
         total_tool_calls=42,
         connections=[
-            {
-                "connection_id": "bridge_abc123",
-                "profile_id": "developer",
-                "connected_at": "2026-03-25T12:00:00Z",
-                "tool_call_count": 5,
-            }
+            ConnectionContext(
+                connection_id="bridge_abc123",
+                profile_id="developer",
+                connected_at="2026-03-25T12:00:00Z",
+                tool_call_count=5,
+            )
         ],
         audit_entries=[audit_entry],
     )

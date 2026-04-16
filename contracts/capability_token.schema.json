@@ -1,22 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "CapabilityToken",
-  "description": "Short-lived capability token. Issued by nervus at dispatch time, passed to anima via --token-file, presented to tela at MCP connection time via clientInfo.capability_token.",
+  "description": "Short-lived capability token. Issued by nervus at dispatch time, consumed by tela to bind a connection to a capability profile.",
   "type": "object",
-  "required": ["token_id", "tools_profile", "issued_at", "expires_at", "signature"],
+  "required": ["token_id", "profile_id", "persona_ref", "instance_id", "issued_at", "expires_at", "token_version", "signature"],
   "properties": {
     "token_id": {
       "type": "string",
       "pattern": "^tok_",
       "description": "Unique token identifier. Prefixed with 'tok_' for log readability."
     },
-    "tools_profile": {
+    "profile_id": {
       "type": "string",
-      "description": "tela profile name this token grants access to"
+      "description": "Identifier of the tela capability profile this token grants access to."
     },
     "persona_ref": {
       "type": "string",
-      "description": "Reference to a PersonaSpec. May be an id (e.g. 'code-reviewer'), an id@digest_prefix (e.g. 'code-reviewer@a1b2c3d4'), or a file path."
+      "description": "Reference to the PersonaSpec for the dispatched run."
     },
     "instance_id": {
       "type": "string",
@@ -37,9 +37,14 @@
       "format": "date-time",
       "description": "Token expiration time. tela rejects expired tokens."
     },
+    "token_version": {
+      "type": "string",
+      "const": "0.1.0",
+      "description": "Schema version. Consumers must reject unknown versions."
+    },
     "signature": {
       "type": "string",
-      "description": "HMAC-SHA256 signature. Input: canonical JSON of all fields except 'signature' (sorted keys, no whitespace). Shared secret between nervus and tela."
+      "description": "Cryptographic signature used to validate token authenticity and integrity."
     }
   },
   "additionalProperties": false

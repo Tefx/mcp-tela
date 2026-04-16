@@ -5,6 +5,8 @@ validation contracts, and runtime boundaries. It intentionally contains no
 business-rule logic.
 """
 
+# @invar:allow file_size: configuration schemas, token models, and shared runtime payloads are the authoritative Pydantic contract surfaces for tela; splitting them here would scatter the canonical model boundary across multiple modules.
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -125,6 +127,13 @@ class ServerConfig(BaseModel):
     instructions: bool | str | None = None
 
     @field_validator("tool_prefix")
+    @pre(lambda cls, v: v is None or len(v) > 0)
+    @post(
+        lambda result: (
+            result is None
+            or not (result.startswith("tela.") or result.startswith("tela_"))
+        )
+    )
     @classmethod
     def _reject_reserved_prefix(cls, v: str | None) -> str | None:
         """Reject tool_prefix values that use the reserved tela namespace.
@@ -213,7 +222,7 @@ class CapabilityToken(BaseModel):
     ``profile_id`` will be rejected before authorization.
 
     Examples:
-        >>> tok = CapabilityToken(token_id="tok_1", profile_id="dev", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", token_version="0.1.0", signature="abc")
+        >>> tok = CapabilityToken(token_id="tok_1", profile_id="dev", persona_ref="persona.dev", instance_id="inst-1", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", token_version="0.1.0", signature="abc")
         >>> tok.profile_id
         'dev'
     """
@@ -222,8 +231,8 @@ class CapabilityToken(BaseModel):
 
     token_id: str
     profile_id: str
-    persona_ref: str | None = None
-    instance_id: str | None = None
+    persona_ref: str
+    instance_id: str
     max_depth: int | None = None
     issued_at: str
     expires_at: str

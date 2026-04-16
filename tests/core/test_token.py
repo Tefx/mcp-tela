@@ -17,14 +17,30 @@ from tela.core.token import (
 
 
 def test_compute_signature_is_deterministic() -> None:
-    fields = {"token_id": "tok_1", "profile_id": "dev"}
+    fields = {
+        "token_id": "tok_1",
+        "profile_id": "dev",
+        "persona_ref": "persona.dev",
+        "instance_id": "inst-1",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-12-31T23:59:59Z",
+        "token_version": "0.1.0",
+    }
     sig1 = compute_signature(fields, "secret")
     sig2 = compute_signature(fields, "secret")
     assert sig1 == sig2
 
 
 def test_compute_signature_differs_for_different_secrets() -> None:
-    fields = {"token_id": "tok_1", "profile_id": "dev"}
+    fields = {
+        "token_id": "tok_1",
+        "profile_id": "dev",
+        "persona_ref": "persona.dev",
+        "instance_id": "inst-1",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-12-31T23:59:59Z",
+        "token_version": "0.1.0",
+    }
     sig1 = compute_signature(fields, "secret1")
     sig2 = compute_signature(fields, "secret2")
     assert sig1 != sig2
@@ -99,6 +115,8 @@ def test_validate_token_rejects_signature_missing_token_version() -> None:
     token_fields = {
         "token_id": "tok_1",
         "profile_id": "dev",
+        "persona_ref": "persona.dev",
+        "instance_id": "inst-1",
         "issued_at": "2026-01-01T00:00:00Z",
         "expires_at": "2026-12-31T23:59:59Z",
         "token_version": "0.1.0",
@@ -125,6 +143,8 @@ def test_capability_token_rejects_unknown_extra_field() -> None:
             {
                 "token_id": "tok_1",
                 "profile_id": "dev",
+                "persona_ref": "persona.dev",
+                "instance_id": "inst-1",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
                 "token_version": "0.1.0",
@@ -134,6 +154,26 @@ def test_capability_token_rejects_unknown_extra_field() -> None:
         )
 
     assert "unexpected_field" in str(exc_info.value)
+
+
+def test_capability_token_rejects_missing_persona_ref_and_instance_id() -> None:
+    from tela.core.models import CapabilityToken
+
+    with pytest.raises(ValidationError) as exc_info:
+        CapabilityToken.model_validate(
+            {
+                "token_id": "tok_1",
+                "profile_id": "dev",
+                "issued_at": "2026-01-01T00:00:00Z",
+                "expires_at": "2026-12-31T23:59:59Z",
+                "token_version": "0.1.0",
+                "signature": "abc",
+            }
+        )
+
+    message = str(exc_info.value)
+    assert "persona_ref" in message
+    assert "instance_id" in message
 
 
 def test_create_token_profile() -> None:

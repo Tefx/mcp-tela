@@ -64,6 +64,8 @@ class TestCapabilityTokenCanonicalProfileId:
         tok = CapabilityToken(
             token_id="tok_1",
             profile_id="dev",
+            persona_ref="persona.dev",
+            instance_id="inst-1",
             issued_at="2026-01-01T00:00:00Z",
             expires_at="2026-12-31T23:59:59Z",
             token_version="0.1.0",
@@ -78,6 +80,8 @@ class TestCapabilityTokenCanonicalProfileId:
                 token_id="tok_1",
                 issued_at="2026-01-01T00:00:00Z",
                 expires_at="2026-12-31T23:59:59Z",
+                persona_ref="persona.dev",
+                instance_id="inst-1",
                 signature="abc",
             )
 
@@ -87,12 +91,17 @@ class TestCapabilityTokenCanonicalProfileId:
         Fail-closed: legacy `profile_name` field must not silently map to `profile_id`.
         """
         with pytest.raises(ValidationError):
-            CapabilityToken(  # type: ignore[call-arg]
-                token_id="tok_1",
-                profile_name="dev",
-                issued_at="2026-01-01T00:00:00Z",
-                expires_at="2026-12-31T23:59:59Z",
-                signature="abc",
+            CapabilityToken.model_validate(
+                {
+                    "token_id": "tok_1",
+                    "profile_name": "dev",
+                    "persona_ref": "persona.dev",
+                    "instance_id": "inst-1",
+                    "issued_at": "2026-01-01T00:00:00Z",
+                    "expires_at": "2026-12-31T23:59:59Z",
+                    "token_version": "0.1.0",
+                    "signature": "abc",
+                }
             )
 
 
@@ -122,12 +131,26 @@ class TestTokenFunctionsUseProfileId:
         fields = {
             "token_id": "tok_1",
             "profile_id": "dev",
+            "persona_ref": "persona.dev",
+            "instance_id": "inst-1",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
             "token_version": "0.1.0",
         }
         sig = compute_signature(fields, "secret1")
         assert isinstance(sig, str) and len(sig) == 64
+
+    def test_token_requires_persona_ref_and_instance_id(self) -> None:
+        """CapabilityToken must reject omission of canonical identity fields."""
+        with pytest.raises(ValidationError):
+            CapabilityToken(  # type: ignore[call-arg]
+                token_id="tok_1",
+                profile_id="dev",
+                issued_at="2026-01-01T00:00:00Z",
+                expires_at="2026-12-31T23:59:59Z",
+                token_version="0.1.0",
+                signature="abc",
+            )
 
 
 # ==============================================================================

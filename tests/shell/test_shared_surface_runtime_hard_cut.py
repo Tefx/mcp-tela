@@ -13,6 +13,7 @@ from tela.core.models import (
     Posture,
     ProfileConfig,
     ResolvedTool,
+    ServerConfig,
     TelaConfig,
 )
 from tela.core.token import compute_signature
@@ -31,14 +32,19 @@ def _make_token_fields(
     *,
     profile_id: str = "dev",
     token_id: str = "tok_test",
+    persona_ref: str = "persona.default",
+    instance_id: str = "instance.default",
     issued_at: str = "2026-01-01T00:00:00Z",
     expires_at: str = "2099-12-31T23:59:59Z",
 ) -> dict[str, str]:
     return {
         "token_id": token_id,
         "profile_id": profile_id,
+        "persona_ref": persona_ref,
+        "instance_id": instance_id,
         "issued_at": issued_at,
         "expires_at": expires_at,
+        "token_version": "0.1.0",
     }
 
 
@@ -48,13 +54,10 @@ def _make_client_info(
     token_overrides: dict[str, object] | None = None,
     **hints: object,
 ) -> dict[str, object]:
-    token_fields: dict[str, object] = _make_token_fields()
+    token_fields: dict[str, object] = dict(_make_token_fields())
     if token_overrides is not None:
         token_fields.update(token_overrides)
-    signature = compute_signature(
-        {key: value for key, value in token_fields.items() if value is not None},
-        secret,
-    )
+    signature = compute_signature(token_fields, secret)
     return {
         **hints,
         "capability_token": {
@@ -111,7 +114,10 @@ def test_handle_initialize_rejects_reserved_top_level_token_semantics(
 ) -> None:
     """Top-level token semantics and alias keys are fail-closed."""
     _configure_token_mode()
-    client_info = _make_client_info(**{reserved_key: "forbidden"})
+    client_info = {
+        **_make_client_info(),
+        reserved_key: "forbidden",
+    }
 
     async def _run() -> None:
         result = await handle_initialize(client_info)
@@ -132,7 +138,10 @@ def test_handle_initialize_rejects_reserved_vendor_top_level_keys(
 ) -> None:
     """tela/opifex-owned top-level client_info keys are rejected."""
     _configure_token_mode()
-    client_info = _make_client_info(**{reserved_key: "forbidden"})
+    client_info = {
+        **_make_client_info(),
+        reserved_key: "forbidden",
+    }
 
     async def _run() -> None:
         result = await handle_initialize(client_info)
@@ -279,7 +288,7 @@ def test_handle_list_providers_rejects_non_snake_case_tool_names(
         TelaConfig(
             auth=AuthConfig(mode=AuthMode.OPEN),
             resolved_default_profile="dev",
-            servers={"fs": {"name": "fs", "command": "cmd"}},
+            servers={"fs": ServerConfig(name="fs", command="cmd")},
             profiles={
                 "dev": ProfileConfig(
                     name="dev",

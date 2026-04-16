@@ -39,18 +39,24 @@ def _make_valid_token_fields(
     token_id: str = "tok-1",
     issued_at: str = "2026-01-01T00:00:00Z",
     expires_at: str = "2099-12-31T23:59:59Z",
-) -> dict:
+    persona_ref: str = "persona.default",
+    instance_id: str = "instance.default",
+    token_version: str = "0.1.0",
+) -> dict[str, object]:
     """Make token fields dict with computed signature."""
-    fields = {
+    fields: dict[str, object] = {
         "token_id": token_id,
         "profile_id": profile,
+        "persona_ref": persona_ref,
+        "instance_id": instance_id,
         "issued_at": issued_at,
         "expires_at": expires_at,
+        "token_version": token_version,
     }
     return fields
 
 
-def _sign_token(fields: dict, secret: str) -> dict:
+def _sign_token(fields: dict[str, object], secret: str) -> dict[str, object]:
     """Add signature to token fields."""
     sig = compute_signature(fields, secret)
     return {**fields, "signature": sig}
@@ -370,10 +376,13 @@ def test_handle_initialize_token_mode_ignores_profile_hints_in_metadata() -> Non
         set_runtime_secrets([])
 
 
-def test_handle_initialize_token_mode_preserves_optional_token_fields() -> None:
-    """Token mode must handle optional token fields (persona_ref, etc.).
+def test_handle_initialize_token_mode_preserves_required_and_optional_token_fields() -> (
+    None
+):
+    """Token mode must preserve required identity fields plus optional max_depth.
 
-    prove token construction handles both minimal and full token shapes.
+    Source: hard_cut.closeout.fix_capability_token_parity_round2 requires
+    persona_ref and instance_id to be required while max_depth remains optional.
     """
     secret = "optional-key"
     fields = {
@@ -384,8 +393,9 @@ def test_handle_initialize_token_mode_preserves_optional_token_fields() -> None:
         "persona_ref": "user-123",
         "instance_id": "inst-456",
         "max_depth": 5,
+        "token_version": "0.1.0",
     }
-    sig = compute_signature({k: v for k, v in fields.items() if v is not None}, secret)
+    sig = compute_signature(fields, secret)
     signed_token = {**fields, "signature": sig}
 
     set_runtime_config(
@@ -547,8 +557,11 @@ def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
         # All required token fields must be in snapshot
         assert ctx.client_info_snapshot["token_id"] == "tok-recovery-1"
         assert ctx.client_info_snapshot["profile_id"] == "production"
+        assert ctx.client_info_snapshot["persona_ref"] == "persona.default"
+        assert ctx.client_info_snapshot["instance_id"] == "instance.default"
         assert "issued_at" in ctx.client_info_snapshot
         assert "expires_at" in ctx.client_info_snapshot
+        assert ctx.client_info_snapshot["token_version"] == "0.1.0"
         assert "signature" in ctx.client_info_snapshot
 
     try:
@@ -598,8 +611,11 @@ def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstr
         for field in (
             "token_id",
             "profile_id",
+            "persona_ref",
+            "instance_id",
             "issued_at",
             "expires_at",
+            "token_version",
             "signature",
         ):
             assert field in ctx.client_info_snapshot, (
