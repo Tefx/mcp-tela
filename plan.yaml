@@ -72051,3 +72051,61 @@ phases:
     fail-closed behavior and no envelope over-tightening.
   depends_on:
   - tech_debt.cleanup
+  steps:
+  - id: hard_cut.closeout.surface_enforcement
+    name: Close shared-surface canonical enforcement
+    status: pending
+    description: 'Implement and verify the remaining shared-surface hard-cut rules.
+
+
+      REQUIRED BEHAVIOR:
+
+      - Do NOT make the entire top-level MCP client_info envelope additionalProperties=false.
+
+      - capability_token payload itself is the strict fail-closed object.
+
+      - Non-reserved top-level hints/external metadata are allowed and ignored.
+
+      - tela/opifex-owned reserved top-level keys, canonical-token alias fields, and
+      conflicting top-level token semantics are hard-rejected.
+
+      - profile_name and tools_profile always fail-closed.
+
+      - extra fields on capability_token always fail-closed.
+
+      - No compatibility aliases, no accept-now-clean-later behavior.
+
+      - Shared MCP tool naming is snake_case only across exposed shared surfaces.
+
+
+      Focus on runtime/external contract behavior, not internal refactors or beautification.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.
+
+      Each deliverable MUST contain substantive logic that processes its inputs and
+      produces outputs that vary based on those inputs.'
+    verification: "local-check protecting downstream full-plan-check and phase gate.\n\
+      Executor must:\n- first add/adjust property-based or contract-based tests proving\
+      \ expected-red for:\n  - non-reserved top-level client_info hints are accepted/ignored\n\
+      \  - reserved tela/opifex top-level conflicts are rejected\n  - profile_name/tools_profile\
+      \ aliases are rejected\n  - extra capability_token fields are rejected\n  -\
+      \ canonical capability_token schema is fail-closed\n  - shared MCP tool names\
+      \ are snake_case\n- run the targeted red proof before implementation\n- implement\
+      \ only the shared-surface behavior needed to make those tests green\n- run targeted\
+      \ green tests plus invar guard on changed files"
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Expected-Red\
+      \ Proof (MANDATORY)\n- Property-based / contract tests added:\n  - <test ids>\n\
+      - Exact command run before implementation:\n  ```bash\n  <command>\n  ```\n\
+      - Failing output showing the gap:\n  ```text\n  <paste output>\n  ```\n\n##\
+      \ Implementation Scope\n- Shared surfaces changed:\n  - <files>\n- Rejected\
+      \ alias/conflict cases covered:\n  - <list>\n- Non-reserved-hint acceptance\
+      \ case covered:\n  - <list>\n- Snake_case naming enforcement path:\n  - <list>\n\
+      \n## Green Proof\n- Targeted command(s):\n  ```bash\n  <command>\n  ```\n- Actual\
+      \ output:\n  ```text\n  <paste output>\n  ```\n\n## Guard Proof\n- invar/guard\
+      \ command:\n  ```bash\n  <command>\n  ```\n- Actual output:\n  ```text\n  <paste\
+      \ output>\n  ```"
+    agent: python-senior-tacit
