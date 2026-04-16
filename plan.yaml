@@ -72572,7 +72572,7 @@ phases:
       \ detection/reporting owner; blockers promoted into batched remediation ownership."
   - id: hard_cut.closeout.fix_capability_token_parity_round2
     name: Batched remediation for capability_token parity blockers (round 2)
-    status: pending
+    status: claimed
     description: "Fix ALL blocker findings from hard_cut.closeout.retest_capability_token_parity.\n\
       \nWork type: defect_repair\nstep_type: implementation\nprior_loop:\n  - hard_cut.closeout.fix_capability_token_parity\n\
       \  - hard_cut.closeout.retest_capability_token_parity\nremaining_blocker: integration\
@@ -72660,6 +72660,8 @@ phases:
     depends_on:
     - hard_cut.closeout.retest_capability_token_parity
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-16T15:04:42.526183+00:00'
   - id: hard_cut.closeout.retest_capability_token_parity_round2
     name: Retest hard-cut closeout capability_token blockers (round 2)
     status: pending
