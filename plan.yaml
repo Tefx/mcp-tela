@@ -72240,7 +72240,7 @@ phases:
       \ opifex schema mirrors with CI parity enforcement`\n\n## NOT Done\n- none"
   - id: hard_cut.closeout.verify
     name: Verify hard-cut closeout shared surfaces
-    status: pending
+    status: claimed
     description: As an INDEPENDENT TESTER, adversarially verify the hard-cut closeout
       behavior from the external/shared-surface perspective. Your job is to find drift,
       especially accidental over-hardening of the top-level envelope or hidden compatibility
@@ -72283,6 +72283,8 @@ phases:
     - hard_cut.closeout.surface_enforcement
     - hard_cut.closeout.vendor_schema_parity
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-16T14:20:41.740773+00:00'
   - id: hard_cut.closeout.gate
     name: Gate hard-cut canonical alignment closeout
     status: pending
