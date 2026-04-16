@@ -72054,7 +72054,7 @@ phases:
   steps:
   - id: hard_cut.closeout.surface_enforcement
     name: Close shared-surface canonical enforcement
-    status: claimed
+    status: done
     description: 'Implement and verify the remaining shared-surface hard-cut rules.
 
 
@@ -72111,6 +72111,62 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-16T13:46:46.296747+00:00'
+    done_at: '2026-04-16T14:00:44.978517+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nNo explicit vectl `refs` were\
+      \ supplied in the dispatch payload, so I used the contract authorities named\
+      \ by the step and local hard-cut docs:\n- docs/ADR-007-opifex-canonical-contract-alignment.md\
+      \ — “`opifex/contracts/capability_token.schema.json` is the only canonical shared\
+      \ token contract”; “`tools_profile` is invalid on shared token surfaces”; “`profile_name`,\
+      \ if retained at all, is repo-local display vocabulary only”\n- docs/hard-cutover-canonical-alignment.md\
+      \ — “Tela extracts and validates the `profile_id` binding from the full canonical\
+      \ token payload”; “It must reject tokens that carry `profile_name` or `tools_profile`\
+      \ instead”; “Exposes exactly one canonical MCP tool: `tela_list_profiles`”\n\
+      - /Users/tefx/Projects/opifex/design/final-canonical-contract.md — “All MCP\
+      \ tool names are `snake_case`”; “`profile_name` is invalid on shared token surfaces”;\
+      \ “`tools_profile` is invalid on shared token surfaces”; “Shared MCP surfaces\
+      \ do not use alias payload keys”\n- /Users/tefx/Projects/opifex/contracts/capability_token.schema.json\
+      \ — canonical token object has explicit `properties`, required fields, and `\"\
+      additionalProperties\": false`\n\n## Expected-Red Proof (MANDATORY)\n- Property-based\
+      \ / contract tests added:\n  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_initialize_accepts_non_reserved_top_level_hints\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_initialize_rejects_reserved_top_level_token_semantics\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_initialize_rejects_reserved_vendor_top_level_keys\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_initialize_rejects_alias_fields_inside_capability_token\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_initialize_rejects_extra_capability_token_fields\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_initialize_requires_capability_token_object\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_tools_list_rejects_non_snake_case_tool_names\n\
+      \  - tests/shell/test_shared_surface_runtime_hard_cut.py::test_handle_list_providers_rejects_non_snake_case_tool_names\n\
+      - Exact command run before implementation:\n  ```bash\n  .venv/bin/python -m\
+      \ pytest -q tests/shell/test_shared_surface_runtime_hard_cut.py\n  ```\n- Failing\
+      \ output showing the gap:\n  ```text\n  FFFFFFFFFFFFFFF                    \
+      \                                      [100%]\n  15 failed in 1.42s\n  ```\n\
+      \n## Implementation Scope\n- Shared surfaces changed:\n  - src/tela/shell/upstream.py\n\
+      \  - src/tela/shell/builtin_tools.py\n  - tests/shell/test_shared_surface_runtime_hard_cut.py\n\
+      \  - tests/integration/test_token_mode_initialize.py\n- Rejected alias/conflict\
+      \ cases covered:\n  - top-level canonical token semantics rejected: `token_id`,\
+      \ `profile_id`, `signature`\n  - top-level alias fields rejected: `profile_name`,\
+      \ `tools_profile`\n  - top-level tela/opifex reserved keys rejected: `tela_profile_id`,\
+      \ `opifex_profile_id`\n  - nested capability_token alias fields rejected: `profile_name`,\
+      \ `tools_profile`\n  - nested extra capability_token field rejected: `unexpected`\n\
+      \  - missing nested `capability_token` object rejected\n- Non-reserved-hint\
+      \ acceptance case covered:\n  - top-level `client`, `profile`, `x_trace` accepted\
+      \ and ignored for authz/profile binding while preserved in snapshot\n- Snake_case\
+      \ naming enforcement path:\n  - `tela.shell.upstream.handle_tools_list` rejects\
+      \ non-snake-case exposed tool names\n  - `tela.shell.builtin_tools.handle_list_providers`\
+      \ rejects non-snake-case exposed tool names in shared provider payloads\n  -\
+      \ builtin shared MCP tool declarations are validated at import time\n\n## Green\
+      \ Proof\n- Targeted command(s):\n  ```bash\n  .venv/bin/python -m pytest -q\
+      \ tests/shell/test_shared_surface_runtime_hard_cut.py tests/integration/test_token_mode_initialize.py\n\
+      \  ```\n- Actual output:\n  ```text\n  ..................................  \
+      \                                     [100%]\n  34 passed in 0.36s\n  ```\n\n\
+      ## Guard Proof\n- invar/guard command:\n  ```bash\n  invar_guard(path=\"/Users/tefx/Projects/mcp-tela/.vectl/worktrees/hard_cut.closeout.surface_enforcement\"\
+      , changed=true, strict=false)\n  ```\n- Actual output:\n  ```text\n  {\"status\"\
+      :\"passed\",\"summary\":{\"files_checked\":2,\"errors\":0,\"warnings\":8,\"\
+      infos\":2}}\n  ```\n\n## Commits\n- a383c84 — `test(hard-cut): add shared surface\
+      \ runtime proofs`\n- 7dac102 — `fix(hard-cut): enforce shared surface contracts`\n\
+      \n## NOT Done\n- Did not refactor shell-local validation helpers into Core;\
+      \ guard passed with warnings only, and broader refactoring was outside this\
+      \ step.\n- Did not expand token semantics beyond this step’s required runtime\
+      \ contract enforcement."
   - id: hard_cut.closeout.vendor_schema_parity
     name: Add read-only opifex schema mirrors and parity enforcement
     status: pending
