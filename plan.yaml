@@ -72045,7 +72045,7 @@ phases:
       \  - `invar guard --changed` -> passed (0 errors, 0 warnings)."
 - id: hard_cut.closeout
   name: Hard-Cut Canonical Alignment Closeout
-  status: in_progress
+  status: done
   gate: Open only when strict capability_token enforcement, read-only vendored schema
     parity, and snake_case shared MCP surface rules are independently verified with
     fail-closed behavior and no envelope over-tightening.
@@ -72327,7 +72327,7 @@ phases:
       \ remediation chain."
   - id: hard_cut.closeout.gate
     name: Gate hard-cut canonical alignment closeout
-    status: claimed
+    status: done
     description: Independent gate for hard-cut canonical alignment closeout. Block
       if any shared surface still accepts old fields, if reserved-key conflict rejection
       is incomplete, if parity enforcement is soft, or if the top-level client_info
@@ -72360,6 +72360,99 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-16T15:30:18.647939+00:00'
+    done_at: '2026-04-16T15:56:38.230251+00:00'
+    evidence: '## Gate Review Report — hard_cut.closeout.gate
+
+
+      Headline: PASS_WITH_DEBT
+
+      blocking_status: CLOSED
+
+      proof_gap_status: NONE
+
+      gate_open_allowed: true
+
+
+      ## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Wiring Audit Results (W1-W8)
+
+      - W1 exports/runtime callers: PASS
+
+      - W2 CLI/registration surface: PASS
+
+      - W3 config fields consumed: PASS
+
+      - W4 unimplemented stubs: PASS
+
+      - W5 write-only fields: PASS
+
+      - W6 ProfileConfig tools rejection/extra forbid: PASS
+
+      - W7 canonical profile discovery surface (tela_list_profiles): PASS
+
+      - W8 profile_aliases deletion/no legacy module: PASS
+
+
+      ## Escape Hatch Audit Results
+
+      - Reviewed @invar:allow annotations; no dead_export hatches
+
+      - file_size/shell_result hatches are present but legitimate and pre-existing
+
+      - invar guard budget warnings are pre-existing debt; no structural blocker for
+      this gate
+
+
+      ## Integration vs Fixture-Injection Evidence
+
+      - Verification covered real handler/runtime paths (initialize/extract/validate
+      and builtin tool handlers)
+
+      - No mock-island boundary substitution for the core parity/gate assertions
+
+
+      ## Behavioral Proof Register
+
+      - Tools alias removal/fail-closed: PROVEN
+
+      - profile_id canonical binding: PROVEN
+
+      - top-level and nested alias rejection: PROVEN
+
+      - tela_list_profiles canonical payload shape: PROVEN
+
+      - posture enum canonicality: PROVEN
+
+      - audit/enforcement profile_id binding: PROVEN
+
+      - client_info envelope not over-broadly fail-closed: PROVEN
+
+      - snake_case shared MCP naming enforcement: PROVEN
+
+
+      ## Gate Decision Basis
+
+      - No unresolved blocker obligations intersecting hard_cut.closeout acceptance
+      remain.
+
+      - One SHOULD_FIX debt remains (pre-existing classmethod/contract decorator interaction
+      outside this hard-cut blocker family).
+
+
+      ## Decision
+
+      OPEN (PASS_WITH_DEBT)
+
+
+      ## Additional Note
+
+      Gate reviewer fixed stale doctest alias usage (`tools=` -> `capabilities=`)
+      during audit in scope-adjacent docs/tests evidence path; blocker count remains
+      zero.'
   - id: hard_cut.closeout.fix_capability_token_parity
     name: Batched remediation for capability_token parity blockers
     status: done
