@@ -224,24 +224,40 @@ def is_recoverable_error(error: str) -> Result[bool, str]:
     )
 
 
-# @invar:allow shell_result: pure parsing helper returning Optional[str], no I/O.
-# @shell_orchestration: JSON-RPC error extraction stays in Shell because it classifies bridge transport responses for replay/recovery decisions at the protocol boundary.
-# @shell_complexity: JSON-RPC error extractor validates payload/object/error/message shape.
-def _extract_jsonrpc_error_message(payload: bytes) -> str | None:
-    """Return JSON-RPC error message text when present in a response payload."""
+# @invar:allow shell_result: pure parsing helper returning list[str], no I/O.
+# @shell_orchestration: bridge error extraction stays in Shell because it classifies protocol-bound transport responses for replay/recovery decisions.
+# @shell_complexity: parser branches across JSON-RPC error envelopes and CallToolResult isError payload content.
+def _extract_bridge_error_messages(payload: bytes) -> list[str]:
+    """Return recoverable error text candidates from a bridge response payload."""
 
     try:
         decoded = json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return None
+        return []
 
     if not isinstance(decoded, dict):
-        return None
+        return []
+
+    messages: list[str] = []
+
     error = decoded.get("error")
-    if not isinstance(error, dict):
-        return None
-    message = error.get("message")
-    return message if isinstance(message, str) else None
+    if isinstance(error, dict):
+        message = error.get("message")
+        if isinstance(message, str):
+            messages.append(message)
+
+    result = decoded.get("result")
+    if isinstance(result, dict) and result.get("isError") is True:
+        content = result.get("content")
+        if isinstance(content, list):
+            for item in content:
+                if not isinstance(item, dict):
+                    continue
+                text = item.get("text")
+                if isinstance(text, str):
+                    messages.append(text)
+
+    return messages
 
 
 # @invar:allow shell_result: pure response-classification helper returning bool, no I/O.
@@ -266,12 +282,10 @@ def _response_requires_bridge_recovery(response_messages: list[bytes]) -> bool:
         "bridge initialize requires pre-registered connection",
     )
     for payload in response_messages:
-        message = _extract_jsonrpc_error_message(payload)
-        if message is None:
-            continue
-        normalized_message = message.lower()
-        if any(marker in normalized_message for marker in recovery_markers):
-            return True
+        for message in _extract_bridge_error_messages(payload):
+            normalized_message = message.lower()
+            if any(marker in normalized_message for marker in recovery_markers):
+                return True
     return False
 
 

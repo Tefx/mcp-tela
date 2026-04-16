@@ -1254,6 +1254,139 @@ def test_forward_stdio_http_recovers_when_response_requests_bridge_reconnect(
     assert '"tools": []' in output
 
 
+def test_response_requires_bridge_recovery_for_tool_call_error_payload() -> None:
+    """CallToolResult isError payloads must also trigger bridge recovery."""
+
+    payload = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "result": {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "RECONNECT_REQUIRED: no live session or connection available; client must re-establish the MCP connection",
+                    }
+                ],
+                "isError": True,
+            },
+        }
+    ).encode("utf-8")
+
+    assert connect_bridge._response_requires_bridge_recovery([payload]) is True
+
+
+def test_forward_stdio_http_recovers_when_tool_call_result_requires_reconnect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """tools/call isError reconnect responses must trigger bridge recovery."""
+
+    initialize_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    tool_call_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"value":"after-idle"}}}'
+    stdin_buffer = io.BytesIO(initialize_request + b"\n" + tool_call_request + b"\n")
+    stdout_buffer = io.BytesIO()
+    post_calls: list[tuple[str, str, str | None]] = []
+    recover_calls = {"count": 0}
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+        max_recovery_attempts: int = 3,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = payload, max_recovery_attempts
+        post_calls.append((mcp_url, bearer_token, session_id))
+        if len(post_calls) == 1:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "session-1",
+                )
+            )
+        if len(post_calls) == 2:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": 2,
+                            "result": {
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "RECONNECT_REQUIRED: no live session or connection available; client must re-establish the MCP connection",
+                                    }
+                                ],
+                                "isError": True,
+                            },
+                        }
+                    ).encode("utf-8"),
+                    "session-1",
+                )
+            )
+        if len(post_calls) == 3:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "recovered-session",
+                )
+            )
+        return Result(
+            value=(
+                "application/json",
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 2,
+                        "result": {
+                            "content": [
+                                {"type": "text", "text": "after-idle"},
+                            ],
+                            "isError": False,
+                        },
+                    }
+                ).encode("utf-8"),
+                "recovered-session",
+            )
+        )
+
+    def _fake_recover_transport() -> Result[tuple[str, str], str]:
+        recover_calls["count"] += 1
+        return Result(value=("http://127.0.0.1:9001/mcp", "recovered-token"))
+
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="old-token",
+        bridge_connection_id="bridge_test",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=stdout_buffer,
+        recover_transport=_fake_recover_transport,
+    )
+
+    assert result.is_ok
+    assert recover_calls["count"] == 1
+    assert post_calls == [
+        ("http://127.0.0.1:8123/mcp", "old-token", None),
+        ("http://127.0.0.1:8123/mcp", "old-token", "session-1"),
+        ("http://127.0.0.1:9001/mcp", "recovered-token", None),
+        ("http://127.0.0.1:9001/mcp", "recovered-token", "recovered-session"),
+    ]
+    output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
+    assert '"after-idle"' in output
+
+
 def test_post_mcp_message_retries_only_for_transient_contract_signal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

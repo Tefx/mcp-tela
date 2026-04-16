@@ -72,6 +72,53 @@ def _write_test_config(
     return path
 
 
+def _write_tool_call_test_config(
+    tmp_dir: str,
+    *,
+    bridge_idle_ttl_seconds: float,
+    sweep_interval_seconds: float,
+) -> str:
+    """Write a config with a real downstream stdio tool for tools/call tests."""
+
+    fixture_path = (
+        Path(__file__).resolve().parents[1] / "fixtures" / "fastmcp_stdio_server.py"
+    )
+    config: dict[str, object] = {
+        "servers": {
+            "local_stdio": {
+                "command": sys.executable,
+                "args": [str(fixture_path)],
+                "default_posture": "read_only",
+            }
+        },
+        "profiles": {
+            "test_profile": {
+                "capabilities": {
+                    "local_stdio": "read_only",
+                },
+                "default": True,
+            },
+        },
+        "auth": {
+            "mode": "open",
+        },
+        "audit": {
+            "level": "L1",
+            "output": os.path.join(tmp_dir, "audit.jsonl"),
+        },
+        "reaper": {
+            "bridge_idle_ttl_seconds": bridge_idle_ttl_seconds,
+            "sweep_interval_seconds": sweep_interval_seconds,
+        },
+    }
+    import yaml
+
+    path = os.path.join(tmp_dir, "tela-tools-call.yaml")
+    with open(path, "w") as f:
+        yaml.dump(config, f)
+    return path
+
+
 def _get_lockfile_path() -> Path:
     """Return the expected lockfile path per docs."""
     return Path.home() / ".tela" / "gateway.lock"
@@ -688,6 +735,177 @@ def test_bridge_recovers_after_idle_bridge_reap(
             )
             assert connect_proc.poll() is None, (
                 "Mode D: connect process exited after recovery instead of remaining alive"
+            )
+
+        finally:
+            if connect_proc is not None:
+                if connect_proc.stdin is not None:
+                    connect_proc.stdin.close()
+                connect_proc.terminate()
+                try:
+                    connect_proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    connect_proc.kill()
+                    connect_proc.wait()
+
+            serve_proc.terminate()
+            try:
+                serve_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                serve_proc.kill()
+                serve_proc.wait()
+
+            _clean_lockfile()
+
+
+def test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A real downstream tools/call must recover after bridge idle reaping.
+
+    Source:
+    - Host-level OpenCode repro showed idle failure on downstream ``tools/call``
+      even after ``tools/list`` recovery existed.
+    - ``tests/shell/test_gateway.py`` verifies ``tools/call`` errors are surfaced
+      as ``CallToolResult.isError`` payloads, so the bridge must recover on that
+      response shape too.
+    """
+
+    fake_home = str(tmp_path / "home")
+    os.makedirs(fake_home, exist_ok=True)
+    monkeypatch.setenv("HOME", fake_home)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        config_path = _write_tool_call_test_config(
+            tmp_dir,
+            bridge_idle_ttl_seconds=1.0,
+            sweep_interval_seconds=0.2,
+        )
+
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+                "--idle-timeout",
+                "30",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        connect_proc: subprocess.Popen[bytes] | None = None
+        try:
+            lockfile_data = _wait_for_lockfile(timeout=10.0)
+            assert lockfile_data is not None, "Server did not write lockfile"
+            token = lockfile_data["token"]
+            assert isinstance(token, str)
+
+            connect_proc = subprocess.Popen(
+                [sys.executable, "-m", "tela", "connect", "--config", config_path],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            time.sleep(1.0)
+            assert connect_proc.poll() is None, (
+                "Connect exited before downstream tool-call traffic began"
+            )
+
+            initialize_response = _send_jsonrpc_line(
+                connect_proc,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {
+                            "name": "idle-tool-call-test",
+                            "version": "0.1",
+                        },
+                    },
+                },
+            )
+            assert "result" in initialize_response, (
+                f"Mode D: initialize failed before tools/call idle test. response={initialize_response!r}"
+            )
+
+            first_call_response = _send_jsonrpc_line(
+                connect_proc,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "echo",
+                        "arguments": {"value": "before-idle"},
+                    },
+                },
+            )
+            assert "result" in first_call_response, (
+                f"Mode D: first tools/call failed. response={first_call_response!r}"
+            )
+            first_result = first_call_response["result"]
+            assert isinstance(first_result, dict)
+            first_content = first_result.get("content")
+            assert isinstance(first_content, list)
+            assert first_content[0]["text"] == "before-idle"
+
+            status_before_idle = _query_status_json(token)
+            active_before_idle = _active_connection_count(status_before_idle)
+            assert active_before_idle >= 1, (
+                "Mode D: bridge never registered before downstream idle recovery test. "
+                f"status={status_before_idle!r}"
+            )
+
+            time.sleep(2.5)
+
+            status_after_reap = _query_status_json(token)
+            active_after_reap = _active_connection_count(status_after_reap)
+            assert active_after_reap == 0, (
+                "Mode D: idle reaper did not remove the quiet bridge connection before "
+                f"tools/call recovery. status={status_after_reap!r}"
+            )
+
+            second_call_response = _send_jsonrpc_line(
+                connect_proc,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "echo",
+                        "arguments": {"value": "after-idle"},
+                    },
+                },
+            )
+            assert "result" in second_call_response, (
+                "Mode D: downstream tools/call did not self-recover after idle reap. "
+                f"response={second_call_response!r}"
+            )
+            second_result = second_call_response["result"]
+            assert isinstance(second_result, dict)
+            second_content = second_result.get("content")
+            assert isinstance(second_content, list)
+            assert second_content[0]["text"] == "after-idle"
+
+            status_after_recovery = _query_status_json(token)
+            active_after_recovery = _active_connection_count(status_after_recovery)
+            assert active_after_recovery >= 1, (
+                "Mode D: downstream tools/call recovered only superficially; runtime did not "
+                f"re-register connection. status={status_after_recovery!r}"
+            )
+            assert connect_proc.poll() is None, (
+                "Mode D: connect process exited after downstream tools/call recovery"
             )
 
         finally:
