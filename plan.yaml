@@ -73276,7 +73276,7 @@ phases:
   steps:
   - id: canonical_gateway_state.token_admission_exactness
     name: Enforce explicit token_version at token admission
-    status: claimed
+    status: done
     description: 'Implement and verify the token admission hard-cut in the actual
       initialize/admission path.
 
@@ -73419,6 +73419,48 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-17T20:28:16.848742+00:00'
+    done_at: '2026-04-17T20:32:27.173135+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - src/tela/shell/upstream.py — Read `_extract_capability_token()` and `handle_initialize()`;\
+      \ admission constructs `CapabilityToken(**token_payload)` before connection\
+      \ creation, so model defaults here can smuggle omitted fields into the admitted\
+      \ path.\n- src/tela/core/models.py — Read `CapabilityToken`; key passage was\
+      \ `token_version: Literal[\"0.1.0\"] = \"0.1.0\"`, which was the default-smuggling\
+      \ seam.\n- tests/integration/test_token_mode_initialize.py — Read token initialize\
+      \ coverage and added the missing-`token_version` admission test beside other\
+      \ token-mode rejection cases.\n- tests/core/test_models.py — Read existing recovery/model\
+      \ contract coverage; no change required because the focused exactness proof\
+      \ fit better in token-specific tests.\n- tests/core/test_token.py — Read token\
+      \ validation/model tests and added contract-strength coverage proving omitted\
+      \ `token_version` must not validate even when the signature matches a defaulted\
+      \ payload.\n\n## Expected-Red Proof (MANDATORY)\n- Added/updated tests/contracts:\n\
+      \  - `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`\n\
+      \  - `tests/core/test_token.py::test_capability_token_rejects_missing_token_version_without_default_smuggling`\
+      \ (Hypothesis-backed exactness coverage)\n- Exact command run before implementation:\n\
+      ```bash\nuv run pytest tests/integration/test_token_mode_initialize.py tests/core/test_token.py\
+      \ -q\n```\n- Failing output proving missing `token_version` is not yet enforced:\n\
+      ```text\n........F..........................F...............               \
+      \       [100%]\n2 failed, 49 passed in 2.39s\n```\n\n## Root Cause vs Symptom\n\
+      - Root cause: `CapabilityToken` in `src/tela/core/models.py` gave `token_version`\
+      \ a model default, so `_extract_capability_token()` in the real initialize/admission\
+      \ path could materialize a canonical-looking token from a payload that omitted\
+      \ the field.\n- Symptom: a client could omit `capability_token.token_version`,\
+      \ sign as if `\"0.1.0\"` were present, and still get a live admitted connection.\n\
+      - Why this closes the admission seam instead of patching a later layer: the\
+      \ fix removes the default at the contract boundary, so admission now fails during\
+      \ `CapabilityToken` validation inside `_extract_capability_token()` before `handle_initialize()`\
+      \ can create/register any connection.\n\n## Green Proof\n- Exact command run\
+      \ after implementation:\n```bash\nuv run pytest tests/integration/test_token_mode_initialize.py\
+      \ tests/core/test_token.py -q\n```\n- Passing output:\n```text\n...................................................\
+      \                      [100%]\n51 passed in 0.47s\n```\n- Guard command/output:\n\
+      ```bash\nuv run invar guard --all\n```\n```text\n{\"status\":\"passed\",\"static\"\
+      :{\"passed\":true,\"errors\":0}}\n```\n\n## Files Changed\n- `src/tela/core/models.py`\
+      \ — removed `CapabilityToken.token_version` default.\n- `tests/integration/test_token_mode_initialize.py`\
+      \ — added admission regression for missing `token_version`.\n- `tests/core/test_token.py`\
+      \ — added Hypothesis-backed payload exactness coverage.\n\n## Required Assertions\
+      \ Closed\n- missing token_version rejected at admission\n- explicit token_version\
+      \ canonical flow still passes\n- no default-smuggling admission path remains\n\
+      \n## Commit\n- `3bd4abe fix(token): require explicit token_version at admission`"
   - id: canonical_gateway_state.builtin_call_admission_exactness
     name: Route builtin tools through canonical session admission and exact empty-args
       validation
