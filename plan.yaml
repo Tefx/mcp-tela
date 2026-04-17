@@ -73048,7 +73048,7 @@ phases:
       \ untouched repo-wide technical debt outside this closeout slice."
 - id: fresh_review_zero_residual
   name: Fresh Review Zero Residual Closeout
-  status: in_progress
+  status: done
   gate: Remove duplicate schema authority and any remaining legacy shared-surface
     narratives so the repo has no known hard-cut residuals.
   depends_on:
@@ -73056,7 +73056,7 @@ phases:
   steps:
   - id: fresh_review_zero_residual.impl
     name: Remove residual schema and naming drift
-    status: claimed
+    status: done
     description: Delete or de-authorize any duplicate CapabilityToken schema surface,
       scrub remaining repo-facing legacy shared naming/surface wording across docs/examples/tests/comments/docstrings,
       verify parity still works, and finish with an independent gate review confirming
@@ -73069,3 +73069,50 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-17T08:39:31.212040+00:00'
+    done_at: '2026-04-17T09:26:26.567593+00:00'
+    evidence: "- Files changed\n  - Deleted: contracts/capability_token.schema.json\n\
+      \  - Updated docs: docs/ADR-003-gateway-capability-only-profiles.md, docs/ADR-007-opifex-canonical-contract-alignment.md,\
+      \ docs/AGENT_INTERFACE.md, docs/CONFIRMED-SURFACE-CONTRACT.md, docs/DESIGN.md,\
+      \ docs/INTERFACES.md, docs/MIGRATION-003-capability-only-profiles.md, docs/hard-cutover-canonical-alignment.md,\
+      \ README.md, tela.yaml.example\n  - Updated evidence docs: evidence/hard_cut_prep_proof_assets.md,\
+      \ evidence/reversal_register.md, evidence/review_miss_root_cause_analysis.md,\
+      \ evidence/runtime_characterization_snapshot.md, evidence/surface_audit_actual_surface.md,\
+      \ evidence/surface_taxonomy_verification.md, evidence/taxonomy_decision.md\n\
+      \  - Updated code/docstrings: src/tela/core/conflict.py, src/tela/core/models.py,\
+      \ src/tela/shell/builtin_tools.py\n  - Updated tests: tests/test_vendor_schema_parity.py,\
+      \ tests/shell/test_surface_contract.py, tests/core/test_hard_cut_vocab.py, tests/core/test_models.py,\
+      \ tests/core/test_tool_prefix_contract.py, tests/repro/runtime_snapshot.py,\
+      \ tests/repro/spec_verify_structural_collapse_liveness.py, tests/repro/test_conn_v2_blackbox.py,\
+      \ tests/repro/test_seam_convergence_proof.py, tests/repro/test_startup_coord_liveness.py,\
+      \ tests/repro/test_tool_prefix_blackbox.py, tests/shell/test_gateway.py, tests/shell/test_hard_cut_shared_surfaces.py\n\
+      - Duplicate schema authority removal\n  - Deleted local editable contracts/capability_token.schema.json.\n\
+      \  - Left authority chain as ../opifex -> vendor/opifex/contracts/ read-only\
+      \ mirror only.\n  - Added parity test asserting no local CapabilityToken schema\
+      \ authority exists outside vendor mirror.\n- Legacy naming/surface cleanup\n\
+      \  - Scrubbed repo-facing docs/evidence/example files of profile_name, tools_profile,\
+      \ tela.profiles, tela://profiles, and dotted wildcard tela.* wording.\n  - Rewrote\
+      \ historical ADR/migration/hard-cut docs as canonical-state references instead\
+      \ of legacy-teaching narratives.\n  - Updated example/config comments to point\
+      \ only at canonical built-in MCP tools and operator surfaces.\n  - Kept legacy\
+      \ terms only where required as negative-test fixtures that prove fail-closed\
+      \ rejection.\n- Verification commands and outputs\n  - uv run pytest tests/test_vendor_schema_parity.py\
+      \ tests/shell/test_surface_contract.py tests/core/test_capability_only_profiles.py\
+      \ tests/core/test_hard_cut_vocab.py tests/core/test_token.py tests/shell/test_hard_cut_shared_surfaces.py\
+      \ tests/shell/test_shared_surface_runtime_hard_cut.py tests/shell/test_gateway.py\
+      \ tests/integration/test_token_mode_initialize.py -> 243 passed, 1 existing\
+      \ pytest mark warning\n  - uv run pytest tests/shell/test_surface_contract.py\
+      \ tests/test_vendor_schema_parity.py -> 41 passed\n  - python3 -m py_compile\
+      \ src/tela/core/conflict.py src/tela/core/models.py src/tela/shell/builtin_tools.py\
+      \ tests/core/test_hard_cut_vocab.py tests/core/test_models.py tests/core/test_tool_prefix_contract.py\
+      \ tests/repro/runtime_snapshot.py tests/repro/spec_verify_structural_collapse_liveness.py\
+      \ tests/repro/test_conn_v2_blackbox.py tests/repro/test_seam_convergence_proof.py\
+      \ tests/repro/test_startup_coord_liveness.py tests/repro/test_tool_prefix_blackbox.py\
+      \ tests/shell/test_gateway.py tests/shell/test_hard_cut_shared_surfaces.py tests/shell/test_surface_contract.py\
+      \ tests/test_vendor_schema_parity.py -> success (no output)\n  - invar_guard\
+      \ changed=true -> passed\n  - Grep scans over docs/, evidence/, README.md, tela.yaml.example\
+      \ for tela.status|tela.connections|tela.audit|tela.profiles|tela://profiles|profile_name|tools_profile|`tools`|`tela.*`\
+      \ -> no matches\n  - Read contracts directory -> only errors.yaml, mcp_admission_transient_503.schema.json,\
+      \ meta.schema.json remain\n- Gate review result\n  - gate-reviewer-tacit verdict:\
+      \ PASS\n  - blocking_status: CLOSED\n  - proof_gap_status: NONE\n  - final statement:\
+      \ no residual hard-cut issue remains; remaining legacy strings in tests are\
+      \ only negative fixtures enforcing fail-closed rejection, not narrative drift"
