@@ -265,7 +265,7 @@ class CapabilityToken(BaseModel):
     max_depth: int | None = Field(default=None, ge=0, strict=True)
     issued_at: str
     expires_at: str
-    token_version: Literal["0.1.0"] = "0.1.0"
+    token_version: Literal["0.1.0"]
     signature: str
 
     @field_validator("issued_at", "expires_at")

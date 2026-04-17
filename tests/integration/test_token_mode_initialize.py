@@ -340,6 +340,59 @@ def test_handle_initialize_token_mode_rejects_invalid_canonical_schema_fields() 
         set_runtime_secrets([])
 
 
+def test_handle_initialize_token_mode_rejects_missing_token_version_before_admission() -> (
+    None
+):
+    """Token mode must fail closed when token_version is omitted from payload.
+
+    Source: canonical_gateway_state.token_admission_exactness requires
+    token_version to be required at admission with no model-default smuggling.
+    This test signs the canonical payload including token_version, then omits the
+    field from the transmitted payload to prove admission must reject the missing
+    field itself rather than accepting a defaulted model instance.
+    """
+    secret = "missing-token-version-secret"
+    payload_without_token_version = {
+        "token_id": "tok_missing_version",
+        "profile_id": "dev",
+        "persona_ref": "persona.dev",
+        "instance_id": "inst-missing-version",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2099-12-31T23:59:59Z",
+    }
+    signed_payload = payload_without_token_version | {
+        "signature": compute_signature(
+            payload_without_token_version | {"token_version": "0.1.0"},
+            secret,
+        )
+    }
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(_wrap_client_info(signed_payload))
+        assert result.is_err
+        assert result.error is not None
+        assert "INITIALIZE_REJECTED" in result.error
+        assert "token_version" in result.error
+        snapshot = get_runtime_connections_snapshot()
+        assert snapshot.is_ok
+        assert snapshot.value == []
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
 def test_handle_initialize_token_mode_expired_token() -> None:
     """Token mode must reject expired tokens.
 

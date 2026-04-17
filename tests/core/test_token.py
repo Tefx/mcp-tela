@@ -4,6 +4,8 @@ from __future__ import annotations
 
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 from pydantic import ValidationError
 
 from tela.core.models import EnforcementVerdict, TokenInitBinding
@@ -14,6 +16,28 @@ from tela.core.token import (
     resolve_token_init_binding,
     validate_token,
 )
+
+
+@st.composite
+def _missing_token_version_payloads(
+    draw: st.DrawFn,
+) -> dict[str, object]:
+    """Build canonical token payloads that omit token_version."""
+
+    payload: dict[str, object] = {
+        "token_id": draw(st.sampled_from(["tok_1", "tok_2", "tok_exact"])),
+        "profile_id": draw(st.sampled_from(["dev", "staging", "production"])),
+        "persona_ref": draw(
+            st.sampled_from(["persona.dev", "persona.staging", "persona.production"])
+        ),
+        "instance_id": draw(st.sampled_from(["inst-1", "inst-2", "inst-3"])),
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-12-31T23:59:59Z",
+    }
+    max_depth = draw(st.one_of(st.none(), st.integers(min_value=0, max_value=5)))
+    if max_depth is not None:
+        payload["max_depth"] = max_depth
+    return payload
 
 
 def test_compute_signature_is_deterministic() -> None:
@@ -133,6 +157,22 @@ def test_validate_token_rejects_signature_missing_token_version() -> None:
     result = validate_token(token, ["secret1"], "2026-06-01T00:00:00Z")
     assert result.verdict == EnforcementVerdict.DENY
     assert result.error_code == "TOKEN_INVALID"
+
+
+@given(payload=_missing_token_version_payloads())
+def test_capability_token_rejects_missing_token_version_without_default_smuggling(
+    payload: dict[str, object],
+) -> None:
+    from tela.core.models import CapabilityToken
+
+    signed_payload = payload | {
+        "signature": compute_signature(payload | {"token_version": "0.1.0"}, "secret1")
+    }
+
+    with pytest.raises(ValidationError) as exc_info:
+        CapabilityToken.model_validate(signed_payload)
+
+    assert "token_version" in str(exc_info.value)
 
 
 def test_capability_token_rejects_unknown_extra_field() -> None:
