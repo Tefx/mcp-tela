@@ -977,6 +977,75 @@ def test_fastmcp_list_profiles_builtin_tool() -> None:
         asyncio.run(gateway_shutdown())
 
 
+def test_fastmcp_list_profiles_builtin_tool_returns_json_payload_resource() -> None:
+    """MCP builtin call must return exact canonical JSON payload, not repr text."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_WRITE},
+                ),
+                "reviewer": ProfileConfig(
+                    name="reviewer",
+                    default=False,
+                    capabilities={"fs": Posture.READ_ONLY},
+                ),
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={})
+        _setup_test_connection_with_session()
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+
+            response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_profiles",
+                        arguments={},
+                    )
+                )
+            )
+
+            assert response.root.isError is False  # type: ignore[union-attr]
+            content_item = response.root.content[0]  # type: ignore[union-attr]
+            assert content_item.type == "resource"
+            assert content_item.resource.mimeType == "application/json"
+            assert str(content_item.resource.uri) == "tela://builtin/tela_list_profiles"
+            resource_text = getattr(content_item.resource, "text", None)
+            assert isinstance(resource_text, str)
+            assert json.loads(resource_text) == [
+                {
+                    "profile_id": "dev",
+                    "capabilities": {"fs": "read_write"},
+                    "default": True,
+                },
+                {
+                    "profile_id": "reviewer",
+                    "capabilities": {"fs": "read_only"},
+                    "default": False,
+                },
+            ]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
 def test_fastmcp_tools_call_denies_unadmitted_family() -> None:
     """tools/call denial comes from enforcement chain before forwarding."""
 

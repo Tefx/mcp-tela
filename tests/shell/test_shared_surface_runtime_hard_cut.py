@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import pytest
 
@@ -17,7 +18,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.core.token import compute_signature
-from tela.shell.builtin_tools import handle_list_providers
+from tela.shell.builtin_tools import handle_list_profiles, handle_list_providers
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.gateway_runtime import (
     clear_runtime_connections,
@@ -25,7 +26,11 @@ from tela.shell.gateway_runtime import (
     set_runtime_secrets,
 )
 from tela.shell.result import Result
-from tela.shell.upstream import handle_initialize, handle_tools_list
+from tela.shell.upstream import (
+    handle_initialize,
+    handle_profiles_list,
+    handle_tools_list,
+)
 
 
 def _make_token_fields(
@@ -195,6 +200,56 @@ def test_handle_initialize_rejects_extra_capability_token_fields() -> None:
         _reset_runtime()
 
 
+def test_handle_initialize_alias_rejection_is_auditable_for_top_level_profile_name(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Top-level alias rejection must have a stable code and audit log."""
+    _configure_token_mode()
+    caplog.set_level(logging.WARNING, logger="tela.shell.upstream")
+
+    async def _run() -> None:
+        result = await handle_initialize(
+            {**_make_client_info(), "profile_name": "legacy"}
+        )
+        assert result.is_err
+        assert result.error is not None
+        assert "TOKEN_ALIAS_FIELD_PRESENT" in result.error
+
+    try:
+        asyncio.run(_run())
+        assert "INITIALIZE_AUDIT" in caplog.text
+        assert "TOKEN_ALIAS_FIELD_PRESENT" in caplog.text
+        assert "location=client_info" in caplog.text
+        assert "field=profile_name" in caplog.text
+    finally:
+        _reset_runtime()
+
+
+def test_handle_initialize_alias_rejection_is_auditable_for_nested_tools_profile(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Nested token alias rejection must have a stable code and audit log."""
+    _configure_token_mode()
+    caplog.set_level(logging.WARNING, logger="tela.shell.upstream")
+
+    async def _run() -> None:
+        result = await handle_initialize(
+            _make_client_info(token_overrides={"tools_profile": "legacy"})
+        )
+        assert result.is_err
+        assert result.error is not None
+        assert "TOKEN_ALIAS_FIELD_PRESENT" in result.error
+
+    try:
+        asyncio.run(_run())
+        assert "INITIALIZE_AUDIT" in caplog.text
+        assert "TOKEN_ALIAS_FIELD_PRESENT" in caplog.text
+        assert "location=capability_token" in caplog.text
+        assert "field=tools_profile" in caplog.text
+    finally:
+        _reset_runtime()
+
+
 def test_handle_initialize_requires_capability_token_object() -> None:
     """Token mode requires the nested capability_token object."""
     _configure_token_mode()
@@ -314,5 +369,41 @@ def test_handle_list_providers_rejects_non_snake_case_tool_names(
     try:
         with pytest.raises(RuntimeError, match="INVALID_TOOL_NAME"):
             asyncio.run(handle_list_providers())
+    finally:
+        set_runtime_config(None)
+
+
+def test_handle_list_profiles_rejects_multiple_default_profiles_fail_closed() -> None:
+    """Shared profile-list tool must reject more than one default profile."""
+    set_runtime_config(
+        TelaConfig(
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+                "reviewer": ProfileConfig(name="reviewer", default=True),
+            }
+        )
+    )
+    try:
+        with pytest.raises(RuntimeError, match="INVALID_DEFAULT_PROFILE_STATE"):
+            handle_list_profiles()
+    finally:
+        set_runtime_config(None)
+
+
+def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() -> None:
+    """Result-wrapped profile listing must also fail closed on multi-default."""
+    set_runtime_config(
+        TelaConfig(
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+                "reviewer": ProfileConfig(name="reviewer", default=True),
+            }
+        )
+    )
+    try:
+        result = handle_profiles_list()
+        assert result.is_err
+        assert result.error is not None
+        assert "INVALID_DEFAULT_PROFILE_STATE" in result.error
     finally:
         set_runtime_config(None)

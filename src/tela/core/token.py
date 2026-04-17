@@ -10,7 +10,7 @@ import hashlib
 import hmac
 import json
 from datetime import datetime
-from typing import Mapping
+from typing import Literal, Mapping
 
 from tela.core.contracts import pre, post
 from tela.core.models import (
@@ -219,7 +219,7 @@ def resolve_token_init_binding(
     """Resolve token-mode initialization binding.
 
     Validates the capability token and binds the connection to the token's
-    profile name. Shell must reject initialization if the returned binding
+    profile_id. Shell must reject initialization if the returned binding
     has `token_result.verdict == DENY`.
 
     Examples:
@@ -276,7 +276,7 @@ def create_token(
     issued_at: str = "2026-01-01T00:00:00Z",
     persona_ref: str = "persona.default",
     instance_id: str = "instance.default",
-    token_version: str = "0.1.0",
+    token_version: Literal["0.1.0"] = "0.1.0",
 ) -> CapabilityToken:
     """Create a signed capability token (for testing).
 
@@ -320,6 +320,6 @@ def create_token(
         instance_id=instance_id,
         issued_at=issued_at,
         expires_at=expires_at,
-        token_version=fields["token_version"],
+        token_version=token_version,
         signature=sig,
     )

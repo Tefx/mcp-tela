@@ -36,7 +36,7 @@ from tela.shell.upstream import handle_initialize
 
 def _make_valid_token_fields(
     profile: str = "dev",
-    token_id: str = "tok-1",
+    token_id: str = "tok_1",
     issued_at: str = "2026-01-01T00:00:00Z",
     expires_at: str = "2099-12-31T23:59:59Z",
     persona_ref: str = "persona.default",
@@ -221,7 +221,7 @@ def test_handle_initialize_token_mode_missing_signature() -> None:
     async def _run() -> None:
         # Has all fields except signature
         token_info = {
-            "token_id": "tok-1",
+            "token_id": "tok_1",
             "profile_id": "dev",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2099-12-31T23:59:59Z",
@@ -261,6 +261,43 @@ def test_handle_initialize_token_mode_invalid_signature() -> None:
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
         assert "TOKEN_INVALID" in (result.error or "")
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
+def test_handle_initialize_token_mode_rejects_invalid_canonical_schema_fields() -> None:
+    """Token mode must classify canonical-schema violations before authz."""
+    secret = "schema-secret"
+    invalid_token = _sign_token(
+        _make_valid_token_fields(
+            profile="dev",
+            token_id="tok-legacy",
+            issued_at="2026-01-01",
+            token_version="0.1.0",
+        ),
+        secret,
+    )
+    invalid_token["max_depth"] = -1
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(_wrap_client_info(invalid_token))
+        assert result.is_err
+        assert "INITIALIZE_REJECTED" in (result.error or "")
+        assert "TOKEN_SCHEMA_INVALID" in (result.error or "")
+        assert "token_id" in (result.error or "")
 
     try:
         asyncio.run(_run())
@@ -386,7 +423,7 @@ def test_handle_initialize_token_mode_preserves_required_and_optional_token_fiel
     """
     secret = "optional-key"
     fields = {
-        "token_id": "tok-opt",
+        "token_id": "tok_opt",
         "profile_id": "dev",
         "issued_at": "2026-01-01T00:00:00Z",
         "expires_at": "2099-12-31T23:59:59Z",
@@ -536,7 +573,7 @@ def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
     from an empty initialize.
     """
     secret = "recovery-snapshot-key"
-    fields = _make_valid_token_fields(profile="production", token_id="tok-recovery-1")
+    fields = _make_valid_token_fields(profile="production", token_id="tok_recovery_1")
     signed_token = _sign_token(fields, secret)
 
     set_runtime_config(
@@ -555,7 +592,7 @@ def test_handle_initialize_token_mode_preserves_client_info_snapshot() -> None:
         assert ctx is not None
         assert ctx.client_info_snapshot is not None
         # All required token fields must be in snapshot
-        assert ctx.client_info_snapshot["token_id"] == "tok-recovery-1"
+        assert ctx.client_info_snapshot["token_id"] == "tok_recovery_1"
         assert ctx.client_info_snapshot["profile_id"] == "production"
         assert ctx.client_info_snapshot["persona_ref"] == "persona.default"
         assert ctx.client_info_snapshot["instance_id"] == "instance.default"
@@ -586,7 +623,7 @@ def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstr
     secret = "recovery-reconstruct-key"
     fields = _make_valid_token_fields(
         profile="staging",
-        token_id="tok-recon-1",
+        token_id="tok_recon_1",
     )
     signed_token = _sign_token(fields, secret)
 
@@ -623,7 +660,7 @@ def test_handle_initialize_token_mode_snapshot_enables_capability_token_reconstr
             )
 
         # The snapshot values must match the original token fields
-        assert ctx.client_info_snapshot["token_id"] == "tok-recon-1"
+        assert ctx.client_info_snapshot["token_id"] == "tok_recon_1"
         assert ctx.client_info_snapshot["profile_id"] == "staging"
 
     try:

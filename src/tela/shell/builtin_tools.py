@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from tela.core.errors import GATEWAY_NOT_STARTED
 from tela.core.models import Posture, ProfileConfig, ProfileInfo, ProviderInfo
 from tela.shell.downstream import (
     get_all_tools,
@@ -17,6 +18,8 @@ if TYPE_CHECKING:
     pass
 
 _SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+_CANONICAL_PROFILE_KEYS = frozenset({"profile_id", "capabilities", "default"})
+_CANONICAL_POSTURES = frozenset(posture.value for posture in Posture)
 
 
 def _raise_if_invalid_shared_tool_name(tool_name: str) -> None:
@@ -27,6 +30,64 @@ def _raise_if_invalid_shared_tool_name(tool_name: str) -> None:
             "INVALID_TOOL_NAME: shared MCP tool names must be snake_case; "
             f"got '{tool_name}'"
         )
+
+
+# @invar:allow shell_result: pure fail-closed validator used only by the builtin profile-list shell boundary.
+# @shell_complexity: payload validation checks canonical key/type/default invariants before emitting shared MCP output.
+def _validate_profile_list_payload(
+    profiles: list["ProfileInfo"],
+) -> list["ProfileInfo"]:
+    """Fail closed unless the emitted profile list is canonical."""
+
+    default_profiles: list[str] = []
+    for entry in profiles:
+        entry_keys = set(entry.keys())
+        if entry_keys != _CANONICAL_PROFILE_KEYS:
+            raise RuntimeError(
+                "INVALID_PROFILE_LIST_PAYLOAD: expected keys "
+                f"{sorted(_CANONICAL_PROFILE_KEYS)}, got {sorted(entry_keys)}"
+            )
+
+        profile_id = entry["profile_id"]
+        capabilities = entry["capabilities"]
+        default = entry["default"]
+
+        if not isinstance(profile_id, str):
+            raise RuntimeError(
+                "INVALID_PROFILE_LIST_PAYLOAD: profile_id must be a string"
+            )
+        if not isinstance(default, bool):
+            raise RuntimeError(
+                "INVALID_PROFILE_LIST_PAYLOAD: default must be a boolean"
+            )
+        if not isinstance(capabilities, dict):
+            raise RuntimeError(
+                "INVALID_PROFILE_LIST_PAYLOAD: capabilities must be an object"
+            )
+
+        invalid_capabilities = sorted(
+            f"{family}={posture}"
+            for family, posture in capabilities.items()
+            if not isinstance(family, str)
+            or not isinstance(posture, str)
+            or posture not in _CANONICAL_POSTURES
+        )
+        if invalid_capabilities:
+            raise RuntimeError(
+                "INVALID_PROFILE_LIST_PAYLOAD: invalid capabilities: "
+                + ", ".join(invalid_capabilities)
+            )
+
+        if default:
+            default_profiles.append(profile_id)
+
+    if len(default_profiles) > 1:
+        raise RuntimeError(
+            "INVALID_DEFAULT_PROFILE_STATE: multiple profiles marked default=true: "
+            + ", ".join(sorted(default_profiles))
+        )
+
+    return profiles
 
 
 BUILTIN_TOOLS: list[dict] = [
@@ -65,9 +126,11 @@ async def handle_list_providers() -> list["ProviderInfo"]:
     # Get runtime config to find all configured servers
     config_result = get_runtime_config()
     if config_result.is_err or config_result.value is None:
+        runtime_error = config_result.error or (
+            f"{GATEWAY_NOT_STARTED}: gateway has not been started"
+        )
         raise RuntimeError(
-            f"handle_list_providers requires a valid runtime config: "
-            f"{config_result.error!r}"
+            f"handle_list_providers requires a valid runtime config: {runtime_error!r}"
         )
     config = config_result.value
 
@@ -166,13 +229,15 @@ def handle_list_profiles() -> list["ProfileInfo"]:
         RuntimeError: if runtime config is not available (gateway not started).
 
     Returns:
-        List of ProfileInfo dicts, one per configured profile.
+    List of ProfileInfo dicts, one per configured profile.
     """
     config_result = get_runtime_config()
     if config_result.is_err or config_result.value is None:
+        runtime_error = config_result.error or (
+            f"{GATEWAY_NOT_STARTED}: gateway has not been started"
+        )
         raise RuntimeError(
-            f"handle_list_profiles requires a valid runtime config: "
-            f"{config_result.error!r}"
+            f"handle_list_profiles requires a valid runtime config: {runtime_error!r}"
         )
     config = config_result.value
 
@@ -186,4 +251,4 @@ def handle_list_profiles() -> list["ProfileInfo"]:
             )
         )
 
-    return profiles
+    return _validate_profile_list_payload(profiles)

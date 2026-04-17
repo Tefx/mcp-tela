@@ -106,6 +106,13 @@ Supported modes:
 In token mode, a CapabilityToken binds the connection to one canonical tela
 profile identity via `profile_id`.
 
+Canonical token validation follows `../opifex/contracts/capability_token.schema.json`:
+- `token_id` must match `^tok_`
+- `token_version` must equal `0.1.0`
+- `issued_at` and `expires_at` must be RFC3339/JSON-schema `date-time` strings with timezone
+- `max_depth`, when present, must be an integer `>= 0`
+- `profile_name` and `tools_profile` are rejected fail-closed with local code `TOKEN_ALIAS_FIELD_PRESENT` and an initialize audit log record
+
 ### 3.4 Audit
 
 Audit logging is configured independently of authorization semantics.
@@ -438,6 +445,13 @@ Canonical payload shape:
 
 `profile_id` is the stable registry identity that canonical token issuance and
 verification bind.
+
+The MCP tool result carries the exact canonical JSON array as `application/json`
+content; tela does not emit Python `repr(...)` approximations for this surface.
+
+At most one entry may carry `default: true`. If multiple configured profiles do
+so, tela rejects the shared profile-list surface with
+`INVALID_DEFAULT_PROFILE_STATE` instead of emitting an invalid payload.
 
 ### 7.3 Session and Notification Forwarding
 
@@ -913,6 +927,9 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `PROFILE_NOT_FOUND` | Startup | CLI `--default-profile` names unknown profile |
 | `OPEN_MODE_DEFAULT_PROFILE_MISSING` | Startup | Open mode with no default profile |
 | `OPEN_MODE_DEFAULT_PROFILE_AMBIGUOUS` | Startup | Multiple profiles marked `default: true` |
+| `INVALID_DEFAULT_PROFILE_STATE` | MCP | Shared profile-list payload would contain multiple `default: true` entries |
+| `TOKEN_ALIAS_FIELD_PRESENT` | MCP | `profile_name` or `tools_profile` appeared on shared token surfaces |
+| `TOKEN_SCHEMA_INVALID` | MCP | CapabilityToken failed canonical schema validation |
 | `TOKEN_INVALID` | MCP | CapabilityToken HMAC validation failed |
 | `TOKEN_EXPIRED` | MCP | CapabilityToken past expiry |
 | `LOCKFILE_READ_ERROR` | Discovery | Lockfile missing or unreadable |

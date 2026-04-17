@@ -10,7 +10,9 @@ business-rule logic.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+import re
 from typing import TypedDict
 
 from typing import Literal
@@ -19,6 +21,34 @@ from pydantic import BaseModel, Field, field_validator
 
 from tela.core.contracts import post, pre
 from tela.core.reaper_config import ReaperPolicyConfig
+
+
+_CAPABILITY_TOKEN_DATETIME_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
+
+
+@pre(lambda value: isinstance(value, str) and len(value) > 0)
+@post(lambda result: isinstance(result, str) and len(result) > 0)
+def _validate_capability_token_datetime(value: str) -> str:
+    """Validate canonical CapabilityToken date-time fields.
+
+    Examples:
+        >>> _validate_capability_token_datetime("2026-01-01T00:00:00Z")
+        '2026-01-01T00:00:00Z'
+    """
+
+    if _CAPABILITY_TOKEN_DATETIME_PATTERN.fullmatch(value) is None:
+        raise ValueError(
+            "must be a canonical date-time with timezone (RFC3339/JSON-schema date-time)"
+        )
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("must be a valid date-time") from exc
+    if parsed.tzinfo is None:
+        raise ValueError("must include timezone information")
+    return value
 
 
 # --- Enumerations ---
@@ -175,7 +205,7 @@ class ProfileConfig(BaseModel):
         <Posture.READ_ONLY: 'read_only'>
     """
 
-    model_config = {"extra": "forbid"}
+    model_config = {"extra": "forbid", "strict": True}
 
     name: str
     capabilities: dict[str, Posture] = Field(default_factory=dict)
@@ -229,15 +259,22 @@ class CapabilityToken(BaseModel):
 
     model_config = {"extra": "forbid"}
 
-    token_id: str
+    token_id: str = Field(pattern=r"^tok_")
     profile_id: str
     persona_ref: str
     instance_id: str
-    max_depth: int | None = None
+    max_depth: int | None = Field(default=None, ge=0, strict=True)
     issued_at: str
     expires_at: str
-    token_version: str = "0.1.0"
+    token_version: Literal["0.1.0"] = "0.1.0"
     signature: str
+
+    @field_validator("issued_at", "expires_at")
+    @classmethod
+    @pre(lambda cls, value: isinstance(value, str) and len(value) > 0)
+    @post(lambda result: isinstance(result, str) and len(result) > 0)
+    def _validate_canonical_datetime(cls, value: str) -> str:
+        return _validate_capability_token_datetime(value)
 
 
 # --- Runtime Types ---

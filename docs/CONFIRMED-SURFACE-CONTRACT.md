@@ -24,7 +24,7 @@ SurfaceContract := {
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
 | `tela_list_providers` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}`. |
-| `tela_list_profiles` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}`. |
+| `tela_list_profiles` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
 | `tela.status` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 | `tela.connections` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 | `tela.audit` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
@@ -101,6 +101,10 @@ completes; endpoint discoverability does not imply readiness.
 - `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
   `profile_id` (str), `capabilities` (dict of family→posture string), and
   `default` (bool).
+- `tela_list_profiles` must return the canonical JSON payload itself, not a
+  Python `repr(...)`/stringified approximation.
+- more than one `default: true` entry is invalid and must fail closed with
+  `INVALID_DEFAULT_PROFILE_STATE`
 - Therefore docs, tests, and runtime work must not claim that `tela.status`,
   `tela.connections`, `tela.audit`, or `tela.profiles` are current MCP tools.
 

@@ -238,7 +238,7 @@ Built-in surfaces:
 
 Important notes:
 
-- in `open` mode, one profile should usually have `default: true`
+- in `open` mode, at most one profile may have `default: true`; multi-default shared profile listings are rejected fail-closed
 - custom families are valid, but built-in profiles only cover built-in family sets
 - `tool_overrides` require the nested `overrides` map
 

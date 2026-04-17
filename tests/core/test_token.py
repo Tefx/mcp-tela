@@ -176,6 +176,40 @@ def test_capability_token_rejects_missing_persona_ref_and_instance_id() -> None:
     assert "instance_id" in message
 
 
+@pytest.mark.parametrize(
+    ("field_name", "field_value"),
+    [
+        ("token_id", "tok-1"),
+        ("token_version", "1.0.0"),
+        ("issued_at", "2026-01-01"),
+        ("expires_at", "2026-12-31 23:59:59"),
+        ("max_depth", -1),
+        ("max_depth", "3"),
+    ],
+)
+def test_capability_token_enforces_canonical_schema_constraints(
+    field_name: str, field_value: object
+) -> None:
+    from tela.core.models import CapabilityToken
+
+    payload: dict[str, object] = {
+        "token_id": "tok_1",
+        "profile_id": "dev",
+        "persona_ref": "persona.dev",
+        "instance_id": "inst-1",
+        "issued_at": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-12-31T23:59:59Z",
+        "token_version": "0.1.0",
+        "signature": "abc",
+    }
+    payload[field_name] = field_value
+
+    with pytest.raises(ValidationError) as exc_info:
+        CapabilityToken.model_validate(payload)
+
+    assert field_name in str(exc_info.value)
+
+
 def test_create_token_profile() -> None:
     tok = create_token("production", "secret")
     assert tok.profile_id == "production"

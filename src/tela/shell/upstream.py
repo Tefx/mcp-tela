@@ -43,6 +43,7 @@ from tela.shell.downstream import (
     get_all_tools,
     get_registry,
 )
+from tela.shell.builtin_tools import handle_list_profiles as build_profile_list_payload
 from tela.shell.gateway_runtime import (
     UpstreamSession,
     add_runtime_connection,
@@ -68,6 +69,9 @@ logger = logging.getLogger(__name__)
 
 _BRIDGE_CONNECTION_ID_KEY = "tela_bridge_connection_id"
 _CAPABILITY_TOKEN_KEY = "capability_token"
+_TOKEN_ALIAS_FIELD_PRESENT = "TOKEN_ALIAS_FIELD_PRESENT"
+_TOKEN_SCHEMA_INVALID = "TOKEN_SCHEMA_INVALID"
+_TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN = "TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN"
 _SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _CANONICAL_TOKEN_FIELDS = frozenset(
     {
@@ -83,6 +87,31 @@ _CANONICAL_TOKEN_FIELDS = frozenset(
     }
 )
 _TOKEN_ALIAS_FIELDS = frozenset({"profile_name", "tools_profile"})
+
+
+def _audit_initialize_rejection(
+    code: str,
+    detail: str,
+    *,
+    location: str,
+    field: str | None = None,
+) -> None:
+    audit_parts = [f"code={code}", f"location={location}"]
+    if field is not None:
+        audit_parts.append(f"field={field}")
+    audit_parts.append(f"detail={detail}")
+    logger.warning("INITIALIZE_AUDIT %s", " ".join(audit_parts))
+
+
+def _reject_initialize(
+    code: str,
+    detail: str,
+    *,
+    location: str,
+    field: str | None = None,
+) -> Result[CapabilityToken, str]:
+    _audit_initialize_rejection(code, detail, location=location, field=field)
+    return Result(error=f"INITIALIZE_REJECTED: {code}: {detail}")
 
 
 # @invar:allow shell_result: pure validator used only inside shell-bound initialize handler.
@@ -137,11 +166,24 @@ def _extract_capability_token(
 
     invalid_key = _invalid_reserved_client_info_key(client_info)
     if invalid_key is not None:
-        return Result(
-            error=(
-                "INITIALIZE_REJECTED: top-level client_info key "
-                f"'{invalid_key}' is reserved; use client_info.capability_token"
+        if invalid_key in _TOKEN_ALIAS_FIELDS:
+            return _reject_initialize(
+                _TOKEN_ALIAS_FIELD_PRESENT,
+                (
+                    f"top-level client_info key '{invalid_key}' is invalid; "
+                    "use client_info.capability_token.profile_id"
+                ),
+                location="client_info",
+                field=invalid_key,
             )
+        return _reject_initialize(
+            _TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN,
+            (
+                f"top-level client_info key '{invalid_key}' is reserved; "
+                "use client_info.capability_token"
+            ),
+            location="client_info",
+            field=invalid_key,
         )
 
     token_payload = client_info.get(_CAPABILITY_TOKEN_KEY)
@@ -153,22 +195,38 @@ def _extract_capability_token(
             )
         )
 
+    alias_fields = sorted(
+        str(key) for key in token_payload if str(key) in _TOKEN_ALIAS_FIELDS
+    )
+    if alias_fields:
+        joined = ", ".join(alias_fields)
+        return _reject_initialize(
+            _TOKEN_ALIAS_FIELD_PRESENT,
+            (f"capability_token field(s) {joined} are invalid; use 'profile_id'"),
+            location="capability_token",
+            field=joined,
+        )
+
     extra_fields = sorted(
-        str(key) for key in token_payload if str(key) not in _CANONICAL_TOKEN_FIELDS
+        str(key)
+        for key in token_payload
+        if str(key) not in _CANONICAL_TOKEN_FIELDS
+        and str(key) not in _TOKEN_ALIAS_FIELDS
     )
     if extra_fields:
-        return Result(
-            error=(
-                "INITIALIZE_REJECTED: invalid capability_token fields: "
-                + ", ".join(extra_fields)
-            )
+        return _reject_initialize(
+            _TOKEN_SCHEMA_INVALID,
+            "invalid capability_token fields: " + ", ".join(extra_fields),
+            location="capability_token",
         )
 
     try:
         return Result(value=CapabilityToken(**token_payload))
     except Exception as exc:
-        return Result(
-            error=f"INITIALIZE_REJECTED: invalid capability_token fields: {exc}"
+        return _reject_initialize(
+            _TOKEN_SCHEMA_INVALID,
+            f"capability_token failed canonical validation: {exc}",
+            location="capability_token",
         )
 
 
@@ -357,11 +415,17 @@ async def handle_initialize(
     token: CapabilityToken | None = None
 
     if config.auth.mode == AuthMode.OPEN:
-        status = (
-            DefaultProfileResolutionStatus.RESOLVED
-            if config.resolved_default_profile is not None
-            else DefaultProfileResolutionStatus.MISSING
-        )
+        if config.resolved_default_profile is not None:
+            status = DefaultProfileResolutionStatus.RESOLVED
+        else:
+            default_count = sum(
+                1 for profile in config.profiles.values() if profile.default
+            )
+            status = (
+                DefaultProfileResolutionStatus.AMBIGUOUS
+                if default_count > 1
+                else DefaultProfileResolutionStatus.MISSING
+            )
 
         binding_result = resolve_initialize_profile_binding(
             resolved_default_profile=config.resolved_default_profile,
@@ -632,22 +696,10 @@ def handle_profiles_list() -> Result[list[dict], str]:
         List of profile dicts once implemented.
     """
 
-    config = get_runtime_config().value
-    if config is None:
-        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
-
-    # Canonical external profile identifier field is 'profile_id'.
-    # Legacy 'profile_name' and 'tools' keys are removed (hard cut).
-    return Result(
-        value=[
-            {
-                "profile_id": name,
-                "default": p.default,
-                "capabilities": {k: v.value for k, v in p.capabilities.items()},
-            }
-            for name, p in config.profiles.items()
-        ]
-    )
+    try:
+        return Result(value=build_profile_list_payload())
+    except RuntimeError as exc:
+        return Result(error=str(exc))
 
 
 async def notify_tools_changed(

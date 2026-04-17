@@ -242,7 +242,7 @@ class TestRuntimeModels:
         original capability-token context from an empty initialize.
         """
         snapshot = {
-            "token_id": "tok-1",
+            "token_id": "tok_1",
             "profile_id": "production",
             "issued_at": "2026-01-01T00:00:00Z",
             "expires_at": "2026-12-31T23:59:59Z",
@@ -256,7 +256,7 @@ class TestRuntimeModels:
             client_info_snapshot=snapshot,
         )
         assert c.client_info_snapshot is not None
-        assert c.client_info_snapshot["token_id"] == "tok-1"
+        assert c.client_info_snapshot["token_id"] == "tok_1"
         assert c.client_info_snapshot["profile_id"] == "production"
         assert c.client_info_snapshot["signature"] == "abc123def456"
 
@@ -278,7 +278,7 @@ class TestRuntimeModels:
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
-                "token_id": "tok-1",
+                "token_id": "tok_1",
                 "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
@@ -290,7 +290,7 @@ class TestRuntimeModels:
         restored = ConnectionContext.model_validate(data)
         assert restored.init_mode == AuthMode.TOKEN
         assert restored.client_info_snapshot is not None
-        assert restored.client_info_snapshot["token_id"] == "tok-1"
+        assert restored.client_info_snapshot["token_id"] == "tok_1"
         assert restored.bridge_connection_id == "bridge_xyz"
 
 
@@ -335,7 +335,7 @@ class TestConnectionContextRecoveryContract:
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
-                "token_id": "tok-1",
+                "token_id": "tok_1",
                 "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
@@ -372,7 +372,7 @@ class TestConnectionContextRecoveryContract:
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
-                "token_id": "tok-1",
+                "token_id": "tok_1",
                 "profile_id": "production",
                 "issued_at": "2026-01-01T00:00:00Z",
                 "expires_at": "2026-12-31T23:59:59Z",
@@ -476,7 +476,7 @@ class TestConnectionContextRecoveryContract:
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.TOKEN,
             client_info_snapshot={
-                "token_id": "tok-1",
+                "token_id": "tok_1",
                 "profile_id": "production",
                 "persona_ref": "persona.production",
                 "instance_id": "inst-production",
