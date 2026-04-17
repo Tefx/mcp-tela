@@ -74221,7 +74221,7 @@ phases:
       gate_open_allowed: true'
   - id: canonical_gateway_state.gate
     name: Gate canonical gateway state closeout
-    status: pending
+    status: claimed
     description: 'Gate review: verify this phase achieves fully canonical gateway
       state with no builtin bypasses, no token-version default smuggling, no wrong-source
       provider/audit binding, and no legacy profile-name denial vocabulary.
@@ -74287,3 +74287,5 @@ phases:
     - canonical_gateway_state.docs_and_regression_sync
     - canonical_gateway_state.verify
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-17T21:26:05.029893+00:00'
