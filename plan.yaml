@@ -73672,3 +73672,103 @@ phases:
     depends_on:
     - canonical_gateway_state.builtin_call_admission_exactness
     agent: python-senior-tacit
+  - id: canonical_gateway_state.family_denial_canonical_profile_id
+    name: Canonicalize family admission and denial vocabulary to profile_id
+    status: pending
+    description: 'Implement and verify canonical family-admission/denial messaging.
+
+
+      Scope:
+
+      - src/tela/core/enforcement.py
+
+      - affected shell/runtime tests that assert denial text
+
+
+      Required behavior:
+
+      - Family-admission and denial messages must use canonical `profile_id` vocabulary
+      only.
+
+      - Never emit local `profile.name` wording in denial messages where the canonical
+      external/shared truth is `profile_id`.
+
+      - Preserve existing deny metadata (`family_admission`, `AUTHZ_DENY`) while correcting
+      the human-facing message.
+
+      - No compatibility aliases or dual-vocabulary output.
+
+
+      Implementation constraints:
+
+      - Keep this step narrowly focused on message and canonical-identity source selection.
+
+      - Update tests to assert the canonical profile_id text, not legacy profile-name
+      vocabulary.
+
+
+      Required expected-red before code changes:
+
+      - A test proving family denial output still mentions `profile.name`/legacy vocabulary.'
+    verification: '- Expected-red proof shows denial text still uses non-canonical
+      profile-name vocabulary.
+
+      - Green proof shows denial text uses canonical profile_id without changing deny
+      classification metadata.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Added/updated tests:
+
+      - Exact command run before implementation:
+
+      ```bash
+
+      uv run pytest tests/shell/test_upstream.py tests/shell/test_gateway.py -q
+
+      ```
+
+      - Failing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Green Proof
+
+      - Exact command run after implementation:
+
+      ```bash
+
+      uv run pytest tests/shell/test_upstream.py tests/shell/test_gateway.py -q
+
+      ```
+
+      - Passing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Required Assertions Closed
+
+      - family-admission denial text uses canonical profile_id
+
+      - no local profile.name vocabulary remains in emitted denial messages
+
+      - deny metadata still reports family_admission / AUTHZ_DENY'
+    depends_on:
+    - canonical_gateway_state.provider_binding_and_audit_attribution
+    agent: python-executor
