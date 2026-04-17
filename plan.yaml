@@ -73144,3 +73144,10 @@ phases:
     evidence: Previous zero-bypass closeout landed in commit f688b92 and full verification
       passed before this new cleanup request. Closing lingering claim before taking
       the new final zero-residual slice.
+- id: fresh_review_final_hard_zero
+  name: Fresh Review Final Hard Zero Closeout
+  status: pending
+  gate: Close the remaining shared auth, naming, builtin input, and legacy vocabulary
+    gaps with zero residuals.
+  depends_on:
+  - fresh_review_auth_zero_bypass
