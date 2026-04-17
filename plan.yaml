@@ -73917,7 +73917,7 @@ phases:
       - Deny metadata keys and classification were unchanged."
   - id: canonical_gateway_state.docs_and_regression_sync
     name: Sync docs and regression inventory to final canonical builtin/shared semantics
-    status: claimed
+    status: done
     description: 'Update docs and any remaining regression inventory so the final
       canonical builtin/shared semantics are explicit and test-backed.
 
@@ -73973,6 +73973,31 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-17T21:02:42.206782+00:00'
+    done_at: '2026-04-17T21:14:35.222672+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- docs/INTERFACES.md — updated\
+      \ builtin tools/call semantics section to require admitted session/connection,\
+      \ exact `{}` args, caller-bound provider/audit attribution, and canonical `profile_id`\
+      \ wording.\n- docs/DESIGN.md — updated canonical semantics sections for admitted-session\
+      \ builtin behavior and explicit required `token_version` at admission.\n\n##\
+      \ Documentation Sync Report\n- Updated sections:\n  - `docs/INTERFACES.md:440-476`\n\
+      \  - `docs/DESIGN.md:311-320`\n  - `docs/DESIGN.md:408-427`\n  - `docs/USAGE.md:234-240`\n\
+      \  - `docs/USAGE.md:596-604`\n  - `docs/CONFIRMED-SURFACE-CONTRACT.md:24-27`\n\
+      \  - `docs/CONFIRMED-SURFACE-CONTRACT.md:87-110`\n- Canonical rules documented:\n\
+      \  - token_version explicit at admission\n  - builtin tools/call require admitted\
+      \ session\n  - builtin args accept `{}` only\n  - provider listing/audit bind\
+      \ to calling connection/profile\n  - denial vocabulary uses profile_id\n- Remaining\
+      \ stale wording found: none in updated builtin-surface docs\n- Regression tests\
+      \ referenced by docs:\n  - `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`\n\
+      \  - `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`\n\
+      \  - `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`\n\
+      \  - `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`\n\
+      \n## Verification\n- `.venv/bin/pytest tests/integration/test_token_mode_initialize.py\
+      \ -k missing_token_version_before_admission` → 1 passed\n- `.venv/bin/pytest\
+      \ tests/shell/test_gateway.py -k 'builtin_call_requires_admitted_session or\
+      \ builtin_call_accepts_only_exact_empty_object'` → 2 passed\n- `.venv/bin/pytest\
+      \ tests/shell/test_builtin_tools.py -k uses_bound_connection_profile_in_token_mode`\
+      \ → 1 passed\n\n## Commits\n- `d6327ce docs: clarify canonical builtin shared\
+      \ semantics`\n- `447fc7c docs: tighten canonical usage wording`"
   - id: canonical_gateway_state.verify
     name: Independent verification of canonical gateway state closeout
     status: pending
