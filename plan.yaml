@@ -73609,7 +73609,7 @@ phases:
   - id: canonical_gateway_state.provider_binding_and_audit_attribution
     name: Bind builtin provider listing and audit attribution to the true calling
       connection
-    status: pending
+    status: claimed
     description: 'Implement and verify canonical truth binding for builtin provider
       listing and builtin audit attribution.
 
@@ -73743,6 +73743,8 @@ phases:
     depends_on:
     - canonical_gateway_state.builtin_call_admission_exactness
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-17T20:47:44.795088+00:00'
   - id: canonical_gateway_state.family_denial_canonical_profile_id
     name: Canonicalize family admission and denial vocabulary to profile_id
     status: pending
