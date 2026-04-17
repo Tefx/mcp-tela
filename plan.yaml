@@ -72997,3 +72997,10 @@ phases:
       \ JSON for list payloads because the installed MCP type model does not accept\
       \ top-level array structuredContent cleanly; this patch avoids repr/stringification\
       \ and emits exact canonical JSON payload content instead."
+- id: fresh_review_final_cut
+  name: Fresh Review Final Hard-Cut Closeout
+  status: pending
+  gate: Resolve the final canonical usability and doc-drift findings without adding
+    compatibility layers.
+  depends_on:
+  - fresh_review_reclose
