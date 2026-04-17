@@ -73004,3 +73004,16 @@ phases:
     compatibility layers.
   depends_on:
   - fresh_review_reclose
+  steps:
+  - id: fresh_review_final_cut.impl
+    name: Close final hard-cut usability and docs drift
+    status: pending
+    description: Repair canonical capabilities YAML parsing so canonical posture strings
+      parse cleanly on the local config surface without reintroducing legacy aliases,
+      remove remaining repo-facing docs that teach tela.profiles/profile_name/tools,
+      and verify tests/docs alignment.
+    verification: Run targeted pytest for config parsing and docs-alignment coverage;
+      run invar guard on changed files.
+    evidence_template: '- Files changed\n- Canonical config parsing fix\n- Docs tightened\n-
+      Validation commands and outcomes\n- Remaining risks'
+    agent: minimalist-architect-tacit
