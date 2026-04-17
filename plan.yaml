@@ -73046,3 +73046,10 @@ phases:
       \ vocabulary outside the primary doc set if kept as historical artifacts.\n\
       \  - No shared-surface semantics were loosened; residual risk is limited to\
       \ untouched repo-wide technical debt outside this closeout slice."
+- id: fresh_review_zero_residual
+  name: Fresh Review Zero Residual Closeout
+  status: pending
+  gate: Remove duplicate schema authority and any remaining legacy shared-surface
+    narratives so the repo has no known hard-cut residuals.
+  depends_on:
+  - fresh_review_final_cut
