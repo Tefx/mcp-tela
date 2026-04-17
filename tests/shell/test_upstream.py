@@ -933,6 +933,34 @@ def test_enforce_tool_call_denies() -> None:
     assert result.value.verdict.value == "deny"
 
 
+def test_enforce_tool_call_denies_uses_canonical_profile_id_vocabulary() -> None:
+    """Family admission denial message must use canonical profile_id vocabulary.
+
+    The human-facing error_message MUST use 'profile_id' (the canonical
+    external/shared identity) and MUST NOT use local 'profile.name' wording.
+
+    This is an expected-red test: it will FAIL until the fix is applied.
+    After the fix, denial messages will use 'profile_id' in the message text.
+    """
+    from tela.core.models import Posture, ProfileConfig, ResolvedTool
+    from tela.shell.upstream_utils import enforce_tool_call
+
+    tool = ResolvedTool(
+        name="exec", server_name="shell", family="shell", posture=Posture.DESTRUCTIVE
+    )
+    profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
+    result = enforce_tool_call("exec", tool, profile, Posture.NONE)
+    assert result.is_ok and result.value is not None
+    assert result.value.verdict.value == "deny"
+    assert result.value.denied_by == "family_admission"
+    assert result.value.error_code == "AUTHZ_DENY"
+    # Canonical profile_id vocabulary must appear in error_message
+    assert result.value.error_message is not None
+    assert "profile_id" in result.value.error_message
+    # Legacy profile.name vocabulary must NOT appear
+    assert "profile 'dev'" not in result.value.error_message
+
+
 # --- handle_tools_list metadata round-trip tests ---
 
 
