@@ -73048,7 +73048,7 @@ phases:
       \ untouched repo-wide technical debt outside this closeout slice."
 - id: fresh_review_zero_residual
   name: Fresh Review Zero Residual Closeout
-  status: pending
+  status: in_progress
   gate: Remove duplicate schema authority and any remaining legacy shared-surface
     narratives so the repo has no known hard-cut residuals.
   depends_on:
@@ -73056,7 +73056,7 @@ phases:
   steps:
   - id: fresh_review_zero_residual.impl
     name: Remove residual schema and naming drift
-    status: pending
+    status: claimed
     description: Delete or de-authorize any duplicate CapabilityToken schema surface,
       scrub remaining repo-facing legacy shared naming/surface wording across docs/examples/tests/comments/docstrings,
       verify parity still works, and finish with an independent gate review confirming
@@ -73067,3 +73067,5 @@ phases:
     evidence_template: '- Files changed\n- Duplicate schema authority removal\n- Legacy
       naming/surface cleanup\n- Verification commands and outputs\n- Gate review result'
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-17T08:39:31.212040+00:00'
