@@ -73151,3 +73151,18 @@ phases:
     gaps with zero residuals.
   depends_on:
   - fresh_review_auth_zero_bypass
+  steps:
+  - id: fresh_review_final_hard_zero.impl
+    name: Close final auth and naming gaps
+    status: pending
+    description: Fail closed on unknown token profile_id at initialize, enforce snake_case
+      on direct tools/call paths, make tela_list_profiles input strict, scrub remaining
+      legacy shared vocabulary from docs/tests/examples, and verify with full regression
+      plus gate review.
+    verification: Run targeted pytest for initialize, gateway, upstream, hard-cut
+      shared surfaces, surface contract, and then full pytest; run invar guard on
+      changed files; run gate-reviewer-tacit.
+    evidence_template: '- Files changed\n- Unknown profile initialize closure\n- tools/call
+      naming closure\n- tela_list_profiles strictness closure\n- Legacy vocabulary
+      cleanup\n- Verification commands and results\n- Gate review result'
+    agent: minimalist-architect-tacit
