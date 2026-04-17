@@ -73118,7 +73118,7 @@ phases:
       \ only negative fixtures enforcing fail-closed rejection, not narrative drift"
 - id: fresh_review_auth_zero_bypass
   name: Fresh Review Auth Zero-Bypass Closeout
-  status: pending
+  status: in_progress
   gate: Eliminate any remaining bridge/token-mode auth bypasses and close related
     docs/tests/schema hygiene with no residuals.
   depends_on:
@@ -73126,7 +73126,7 @@ phases:
   steps:
   - id: fresh_review_auth_zero_bypass.impl
     name: Close token-mode bridge bypasses
-    status: pending
+    status: claimed
     description: Inspect and remove any bridge initialize token-mode auth bypass,
       prevent fabricated/default bindings on /connect and bridge paths, update tests
       to protect correct behavior, finish any remaining shared-doc/schema hygiene,
@@ -73138,3 +73138,5 @@ phases:
       binding closure\n- Test rewrites\n- Verification commands and outputs\n- Gate
       review result'
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-17T15:27:18.434045+00:00'
