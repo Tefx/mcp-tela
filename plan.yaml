@@ -73464,7 +73464,7 @@ phases:
   - id: canonical_gateway_state.builtin_call_admission_exactness
     name: Route builtin tools through canonical session admission and exact empty-args
       validation
-    status: claimed
+    status: done
     description: 'Implement and verify the builtin tools/call path so builtins cannot
       bypass normal connection/session admission semantics.
 
@@ -73581,6 +73581,31 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-17T20:32:50.005860+00:00'
+    done_at: '2026-04-17T20:47:28.801066+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - src/tela/shell/gateway.py — read `_wire_upstream_handlers`, `_ensure_connection`,\
+      \ builtin call dispatch, and `_handle_builtin_call`\n- tests/shell/test_gateway.py\
+      \ — read existing gateway MCP handler tests and added focused builtin admission/exactness\
+      \ coverage\n\n## Expected-Red Proof (MANDATORY)\n- Added/updated tests/contracts:\n\
+      \  - `test_streamable_http_builtin_call_requires_admitted_session`\n  - `test_streamable_http_builtin_call_accepts_only_exact_empty_object`\n\
+      - Exact command run before implementation:\n```bash\nuv run pytest tests/shell/test_gateway.py\
+      \ -q\n```\n- Failing output proving builtin tools bypass session admission and/or\
+      \ accept non-exact args:\n```text\nFAILED tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object\n\
+      1 failed, 70 passed in 0.94s\n```\n\n## Green Proof\n- Exact command run after\
+      \ implementation:\n```bash\nuv run pytest tests/shell/test_gateway.py -q\n```\n\
+      - Passing output:\n```text\n71 passed in 0.99s\n```\n- Guard/run evidence:\n\
+      ```bash\ninvar guard --changed\n```\n```text\nstatus: passed\nerrors: 0\nwarnings:\
+      \ 6\n```\n- Commit:\n  - `06c3f44 fix builtin tool admission exactness`\n\n\
+      ## Required Assertions Closed\n- builtin tools/call without admitted session\
+      \ fails with `RECONNECT_REQUIRED`\n- builtin tools/call accepts `{}` only\n\
+      - builtin tools/call rejects null / non-object / extra args\n- no builtin-only\
+      \ admission bypass exists\n\n## Files Changed\n- src/tela/shell/gateway.py —\
+      \ routed builtin tools/call through the canonical admitted `_call_tool` path,\
+      \ preserved raw request arguments before SDK null-to-`{}` normalization, and\
+      \ bound builtin audit entries to the admitted connection\n- tests/shell/test_gateway.py\
+      \ — added focused upstream request-handler tests for builtin admission and exact\
+      \ empty-object input handling\n\n## NOT Done\n- Did not refactor unrelated gateway\
+      \ size warnings\n- Did not modify files outside the scoped pair"
   - id: canonical_gateway_state.provider_binding_and_audit_attribution
     name: Bind builtin provider listing and audit attribution to the true calling
       connection
