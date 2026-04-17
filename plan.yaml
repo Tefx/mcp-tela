@@ -74000,7 +74000,7 @@ phases:
       \ semantics`\n- `447fc7c docs: tighten canonical usage wording`"
   - id: canonical_gateway_state.verify
     name: Independent verification of canonical gateway state closeout
-    status: claimed
+    status: done
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the canonical gateway-state closeout from a fresh perspective.
 
@@ -74103,6 +74103,122 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-17T21:14:47.931235+00:00'
+    done_at: '2026-04-17T21:25:47.440023+00:00'
+    evidence: '## Verification Report
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: canonical gateway state closeout
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - tests/integration/test_token_mode_initialize.py — verified missing-token_version
+      admission rejection coverage and canonical envelope usage.
+
+      - tests/shell/test_gateway.py — verified builtin admitted-session requirement,
+      exact-empty-object arg handling, and canonical gateway token validation paths.
+
+      - tests/shell/test_builtin_tools.py — verified token-bound provider listing
+      binds to calling connection profile.
+
+      - tests/shell/test_upstream.py — verified canonical profile_id denial vocabulary
+      assertions.
+
+      - tests/shell/test_audit.py — verified audit entry construction uses canonical
+      profile_id.
+
+      - src/tela/core/enforcement.py — verified family-admission error message uses
+      `profile_id` vocabulary.
+
+      - src/tela/core/token.py — verified token canonicalization requires `token_version`.
+
+      - src/tela/shell/builtin_tools.py — verified builtin input schema strictness
+      and canonical payload validation.
+
+      - src/tela/shell/upstream.py — verified initialize-token admission path and
+      token validation routing.
+
+      - src/tela/core/models.py — verified AuditEntry profile_id field.
+
+      - src/tela/shell/gateway.py — verified builtin routing and error detail path.
+
+
+      ### Test Execution
+
+      ```bash
+
+      uv run pytest tests/integration/test_token_mode_initialize.py tests/shell/test_gateway.py
+      tests/shell/test_builtin_tools.py tests/shell/test_upstream.py tests/shell/test_audit.py
+      -q
+
+      ```
+
+      Output: `191 passed in 4.75s`
+
+
+      ```bash
+
+      uv run invar guard --all
+
+      ```
+
+      Output: `status: passed, static errors: 0`
+
+
+      ### Required Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | token_version_required | missing token_version rejected at admission | initialize-path
+      rejection + canonical required fields | test_token_mode_initialize + token.py
+      required_fields | PROVEN | admission rejects missing field and canonicalizer
+      requires token_version | required at admission, no default smuggling |
+
+      | builtin_session_admission | builtin tools/call requires admitted session |
+      builtin session admission tests | test_gateway builtin admitted-session tests
+      | PROVEN | unauthenticated/unadmitted builtin calls fail closed | builtin calls
+      cannot bypass admission |
+
+      | provider_binding | provider listing binds to token-bound calling profile |
+      token-mode provider listing test | test_builtin_tools token-bound profile test
+      | PROVEN | visibility follows connection.profile_id | canonical caller profile
+      binding |
+
+      | builtin_arg_exactness | only `{}` accepted for builtin args | null/non-object/extra-key
+      rejections | test_gateway builtin arg exactness tests | PROVEN | invalid forms
+      rejected with INVALID_TOOL_INPUT | exact empty-object contract enforced |
+
+      | audit_attribution | audit attribution follows canonical calling connection/profile
+      | audit model + audit tests + gateway path | models AuditEntry + audit tests
+      | PROVEN | audit entries bind via ConnectionContext profile_id | no first-connection
+      shortcut |
+
+      | family_denial_profile_id | family denial message uses canonical profile_id
+      vocabulary | denial vocabulary assertion test | test_upstream + enforcement
+      message string | PROVEN | profile_id wording present; legacy wording absent
+      | canonical vocabulary enforced |
+
+
+      ### Step Semantics
+
+      - step_intent: verify
+
+      - expected_result: green
+
+      - observed_result: green
+
+      - failure_alignment: none
+
+      - product_files_modified: no (only untracked cache artifacts in worktree)
+
+
+      gate_open_allowed: true'
   - id: canonical_gateway_state.gate
     name: Gate canonical gateway state closeout
     status: pending
