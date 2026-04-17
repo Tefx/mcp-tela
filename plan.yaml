@@ -73266,7 +73266,7 @@ phases:
       \ declaring the current worktree fully closed"
 - id: canonical_gateway_state
   name: Canonical Gateway State Closeout
-  status: in_progress
+  status: done
   gate: Open only when gateway admission, builtin dispatch, provider truth, audit
     attribution, denial vocabulary, and docs/spec tests all converge on the fully
     canonical profile_id/token/session model with fail-closed behavior and no compatibility
@@ -74221,7 +74221,7 @@ phases:
       gate_open_allowed: true'
   - id: canonical_gateway_state.gate
     name: Gate canonical gateway state closeout
-    status: claimed
+    status: done
     description: 'Gate review: verify this phase achieves fully canonical gateway
       state with no builtin bypasses, no token-version default smuggling, no wrong-source
       provider/audit binding, and no legacy profile-name denial vocabulary.
@@ -74289,3 +74289,49 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-17T21:26:05.029893+00:00'
+    done_at: '2026-04-17T21:47:56.225656+00:00'
+    evidence: "## Gate Review Report\n\n### refs Read Confirmation (MANDATORY)\n-\
+      \ Reviewed canonical token/admission, gateway/builtin, audit attribution, enforcement\
+      \ vocabulary, and aligned docs/tests across src and docs surfaces.\n\n### Decision\
+      \ Basis\n- token_version required at admission: OPEN\n  - CapabilityToken and\
+      \ canonical token validation require explicit token_version; missing field rejected\
+      \ in tests and initialize path.\n- builtin session admission canonical: OPEN\n\
+      \  - Builtin calls require bound admitted connection/session; unadmitted conditions\
+      \ fail closed.\n- provider binding canonical: OPEN\n  - Provider listing binds\
+      \ to calling connection profile_id in token-bound scenarios.\n- builtin arg\
+      \ exactness canonical: OPEN\n  - Builtin contract enforces exact empty-object\
+      \ semantics and rejects non-canonical argument shapes.\n- audit attribution\
+      \ canonical: OPEN\n  - Audit attribution derives from canonical ConnectionContext/profile_id\
+      \ rather than index-based selection.\n- family denial vocabulary canonical:\
+      \ OPEN\n  - Denial messaging uses canonical `profile_id` vocabulary.\n- docs/tests\
+      \ aligned: OPEN\n  - Canonical semantics reflected in DESIGN/INTERFACES/USAGE/confirmed\
+      \ contract docs and matching regression tests.\n\n### Required Behavioral Proof\
+      \ Register\n| requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref\
+      \ | status | closure_path | gate_decision_basis |\n|---|---|---|---|---|---|---|\n\
+      | token_version_required | missing token_version rejected at admission | token\
+      \ tests + initialize-token regression | core/integration token tests | PROVEN\
+      \ | canonical validation + initialize rejection | OPEN |\n| builtin_session_admission\
+      \ | builtin calls require admitted session | gateway builtin admission tests\
+      \ | shell gateway tests | PROVEN | fail-closed on unadmitted/no-session paths\
+      \ | OPEN |\n| provider_binding | provider listing follows caller profile_id\
+      \ | token-bound provider test | shell builtin tools tests | PROVEN | uses bound\
+      \ connection profile semantics | OPEN |\n| builtin_arg_exactness | builtin input\
+      \ accepts `{}` only | builtin arg exactness tests | shell gateway tests | PROVEN\
+      \ | rejects null/non-object/extra args | OPEN |\n| audit_attribution | audit\
+      \ binds to true calling connection/profile | audit construction + runtime paths\
+      \ | shell audit + gateway | PROVEN | canonical connection attribution | OPEN\
+      \ |\n| family_denial_profile_id | denial wording uses profile_id vocabulary\
+      \ | denial vocabulary assertion tests | shell upstream tests | PROVEN | canonical\
+      \ vocabulary enforced | OPEN |\n| docs_tests_alignment | docs and tests match\
+      \ canonical semantics | docs + targeted regressions | DESIGN/INTERFACES/USAGE/contract\
+      \ docs + tests | PROVEN | documented canonical rule set with matching tests\
+      \ | OPEN |\n\n### Blind Tester Mode D Supplement (Runnable-surface liveness)\n\
+      - Ran existing-test probe sets for:\n  1) missing token_version rejected\n \
+      \ 2) builtin call without admitted session fails closed\n  3) builtin arg exactness\
+      \ and canonical builtin behavior paths\n- Command outputs showed all selected\
+      \ probes passing.\n- verify_only_purity confirmed: no product file modifications\
+      \ during blind probe (cache artifacts only).\n\n### Gate Decision\n- headline:\
+      \ PASS\n- proof_gap_status: NONE\n- blocking_status: CLOSED\n- gate_open_allowed:\
+      \ true\n- uncertainty_sources: []\n\n### Step Semantics\n- step_intent: gate\n\
+      - expected_result: green\n- observed_result: green\n- failure_alignment: none\n\
+      - product_files_modified: no (verify-only execution; no product mutations)"
