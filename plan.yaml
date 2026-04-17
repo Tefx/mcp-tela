@@ -73793,7 +73793,7 @@ phases:
       \ audit truth to caller`"
   - id: canonical_gateway_state.family_denial_canonical_profile_id
     name: Canonicalize family admission and denial vocabulary to profile_id
-    status: pending
+    status: claimed
     description: 'Implement and verify canonical family-admission/denial messaging.
 
 
@@ -73891,6 +73891,8 @@ phases:
     depends_on:
     - canonical_gateway_state.provider_binding_and_audit_attribution
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-17T20:56:02.143169+00:00'
   - id: canonical_gateway_state.docs_and_regression_sync
     name: Sync docs and regression inventory to final canonical builtin/shared semantics
     status: pending
