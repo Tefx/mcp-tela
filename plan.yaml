@@ -73417,3 +73417,121 @@ phases:
 
       - explicit token_version path still admits correctly'
     agent: python-senior-tacit
+  - id: canonical_gateway_state.builtin_call_admission_exactness
+    name: Route builtin tools through canonical session admission and exact empty-args
+      validation
+    status: pending
+    description: 'Implement and verify the builtin tools/call path so builtins cannot
+      bypass normal connection/session admission semantics.
+
+
+      Scope:
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_gateway.py
+
+
+      Required behavior:
+
+      - Builtin tools/call must pass through the same `_ensure_connection` / real-session
+      admission requirements as downstream tool calls.
+
+      - `tela_list_providers` and `tela_list_profiles` must fail closed with `RECONNECT_REQUIRED`
+      when there is no admitted live session/connection.
+
+      - Builtin input exactness must be fail-closed: only `{}` is accepted. Reject
+      `null`, non-object payloads, and any extra keys.
+
+      - Do NOT weaken builtin/bridge/alternate boundaries and do NOT create a builtin-only
+      escape path.
+
+
+      Implementation constraints:
+
+      - Keep builtin dispatch inside the existing canonical gateway entrypoint; no
+      compatibility shim, no side-channel admission helper.
+
+      - Add focused tests covering unauthenticated/unadmitted builtin calls and exact
+      empty-object input acceptance.
+
+      - Use the real upstream request handler path in tests, not direct helper invocation
+      only.
+
+
+      Required expected-red before code changes:
+
+      - A real MCP tools/call test where builtin invocation without an admitted session
+      does not yet fail closed, and tests for `null`/non-object/extra-arg payloads.'
+    verification: '- Expected-red proof demonstrates builtin calls are currently too
+      permissive or unguarded.
+
+      - Green proof demonstrates builtin call without admitted session returns RECONNECT_REQUIRED
+      and builtin args accept only `{}`.
+
+      - Guard/run evidence covers the changed gateway path.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Added/updated tests/contracts:
+
+      - Exact command run before implementation:
+
+      ```bash
+
+      uv run pytest tests/shell/test_gateway.py -q
+
+      ```
+
+      - Failing output proving builtin tools bypass session admission and/or accept
+      non-exact args:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Green Proof
+
+      - Exact command run after implementation:
+
+      ```bash
+
+      uv run pytest tests/shell/test_gateway.py -q
+
+      ```
+
+      - Passing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Required Assertions Closed
+
+      - builtin tools/call without admitted session fails with RECONNECT_REQUIRED
+
+      - builtin tools/call accepts `{}` only
+
+      - builtin tools/call rejects null / non-object / extra args
+
+      - no builtin-only admission bypass exists
+
+
+      ## Files Changed
+
+      - <path> — why'
+    depends_on:
+    - canonical_gateway_state.token_admission_exactness
+    agent: python-senior-tacit
