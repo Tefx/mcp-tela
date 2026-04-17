@@ -73206,7 +73206,7 @@ phases:
       \ five hard-zero closure checks verified, no blocker remaining in scope"
 - id: fresh_review_true_zero
   name: Fresh Review True Zero Closeout
-  status: in_progress
+  status: done
   gate: Remove remaining skip/xfail debt and prove a fully green closure with no latent
     gaps.
   depends_on:
@@ -73214,7 +73214,7 @@ phases:
   steps:
   - id: fresh_review_true_zero.impl
     name: Eliminate residual skip and xfail debt
-    status: claimed
+    status: done
     description: Inspect the remaining skipped and xfailed tests, implement any missing
       runtime behavior or rewrite stale red probes so the suite no longer carries
       known unresolved gaps, and re-run full verification until pytest is fully green
@@ -73226,3 +73226,41 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-17T18:44:56.967857+00:00'
+    done_at: '2026-04-17T19:36:10.320126+00:00'
+    evidence: "- Files changed\n  - src/tela/core/bearer.py\n  - src/tela/core/bridge_protocol.py\n\
+      \  - src/tela/core/http_transient.py\n  - src/tela/core/recovery_helpers.py\n\
+      \  - src/tela/core/surface_manifest.py\n  - src/tela/commands/connect_bridge.py\n\
+      \  - src/tela/commands/http_client.py\n  - src/tela/shell/_downstream_recovery.py\n\
+      \  - src/tela/shell/http_auth.py\n  - src/tela/shell/initialize_session_patch.py\n\
+      \  - src/tela/shell/surface_instructions.py\n  - src/tela/shell/upstream.py\n\
+      \  - tests/shell/test_connect_recovery_red.py\n  - tests/shell/test_downstream_recovery.py\n\
+      \  - tests/repro/test_adr006_runtime_hardening_probes.py\n  - tests/repro/test_conn_v2_blackbox.py\n\
+      - Skip/xfail closures\n  - Removed all remaining pytest skip/xfail markers by\
+      \ converting stale red tests into passing regression tests and by making black-box\
+      \ schema/liveness probes self-start their own isolated gateway instead of depending\
+      \ on a pre-existing server.\n  - Rewrote connect recovery gap test to assert\
+      \ the current bounded second-chance coordinator retry contract.\n  - Rewrote\
+      \ downstream recovery xfail tests to assert implemented ADR-006 behavior (eligibility\
+      \ classification, per-server lock map, convergence rejection, diagnostics, one\
+      \ retry after recovery).\n  - Replaced the last skipped ADR-006 healthy-neighbor\
+      \ probe with an actual concurrent recovery/healthy-call test.\n- Verification\
+      \ commands and outputs\n  - uv run pytest tests/shell/test_connect_recovery_red.py\
+      \ tests/shell/test_downstream_recovery.py tests/repro/test_adr006_runtime_hardening_probes.py\
+      \ tests/repro/test_conn_v2_blackbox.py -q -> 48 passed\n  - uv run pytest tests/shell/test_connect_recovery_red.py\
+      \ tests/shell/test_downstream_recovery.py tests/repro/test_adr006_runtime_hardening_probes.py\
+      \ tests/repro/test_conn_v2_blackbox.py tests/shell/test_http_client.py tests/shell/test_connect_cmd.py\
+      \ tests/shell/test_merge_instructions.py -> 140 passed\n  - uv run pytest -rxXs\
+      \ -> 1185 passed, 0 skipped, 0 xfailed\n  - uv run pytest -q -> 1185 passed\n\
+      \  - python3 -m py_compile src/tela/core/http_transient.py src/tela/core/bridge_protocol.py\
+      \ src/tela/core/recovery_helpers.py src/tela/core/surface_manifest.py src/tela/core/bearer.py\
+      \ src/tela/commands/http_client.py src/tela/commands/connect_bridge.py src/tela/shell/_downstream_recovery.py\
+      \ src/tela/shell/surface_instructions.py src/tela/shell/initialize_session_patch.py\
+      \ src/tela/shell/http_auth.py tests/shell/test_connect_recovery_red.py tests/shell/test_downstream_recovery.py\
+      \ tests/repro/test_adr006_runtime_hardening_probes.py tests/repro/test_conn_v2_blackbox.py\
+      \ -> success (no output)\n  - invar_guard changed=true -> passed (0 errors)\n\
+      \  - uvx invar-tools guard --all -> static passed with 0 errors; warning-only\
+      \ budgets/maintainability findings remain non-blocking\n  - grep for pytest.mark.xfail|pytest.xfail|pytest.skip|mark.skip\
+      \ in tests/**/*.py -> no matches\n- Final full-suite status\n  - Full pytest\
+      \ suite is fully green with no skips/xfails: 1185 passed, 0 failed, 0 skipped,\
+      \ 0 xfailed\n  - gate-reviewer-tacit -> PASS: no blocker remains in scope for\
+      \ declaring the current worktree fully closed"
