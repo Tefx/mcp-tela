@@ -73053,3 +73053,17 @@ phases:
     narratives so the repo has no known hard-cut residuals.
   depends_on:
   - fresh_review_final_cut
+  steps:
+  - id: fresh_review_zero_residual.impl
+    name: Remove residual schema and naming drift
+    status: pending
+    description: Delete or de-authorize any duplicate CapabilityToken schema surface,
+      scrub remaining repo-facing legacy shared naming/surface wording across docs/examples/tests/comments/docstrings,
+      verify parity still works, and finish with an independent gate review confirming
+      no known residuals.
+    verification: Run targeted grep scans, targeted pytest including parity/shared-surface/docs
+      checks, invar guard on changed files, and an independent gate-reviewer-tacit
+      audit.
+    evidence_template: '- Files changed\n- Duplicate schema authority removal\n- Legacy
+      naming/surface cleanup\n- Verification commands and outputs\n- Gate review result'
+    agent: minimalist-architect-tacit
