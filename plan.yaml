@@ -73464,7 +73464,7 @@ phases:
   - id: canonical_gateway_state.builtin_call_admission_exactness
     name: Route builtin tools through canonical session admission and exact empty-args
       validation
-    status: pending
+    status: claimed
     description: 'Implement and verify the builtin tools/call path so builtins cannot
       bypass normal connection/session admission semantics.
 
@@ -73579,6 +73579,8 @@ phases:
     depends_on:
     - canonical_gateway_state.token_admission_exactness
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-17T20:32:50.005860+00:00'
   - id: canonical_gateway_state.provider_binding_and_audit_attribution
     name: Bind builtin provider listing and audit attribution to the true calling
       connection
