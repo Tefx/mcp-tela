@@ -74000,7 +74000,7 @@ phases:
       \ semantics`\n- `447fc7c docs: tighten canonical usage wording`"
   - id: canonical_gateway_state.verify
     name: Independent verification of canonical gateway state closeout
-    status: pending
+    status: claimed
     description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
       the canonical gateway-state closeout from a fresh perspective.
 
@@ -74101,6 +74101,8 @@ phases:
     - canonical_gateway_state.family_denial_canonical_profile_id
     - canonical_gateway_state.docs_and_regression_sync
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-17T21:14:47.931235+00:00'
   - id: canonical_gateway_state.gate
     name: Gate canonical gateway state closeout
     status: pending
