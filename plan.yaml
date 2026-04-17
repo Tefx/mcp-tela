@@ -73116,3 +73116,10 @@ phases:
       \ PASS\n  - blocking_status: CLOSED\n  - proof_gap_status: NONE\n  - final statement:\
       \ no residual hard-cut issue remains; remaining legacy strings in tests are\
       \ only negative fixtures enforcing fail-closed rejection, not narrative drift"
+- id: fresh_review_auth_zero_bypass
+  name: Fresh Review Auth Zero-Bypass Closeout
+  status: pending
+  gate: Eliminate any remaining bridge/token-mode auth bypasses and close related
+    docs/tests/schema hygiene with no residuals.
+  depends_on:
+  - fresh_review_zero_residual
