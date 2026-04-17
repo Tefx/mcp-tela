@@ -231,10 +231,16 @@ profiles:
     default: true
 ```
 
-Built-in surfaces:
-- `tela_list_profiles` is a built-in MCP tool returning profile list with `profile_id`, `capabilities`, and `default`
-- `tela_list_providers` is a built-in MCP tool returning server status, tool counts, and tool names
-- `tela profiles`, `tela status`, `tela connections`, and `tela audit` are operator-only surfaces accessible via CLI/HTTP
+Built-in MCP surfaces (require admitted session, accept `{}` only):
+- `tela_list_profiles` — built-in MCP tool returning profile list with `profile_id`, `capabilities`, and `default`
+- `tela_list_providers` — built-in MCP tool returning server status, tool counts, and tool names (filtered by the calling connection's admitted `profile_id`)
+
+Builtin calls fail closed without an admitted session/connection. Builtin audit
+entries and provider visibility both bind to the calling connection's admitted
+`profile_id`.
+
+Operator-only surfaces (CLI/HTTP, not MCP):
+- `tela profiles`, `tela status`, `tela connections`, and `tela audit`
 
 Important notes:
 
@@ -284,7 +290,8 @@ Use token mode for shared or production deployments.
 
 Canonical note: in composed deployments, the shared token contract is owned by
 `../opifex`. The canonical binding identity is `profile_id`, and shared token
-surfaces do not define any alternate binding field.
+surfaces do not define any alternate binding field. `token_version` is explicit
+and required at admission; omission or mismatch is rejected fail-closed.
 
 Note: The gateway also auto-generates a per-instance bearer token on every
 startup and stores it in the lockfile. When `tela serve` is started manually,
@@ -591,8 +598,11 @@ Query commands discover the running server via `~/.tela/gateway.lock`.
 
 ### MCP Tools
 
-- `tela_list_profiles` — built-in MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`
-- `tela_list_providers` — built-in MCP tool returning server status, tool counts, and tool names
+- `tela_list_profiles` — built-in MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`; requires an admitted session and exact `{}` input
+- `tela_list_providers` — built-in MCP tool returning server status, tool counts, and tool names; requires an admitted session and exact `{}` input, and visibility binds to the calling connection's admitted `profile_id`
+
+Builtin audit attribution also binds to the calling connection's admitted
+`profile_id`.
 
 ### Operator Surfaces (CLI/HTTP)
 

@@ -309,8 +309,15 @@ There is no separate workflow-policy layer in gateway authorization.
 ### Introspection
 
 Built-in MCP tools:
-- `tela_list_profiles` — MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`
-- `tela_list_providers` — MCP tool returning a list of configured servers and their runtime status
+- `tela_list_profiles` — MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`; **requires admitted session**
+- `tela_list_providers` — MCP tool returning a list of configured servers and their runtime status; **requires admitted session**
+
+**Canonical builtin semantics:**
+- Built-in tools require an admitted session/connection at call time; there is no builtin-session bypass
+- Built-in tools accept strictly `{}` (empty object) input; `null`, omitted payloads, and additional properties are rejected
+- Provider listing returns tools filtered by the calling connection's admitted `profile_id`
+- Audit entries for builtin calls attribute to the calling connection's admitted `profile_id`
+- Regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`, `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`
 
 Operator surfaces (CLI/HTTP, not MCP):
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`
@@ -403,19 +410,20 @@ CLI entrypoints only:
 | Layer | Mechanism | Purpose |
 |-------|-----------|---------|
 | Lockfile bearer token | Auto-generated per server instance | Protects HTTP endpoints |
-| Config `auth.mode: token` | CapabilityToken with HMAC | Verifies canonical token fields and binds connection to canonical `profile_id` |
-| Config `auth.mode: open` | No token needed | Uses default profile |
+| Config `auth.mode: token` | CapabilityToken with HMAC | Verifies canonical token fields (including explicit `token_version`) and binds connection to canonical `profile_id` |
+| Config `auth.mode: open` | No token needed | Binds the connection to one explicit local default `profile_id` |
 
 Both layers are independent and apply simultaneously:
 
 - **Bearer token** (lockfile or `--token`/`TELA_BEARER_TOKEN`): protects the HTTP transport layer
-- **Config `auth.mode`** (open/token): controls MCP-level profile binding
+- **Config `auth.mode`** (open/token): controls MCP-level profile binding via CapabilityToken
 - You can have `auth.mode: open` (no CapabilityToken) and still require the bearer token for HTTP access
 - You can override the bearer token with `--token` without changing profile authorization
 
 Canonical contract note:
 
 - `../opifex` owns the shared CapabilityToken and `_meta` contracts
+- `token_version` is **explicit and required** at admission; no default or fallback
 - token-mode binding uses canonical `profile_id`; legacy shared token aliases are rejected fail-closed
 - `tela` is the verifier/enforcer and audit sink for those shared surfaces, not a second contract authority
 

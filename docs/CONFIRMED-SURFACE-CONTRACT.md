@@ -23,8 +23,8 @@ SurfaceContract := {
 
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
-| `tela_list_providers` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}`. |
-| `tela_list_profiles` | `tool` | MCP `tools/call` with exact `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
+| `tela_list_providers` | `tool` | MCP `tools/call` with an admitted session/connection and exact `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}` filtered by the calling connection's admitted `profile_id`. |
+| `tela_list_profiles` | `tool` | MCP `tools/call` with an admitted session/connection and exact `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
 
 ### 1.2 Operator companion surfaces
 
@@ -88,13 +88,15 @@ completes; endpoint discoverability does not imply readiness.
   explicitly supported built-in tela surface.
 - This contract confirms exactly two current built-in MCP tools:
   `tela_list_providers` and `tela_list_profiles`.
-- `tela_list_providers` input: empty object `{}`
+- **Input contract:** Both tools accept strictly `{}` (empty object); additional
+  properties are rejected (`INVALID_TOOL_INPUT`)
+- **Session contract:** Both tools require an **admitted session/connection** at
+  call time; they fail closed if called without one
+- there is no builtin-session bypass and no alternate admission path for builtin tools
 - `tela_list_providers` output: list of `ProviderInfo` objects, each containing
   `name` (server name), `status` (`"connected"` | `"disconnected"` | `"failed"`),
   `tool_count` (int), and `tool_names` (list of post-enforcement-filter exposed
   tool names).
-- `tela_list_profiles` input: empty object `{}`
-- extra input keys are invalid; builtin list tools fail closed on non-empty argument payloads
 - `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
   `profile_id` (str), `capabilities` (dict of family→posture string), and
   `default` (bool).
@@ -102,6 +104,11 @@ completes; endpoint discoverability does not imply readiness.
   Python `repr(...)`/stringified approximation.
 - more than one `default: true` entry is invalid and must fail closed with
   `INVALID_DEFAULT_PROFILE_STATE`
+- **Provider listing visibility:** Tools are filtered by the calling
+  connection's bound `profile_id`; no cross-profile visibility
+- **Audit attribution:** Builtin tool calls are attributed to the caller's
+  `profile_id`
+- **Regression coverage:** `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`, `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`
 - Therefore docs, tests, and runtime work must not claim any additional dotted
   MCP surface names beyond the two canonical builtin list tools.
 

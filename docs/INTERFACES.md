@@ -106,12 +106,15 @@ Supported modes:
 In token mode, a CapabilityToken binds the connection to one canonical tela
 profile identity via `profile_id`.
 
-Canonical token validation follows `../opifex/contracts/capability_token.schema.json`:
+**Canonical token validation** follows `../opifex/contracts/capability_token.schema.json`:
 - `token_id` must match `^tok_`
-- `token_version` must equal `0.1.0`
+- `token_version` must equal `0.1.0` (**explicit and required**; no default, no fallback)
 - `issued_at` and `expires_at` must be RFC3339/JSON-schema `date-time` strings with timezone
 - `max_depth`, when present, must be an integer `>= 0`
 - legacy alias fields are rejected fail-closed with local code `TOKEN_ALIAS_FIELD_PRESENT` and an initialize audit log record
+
+At admission, `token_version` is validated explicitly; absence or mismatch results
+in `TOKEN_SCHEMA_INVALID`.
 
 ### 3.4 Audit
 
@@ -161,8 +164,12 @@ according to gateway configuration.
 
 At connection establishment, tela binds the session to exactly one profile.
 
-In token mode, the binding comes from the token `profile_id`.
+In token mode, the binding comes from the token's `profile_id`.
 In open mode, the binding comes from one explicit local default profile.
+
+**Canonical binding identity:** The `profile_id` field is the sole canonical
+identity for profile admission and audit attribution. No alternate binding
+vocabulary exists at shared boundaries.
 
 ### 6.2 Per-call authorization
 
@@ -202,12 +209,18 @@ as conflicts.
 
 | Surface | Kind | Access method | Status |
 |---------|------|---------------|--------|
-| `tela_list_profiles` | MCP tool | `tools/call` with `{}` | Built-in |
-| `tela_list_providers` | MCP tool | `tools/call` with `{}` | Built-in |
+| `tela_list_profiles` | MCP tool | `tools/call` with `{}` | Built-in; requires admitted session |
+| `tela_list_providers` | MCP tool | `tools/call` with `{}` | Built-in; requires admitted session |
 | `tela profiles` | CLI/HTTP | `tela profiles` or `GET /status` | Operator-only (not MCP built-in) |
 | `tela status` | CLI/HTTP | `tela status` or `GET /status` | Operator-only (not MCP built-in) |
 | `tela connections` | CLI/HTTP | `tela connections` or via `/status` | Operator-only (not MCP built-in) |
 | `tela audit` | CLI/HTTP | `tela audit` or via `/status` | Operator-only (not MCP built-in) |
+
+**Canonical builtin semantics:**
+- Built-in MCP tools (`tela_list_profiles`, `tela_list_providers`) require an **admitted session/connection** at call time
+- Input is strictly `{}` (empty object); additional properties are rejected
+- Provider listing visibility is filtered by the **calling connection's bound profile**
+- Audit attribution for builtin tool calls uses the caller's `profile_id`
 
 ### 7.2 HTTP Endpoints
 
@@ -426,7 +439,7 @@ MCP-level profile binding via CapabilityToken).
 
 ### `tela_list_profiles` Built-in Tool
 
-`access: tools/call` with empty input `{}`.
+`access: tools/call` with an admitted session/connection and exact empty input `{}`.
 
 Canonical payload shape:
 
@@ -443,8 +456,8 @@ Canonical payload shape:
 ]
 ```
 
-`profile_id` is the stable registry identity that canonical token issuance and
-verification bind.
+`profile_id` is the canonical admission and shared-surface identity that token
+issuance, verification, and builtin audit attribution bind.
 
 The MCP tool result carries the exact canonical JSON array as `application/json`
 content; tela does not emit Python `repr(...)` approximations for this surface.
@@ -452,6 +465,15 @@ content; tela does not emit Python `repr(...)` approximations for this surface.
 At most one entry may carry `default: true`. If multiple configured profiles do
 so, tela rejects the shared profile-list surface with
 `INVALID_DEFAULT_PROFILE_STATE` instead of emitting an invalid payload.
+
+Canonical builtin rule set for both `tela_list_profiles` and
+`tela_list_providers`:
+
+- calls require a live admitted session/connection; there is no builtin-session bypass
+- arguments must be exactly `{}`; `null`, omitted payloads, or extra keys are rejected with `INVALID_TOOL_INPUT`
+- provider visibility binds to the calling connection's admitted `profile_id`
+- builtin audit attribution binds to the calling connection's admitted `profile_id`
+- regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`
 
 ### 7.3 Session and Notification Forwarding
 
