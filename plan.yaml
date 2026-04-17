@@ -73266,7 +73266,7 @@ phases:
       \ declaring the current worktree fully closed"
 - id: canonical_gateway_state
   name: Canonical Gateway State Closeout
-  status: pending
+  status: in_progress
   gate: Open only when gateway admission, builtin dispatch, provider truth, audit
     attribution, denial vocabulary, and docs/spec tests all converge on the fully
     canonical profile_id/token/session model with fail-closed behavior and no compatibility
@@ -73276,7 +73276,7 @@ phases:
   steps:
   - id: canonical_gateway_state.token_admission_exactness
     name: Enforce explicit token_version at token admission
-    status: pending
+    status: claimed
     description: 'Implement and verify the token admission hard-cut in the actual
       initialize/admission path.
 
@@ -73417,6 +73417,8 @@ phases:
 
       - explicit token_version path still admits correctly'
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-17T20:28:16.848742+00:00'
   - id: canonical_gateway_state.builtin_call_admission_exactness
     name: Route builtin tools through canonical session admission and exact empty-args
       validation
