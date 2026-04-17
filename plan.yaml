@@ -73273,3 +73273,147 @@ phases:
     shims.
   depends_on:
   - fresh_review_true_zero
+  steps:
+  - id: canonical_gateway_state.token_admission_exactness
+    name: Enforce explicit token_version at token admission
+    status: pending
+    description: 'Implement and verify the token admission hard-cut in the actual
+      initialize/admission path.
+
+
+      Scope:
+
+      - src/tela/shell/upstream.py
+
+      - src/tela/core/models.py only if needed to remove default-smuggling from CapabilityToken
+      validation
+
+      - tests/integration/test_token_mode_initialize.py
+
+      - tests/core/test_models.py and/or tests/core/test_token.py
+
+
+      Required behavior:
+
+      - `capability_token.token_version` is REQUIRED at admission; missing field must
+      fail closed before any connection is admitted.
+
+      - No default smuggling: admission must not accept tokens that omit `token_version`
+      because a model default or helper inserts it implicitly.
+
+      - Preserve canonical token contract only; add NO compatibility layer and NO
+      fallback alias.
+
+
+      Implementation constraints:
+
+      - Keep the public token shape canonical (`profile_id`, `token_version`, snake_case
+      fields).
+
+      - If the model currently defaults `token_version`, remove that default from
+      the admission path instead of compensating later.
+
+      - Add focused property-based or contract-strength coverage for token payload
+      exactness; pure one-example proof is insufficient.
+
+
+      Required expected-red before code changes:
+
+      - A targeted test proving initialize/admission currently accepts or can be made
+      to accept a token payload missing `token_version`, then fail it.
+
+
+      Completion criteria:
+
+      - Missing `token_version` is rejected during initialize/admission.
+
+      - No admitted connection is created from a payload missing `token_version`.
+
+      - Existing canonical signed-token flow with explicit `token_version` still works.'
+    verification: '- Expected-red proof shows a missing-token_version admission path
+      fails only after the new test is added.
+
+      - Green proof shows explicit-token_version admission succeeds while missing-token_version
+      fails closed.
+
+      - `uv run invar guard --all` passes for changed files or the authoritative guard
+      slice used by the executor.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Added/updated tests/contracts:
+
+      - Exact command run before implementation:
+
+      ```bash
+
+      uv run pytest tests/integration/test_token_mode_initialize.py tests/core/test_token.py
+      -q
+
+      ```
+
+      - Failing output proving missing `token_version` is not yet enforced:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause:
+
+      - Symptom:
+
+      - Why this closes the admission seam instead of patching a later layer:
+
+
+      ## Green Proof
+
+      - Exact command run after implementation:
+
+      ```bash
+
+      uv run pytest tests/integration/test_token_mode_initialize.py tests/core/test_token.py
+      -q
+
+      ```
+
+      - Passing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+      - Guard command/output:
+
+      ```bash
+
+      uv run invar guard --all
+
+      ```
+
+
+      ## Files Changed
+
+      - <path> — why
+
+
+      ## Required Assertions Closed
+
+      - missing token_version rejected at admission
+
+      - no default smuggling remains
+
+      - explicit token_version path still admits correctly'
+    agent: python-senior-tacit
