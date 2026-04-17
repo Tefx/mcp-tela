@@ -73917,7 +73917,7 @@ phases:
       - Deny metadata keys and classification were unchanged."
   - id: canonical_gateway_state.docs_and_regression_sync
     name: Sync docs and regression inventory to final canonical builtin/shared semantics
-    status: pending
+    status: claimed
     description: 'Update docs and any remaining regression inventory so the final
       canonical builtin/shared semantics are explicit and test-backed.
 
@@ -73971,6 +73971,8 @@ phases:
     depends_on:
     - canonical_gateway_state.family_denial_canonical_profile_id
     agent: doc-reviewer-tacit
+    claimed_by: doc-reviewer-tacit
+    claimed_at: '2026-04-17T21:02:42.206782+00:00'
   - id: canonical_gateway_state.verify
     name: Independent verification of canonical gateway state closeout
     status: pending
