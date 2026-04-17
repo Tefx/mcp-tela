@@ -416,7 +416,7 @@ Both layers are independent and apply simultaneously:
 Canonical contract note:
 
 - `../opifex` owns the shared CapabilityToken and `_meta` contracts
-- token-mode binding uses canonical `profile_id`, not `profile_name` or `tools_profile`
+- token-mode binding uses canonical `profile_id`; legacy shared token aliases are rejected fail-closed
 - `tela` is the verifier/enforcer and audit sink for those shared surfaces, not a second contract authority
 
 ## Ownership Rules

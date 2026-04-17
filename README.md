@@ -20,8 +20,8 @@ In composed deployments, `../opifex` is the canonical authority for shared
 CapabilityToken, `_meta`, and shared error semantics.
 
 - shared token binding identity is `profile_id`
-- `tools_profile` is not canonical shared vocabulary
-- `profile_name`, if shown locally, is a display label only
+- legacy token alias fields are not canonical shared vocabulary
+- shared/profile-binding docs use `profile_id` only
 - `_meta.trace_id` and related canonical `_meta` fields are audit carriers;
   tela records them and strips `_meta` before forwarding downstream
 

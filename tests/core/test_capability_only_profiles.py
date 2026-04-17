@@ -41,6 +41,31 @@ class TestCapabilitiesOnly:
         with pytest.raises(ValidationError):
             ProfileConfig(name="dev", tools={"filesystem": Posture.READ_WRITE})  # type: ignore[call-arg]
 
+    @pytest.mark.parametrize(
+        ("posture_text", "expected"),
+        [
+            ("none", Posture.NONE),
+            ("read_only", Posture.READ_ONLY),
+            ("read_write", Posture.READ_WRITE),
+            ("destructive", Posture.DESTRUCTIVE),
+        ],
+    )
+    def test_profile_config_accepts_canonical_posture_strings(
+        self, posture_text: str, expected: Posture
+    ) -> None:
+        """Canonical posture strings must remain usable on the local config surface."""
+        p = ProfileConfig.model_validate(
+            {"name": "dev", "capabilities": {"filesystem": posture_text}}
+        )
+        assert p.capabilities["filesystem"] == expected
+
+    def test_profile_config_rejects_noncanonical_posture_strings(self) -> None:
+        """Only canonical posture strings are accepted for capabilities."""
+        with pytest.raises(ValidationError):
+            ProfileConfig.model_validate(
+                {"name": "dev", "capabilities": {"filesystem": "readonly"}}
+            )
+
 
 # ==============================================================================
 # (b) capabilities= is canonical in serialized output
@@ -70,6 +95,27 @@ class TestCanonicalOutput:
         json_data = p.model_dump(mode="json")
         assert "capabilities" in json_data
         assert json_data["capabilities"]["filesystem"] == "read_write"
+
+    def test_parse_config_accepts_canonical_capabilities_yaml_strings(self) -> None:
+        """parse_config must accept canonical posture strings from YAML/object input."""
+        config = parse_config(
+            {
+                "profiles": {
+                    "dev": {
+                        "capabilities": {
+                            "filesystem": "read_only",
+                            "git": "read_write",
+                        }
+                    }
+                },
+                "auth": {"mode": "open"},
+            },
+            {},
+        )
+        assert config.profiles["dev"].capabilities == {
+            "filesystem": Posture.READ_ONLY,
+            "git": Posture.READ_WRITE,
+        }
 
 
 # ==============================================================================

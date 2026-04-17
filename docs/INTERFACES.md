@@ -111,7 +111,7 @@ Canonical token validation follows `../opifex/contracts/capability_token.schema.
 - `token_version` must equal `0.1.0`
 - `issued_at` and `expires_at` must be RFC3339/JSON-schema `date-time` strings with timezone
 - `max_depth`, when present, must be an integer `>= 0`
-- `profile_name` and `tools_profile` are rejected fail-closed with local code `TOKEN_ALIAS_FIELD_PRESENT` and an initialize audit log record
+- legacy alias fields are rejected fail-closed with local code `TOKEN_ALIAS_FIELD_PRESENT` and an initialize audit log record
 
 ### 3.4 Audit
 
@@ -125,8 +125,8 @@ Each `AuditEntry` includes:
 - `latency_ms`, `param_hash` (L2+), `request_content`/`response_content` (L3)
 - `meta` (trace fields from `_meta` argument)
 
-If a repo-local `profile_name` is present in operator-facing output, it is a
-display label only and not the canonical authorization identity.
+Operator-facing output uses the canonical bound identity `profile_id`; this
+interface does not define any alternate shared profile-binding field.
 
 `instance_id` is generated per `tela serve` invocation and identifies the
 server instance that produced each entry.
@@ -770,7 +770,7 @@ as a `TelaError` via MCP error semantics:
 
 | Denial reason | `denied_by` | `error_code` | Message template |
 |--------------|-------------|--------------|------------------|
-| Family not in profile capabilities | `family_admission` | `AUTHZ_DENY` | `"Family '{family}' is not admitted by profile '{profile_name}'"` |
+| Family not in profile capabilities | `family_admission` | `AUTHZ_DENY` | `"Family '{family}' is not admitted by profile '{profile_id}'"` |
 | Tool explicitly denied by override | `tool_override` | `AUTHZ_DENY` | `"Tool '{tool_name}' explicitly denied by profile override"` |
 | Posture exceeds family ceiling | `posture_ceiling` | `AUTHZ_DENY` | `"Tool posture {posture} exceeds ceiling {ceiling}"` |
 | Unclassified tool with `default_posture=none` | `posture_ceiling` | `TOOL_UNCLASSIFIED` | `"Tool is unclassified and server default_posture is NONE"` |
@@ -779,8 +779,8 @@ The enforcement result is wrapped in a `TelaError(code=..., message=...)` and
 raised as a `RuntimeError` by the upstream MCP handler. The MCP framework
 serializes this as a standard MCP error response.
 
-In these operator-facing message templates, `profile_name` is local display
-vocabulary only. The canonical shared binding identity remains `profile_id`.
+These operator-facing message templates report the canonical bound identity
+using `profile_id`.
 
 ### Missing/invalid bearer token (HTTP)
 
@@ -928,7 +928,7 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `OPEN_MODE_DEFAULT_PROFILE_MISSING` | Startup | Open mode with no default profile |
 | `OPEN_MODE_DEFAULT_PROFILE_AMBIGUOUS` | Startup | Multiple profiles marked `default: true` |
 | `INVALID_DEFAULT_PROFILE_STATE` | MCP | Shared profile-list payload would contain multiple `default: true` entries |
-| `TOKEN_ALIAS_FIELD_PRESENT` | MCP | `profile_name` or `tools_profile` appeared on shared token surfaces |
+| `TOKEN_ALIAS_FIELD_PRESENT` | MCP | A legacy alias field appeared on shared token surfaces |
 | `TOKEN_SCHEMA_INVALID` | MCP | CapabilityToken failed canonical schema validation |
 | `TOKEN_INVALID` | MCP | CapabilityToken HMAC validation failed |
 | `TOKEN_EXPIRED` | MCP | CapabilityToken past expiry |

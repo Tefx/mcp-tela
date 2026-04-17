@@ -41,6 +41,7 @@ DESIGN_DOC = PROJECT_ROOT / "docs" / "DESIGN.md"
 AGENT_INTERFACE_DOC = PROJECT_ROOT / "docs" / "AGENT_INTERFACE.md"
 INTERFACES_DOC = PROJECT_ROOT / "docs" / "INTERFACES.md"
 USAGE_DOC = PROJECT_ROOT / "docs" / "USAGE.md"
+README_DOC = PROJECT_ROOT / "README.md"
 SURFACE_VERIFICATION_ARTIFACT = (
     PROJECT_ROOT / "evidence" / "surface_taxonomy_verification.md"
 )
@@ -65,6 +66,10 @@ def _read_agent_interface_doc() -> str:
 
 def _read_usage_doc() -> str:
     return USAGE_DOC.read_text(encoding="utf-8")
+
+
+def _read_readme_doc() -> str:
+    return README_DOC.read_text(encoding="utf-8")
 
 
 def _read_interfaces_doc() -> str:
@@ -141,6 +146,8 @@ class TestCanonicalSurfaceMatrix:
         gateway_source = _read_gateway_source()
         assert "tela://profiles" not in gateway_source
         assert "_register_profiles_resource" not in gateway_source
+        assert "tela.profiles" not in _read_contract_text()
+        assert "tela.profiles" not in _read_agent_interface_doc()
 
     def test_tela_status_is_absent_as_mcp_surface(self) -> None:
         """tela.status must NOT be claimed as current MCP tool or resource."""
@@ -258,12 +265,31 @@ class TestNoCurrentBuiltinTelaTools:
         builtin tool. This test ensures we never accidentally re-register it.
         """
         gateway_source = _read_gateway_source()
-        assert _contract_kind("tela.profiles") == "absent"
         assert '@upstream_server.tool("tela.profiles")' not in gateway_source
         assert (
             "@upstream_server.resource" not in gateway_source
             or "tela.profiles" not in gateway_source
         )
+
+    def test_primary_docs_do_not_teach_legacy_profile_surface_or_alias_fields(
+        self,
+    ) -> None:
+        """Repo-facing docs must not teach removed surface or alias vocabulary."""
+        primary_docs = {
+            "README.md": _read_readme_doc(),
+            "docs/CONFIRMED-SURFACE-CONTRACT.md": _read_contract_text(),
+            "docs/INTERFACES.md": _read_interfaces_doc(),
+            "docs/USAGE.md": _read_usage_doc(),
+            "docs/DESIGN.md": _read_design_doc(),
+            "docs/AGENT_INTERFACE.md": _read_agent_interface_doc(),
+        }
+
+        for doc_name, text in primary_docs.items():
+            assert "tela.profiles" not in text, (
+                f"{doc_name} still teaches tela.profiles"
+            )
+            assert "profile_name" not in text, f"{doc_name} still teaches profile_name"
+            assert "`tools`" not in text, f"{doc_name} still teaches tools alias"
 
 
 # =============================================================================

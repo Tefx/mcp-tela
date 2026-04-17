@@ -283,8 +283,8 @@ auth:
 Use token mode for shared or production deployments.
 
 Canonical note: in composed deployments, the shared token contract is owned by
-`../opifex`. The canonical binding identity is `profile_id`. Any local
-`profile_name` shown by `tela` is display vocabulary only.
+`../opifex`. The canonical binding identity is `profile_id`, and shared token
+surfaces do not define any alternate binding field.
 
 Note: The gateway also auto-generates a per-instance bearer token on every
 startup and stores it in the lockfile. When `tela serve` is started manually,

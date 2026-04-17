@@ -21,7 +21,7 @@ The following surfaces are **operator-only** and accessible via CLI/HTTP. They a
 
 | Surface | Kind | Access Method |
 |---------|------|---------------|
-| `tela profiles` | CLI/HTTP | `tela profiles` command or via `GET /status` (distinct from MCP resource name `tela.profiles`) |
+| `tela profiles` | CLI/HTTP | `tela profiles` command or via `GET /status`; not an MCP resource |
 | `tela status` | CLI/HTTP | `tela status` command or `GET /status` endpoint |
 | `tela connections` | CLI/HTTP | `tela connections` command or via `GET /status` |
 | `tela audit` | CLI/HTTP | `tela audit` command or via `GET /status` |

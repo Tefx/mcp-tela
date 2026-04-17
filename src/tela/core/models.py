@@ -205,7 +205,7 @@ class ProfileConfig(BaseModel):
         <Posture.READ_ONLY: 'read_only'>
     """
 
-    model_config = {"extra": "forbid", "strict": True}
+    model_config = {"extra": "forbid"}
 
     name: str
     capabilities: dict[str, Posture] = Field(default_factory=dict)
