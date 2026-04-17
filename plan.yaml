@@ -73828,3 +73828,106 @@ phases:
     depends_on:
     - canonical_gateway_state.family_denial_canonical_profile_id
     agent: doc-reviewer-tacit
+  - id: canonical_gateway_state.verify
+    name: Independent verification of canonical gateway state closeout
+    status: pending
+    description: 'As an INDEPENDENT TESTER (integration-verifier-tacit), validate
+      the canonical gateway-state closeout from a fresh perspective.
+
+
+      Your goal is to find remaining non-canonical behavior, not to confirm success.
+
+
+      Must verify these exact cases through the real runtime/test path:
+
+      - missing `token_version`
+
+      - builtin tools/call without admitted session
+
+      - provider listing under token-bound profile
+
+      - builtin arg exactness (`{}` only; reject null / non-object / extra args)
+
+      - audit attribution correctness under multiple live connections
+
+      - family-admission/denial messages use canonical `profile_id`
+
+
+      Protects downstream gate: canonical_gateway_state.gate.
+
+      Use fresh execution evidence; do not rely on implementation-step summaries.'
+    verification: '- Run the focused regression suite for all six required behaviors
+      and report actual outputs.
+
+      - Run `uv run invar guard --all` or authoritative equivalent used by the repo.
+
+      - PASS only if all required behaviors are proven canonical and docs/test wording
+      matches the runtime behavior.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit
+
+      **Scope**: canonical gateway state closeout
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Test Execution
+
+      ```bash
+
+      uv run pytest tests/integration/test_token_mode_initialize.py tests/shell/test_gateway.py
+      tests/shell/test_builtin_tools.py tests/shell/test_upstream.py tests/shell/test_audit.py
+      -q
+
+      uv run invar guard --all
+
+      ```
+
+
+      ### Required Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | token_version_required | missing token_version is rejected at admission |
+      failing/passing initialize-path test | <ref> | PROVEN/UNPROVEN | <path> | <basis>
+      |
+
+      | builtin_session_admission | builtin tools/call without admitted session fails
+      closed | runtime call_tool proof | <ref> | PROVEN/UNPROVEN | <path> | <basis>
+      |
+
+      | provider_binding_truth | tela_list_providers follows calling connection profile
+      | token-bound provider-list proof | <ref> | PROVEN/UNPROVEN | <path> | <basis>
+      |
+
+      | builtin_arg_exactness | builtin args accept `{}` only | null/non-object/extra-arg
+      proof | <ref> | PROVEN/UNPROVEN | <path> | <basis> |
+
+      | audit_attribution_truth | builtin audit attribution binds to calling connection
+      | multi-connection audit proof | <ref> | PROVEN/UNPROVEN | <path> | <basis>
+      |
+
+      | family_denial_vocab | denial messages use canonical profile_id | denial text
+      proof | <ref> | PROVEN/UNPROVEN | <path> | <basis> |
+
+
+      ### Headline
+
+      - PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - canonical_gateway_state.token_admission_exactness
+    - canonical_gateway_state.builtin_call_admission_exactness
+    - canonical_gateway_state.provider_binding_and_audit_attribution
+    - canonical_gateway_state.family_denial_canonical_profile_id
+    - canonical_gateway_state.docs_and_regression_sync
+    agent: integration-verifier-tacit
