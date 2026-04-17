@@ -193,7 +193,7 @@ The upstream MCP surface exposes:
 
 ### 7.1 MCP Resources
 
-There are currently no built-in MCP resources in the `tela.*` namespace.
+There are currently no built-in MCP resources.
 
 The `tela.` prefix is reserved. Downstream tools with this prefix are rejected
 as conflicts.

@@ -6,9 +6,12 @@ import ast
 import inspect
 
 from tela.core.models import (
+    AuthConfig,
+    AuthMode,
     ConnectRequest,
     ConnectionContext,
     DisconnectRequest,
+    ProfileConfig,
     TelaConfig,
 )
 from tela.shell import http_routes
@@ -229,11 +232,15 @@ class TestHandleConnect:
             req = ConnectRequest(connection_id="test-conn-ready")
             result = http_routes.handle_connect("valid", "valid", req)
             assert result.is_ok, f"Expected ok but got: {result.error}"
+            assert result.value is not None
+            assert "profile_id" not in result.value
         finally:
             set_runtime_config(None)
             set_runtime_running(False)
 
-    def test_handle_connect_registers_connection(self) -> None:
+    def test_handle_connect_registers_pending_bridge_without_runtime_binding(
+        self,
+    ) -> None:
         set_runtime_config(TelaConfig())
         set_runtime_running(True)
         clear_runtime_connections()
@@ -245,7 +252,70 @@ class TestHandleConnect:
             assert result.value is not None
             assert result.value["connection_id"] == "test-conn-123"
             assert result.value["status"] == "connected"
-            assert len(get_runtime_connections_snapshot().value) == 1
+            assert "profile_id" not in result.value
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            assert len(snapshot.value) == 0
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+            clear_runtime_connections()
+
+    def test_handle_connect_token_mode_does_not_fabricate_profile_binding(self) -> None:
+        """Token-mode /connect must not fabricate a bound profile or connection."""
+        set_runtime_config(
+            TelaConfig(
+                auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
+                profiles={"dev": ProfileConfig(name="dev", default=True)},
+                resolved_default_profile="dev",
+            )
+        )
+        set_runtime_running(True)
+        clear_runtime_connections()
+
+        try:
+            req = ConnectRequest(connection_id="token-bridge-123")
+            result = http_routes.handle_connect("valid", "valid", req)
+            assert result.is_ok
+            assert result.value is not None
+            assert result.value == {
+                "connection_id": "token-bridge-123",
+                "status": "connected",
+            }
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            assert len(snapshot.value) == 0
+        finally:
+            set_runtime_config(None)
+            set_runtime_running(False)
+            clear_runtime_connections()
+
+    def test_handle_disconnect_succeeds_for_pending_bridge_registration(self) -> None:
+        """Pending bridge registrations must be removable before initialize."""
+        set_runtime_config(TelaConfig())
+        set_runtime_running(True)
+        clear_runtime_connections()
+
+        try:
+            req = ConnectRequest(connection_id="pending-only-conn")
+            connect_result = http_routes.handle_connect("valid", "valid", req)
+            assert connect_result.is_ok
+
+            disconnect_result = http_routes.handle_disconnect(
+                "valid",
+                "valid",
+                DisconnectRequest(connection_id="pending-only-conn"),
+            )
+            assert disconnect_result.is_ok
+            assert disconnect_result.value is not None
+            assert disconnect_result.value["connection_id"] == "pending-only-conn"
+            assert disconnect_result.value["status"] == "disconnected"
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            assert len(snapshot.value) == 0
         finally:
             set_runtime_config(None)
             set_runtime_running(False)
@@ -287,7 +357,10 @@ class TestHandleDisconnect:
             assert result.value is not None
             assert result.value["connection_id"] == "remove-me"
             assert result.value["status"] == "disconnected"
-            assert len(get_runtime_connections_snapshot().value) == 0
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value is not None
+            assert len(snapshot.value) == 0
         finally:
             set_runtime_config(None)
             set_runtime_running(False)
@@ -321,6 +394,7 @@ class TestHandleDisconnect:
                 value=ConnectionCleanupOutcome(
                     connection_id=connection_id,
                     removed_runtime_connection=True,
+                    removed_bridge_registration=False,
                 )
             )
 

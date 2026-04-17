@@ -27,16 +27,18 @@ import tempfile
 import time
 from pathlib import Path
 
+import pytest
+
 # Test configuration
 TELA_REPO = Path(__file__).parent.parent.parent
 GATEWAY_LOCKFILE = Path.home() / ".tela" / "gateway.lock"
 
 
-def _write_test_config(tmp_dir: str, profile_name: str = "test_profile") -> str:
+def _write_test_config(tmp_dir: str, profile_id: str = "test_profile") -> str:
     """Write a minimal open-mode config with a default profile."""
     config = {
         "profiles": {
-            profile_name: {
+            profile_id: {
                 "default": True,
             },
         },
@@ -133,6 +135,8 @@ def test_status_schema_fields():
     print("\n=== Test: Status Schema ===")
 
     code, stdout, stderr = _run_tela(["status", "--json"])
+    if code != 0 and "NO_RUNNING_SERVER" in stderr:
+        pytest.skip("No running gateway available for black-box status schema probe")
     assert code == 0, f"status --json failed: {stderr}"
 
     try:
@@ -176,6 +180,10 @@ def test_connections_schema_fields():
     print("\n=== Test: Connections Schema ===")
 
     code, stdout, stderr = _run_tela(["connections", "--json"])
+    if code != 0 and "NO_RUNNING_SERVER" in stderr:
+        pytest.skip(
+            "No running gateway available for black-box connections schema probe"
+        )
     assert code == 0, f"connections --json failed: {stderr}"
 
     try:

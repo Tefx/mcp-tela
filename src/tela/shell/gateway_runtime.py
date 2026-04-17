@@ -164,6 +164,7 @@ class GatewayRuntime:
     upstream_server: FastMCP | None = None
     expected_bearer_token: str | None = None
     secrets: list[str] = field(default_factory=list)
+    pending_bridge_registrations: set[str] = field(default_factory=set)
     # Session registry: connection_id -> UpstreamSession
     session_registry: dict[str, UpstreamSession] = field(default_factory=dict)
     # Connection reaper instance (lifecycle managed via locked accessors)
@@ -342,7 +343,7 @@ def set_runtime_running(running: bool) -> None:
 
 
 def clear_runtime_connections() -> None:
-    """Remove all connections from the runtime under lock.
+    """Remove all connections and pending bridge registrations under lock.
 
     Examples:
         >>> clear_runtime_connections()
@@ -351,6 +352,50 @@ def clear_runtime_connections() -> None:
     """
     with _runtime_lock:
         _runtime.connections.clear()
+        _runtime.pending_bridge_registrations.clear()
+
+
+def register_bridge_connection(connection_id: str) -> Result[None, str]:
+    """Register a bridge connection identifier before MCP initialize.
+
+    The bridge lifecycle uses ``POST /connect`` to reserve a connection ID.
+    Canonical profile binding still occurs later at MCP initialize.
+    """
+
+    if not connection_id:
+        return Result(
+            error="BRIDGE_REGISTRATION_FAILED: connection_id must not be empty"
+        )
+    with _runtime_lock:
+        _runtime.pending_bridge_registrations.add(connection_id)
+    return Result(value=None)
+
+
+def has_bridge_registration(connection_id: str) -> Result[bool, str]:
+    """Return whether a bridge connection identifier has been registered."""
+
+    if not connection_id:
+        return Result(
+            error="BRIDGE_REGISTRATION_LOOKUP_FAILED: connection_id must not be empty"
+        )
+    with _runtime_lock:
+        return Result(value=connection_id in _runtime.pending_bridge_registrations)
+
+
+def remove_bridge_registration(connection_id: str) -> Result[bool, str]:
+    """Remove a registered bridge connection identifier.
+
+    Returns True when a pending bridge registration existed for the ID.
+    """
+
+    if not connection_id:
+        return Result(
+            error="BRIDGE_REGISTRATION_REMOVE_FAILED: connection_id must not be empty"
+        )
+    with _runtime_lock:
+        existed = connection_id in _runtime.pending_bridge_registrations
+        _runtime.pending_bridge_registrations.discard(connection_id)
+    return Result(value=existed)
 
 
 def increment_tool_calls() -> None:

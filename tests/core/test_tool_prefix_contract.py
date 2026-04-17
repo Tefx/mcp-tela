@@ -330,11 +330,10 @@ def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
 def test_tela_prefix_dot_is_reserved_and_rejected() -> None:
     """tool_prefix="tela." is reserved and must be rejected at model level.
 
-    The "tela." prefix is used for built-in MCP surfaces (tela_list_providers,
-    tela_list_profiles, etc.) per INTERFACES.md §7.1.
+    The reserved dotted tela prefix is used only for tela-owned surface names.
 
     Ref: ServerConfig.tool_prefix contract (models.py line 100)
-    Ref: INTERFACES.md §7.1 (tela.* prefix is reserved for built-in surfaces)
+    Ref: INTERFACES.md §7.1 (reserved dotted tela prefix)
     Ref: USAGE.md §Tool Prefix Configuration line 126
     """
     from pydantic import ValidationError

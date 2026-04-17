@@ -26,8 +26,10 @@ from tela.core.models import (
 )
 from tela.core.token import compute_signature
 from tela.shell.gateway_runtime import (
+    add_runtime_connection,
     clear_runtime_connections,
     get_runtime_connections_snapshot,
+    register_bridge_connection,
     set_runtime_config,
     set_runtime_secrets,
 )
@@ -696,6 +698,101 @@ def test_handle_initialize_token_mode_bridge_connection_id_is_none() -> None:
     finally:
         set_runtime_config(None)
         set_runtime_secrets([])
+
+
+def test_handle_initialize_token_mode_bridge_uses_canonical_token_validation() -> None:
+    """Bridge initialize in token mode must validate token and bind to token profile."""
+    secret = "bridge-secret"
+    signed_token = _sign_token(_make_valid_token_fields(profile="production"), secret)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+                "production": ProfileConfig(name="production"),
+            },
+            resolved_default_profile="dev",
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+    registration_result = register_bridge_connection("bridge_token_1")
+    assert registration_result.is_ok
+
+    async def _run() -> None:
+        result = await handle_initialize(
+            _wrap_client_info(
+                signed_token,
+                tela_bridge_connection_id="bridge_token_1",
+            )
+        )
+        assert result.is_ok
+        assert result.value is not None
+        assert result.value.connection_id == "bridge_token_1"
+        assert result.value.bridge_connection_id == "bridge_token_1"
+        assert result.value.profile_id == "production"
+        assert result.value.init_mode == AuthMode.TOKEN
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+        clear_runtime_connections()
+
+
+def test_handle_initialize_token_mode_bridge_invalid_token_cannot_reuse_stale_binding() -> (
+    None
+):
+    """Invalid bridge initialize must not inherit a stale runtime profile binding."""
+    secret = "bridge-secret"
+    stale_connection = ConnectionContext(
+        connection_id="bridge_token_2",
+        profile_id="dev",
+        connected_at="2026-01-01T00:00:00Z",
+        init_mode=AuthMode.OPEN,
+        bridge_connection_id="bridge_token_2",
+    )
+    invalid_token = _sign_token(_make_valid_token_fields(profile="production"), secret)
+    invalid_token["signature"] = "bad-signature"
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+                "production": ProfileConfig(name="production"),
+            },
+            resolved_default_profile="dev",
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+    add_runtime_connection(stale_connection)
+    registration_result = register_bridge_connection("bridge_token_2")
+    assert registration_result.is_ok
+
+    async def _run() -> None:
+        result = await handle_initialize(
+            _wrap_client_info(
+                invalid_token,
+                tela_bridge_connection_id="bridge_token_2",
+            )
+        )
+        assert result.is_err
+        assert result.error is not None
+        assert "INITIALIZE_REJECTED" in result.error
+        snapshot = get_runtime_connections_snapshot()
+        assert snapshot.is_ok
+        assert snapshot.value == []
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+        clear_runtime_connections()
 
 
 def test_handle_initialize_open_mode_records_init_mode() -> None:

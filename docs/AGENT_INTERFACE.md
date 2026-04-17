@@ -32,11 +32,12 @@ The following surfaces are **operator-only** and accessible via CLI/HTTP. They a
 
 ### 3.1 MCP Resources (Read-Only)
 
-There are currently no built-in MCP resources in the `tela.*` namespace. Profile information is available via the `tela_list_profiles` built-in tool.
+There are currently no built-in MCP resources. Profile information is available
+via the `tela_list_profiles` built-in tool.
 
 ### 3.2 MCP Tools
 
-tela exposes two built-in MCP tools under the `tela.*` namespace:
+tela exposes exactly two built-in MCP tools:
 
 - `tela_list_providers` — returns a list of configured servers and their runtime status
   - **Input:** empty object `{}`
@@ -131,7 +132,7 @@ bare `503` status alone.
 ## 7. Invariants
 
 - `tela_list_profiles` is the **canonical built-in MCP tool** for listing profiles (not a resource)
-- `tela_list_providers` and `tela_list_profiles` are the only built-in `tela.*` MCP tools
+- `tela_list_providers` and `tela_list_profiles` are the only built-in MCP tools provided by tela itself
 - `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
 - `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice
 - `POST /mcp` warming rejection uses `ADMISSION_REJECTED_WARMING` plus explicit machine-readable transient retry authorization
@@ -144,4 +145,4 @@ bare `503` status alone.
 - explicit non-goal: no `shutting_down` expansion in this slice
 - lockfile discovery is not readiness truth
 - Gateway instructions are emitted first; downstream sections are append-only
-- The `tela.` prefix is reserved for built-in surfaces
+- The reserved tela-owned prefixes remain unavailable to downstream tool prefixes

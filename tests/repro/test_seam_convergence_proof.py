@@ -33,13 +33,13 @@ pytestmark = pytest.mark.runtime_liveness
 
 def _write_test_config(
     tmp_dir: str,
-    profile_name: str = "test_profile",
+    profile_id: str = "test_profile",
     include_server: bool = False,
 ) -> str:
     """Write a minimal open-mode config for testing."""
     config: dict = {
         "profiles": {
-            profile_name: {
+            profile_id: {
                 "capabilities": {
                     "filesystem": "read_only",
                 },
@@ -628,7 +628,8 @@ def test_attach_succeeds_before_full_convergence_real_path():
                     f"stderr={stderr[:500]}"
                 )
 
-            # P5: Verify connection registered
+            # P5: Verify the bridge stays alive without fabricating an active
+            # connection before MCP initialize.
             status_result = subprocess.run(
                 [sys.executable, "-m", "tela", "status", "--json"],
                 capture_output=True,
@@ -644,11 +645,14 @@ def test_attach_succeeds_before_full_convergence_real_path():
                 f"  P5_EVIDENCE: active_connections={active_connections} during warming"
             )
 
-            assert active_connections >= 1, (
-                f"P5_FAIL: connect did not register (active_connections={active_connections})"
+            assert active_connections == 0, (
+                f"P5_FAIL: connect fabricated an active binding before initialize "
+                f"(active_connections={active_connections})"
             )
 
-            print("  P5_PASS: attach succeeded during warming, connection registered")
+            print(
+                "  P5_PASS: attach succeeded during warming without fabricated binding"
+            )
 
             # Cleanup
             connect_proc.stdin.close()

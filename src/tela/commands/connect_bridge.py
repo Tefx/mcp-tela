@@ -316,6 +316,10 @@ def recover_gateway(
         Result with ``(host, port, token)`` tuple on success.
     """
 
+    discovery_error = (
+        "DISCOVERY_DISABLED: explicit server mode disables autostart recovery"
+    )
+
     if config_path is not None and discover_or_autostart is not None:
         discovery_result = discover_or_autostart(
             config_path=config_path,
@@ -325,10 +329,7 @@ def recover_gateway(
             assert discovery_result.value is not None
             discovered = discovery_result.value
             return Result(value=(discovered.host, discovered.port, discovered.token))
-    else:
-        discovery_result = Result[object, str](  # type: ignore[type-arg]
-            error="DISCOVERY_DISABLED: explicit server mode disables autostart recovery"
-        )
+        discovery_error = discovery_result.error or "DISCOVERY_FAILED"
 
     readiness_result = _wait_for_gateway_readiness(
         status_url=f"http://{host}:{port}/status",
@@ -341,7 +342,7 @@ def recover_gateway(
     return Result(
         error=(
             "GATEWAY_RECOVERY_FAILED: "
-            f"discovery={discovery_result.error}; readiness={readiness_result.error}"
+            f"discovery={discovery_error}; readiness={readiness_result.error}"
         )
     )
 
@@ -1139,7 +1140,8 @@ def run_bridge(
         )
         return Result(error=connect_result.error)
 
-    bridge_result = Result[None, str](value=None)
+    bridge_result: Result[None, str] = Result(value=None)
+    teardown_error: str | None = None
 
     try:
         bridge_result = _run_bridge_attach_loop(
@@ -1158,9 +1160,11 @@ def run_bridge(
             connection_id=connection_id,
         )
         if teardown_result.is_err:
-            return Result(error=teardown_result.error)
-        assert teardown_result.value is not None
-        teardown_interrupted = teardown_result.value
+            teardown_error = teardown_result.error or "BRIDGE_TEARDOWN_FAILED"
+            teardown_interrupted = False
+        else:
+            assert teardown_result.value is not None
+            teardown_interrupted = teardown_result.value
         signal.signal(signal.SIGINT, previous_int)
         signal.signal(signal.SIGTERM, previous_term)
 
@@ -1168,5 +1172,9 @@ def run_bridge(
             pass
 
     if bridge_result.is_err:
+        if teardown_error is not None:
+            return Result(error=f"{bridge_result.error}; {teardown_error}")
         return Result(error=bridge_result.error)
+    if teardown_error is not None:
+        return Result(error=teardown_error)
     return Result(value=None)

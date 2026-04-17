@@ -223,7 +223,7 @@ def handle_list_profiles() -> list["ProfileInfo"]:
 
     Reads configured profiles and emits canonical payload:
     ``profile_id``, ``capabilities``, ``default`` only.
-    Legacy keys ``profile_name``, ``families``, ``tools`` are never emitted.
+    No retired payload keys are ever emitted.
 
     Raises:
         RuntimeError: if runtime config is not available (gateway not started).

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import signal
 import subprocess
 import sys
@@ -95,6 +96,50 @@ def _wait_for_lockfile(timeout: float = 10.0) -> dict | None:
             return _read_lockfile()
         time.sleep(0.1)
     return None
+
+
+def _activate_bridge(connect_proc: subprocess.Popen[bytes], token: str) -> None:
+    """Drive MCP initialize so the bridge becomes an active runtime connection."""
+
+    assert connect_proc.stdin is not None
+    assert connect_proc.stdout is not None
+
+    initialize_request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "sigint-test", "version": "0.1"},
+        },
+    }
+    connect_proc.stdin.write((json.dumps(initialize_request) + "\n").encode())
+    connect_proc.stdin.flush()
+
+    ready, _, _ = select.select([connect_proc.stdout], [], [], 10.0)
+    assert ready, "SIGINT active-bridge probe did not receive initialize response"
+    _ = connect_proc.stdout.readline()
+
+    max_wait = 5.0
+    start = time.time()
+    while time.time() - start < max_wait:
+        status_result = subprocess.run(
+            [sys.executable, "-m", "tela", "status", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            env={**os.environ, "TELA_BEARER_TOKEN": token},
+        )
+        if status_result.returncode == 0:
+            status_data = json.loads(status_result.stdout)
+            if status_data.get("active_connections", 0) >= 1:
+                return
+        time.sleep(0.2)
+
+    raise AssertionError(
+        "SIGINT_DURING_ACTIVE: bridge did not become active after initialize"
+    )
 
 
 def _clean_lockfile():
@@ -344,29 +389,7 @@ class TestSIGINTDuringActiveBridge:
                     stderr=subprocess.PIPE,
                 )
 
-                # Wait for connection to register (bridge is active)
-                max_wait = 5.0
-                start = time.time()
-                connected = False
-                while time.time() - start < max_wait:
-                    status_result = subprocess.run(
-                        [sys.executable, "-m", "tela", "status", "--json"],
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        env={**os.environ, "TELA_BEARER_TOKEN": token},
-                    )
-                    if status_result.returncode == 0:
-                        status_data = json.loads(status_result.stdout)
-                        if status_data.get("active_connections", 0) >= 1:
-                            connected = True
-                            break
-                    time.sleep(0.2)
-
-                assert connected, (
-                    "SIGINT_DURING_ACTIVE: connect did not register with gateway "
-                    f"within {max_wait}s"
-                )
+                _activate_bridge(connect_proc, token)
 
                 # Bridge is now active - send SIGINT
                 connect_proc.send_signal(signal.SIGINT)
@@ -463,22 +486,7 @@ class TestSIGINTDuringActiveBridge:
                     stderr=subprocess.PIPE,
                 )
 
-                # Wait for connection
-                max_wait = 5.0
-                start = time.time()
-                while time.time() - start < max_wait:
-                    status_result = subprocess.run(
-                        [sys.executable, "-m", "tela", "status", "--json"],
-                        capture_output=True,
-                        text=True,
-                        timeout=5,
-                        env={**os.environ, "TELA_BEARER_TOKEN": token},
-                    )
-                    if status_result.returncode == 0:
-                        status_data = json.loads(status_result.stdout)
-                        if status_data.get("active_connections", 0) >= baseline + 1:
-                            break
-                    time.sleep(0.2)
+                _activate_bridge(connect_proc, token)
 
                 # Verify connection was registered
                 status_during = subprocess.run(

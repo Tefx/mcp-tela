@@ -64,6 +64,7 @@ from tela.shell.surface_instructions import (
     compose_gateway_and_downstream,
     get_gateway_surface_instructions,
 )
+from tela.shell.initialize_session_patch import install_initialize_session_patch
 
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
@@ -235,11 +236,6 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         if connect_result.is_err:
             assert connect_result.error is not None
             return _as_error_response(connect_result.error)
-        from tela.shell.idle_shutdown import get_idle_manager
-
-        idle_manager = get_idle_manager()
-        if idle_manager is not None:
-            _ = await idle_manager.increment()
         assert connect_result.value is not None
         return JSONResponse(content=dict(connect_result.value))
 
@@ -261,6 +257,14 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
                 content={"error": "INVALID_REQUEST: invalid disconnect payload"},
             )
 
+        connection_existed = False
+        snapshot_result = gateway_runtime.get_runtime_connections_snapshot()
+        if snapshot_result.is_ok and snapshot_result.value is not None:
+            connection_existed = any(
+                conn.connection_id == payload.connection_id
+                for conn in snapshot_result.value
+            )
+
         disconnect_result = handle_disconnect(request_token, expected_token, payload)
         if disconnect_result.is_err:
             assert disconnect_result.error is not None
@@ -268,7 +272,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         from tela.shell.idle_shutdown import get_idle_manager
 
         idle_manager = get_idle_manager()
-        if idle_manager is not None:
+        if idle_manager is not None and connection_existed:
             _ = await idle_manager.decrement()
         assert disconnect_result.value is not None
         return JSONResponse(content=dict(disconnect_result.value))
@@ -375,6 +379,8 @@ def _create_upstream_server(
         return Result(error=compose_result.error)
     merged_instructions = compose_result.value
 
+    install_initialize_session_patch()
+
     if (
         startup_config.transport in (GatewayTransport.SSE, GatewayTransport.HTTP)
         and startup_config.port is not None
@@ -433,9 +439,11 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 return conn_r.value
         except LookupError:
             pass
-        # Path 2: Adopt unbound bridge connection before failing closed.
-        # Bridge connections are pre-registered via POST /connect but their
-        # MCP session is not captured until the first list_tools/call_tool.
+        # Path 2: Adopt validated bridge connection before failing closed.
+        # Bridge sessions are registered via POST /connect, but canonical
+        # profile binding is not established until initialize succeeds.
+        # After initialize, the validated bridge connection exists without a
+        # captured MCP session until the first list_tools/call_tool.
         # Only adopt when a real current session is available.
         try:
             current_session = request_ctx.get().session
@@ -949,6 +957,7 @@ async def gateway_shutdown() -> Result[None, str]:
         gateway_runtime._runtime.start_time = None
         gateway_runtime._runtime.total_tool_calls = 0
         gateway_runtime._runtime.connections.clear()
+        gateway_runtime._runtime.pending_bridge_registrations.clear()
         gateway_runtime._runtime.expected_bearer_token = None
         gateway_runtime._runtime.secrets = []
     return disconnect_result

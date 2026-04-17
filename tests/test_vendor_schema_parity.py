@@ -20,6 +20,7 @@ import pytest
 # =============================================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+LOCAL_CONTRACTS_ROOT = PROJECT_ROOT / "contracts"
 
 # Vendor mirror location (relative to project root)
 # vendor/opifex/contracts/ is at the worktree/project root level
@@ -135,6 +136,14 @@ class TestVendorMirrorParity:
 
 class TestVendorMirrorReadOnlyContract:
     """Enforce read-only mirror semantics."""
+
+    def test_no_local_capability_token_schema_authority(self) -> None:
+        """CapabilityToken schema must not exist as a local editable contract copy."""
+        local_schema = LOCAL_CONTRACTS_ROOT / "capability_token.schema.json"
+        assert not local_schema.exists(), (
+            "CapabilityToken schema must live only in ../opifex and the "
+            "read-only vendor mirror under vendor/opifex/contracts/."
+        )
 
     def test_vendor_root_has_no_write_gitattrs(self) -> None:
         """Vendor directory should have .gitignore entries preventing accidental editing.

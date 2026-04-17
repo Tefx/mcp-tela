@@ -27,11 +27,11 @@ import pytest
 pytestmark = pytest.mark.runtime_liveness
 
 
-def _write_test_config(tmp_dir: str, profile_name: str = "test_profile") -> str:
+def _write_test_config(tmp_dir: str, profile_id: str = "test_profile") -> str:
     """Write a minimal open-mode config for testing."""
     config = {
         "profiles": {
-            profile_name: {
+            profile_id: {
                 "capabilities": {
                     "filesystem": "read_only",
                 },
@@ -357,8 +357,8 @@ def test_follower_attaches_to_existing_gateway(tmp_path, monkeypatch):
                 f"Expected leader pid={leader_pid}, got {new_lockfile['pid']}"
             )
 
-            # Verify no new gateway process was spawned
-            # Check connection count to confirm followers attached
+            # Verify no new gateway process was spawned. Followers should stay
+            # alive but unbound until they receive MCP initialize traffic.
             status_result = subprocess.run(
                 [sys.executable, "-m", "tela", "status", "--json"],
                 capture_output=True,
@@ -374,15 +374,14 @@ def test_follower_attaches_to_existing_gateway(tmp_path, monkeypatch):
             status_data = json.loads(status_result.stdout)
             active_connections = status_data.get("active_connections", 0)
 
-            # Should have N connections for N followers
-            assert active_connections >= len(follower_procs), (
-                f"Follower attach: expected >= {len(follower_procs)} connections, "
+            assert active_connections == 0, (
+                f"Follower attach: fabricated active bindings before initialize. "
                 f"got {active_connections}"
             )
 
             print(
                 f"  PASS: {len(follower_procs)} followers attached to single gateway "
-                f"(connections={active_connections})"
+                f"without fabricated bindings"
             )
 
         finally:
@@ -523,7 +522,7 @@ def test_config_mismatch_diagnostics(tmp_path, monkeypatch):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         # Start gateway with one config
-        config_1 = _write_test_config(tmp_dir, profile_name="profile_1")
+        config_1 = _write_test_config(tmp_dir, profile_id="profile_1")
 
         serve_proc = subprocess.Popen(
             [
@@ -546,7 +545,7 @@ def test_config_mismatch_diagnostics(tmp_path, monkeypatch):
             assert lockfile_data is not None, "Server did not write lockfile"
 
             # Create a DIFFERENT config file
-            config_2 = _write_test_config(tmp_dir, profile_name="profile_2")
+            config_2 = _write_test_config(tmp_dir, profile_id="profile_2")
 
             # Connect with different config
             # Behavior depends on implementation: may warn, error, or proceed

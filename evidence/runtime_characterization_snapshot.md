@@ -28,7 +28,7 @@ All endpoints return documented contract shapes; discovery truth (lockfile) and 
 - Auth enforced correctly
 
 ### Phase 4: POST /connect
-- HTTP 200: `{"connection_id":"char-snapshot-conn-1","profile_name":"dev","status":"connected"}`
+- HTTP 200: `{"connection_id":"char-snapshot-conn-1","status":"connected"}`
 - Registration succeeds with valid bearer token + connection_id payload
 
 ### Phase 4b: POST /connect (no auth)
@@ -84,7 +84,7 @@ None. Only test files written:
 | `GET /health` | 200, `{status:"ok",pid:N}`, no auth required | CONFIRMED |
 | `GET /status` (auth) | 200, full lifecycle snapshot with `state` field | CONFIRMED |
 | `GET /status` (no auth) | 401, AUTH_INVALID_TOKEN | CONFIRMED |
-| `POST /connect` (auth) | 200, `{status:"connected",connection_id,pid,profile_name}` | CONFIRMED |
+| `POST /connect` (auth) | 200, `{status:"connected",connection_id}` | CONFIRMED |
 | `POST /connect` (no auth) | 401 | CONFIRMED |
 | `POST /disconnect` (auth, existing) | 200, `{status:"disconnected",connection_id}` | CONFIRMED |
 | `POST /disconnect` (auth, nonexistent) | 404, CONNECTION_NOT_FOUND | CONFIRMED |

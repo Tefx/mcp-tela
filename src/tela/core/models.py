@@ -157,6 +157,7 @@ class ServerConfig(BaseModel):
     instructions: bool | str | None = None
 
     @field_validator("tool_prefix")
+    @classmethod
     @pre(lambda cls, v: v is None or len(v) > 0)
     @post(
         lambda result: (
@@ -164,7 +165,6 @@ class ServerConfig(BaseModel):
             or not (result.startswith("tela.") or result.startswith("tela_"))
         )
     )
-    @classmethod
     def _reject_reserved_prefix(cls, v: str | None) -> str | None:
         """Reject tool_prefix values that use the reserved tela namespace.
 
@@ -195,7 +195,7 @@ class ProfileConfig(BaseModel):
     """Contract shape for a single profile configuration.
 
     ``capabilities`` is the canonical field for tool-family posture ceilings.
-    The legacy ``tools`` alias has been removed (hard cut).
+    No legacy profile-key alias remains active.
 
     `default` marks the profile as the open-mode fallback candidate when the
     CLI does not supply `--default-profile`.
@@ -247,9 +247,8 @@ class TelaConfig(BaseModel):
 class CapabilityToken(BaseModel):
     """Token presented by upstream client at connection time.
 
-    The canonical identity field is ``profile_id``. The legacy ``profile_name``
-    alias is rejected fail-closed: tokens bearing ``profile_name`` instead of
-    ``profile_id`` will be rejected before authorization.
+    The canonical identity field is ``profile_id``. Legacy alias fields are
+    rejected fail-closed before authorization.
 
     Examples:
         >>> tok = CapabilityToken(token_id="tok_1", profile_id="dev", persona_ref="persona.dev", instance_id="inst-1", issued_at="2026-01-01T00:00:00Z", expires_at="2026-12-31T23:59:59Z", token_version="0.1.0", signature="abc")
@@ -324,7 +323,7 @@ class ProfileInfo(TypedDict):
     """Per-profile summary returned by tela_list_profiles.
 
     Canonical schema (hard cut): ``profile_id``, ``capabilities``, ``default``.
-    Legacy keys ``profile_name``, ``families``, and ``tools`` are removed.
+    No retired payload keys are emitted.
     """
 
     profile_id: str
@@ -335,9 +334,8 @@ class ProfileInfo(TypedDict):
 class ConnectionContext(BaseModel):
     """Per-connection state for an upstream client.
 
-    The canonical identity field is ``profile_id``. The legacy ``profile_name``
-    alias has been removed (hard cut): all shared runtime/audit/tool-facing
-    surfaces bind canonical ``profile_id`` only.
+    The canonical identity field is ``profile_id``. All shared
+    runtime/audit/tool-facing surfaces bind canonical ``profile_id`` only.
 
     Recovery-critical fields (idle reconnect / explicit re-initialize):
     - ``init_mode``: Records which auth path established this connection
@@ -392,9 +390,8 @@ class MetaField(BaseModel):
 class AuditEntry(BaseModel):
     """A single audit log entry.
 
-    The canonical identity field is ``profile_id``. The legacy ``profile_name``
-    field has been removed (hard cut): audit entries bind canonical ``profile_id``
-    only.
+    The canonical identity field is ``profile_id`` and audit entries bind that
+    canonical identity only.
     """
 
     model_config = {"extra": "forbid"}
@@ -531,9 +528,8 @@ class TokenInitBinding:
     Binds a capability token validation result to the connection's profile.
     Shell must reject initialization if `token_result.verdict` is DENY.
 
-    The canonical identity field is ``profile_id``. The legacy ``profile_name``
-    field has been removed (hard cut): all shared surfaces bind canonical
-    ``profile_id`` only.
+    The canonical identity field is ``profile_id`` and all shared surfaces bind
+    that canonical identity only.
 
     Examples:
         >>> from tela.core.models import EnforcementResult, EnforcementVerdict

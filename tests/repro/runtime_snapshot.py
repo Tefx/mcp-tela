@@ -38,6 +38,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:Test functions should return None:pytest.PytestReturnNotNoneWarning"
+)
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -572,14 +578,14 @@ def test_discovery_vs_readiness() -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Phase 7: connect/connect cycle and /status connection count
+# Phase 7: /connect registration does not fabricate active binding
 # ---------------------------------------------------------------------------
 
 
 def test_connection_count_after_lifecycle() -> bool:
     """
-    After POST /connect then POST /disconnect, GET /status should reflect
-    zero active connections (assuming we connected/disconnected our test conn).
+    After POST /connect then POST /disconnect without MCP initialize,
+    GET /status should keep the same active connection count.
     """
     assert _bound_port is not None and _bearer_token is not None
     url_status = f"http://{SERVE_HOST}:{_bound_port}/status"
@@ -603,15 +609,15 @@ def test_connection_count_after_lifecycle() -> bool:
         record("FAIL", f"POST /connect failed: {s}")
         return False
 
-    # Verify count incremented
+    # Verify count did NOT increment: /connect is registration only.
     status, body = _http_get(url_status, token=_bearer_token)
     post_connect_count = body.get("active_connections", -1)
     record("POST_CONNECT_COUNT", f"active_connections={post_connect_count}")
 
-    if post_connect_count != pre_count + 1:
+    if post_connect_count != pre_count:
         record(
             "FAIL",
-            f"active_connections not incremented: expected {pre_count + 1}, got {post_connect_count}",
+            f"active_connections changed during /connect registration: expected {pre_count}, got {post_connect_count}",
         )
         return False
 
@@ -633,7 +639,7 @@ def test_connection_count_after_lifecycle() -> bool:
 
     record(
         "PASS",
-        f"Connection lifecycle: count {pre_count} -> {post_connect_count} -> {post_disconnect_count}",
+        f"Bridge registration stayed unbound until initialize: count {pre_count} -> {post_connect_count} -> {post_disconnect_count}",
     )
     return True
 
@@ -759,7 +765,7 @@ def test_connect_bridge() -> bool:
         if isinstance(conn, dict) and "connection_id" in conn:
             record(
                 "BRIDGE_CONN",
-                f"connection_id={conn['connection_id']}, profile={conn.get('profile_name')}",
+                f"connection_id={conn['connection_id']}, profile={conn.get('profile_id')}",
             )
             bridge_found = True
 

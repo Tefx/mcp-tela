@@ -329,9 +329,9 @@ profiles:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
-      # NOTE: tela.status, tela.connections, and tela.audit are operator-only
-      # CLI/HTTP surfaces, not MCP tools/resources.
-      # tela.profiles is available via the MCP resource interface (not a capability key).
+      # NOTE: status, connections, and audit are operator-only CLI/HTTP views.
+      # Shared MCP introspection is exposed only through tela_list_providers and
+      # tela_list_profiles; capability maps do not reference surface names.
 
     # Per-tool fine control within family posture ceiling
     # NOTE: The structure requires 'overrides' nesting:

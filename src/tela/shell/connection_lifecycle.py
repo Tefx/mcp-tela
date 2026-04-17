@@ -9,7 +9,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tela.shell.result import Result
-from tela.shell.gateway_runtime import release_session, remove_runtime_connection
+from tela.shell.gateway_runtime import (
+    release_session,
+    remove_bridge_registration,
+    remove_runtime_connection,
+)
 
 
 @dataclass(frozen=True)
@@ -21,10 +25,13 @@ class ConnectionCleanupOutcome:
         removed_runtime_connection: True when at least one runtime connection
             entry was removed for this ``connection_id``; False when already
             absent (idempotent repeat invocation).
+        removed_bridge_registration: True when a pending bridge registration was
+            removed for this ``connection_id``.
     """
 
     connection_id: str
     removed_runtime_connection: bool
+    removed_bridge_registration: bool
 
 
 def cleanup_connection_by_id(
@@ -48,6 +55,10 @@ def cleanup_connection_by_id(
     if removed_result.is_err:
         return Result(error=removed_result.error)
 
+    bridge_result = remove_bridge_registration(connection_id)
+    if bridge_result.is_err:
+        return Result(error=bridge_result.error)
+
     release_result = release_session(connection_id)
     if release_result.is_err:
         return Result(error=release_result.error)
@@ -56,5 +67,6 @@ def cleanup_connection_by_id(
         value=ConnectionCleanupOutcome(
             connection_id=connection_id,
             removed_runtime_connection=bool(removed_result.value),
+            removed_bridge_registration=bool(bridge_result.value),
         )
     )

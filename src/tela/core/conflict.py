@@ -68,7 +68,7 @@ def detect_conflicts(
         ['fs1', 'fs2']
         >>> detect_conflicts({"a": [ResolvedTool(name="t1", server_name="a", family="a")]})
         []
-        >>> # tela.* prefix from single server is rejected as PREFIX_VIOLATION
+        >>> # reserved dotted tela prefix from single server is rejected as PREFIX_VIOLATION
         >>> conflicts = detect_conflicts({
         ...     "srv": [ResolvedTool(name="tela.custom", server_name="srv", family="srv")],
         ... })

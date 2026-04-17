@@ -20,7 +20,7 @@ import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Mapping
+from typing import Mapping, cast
 
 from tela.core.errors import (
     CONNECTION_NOT_FOUND,
@@ -34,6 +34,7 @@ from tela.core.models import (
     EnforcementVerdict,
     InitializeProfileBinding,
     Posture,
+    ProfileInfo,
     TelaError,
 )
 from tela.core.token import resolve_token_init_binding
@@ -51,10 +52,11 @@ from tela.shell.gateway_runtime import (
     get_captured_session,
     get_connection_id_for_session,
     get_runtime_config,
-    get_runtime_connections_snapshot,
     get_runtime_secrets,
+    has_bridge_registration,
     increment_tool_calls,
     release_session,
+    remove_runtime_connection,
     set_runtime_config,  # noqa: F401 — used in doctests
     touch_connection_activity,
 )
@@ -397,20 +399,35 @@ async def handle_initialize(
         return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
 
     bridge_connection_id = client_info.get(_BRIDGE_CONNECTION_ID_KEY)
+    bridge_connection_id_str: str | None = None
+    had_existing_bridge_connection = False
     if bridge_connection_id is not None:
         bridge_connection_id_str = str(bridge_connection_id)
-        connections_result = get_runtime_connections_snapshot()
-        if connections_result.is_err:
-            return Result(error=connections_result.error)
-        assert connections_result.value is not None
-        for existing in connections_result.value:
-            if existing.connection_id == bridge_connection_id_str:
-                return Result(value=existing)
-        return Result(
-            error=f"{CONNECTION_NOT_FOUND}: bridge initialize requires pre-registered connection '{bridge_connection_id_str}'"
-        )
+        registration_result = has_bridge_registration(bridge_connection_id_str)
+        if registration_result.is_err:
+            return Result(error=registration_result.error)
+        if not registration_result.value:
+            return Result(
+                error=f"{CONNECTION_NOT_FOUND}: bridge initialize requires pre-registered connection '{bridge_connection_id_str}'"
+            )
 
-    connection_id = f"conn_{uuid.uuid4().hex[:8]}"
+        removed_result = remove_runtime_connection(bridge_connection_id_str)
+        if removed_result.is_err:
+            return Result(error=removed_result.error)
+        had_existing_bridge_connection = bool(removed_result.value)
+
+        if had_existing_bridge_connection:
+            idle_manager = get_idle_manager()
+            if idle_manager is not None:
+                decrement_result = await idle_manager.decrement()
+                if decrement_result.is_err:
+                    return Result(error=decrement_result.error)
+
+        released_result = release_session(bridge_connection_id_str)
+        if released_result.is_err:
+            return Result(error=released_result.error)
+
+    connection_id = bridge_connection_id_str or f"conn_{uuid.uuid4().hex[:8]}"
     now_iso = datetime.now(timezone.utc).isoformat()
     token: CapabilityToken | None = None
 
@@ -680,7 +697,7 @@ async def handle_tools_call(
     return await call_tool(tool.server_name, routing_name, stripped_args)
 
 
-def handle_profiles_list() -> Result[list[dict], str]:
+def handle_profiles_list() -> Result[list[ProfileInfo], str]:
     """Return list of configured profiles.
 
     Returns list of configured profiles.
@@ -697,7 +714,9 @@ def handle_profiles_list() -> Result[list[dict], str]:
     """
 
     try:
-        return Result(value=build_profile_list_payload())
+        return cast(
+            Result[list[ProfileInfo], str], Result(value=build_profile_list_payload())
+        )
     except RuntimeError as exc:
         return Result(error=str(exc))
 

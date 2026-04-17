@@ -19,7 +19,6 @@ from tela.core.errors import (
 )
 from tela.core.models import (
     ConnectRequest,
-    ConnectionContext,
     DisconnectRequest,
     HealthResponse,
     StatusResponse,
@@ -30,13 +29,12 @@ from tela.shell.audit import audit_query, get_audit_entries  # noqa: F401 — au
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_runtime import (
-    add_runtime_connection,
     clear_runtime_connections,  # noqa: F401 — used in doctests
     get_runtime_config,
     is_runtime_running,
+    register_bridge_connection,
     set_runtime_config,  # noqa: F401 — used in doctests
     set_runtime_running,  # noqa: F401 — used in doctests
-    touch_connection_activity,
 )
 from tela.shell.http_auth import validate_bearer_token
 
@@ -205,7 +203,6 @@ def handle_status(
             and result.value is not None
             and result.value.get("status") == "connected"
             and isinstance(result.value.get("connection_id"), str)
-            and isinstance(result.value.get("profile_id"), str)
         )
         or (
             result.is_err
@@ -232,7 +229,10 @@ def handle_connect(
     The caller is required to provide credentials that must validate with
     ``validate_bearer_token`` from ``tela.shell.http_auth``.
 
-    Registers a bridge connection in the gateway runtime.
+    Registers a pending bridge connection identifier in the gateway runtime.
+
+    Profile binding is not established here. Canonical open-mode/token-mode
+    admission still occurs at MCP initialize.
 
     This endpoint is lifecycle plumbing only and is not a readiness-gated
     admission surface for MCP traffic. Readiness-gated admission is enforced
@@ -264,31 +264,13 @@ def handle_connect(
     if lifecycle_result.is_err:
         return Result(error=lifecycle_result.error)
 
-    from datetime import datetime, timezone
-
-    now_iso = datetime.now(timezone.utc).isoformat()
-    connection_context = ConnectionContext(
-        connection_id=payload.connection_id,
-        profile_id=config.resolved_default_profile or "default",
-        connected_at=now_iso,
-        init_mode=config.auth.mode,
-        bridge_connection_id=payload.connection_id,
-    )
-
-    add_runtime_connection(connection_context)
-
-    touch_r = touch_connection_activity(payload.connection_id, now_iso)
-    if touch_r.is_err:
-        logger.warning(
-            "Failed to touch connection activity for %s: %s",
-            payload.connection_id,
-            touch_r.error,
-        )
+    registration_result = register_bridge_connection(payload.connection_id)
+    if registration_result.is_err:
+        return Result(error=registration_result.error)
 
     return Result(
         value={
-            "connection_id": connection_context.connection_id,
-            "profile_id": connection_context.profile_id,
+            "connection_id": payload.connection_id,
             "status": "connected",
         }
     )
@@ -346,6 +328,7 @@ def handle_disconnect(
 
     Examples:
         >>> from tela.core.models import DisconnectRequest, TelaConfig, ConnectionContext
+        >>> from tela.shell.gateway_runtime import add_runtime_connection
         >>> set_runtime_config(TelaConfig())
         >>> set_runtime_running(True)
         >>> clear_runtime_connections()
@@ -383,7 +366,10 @@ def handle_disconnect(
         return Result(error=cleanup_result.error)
     assert cleanup_result.value is not None
 
-    if not cleanup_result.value.removed_runtime_connection:
+    if not (
+        cleanup_result.value.removed_runtime_connection
+        or cleanup_result.value.removed_bridge_registration
+    ):
         return Result(
             error=f"{CONNECTION_NOT_FOUND}: connection '{target_id}' not found"
         )

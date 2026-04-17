@@ -1,11 +1,7 @@
-"""Expected-red tests for hard_cut.impl_core_vocab step.
+"""Regression tests for the hard-cut shared vocabulary boundary.
 
-Verifies:
-- ProfileConfig no longer accepts `tools` alias (hard cut)
-- CapabilityToken uses canonical `profile_id` (not `profile_name`)
-- CapabilityToken rejects legacy `profile_name` field fail-closed
-- parse_config rejects `tools:` key in profile YAML data
-- normalize_profile_config_aliases module is deleted
+Verifies canonical profile/config vocabulary, canonical token identity, fail-closed
+legacy-alias rejection, and removal of the old alias-normalization module.
 """
 
 from __future__ import annotations
@@ -22,15 +18,15 @@ from tela.core.token import compute_signature, create_token, validate_token
 
 
 # ==============================================================================
-# (1) ProfileConfig rejects `tools=` keyword argument (hard cut)
+# (1) ProfileConfig rejects the retired legacy keyword argument
 # ==============================================================================
 
 
 class TestProfileConfigRejectsToolsAlias:
-    """ProfileConfig must NOT accept `tools=` as a keyword argument."""
+    """ProfileConfig must not accept the retired legacy keyword argument."""
 
     def test_tools_kwarg_rejected(self) -> None:
-        """ProfileConfig(tools={...}) must raise because `tools` alias is removed."""
+        """Legacy keyword input must raise because the alias is removed."""
         with pytest.raises((TypeError, ValidationError)):
             ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})  # type: ignore[call-arg]
 
@@ -52,7 +48,7 @@ class TestProfileConfigRejectsToolsAlias:
 
 
 # ==============================================================================
-# (2) CapabilityToken uses `profile_id` (not `profile_name`)
+# (2) CapabilityToken uses canonical shared profile identity
 # ==============================================================================
 
 
@@ -86,10 +82,7 @@ class TestCapabilityTokenCanonicalProfileId:
             )
 
     def test_token_rejects_profile_name_alias_fail_closed(self) -> None:
-        """CapabilityToken must NOT accept `profile_name` as an alias for `profile_id`.
-
-        Fail-closed: legacy `profile_name` field must not silently map to `profile_id`.
-        """
+        """CapabilityToken must reject a retired legacy alias field fail-closed."""
         with pytest.raises(ValidationError):
             CapabilityToken.model_validate(
                 {
@@ -154,15 +147,15 @@ class TestTokenFunctionsUseProfileId:
 
 
 # ==============================================================================
-# (4) parse_config rejects `tools:` key in profile YAML data
+# (4) parse_config rejects the retired legacy profile key in YAML data
 # ==============================================================================
 
 
 class TestParseConfigRejectsToolsKey:
-    """parse_config must NOT accept `tools:` in profile data (hard cut)."""
+    """parse_config must not accept the retired legacy profile key."""
 
     def test_parse_config_rejects_tools_key_in_profile(self) -> None:
-        """Profile data with `tools:` key must be rejected (not aliased)."""
+        """Legacy-key profile data must be rejected instead of normalized."""
         from tela.core.config import parse_config
         from tela.core.errors import ConfigContractError
 

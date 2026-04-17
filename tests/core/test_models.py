@@ -52,7 +52,7 @@ class TestProfileConfig:
         assert p.capabilities["read_file"] == Posture.READ_WRITE
 
     def test_tools_kwarg_rejected_after_hard_cut(self) -> None:
-        """Hard cut: ProfileConfig must reject the legacy `tools` keyword."""
+        """Hard cut: ProfileConfig must reject the retired legacy keyword."""
         with pytest.raises(ValidationError):
             ProfileConfig(name="dev", tools={"read_file": Posture.READ_ONLY})  # type: ignore[call-arg]
 

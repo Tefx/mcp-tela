@@ -247,14 +247,22 @@ def test_handle_initialize_uses_profile_binding_resolver(
     assert calls[0].connection_metadata == {"client": "desktop"}
 
 
-def test_handle_initialize_reuses_existing_bridge_connection() -> None:
-    """Bridge initialize must reuse the HTTP /connect connection context."""
+def test_handle_initialize_bridge_rebinds_registered_open_mode_connection() -> None:
+    """Bridge initialize must rebind a registered bridge through normal admission."""
     import asyncio
 
-    from tela.core.models import AuthConfig, AuthMode, ConnectionContext, TelaConfig
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        ProfileConfig,
+        TelaConfig,
+    )
     from tela.shell.gateway_runtime import (
         add_runtime_connection,
         clear_runtime_connections,
+        get_runtime_connections_snapshot,
+        register_bridge_connection,
         set_runtime_config,
     )
     from tela.shell.idle_shutdown import (
@@ -279,9 +287,12 @@ def test_handle_initialize_reuses_existing_bridge_connection() -> None:
             TelaConfig(
                 auth=AuthConfig(mode=AuthMode.OPEN),
                 resolved_default_profile="dev",
+                profiles={"dev": ProfileConfig(name="dev", default=True)},
             )
         )
         clear_runtime_connections()
+        registration_result = register_bridge_connection("bridge_abc")
+        assert registration_result.is_ok
 
         bridge_connection = ConnectionContext(
             connection_id="bridge_abc",
@@ -297,10 +308,22 @@ def test_handle_initialize_reuses_existing_bridge_connection() -> None:
         )
 
         assert result.is_ok
-        assert result.value == bridge_connection
+        assert result.value is not None
+        assert result.value.connection_id == "bridge_abc"
+        assert result.value.bridge_connection_id == "bridge_abc"
+        assert result.value.profile_id == "dev"
+        snapshot = get_runtime_connections_snapshot()
+        assert snapshot.is_ok
+        assert snapshot.value is not None
+        assert len(snapshot.value) == 1
+        assert snapshot.value[0].connection_id == "bridge_abc"
         assert manager.connection_count == 1
 
-    asyncio.run(_scenario())
+    try:
+        asyncio.run(_scenario())
+    finally:
+        set_runtime_config(None)
+        clear_runtime_connections()
 
 
 def test_handle_initialize_rejects_open_mode_without_resolved_profile() -> None:
@@ -1170,7 +1193,7 @@ def test_handle_tools_list_exposes_distinct_prefixed_names() -> None:
         "server_a",
         [
             ResolvedTool(
-                name="a.read_file",
+                name="a_read_file",
                 raw_name="read_file",
                 server_name="server_a",
                 family="fs",
@@ -1184,7 +1207,7 @@ def test_handle_tools_list_exposes_distinct_prefixed_names() -> None:
         "server_b",
         [
             ResolvedTool(
-                name="b.read_file",
+                name="b_read_file",
                 raw_name="read_file",
                 server_name="server_b",
                 family="fs",
@@ -1201,10 +1224,10 @@ def test_handle_tools_list_exposes_distinct_prefixed_names() -> None:
             resolved_default_profile="dev",
             servers={
                 "server_a": ServerConfig(
-                    name="server_a", command="cmd", tool_prefix="a."
+                    name="server_a", command="cmd", tool_prefix="a_"
                 ),
                 "server_b": ServerConfig(
-                    name="server_b", command="cmd", tool_prefix="b."
+                    name="server_b", command="cmd", tool_prefix="b_"
                 ),
             },
             profiles={
@@ -1230,7 +1253,7 @@ def test_handle_tools_list_exposes_distinct_prefixed_names() -> None:
         assert list_result.is_ok
         assert list_result.value is not None
         names = sorted(tool["name"] for tool in list_result.value)
-        assert names == ["a.read_file", "b.read_file"]
+        assert names == ["a_read_file", "b_read_file"]
     finally:
         tela.shell.upstream.get_all_tools = original_get_all_tools
 
@@ -1260,7 +1283,7 @@ def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
         "server_a",
         [
             ResolvedTool(
-                name="a.read_file",
+                name="a_read_file",
                 raw_name="read_file",
                 server_name="server_a",
                 family="fs",
@@ -1273,7 +1296,7 @@ def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
         "server_b",
         [
             ResolvedTool(
-                name="b.read_file",
+                name="b_read_file",
                 raw_name="read_file",
                 server_name="server_b",
                 family="fs",
@@ -1302,10 +1325,10 @@ def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
             resolved_default_profile="dev",
             servers={
                 "server_a": ServerConfig(
-                    name="server_a", command="cmd", tool_prefix="a."
+                    name="server_a", command="cmd", tool_prefix="a_"
                 ),
                 "server_b": ServerConfig(
-                    name="server_b", command="cmd", tool_prefix="b."
+                    name="server_b", command="cmd", tool_prefix="b_"
                 ),
             },
             profiles={
@@ -1321,11 +1344,11 @@ def test_handle_tools_call_routes_exposed_names_to_raw_downstream_names(
     )
 
     call_a = asyncio.run(
-        handle_tools_call(connection, "a.read_file", {"path": "/tmp/a"})
+        handle_tools_call(connection, "a_read_file", {"path": "/tmp/a"})
     )
     assert call_a.is_ok
     call_b = asyncio.run(
-        handle_tools_call(connection, "b.read_file", {"path": "/tmp/b"})
+        handle_tools_call(connection, "b_read_file", {"path": "/tmp/b"})
     )
     assert call_b.is_ok
 
@@ -1349,7 +1372,7 @@ def test_filter_tools_for_profile_matches_tool_override_on_raw_name() -> None:
     tools = {
         "server_a": [
             ResolvedTool(
-                name="a.read_file",
+                name="a_read_file",
                 raw_name="read_file",
                 server_name="server_a",
                 family="fs",
@@ -1905,10 +1928,10 @@ def test_handle_initialize_bridge_connection_id_populated() -> None:
         set_runtime_config(None)
 
 
-def test_handle_initialize_bridge_reuse_preserves_init_mode_on_existing(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Bridge initialize that reuses an existing connection must preserve init_mode."""
+def test_handle_initialize_bridge_revalidates_token_and_replaces_existing_connection() -> (
+    None
+):
+    """Bridge initialize must validate token input instead of reusing stale binding."""
     import asyncio
 
     from tela.core.models import (
@@ -1917,57 +1940,75 @@ def test_handle_initialize_bridge_reuse_preserves_init_mode_on_existing(
         ConnectionContext,
         TelaConfig,
     )
+    from tela.core.token import compute_signature
     from tela.shell.gateway_runtime import (
         add_runtime_connection,
         clear_runtime_connections,
+        get_runtime_connections_snapshot,
+        register_bridge_connection,
         set_runtime_config,
-    )
-    from tela.shell.idle_shutdown import (
-        _reset_idle_manager,
-        get_idle_manager,
-        init_idle_manager,
+        set_runtime_secrets,
     )
     from tela.shell.upstream import handle_initialize
 
     async def _scenario() -> None:
-        _reset_idle_manager()
-
-        async def _shutdown_callback() -> None:
-            return None
-
-        init_result = await init_idle_manager(30.0, _shutdown_callback)
-        assert init_result.is_ok
-        manager = get_idle_manager()
-        assert manager is not None
-
+        secret = "bridge-secret"
+        fields = {
+            "token_id": "tok_bridge_1",
+            "profile_id": "prod",
+            "persona_ref": "persona.prod",
+            "instance_id": "inst-prod",
+            "issued_at": "2026-01-01T00:00:00Z",
+            "expires_at": "2099-12-31T23:59:59Z",
+            "token_version": "0.1.0",
+        }
+        signature = compute_signature(fields, secret)
         set_runtime_config(
             TelaConfig(
-                auth=AuthConfig(mode=AuthMode.OPEN),
-                resolved_default_profile="dev",
+                auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+                profiles={"prod": ProfileConfig(name="prod")},
             )
         )
+        set_runtime_secrets([secret])
         clear_runtime_connections()
+        registration_result = register_bridge_connection("bridge_recovery_1")
+        assert registration_result.is_ok
 
-        # Pre-register a bridge connection with init_mode already set
+        # Seed a stale bridge connection that must NOT be reused.
         bridge_connection = ConnectionContext(
             connection_id="bridge_recovery_1",
-            profile_id="dev",
+            profile_id="stale",
             connected_at="2026-01-01T00:00:00Z",
             init_mode=AuthMode.OPEN,
             bridge_connection_id="bridge_recovery_1",
         )
         add_runtime_connection(bridge_connection)
-        increment_result = await manager.increment()
-        assert increment_result.is_ok
 
-        # MCP initialize with bridge connection ID should return the existing context
+        # MCP initialize with bridge connection ID must validate the canonical token
+        # and replace the stale connection binding.
         result = await handle_initialize(
-            {"name": "probe", "tela_bridge_connection_id": "bridge_recovery_1"}
+            {
+                "name": "probe",
+                "tela_bridge_connection_id": "bridge_recovery_1",
+                "capability_token": {**fields, "signature": signature},
+            }
         )
         assert result.is_ok
         ctx = result.value
         assert ctx is not None
-        assert ctx.init_mode == AuthMode.OPEN
+        assert ctx.connection_id == "bridge_recovery_1"
+        assert ctx.profile_id == "prod"
+        assert ctx.init_mode == AuthMode.TOKEN
         assert ctx.bridge_connection_id == "bridge_recovery_1"
+        snapshot = get_runtime_connections_snapshot()
+        assert snapshot.is_ok
+        assert snapshot.value is not None
+        assert len(snapshot.value) == 1
+        assert snapshot.value[0].profile_id == "prod"
 
-    asyncio.run(_scenario())
+    try:
+        asyncio.run(_scenario())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+        clear_runtime_connections()

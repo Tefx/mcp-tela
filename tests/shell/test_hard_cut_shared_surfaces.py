@@ -1,19 +1,8 @@
-"""Expected-red tests for hard_cut.impl_shared_surfaces + hard_cut.impl_listing_surface steps.
+"""Regression tests for canonical shared runtime surfaces.
 
-Verifies:
-- ConnectionContext uses `profile_id` (not `profile_name`)
-- AuditEntry uses `profile_id` (not `profile_name`)
-- TokenInitBinding uses `profile_id` (not `profile_name`)
-- Shared runtime surfaces bind canonical `profile_id` only
-- Audit construction binds `profile_id` from connection
-- handle_connect response uses `profile_id` key
-- handle_profiles_list emits `profile_id` key (not `profile_name`)
-- CLI commands display `profile_id` (not `profile_name`)
-- Legacy `profile_name` field is rejected fail-closed on all shared models
-- tela_list_profiles is a builtin MCP tool with canonical payload
-- tela_list_profiles payload has profile_id, capabilities, default (no legacy keys)
-- Shared tela://profiles / tela.profiles resource registration is removed
-- Fail-closed: invalid/missing gateway state rejects list_profiles
+Verifies canonical `profile_id` binding, fail-closed legacy-alias rejection,
+canonical profile-list payload shape, and removal of the retired shared profile
+resource.
 """
 
 from __future__ import annotations
@@ -33,7 +22,7 @@ from tela.core.models import (
 
 
 # ==============================================================================
-# (1) ConnectionContext uses `profile_id` as canonical identity field
+# (1) ConnectionContext uses canonical identity field
 # ==============================================================================
 
 
@@ -58,10 +47,7 @@ class TestConnectionContextProfileId:
             )
 
     def test_connection_context_rejects_profile_name_fail_closed(self) -> None:
-        """ConnectionContext must NOT accept `profile_name` as field name.
-
-        Fail-closed: legacy `profile_name` must not silently work.
-        """
+        """ConnectionContext must reject a retired alias field fail-closed."""
         with pytest.raises(ValidationError):
             ConnectionContext(  # type: ignore[call-arg]
                 connection_id="c1",
@@ -71,7 +57,7 @@ class TestConnectionContextProfileId:
 
 
 # ==============================================================================
-# (2) AuditEntry uses `profile_id` as canonical identity field
+# (2) AuditEntry uses canonical identity field
 # ==============================================================================
 
 
@@ -104,7 +90,7 @@ class TestAuditEntryProfileId:
             )
 
     def test_audit_entry_rejects_profile_name_fail_closed(self) -> None:
-        """AuditEntry must NOT accept `profile_name` as field name."""
+        """AuditEntry must reject a retired alias field fail-closed."""
         with pytest.raises(ValidationError):
             AuditEntry(  # type: ignore[call-arg]
                 timestamp="2026-01-01T00:00:00Z",
@@ -175,25 +161,27 @@ class TestAuditBindsProfileId:
 
 
 # ==============================================================================
-# (5) handle_connect response uses `profile_id` key (not `profile_name`)
+# (5) handle_connect stays unbound until initialize
 # ==============================================================================
 
 
-class TestConnectResponseUsesProfileId:
-    """HTTP /connect response must use `profile_id` key."""
+class TestConnectResponseStaysUnbound:
+    """HTTP /connect must not fabricate profile binding."""
 
-    def test_connect_response_contains_profile_id_key(self) -> None:
-        """Connect response dict must have `profile_id` key, not `profile_name`."""
-        from tela.core.models import TelaConfig, ConnectRequest
+    def test_connect_response_omits_profile_binding_until_initialize(self) -> None:
+        """Connect response must not claim a bound profile before initialize."""
+        from tela.core.models import AuthConfig, AuthMode, ConnectRequest, TelaConfig
         from tela.shell.gateway_runtime import (
-            add_runtime_connection,
+            clear_runtime_connections,
+            get_runtime_connections_snapshot,
             set_runtime_config,
             set_runtime_running,
-            clear_runtime_connections,
         )
         from tela.shell.http_routes import handle_connect
 
-        set_runtime_config(TelaConfig())
+        set_runtime_config(
+            TelaConfig(auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["s"]))
+        )
         set_runtime_running(True)
         clear_runtime_connections()
         try:
@@ -201,8 +189,13 @@ class TestConnectResponseUsesProfileId:
                 "valid-token", "valid-token", ConnectRequest(connection_id="test-c1")
             )
             assert result.is_ok
-            assert "profile_id" in result.value
+            assert result.value is not None
+            assert result.value == {"connection_id": "test-c1", "status": "connected"}
+            assert "profile_id" not in result.value
             assert "profile_name" not in result.value
+            snapshot = get_runtime_connections_snapshot()
+            assert snapshot.is_ok
+            assert snapshot.value == []
         finally:
             clear_runtime_connections()
             set_runtime_config(None)

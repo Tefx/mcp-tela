@@ -19,15 +19,12 @@ SurfaceContract := {
 
 ## 1. Canonical surface matrix
 
-### 1.1 Named `tela.*` built-in surfaces
+### 1.1 Built-in MCP surfaces
 
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
 | `tela_list_providers` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}`. |
 | `tela_list_profiles` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
-| `tela.status` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
-| `tela.connections` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
-| `tela.audit` | `absent` | N/A | Do not present as a current MCP tool or MCP resource. Use operator surfaces instead. |
 
 ### 1.2 Operator companion surfaces
 
@@ -89,7 +86,7 @@ completes; endpoint discoverability does not imply readiness.
 
 - A surface is a `tool` only if it is callable through MCP `tools/call` as an
   explicitly supported built-in tela surface.
-- This contract confirms **two current built-in `tela.*` MCP tools**:
+- This contract confirms exactly two current built-in MCP tools:
   `tela_list_providers` and `tela_list_profiles`.
 - `tela_list_providers` input: empty object `{}`
 - `tela_list_providers` output: list of `ProviderInfo` objects, each containing
@@ -104,9 +101,8 @@ completes; endpoint discoverability does not imply readiness.
   Python `repr(...)`/stringified approximation.
 - more than one `default: true` entry is invalid and must fail closed with
   `INVALID_DEFAULT_PROFILE_STATE`
-- Therefore docs, tests, and runtime work must not claim that `tela.status`,
-  `tela.connections`, or `tela.audit` are current MCP tools beyond the two
-  canonical builtin list tools.
+- Therefore docs, tests, and runtime work must not claim any additional dotted
+  MCP surface names beyond the two canonical builtin list tools.
 
 ### 2.2 MCP resources
 
@@ -123,8 +119,8 @@ completes; endpoint discoverability does not imply readiness.
   `resource`.
 - `tela profiles` (CLI companion), `tela status`, `tela connections`, and
   `tela audit` are confirmed operator surfaces.
-- `GET /status` is an operator/runtime HTTP endpoint and must not be renamed in
-  docs/tests as `tela.status` MCP access.
+- `GET /status` is an operator/runtime HTTP endpoint and must not be relabeled
+  as a dotted MCP surface.
 
 ## 3. Capability wording
 
@@ -135,8 +131,8 @@ completes; endpoint discoverability does not imply readiness.
     `tela_admin` MCP surfaces unless and until explicit MCP support exists
 
 - `tela_admin` is **not approved as current-runtime contract wording** for
-  `tela.status`, `tela.connections`, or `tela.audit` because those named MCP
-  built-ins are currently absent in this confirmed contract.
+  dotted MCP surface names because the confirmed contract exposes no such
+  built-ins.
 
 - If `tela_admin` is mentioned in migration/spec history, it must be marked as
   historical or future-facing language rather than current confirmed runtime
@@ -181,8 +177,8 @@ The following files/surfaces must align to this contract:
 - `docs/USAGE.md`
 - tests that classify agent-facing surfaces
 - runtime registration/wiring in `src/tela/shell/gateway.py`
-- any tests or docs that currently describe `tela.status`, `tela.connections`,
-  or `tela.audit` as built-in MCP surfaces
+- any tests or docs that currently describe dotted MCP labels as built-in MCP
+  surfaces
 
 ## 7. Source basis
 

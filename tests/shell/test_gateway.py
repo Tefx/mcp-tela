@@ -24,6 +24,7 @@ from tela.core.models import (
     ServerConfig,
     TelaConfig,
 )
+from tela.core.token import compute_signature
 from tela.commands.start import start_command
 from tela.shell.result import Result
 from tela.shell.connection_lifecycle import ConnectionCleanupOutcome
@@ -684,6 +685,7 @@ def test_gateway_shutdown_uses_shared_cleanup_authority(
             value=ConnectionCleanupOutcome(
                 connection_id=connection_id,
                 removed_runtime_connection=True,
+                removed_bridge_registration=False,
             )
         )
 
@@ -890,7 +892,7 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
 
 
 def test_fastmcp_profiles_resource_not_registered() -> None:
-    """tela.profiles MCP resource must NOT be registered (replaced by builtin tool)."""
+    """Legacy profile MCP resource must not be registered."""
 
     tela = TelaConfig(
         profiles={
@@ -918,7 +920,7 @@ def test_fastmcp_profiles_resource_not_registered() -> None:
             lambda s: asyncio.run(s.list_resources())
         )
         assert resources_result.is_ok
-        # tela.profiles resource must NOT appear (replaced by tela_list_profiles tool)
+        # The retired profile resource must not appear.
         assert not any(
             resource.name == "tela.profiles" for resource in resources_result.value
         )
@@ -1118,8 +1120,9 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
             app_result = with_upstream_server(lambda s: s.streamable_http_app())
             assert app_result.is_ok
             app = app_result.value
+            assert app is not None
 
-            with TestClient(app) as client:
+            with TestClient(app, base_url="http://127.0.0.1:8402") as client:
                 health = client.get("/health")
                 assert health.status_code == 200
                 assert health.json()["status"] == "ok"
@@ -1150,6 +1153,198 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
                     json={"connection_id": "conn-1"},
                 )
                 assert disconnect.status_code == 200
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_streamable_http_initialize_token_mode_rejects_missing_capability_token() -> (
+    None
+):
+    """Actual /mcp initialize must reject token mode when the canonical token is absent."""
+
+    def _extract_jsonrpc_payload(raw_text: str) -> dict[str, object]:
+        for line in raw_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("data: "):
+                return json.loads(stripped[6:])
+            if stripped.startswith("{"):
+                return json.loads(stripped)
+        raise AssertionError(f"No JSON-RPC payload found in response: {raw_text!r}")
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
+            profiles={"prod": ProfileConfig(name="prod")},
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8402,
+            auth_mode=AuthMode.TOKEN,
+            default_profile=None,
+        )
+        start_result = await gateway_start(
+            config,
+            tela_config=tela,
+            expected_bearer_token="mounted-token",
+        )
+        assert start_result.is_ok
+
+        try:
+            app_result = with_upstream_server(lambda s: s.streamable_http_app())
+            assert app_result.is_ok
+            app = app_result.value
+            assert app is not None
+
+            with TestClient(app, base_url="http://127.0.0.1:8402") as client:
+                response = client.post(
+                    "/mcp",
+                    headers={
+                        "Authorization": "Bearer mounted-token",
+                        "Accept": "application/json, text/event-stream",
+                    },
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {},
+                            "clientInfo": {"name": "bridge-test", "version": "0.1"},
+                        },
+                    },
+                )
+                assert response.status_code == 200
+                payload = _extract_jsonrpc_payload(response.text)
+                assert "error" in payload
+                error = payload["error"]
+                assert isinstance(error, dict)
+                assert "INITIALIZE_REJECTED" in str(error.get("message"))
+
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_streamable_http_bridge_initialize_token_mode_binds_after_connect_only_with_valid_token() -> (
+    None
+):
+    """Bridge /mcp initialize must validate token and establish the binding after /connect."""
+
+    def _extract_jsonrpc_payload(raw_text: str) -> dict[str, object]:
+        for line in raw_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("data: "):
+                return json.loads(stripped[6:])
+            if stripped.startswith("{"):
+                return json.loads(stripped)
+        raise AssertionError(f"No JSON-RPC payload found in response: {raw_text!r}")
+
+    async def _scenario() -> None:
+        secret = "bridge-secret"
+        token_fields = {
+            "token_id": "tok_bridge_http_1",
+            "profile_id": "prod",
+            "persona_ref": "persona.prod",
+            "instance_id": "inst-prod",
+            "issued_at": "2026-01-01T00:00:00Z",
+            "expires_at": "2099-12-31T23:59:59Z",
+            "token_version": "0.1.0",
+        }
+        token_payload = {
+            **token_fields,
+            "signature": compute_signature(token_fields, secret),
+        }
+
+        tela = TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={
+                "dev": ProfileConfig(name="dev", default=True),
+                "prod": ProfileConfig(name="prod"),
+            },
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8403,
+            auth_mode=AuthMode.TOKEN,
+            default_profile=None,
+        )
+        start_result = await gateway_start(
+            config,
+            tela_config=tela,
+            expected_bearer_token="mounted-token",
+        )
+        assert start_result.is_ok
+
+        try:
+            app_result = with_upstream_server(lambda s: s.streamable_http_app())
+            assert app_result.is_ok
+            app = app_result.value
+            assert app is not None
+
+            with TestClient(app, base_url="http://127.0.0.1:8403") as client:
+                connect = client.post(
+                    "/connect",
+                    headers={"Authorization": "Bearer mounted-token"},
+                    json={"connection_id": "bridge_http_1"},
+                )
+                assert connect.status_code == 200
+                assert connect.json() == {
+                    "connection_id": "bridge_http_1",
+                    "status": "connected",
+                }
+
+                initialize = client.post(
+                    "/mcp",
+                    headers={
+                        "Authorization": "Bearer mounted-token",
+                        "Accept": "application/json, text/event-stream",
+                    },
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {},
+                            "clientInfo": {
+                                "name": "bridge-test",
+                                "version": "0.1",
+                                "tela_bridge_connection_id": "bridge_http_1",
+                                "capability_token": token_payload,
+                            },
+                        },
+                    },
+                )
+                assert initialize.status_code == 200
+                initialize_payload_json = _extract_jsonrpc_payload(initialize.text)
+                assert "result" in initialize_payload_json
+
+                session_id = initialize.headers.get("mcp-session-id")
+                assert isinstance(session_id, str) and len(session_id) > 0
+
+                tools_list = client.post(
+                    "/mcp",
+                    headers={
+                        "Authorization": "Bearer mounted-token",
+                        "Accept": "application/json, text/event-stream",
+                        "mcp-session-id": session_id,
+                    },
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 2,
+                        "method": "tools/list",
+                        "params": {},
+                    },
+                )
+                assert tools_list.status_code == 200
+                tools_payload = _extract_jsonrpc_payload(tools_list.text)
+                assert "error" not in tools_payload
+                assert "result" in tools_payload
+
         finally:
             await gateway_shutdown()
 
@@ -2124,7 +2319,6 @@ def test_adr006_convergence_rejection_has_required_diagnostic_keys() -> None:
     # Implementation in adr006_recovery.impl
     pass
 
-    @pytest.mark.asyncio
     async def test_gateway_recovery_diagnostic_latency_visible_only_as_added_time(
         self,
     ) -> None:

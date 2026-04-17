@@ -393,7 +393,8 @@ def test_connect_discovers_via_lockfile(monkeypatch, tmp_path):
                     f"stderr={stderr_data!r}"
                 )
 
-            # Check status to verify connection registered
+            # Check status: bridge process is alive, but no MCP session has
+            # initialized yet, so there must be no fabricated active binding.
             status_result = subprocess.run(
                 [sys.executable, "-m", "tela", "status", "--json"],
                 capture_output=True,
@@ -409,15 +410,15 @@ def test_connect_discovers_via_lockfile(monkeypatch, tmp_path):
             status_data = json.loads(status_result.stdout)
             active_connections = status_data.get("active_connections", 0)
 
-            assert active_connections >= 1, (
-                f"Mode D: connect did not register with gateway. "
-                f"active_connections={active_connections}, expected >= 1"
+            assert active_connections == 0, (
+                f"Mode D: connect fabricated an active binding before initialize. "
+                f"active_connections={active_connections}, expected 0"
             )
 
             print(
                 f"  PASS: connect discovered gateway via lockfile (host={host}, port={port})"
             )
-            print(f"        gateway reports {active_connections} active connection(s)")
+            print("        gateway reports no active connection before initialize")
 
             # Clean disconnect
             connect_proc.stdin.close()
@@ -929,8 +930,8 @@ def test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap(
             _clean_lockfile()
 
 
-def test_disconnect_decrements_connection_count():
-    """When connect disconnects, connection count must decrease.
+def test_connect_without_initialize_keeps_connection_count_flat():
+    """A bridge process without MCP initialize must not change active count.
 
     Per docs/INTERFACES.md:
       - POST /disconnect unregisters bridge connection
@@ -989,7 +990,7 @@ def test_disconnect_decrements_connection_count():
 
             time.sleep(1.0)
 
-            # Verify connection registered
+            # Verify connection count stays flat before initialize.
             status_during = subprocess.run(
                 [sys.executable, "-m", "tela", "status", "--json"],
                 capture_output=True,
@@ -1001,13 +1002,13 @@ def test_disconnect_decrements_connection_count():
             status_data_during = json.loads(status_during.stdout)
             connections_during = status_data_during.get("active_connections", 0)
 
-            assert connections_during > connections_before, (
-                f"Mode D: connect did not increment active_connections. "
+            assert connections_during == connections_before, (
+                f"Mode D: connect changed active_connections before initialize. "
                 f"before={connections_before}, during={connections_during}"
             )
 
             print(
-                f"  PASS: active_connections incremented {connections_before} -> {connections_during}"
+                f"  PASS: active_connections stayed flat at {connections_during} before initialize"
             )
 
             # Disconnect
@@ -1017,7 +1018,7 @@ def test_disconnect_decrements_connection_count():
 
             time.sleep(0.5)  # Allow disconnect to propagate
 
-            # Verify connection count decreased
+            # Verify connection count remains unchanged after bridge teardown.
             status_after = subprocess.run(
                 [sys.executable, "-m", "tela", "status", "--json"],
                 capture_output=True,
@@ -1029,13 +1030,13 @@ def test_disconnect_decrements_connection_count():
             status_data_after = json.loads(status_after.stdout)
             connections_after = status_data_after.get("active_connections", 0)
 
-            assert connections_after < connections_during, (
-                f"Mode D: disconnect did not decrement active_connections. "
-                f"during={connections_during}, after={connections_after}"
+            assert connections_after == connections_before, (
+                f"Mode D: bridge teardown changed active_connections unexpectedly. "
+                f"before={connections_before}, after={connections_after}"
             )
 
             print(
-                f"  PASS: active_connections decremented {connections_during} -> {connections_after}"
+                f"  PASS: active_connections remained {connections_after} without initialize"
             )
 
         finally:
@@ -1126,7 +1127,7 @@ def test_coldstart_endpoint_discovers_before_convergence(tmp_path, monkeypatch):
                     f"stderr={stderr_data!r}"
                 )
 
-            # Verify connection registered
+            # Verify bridge stays unbound until initialize even during cold start.
             status_result = subprocess.run(
                 [sys.executable, "-m", "tela", "status", "--json"],
                 capture_output=True,
@@ -1142,12 +1143,12 @@ def test_coldstart_endpoint_discovers_before_convergence(tmp_path, monkeypatch):
             status_data = json.loads(status_result.stdout)
             active_connections = status_data.get("active_connections", 0)
 
-            assert active_connections >= 1, (
-                f"Cold-start: connect did not register with gateway. "
+            assert active_connections == 0, (
+                f"Cold-start: connect fabricated an active binding before initialize. "
                 f"active_connections={active_connections}"
             )
 
-            print(f"  PASS: cold-start connect succeeded during convergence phase")
+            print("  PASS: cold-start connect stayed alive without fabricating binding")
             print(f"        endpoint discovered at {host}:{port}")
 
             # Clean disconnect
@@ -1236,7 +1237,8 @@ def test_concurrent_attach_converges_on_single_leader(tmp_path, monkeypatch):
                 f"Expected at least {num_concurrent - 1} alive, got {len(alive_procs)}"
             )
 
-            # Get gateway status - should show multiple connections
+            # Get gateway status - concurrent bridge processes must stay unbound
+            # until individual MCP sessions initialize.
             token = lockfile_data["token"]
 
             status_result = subprocess.run(
@@ -1254,14 +1256,13 @@ def test_concurrent_attach_converges_on_single_leader(tmp_path, monkeypatch):
             status_data = json.loads(status_result.stdout)
             active_connections = status_data.get("active_connections", 0)
 
-            # At least the alive connects should be registered
-            assert active_connections >= len(alive_procs), (
-                f"Concurrent connect: expected >= {len(alive_procs)} connections, "
+            assert active_connections == 0, (
+                f"Concurrent connect: fabricated active bindings before initialize. "
                 f"got {active_connections}"
             )
 
             print(
-                f"  PASS: {active_connections} concurrent connects stabilized on gateway"
+                f"  PASS: {len(alive_procs)} concurrent bridge processes stayed unbound before initialize"
             )
 
         finally:
@@ -1293,7 +1294,7 @@ if __name__ == "__main__":
         test_serve_ephemeral_bind_publishes_lockfile,
         test_connect_discovers_via_lockfile,
         test_bridge_handles_mcp_initialize_and_tools_list,
-        test_disconnect_decrements_connection_count,
+        test_connect_without_initialize_keeps_connection_count_flat,
         test_coldstart_endpoint_discovers_before_convergence,
         test_concurrent_attach_converges_on_single_leader,
     ]

@@ -492,7 +492,7 @@ def test_downstream_tela_prefix_rejected_at_resolution():
         )
         print(f"PASS: resolve_tools rejected 'tela.custom' with: {e}")
 
-    print("PASS: Downstream 'tela.*' tool rejected at resolution time")
+    print("PASS: Downstream reserved dotted tela prefix rejected at resolution time")
 
 
 def test_prefix_combination_producing_tela_namespace_rejected():

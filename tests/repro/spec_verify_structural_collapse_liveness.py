@@ -36,6 +36,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:Test functions should return None:pytest.PytestReturnNotNoneWarning"
+)
+
 # ---------------------------------------------------------------------------
 # Paths & Constants
 # ---------------------------------------------------------------------------
@@ -405,7 +411,8 @@ def test_connect_is_lifecycle_plumbing() -> bool:
         )
         return False
 
-    # Verify the connection appears in /status (separate authority)
+    # Verify /status remains a separate authority. Registration alone does not
+    # need to create an active bound connection before MCP initialize.
     url_status = f"http://{SERVE_HOST}:{_bound_port}/status"
     s, b = _http_get(url_status, token=_bearer_token)
     if s == 200 and isinstance(b, dict):
@@ -415,15 +422,15 @@ def test_connect_is_lifecycle_plumbing() -> bool:
             isinstance(c, dict) and c.get("connection_id") == connection_id
             for c in connections
         )
-        if not found:
+        if found:
             record(
-                "WARN",
-                f"POST /connect succeeded but /status doesn't list connection (count={active_count})",
+                "VERIFY",
+                f"/status confirms connection '{connection_id}' present, active_connections={active_count}",
             )
         else:
             record(
                 "VERIFY",
-                f"/status confirms connection '{connection_id}' present, active_connections={active_count}",
+                f"/status keeps registration unbound before initialize (count={active_count})",
             )
     else:
         record("WARN", f"/status query failed: HTTP {s}")
@@ -641,7 +648,7 @@ def test_connect_bridge_lifecycle() -> bool:
         if isinstance(conn, dict) and "connection_id" in conn:
             record(
                 "BRIDGE_CONN",
-                f"connection_id={conn['connection_id']}, profile={conn.get('profile_name')}",
+                f"connection_id={conn['connection_id']}, profile={conn.get('profile_id')}",
             )
             bridge_found = True
 
