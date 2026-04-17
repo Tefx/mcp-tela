@@ -73931,3 +73931,66 @@ phases:
     - canonical_gateway_state.family_denial_canonical_profile_id
     - canonical_gateway_state.docs_and_regression_sync
     agent: integration-verifier-tacit
+  - id: canonical_gateway_state.gate
+    name: Gate canonical gateway state closeout
+    status: pending
+    description: 'Gate review: verify this phase achieves fully canonical gateway
+      state with no builtin bypasses, no token-version default smuggling, no wrong-source
+      provider/audit binding, and no legacy profile-name denial vocabulary.
+
+
+      Review depth: THOROUGH
+
+      Cross-cutting focus:
+
+      - builtin call path uses canonical admission
+
+      - token admission is fail-closed on missing token_version
+
+      - provider listing and audit attribution use the true calling connection/profile
+
+      - docs/tests match final canonical semantics
+
+
+      Protects downstream gate(s): full-plan closeout after this phase.'
+    verification: '- All phase steps completed with specific evidence.
+
+      - Independent verification proves each required behavior.
+
+      - No compatibility layer, weakened boundary, or residual-risk framing remains
+      in the affected surfaces.'
+    evidence_template: '## Gate Review Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Decision Basis
+
+      - token_version required at admission: OPEN/BLOCK
+
+      - builtin session admission canonical: OPEN/BLOCK
+
+      - provider binding canonical: OPEN/BLOCK
+
+      - builtin arg exactness canonical: OPEN/BLOCK
+
+      - audit attribution canonical: OPEN/BLOCK
+
+      - family denial vocabulary canonical: OPEN/BLOCK
+
+      - docs/tests aligned: OPEN/BLOCK
+
+
+      ### Final Decision
+
+      - OPEN only if all seven checks are OPEN with concrete evidence.
+
+      - Otherwise BLOCK and enumerate exact residual blockers.'
+    depends_on:
+    - canonical_gateway_state.verify
+    agent: gate-reviewer-tacit
