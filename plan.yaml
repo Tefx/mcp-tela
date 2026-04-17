@@ -72950,3 +72950,17 @@ phases:
     alignment.
   depends_on:
   - hard_cut.closeout
+  steps:
+  - id: fresh_review_reclose.impl
+    name: Implement remaining fresh review fixes
+    status: pending
+    description: Tighten canonical CapabilityToken validation, make alias rejection
+      auditable, return canonical tela_list_profiles payload from MCP, fail closed
+      on multi-default profile lists, and close tests/docs without adding compatibility
+      layers.
+    verification: Run targeted pytest coverage for token, upstream, builtin tool,
+      gateway, schema parity, and shared surface tests; run invar guard on changed
+      files.
+    evidence_template: '- Files changed\n- How each review issue was closed\n- Validation
+      commands and outcomes\n- Remaining risks'
+    agent: minimalist-architect-tacit
