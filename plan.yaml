@@ -72943,3 +72943,10 @@ phases:
       ## Outcome
 
       All blocker-class parity assertions closed for round2 retest.'
+- id: fresh_review_reclose
+  name: Fresh Review Hard-Cut Closeout
+  status: pending
+  gate: Fix remaining fresh isolated review findings and verify canonical hard-cut
+    alignment.
+  depends_on:
+  - hard_cut.closeout
