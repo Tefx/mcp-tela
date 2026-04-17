@@ -72945,7 +72945,7 @@ phases:
       All blocker-class parity assertions closed for round2 retest.'
 - id: fresh_review_reclose
   name: Fresh Review Hard-Cut Closeout
-  status: pending
+  status: in_progress
   gate: Fix remaining fresh isolated review findings and verify canonical hard-cut
     alignment.
   depends_on:
@@ -72953,7 +72953,7 @@ phases:
   steps:
   - id: fresh_review_reclose.impl
     name: Implement remaining fresh review fixes
-    status: pending
+    status: claimed
     description: Tighten canonical CapabilityToken validation, make alias rejection
       auditable, return canonical tela_list_profiles payload from MCP, fail closed
       on multi-default profile lists, and close tests/docs without adding compatibility
@@ -72964,3 +72964,5 @@ phases:
     evidence_template: '- Files changed\n- How each review issue was closed\n- Validation
       commands and outcomes\n- Remaining risks'
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-17T07:02:37.606520+00:00'
