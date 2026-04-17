@@ -73264,3 +73264,12 @@ phases:
       \ suite is fully green with no skips/xfails: 1185 passed, 0 failed, 0 skipped,\
       \ 0 xfailed\n  - gate-reviewer-tacit -> PASS: no blocker remains in scope for\
       \ declaring the current worktree fully closed"
+- id: canonical_gateway_state
+  name: Canonical Gateway State Closeout
+  status: pending
+  gate: Open only when gateway admission, builtin dispatch, provider truth, audit
+    attribution, denial vocabulary, and docs/spec tests all converge on the fully
+    canonical profile_id/token/session model with fail-closed behavior and no compatibility
+    shims.
+  depends_on:
+  - fresh_review_true_zero
