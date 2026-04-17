@@ -107,6 +107,19 @@ def _build_builtin_json_result(
     )
 
 
+def _raise_if_builtin_arguments_present(
+    tool_name: str,
+    arguments: dict[str, object] | None,
+) -> None:
+    """Builtin tools with empty-object schemas must reject extra arguments."""
+
+    if arguments:
+        argument_keys = ", ".join(sorted(arguments.keys()))
+        raise RuntimeError(
+            f"INVALID_TOOL_INPUT: {tool_name} takes no arguments; got {argument_keys}"
+        )
+
+
 @dataclass(frozen=True)
 class GatewayStartupConfig:
     """Resolved gateway startup contract consumed by runtime shell.
@@ -584,6 +597,7 @@ async def _handle_builtin_call(
     """
     start_time = time.time()
     try:
+        _raise_if_builtin_arguments_present(tool_name, arguments)
         if tool_name == "tela_list_profiles":
             profiles_result = handle_list_profiles()
             call_result = [dict(p) for p in profiles_result]  # type: ignore[arg-type]

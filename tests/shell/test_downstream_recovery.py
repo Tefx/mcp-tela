@@ -83,109 +83,44 @@ def fake_client_handle() -> downstream._ClientHandle:
 # ==============================================================================
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: recovery_eligible field now present in error details — gap closed"
-)
-def test_gap_recovery_eligibility_classifier_missing_for_no_handle(
+def test_recovery_eligibility_classifier_marks_missing_handle_as_eligible(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
-    """GAP EXPOSED: call_tool has no recovery eligibility classifier.
-
-    ADR-006 §Recovery Eligibility Table:
-    "_clients[server_name] has no active handle" = ELIGIBLE
-
-    Current behavior: call_tool returns DOWNSTREAM_UNAVAILABLE immediately
-    with no recovery attempt.
-
-    Expected behavior: Should trigger recovery sequence when server has no handle.
-
-    This test will FAIL until eligibility classifier is implemented.
-    """
-    # Setup: no client handle exists
+    """Missing client handles are classified as recovery-eligible."""
     assert downstream._clients.get("test_server") is None
-
-    # Call tool on non-existent server
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
 
-    # Current behavior: immediate failure
     assert result.is_err
     assert result.error is not None
     assert result.error.code == "DOWNSTREAM_UNAVAILABLE"
-
-    # GAP: error details do NOT contain recovery_stage indicating classifier ran
-    # Expected per ADR-006 Error Payload Contract when recovery is considered:
-    # - recovery_attempted: bool
-    # - recovery_stage: str
-    # - recovery_eligible: bool
-    # Current: details are minimal or absent
-    assert result.error.details is None or "recovery_eligible" not in (
-        result.error.details or {}
-    ), (
-        "GAP: recovery_eligible field missing from error details. "
-        "Eligibility classifier not implemented per ADR-006 §Recovery Eligibility."
-    )
+    details = result.error.details or {}
+    assert details.get("recovery_eligible") is True
+    assert details.get("recovery_attempted") is True
+    assert details.get("recovery_stage") == "reconnect_started"
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: TimeoutError now classified as recovery_ineligible — gap closed"
-)
-def test_gap_recovery_eligibility_classifier_rejects_timeout(
+def test_recovery_eligibility_classifier_rejects_timeout(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
-    """GAP EXPOSED: TimeoutError is NOT recovery eligible but current code doesn't classify.
-
-    ADR-006 §Recovery Eligibility Table:
-    "TimeoutError / asyncio.TimeoutError" = NOT ELIGIBLE
-    "Dispatch may already be underway; duplicate side effects cannot be excluded."
-
-    Current behavior: Any Exception from call_tool returns DOWNSTREAM_UNAVAILABLE
-    with no classification of eligibility.
-
-    Expected behavior: TimeoutError should be classified as NOT recovery-eligible
-    and fail immediately without recovery attempt.
-
-    This test documents expected behavior once classifier is implemented.
-    """
-    # Setup: client handle exists but call raises TimeoutError
+    """TimeoutError is classified as recovery-ineligible."""
     downstream._clients["test_server"] = fake_client_handle
     fake_client_handle.session.call_tool.side_effect = asyncio.TimeoutError(
         "Operation timed out"
     )
 
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
-
-    # Current behavior: error returned but no recovery_stage classification
     assert result.is_err
     assert result.error is not None
-
-    # GAP: No recovery_stage indicating TimeoutError was classified as ineligible
-    # Per ADR-006, classifier should set recovery_stage="not_attempted"
-    # and recovery_eligible=False for TimeoutError
     details = result.error.details or {}
-    recovery_stage = details.get("recovery_stage")
-
-    assert recovery_stage != "not_attempted", (
-        "GAP: TimeoutError not classified as recovery-ineligible. "
-        "Expected recovery_stage='not_attempted' per ADR-006 §Recovery Eligibility. "
-        f"Got recovery_stage={recovery_stage}"
-    )
+    assert details.get("recovery_stage") == "not_attempted"
+    assert details.get("recovery_eligible") is False
+    assert details.get("recovery_attempted") is False
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: BrokenPipeError now classified as recovery_ineligible — gap closed"
-)
-def test_gap_recovery_eligibility_classifier_rejects_broken_pipe(
+def test_recovery_eligibility_classifier_rejects_broken_pipe(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
-    """GAP EXPOSED: BrokenPipeError is NOT recovery eligible.
-
-    ADR-006 §Recovery Eligibility Table:
-    "BrokenPipeError, ConnectionResetError, EOF-like transport interruption
-    after call submission" = NOT ELIGIBLE
-    "Mid-flight ambiguity; retry safety is not provable locally."
-
-    This test will FAIL until the eligibility classifier is implemented.
-    """
+    """BrokenPipeError is classified as recovery-ineligible."""
     downstream._clients["test_server"] = fake_client_handle
     fake_client_handle.session.call_tool.side_effect = BrokenPipeError("Broken pipe")
 
@@ -193,12 +128,8 @@ def test_gap_recovery_eligibility_classifier_rejects_broken_pipe(
 
     assert result.is_err
     details = result.error.details or {}
-
-    # GAP: No classification of BrokenPipeError as ineligible
-    assert details.get("recovery_eligible") is not False, (
-        "GAP: BrokenPipeError not classified as recovery-ineligible. "
-        "Expected recovery_eligible=False per ADR-006 §Recovery Eligibility."
-    )
+    assert details.get("recovery_eligible") is False
+    assert details.get("recovery_stage") == "not_attempted"
 
 
 def test_gap_recovery_eligibility_classifier_rejects_tool_error(
@@ -339,47 +270,28 @@ def test_gap_second_retry_forbidden(
 # ==============================================================================
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: _recovery_locks per-server lock map now exists — gap closed"
-)
-def test_gap_per_server_recovery_serialization_absent(
+def test_per_server_recovery_serialization_lock_map_exists(
     fake_client_handle: downstream._ClientHandle,
 ) -> None:
-    """GAP EXPOSED: No per-server recovery lock mechanism exists.
+    """Recovery serialization uses a per-server lock map."""
 
-    ADR-006 §Concurrency Contract:
-    "call-triggered recovery and message-handler-triggered recovery for the same
-    server MUST share the same per-server recovery lock"
+    async def _run() -> None:
+        result_a = await downstream._acquire_recovery_lock(
+            "server_a", deadline_monotonic=time.monotonic() + 1.0
+        )
+        result_b = await downstream._acquire_recovery_lock(
+            "server_b", deadline_monotonic=time.monotonic() + 1.0
+        )
+        assert result_a.is_ok and result_b.is_ok
+        assert result_a.value is not None and result_b.value is not None
+        lock_a, _ = result_a.value
+        lock_b, _ = result_b.value
+        assert lock_a is not lock_b
+        lock_a.release()
+        lock_b.release()
 
-    Required:
-    - Per-server lock map in downstream.py
-    - Locks acquired before transport work
-    - No _registry_lock held during network I/O
-
-    This test will FAIL until per-server locks are implemented.
-    """
-    # GAP: No _recovery_locks dict exists in downstream module
-    assert not hasattr(downstream, "_recovery_locks"), (
-        "GAP: Per-server recovery lock map not found. "
-        "Expected _recovery_locks: dict[str, asyncio.Lock] in downstream.py "
-        "per ADR-006 §Concurrency Contract."
-    )
-
-    # Verify no lock acquisition in call_tool path
-    # Current call_tool does not acquire any per-server lock
-    downstream._clients["test_server"] = fake_client_handle
-    fake_client_handle.session.call_tool.side_effect = RuntimeError(
-        "Client is not connected."
-    )
-
-    result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
-
-    # GAP: No lock was acquired because no lock mechanism exists
-    # After implementation, a lock should be acquired for recovery
-    assert result.is_err
-    # If recovery_locks existed and worked, we could verify:
-    # - lock was acquired for "test_server"
-    # - other servers' calls proceeded without blocking
+    asyncio.run(_run())
+    assert hasattr(downstream, "_recovery_locks")
 
 
 def test_gap_healthy_server_unblocked_during_neighbor_recovery(
@@ -731,40 +643,20 @@ def test_gap_reload_wins_over_inflight_recovery(
 # ==============================================================================
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: _recover_server_client shared primitive now exists — gap closed"
-)
-def test_gap_convergence_rejection_returns_downstream_unavailable(
+def test_convergence_rejection_returns_downstream_unavailable(
     fake_client_handle: downstream._ClientHandle,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """GAP EXPOSED: No convergence rejection handling in recovery path.
+    """Convergence rejection is surfaced as terminal DOWNSTREAM_UNAVAILABLE."""
 
-    ADR-006 §Recovery Sequence:
-    "If convergence rejects the reconnect payload (for example due to
-    TOOL_CONFLICT), ... the outward failure remains DOWNSTREAM_UNAVAILABLE
-    with rejection context in diagnostics."
-
-    recovery_stage should be "convergence_rejected".
-
-    This test will FAIL until convergence rejection handling is implemented.
-    """
-
-    # Track if recovery path was triggered
-    recovery_called = False
-    convergence_result: Result = Result(
-        error="TOOL_CONFLICT: tool_name conflicts with another server"
-    )
+    from tela.shell import _downstream_recovery
 
     async def mock_recover_server_client(
         server_name: str,
         *,
         deadline_monotonic: float,
     ) -> Result[None, TelaError]:
-        nonlocal recovery_called, convergence_result
-        recovery_called = True
-        # GAP: No _recover_server_client exists yet
-        # This would call reload.on_server_reconnect which could return conflict
+        _ = deadline_monotonic
         return Result(
             error=TelaError(
                 code="DOWNSTREAM_UNAVAILABLE",
@@ -780,27 +672,21 @@ def test_gap_convergence_rejection_returns_downstream_unavailable(
             )
         )
 
-    # GAP: _recover_server_client does not exist in downstream module
-    assert not hasattr(downstream, "_recover_server_client"), (
-        "GAP: _recover_server_client recovery primitive not found. "
-        "Expected shared internal recovery primitive owned by shell/downstream.py "
-        "per ADR-006 §Internal recovery primitive interface."
+    downstream._clients["test_server"] = fake_client_handle
+    fake_client_handle.session.call_tool.side_effect = RuntimeError(
+        "Client is not connected. Use the 'async with client:' context manager first."
     )
-
-    # Setup: client handle missing to trigger recovery
-    assert downstream._clients.get("test_server") is None
+    monkeypatch.setattr(
+        _downstream_recovery,
+        "_recover_server_client",
+        mock_recover_server_client,
+    )
 
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
-
-    # Current behavior: immediate DOWNSTREAM_UNAVAILABLE
     assert result.is_err
-
-    # GAP: No recovery_stage="convergence_rejected" because no recovery ran
     details = result.error.details or {}
-    assert details.get("recovery_stage") != "convergence_rejected", (
-        "GAP: Convergence rejection not handled in recovery path. "
-        "Expected recovery_stage='convergence_rejected' per ADR-006 §Recovery Sequence."
-    )
+    assert details.get("recovery_stage") == "convergence_rejected"
+    assert details.get("recovery_attempted") is True
 
 
 # ==============================================================================
@@ -869,46 +755,13 @@ def test_gap_error_details_missing_recovery_fields(
 # ==============================================================================
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: structured recovery diagnostics now emitted — gap closed"
-)
-def test_gap_recovery_diagnostics_not_emitted(
+def test_recovery_diagnostics_are_emitted(
     fake_client_handle: downstream._ClientHandle,
-    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """GAP EXPOSED: No structured recovery diagnostic events emitted.
+    """Recovery paths emit structured diagnostic log events."""
 
-    ADR-006 §Observability:
-    "The gateway MUST emit structured diagnostics for:
-    - recovery started
-    - recovery succeeded
-    - recovery rejected by convergence/conflict checks
-    - recovery exhausted"
-
-    Structured contract:
-    {
-        event: str,  # downstream_recovery_started|succeeded|rejected|exhausted|classifier_unknown
-        level: str,  # INFO|WARNING
-        server_name: str,
-        tool_name: str | None,
-        elapsed_ms: float,
-        recovery_stage: str,
-        underlying_error: str | None,
-        request_id: str | None,
-    }
-
-    This test will FAIL until recovery diagnostics are implemented.
-    """
-    from tela.shell import audit
-
-    audit_events: list[dict] = []
-
-    def mock_audit_write(entry: dict) -> Any:
-        audit_events.append(entry)
-        return Result(value=None)
-
-    monkeypatch.setattr(audit, "audit_write", mock_audit_write)
-
+    caplog.set_level("INFO")
     downstream._clients["test_server"] = fake_client_handle
     fake_client_handle.session.call_tool.side_effect = RuntimeError(
         "Client is not connected."
@@ -917,18 +770,7 @@ def test_gap_recovery_diagnostics_not_emitted(
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
 
     assert result.is_err
-
-    # GAP: No recovery-specific audit events emitted
-    recovery_events = [
-        e for e in audit_events if "recovery" in str(e.get("event", "")).lower()
-    ]
-
-    assert recovery_events, (
-        "GAP: No structured recovery diagnostic events emitted. "
-        "Expected events like downstream_recovery_started, downstream_recovery_succeeded, "
-        "downstream_recovery_rejected, downstream_recovery_exhausted "
-        "per ADR-006 §Observability."
-    )
+    assert "downstream_recovery_classifier_unknown" in caplog.text
 
 
 # ==============================================================================
@@ -1002,25 +844,19 @@ def test_gap_shared_recovery_primitive_not_extracted(
 # ==============================================================================
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: full recovery sequence now runs (recovery_attempted=True) — gap closed"
-)
-def test_gap_full_recovery_sequence_not_implemented(
+def test_full_recovery_sequence_retries_once_after_successful_recovery(
     fake_client_handle: downstream._ClientHandle,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """GAP EXPOSED: Full recovery sequence (steps 1-6) not implemented.
+    """Recovery performs one retry after a successful reconnect sequence."""
+    from tela.shell import _downstream_recovery
 
-    ADR-006 §Recovery Sequence defines the complete recovery flow.
-    Current call_tool implements steps 1-2 only.
-
-    This test verifies the complete sequence is missing.
-    """
-    # Track what happens during a "recovery-eligible" failure
     downstream._clients["test_server"] = fake_client_handle
 
     call_sequence: list[str] = []
 
     async def track_calls(tool_name: str, arguments: dict) -> Any:
+        _ = tool_name, arguments
         call_sequence.append("call_tool")
         raise RuntimeError(
             "Client is not connected. Use the 'async with client:' context manager first."
@@ -1028,23 +864,40 @@ def test_gap_full_recovery_sequence_not_implemented(
 
     fake_client_handle.session.call_tool = track_calls
 
+    refreshed_session = MagicMock()
+
+    async def _retry_call(tool_name: str, *, arguments: dict) -> Any:
+        _ = tool_name, arguments
+        call_sequence.append("retry")
+        response = MagicMock()
+        response.isError = False
+        response.model_dump.return_value = {"content": [], "isError": False}
+        return response
+
+    refreshed_session.call_tool = AsyncMock(side_effect=_retry_call)
+    refreshed_handle = downstream._ClientHandle(
+        session=refreshed_session,
+        stack=MagicMock(aclose=AsyncMock()),
+    )
+
+    async def _fake_recover_server_client(
+        server_name: str,
+        *,
+        deadline_monotonic: float,
+    ) -> Result[None, TelaError]:
+        _ = deadline_monotonic
+        downstream._clients[server_name] = refreshed_handle
+        call_sequence.append("recover")
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        _downstream_recovery,
+        "_recover_server_client",
+        _fake_recover_server_client,
+    )
+
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
 
-    # GAP: Only step 1 (attempt call) happened
-    # Steps 3-6 (recovery + retry) did not occur
-    assert call_sequence == ["call_tool"], (
-        "GAP: Full recovery sequence not implemented. "
-        f"Expected full sequence: 1) call_tool, 2) recovery, 3) retry. "
-        f"Got: {call_sequence}. "
-        "Per ADR-006 §Recovery Sequence steps 1-6."
-    )
-
-    # Verify error has no recovery context
-    assert result.is_err
-    details = result.error.details or {}
-
-    # GAP: No recovery_stage indicating recovery was attempted
-    assert details.get("recovery_attempted") is not True, (
-        "GAP: Recovery not triggered for eligible failure. "
-        "Expected recovery_attempted=True per ADR-006 §Recovery Eligibility."
-    )
+    assert result.is_ok
+    assert result.value == {"content": [], "isError": False}
+    assert call_sequence == ["call_tool", "recover", "retry"]

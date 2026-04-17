@@ -30,6 +30,11 @@ from typing import BinaryIO, Callable, Literal
 from urllib import error as urllib_error
 import uuid
 
+from tela.core.bridge_protocol import (
+    extract_bridge_error_messages as _extract_bridge_error_messages,
+    extract_jsonrpc_method,
+    response_requires_bridge_recovery as _response_requires_bridge_recovery,
+)
 from tela.core.models import LockfileData, StatusResponse
 from tela.commands.connect_transport import (
     extract_response_messages,
@@ -182,22 +187,6 @@ def write_framed_message(
     return Result(value=None)
 
 
-# @invar:allow shell_result: pure parsing helper returning Optional[str], no I/O.
-# @shell_orchestration: JSON-RPC method extraction is transport-bound bridge glue used only to manage initialize/session replay semantics at the stdio/HTTP boundary.
-def extract_jsonrpc_method(payload: bytes) -> str | None:
-    """Return JSON-RPC method name from payload when present."""
-
-    try:
-        decoded = json.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        return None
-
-    if not isinstance(decoded, dict):
-        return None
-    method = decoded.get("method")
-    return method if isinstance(method, str) else None
-
-
 # ---------------------------------------------------------------------------
 # Error classification and recovery
 # ---------------------------------------------------------------------------
@@ -222,71 +211,6 @@ def is_recoverable_error(error: str) -> Result[bool, str]:
     return Result(
         value=any(marker in normalized_error for marker in recoverable_markers)
     )
-
-
-# @invar:allow shell_result: pure parsing helper returning list[str], no I/O.
-# @shell_orchestration: bridge error extraction stays in Shell because it classifies protocol-bound transport responses for replay/recovery decisions.
-# @shell_complexity: parser branches across JSON-RPC error envelopes and CallToolResult isError payload content.
-def _extract_bridge_error_messages(payload: bytes) -> list[str]:
-    """Return recoverable error text candidates from a bridge response payload."""
-
-    try:
-        decoded = json.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        return []
-
-    if not isinstance(decoded, dict):
-        return []
-
-    messages: list[str] = []
-
-    error = decoded.get("error")
-    if isinstance(error, dict):
-        message = error.get("message")
-        if isinstance(message, str):
-            messages.append(message)
-
-    result = decoded.get("result")
-    if isinstance(result, dict) and result.get("isError") is True:
-        content = result.get("content")
-        if isinstance(content, list):
-            for item in content:
-                if not isinstance(item, dict):
-                    continue
-                text = item.get("text")
-                if isinstance(text, str):
-                    messages.append(text)
-
-    return messages
-
-
-# @invar:allow shell_result: pure response-classification helper returning bool, no I/O.
-# @shell_orchestration: recovery marker classification is specific to bridge-session repair policy and therefore remains co-located with the Shell transport loop.
-def _response_requires_bridge_recovery(response_messages: list[bytes]) -> bool:
-    """Return True when a JSON-RPC error proves the bridge session is stale.
-
-    Source:
-    - User bug report: Tela MCP provider becomes unavailable after long idle.
-    - ``tela.shell.gateway._ensure_connection`` fails closed with
-      ``RECONNECT_REQUIRED`` when the bridge session/connection mapping is gone.
-    - ``tela.shell.upstream.handle_initialize`` returns
-      ``CONNECTION_NOT_FOUND: bridge initialize requires pre-registered
-      connection`` when the bridge registration was reaped.
-
-    These responses indicate pre-dispatch session loss, so replaying initialize
-    and then retrying the original request is safe.
-    """
-
-    recovery_markers = (
-        "reconnect_required:",
-        "bridge initialize requires pre-registered connection",
-    )
-    for payload in response_messages:
-        for message in _extract_bridge_error_messages(payload):
-            normalized_message = message.lower()
-            if any(marker in normalized_message for marker in recovery_markers):
-                return True
-    return False
 
 
 DiscoverOrAutostartFn = Callable[..., Result[LockfileData, str]]

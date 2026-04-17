@@ -25,6 +25,7 @@ from typing import Mapping, cast
 from tela.core.errors import (
     CONNECTION_NOT_FOUND,
     GATEWAY_NOT_STARTED,
+    PROFILE_NOT_FOUND,
 )
 from tela.core.models import (
     AuthMode,
@@ -117,6 +118,7 @@ def _reject_initialize(
 
 
 # @invar:allow shell_result: pure validator used only inside shell-bound initialize handler.
+# @shell_complexity: clientInfo key validation deliberately branches across reserved namespace, top-level token fields, and alias fail-closed checks.
 def _invalid_reserved_client_info_key(
     client_info: Mapping[object, object],
 ) -> str | None:
@@ -480,6 +482,13 @@ async def handle_initialize(
             return Result(error=f"INITIALIZE_REJECTED: {error_code}: {error_msg}")
 
         profile_id = binding.profile_id
+        if profile_id not in config.profiles:
+            return Result(
+                error=(
+                    "INITIALIZE_REJECTED: "
+                    f"{PROFILE_NOT_FOUND}: profile '{profile_id}' not found"
+                )
+            )
 
     ctx = ConnectionContext(
         connection_id=connection_id,
@@ -630,6 +639,18 @@ async def handle_tools_call(
         return Result(
             error=TelaError(
                 code=GATEWAY_NOT_STARTED, message="Gateway has not been started"
+            )
+        )
+
+    invalid_tool_name = _invalid_shared_tool_name(tool_name)
+    if invalid_tool_name is not None:
+        return Result(
+            error=TelaError(
+                code="INVALID_TOOL_NAME",
+                message=(
+                    "shared MCP tool names must be snake_case; "
+                    f"got '{invalid_tool_name}'"
+                ),
             )
         )
 

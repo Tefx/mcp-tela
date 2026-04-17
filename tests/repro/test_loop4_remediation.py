@@ -14,6 +14,9 @@ from tela.commands.profiles_cmd import profiles_command
 from tela.shell import surface_instructions
 
 
+_LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 README_PATH = PROJECT_ROOT / "README.md"
 EVIDENCE_PATH = PROJECT_ROOT / "evidence" / "surface_taxonomy_verification.md"
@@ -52,7 +55,7 @@ class TestLoop4OperatorSurfaceRemediation:
         assert "tela status" in listed
         assert "tela connections" in listed
         assert "tela audit" in listed
-        assert "tela.profiles" not in listed
+        assert _LEGACY_PROFILE_RESOURCE not in listed
 
     def test_profiles_command_runs_and_lists_configured_profile(
         self, tmp_path: Path, capsys

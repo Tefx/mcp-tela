@@ -2,50 +2,9 @@
 
 from __future__ import annotations
 
+from tela.core.surface_manifest import build_manifest_header
 from tela.core.models import ResolvedTool, ServerConfig
 from tela.shell.result import Result
-
-
-# @invar:allow shell_result: pure data transformation, no I/O - per pm.p1 contract
-def build_manifest_header(
-    servers: dict[str, "ServerConfig"],
-    connected_names: set[str],
-    tools_by_server: dict[str, list["ResolvedTool"]],
-) -> str:
-    """Build provider manifest header for instructions.
-
-    Format: "Connected at startup: server_a (N tools), server_b (M tools)"
-
-    Only connected servers are listed. Disconnected/failed servers are omitted
-    from the manifest header (they are discoverable via tela_list_providers).
-
-    Examples:
-        >>> from tela.core.models import ServerConfig, ResolvedTool
-        >>> servers = {"fs": ServerConfig(name="fs", command="cmd")}
-        >>> connected = {"fs"}
-        >>> tools = {"fs": [ResolvedTool(name="read_file", server_name="fs", family="fs")]}
-        >>> header = build_manifest_header(servers, connected, tools)
-        >>> "Connected at startup:" in header
-        True
-        >>> "fs (1 tools)" in header
-        True
-
-    Args:
-        servers: Server name to config mapping from TelaConfig.
-        connected_names: Set of server names with active connections.
-        tools_by_server: Registry tool map (exposed names).
-
-    Returns:
-        Manifest header string.
-    """
-    parts = []
-    for server_name in sorted(servers.keys()):
-        if server_name in connected_names:
-            tool_count = len(tools_by_server.get(server_name, []))
-            parts.append(f"{server_name} ({tool_count} tools)")
-    if not parts:
-        return "Connected at startup: (none)"
-    return "Connected at startup: " + ", ".join(parts)
 
 
 def get_gateway_surface_instructions(

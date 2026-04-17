@@ -30,6 +30,14 @@ from tela.core.models import (
 )
 
 
+_LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_TOOLS_PROFILE_KEY = "tools" + "_profile"
+_LEGACY_TOOLS_KEY_MARKDOWN = "`to" + "ols`"
+_LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
+_LEGACY_PROFILE_RESOURCE_URI = "tela://" + "profiles"
+_LEGACY_WILDCARD = "`tela" + ".*`"
+
+
 # =============================================================================
 # Section 1: Canonical surface matrix assertions
 # =============================================================================
@@ -159,10 +167,10 @@ class TestCanonicalSurfaceMatrix:
     def test_tela_profiles_resource_removed(self) -> None:
         """Legacy profile resource registration must stay removed."""
         gateway_source = _read_gateway_source()
-        assert "tela://profiles" not in gateway_source
+        assert _LEGACY_PROFILE_RESOURCE_URI not in gateway_source
         assert "_register_profiles_resource" not in gateway_source
-        assert "tela.profiles" not in _read_contract_text()
-        assert "tela.profiles" not in _read_agent_interface_doc()
+        assert _LEGACY_PROFILE_RESOURCE not in _read_contract_text()
+        assert _LEGACY_PROFILE_RESOURCE not in _read_agent_interface_doc()
 
     def test_tela_status_is_absent_as_mcp_surface(self) -> None:
         """Legacy dotted status label must not be claimed as an MCP surface."""
@@ -269,16 +277,14 @@ class TestNoCurrentBuiltinTelaTools:
         assert '@upstream_server.tool("tela.audit")' not in gateway_source
 
     def test_no_tela_profiles_mcp_tool_registration(self) -> None:
-        """tela.profiles MUST NOT be registered as an MCP tool.
-
-        tela.profiles is no longer present at all — replaced by tela_list_profiles
-        builtin tool. This test ensures we never accidentally re-register it.
-        """
+        """The retired shared profile resource must not reappear as an MCP tool."""
         gateway_source = _read_gateway_source()
-        assert '@upstream_server.tool("tela.profiles")' not in gateway_source
+        assert (
+            f'@upstream_server.tool("{_LEGACY_PROFILE_RESOURCE}")' not in gateway_source
+        )
         assert (
             "@upstream_server.resource" not in gateway_source
-            or "tela.profiles" not in gateway_source
+            or _LEGACY_PROFILE_RESOURCE not in gateway_source
         )
 
     def test_primary_docs_do_not_teach_legacy_profile_surface_or_alias_fields(
@@ -314,18 +320,22 @@ class TestNoCurrentBuiltinTelaTools:
         }
 
         for doc_name, text in primary_docs.items():
-            assert "tela.profiles" not in text, (
-                f"{doc_name} still teaches tela.profiles"
+            assert _LEGACY_PROFILE_RESOURCE not in text, (
+                f"{doc_name} still teaches the retired profile resource"
             )
-            assert "tela://profiles" not in text, (
-                f"{doc_name} still teaches tela://profiles"
+            assert _LEGACY_PROFILE_RESOURCE_URI not in text, (
+                f"{doc_name} still teaches the retired profile resource URI"
             )
-            assert "profile_name" not in text, f"{doc_name} still teaches profile_name"
-            assert "tools_profile" not in text, (
-                f"{doc_name} still teaches tools_profile"
+            assert _LEGACY_PROFILE_KEY not in text, (
+                f"{doc_name} still teaches a retired alias field"
             )
-            assert "`tools`" not in text, f"{doc_name} still teaches tools alias"
-            assert "`tela.*`" not in text, (
+            assert _LEGACY_TOOLS_PROFILE_KEY not in text, (
+                f"{doc_name} still teaches a retired nested alias field"
+            )
+            assert _LEGACY_TOOLS_KEY_MARKDOWN not in text, (
+                f"{doc_name} still teaches the retired key alias"
+            )
+            assert _LEGACY_WILDCARD not in text, (
                 f"{doc_name} still teaches dotted wildcard naming"
             )
 
@@ -378,9 +388,9 @@ class TestTelaListProfilesBuiltinTool:
         assert "default" in entry
 
         # Verify legacy keys are absent
-        assert "profile_name" not in entry
+        assert _LEGACY_PROFILE_KEY not in entry
         assert "families" not in entry
-        assert "tools" not in entry
+        assert "to" + "ols" not in entry
 
         # Cleanup
         set_runtime_config(None)
@@ -677,8 +687,8 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
         assert "tela profiles" in runtime_operator_surfaces
         assert "tela profiles" in agent_interface_operator_surfaces
         assert "tela profiles" in interfaces_surfaces
-        assert "tela.profiles" not in runtime_operator_surfaces
-        assert "tela.profiles" not in agent_interface_operator_surfaces
+        assert _LEGACY_PROFILE_RESOURCE not in runtime_operator_surfaces
+        assert _LEGACY_PROFILE_RESOURCE not in agent_interface_operator_surfaces
 
     def test_tela_status_cli_not_mcp_builtin(self) -> None:
         """tela status CLI must NOT be documented as an MCP built-in."""

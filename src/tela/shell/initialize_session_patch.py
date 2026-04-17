@@ -21,15 +21,7 @@ _ORIGINAL_RECEIVED_REQUEST = ServerSession._received_request
 _PATCH_INSTALLED = False
 
 
-def _extract_client_info(
-    params: mcp_types.InitializeRequestParams,
-) -> dict[str, object]:
-    """Return initialize clientInfo as a plain mapping."""
-
-    dumped = params.clientInfo.model_dump(exclude_none=True)
-    return {str(key): value for key, value in dumped.items()}
-
-
+# @shell_complexity: initialize gate must branch across admission failure, session capture failure, and cleanup paths before deferring to the protocol handler.
 async def _patched_received_request(
     self: ServerSession,
     responder: Any,
@@ -38,7 +30,9 @@ async def _patched_received_request(
 
     root = responder.request.root
     if isinstance(root, mcp_types.InitializeRequest):
-        initialize_result = await handle_initialize(_extract_client_info(root.params))
+        dumped = root.params.clientInfo.model_dump(exclude_none=True)
+        client_info = {str(key): value for key, value in dumped.items()}
+        initialize_result = await handle_initialize(client_info)
         if initialize_result.is_err:
             with responder:
                 await responder.respond(

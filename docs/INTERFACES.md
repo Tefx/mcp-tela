@@ -908,11 +908,13 @@ When `verdict == "allow"`, `error_code` is `null`.
 |------------|---------|-----------|
 | `GATEWAY_NOT_STARTED` | MCP + HTTP | Gateway runtime not initialized |
 | `TOOL_NOT_FOUND` | MCP | Tool name not in downstream registry |
-| `PROFILE_NOT_FOUND` | MCP | Bound profile not in runtime config |
+| `PROFILE_NOT_FOUND` | MCP | Initialize or subsequent calls reference a profile not present in runtime config |
+| `INVALID_TOOL_NAME` | MCP | Shared MCP tool name is not canonical snake_case |
+| `INVALID_TOOL_INPUT` | MCP | Built-in tela tool received unexpected arguments |
 | `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected, call failed, or recovery exhausted (see ADR-006) |
 | `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
 | `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
-| `INITIALIZE_REJECTED` | MCP | Token validation failed or no default profile |
+| `INITIALIZE_REJECTED` | MCP | Token validation failed, token profile is unknown, or no default profile |
 | `AUTH_INVALID_TOKEN` | HTTP | Bearer token validation failed |
 | `CONNECTION_NOT_FOUND` | HTTP | Disconnect for unknown connection_id |
 | `INTERNAL_ERROR` | MCP | Unexpected internal failure |

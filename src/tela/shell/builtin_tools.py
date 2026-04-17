@@ -94,12 +94,22 @@ BUILTIN_TOOLS: list[dict] = [
     {
         "name": "tela_list_providers",
         "description": "List connected downstream providers with their status and tool counts.",
-        "inputSchema": {"type": "object", "properties": {}, "required": []},
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
     },
     {
         "name": "tela_list_profiles",
         "description": "List configured profiles with their capabilities and default status.",
-        "inputSchema": {"type": "object", "properties": {}, "required": []},
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
     },
 ]
 

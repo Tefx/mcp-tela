@@ -271,6 +271,38 @@ def test_handle_initialize_token_mode_invalid_signature() -> None:
         set_runtime_secrets([])
 
 
+def test_handle_initialize_token_mode_unknown_profile_rejected_at_initialize() -> None:
+    """Token mode must fail closed if the validated token binds an unknown profile."""
+    secret = "unknown-profile-secret"
+    signed_token = _sign_token(_make_valid_token_fields(profile="ghost"), secret)
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+            resolved_default_profile="dev",
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(_wrap_client_info(signed_token))
+        assert result.is_err
+        assert result.error is not None
+        assert "INITIALIZE_REJECTED" in result.error
+        assert "PROFILE_NOT_FOUND" in result.error
+        snapshot = get_runtime_connections_snapshot()
+        assert snapshot.is_ok
+        assert snapshot.value == []
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
 def test_handle_initialize_token_mode_rejects_invalid_canonical_schema_fields() -> None:
     """Token mode must classify canonical-schema violations before authz."""
     secret = "schema-secret"

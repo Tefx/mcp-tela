@@ -38,6 +38,7 @@ from tela.shell.downstream import (
     _prune_recovery_lock_if_unused,
     _recovery_locks,
 )
+from tela.shell.result import Result
 
 
 # --- Fixtures ---
@@ -746,23 +747,96 @@ class TestHealthyNeighborLiveness:
 
         asyncio.run(_exercise())
 
-    @pytest.mark.xfail(
-        reason="UNC-LIVENESS GAP: requires integration test with concurrent multi-server calls"
-    )
     def test_healthy_neighbor_concurrent_calls_during_peer_recovery(self) -> None:
-        """Probe: concurrent calls to healthy server during peer recovery succeed.
+        """Probe: healthy server calls stay live while a peer is recovering."""
 
-        This integration-level probe would:
-        1. Start a long-running call to server A
-        2. While A is in recovery, make a call to server B
-        3. Verify B's call succeeds without waiting for A's recovery
+        from tela.shell import _downstream_recovery
 
-        GAP: This requires a full integration environment with two
-        live servers. Unit-level testing cannot fully simulate this.
-        """
-        pytest.skip(
-            "UNC-LIVENESS gap: integration-level probe required for concurrent multi-server scenario"
-        )
+        def _make_fake_client_handle() -> downstream._ClientHandle:
+            session = MagicMock()
+            session.call_tool = AsyncMock()
+            stack = MagicMock()
+            stack.aclose = AsyncMock()
+            return downstream._ClientHandle(session=session, stack=stack)
+
+        server_a = _make_fake_client_handle()
+        server_b = _make_fake_client_handle()
+
+        recovery_entered = asyncio.Event()
+        release_recovery = asyncio.Event()
+
+        async def _server_a_call(
+            name: str, arguments: dict | None = None, **_: Any
+        ) -> Any:
+            _ignored = (name, arguments)
+            raise RuntimeError(
+                "Client is not connected. Use the 'async with client:' context manager first."
+            )
+
+        async def _server_b_call(
+            name: str, arguments: dict | None = None, **_: Any
+        ) -> Any:
+            _ignored = (name, arguments)
+            response = MagicMock()
+            response.isError = False
+            response.model_dump.return_value = {"content": [], "isError": False}
+            return response
+
+        async def _fake_recover_server_client(
+            server_name: str,
+            *,
+            deadline_monotonic: float,
+        ) -> Result[None, TelaError]:
+            _ = server_name, deadline_monotonic
+            recovery_entered.set()
+            await release_recovery.wait()
+            return Result(
+                error=TelaError(
+                    code="DOWNSTREAM_UNAVAILABLE",
+                    message="Synthetic peer recovery completion",
+                    details={
+                        "server_name": "server_a",
+                        "recovery_attempted": True,
+                        "recovery_eligible": True,
+                        "recovery_stage": "retry_failed",
+                        "underlying_error": "synthetic",
+                    },
+                )
+            )
+
+        server_a.session.call_tool = AsyncMock(side_effect=_server_a_call)
+        server_b.session.call_tool = AsyncMock(side_effect=_server_b_call)
+        downstream._clients["server_a"] = server_a
+        downstream._clients["server_b"] = server_b
+
+        with patch.object(
+            _downstream_recovery,
+            "_recover_server_client",
+            _fake_recover_server_client,
+        ):
+
+            async def _exercise() -> None:
+                task_a = asyncio.create_task(
+                    downstream.call_tool("server_a", "tool_a", {})
+                )
+                await asyncio.wait_for(recovery_entered.wait(), timeout=1.0)
+
+                result_b = await asyncio.wait_for(
+                    downstream.call_tool("server_b", "tool_b", {}),
+                    timeout=1.0,
+                )
+                assert result_b.is_ok, (
+                    "HEALTHY NEIGHBOR BLOCKED: server_b failed while server_a was in recovery"
+                )
+                assert task_a.done() is False, (
+                    "PEER RECOVERY FINISHED TOO EARLY: expected server_a to still be in recovery while server_b completed"
+                )
+
+                release_recovery.set()
+                result_a = await asyncio.wait_for(task_a, timeout=1.0)
+                assert result_a.is_err
+
+            asyncio.run(_exercise())
 
 
 # ==============================================================================

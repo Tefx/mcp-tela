@@ -19,6 +19,7 @@ Mode D Liveness Probe:
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import json
 import os
 import subprocess
@@ -26,8 +27,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-
-import pytest
+from typing import Iterator
 
 # Test configuration
 TELA_REPO = Path(__file__).parent.parent.parent
@@ -81,6 +81,60 @@ def _run_tela(args: list[str], timeout: float = 5.0) -> tuple[int, str, str]:
     return result.returncode, result.stdout, result.stderr
 
 
+def _wait_for_lockfile(lockfile: Path, timeout: float = 10.0) -> dict | None:
+    """Wait for a specific lockfile path to appear and parse as JSON."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if lockfile.exists():
+            try:
+                return json.loads(lockfile.read_text())
+            except (json.JSONDecodeError, OSError):
+                pass
+        time.sleep(0.1)
+    return None
+
+
+@contextmanager
+def _temporary_gateway() -> Iterator[tuple[dict[str, str], dict[str, object]]]:
+    """Start an isolated gateway for black-box CLI schema probes."""
+    with (
+        tempfile.TemporaryDirectory() as tmp_dir,
+        tempfile.TemporaryDirectory() as fake_home,
+    ):
+        env = {**os.environ, "HOME": fake_home}
+        config_path = _write_test_config(tmp_dir)
+        lockfile_path = Path(fake_home) / ".tela" / "gateway.lock"
+        serve_proc = subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tela",
+                "serve",
+                "--config",
+                config_path,
+                "--port",
+                "0",
+            ],
+            cwd=TELA_REPO,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        try:
+            lockfile = _wait_for_lockfile(lockfile_path)
+            assert lockfile is not None, "Temporary gateway did not publish lockfile"
+            env["TELA_BEARER_TOKEN"] = str(lockfile["token"])
+            yield env, lockfile
+        finally:
+            serve_proc.terminate()
+            try:
+                serve_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                serve_proc.kill()
+                serve_proc.wait()
+
+
 def test_cold_start_cli_surface():
     """Verify `tela serve` and `tela connect` CLI surfaces are documented."""
     print("\n=== Test: Cold-start CLI Surface ===")
@@ -114,10 +168,8 @@ def test_lockfile_location_and_schema():
     )
     print(f"  PASS: Lockfile location is {lockfile}")
 
-    data = _read_lockfile()
-    if data is None:
-        print("  NOTE: No running gateway detected, skip schema check")
-        return
+    with _temporary_gateway() as (_env, data):
+        pass
 
     # Per docs/INTERFACES.md#7.3, lockfile must contain:
     # - pid, host, port, token, started_at, config_path, version
@@ -134,9 +186,16 @@ def test_status_schema_fields():
     """Verify `tela status --json` produces documented fields."""
     print("\n=== Test: Status Schema ===")
 
-    code, stdout, stderr = _run_tela(["status", "--json"])
-    if code != 0 and "NO_RUNNING_SERVER" in stderr:
-        pytest.skip("No running gateway available for black-box status schema probe")
+    with _temporary_gateway() as (env, _lockfile):
+        result = subprocess.run(
+            [sys.executable, "-m", "tela", "status", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=TELA_REPO,
+            env=env,
+        )
+        code, stdout, stderr = result.returncode, result.stdout, result.stderr
     assert code == 0, f"status --json failed: {stderr}"
 
     try:
@@ -179,11 +238,16 @@ def test_connections_schema_fields():
     """Verify `tela connections --json` produces documented fields."""
     print("\n=== Test: Connections Schema ===")
 
-    code, stdout, stderr = _run_tela(["connections", "--json"])
-    if code != 0 and "NO_RUNNING_SERVER" in stderr:
-        pytest.skip(
-            "No running gateway available for black-box connections schema probe"
+    with _temporary_gateway() as (env, _lockfile):
+        result = subprocess.run(
+            [sys.executable, "-m", "tela", "connections", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=TELA_REPO,
+            env=env,
         )
+        code, stdout, stderr = result.returncode, result.stdout, result.stderr
     assert code == 0, f"connections --json failed: {stderr}"
 
     try:
@@ -208,54 +272,47 @@ def test_status_endpoint_liveness():
     """Verify HTTP gateway status/health endpoints respond."""
     print("\n=== Test: Gateway HTTP Liveness ===")
 
-    data = _read_lockfile()
-    if data is None:
-        print("  SKIP: No running gateway detected")
-        return
+    with _temporary_gateway() as (_env, data):
+        # Get gateway endpoint
+        host = data.get("host", "127.0.0.1")
+        port = data.get("port")
+        token = data.get("token")
+        assert port is not None, "Temporary gateway lockfile missing port"
 
-    # Get gateway endpoint
-    host = data.get("host", "127.0.0.1")
-    port = data.get("port")
-    token = data.get("token")
+        print(f"  Gateway at {host}:{port}")
 
-    if not port:
-        print("  SKIP: Lockfile has no port")
-        return
+        # Test /health endpoint (no auth required)
+        import urllib.request
+        import urllib.error
 
-    print(f"  Gateway at {host}:{port}")
-
-    # Test /health endpoint (no auth required)
-    import urllib.request
-    import urllib.error
-
-    url = f"http://{host}:{port}/health"
-    try:
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            health_data = json.loads(resp.read().decode())
-            print(f"  PASS: /health endpoint responded: {health_data}")
-            assert health_data.get("status") == "ok", (
-                f"health status should be 'ok', got {health_data}"
-            )
-            print("  PASS: /health returns {status: ok}")
-    except urllib.error.URLError as e:
-        print(f"  FAIL: /health endpoint unreachable: {e}")
-        raise
-
-    # Test /status endpoint with auth
-    if token:
-        url = f"http://{host}:{port}/status"
+        url = f"http://{host}:{port}/health"
         try:
             req = urllib.request.Request(url)
-            req.add_header("Authorization", f"Bearer {token}")
             with urllib.request.urlopen(req, timeout=5) as resp:
-                status_data = json.loads(resp.read().decode())
-                print(
-                    f"  PASS: /status endpoint responded with state={status_data.get('state')}"
+                health_data = json.loads(resp.read().decode())
+                print(f"  PASS: /health endpoint responded: {health_data}")
+                assert health_data.get("status") == "ok", (
+                    f"health status should be 'ok', got {health_data}"
                 )
+                print("  PASS: /health returns {status: ok}")
         except urllib.error.URLError as e:
-            print(f"  FAIL: /status endpoint unreachable: {e}")
+            print(f"  FAIL: /health endpoint unreachable: {e}")
             raise
+
+        # Test /status endpoint with auth
+        if token:
+            url = f"http://{host}:{port}/status"
+            try:
+                req = urllib.request.Request(url)
+                req.add_header("Authorization", f"Bearer {token}")
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    status_data = json.loads(resp.read().decode())
+                    print(
+                        f"  PASS: /status endpoint responded with state={status_data.get('state')}"
+                    )
+            except urllib.error.URLError as e:
+                print(f"  FAIL: /status endpoint unreachable: {e}")
+                raise
 
 
 def test_interrupt_cli_surface():

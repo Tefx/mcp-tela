@@ -681,6 +681,37 @@ def test_tools_call_meta_extraction_input_shape() -> None:
     assert "path" in stripped
 
 
+def test_handle_tools_call_rejects_non_snake_case_tool_name() -> None:
+    """Direct tools/call must reject non-canonical shared tool names."""
+    import asyncio
+
+    from tela.core.models import ConnectionContext, ProfileConfig, TelaConfig
+    from tela.shell.gateway_runtime import clear_runtime_connections, set_runtime_config
+    from tela.shell.upstream import handle_tools_call
+
+    set_runtime_config(
+        TelaConfig(profiles={"dev": ProfileConfig(name="dev", default=True)})
+    )
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        conn = ConnectionContext(
+            connection_id="c1",
+            profile_id="dev",
+            connected_at="2026-01-01T00:00:00Z",
+        )
+        result = await handle_tools_call(conn, "bad.tool", {})
+        assert result.is_err
+        assert result.error is not None
+        assert result.error.code == "INVALID_TOOL_NAME"
+        assert "snake_case" in result.error.message
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+
+
 def test_tela_error_model_shape() -> None:
     """TelaError carries structured error response for denied calls."""
     from tela.core.models import TelaError

@@ -20,6 +20,11 @@ from typing import Any, Literal
 
 from tela.core.errors import DOWNSTREAM_ERROR, DOWNSTREAM_UNAVAILABLE
 from tela.core.models import ServerConfig, TelaError
+from tela.core.recovery_helpers import (
+    build_recovery_error as _build_recovery_error,
+    get_exception_text as _get_exception_text,
+    is_recovery_eligible_exception as _is_recovery_eligible_exception,
+)
 from tela.shell.result import Result
 
 # Recovery constants
@@ -31,34 +36,6 @@ _RECOVERY_STAGE_CONVERGENCE_REJECTED = "convergence_rejected"
 _RECOVERY_STAGE_RETRY_FAILED = "retry_failed"
 _RECOVERY_STAGE_RECOVERY_TIMEOUT = "recovery_timeout"
 _RECOVERY_STAGE_CLASSIFIER_UNKNOWN = "classifier_unknown"
-_ELIGIBLE_RUNTIME_ERRORS: tuple[str, ...] = (
-    "Client is not connected. Use the 'async with client:' context manager first.",
-    "Server session was closed unexpectedly",
-)
-
-
-# --- Pure helpers (no shared state access) ---
-
-
-# @invar:allow shell_result: pure text normalization helper — no I/O, no failable boundary.
-def _get_exception_text(exc: Exception) -> str:
-    """Return normalized exception text for diagnostics."""
-
-    return f"{type(exc).__name__}: {exc}"
-
-
-# @invar:allow shell_result: pure boolean classification — no I/O, no failable boundary.
-def _is_recovery_eligible_exception(exc: Exception) -> bool:
-    """Classify transport failures that are safe for one automatic retry."""
-
-    if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
-        return False
-    if isinstance(exc, (BrokenPipeError, ConnectionResetError)):
-        return False
-    if isinstance(exc, RuntimeError):
-        msg = str(exc)
-        return any(msg == expected for expected in _ELIGIBLE_RUNTIME_ERRORS)
-    return False
 
 
 def _emit_recovery_diagnostic(
@@ -89,37 +66,10 @@ def _emit_recovery_diagnostic(
     logging.warning("%s", entry)
 
 
-# @invar:allow shell_result: pure data constructor returning TelaError, no I/O.
-def _build_recovery_error(
-    server_name: str,
-    *,
-    recovery_attempted: bool,
-    recovery_eligible: bool,
-    recovery_stage: str,
-    underlying_error: str,
-    config_missing: bool | None = None,
-) -> TelaError:
-    """Build ADR-006 error envelope for recovery outcomes."""
-
-    details: dict[str, Any] = {
-        "server_name": server_name,
-        "recovery_attempted": recovery_attempted,
-        "recovery_stage": recovery_stage,
-        "recovery_eligible": recovery_eligible,
-        "underlying_error": underlying_error,
-    }
-    if config_missing is not None:
-        details["config_missing"] = config_missing
-    return TelaError(
-        code=DOWNSTREAM_UNAVAILABLE,
-        message=f"Downstream server '{server_name}' is not connected",
-        details=details,
-    )
-
-
 # --- Recovery config resolution ---
 
 
+# @shell_complexity: recovery config resolution branches across runtime-missing, server-missing, and config-present fail-closed paths required by ADR-006.
 def _get_runtime_server_config(server_name: str) -> Result[ServerConfig, TelaError]:
     """Resolve server config from runtime authority only.
 

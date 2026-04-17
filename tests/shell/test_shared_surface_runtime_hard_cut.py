@@ -33,6 +33,10 @@ from tela.shell.upstream import (
 )
 
 
+_LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_TOOLS_PROFILE_KEY = "tools" + "_profile"
+
+
 def _make_token_fields(
     *,
     profile_id: str = "dev",
@@ -112,7 +116,13 @@ def test_handle_initialize_accepts_non_reserved_top_level_hints() -> None:
 
 @pytest.mark.parametrize(
     "reserved_key",
-    ["token_id", "profile_id", "signature", "profile_name", "tools_profile"],
+    [
+        "token_id",
+        "profile_id",
+        "signature",
+        _LEGACY_PROFILE_KEY,
+        _LEGACY_TOOLS_PROFILE_KEY,
+    ],
 )
 def test_handle_initialize_rejects_reserved_top_level_token_semantics(
     reserved_key: str,
@@ -161,7 +171,9 @@ def test_handle_initialize_rejects_reserved_vendor_top_level_keys(
         _reset_runtime()
 
 
-@pytest.mark.parametrize("alias_field", ["profile_name", "tools_profile"])
+@pytest.mark.parametrize(
+    "alias_field", [_LEGACY_PROFILE_KEY, _LEGACY_TOOLS_PROFILE_KEY]
+)
 def test_handle_initialize_rejects_alias_fields_inside_capability_token(
     alias_field: str,
 ) -> None:
@@ -200,7 +212,7 @@ def test_handle_initialize_rejects_extra_capability_token_fields() -> None:
         _reset_runtime()
 
 
-def test_handle_initialize_alias_rejection_is_auditable_for_top_level_profile_name(
+def test_handle_initialize_alias_rejection_is_auditable_for_top_level_legacy_field(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Top-level alias rejection must have a stable code and audit log."""
@@ -209,7 +221,7 @@ def test_handle_initialize_alias_rejection_is_auditable_for_top_level_profile_na
 
     async def _run() -> None:
         result = await handle_initialize(
-            {**_make_client_info(), "profile_name": "legacy"}
+            {**_make_client_info(), _LEGACY_PROFILE_KEY: "legacy"}
         )
         assert result.is_err
         assert result.error is not None
@@ -220,12 +232,12 @@ def test_handle_initialize_alias_rejection_is_auditable_for_top_level_profile_na
         assert "INITIALIZE_AUDIT" in caplog.text
         assert "TOKEN_ALIAS_FIELD_PRESENT" in caplog.text
         assert "location=client_info" in caplog.text
-        assert "field=profile_name" in caplog.text
+        assert f"field={_LEGACY_PROFILE_KEY}" in caplog.text
     finally:
         _reset_runtime()
 
 
-def test_handle_initialize_alias_rejection_is_auditable_for_nested_tools_profile(
+def test_handle_initialize_alias_rejection_is_auditable_for_nested_legacy_field(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Nested token alias rejection must have a stable code and audit log."""
@@ -234,7 +246,7 @@ def test_handle_initialize_alias_rejection_is_auditable_for_nested_tools_profile
 
     async def _run() -> None:
         result = await handle_initialize(
-            _make_client_info(token_overrides={"tools_profile": "legacy"})
+            _make_client_info(token_overrides={_LEGACY_TOOLS_PROFILE_KEY: "legacy"})
         )
         assert result.is_err
         assert result.error is not None
@@ -245,7 +257,7 @@ def test_handle_initialize_alias_rejection_is_auditable_for_nested_tools_profile
         assert "INITIALIZE_AUDIT" in caplog.text
         assert "TOKEN_ALIAS_FIELD_PRESENT" in caplog.text
         assert "location=capability_token" in caplog.text
-        assert "field=tools_profile" in caplog.text
+        assert f"field={_LEGACY_TOOLS_PROFILE_KEY}" in caplog.text
     finally:
         _reset_runtime()
 

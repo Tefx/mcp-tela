@@ -151,7 +151,7 @@ class TestL20ProfileCatalog:
 
         assert len(BUILTIN_PROFILES) == 7
 
-    def test_catalog_profile_names(self) -> None:
+    def test_catalog_profile_ids(self) -> None:
         from tela.core.catalog import BUILTIN_PROFILES
 
         expected = {

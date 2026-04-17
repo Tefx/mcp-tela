@@ -24,7 +24,7 @@ SurfaceContract := {
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
 | `tela_list_providers` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}`. |
-| `tela_list_profiles` | `tool` | MCP `tools/call` with `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
+| `tela_list_profiles` | `tool` | MCP `tools/call` with exact `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
 
 ### 1.2 Operator companion surfaces
 
@@ -94,6 +94,7 @@ completes; endpoint discoverability does not imply readiness.
   `tool_count` (int), and `tool_names` (list of post-enforcement-filter exposed
   tool names).
 - `tela_list_profiles` input: empty object `{}`
+- extra input keys are invalid; builtin list tools fail closed on non-empty argument payloads
 - `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
   `profile_id` (str), `capabilities` (dict of family→posture string), and
   `default` (bool).

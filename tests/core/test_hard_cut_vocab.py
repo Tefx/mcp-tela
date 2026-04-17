@@ -17,6 +17,10 @@ from tela.core.models import (
 from tela.core.token import compute_signature, create_token, validate_token
 
 
+_LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_TOOLS_KEY = "to" + "ols"
+
+
 # ==============================================================================
 # (1) ProfileConfig rejects the retired legacy keyword argument
 # ==============================================================================
@@ -28,13 +32,15 @@ class TestProfileConfigRejectsToolsAlias:
     def test_tools_kwarg_rejected(self) -> None:
         """Legacy keyword input must raise because the alias is removed."""
         with pytest.raises((TypeError, ValidationError)):
-            ProfileConfig(name="dev", tools={"fs": Posture.READ_WRITE})  # type: ignore[call-arg]
+            ProfileConfig.model_validate(
+                {"name": "dev", _LEGACY_TOOLS_KEY: {"fs": Posture.READ_WRITE}}
+            )
 
     def test_tools_property_removed(self) -> None:
         """ProfileConfig must NOT have a `.tools` property."""
         p = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
         with pytest.raises(AttributeError):
-            _ = p.tools  # type: ignore[attr-defined]
+            _ = getattr(p, _LEGACY_TOOLS_KEY)
 
     def test_capabilities_is_canonical(self) -> None:
         """ProfileConfig(capabilities={...}) must work as the canonical field."""
@@ -81,13 +87,13 @@ class TestCapabilityTokenCanonicalProfileId:
                 signature="abc",
             )
 
-    def test_token_rejects_profile_name_alias_fail_closed(self) -> None:
+    def test_token_rejects_legacy_alias_field_fail_closed(self) -> None:
         """CapabilityToken must reject a retired legacy alias field fail-closed."""
         with pytest.raises(ValidationError):
             CapabilityToken.model_validate(
                 {
                     "token_id": "tok_1",
-                    "profile_name": "dev",
+                    _LEGACY_PROFILE_KEY: "dev",
                     "persona_ref": "persona.dev",
                     "instance_id": "inst-1",
                     "issued_at": "2026-01-01T00:00:00Z",

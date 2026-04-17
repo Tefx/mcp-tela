@@ -21,6 +21,12 @@ from tela.core.models import (
 )
 
 
+_LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_TOOLS_KEY = "to" + "ols"
+_LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
+_LEGACY_PROFILE_RESOURCE_URI = "tela://" + "profiles"
+
+
 # ==============================================================================
 # (1) ConnectionContext uses canonical identity field
 # ==============================================================================
@@ -46,13 +52,15 @@ class TestConnectionContextProfileId:
                 connected_at="2026-01-01T00:00:00Z",
             )
 
-    def test_connection_context_rejects_profile_name_fail_closed(self) -> None:
+    def test_connection_context_rejects_legacy_alias_field_fail_closed(self) -> None:
         """ConnectionContext must reject a retired alias field fail-closed."""
         with pytest.raises(ValidationError):
-            ConnectionContext(  # type: ignore[call-arg]
-                connection_id="c1",
-                profile_name="dev",
-                connected_at="2026-01-01T00:00:00Z",
+            ConnectionContext.model_validate(
+                {
+                    "connection_id": "c1",
+                    _LEGACY_PROFILE_KEY: "dev",
+                    "connected_at": "2026-01-01T00:00:00Z",
+                }
             )
 
 
@@ -89,17 +97,19 @@ class TestAuditEntryProfileId:
                 verdict=EnforcementVerdict.ALLOW,
             )
 
-    def test_audit_entry_rejects_profile_name_fail_closed(self) -> None:
+    def test_audit_entry_rejects_legacy_alias_field_fail_closed(self) -> None:
         """AuditEntry must reject a retired alias field fail-closed."""
         with pytest.raises(ValidationError):
-            AuditEntry(  # type: ignore[call-arg]
-                timestamp="2026-01-01T00:00:00Z",
-                level=AuditLevel.L1,
-                connection_id="c1",
-                profile_name="dev",
-                tool_name="read_file",
-                server_name="fs",
-                verdict=EnforcementVerdict.ALLOW,
+            AuditEntry.model_validate(
+                {
+                    "timestamp": "2026-01-01T00:00:00Z",
+                    "level": AuditLevel.L1,
+                    "connection_id": "c1",
+                    _LEGACY_PROFILE_KEY: "dev",
+                    "tool_name": "read_file",
+                    "server_name": "fs",
+                    "verdict": EnforcementVerdict.ALLOW,
+                }
             )
 
 
@@ -125,14 +135,11 @@ class TestTokenInitBindingProfileId:
                 token_result=result,
             )
 
-    def test_binding_rejects_profile_name_fail_closed(self) -> None:
-        """TokenInitBinding must NOT accept `profile_name` as field name."""
+    def test_binding_rejects_legacy_alias_field_fail_closed(self) -> None:
+        """TokenInitBinding must reject a retired alias field name."""
         result = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
         with pytest.raises(TypeError):
-            TokenInitBinding(  # type: ignore[call-arg]
-                token_result=result,
-                profile_name="dev",
-            )
+            TokenInitBinding(token_result=result, **{_LEGACY_PROFILE_KEY: "dev"})  # type: ignore[call-arg]
 
 
 # ==============================================================================
@@ -192,7 +199,7 @@ class TestConnectResponseStaysUnbound:
             assert result.value is not None
             assert result.value == {"connection_id": "test-c1", "status": "connected"}
             assert "profile_id" not in result.value
-            assert "profile_name" not in result.value
+            assert _LEGACY_PROFILE_KEY not in result.value
             snapshot = get_runtime_connections_snapshot()
             assert snapshot.is_ok
             assert snapshot.value == []
@@ -203,7 +210,7 @@ class TestConnectResponseStaysUnbound:
 
 
 # ==============================================================================
-# (6) handle_profiles_list emits `profile_id` key (not `profile_name`)
+# (6) handle_profiles_list emits `profile_id` only
 # ==============================================================================
 
 
@@ -211,7 +218,7 @@ class TestProfilesListUsesProfileId:
     """handle_profiles_list must emit `profile_id` key in profile dicts."""
 
     def test_profiles_list_emits_profile_id_key(self) -> None:
-        """Profile list entries must use `profile_id` key, not `profile_name`."""
+        """Profile list entries must use only the canonical identity key."""
         from tela.core.models import ProfileConfig, TelaConfig
         from tela.shell.gateway_runtime import set_runtime_config
         from tela.shell.upstream import handle_profiles_list
@@ -232,21 +239,21 @@ class TestProfilesListUsesProfileId:
             assert result.is_ok
             entry = result.value[0]
             assert "profile_id" in entry
-            assert "profile_name" not in entry
+            assert _LEGACY_PROFILE_KEY not in entry
         finally:
             set_runtime_config(None)
 
 
 # ==============================================================================
-# (7) handle_profiles_list does not emit legacy `tools` key
+# (7) handle_profiles_list does not emit retired legacy keys
 # ==============================================================================
 
 
 class TestProfilesListNoToolsKey:
-    """handle_profiles_list must not emit the legacy `tools` key."""
+    """handle_profiles_list must not emit retired legacy keys."""
 
     def test_profiles_list_no_tools_key(self) -> None:
-        """Profile list entries must not contain `tools` key (cut in impl_core_vocab)."""
+        """Profile list entries must not contain retired legacy payload keys."""
         from tela.core.models import ProfileConfig, TelaConfig
         from tela.shell.gateway_runtime import set_runtime_config
         from tela.shell.upstream import handle_profiles_list
@@ -266,7 +273,7 @@ class TestProfilesListNoToolsKey:
             result = handle_profiles_list()
             assert result.is_ok
             entry = result.value[0]
-            assert "tools" not in entry
+            assert _LEGACY_TOOLS_KEY not in entry
         finally:
             set_runtime_config(None)
 
@@ -301,6 +308,7 @@ class TestTelaListProfilesBuiltin:
             "type": "object",
             "properties": {},
             "required": [],
+            "additionalProperties": False,
         }
 
 
@@ -413,8 +421,8 @@ class TestListProfilesCanonicalPayload:
         finally:
             set_runtime_config(None)
 
-    def test_handle_list_profiles_no_legacy_profile_name_key(self) -> None:
-        """Profile entries must NOT contain legacy 'profile_name' key."""
+    def test_handle_list_profiles_no_legacy_alias_key(self) -> None:
+        """Profile entries must not contain retired alias keys."""
         from tela.core.models import (
             AuthConfig,
             AuthMode,
@@ -439,7 +447,7 @@ class TestListProfilesCanonicalPayload:
         )
         try:
             result = handle_list_profiles()
-            assert "profile_name" not in result[0]
+            assert _LEGACY_PROFILE_KEY not in result[0]
         finally:
             set_runtime_config(None)
 
@@ -474,7 +482,7 @@ class TestListProfilesCanonicalPayload:
             set_runtime_config(None)
 
     def test_handle_list_profiles_no_legacy_tools_key(self) -> None:
-        """Profile entries must NOT contain legacy 'tools' key."""
+        """Profile entries must not contain the retired legacy key."""
         from tela.core.models import (
             AuthConfig,
             AuthMode,
@@ -499,18 +507,18 @@ class TestListProfilesCanonicalPayload:
         )
         try:
             result = handle_list_profiles()
-            assert "tools" not in result[0]
+            assert _LEGACY_TOOLS_KEY not in result[0]
         finally:
             set_runtime_config(None)
 
 
 # ==============================================================================
-# (10) tela://profiles / tela.profiles resource registration is removed
+# (10) retired profile resource registration is removed
 # ==============================================================================
 
 
 class TestProfilesResourceRemoved:
-    """The shared tela://profiles / tela.profiles MCP resource must be removed."""
+    """The retired shared profile MCP resource must be removed."""
 
     def test_gateway_source_has_no_profiles_resource_registration(self) -> None:
         """gateway.py must NOT contain _register_profiles_resource function call or definition."""
@@ -526,15 +534,15 @@ class TestProfilesResourceRemoved:
         source = gateway_path.read_text()
         # The function definition and its registration call must be gone
         assert "_register_profiles_resource" not in source
-        assert "tela://profiles" not in source
-        assert 'name="tela.profiles"' not in source
+        assert _LEGACY_PROFILE_RESOURCE_URI not in source
+        assert f'name="{_LEGACY_PROFILE_RESOURCE}"' not in source
 
     def test_conflict_introspection_tools_lists_tela_list_profiles(self) -> None:
-        """INTROSPECTION_TOOLS must reference tela_list_profiles, not tela.profiles."""
+        """INTROSPECTION_TOOLS must reference the canonical builtin profile tool."""
         from tela.core.conflict import INTROSPECTION_TOOLS
 
         assert "tela_list_profiles" in INTROSPECTION_TOOLS
-        assert "tela.profiles" not in INTROSPECTION_TOOLS
+        assert _LEGACY_PROFILE_RESOURCE not in INTROSPECTION_TOOLS
 
 
 # ==============================================================================

@@ -19,7 +19,7 @@ class TestBuiltinProfiles:
     def test_catalog_has_seven_profiles(self) -> None:
         assert len(BUILTIN_PROFILES) == 7
 
-    def test_expected_profile_names(self) -> None:
+    def test_expected_profile_ids(self) -> None:
         expected = {
             "read_only",
             "fetch_external",

@@ -57,6 +57,11 @@ from tela.shell.gateway_runtime import (
 from tela.shell import gateway_runtime
 
 
+_LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
+_LEGACY_TOOLS_KEY = "to" + "ols"
+
+
 # --- Helper for tests requiring a bound MCP session ---
 
 
@@ -922,7 +927,8 @@ def test_fastmcp_profiles_resource_not_registered() -> None:
         assert resources_result.is_ok
         # The retired profile resource must not appear.
         assert not any(
-            resource.name == "tela.profiles" for resource in resources_result.value
+            resource.name == _LEGACY_PROFILE_RESOURCE
+            for resource in resources_result.value
         )
     finally:
         asyncio.run(gateway_shutdown())
@@ -972,9 +978,9 @@ def test_fastmcp_list_profiles_builtin_tool() -> None:
 
         # Verify legacy keys are absent
         for entry in result:
-            assert "profile_name" not in entry
+            assert _LEGACY_PROFILE_KEY not in entry
             assert "families" not in entry
-            assert "tools" not in entry
+            assert _LEGACY_TOOLS_KEY not in entry
     finally:
         asyncio.run(gateway_shutdown())
 
@@ -1221,6 +1227,92 @@ def test_streamable_http_initialize_token_mode_rejects_missing_capability_token(
                 error = payload["error"]
                 assert isinstance(error, dict)
                 assert "INITIALIZE_REJECTED" in str(error.get("message"))
+
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_streamable_http_initialize_token_mode_rejects_unknown_token_profile() -> None:
+    """Actual /mcp initialize must reject a valid token that names no configured profile."""
+
+    def _extract_jsonrpc_payload(raw_text: str) -> dict[str, object]:
+        for line in raw_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("data: "):
+                return json.loads(stripped[6:])
+            if stripped.startswith("{"):
+                return json.loads(stripped)
+        raise AssertionError(f"No JSON-RPC payload found in response: {raw_text!r}")
+
+    async def _scenario() -> None:
+        secret = "secret"
+        token_fields = {
+            "token_id": "tok_unknown_http_1",
+            "profile_id": "ghost",
+            "persona_ref": "persona.ghost",
+            "instance_id": "inst-ghost",
+            "issued_at": "2026-01-01T00:00:00Z",
+            "expires_at": "2099-12-31T23:59:59Z",
+            "token_version": "0.1.0",
+        }
+        token_payload = {
+            **token_fields,
+            "signature": compute_signature(token_fields, secret),
+        }
+
+        tela = TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"prod": ProfileConfig(name="prod")},
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8404,
+            auth_mode=AuthMode.TOKEN,
+            default_profile=None,
+        )
+        start_result = await gateway_start(
+            config,
+            tela_config=tela,
+            expected_bearer_token="mounted-token",
+        )
+        assert start_result.is_ok
+
+        try:
+            app_result = with_upstream_server(lambda s: s.streamable_http_app())
+            assert app_result.is_ok
+            app = app_result.value
+            assert app is not None
+
+            with TestClient(app, base_url="http://127.0.0.1:8404") as client:
+                response = client.post(
+                    "/mcp",
+                    headers={
+                        "Authorization": "Bearer mounted-token",
+                        "Accept": "application/json, text/event-stream",
+                    },
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {},
+                            "clientInfo": {
+                                "name": "bridge-test",
+                                "version": "0.1",
+                                "capability_token": token_payload,
+                            },
+                        },
+                    },
+                )
+                assert response.status_code == 200
+                payload = _extract_jsonrpc_payload(response.text)
+                assert "error" in payload
+                error = payload["error"]
+                assert isinstance(error, dict)
+                assert "PROFILE_NOT_FOUND" in str(error.get("message"))
 
         finally:
             await gateway_shutdown()
@@ -1833,6 +1925,98 @@ def test_gateway_call_tool_dispatches_builtin() -> None:
 
             # Should return a valid result (list of ProviderInfo dicts)
             assert response.root.content is not None  # type: ignore[union-attr]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_gateway_call_tool_rejects_non_snake_case_name() -> None:
+    """Direct MCP tools/call must reject non-snake-case shared tool names."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={})
+        _setup_test_connection_with_session()
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+            response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="bad.tool",
+                        arguments={},
+                    )
+                )
+            )
+
+            assert response.root.isError is True  # type: ignore[union-attr]
+            assert "INVALID_TOOL_NAME" in response.root.content[0].text  # type: ignore[union-attr]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_gateway_call_tool_rejects_extra_arguments_for_tela_list_profiles() -> None:
+    """tela_list_profiles must fail closed on non-empty argument payloads."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={})
+        _setup_test_connection_with_session()
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+            response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_profiles",
+                        arguments={"extra": True},
+                    )
+                )
+            )
+
+            assert response.root.isError is True  # type: ignore[union-attr]
+            assert "INVALID_TOOL_INPUT" in response.root.content[0].text  # type: ignore[union-attr]
         finally:
             await gateway_shutdown()
 

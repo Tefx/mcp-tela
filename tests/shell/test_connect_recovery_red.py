@@ -196,23 +196,17 @@ def test_discover_or_autostart_handles_stale_lockfile_via_coordinator(
 # =============================================================================
 
 
-@pytest.mark.xfail(
-    reason="Post-impl: _discover_or_autostart delegates to startup coordinator "
-    "which retries autostart within its race loop; coordination gap exists "
-    "when wait-for-lockfile times out after autostart but no second autostart "
-    "is triggered outside the coordinator's retry budget"
-)
-def test_discover_or_autostart_re_autostarts_after_wait_timeout(
+def test_discover_or_autostart_retries_coordinator_after_discovery_failed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Wait timeout during discovery must trigger re-autostart.
+    """Discovery gets one bounded second-chance coordinator retry.
 
-    RED test: When _wait_for_live_lockfile times out, the system should
-    re-attempt autostart rather than failing immediately. Currently
-    only one autostart attempt is made.
+    Current contract: connect_cmd._discover_or_autostart delegates startup
+    arbitration to the coordinator and performs one extra coordinator pass when
+    the first pass returns DISCOVERY_FAILED.
     """
 
-    calls = {"wait": 0, "autostart": 0}
+    calls = {"coordinator": 0}
 
     lockfile = LockfileData(
         pid=99999,
@@ -224,50 +218,32 @@ def test_discover_or_autostart_re_autostarts_after_wait_timeout(
         version="0.1.0",
     )
 
-    def _fake_read_lockfile() -> Result[LockfileData, str]:
-        return Result(error="LOCKFILE_READ_ERROR: lockfile does not exist")
-
-    def _fake_wait_for_live_lockfile(
-        timeout_seconds: float,
-        expected_pid: int | None = None,
+    def _fake_coordinator_discover_or_autostart(
+        **_: object,
     ) -> Result[LockfileData, str]:
-        calls["wait"] += 1
-        if calls["wait"] == 1:
-            # First wait times out
-            return Result(error="LOCKFILE_WAIT_TIMEOUT: timed out")
-        # Second wait succeeds
+        calls["coordinator"] += 1
+        if calls["coordinator"] == 1:
+            return Result(
+                error=(
+                    "DISCOVERY_FAILED: could not discover or auto-start tela serve via lockfile"
+                )
+            )
         return Result(value=lockfile)
 
-    def _fake_autostart_serve(
-        *,
-        config_path: str,
-        default_profile: str | None,
-    ) -> Result[int, str]:
-        calls["autostart"] += 1
-        return Result(value=99999)
-
-    monkeypatch.setattr(connect_cmd, "read_lockfile", _fake_read_lockfile)
     monkeypatch.setattr(
-        connect_cmd, "_wait_for_live_lockfile", _fake_wait_for_live_lockfile
+        connect_cmd,
+        "_coordinator_discover_or_autostart",
+        _fake_coordinator_discover_or_autostart,
     )
-    monkeypatch.setattr(connect_cmd, "_autostart_serve", _fake_autostart_serve)
 
     result = connect_cmd._discover_or_autostart(
         config_path="tela.yaml",
         default_profile=None,
     )
 
-    # Expected: wait timeout triggers autostart, then second wait succeeds
-    # Actual: only one autostart attempt is made
     assert result.is_ok
-    assert calls["autostart"] >= 2, (
-        f"Expected at least 2 autostart attempts after wait failures, "
-        f"got {calls['autostart']}"
-    )
-    assert calls["wait"] >= 2, (
-        f"Expected at least 2 wait calls (before and after autostart), "
-        f"got {calls['wait']}"
-    )
+    assert result.value == lockfile
+    assert calls["coordinator"] == 2
 
 
 # =============================================================================

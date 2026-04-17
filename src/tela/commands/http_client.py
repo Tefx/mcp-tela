@@ -37,59 +37,8 @@ from typing import Callable
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
+from tela.core.http_transient import is_transient_url_error as _is_transient_url_error
 from tela.shell.result import Result
-from tela.shell.transient_types import (
-    TRANSIENT_CONNECTION_EXCEPTIONS,
-    TRANSIENT_ERRNOS,
-)
-
-
-# @invar:allow shell_result: pure boolean classifier returning bool, not a failable I/O boundary.
-def _is_transient_url_error(exc: urllib_error.URLError) -> bool:
-    """Classify whether a URLError is a transient connection failure.
-
-    Transient failures (connection refused, reset, broken pipe) can occur
-    when the gateway HTTP server is still starting up or temporarily
-    unreachable. Non-transient failures (DNS, SSL, etc.) should not be
-    retried.
-
-    This is the canonical classification for the retry skeleton. It
-    mirrors the same logic previously defined inline in
-    ``connect_cmd._is_transient_url_error`` but returns a plain ``bool``
-    rather than ``Result[bool, str]`` — the ``Result`` wrapper added
-    no semantic value since classification never fails.
-
-    Args:
-        exc: The URLError to classify.
-
-    Returns:
-        ``True`` if the underlying error is a transient connection
-        failure, ``False`` otherwise.
-    """
-    reason = exc.reason
-    if isinstance(reason, OSError):
-        # Prefer type-based classification: Python's builtin subclasses
-        # (ConnectionRefusedError, ConnectionResetError, etc.) may carry
-        # errno=None when constructed with only a message string — which is
-        # the common pattern in both production urllib and test fixtures.
-        if isinstance(reason, TRANSIENT_CONNECTION_EXCEPTIONS):
-            return True
-
-        # Fallback: errno check for generic OSError instances raised by the
-        # OS with a numeric errno but no dedicated exception subclass.
-        return reason.errno in TRANSIENT_ERRNOS
-    if isinstance(reason, str):
-        normalized_reason = reason.lower()
-        transient_reason_markers = (
-            "connection refused",
-            "connection reset",
-            "connection aborted",
-            "broken pipe",
-            "timed out",
-            "temporarily unavailable",
-        )
-        return any(marker in normalized_reason for marker in transient_reason_markers)
-    return False
 
 
 # @shell_complexity: retry/backoff loop branches on HTTPError code, transient
