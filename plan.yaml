@@ -73992,5 +73992,10 @@ phases:
 
       - Otherwise BLOCK and enumerate exact residual blockers.'
     depends_on:
+    - canonical_gateway_state.token_admission_exactness
+    - canonical_gateway_state.builtin_call_admission_exactness
+    - canonical_gateway_state.provider_binding_and_audit_attribution
+    - canonical_gateway_state.family_denial_canonical_profile_id
+    - canonical_gateway_state.docs_and_regression_sync
     - canonical_gateway_state.verify
     agent: gate-reviewer-tacit
