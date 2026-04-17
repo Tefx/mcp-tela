@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, cast
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
@@ -105,19 +105,6 @@ def _build_builtin_json_result(
         ],
         isError=False,
     )
-
-
-def _raise_if_builtin_arguments_present(
-    tool_name: str,
-    arguments: dict[str, object] | None,
-) -> None:
-    """Builtin tools with empty-object schemas must reject extra arguments."""
-
-    if arguments:
-        argument_keys = ", ".join(sorted(arguments.keys()))
-        raise RuntimeError(
-            f"INVALID_TOOL_INPUT: {tool_name} takes no arguments; got {argument_keys}"
-        )
 
 
 @dataclass(frozen=True)
@@ -545,27 +532,40 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
     # @shell_complexity: builtin tool calls follow a different execution path than downstream tools.
     @upstream_server._mcp_server.call_tool(validate_input=False)
-    async def _call_tool(
-        tool_name: str, arguments: dict[str, object]
-    ) -> mcp_types.CallToolResult:
-        # Check if this is a builtin tool
-        if tool_name in BUILTIN_TOOL_NAMES:
-            return await _handle_builtin_call(tool_name, arguments)
-
+    async def _call_tool(tool_name: str, arguments: object) -> mcp_types.CallToolResult:
         connection = await _ensure_connection()
-        # Wait for convergence before calling downstream tools.
-        converge = gateway_runtime.get_runtime_converge_event().value
-        if converge is not None:
-            await converge.wait()
-        # Capture upstream MCP session for notification delivery.
-        # Mirrors the capture in _list_tools so that tools/call also
-        # establishes session binding (not just tools/list).
+        # Capture upstream MCP session for notification delivery for all tool
+        # calls, including builtins, so builtin dispatch cannot bypass
+        # session/connection admission.
         try:
             gateway_runtime.capture_session(
                 connection.connection_id, request_ctx.get().session
             )
         except LookupError:
             pass  # No request context (e.g. stdio without session capture)
+
+        # Check if this is a builtin tool
+        if tool_name in BUILTIN_TOOL_NAMES:
+            if not isinstance(arguments, dict):
+                raise RuntimeError(
+                    f"INVALID_TOOL_INPUT: {tool_name} requires an empty object argument payload"
+                )
+            if arguments:
+                argument_keys = ", ".join(sorted(arguments.keys()))
+                raise RuntimeError(
+                    f"INVALID_TOOL_INPUT: {tool_name} takes no arguments; got {argument_keys}"
+                )
+            builtin_arguments = arguments
+            return await _handle_builtin_call(tool_name, builtin_arguments, connection)
+
+        # Wait for convergence before calling downstream tools.
+        converge = gateway_runtime.get_runtime_converge_event().value
+        if converge is not None:
+            await converge.wait()
+        if not isinstance(arguments, dict):
+            raise RuntimeError(
+                f"INVALID_TOOL_INPUT: {tool_name} requires an object argument payload"
+            )
         result = await handle_tools_call(connection, tool_name, dict(arguments))
         if result.is_err:
             assert result.error is not None
@@ -576,18 +576,39 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         # gateway proxies downstream results as-is.
         return mcp_types.CallToolResult.model_validate(result.value)
 
+    async def _call_tool_request(
+        req: mcp_types.CallToolRequest,
+    ) -> mcp_types.ServerResult:
+        """Preserve raw tool arguments before the SDK normalizes ``null`` to ``{}``."""
+
+        try:
+            return mcp_types.ServerResult(
+                cast(
+                    mcp_types.CallToolResult,
+                    await _call_tool(req.params.name, req.params.arguments),
+                )
+            )
+        except Exception as exc:
+            return upstream_server._mcp_server._make_error_result(str(exc))
+
+    upstream_server._mcp_server.request_handlers[mcp_types.CallToolRequest] = (
+        _call_tool_request
+    )
+
 
 # @shell_complexity: dispatch across builtin tool variants with protocol-contract branching
 # @invar:allow shell_result: _handle_builtin_call is an async MCP callback invoked by FastMCP's call_tool handler; returning mcp_types.CallToolResult directly satisfies the MCP protocol contract. The function delegates to handle_list_providers/handle_list_profiles (Shell) and returns a raw MCP type rather than Result[T, E], which is intentional — the function IS the boundary between Shell and MCP protocol layer.
 async def _handle_builtin_call(
     tool_name: str,
-    arguments: dict[str, object] | None,
+    arguments: dict[str, object],
+    connection: ConnectionContext,
 ) -> mcp_types.CallToolResult:
     """Handle a builtin tool call with L2 audit trail.
 
     Args:
         tool_name: Name of the builtin tool being invoked.
-        arguments: Tool arguments dict, or None if empty.
+        arguments: Tool arguments dict.
+        connection: Admitted connection bound to the current live session.
 
     Returns:
         CallToolResult on success.
@@ -597,7 +618,6 @@ async def _handle_builtin_call(
     """
     start_time = time.time()
     try:
-        _raise_if_builtin_arguments_present(tool_name, arguments)
         if tool_name == "tela_list_profiles":
             profiles_result = handle_list_profiles()
             call_result = [dict(p) for p in profiles_result]  # type: ignore[arg-type]
@@ -608,48 +628,38 @@ async def _handle_builtin_call(
 
         latency_ms = (time.time() - start_time) * 1000
 
-        # L2 audit entry for builtin tool calls (if connection available)
-        with gateway_runtime._runtime_lock:
-            connections = list(gateway_runtime._runtime.connections)
-        if connections:
-            connection = connections[0]
-            audit_entry_result = build_audit_entry(
-                level=AuditLevel.L2,
-                connection=connection,
-                tool_name=tool_name,
-                server_name="tela",  # builtin tools belong to "tela" pseudo-server
-                result=EnforcementResult(verdict=EnforcementVerdict.ALLOW),
-                latency_ms=latency_ms,
-                arguments=dict(arguments) if arguments else None,
-            )
-            if audit_entry_result.is_ok and audit_entry_result.value is not None:
-                await audit_write(audit_entry_result.value)
+        audit_entry_result = build_audit_entry(
+            level=AuditLevel.L2,
+            connection=connection,
+            tool_name=tool_name,
+            server_name="tela",  # builtin tools belong to "tela" pseudo-server
+            result=EnforcementResult(verdict=EnforcementVerdict.ALLOW),
+            latency_ms=latency_ms,
+            arguments=None,
+        )
+        if audit_entry_result.is_ok and audit_entry_result.value is not None:
+            await audit_write(audit_entry_result.value)
 
         return _build_builtin_json_result(tool_name, call_result)
     except Exception as e:
         latency_ms = (time.time() - start_time) * 1000
         error_code, error_message = _builtin_tool_error_details(e)
-        # L2 audit entry for failed builtin tool call (if connection available)
-        with gateway_runtime._runtime_lock:
-            connections = list(gateway_runtime._runtime.connections)
-        if connections:
-            connection = connections[0]
-            audit_entry_result = build_audit_entry(
-                level=AuditLevel.L2,
-                connection=connection,
-                tool_name=tool_name,
-                server_name="tela",
-                result=EnforcementResult(
-                    verdict=EnforcementVerdict.DENY,
-                    denied_by="builtin_tool_error",
-                    error_code=error_code,
-                    error_message=error_message,
-                ),
-                latency_ms=latency_ms,
-                arguments=dict(arguments) if arguments else None,
-            )
-            if audit_entry_result.is_ok and audit_entry_result.value is not None:
-                await audit_write(audit_entry_result.value)
+        audit_entry_result = build_audit_entry(
+            level=AuditLevel.L2,
+            connection=connection,
+            tool_name=tool_name,
+            server_name="tela",
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="builtin_tool_error",
+                error_code=error_code,
+                error_message=error_message,
+            ),
+            latency_ms=latency_ms,
+            arguments=dict(arguments) if arguments else None,
+        )
+        if audit_entry_result.is_ok and audit_entry_result.value is not None:
+            await audit_write(audit_entry_result.value)
         raise
 
 

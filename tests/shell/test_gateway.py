@@ -109,6 +109,22 @@ def _setup_test_connection_with_session() -> tuple[str, _FakeSession]:
     return connection_id, session
 
 
+def _extract_jsonrpc_payload(raw_text: str) -> dict[str, object]:
+    """Extract the JSON-RPC payload from plain or SSE-style HTTP responses."""
+
+    for line in raw_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("data: "):
+            payload = json.loads(stripped[6:])
+            assert isinstance(payload, dict)
+            return payload
+        if stripped.startswith("{"):
+            payload = json.loads(stripped)
+            assert isinstance(payload, dict)
+            return payload
+    raise AssertionError(f"No JSON-RPC payload found in response: {raw_text!r}")
+
+
 # --- GatewayStartupConfig model tests ---
 
 
@@ -990,6 +1006,13 @@ def test_fastmcp_list_profiles_builtin_tool_returns_json_payload_resource() -> N
 
     async def _scenario() -> None:
         tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
             profiles={
                 "dev": ProfileConfig(
                     name="dev",
@@ -1936,6 +1959,13 @@ def test_gateway_call_tool_rejects_non_snake_case_name() -> None:
 
     async def _scenario() -> None:
         tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
             profiles={
                 "dev": ProfileConfig(
                     name="dev",
@@ -2017,6 +2047,139 @@ def test_gateway_call_tool_rejects_extra_arguments_for_tela_list_profiles() -> N
 
             assert response.root.isError is True  # type: ignore[union-attr]
             assert "INVALID_TOOL_INPUT" in response.root.content[0].text  # type: ignore[union-attr]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_streamable_http_builtin_call_requires_admitted_session() -> None:
+    """Builtin tools/call must fail closed without a live admitted session."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        start_result = await gateway_start(config, tela_config=tela)
+        assert start_result.is_ok
+
+        try:
+            add_runtime_connection(
+                ConnectionContext(
+                    connection_id="conn_unadmitted_builtin",
+                    profile_id="dev",
+                    connected_at="2026-01-01T00:00:00Z",
+                    init_mode=AuthMode.OPEN,
+                )
+            )
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+
+            response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_providers",
+                        arguments={},
+                    )
+                )
+            )
+
+            assert response.root.isError is True  # type: ignore[union-attr]
+            assert "RECONNECT_REQUIRED" in response.root.content[0].text  # type: ignore[union-attr]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_streamable_http_builtin_call_accepts_only_exact_empty_object() -> None:
+    """Builtin tools/call must accept {} only and reject null/non-object/extra keys."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        start_result = await gateway_start(config, tela_config=tela)
+        assert start_result.is_ok
+        _setup_test_connection_with_session()
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+
+            ok_response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_profiles",
+                        arguments={},
+                    )
+                )
+            )
+            assert ok_response.root.isError is False  # type: ignore[union-attr]
+
+            null_response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_profiles",
+                        arguments=None,
+                    )
+                )
+            )
+            assert null_response.root.isError is True  # type: ignore[union-attr]
+            assert "INVALID_TOOL_INPUT" in null_response.root.content[0].text  # type: ignore[union-attr]
+
+            list_response = await handler_result.value(
+                types.CallToolRequest.model_construct(
+                    params=types.CallToolRequestParams.model_construct(
+                        name="tela_list_profiles",
+                        arguments=[],
+                    )
+                )
+            )
+            assert list_response.root.isError is True  # type: ignore[union-attr]
+            assert "INVALID_TOOL_INPUT" in list_response.root.content[0].text  # type: ignore[union-attr]
+
+            extra_response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="tela_list_profiles",
+                        arguments={"extra": True},
+                    )
+                )
+            )
+            assert extra_response.root.isError is True  # type: ignore[union-attr]
+            assert "INVALID_TOOL_INPUT" in extra_response.root.content[0].text  # type: ignore[union-attr]
         finally:
             await gateway_shutdown()
 
