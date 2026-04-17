@@ -73204,3 +73204,10 @@ phases:
       \ across README.md,tela.yaml.example,docs/**/*.md,evidence/**/*.md,tests/**/*.py\
       \ -> no matches\n- Gate review result\n  - gate-reviewer-tacit -> PASS: all\
       \ five hard-zero closure checks verified, no blocker remaining in scope"
+- id: fresh_review_true_zero
+  name: Fresh Review True Zero Closeout
+  status: pending
+  gate: Remove remaining skip/xfail debt and prove a fully green closure with no latent
+    gaps.
+  depends_on:
+  - fresh_review_final_hard_zero
