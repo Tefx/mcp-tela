@@ -73609,7 +73609,7 @@ phases:
   - id: canonical_gateway_state.provider_binding_and_audit_attribution
     name: Bind builtin provider listing and audit attribution to the true calling
       connection
-    status: claimed
+    status: done
     description: 'Implement and verify canonical truth binding for builtin provider
       listing and builtin audit attribution.
 
@@ -73745,6 +73745,52 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-17T20:47:44.795088+00:00'
+    done_at: '2026-04-17T20:55:42.144586+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - src/tela/shell/builtin_tools.py — read `handle_list_providers`; it selected\
+      \ profile truth from `config.resolved_default_profile`, not a bound caller connection.\n\
+      - src/tela/shell/gateway.py — read `_wire_upstream_handlers` / `_handle_builtin_call`;\
+      \ builtin calls resolved a connection before dispatch and audited against that\
+      \ connection.\n- tests/shell/test_builtin_tools.py — read existing provider-listing\
+      \ coverage to extend with a token-bound canonical-profile case.\n- tests/shell/test_gateway.py\
+      \ — read builtin call and session helper coverage; used `_setup_test_connection_with_session`\
+      \ and builtin request-handler tests as extension points.\n- tests/shell/test_audit.py\
+      \ — read audit entry helpers and storage assertions; no changes needed.\n\n\
+      ## Expected-Red Proof (MANDATORY)\n- Added/updated tests/contracts:\n  - `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`\n\
+      \  - `tests/shell/test_gateway.py::test_builtin_call_rejects_unbound_multi_bridge_session_instead_of_auditing_first_connection`\n\
+      - Exact command run before implementation:\n```bash\nuv run pytest tests/shell/test_builtin_tools.py\
+      \ tests/shell/test_gateway.py tests/shell/test_audit.py -q\n```\n- Failing output\
+      \ proving provider truth or audit attribution is currently non-canonical:\n\
+      ```text\nFAILED tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode\n\
+      FAILED tests/shell/test_gateway.py::test_builtin_call_rejects_unbound_multi_bridge_session_instead_of_auditing_first_connection\n\
+      2 failed, 95 passed in 2.10s\n```\n\n## Root Cause vs Symptom\n- Root cause:\n\
+      \  - `handle_list_providers` had no caller-connection input, so builtin provider\
+      \ visibility could only be derived from global config truth (`resolved_default_profile`).\n\
+      \  - Builtin calls could proceed without an already bound admitted session by\
+      \ adopting an arbitrary runtime bridge candidate under multi-connection conditions.\n\
+      - Symptom:\n  - Token-bound callers could see provider visibility filtered by\
+      \ config default rather than admitted `profile_id`.\n  - Builtin calls with\
+      \ multiple runtime connections could succeed where they should fail closed.\n\
+      - Why `resolved_default_profile` / `connections[0]` were non-canonical sources\
+      \ of truth:\n  - `resolved_default_profile` is config authority for open-mode\
+      \ default selection, not per-request caller identity.\n  - First-connection/runtime-order\
+      \ selection is not session identity.\n\n## Green Proof\n- Exact command run\
+      \ after implementation:\n```bash\nuv run pytest tests/shell/test_builtin_tools.py\
+      \ tests/shell/test_gateway.py tests/shell/test_audit.py -q\n```\n- Passing output:\n\
+      ```text\n97 passed in 0.83s\n```\n- Additional verification:\n```bash\ninvar\
+      \ guard --changed\n```\n```text\nstatus: passed\nerrors: 0\nwarnings: 9\n```\n\
+      \n## Required Assertions Closed\n- provider listing under token-bound profile\
+      \ matches admitted caller profile\n- builtin audit attribution binds to true\
+      \ calling connection (not index 0)\n\n## Files Changed\n- src/tela/shell/builtin_tools.py\
+      \ — added optional bound-connection input to `handle_list_providers` and used\
+      \ `connection.profile_id` as canonical provider-filter truth when present.\n\
+      - src/tela/shell/gateway.py — required builtin calls to use an already bound\
+      \ admitted session connection and passed that connection into provider listing.\n\
+      - tests/shell/test_builtin_tools.py — added token-bound provider-listing regression\
+      \ coverage.\n- tests/shell/test_gateway.py — updated test helper to bind session\
+      \ canonically and added multi-connection builtin rejection/audit regression\
+      \ coverage.\n\n## Commit\n- `1dbb673 fix(gateway): bind builtin provider and\
+      \ audit truth to caller`"
   - id: canonical_gateway_state.family_denial_canonical_profile_id
     name: Canonicalize family admission and denial vocabulary to profile_id
     status: pending
