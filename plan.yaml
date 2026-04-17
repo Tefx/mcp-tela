@@ -73123,3 +73123,18 @@ phases:
     docs/tests/schema hygiene with no residuals.
   depends_on:
   - fresh_review_zero_residual
+  steps:
+  - id: fresh_review_auth_zero_bypass.impl
+    name: Close token-mode bridge bypasses
+    status: pending
+    description: Inspect and remove any bridge initialize token-mode auth bypass,
+      prevent fabricated/default bindings on /connect and bridge paths, update tests
+      to protect correct behavior, finish any remaining shared-doc/schema hygiene,
+      and verify with an independent gate review.
+    verification: Run targeted pytest for bridge/http/token-mode/shared-surface/parity
+      suites, run py_compile for modified python files, run invar guard on changed
+      files, and request gate-reviewer-tacit audit.
+    evidence_template: '- Files changed\n- Bridge/token-mode bypass closure\n- Fabricated
+      binding closure\n- Test rewrites\n- Verification commands and outputs\n- Gate
+      review result'
+    agent: minimalist-architect-tacit
