@@ -73535,3 +73535,140 @@ phases:
     depends_on:
     - canonical_gateway_state.token_admission_exactness
     agent: python-senior-tacit
+  - id: canonical_gateway_state.provider_binding_and_audit_attribution
+    name: Bind builtin provider listing and audit attribution to the true calling
+      connection
+    status: pending
+    description: 'Implement and verify canonical truth binding for builtin provider
+      listing and builtin audit attribution.
+
+
+      Scope:
+
+      - src/tela/shell/builtin_tools.py
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_builtin_tools.py
+
+      - tests/shell/test_gateway.py
+
+      - tests/shell/test_audit.py if needed
+
+
+      Required behavior:
+
+      - `tela_list_providers` must reflect the actual bound calling connection/profile,
+      not `resolved_default_profile` from config.
+
+      - Builtin tool audit entries must bind to the true calling connection, never
+      `connections[0]`.
+
+      - Provider visibility under token mode must follow the admitted connection''s
+      canonical `profile_id` exactly.
+
+      - Keep builtin and shared surfaces canonical-only; no fallback to default-profile
+      truth and no residual-risk wording.
+
+
+      Implementation constraints:
+
+      - Use the calling connection/session already resolved by the canonical gateway
+      path; do not re-derive profile truth from global config when a bound connection
+      exists.
+
+      - Remove any `connections[0]` attribution shortcut from builtin audit logging.
+
+      - Add targeted tests for provider listing under a token-bound profile and for
+      audit attribution when multiple connections exist.
+
+
+      Required expected-red before code changes:
+
+      - One test proving provider listing follows `resolved_default_profile` instead
+      of the calling connection profile.
+
+      - One test proving builtin audit attribution can attach to the wrong connection
+      when multiple connections exist.'
+    verification: '- Expected-red proof exposes wrong-profile provider listing and
+      wrong-connection audit attribution.
+
+      - Green proof shows provider listing and audit entries bind to the admitted
+      calling connection/profile under multi-connection conditions.
+
+      - Verification includes the required token-bound provider-listing case and audit
+      attribution correctness case.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Expected-Red Proof (MANDATORY)
+
+      - Added/updated tests/contracts:
+
+      - Exact command run before implementation:
+
+      ```bash
+
+      uv run pytest tests/shell/test_builtin_tools.py tests/shell/test_gateway.py
+      tests/shell/test_audit.py -q
+
+      ```
+
+      - Failing output proving provider truth or audit attribution is currently non-canonical:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause:
+
+      - Symptom:
+
+      - Why `resolved_default_profile` / `connections[0]` were non-canonical sources
+      of truth:
+
+
+      ## Green Proof
+
+      - Exact command run after implementation:
+
+      ```bash
+
+      uv run pytest tests/shell/test_builtin_tools.py tests/shell/test_gateway.py
+      tests/shell/test_audit.py -q
+
+      ```
+
+      - Passing output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ## Required Assertions Closed
+
+      - provider listing under token-bound profile matches the bound calling connection/profile
+
+      - builtin audit attribution uses the true calling connection
+
+      - no `connections[0]` attribution shortcut remains
+
+
+      ## Files Changed
+
+      - <path> — why'
+    depends_on:
+    - canonical_gateway_state.builtin_call_admission_exactness
+    agent: python-senior-tacit
