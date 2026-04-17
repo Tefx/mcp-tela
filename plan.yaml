@@ -72999,7 +72999,7 @@ phases:
       \ and emits exact canonical JSON payload content instead."
 - id: fresh_review_final_cut
   name: Fresh Review Final Hard-Cut Closeout
-  status: in_progress
+  status: done
   gate: Resolve the final canonical usability and doc-drift findings without adding
     compatibility layers.
   depends_on:
@@ -73007,7 +73007,7 @@ phases:
   steps:
   - id: fresh_review_final_cut.impl
     name: Close final hard-cut usability and docs drift
-    status: claimed
+    status: done
     description: Repair canonical capabilities YAML parsing so canonical posture strings
       parse cleanly on the local config surface without reintroducing legacy aliases,
       remove remaining repo-facing docs that teach tela.profiles/profile_name/tools,
@@ -73019,3 +73019,30 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-17T08:01:06.606612+00:00'
+    done_at: '2026-04-17T08:07:24.598793+00:00'
+    evidence: "- Files changed\n  - src/tela/core/models.py\n  - tests/core/test_capability_only_profiles.py\n\
+      \  - tests/shell/test_surface_contract.py\n  - README.md\n  - docs/AGENT_INTERFACE.md\n\
+      \  - docs/CONFIRMED-SURFACE-CONTRACT.md\n  - docs/DESIGN.md\n  - docs/INTERFACES.md\n\
+      \  - docs/USAGE.md\n- Canonical config parsing fix\n  - Removed accidental `strict=True`\
+      \ from `ProfileConfig` so canonical local config/YAML posture strings like `read_only`,\
+      \ `read_write`, `none`, and `destructive` parse cleanly into `Posture` enums.\n\
+      \  - Did not reintroduce `tools` alias support; `ProfileConfig` still forbids\
+      \ extra fields and `parse_config` still rejects `tools:` in profile data.\n\
+      \  - Did not loosen shared token validation; CapabilityToken strict canonical\
+      \ validation remains untouched.\n- Docs tightened\n  - Removed repo-facing mentions\
+      \ that taught `tela.profiles`, `profile_name`, or backticked legacy `tools`\
+      \ alias from README.md, docs/AGENT_INTERFACE.md, docs/CONFIRMED-SURFACE-CONTRACT.md,\
+      \ docs/DESIGN.md, docs/INTERFACES.md, and docs/USAGE.md.\n  - Reworded contract/docs\
+      \ language to describe canonical `profile_id` and generic legacy alias rejection\
+      \ without re-teaching deprecated shared vocabulary.\n- Validation commands and\
+      \ outcomes\n  - uv run pytest tests/core/test_capability_only_profiles.py tests/core/test_hard_cut_vocab.py\
+      \ tests/shell/test_surface_contract.py -> 80 passed\n  - uv run pytest tests/core/test_capability_only_profiles.py\
+      \ tests/core/test_hard_cut_vocab.py tests/core/test_token.py tests/integration/test_token_mode_initialize.py\
+      \ tests/shell/test_surface_contract.py tests/shell/test_shared_surface_runtime_hard_cut.py\
+      \ tests/test_vendor_schema_parity.py -> 153 passed\n  - invar_guard changed=true\
+      \ -> passed\n  - grep over primary repo-facing docs for `tela.profiles|profile_name|`tools`|tools_profile`\
+      \ -> no matches\n- Remaining risks\n  - This patch intentionally tightened only\
+      \ repo-facing docs. Historical/internal migration docs may still discuss legacy\
+      \ vocabulary outside the primary doc set if kept as historical artifacts.\n\
+      \  - No shared-surface semantics were loosened; residual risk is limited to\
+      \ untouched repo-wide technical debt outside this closeout slice."
