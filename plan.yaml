@@ -72945,7 +72945,7 @@ phases:
       All blocker-class parity assertions closed for round2 retest.'
 - id: fresh_review_reclose
   name: Fresh Review Hard-Cut Closeout
-  status: in_progress
+  status: done
   gate: Fix remaining fresh isolated review findings and verify canonical hard-cut
     alignment.
   depends_on:
@@ -72953,7 +72953,7 @@ phases:
   steps:
   - id: fresh_review_reclose.impl
     name: Implement remaining fresh review fixes
-    status: claimed
+    status: done
     description: Tighten canonical CapabilityToken validation, make alias rejection
       auditable, return canonical tela_list_profiles payload from MCP, fail closed
       on multi-default profile lists, and close tests/docs without adding compatibility
@@ -72966,3 +72966,34 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-17T07:02:37.606520+00:00'
+    done_at: '2026-04-17T07:17:43.123575+00:00'
+    evidence: "- Files changed\n  - src/tela/core/models.py\n  - src/tela/core/token.py\n\
+      \  - src/tela/shell/builtin_tools.py\n  - src/tela/shell/gateway.py\n  - src/tela/shell/upstream.py\n\
+      \  - tests/core/test_models.py\n  - tests/core/test_token.py\n  - tests/integration/test_token_mode_initialize.py\n\
+      \  - tests/shell/test_gateway.py\n  - tests/shell/test_shared_surface_runtime_hard_cut.py\n\
+      \  - docs/INTERFACES.md\n  - docs/CONFIRMED-SURFACE-CONTRACT.md\n  - docs/USAGE.md\n\
+      - How each review issue was closed\n  - CapabilityToken now enforces canonical\
+      \ constraints directly at model validation: token_id pattern ^tok_, token_version\
+      \ literal 0.1.0, issued_at/expires_at RFC3339 date-time with timezone, max_depth\
+      \ >= 0 and strict int typing.\n  - Alias rejection now has explicit local classifications\
+      \ (TOKEN_ALIAS_FIELD_PRESENT / TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN / TOKEN_SCHEMA_INVALID)\
+      \ and initialize audit log records in tela.shell.upstream.\n  - tela_list_profiles\
+      \ payload generation now validates canonical key/type/value shape and hard-rejects\
+      \ multi-default payloads with INVALID_DEFAULT_PROFILE_STATE.\n  - Builtin MCP\
+      \ tool results no longer return Python repr text; gateway emits exact application/json\
+      \ payload content for builtin list tools.\n  - Docs/tests updated to reflect\
+      \ canonical validation and fail-closed behavior; vendored schema parity test\
+      \ remains intact and passes.\n- Validation commands and outcomes\n  - invar_guard\
+      \ changed=true strict=false -> passed (changed-file guard green; warnings only)\n\
+      \  - uv run pytest tests/core/test_token.py tests/integration/test_token_mode_initialize.py\
+      \ tests/shell/test_shared_surface_runtime_hard_cut.py tests/shell/test_gateway.py\
+      \ tests/test_vendor_schema_parity.py -> 137 passed, 1 existing pytest mark warning\n\
+      \  - invar_guard changed=false deferred wrapper failed with tooling_parity_wrapper_instability;\
+      \ accepted fallback uvx invar-tools guard --all ran and exposed pre-existing\
+      \ repo-wide global debt (shell_complexity_debt / escape_hatch budgets), not\
+      \ new changed-file errors\n- Remaining risks\n  - Repository-wide full guard\
+      \ remains red because of pre-existing global complexity/escape-hatch budget\
+      \ debt unrelated to this patch set.\n  - MCP CallToolResult still uses content-carried\
+      \ JSON for list payloads because the installed MCP type model does not accept\
+      \ top-level array structuredContent cleanly; this patch avoids repr/stringification\
+      \ and emits exact canonical JSON payload content instead."
