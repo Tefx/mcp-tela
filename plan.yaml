@@ -73772,3 +73772,59 @@ phases:
     depends_on:
     - canonical_gateway_state.provider_binding_and_audit_attribution
     agent: python-executor
+  - id: canonical_gateway_state.docs_and_regression_sync
+    name: Sync docs and regression inventory to final canonical builtin/shared semantics
+    status: pending
+    description: 'Update docs and any remaining regression inventory so the final
+      canonical builtin/shared semantics are explicit and test-backed.
+
+
+      Scope:
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md and any builtin-surface docs that still imply default-profile
+      truth, permissive builtin args, or builtin-session bypass
+
+      - focused test docstrings/names only if needed for clarity
+
+
+      Required behavior:
+
+      - Docs state that token_version is explicit-and-required at admission.
+
+      - Docs state that builtin tools/call require an admitted session/connection
+      and accept `{}` only.
+
+      - Docs state that provider listing and audit attribution bind to the calling
+      connection/profile.
+
+      - Docs use canonical `profile_id` vocabulary for family-admission/shared semantics.
+
+      - No residual-risk framing and no compatibility-language carveouts.
+
+
+      Implementation constraints:
+
+      - This is a docs sync step, not a product-code step.
+
+      - Do not re-open semantics already settled by earlier steps; document the final
+      canonical rule set only.'
+    verification: '- Docs explicitly cover the final canonical builtin/shared semantics
+      from this phase.
+
+      - No docs still describe default-profile truth, permissive builtin args, or
+      builtin session bypass.
+
+      - Referenced regression tests named in this phase still match the documented
+      behavior.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Documentation\
+      \ Sync Report\n- Updated sections:\n- Canonical rules documented:\n  - token_version\
+      \ explicit at admission\n  - builtin tools/call require admitted session\n \
+      \ - builtin args accept `{}` only\n  - provider listing/audit bind to calling\
+      \ connection/profile\n  - denial vocabulary uses profile_id\n- Remaining stale\
+      \ wording found: <none or list>\n- Regression tests referenced by docs: <list>"
+    depends_on:
+    - canonical_gateway_state.family_denial_canonical_profile_id
+    agent: doc-reviewer-tacit
