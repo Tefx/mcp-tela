@@ -73211,3 +73211,16 @@ phases:
     gaps.
   depends_on:
   - fresh_review_final_hard_zero
+  steps:
+  - id: fresh_review_true_zero.impl
+    name: Eliminate residual skip and xfail debt
+    status: pending
+    description: Inspect the remaining skipped and xfailed tests, implement any missing
+      runtime behavior or rewrite stale red probes so the suite no longer carries
+      known unresolved gaps, and re-run full verification until pytest is fully green
+      for this closure slice.
+    verification: Run targeted pytest on formerly skipped/xfail files, then run full
+      pytest and invar guard on changed files.
+    evidence_template: '- Files changed\n- Skip/xfail closures\n- Verification commands
+      and outputs\n- Final full-suite status'
+    agent: minimalist-architect-tacit
