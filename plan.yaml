@@ -73206,7 +73206,7 @@ phases:
       \ five hard-zero closure checks verified, no blocker remaining in scope"
 - id: fresh_review_true_zero
   name: Fresh Review True Zero Closeout
-  status: pending
+  status: in_progress
   gate: Remove remaining skip/xfail debt and prove a fully green closure with no latent
     gaps.
   depends_on:
@@ -73214,7 +73214,7 @@ phases:
   steps:
   - id: fresh_review_true_zero.impl
     name: Eliminate residual skip and xfail debt
-    status: pending
+    status: claimed
     description: Inspect the remaining skipped and xfailed tests, implement any missing
       runtime behavior or rewrite stale red probes so the suite no longer carries
       known unresolved gaps, and re-run full verification until pytest is fully green
@@ -73224,3 +73224,5 @@ phases:
     evidence_template: '- Files changed\n- Skip/xfail closures\n- Verification commands
       and outputs\n- Final full-suite status'
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-17T18:44:56.967857+00:00'
