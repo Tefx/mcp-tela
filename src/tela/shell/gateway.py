@@ -477,6 +477,43 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             "client must re-establish the MCP connection"
         )
 
+    async def _ensure_bound_connection() -> ConnectionContext:
+        """Resolve the current session's already-admitted connection only.
+
+        Builtin tools must bind to the canonical caller connection that was
+        already established by the initialize path. They must not adopt an
+        arbitrary runtime connection when no session binding exists.
+        """
+
+        try:
+            with gateway_runtime._runtime_lock:
+                connections_snapshot = list(gateway_runtime._runtime.connections)
+            conn_r = find_connection_for_session(
+                request_ctx.get().session, connections_snapshot
+            )
+        except LookupError as exc:
+            raise RuntimeError(
+                "RECONNECT_REQUIRED: no live session or admitted connection "
+                "available for builtin tool call"
+            ) from exc
+
+        if conn_r.is_err or conn_r.value is None:
+            raise RuntimeError(
+                "RECONNECT_REQUIRED: no admitted connection bound to the "
+                "current session for builtin tool call"
+            )
+
+        touch_r = gateway_runtime.touch_connection_activity(
+            conn_r.value.connection_id, datetime.now(timezone.utc).isoformat()
+        )
+        if touch_r.is_err:
+            logger.warning(
+                "Failed to touch connection activity for %s: %s",
+                conn_r.value.connection_id,
+                touch_r.error,
+            )
+        return conn_r.value
+
     def _build_tool_annotations(
         annotations: dict | None,
     ) -> mcp_types.ToolAnnotations | None:
@@ -533,10 +570,14 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
     # @shell_complexity: builtin tool calls follow a different execution path than downstream tools.
     @upstream_server._mcp_server.call_tool(validate_input=False)
     async def _call_tool(tool_name: str, arguments: object) -> mcp_types.CallToolResult:
-        connection = await _ensure_connection()
-        # Capture upstream MCP session for notification delivery for all tool
-        # calls, including builtins, so builtin dispatch cannot bypass
-        # session/connection admission.
+        # Check if this is a builtin tool
+        if tool_name in BUILTIN_TOOL_NAMES:
+            connection = await _ensure_bound_connection()
+        else:
+            connection = await _ensure_connection()
+
+        # Capture upstream MCP session for notification delivery for downstream
+        # and builtin tool calls after canonical connection resolution.
         try:
             gateway_runtime.capture_session(
                 connection.connection_id, request_ctx.get().session
@@ -544,7 +585,6 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
         except LookupError:
             pass  # No request context (e.g. stdio without session capture)
 
-        # Check if this is a builtin tool
         if tool_name in BUILTIN_TOOL_NAMES:
             if not isinstance(arguments, dict):
                 raise RuntimeError(
@@ -623,7 +663,7 @@ async def _handle_builtin_call(
             call_result = [dict(p) for p in profiles_result]  # type: ignore[arg-type]
         else:
             # Default: tela_list_providers
-            providers_result = await handle_list_providers()
+            providers_result = await handle_list_providers(connection)
             call_result = [dict(p) for p in providers_result]  # type: ignore[arg-type]
 
         latency_ms = (time.time() - start_time) * 1000

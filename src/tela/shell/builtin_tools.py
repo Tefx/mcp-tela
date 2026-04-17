@@ -15,7 +15,7 @@ from tela.shell.gateway_runtime import get_runtime_config
 from tela.shell.upstream_utils import filter_tools_for_profile
 
 if TYPE_CHECKING:
-    pass
+    from tela.core.models import ConnectionContext
 
 _SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _CANONICAL_PROFILE_KEYS = frozenset({"profile_id", "capabilities", "default"})
@@ -121,7 +121,9 @@ for _tool in BUILTIN_TOOLS:
 
 # @invar:allow shell_result: builtin tools follow FastMCP @tool pattern (raise on error, not Result wrap)
 # @shell_complexity: branching is unavoidable for per-server status determination and profile enforcement filtering
-async def handle_list_providers() -> list["ProviderInfo"]:
+async def handle_list_providers(
+    connection: "ConnectionContext | None" = None,
+) -> list["ProviderInfo"]:
     """Return per-provider summary from live DownstreamRegistry.
 
     Reads connected servers, their tool counts (post-enforcement-filter),
@@ -167,8 +169,11 @@ async def handle_list_providers() -> list["ProviderInfo"]:
     for sname, scfg in config.servers.items():
         server_default_postures[sname] = scfg.default_posture
 
-    # Get active profile (use resolved_default_profile from config)
-    profile_id = config.resolved_default_profile
+    profile_id = (
+        connection.profile_id
+        if connection is not None
+        else config.resolved_default_profile
+    )
     profile: ProfileConfig | None = None
     if profile_id and profile_id in config.profiles:
         profile = config.profiles[profile_id]

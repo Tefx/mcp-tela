@@ -8,6 +8,7 @@ import asyncio
 from tela.core.models import (
     AuthConfig,
     AuthMode,
+    ConnectionContext,
     GatewayTransport,
     Posture,
     ProfileConfig,
@@ -238,3 +239,60 @@ def test_handle_list_providers_raises_on_missing_runtime_config() -> None:
 def test_builtin_tool_names_set_contains_tela_list_providers() -> None:
     """BUILTIN_TOOL_NAMES includes 'tela_list_providers'."""
     assert "tela_list_providers" in BUILTIN_TOOL_NAMES
+
+
+def test_handle_list_providers_uses_bound_connection_profile_in_token_mode() -> None:
+    """Provider visibility must follow the admitted token-bound connection profile."""
+
+    tela = TelaConfig(
+        servers={
+            "fs": ServerConfig(
+                name="fs",
+                command="cmd",
+                default_posture=Posture.READ_ONLY,
+            ),
+        },
+        profiles={
+            "default": ProfileConfig(
+                name="default",
+                default=True,
+                capabilities={"fs": Posture.READ_ONLY},
+            ),
+            "token-bound": ProfileConfig(
+                name="token-bound",
+                default=False,
+                capabilities={"fs": Posture.NONE},
+            ),
+        },
+        auth=AuthConfig(mode=AuthMode.TOKEN),
+        resolved_default_profile="default",
+    )
+    tool_lists = {
+        "fs": [
+            {"name": "read_file", "inputSchema": {}},
+            {"name": "write_file", "inputSchema": {}},
+        ]
+    }
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.TOKEN,
+        default_profile=None,
+    )
+    connection = ConnectionContext(
+        connection_id="conn_token_bound",
+        profile_id="token-bound",
+        connected_at="2026-01-01T00:00:00Z",
+        init_mode=AuthMode.TOKEN,
+    )
+
+    asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
+    try:
+        result = asyncio.run(handle_list_providers(connection))
+
+        assert len(result) == 1
+        assert result[0]["name"] == "fs"
+        assert result[0]["tool_count"] == 0
+        assert result[0]["tool_names"] == []
+    finally:
+        asyncio.run(gateway_shutdown())

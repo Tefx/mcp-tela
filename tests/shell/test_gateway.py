@@ -43,6 +43,7 @@ from tela.shell.gateway_runtime import (
     is_upstream_server_initialized,
     with_upstream_server,
 )
+from tela.shell.audit import clear_audit_entries, get_audit_entries
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,
     STATUS_SNAPSHOT_CONTRACT,
@@ -102,6 +103,8 @@ def _setup_test_connection_with_session() -> tuple[str, _FakeSession]:
     )
     add_runtime_connection(conn)
     session = _FakeSession()
+    capture_result = capture_session(connection_id, session)
+    assert capture_result.is_ok
     # Set request_ctx so _ensure_connection can find the session and
     # adopt the bridge connection. type: ignore because _FakeSession
     # is not a RequestContext but has .session attribute for duck typing.
@@ -2181,6 +2184,97 @@ def test_streamable_http_builtin_call_accepts_only_exact_empty_object() -> None:
             assert extra_response.root.isError is True  # type: ignore[union-attr]
             assert "INVALID_TOOL_INPUT" in extra_response.root.content[0].text  # type: ignore[union-attr]
         finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_builtin_call_rejects_unbound_multi_bridge_session_instead_of_auditing_first_connection() -> (
+    None
+):
+    """Builtin calls must fail closed when no admitted session binding exists."""
+
+    async def _scenario() -> None:
+        from mcp.server.lowlevel.server import request_ctx
+
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                ),
+                "prod": ProfileConfig(
+                    name="prod",
+                    default=False,
+                    capabilities={"fs": Posture.NONE},
+                ),
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        clear_audit_entries()
+        await gateway_start(
+            config,
+            tela_config=tela,
+            tool_lists={"fs": [{"name": "read_file", "inputSchema": {}}]},
+        )
+        try:
+            add_runtime_connection(
+                ConnectionContext(
+                    connection_id="bridge_conn_dev",
+                    profile_id="dev",
+                    connected_at="2026-01-01T00:00:00Z",
+                    init_mode=AuthMode.OPEN,
+                )
+            )
+            add_runtime_connection(
+                ConnectionContext(
+                    connection_id="bridge_conn_prod",
+                    profile_id="prod",
+                    connected_at="2026-01-01T00:00:01Z",
+                    init_mode=AuthMode.OPEN,
+                )
+            )
+            ctx_token = request_ctx.set(_FakeSession())  # type: ignore[arg-type]  # test-only session duck type
+            try:
+                handler_result = with_upstream_server(
+                    lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+                )
+                assert handler_result.is_ok
+                response = await handler_result.value(
+                    types.CallToolRequest(
+                        params=types.CallToolRequestParams(
+                            name="tela_list_providers",
+                            arguments={},
+                        )
+                    )
+                )
+            finally:
+                request_ctx.reset(ctx_token)
+
+            assert response.root.isError is True  # type: ignore[union-attr]
+            assert "RECONNECT_REQUIRED" in response.root.content[0].text  # type: ignore[union-attr]
+
+            audit_entries_result = get_audit_entries()
+            assert audit_entries_result.is_ok
+            assert audit_entries_result.value == []
+        finally:
+            clear_audit_entries()
             await gateway_shutdown()
 
     asyncio.run(_scenario())
