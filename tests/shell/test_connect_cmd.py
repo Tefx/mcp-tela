@@ -6,13 +6,16 @@ from collections.abc import Callable
 from email.message import Message
 import io
 import json
+import os
 from urllib import error as urllib_error
+from pathlib import Path
 
 import pytest
 
 from tela.cli import main
 from tela.commands import connect_cmd
 from tela.commands import connect_bridge
+from tela.shell import lockfile, startup_coordinator
 from tela.commands.connect_transport import inject_bridge_connection_id
 from tela.core.models import LockfileData, StatusResponse
 from tela.shell.result import Result
@@ -222,6 +225,88 @@ def test_discovery_autostart_handles_race_lockfile_appearance(
         (0.3, None),
         (connect_cmd.LOCKFILE_WAIT_TIMEOUT_SECONDS, spawned_pid),
     ]
+
+
+def test_wait_for_live_lockfile_does_not_delete_fresh_lockfile_after_stale_read(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Stale cleanup must not delete a fresh live lockfile published mid-loop."""
+
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+
+    live_data = LockfileData(
+        pid=os.getpid(),
+        host="127.0.0.1",
+        port=49152,
+        token="live-token",
+        started_at="2026-03-22T10:00:00Z",
+        config_path=str(tmp_path / "tela.yaml"),
+        version="0.1.0",
+    )
+
+    calls = {"count": 0}
+
+    def _stale_then_live() -> Result[LockfileData, str]:
+        calls["count"] += 1
+        if calls["count"] == 1:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(live_data.model_dump_json(), encoding="utf-8")
+            return Result(
+                error="LOCKFILE_STALE: no live process found for pid 999999; lockfile should be considered stale"
+            )
+        return lockfile.read_lockfile()
+
+    monkeypatch.setattr(connect_cmd, "read_lockfile", _stale_then_live)
+
+    result = connect_cmd._wait_for_live_lockfile(timeout_seconds=0.3)
+
+    assert result.is_ok
+    assert result.value == live_data
+    assert path.exists()
+
+
+def test_startup_coordinator_follower_wait_preserves_fresh_lockfile_after_stale_read(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Follower stale cleanup must not remove a fresh live lockfile."""
+
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+
+    live_data = LockfileData(
+        pid=os.getpid(),
+        host="127.0.0.1",
+        port=49153,
+        token="live-token",
+        started_at="2026-03-22T10:00:00Z",
+        config_path=str(tmp_path / "tela.yaml"),
+        version="0.1.0",
+    )
+
+    calls = {"count": 0}
+
+    def _stale_then_live() -> Result[LockfileData, str]:
+        calls["count"] += 1
+        if calls["count"] == 1:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(live_data.model_dump_json(), encoding="utf-8")
+            return Result(
+                error="LOCKFILE_STALE: no live process found for pid 999999; lockfile should be considered stale"
+            )
+        return lockfile.read_lockfile()
+
+    result = startup_coordinator._wait_for_owned_live_lockfile(
+        timeout_seconds=0.3,
+        requested_config_path=str(tmp_path / "tela.yaml"),
+        read_lockfile=_stale_then_live,
+    )
+
+    assert result.is_ok
+    assert result.value == live_data
+    assert path.exists()
 
 
 def test_connect_discovery_uses_published_lockfile_port(

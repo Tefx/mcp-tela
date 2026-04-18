@@ -703,7 +703,7 @@ def test_handle_tools_call_rejects_non_snake_case_tool_name() -> None:
         result = await handle_tools_call(conn, "bad.tool", {})
         assert result.is_err
         assert result.error is not None
-        assert result.error.code == "INVALID_TOOL_NAME"
+        assert result.error.code == "invalid_tool_name"
         assert "snake_case" in result.error.message
 
     try:
@@ -752,7 +752,7 @@ def test_filter_tools_admits_matching_family() -> None:
 
 
 def test_filter_tools_excludes_unadmitted_family() -> None:
-    """Tools from unadmitted families are excluded."""
+    """Tools from unadmitted capability groups are excluded."""
     from tela.core.models import Posture, ProfileConfig, ResolvedTool
     from tela.shell.upstream_utils import filter_tools_for_profile
 
@@ -1450,6 +1450,191 @@ def test_filter_tools_for_profile_matches_tool_override_on_raw_name() -> None:
     result = filter_tools_for_profile(tools, profile, {"server_a": Posture.NONE})
     assert result.is_ok
     assert result.value == []
+
+
+def test_handle_tools_call_writes_audit_entry_on_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Downstream tools/call must emit audit with bound profile and held _meta."""
+    import asyncio
+
+    from tela.core.models import (
+        AuditConfig,
+        AuditLevel,
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        Posture,
+        ResolvedTool,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.audit import clear_audit_entries, get_audit_entries
+    from tela.shell.downstream_registry import DownstreamRegistry
+    from tela.shell.gateway_runtime import set_runtime_config
+    from tela.shell.result import Result
+    from tela.shell.upstream import handle_tools_call
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "fs",
+        [
+            ResolvedTool(
+                name="read_file",
+                server_name="fs",
+                family="filesystem",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+            )
+        ],
+    )
+
+    async def _fake_call_tool(
+        server_name: str,
+        tool_name: str,
+        arguments: dict,
+    ) -> Result[dict, object]:
+        assert server_name == "fs"
+        assert tool_name == "read_file"
+        assert arguments == {"path": "/tmp/demo"}
+        return Result(value={"content": [{"type": "text", "text": "ok"}]})
+
+    monkeypatch.setattr("tela.shell.upstream.get_registry", lambda: registry)
+    monkeypatch.setattr("tela.shell.upstream.call_tool", _fake_call_tool)
+
+    clear_audit_entries()
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            audit=AuditConfig(level=AuditLevel.L2),
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    capabilities={"filesystem": Posture.READ_ONLY},
+                    default=True,
+                )
+            },
+            resolved_default_profile="dev",
+        )
+    )
+
+    connection = ConnectionContext(
+        connection_id="c_audit_ok",
+        profile_id="dev",
+        connected_at="2026-01-01T00:00:00Z",
+    )
+
+    try:
+        result = asyncio.run(
+            handle_tools_call(
+                connection,
+                "read_file",
+                {"path": "/tmp/demo", "_meta": {"trace_id": "trace-1"}},
+            )
+        )
+        assert result.is_ok
+        entries = get_audit_entries()
+        assert entries.is_ok and entries.value is not None
+        entry = entries.value[-1]
+        assert entry.profile_id == "dev"
+        assert entry.tool_name == "read_file"
+        assert entry.server_name == "fs"
+        assert entry.param_hash is not None
+        assert entry.meta is not None
+        assert entry.meta.trace_id == "trace-1"
+    finally:
+        clear_audit_entries()
+        set_runtime_config(None)
+
+
+def test_handle_tools_call_writes_audit_entry_on_denial(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Denied downstream calls must still emit audit entries."""
+    import asyncio
+
+    from tela.core.models import (
+        AuditConfig,
+        AuditLevel,
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        Posture,
+        ResolvedTool,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.audit import clear_audit_entries, get_audit_entries
+    from tela.shell.downstream_registry import DownstreamRegistry
+    from tela.shell.gateway_runtime import set_runtime_config
+    from tela.shell.upstream import handle_tools_call
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "fs",
+        [
+            ResolvedTool(
+                name="write_file",
+                server_name="fs",
+                family="filesystem",
+                posture=Posture.READ_WRITE,
+                schema_={"type": "object"},
+            )
+        ],
+    )
+    monkeypatch.setattr("tela.shell.upstream.get_registry", lambda: registry)
+
+    clear_audit_entries()
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            audit=AuditConfig(level=AuditLevel.L2),
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_WRITE,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    capabilities={"filesystem": Posture.READ_ONLY},
+                    default=True,
+                )
+            },
+            resolved_default_profile="dev",
+        )
+    )
+
+    connection = ConnectionContext(
+        connection_id="c_audit_deny",
+        profile_id="dev",
+        connected_at="2026-01-01T00:00:00Z",
+    )
+
+    try:
+        result = asyncio.run(
+            handle_tools_call(connection, "write_file", {"path": "/tmp/demo"})
+        )
+        assert result.is_err
+        entries = get_audit_entries()
+        assert entries.is_ok and entries.value is not None
+        entry = entries.value[-1]
+        assert entry.profile_id == "dev"
+        assert entry.tool_name == "write_file"
+        assert entry.server_name == "fs"
+        assert entry.verdict.value == "deny"
+    finally:
+        clear_audit_entries()
+        set_runtime_config(None)
 
 
 # =============================================================================

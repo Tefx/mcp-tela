@@ -20,7 +20,10 @@ import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import time
 from typing import Mapping, cast
+
+from pydantic import ValidationError
 
 from tela.core.errors import (
     CONNECTION_NOT_FOUND,
@@ -28,18 +31,22 @@ from tela.core.errors import (
     PROFILE_NOT_FOUND,
 )
 from tela.core.models import (
+    AuditLevel,
     AuthMode,
     CapabilityToken,
     ConnectionContext,
     DefaultProfileResolutionStatus,
+    EnforcementResult,
     EnforcementVerdict,
     InitializeProfileBinding,
     Posture,
     ProfileInfo,
     TelaError,
+    MetaField,
 )
 from tela.core.token import resolve_token_init_binding
 from tela.shell.result import Result
+from tela.shell.audit import audit_write, build_audit_entry
 from tela.shell.downstream import (
     call_tool,
     get_all_tools,
@@ -72,9 +79,9 @@ logger = logging.getLogger(__name__)
 
 _BRIDGE_CONNECTION_ID_KEY = "tela_bridge_connection_id"
 _CAPABILITY_TOKEN_KEY = "capability_token"
-_TOKEN_ALIAS_FIELD_PRESENT = "TOKEN_ALIAS_FIELD_PRESENT"
-_TOKEN_SCHEMA_INVALID = "TOKEN_SCHEMA_INVALID"
-_TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN = "TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN"
+_TOKEN_ALIAS_FIELD_PRESENT = "alias_field_present"
+_TOKEN_SCHEMA_INVALID = "token_schema_invalid"
+_TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN = "extra_key"
 _SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _CANONICAL_TOKEN_FIELDS = frozenset(
     {
@@ -90,6 +97,69 @@ _CANONICAL_TOKEN_FIELDS = frozenset(
     }
 )
 _TOKEN_ALIAS_FIELDS = frozenset({"profile_name", "tools_profile"})
+
+
+# @shell_orchestration: maps shell-bound pydantic validation failures into canonical initialize rejection codes.
+def _canonical_validation_error(
+    exc: ValidationError,
+) -> Result[tuple[str, str, str | None], str]:
+    """Project pydantic validation failures onto canonical conformance codes."""
+
+    first_error = exc.errors()[0]
+    field = ".".join(str(part) for part in first_error.get("loc", ())) or None
+    error_type = str(first_error.get("type", ""))
+    if error_type == "missing":
+        return Result(
+            value=("missing_required_field", first_error.get("msg", error_type), field)
+        )
+    if error_type.endswith("_type") or error_type in {"int_type", "string_type"}:
+        return Result(value=("wrong_type", first_error.get("msg", error_type), field))
+    if error_type == "extra_forbidden":
+        return Result(value=("extra_key", first_error.get("msg", error_type), field))
+    return Result(
+        value=("token_schema_invalid", first_error.get("msg", error_type), field)
+    )
+
+
+# @shell_orchestration: validates _meta before audit emission so shell-bound audit entries stay typed.
+def _audit_meta_field(arguments_meta: dict | None) -> Result[MetaField | None, str]:
+    """Return validated audit metadata when the call supplied canonical _meta."""
+
+    if arguments_meta is None:
+        return Result(value=None)
+    try:
+        return Result(value=MetaField.model_validate(arguments_meta))
+    except ValidationError as exc:
+        return Result(error=f"invalid _meta audit payload: {exc}")
+
+
+# @shell_orchestration: audit emission coordinates shell-level audit entry construction and write side effects for the MCP tools/call boundary.
+async def _audit_tool_call(
+    *,
+    connection: ConnectionContext,
+    config_level: AuditLevel,
+    tool_name: str,
+    server_name: str,
+    result: EnforcementResult,
+    latency_ms: float,
+    arguments: dict | None,
+    held_meta: dict | None,
+) -> None:
+    """Write an audit entry for downstream tool calls when construction succeeds."""
+
+    meta_result = _audit_meta_field(held_meta)
+    audit_entry_result = build_audit_entry(
+        level=config_level,
+        connection=connection,
+        tool_name=tool_name,
+        server_name=server_name,
+        result=result,
+        latency_ms=latency_ms,
+        arguments=arguments,
+        meta=meta_result.value if meta_result.is_ok else None,
+    )
+    if audit_entry_result.is_ok and audit_entry_result.value is not None:
+        await audit_write(audit_entry_result.value)
 
 
 def _audit_initialize_rejection(
@@ -114,7 +184,9 @@ def _reject_initialize(
     field: str | None = None,
 ) -> Result[CapabilityToken, str]:
     _audit_initialize_rejection(code, detail, location=location, field=field)
-    return Result(error=f"INITIALIZE_REJECTED: {code}: {detail}")
+    if field is None:
+        return Result(error=f"INITIALIZE_REJECTED: {code}: {detail}")
+    return Result(error=f"INITIALIZE_REJECTED: {code}: field={field}: {detail}")
 
 
 # @invar:allow shell_result: pure validator used only inside shell-bound initialize handler.
@@ -226,11 +298,15 @@ def _extract_capability_token(
 
     try:
         return Result(value=CapabilityToken(**token_payload))
-    except Exception as exc:
+    except ValidationError as exc:
+        validation_result = _canonical_validation_error(exc)
+        assert validation_result.value is not None
+        error_code, detail, field = validation_result.value
         return _reject_initialize(
-            _TOKEN_SCHEMA_INVALID,
-            f"capability_token failed canonical validation: {exc}",
+            error_code,
+            detail,
             location="capability_token",
+            field=field,
         )
 
 
@@ -485,8 +561,8 @@ async def handle_initialize(
         if profile_id not in config.profiles:
             return Result(
                 error=(
-                    "INITIALIZE_REJECTED: "
-                    f"{PROFILE_NOT_FOUND}: profile '{profile_id}' not found"
+                    "INITIALIZE_REJECTED: unknown_profile_binding: "
+                    f"profile_id '{profile_id}' is not configured"
                 )
             )
 
@@ -642,11 +718,31 @@ async def handle_tools_call(
             )
         )
 
+    start_time = time.monotonic()
     invalid_tool_name = _invalid_shared_tool_name(tool_name)
     if invalid_tool_name is not None:
+        latency_ms = max(0.0, (time.monotonic() - start_time) * 1000.0)
+        await _audit_tool_call(
+            connection=connection,
+            config_level=config.audit.level,
+            tool_name=tool_name,
+            server_name="unknown",
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="shared_surface_validation",
+                error_code="invalid_tool_name",
+                error_message=(
+                    "shared MCP tool names must be snake_case; "
+                    f"got '{invalid_tool_name}'"
+                ),
+            ),
+            latency_ms=latency_ms,
+            arguments=arguments,
+            held_meta=None,
+        )
         return Result(
             error=TelaError(
-                code="INVALID_TOOL_NAME",
+                code="invalid_tool_name",
                 message=(
                     "shared MCP tool names must be snake_case; "
                     f"got '{invalid_tool_name}'"
@@ -707,6 +803,17 @@ async def handle_tools_call(
     enforcement = enforcement_result.value
 
     if enforcement.verdict == EnforcementVerdict.DENY:
+        latency_ms = max(0.0, (time.monotonic() - start_time) * 1000.0)
+        await _audit_tool_call(
+            connection=connection,
+            config_level=config.audit.level,
+            tool_name=tool_name,
+            server_name=tool.server_name,
+            result=enforcement,
+            latency_ms=latency_ms,
+            arguments=stripped_args,
+            held_meta=held_meta,
+        )
         return Result(
             error=TelaError(
                 code=enforcement.error_code or "AUTHZ_DENY",
@@ -715,7 +822,41 @@ async def handle_tools_call(
         )
 
     increment_tool_calls()
-    return await call_tool(tool.server_name, routing_name, stripped_args)
+    call_result = await call_tool(tool.server_name, routing_name, stripped_args)
+    latency_ms = max(0.0, (time.monotonic() - start_time) * 1000.0)
+    if call_result.is_err:
+        await _audit_tool_call(
+            connection=connection,
+            config_level=config.audit.level,
+            tool_name=tool_name,
+            server_name=tool.server_name,
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="downstream_call",
+                error_code=(
+                    call_result.error.code if call_result.error is not None else None
+                ),
+                error_message=(
+                    call_result.error.message if call_result.error is not None else None
+                ),
+            ),
+            latency_ms=latency_ms,
+            arguments=stripped_args,
+            held_meta=held_meta,
+        )
+        return call_result
+
+    await _audit_tool_call(
+        connection=connection,
+        config_level=config.audit.level,
+        tool_name=tool_name,
+        server_name=tool.server_name,
+        result=EnforcementResult(verdict=EnforcementVerdict.ALLOW),
+        latency_ms=latency_ms,
+        arguments=stripped_args,
+        held_meta=held_meta,
+    )
+    return call_result
 
 
 def handle_profiles_list() -> Result[list[ProfileInfo], str]:

@@ -26,6 +26,15 @@ from tela.shell.gateway import (
 )
 
 
+def _bound_connection(profile_id: str = "dev") -> ConnectionContext:
+    return ConnectionContext(
+        connection_id=f"conn_{profile_id}",
+        profile_id=profile_id,
+        connected_at="2026-01-01T00:00:00Z",
+        init_mode=AuthMode.OPEN,
+    )
+
+
 # --- handle_list_providers unit tests ---
 
 
@@ -65,10 +74,11 @@ def test_handle_list_providers_returns_provider_info_shape() -> None:
 
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
     try:
-        result = asyncio.run(handle_list_providers())
+        result = asyncio.run(handle_list_providers(_bound_connection()))
         assert isinstance(result, list)
         assert len(result) == 1
         assert result[0]["name"] == "fs"
+        assert result[0]["profile_id"] == "dev"
         assert result[0]["status"] == "connected"
         assert result[0]["tool_count"] == 2
         assert isinstance(result[0]["tool_names"], list)
@@ -112,7 +122,7 @@ def test_handle_list_providers_includes_disconnected_server() -> None:
 
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
     try:
-        result = asyncio.run(handle_list_providers())
+        result = asyncio.run(handle_list_providers(_bound_connection()))
 
         # Should have 2 entries: one connected, one disconnected
         assert len(result) == 2
@@ -161,7 +171,7 @@ def test_handle_list_providers_includes_failed_server() -> None:
 
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
     try:
-        result = asyncio.run(handle_list_providers())
+        result = asyncio.run(handle_list_providers(_bound_connection()))
 
         # Should have an entry for "bad" with failed status
         bad_entry = next((r for r in result if r["name"] == "bad"), None)
@@ -209,7 +219,7 @@ def test_handle_list_providers_filters_by_profile_enforcement() -> None:
 
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
     try:
-        result = asyncio.run(handle_list_providers())
+        result = asyncio.run(handle_list_providers(_bound_connection()))
 
         assert len(result) == 1
         assert result[0]["name"] == "fs"
@@ -233,12 +243,37 @@ def test_handle_list_providers_raises_on_missing_runtime_config() -> None:
     with pytest.raises(
         RuntimeError, match="handle_list_providers requires a valid runtime config"
     ):
-        asyncio.run(handle_list_providers())
+        asyncio.run(handle_list_providers(_bound_connection()))
 
 
 def test_builtin_tool_names_set_contains_tela_list_providers() -> None:
     """BUILTIN_TOOL_NAMES includes 'tela_list_providers'."""
     assert "tela_list_providers" in BUILTIN_TOOL_NAMES
+
+
+def test_handle_list_providers_requires_bound_connection() -> None:
+    """Canonical provider listing must reject missing bound profile truth."""
+    import pytest
+
+    tela = TelaConfig(
+        servers={"fs": ServerConfig(name="fs", command="cmd")},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+    )
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
+    )
+
+    asyncio.run(gateway_start(config, tela_config=tela, tool_lists={"fs": []}))
+    try:
+        with pytest.raises(RuntimeError, match="missing_bound_profile"):
+            asyncio.run(handle_list_providers())
+    finally:
+        asyncio.run(gateway_shutdown())
 
 
 def test_handle_list_providers_uses_bound_connection_profile_in_token_mode() -> None:

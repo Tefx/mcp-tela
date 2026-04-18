@@ -48,6 +48,7 @@ from tela.shell.builtin_tools import (
     BUILTIN_TOOL_NAMES,
     handle_list_profiles,
     handle_list_providers,
+    register_builtin_tools,
 )
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.connection_reaper import ConnectionReaper, ReaperConfig
@@ -557,13 +558,22 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             for tool in filtered_tools
         ]
         # Merge builtin tools into the returned list
+        builtin_tools_result = register_builtin_tools()
+        if builtin_tools_result.is_err or builtin_tools_result.value is None:
+            raise RuntimeError(
+                builtin_tools_result.error or "builtin registration failed"
+            )
         builtin_tools = [
             mcp_types.Tool(
-                name=bt["name"],
-                inputSchema=dict(bt.get("inputSchema") or {}),
-                description=bt.get("description", ""),
+                name=str(bt["name"]),
+                inputSchema=(
+                    cast(dict[str, object], bt["inputSchema"])
+                    if isinstance(bt.get("inputSchema"), dict)
+                    else {}
+                ),
+                description=str(bt.get("description", "")),
             )
-            for bt in BUILTIN_TOOLS
+            for bt in builtin_tools_result.value
         ]
         return downstream_tools + builtin_tools
 

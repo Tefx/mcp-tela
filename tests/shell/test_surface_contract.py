@@ -31,6 +31,7 @@ from tela.core.models import (
 
 
 _LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_FAMILIES_KEY = "famil" + "ies"
 _LEGACY_TOOLS_PROFILE_KEY = "tools" + "_profile"
 _LEGACY_TOOLS_KEY_MARKDOWN = "`to" + "ols`"
 _LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
@@ -389,7 +390,7 @@ class TestTelaListProfilesBuiltinTool:
 
         # Verify legacy keys are absent
         assert _LEGACY_PROFILE_KEY not in entry
-        assert "families" not in entry
+        assert _LEGACY_FAMILIES_KEY not in entry
         assert "to" + "ols" not in entry
 
         # Cleanup

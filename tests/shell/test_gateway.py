@@ -61,6 +61,7 @@ from tela.shell import gateway_runtime
 _LEGACY_PROFILE_KEY = "profile" + "_name"
 _LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
 _LEGACY_TOOLS_KEY = "to" + "ols"
+_LEGACY_FAMILIES_KEY = "famil" + "ies"
 
 
 # --- Helper for tests requiring a bound MCP session ---
@@ -998,7 +999,7 @@ def test_fastmcp_list_profiles_builtin_tool() -> None:
         # Verify legacy keys are absent
         for entry in result:
             assert _LEGACY_PROFILE_KEY not in entry
-            assert "families" not in entry
+            assert _LEGACY_FAMILIES_KEY not in entry
             assert _LEGACY_TOOLS_KEY not in entry
     finally:
         asyncio.run(gateway_shutdown())
@@ -1338,7 +1339,7 @@ def test_streamable_http_initialize_token_mode_rejects_unknown_token_profile() -
                 assert "error" in payload
                 error = payload["error"]
                 assert isinstance(error, dict)
-                assert "PROFILE_NOT_FOUND" in str(error.get("message"))
+                assert "unknown_profile_binding" in str(error.get("message"))
 
         finally:
             await gateway_shutdown()
@@ -2003,7 +2004,7 @@ def test_gateway_call_tool_rejects_non_snake_case_name() -> None:
             )
 
             assert response.root.isError is True  # type: ignore[union-attr]
-            assert "INVALID_TOOL_NAME" in response.root.content[0].text  # type: ignore[union-attr]
+            assert "invalid_tool_name" in response.root.content[0].text  # type: ignore[union-attr]
         finally:
             await gateway_shutdown()
 

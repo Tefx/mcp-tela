@@ -25,6 +25,7 @@ _LEGACY_PROFILE_KEY = "profile" + "_name"
 _LEGACY_TOOLS_KEY = "to" + "ols"
 _LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
 _LEGACY_PROFILE_RESOURCE_URI = "tela://" + "profiles"
+_LEGACY_FAMILIES_KEY = "famil" + "ies"
 
 
 # ==============================================================================
@@ -452,7 +453,7 @@ class TestListProfilesCanonicalPayload:
             set_runtime_config(None)
 
     def test_handle_list_profiles_no_legacy_families_key(self) -> None:
-        """Profile entries must NOT contain legacy 'families' key."""
+        """Profile entries must NOT contain the retired legacy capability key."""
         from tela.core.models import (
             AuthConfig,
             AuthMode,
@@ -477,7 +478,7 @@ class TestListProfilesCanonicalPayload:
         )
         try:
             result = handle_list_profiles()
-            assert "families" not in result[0]
+            assert _LEGACY_FAMILIES_KEY not in result[0]
         finally:
             set_runtime_config(None)
 

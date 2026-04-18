@@ -12,6 +12,7 @@ from tela.shell.downstream import (
     get_successful_servers,
 )
 from tela.shell.gateway_runtime import get_runtime_config
+from tela.shell.result import Result
 from tela.shell.upstream_utils import filter_tools_for_profile
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
 _SHARED_TOOL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _CANONICAL_PROFILE_KEYS = frozenset({"profile_id", "capabilities", "default"})
 _CANONICAL_POSTURES = frozenset(posture.value for posture in Posture)
+_LEGACY_PROFILE_KEYS = frozenset({"profile_name", "families"})
 
 
 def _raise_if_invalid_shared_tool_name(tool_name: str) -> None:
@@ -42,10 +44,25 @@ def _validate_profile_list_payload(
     default_profiles: list[str] = []
     for entry in profiles:
         entry_keys = set(entry.keys())
-        if entry_keys != _CANONICAL_PROFILE_KEYS:
+        legacy_keys = sorted(key for key in entry_keys if key in _LEGACY_PROFILE_KEYS)
+        if legacy_keys:
             raise RuntimeError(
-                "INVALID_PROFILE_LIST_PAYLOAD: expected keys "
-                f"{sorted(_CANONICAL_PROFILE_KEYS)}, got {sorted(entry_keys)}"
+                "legacy_alias: profile payload contains invalid key(s): "
+                + ", ".join(legacy_keys)
+            )
+
+        missing_keys = sorted(_CANONICAL_PROFILE_KEYS - entry_keys)
+        if missing_keys:
+            raise RuntimeError(
+                "missing_required_field: profile payload missing key(s): "
+                + ", ".join(missing_keys)
+            )
+
+        extra_keys = sorted(entry_keys - _CANONICAL_PROFILE_KEYS)
+        if extra_keys:
+            raise RuntimeError(
+                "extra_key: profile payload contains unexpected key(s): "
+                + ", ".join(extra_keys)
             )
 
         profile_id = entry["profile_id"]
@@ -53,17 +70,11 @@ def _validate_profile_list_payload(
         default = entry["default"]
 
         if not isinstance(profile_id, str):
-            raise RuntimeError(
-                "INVALID_PROFILE_LIST_PAYLOAD: profile_id must be a string"
-            )
+            raise RuntimeError("wrong_type: profile_id must be a string")
         if not isinstance(default, bool):
-            raise RuntimeError(
-                "INVALID_PROFILE_LIST_PAYLOAD: default must be a boolean"
-            )
+            raise RuntimeError("wrong_type: default must be a boolean")
         if not isinstance(capabilities, dict):
-            raise RuntimeError(
-                "INVALID_PROFILE_LIST_PAYLOAD: capabilities must be an object"
-            )
+            raise RuntimeError("wrong_type: capabilities must be an object")
 
         invalid_capabilities = sorted(
             f"{family}={posture}"
@@ -73,21 +84,30 @@ def _validate_profile_list_payload(
             or posture not in _CANONICAL_POSTURES
         )
         if invalid_capabilities:
-            raise RuntimeError(
-                "INVALID_PROFILE_LIST_PAYLOAD: invalid capabilities: "
-                + ", ".join(invalid_capabilities)
-            )
+            raise RuntimeError("bad_enum: capabilities contains invalid posture values")
 
         if default:
             default_profiles.append(profile_id)
 
     if len(default_profiles) > 1:
         raise RuntimeError(
-            "INVALID_DEFAULT_PROFILE_STATE: multiple profiles marked default=true: "
+            "invalid_default_profile_state: multiple profiles marked default=true: "
             + ", ".join(sorted(default_profiles))
         )
 
     return profiles
+
+
+def register_builtin_tools() -> Result[list[dict[str, object]], str]:
+    """Return the canonical builtin MCP tool registrations."""
+
+    registered = [dict(tool) for tool in BUILTIN_TOOLS]
+    try:
+        for tool in registered:
+            _raise_if_invalid_shared_tool_name(str(tool["name"]))
+    except RuntimeError as exc:
+        return Result(error=str(exc))
+    return Result(value=registered)
 
 
 BUILTIN_TOOLS: list[dict] = [
@@ -169,14 +189,17 @@ async def handle_list_providers(
     for sname, scfg in config.servers.items():
         server_default_postures[sname] = scfg.default_posture
 
-    profile_id = (
-        connection.profile_id
-        if connection is not None
-        else config.resolved_default_profile
-    )
-    profile: ProfileConfig | None = None
-    if profile_id and profile_id in config.profiles:
-        profile = config.profiles[profile_id]
+    if connection is None:
+        raise RuntimeError(
+            "missing_bound_profile: tela_list_providers requires an admitted connection"
+        )
+
+    profile_id = connection.profile_id
+    profile: ProfileConfig | None = config.profiles.get(profile_id)
+    if profile is None:
+        raise RuntimeError(
+            f"missing_bound_profile: profile '{profile_id}' is not configured"
+        )
 
     providers: list[ProviderInfo] = []
 
@@ -219,13 +242,14 @@ async def handle_list_providers(
             tool_count = 0
 
         providers.append(
-            ProviderInfo(
-                name=server_name,
-                status=status,
-                tool_prefix=tool_prefix,
-                tool_count=tool_count,
-                tool_names=tool_names,
-            )
+            {
+                "name": server_name,
+                "profile_id": profile_id,
+                "status": status,
+                "tool_prefix": tool_prefix,
+                "tool_count": tool_count,
+                "tool_names": tool_names,
+            }
         )
 
     return providers

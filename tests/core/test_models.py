@@ -28,6 +28,8 @@ from tela.core.models import (
     InitializeProfileBinding,
     DefaultProfileResolutionStatus,
     CapabilityToken,
+    ConnectRequest,
+    DisconnectRequest,
 )
 
 
@@ -38,6 +40,32 @@ class TestProfileConfig:
     def test_default_field_defaults_to_false(self) -> None:
         p = ProfileConfig(name="dev")
         assert p.default is False
+
+
+class TestConnectRequest:
+    def test_connect_request_requires_connection_id(self) -> None:
+        with pytest.raises(ValidationError):
+            ConnectRequest.model_validate({})
+
+    def test_connect_request_rejects_wrong_type(self) -> None:
+        with pytest.raises(ValidationError):
+            ConnectRequest.model_validate({"connection_id": 1})
+
+    def test_connect_request_rejects_extra_keys(self) -> None:
+        with pytest.raises(ValidationError):
+            ConnectRequest.model_validate(
+                {"connection_id": "bridge_1", "unexpected_key": True}
+            )
+
+
+class TestDisconnectRequest:
+    def test_disconnect_request_requires_connection_id(self) -> None:
+        with pytest.raises(ValidationError):
+            DisconnectRequest.model_validate({})
+
+    def test_disconnect_request_rejects_wrong_type(self) -> None:
+        with pytest.raises(ValidationError):
+            DisconnectRequest.model_validate({"connection_id": 1})
 
     def test_default_field_can_be_set_true(self) -> None:
         p = ProfileConfig(name="dev", default=True)

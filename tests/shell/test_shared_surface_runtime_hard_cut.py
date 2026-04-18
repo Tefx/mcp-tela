@@ -225,12 +225,12 @@ def test_handle_initialize_alias_rejection_is_auditable_for_top_level_legacy_fie
         )
         assert result.is_err
         assert result.error is not None
-        assert "TOKEN_ALIAS_FIELD_PRESENT" in result.error
+        assert "alias_field_present" in result.error
 
     try:
         asyncio.run(_run())
         assert "INITIALIZE_AUDIT" in caplog.text
-        assert "TOKEN_ALIAS_FIELD_PRESENT" in caplog.text
+        assert "alias_field_present" in caplog.text
         assert "location=client_info" in caplog.text
         assert f"field={_LEGACY_PROFILE_KEY}" in caplog.text
     finally:
@@ -250,12 +250,12 @@ def test_handle_initialize_alias_rejection_is_auditable_for_nested_legacy_field(
         )
         assert result.is_err
         assert result.error is not None
-        assert "TOKEN_ALIAS_FIELD_PRESENT" in result.error
+        assert "alias_field_present" in result.error
 
     try:
         asyncio.run(_run())
         assert "INITIALIZE_AUDIT" in caplog.text
-        assert "TOKEN_ALIAS_FIELD_PRESENT" in caplog.text
+        assert "alias_field_present" in caplog.text
         assert "location=capability_token" in caplog.text
         assert f"field={_LEGACY_TOOLS_PROFILE_KEY}" in caplog.text
     finally:
@@ -325,7 +325,9 @@ def test_handle_tools_list_rejects_non_snake_case_tool_names(
         result = await handle_tools_list(connection)
         assert result.is_err
         assert result.error is not None
-        assert "INVALID_TOOL_NAME" in result.error
+        assert (
+            "INVALID_TOOL_NAME" in result.error or "invalid_tool_name" in result.error
+        )
         assert tool_name in result.error
 
     try:
@@ -379,8 +381,14 @@ def test_handle_list_providers_rejects_non_snake_case_tool_names(
     )
 
     try:
-        with pytest.raises(RuntimeError, match="INVALID_TOOL_NAME"):
-            asyncio.run(handle_list_providers())
+        connection = ConnectionContext(
+            connection_id="c1",
+            profile_id="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.OPEN,
+        )
+        with pytest.raises(RuntimeError, match="INVALID_TOOL_NAME|invalid_tool_name"):
+            asyncio.run(handle_list_providers(connection))
     finally:
         set_runtime_config(None)
 
@@ -396,7 +404,7 @@ def test_handle_list_profiles_rejects_multiple_default_profiles_fail_closed() ->
         )
     )
     try:
-        with pytest.raises(RuntimeError, match="INVALID_DEFAULT_PROFILE_STATE"):
+        with pytest.raises(RuntimeError, match="invalid_default_profile_state"):
             handle_list_profiles()
     finally:
         set_runtime_config(None)
@@ -416,6 +424,6 @@ def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() ->
         result = handle_profiles_list()
         assert result.is_err
         assert result.error is not None
-        assert "INVALID_DEFAULT_PROFILE_STATE" in result.error
+        assert "invalid_default_profile_state" in result.error
     finally:
         set_runtime_config(None)

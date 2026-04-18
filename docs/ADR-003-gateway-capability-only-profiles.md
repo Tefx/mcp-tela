@@ -47,7 +47,7 @@ Positive:
 
 - profile behavior is explicit and local
 - enforcement stays data-driven and easy to audit
-- built-in and custom families share one model
+- built-in and custom capability groups share one model
 
 Negative:
 

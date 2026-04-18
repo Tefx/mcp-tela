@@ -291,7 +291,7 @@ def test_handle_initialize_token_mode_unknown_profile_rejected_at_initialize() -
         assert result.is_err
         assert result.error is not None
         assert "INITIALIZE_REJECTED" in result.error
-        assert "PROFILE_NOT_FOUND" in result.error
+        assert "unknown_profile_binding" in result.error
         snapshot = get_runtime_connections_snapshot()
         assert snapshot.is_ok
         assert snapshot.value == []
@@ -330,7 +330,7 @@ def test_handle_initialize_token_mode_rejects_invalid_canonical_schema_fields() 
         result = await handle_initialize(_wrap_client_info(invalid_token))
         assert result.is_err
         assert "INITIALIZE_REJECTED" in (result.error or "")
-        assert "TOKEN_SCHEMA_INVALID" in (result.error or "")
+        assert "token_schema_invalid" in (result.error or "")
         assert "token_id" in (result.error or "")
 
     try:
@@ -381,7 +381,7 @@ def test_handle_initialize_token_mode_rejects_missing_token_version_before_admis
         assert result.is_err
         assert result.error is not None
         assert "INITIALIZE_REJECTED" in result.error
-        assert "token_version" in result.error
+        assert "field=token_version" in result.error
         snapshot = get_runtime_connections_snapshot()
         assert snapshot.is_ok
         assert snapshot.value == []

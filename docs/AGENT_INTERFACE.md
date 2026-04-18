@@ -74,7 +74,7 @@ Rules:
 - Profile authorization is expressed through `capabilities: family -> posture`
 - `tool_overrides` may further restrict or selectively expose tools
 - No override may exceed the family capability ceiling
-- tela profiles do not include `tela_admin` or other reserved families
+- tela profiles do not include `tela_admin` or other reserved capability groups
 
 ## 5. Downstream Instruction Merge
 

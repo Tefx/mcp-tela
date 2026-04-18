@@ -142,6 +142,47 @@ def test_delete_lockfile_succeeds_when_missing(
     assert not path.exists()
 
 
+def test_delete_lockfile_if_stale_removes_only_stale_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    stale_data = LockfileData(
+        pid=2**31,
+        host="127.0.0.1",
+        port=39124,
+        token="token-stale",
+        started_at="2026-01-01T00:00:00Z",
+        config_path=str(tmp_path / "tela.yaml"),
+        version="0.1.0",
+    )
+    path.write_text(stale_data.model_dump_json(), encoding="utf-8")
+
+    stale_result = lockfile.delete_lockfile_if_stale()
+
+    assert stale_result.is_ok
+    assert stale_result.value is True
+    assert not path.exists()
+
+
+def test_delete_lockfile_if_stale_preserves_live_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile, "LOCKFILE_PATH", path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    live_data = _sample_lockfile_data(config_path=str(tmp_path / "tela.yaml"))
+    path.write_text(live_data.model_dump_json(), encoding="utf-8")
+
+    result = lockfile.delete_lockfile_if_stale()
+
+    assert result.is_ok
+    assert result.value is False
+    assert path.exists()
+
+
 # -- Schema Validation Regression (INTERFACES.md §7.3 Lockfile Contract) ---
 
 

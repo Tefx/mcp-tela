@@ -313,6 +313,7 @@ class ProviderInfo(TypedDict):
     """Per-provider summary returned by tela_list_providers."""
 
     name: str
+    profile_id: str
     status: str  # "connected" | "disconnected" | "failed"
     tool_prefix: str | None
     tool_count: int
@@ -471,13 +472,17 @@ class StatusResponse(GatewayStatus):
 class ConnectRequest(BaseModel):
     """Registration payload for bridge connection endpoints."""
 
-    connection_id: str
+    model_config = {"extra": "forbid"}
+
+    connection_id: str = Field(strict=True)
 
 
 class DisconnectRequest(BaseModel):
     """Deregistration payload for bridge connection endpoints."""
 
-    connection_id: str
+    model_config = {"extra": "forbid"}
+
+    connection_id: str = Field(strict=True)
 
 
 class TelaError(BaseModel):

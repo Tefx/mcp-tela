@@ -20,7 +20,7 @@ from typing import IO, Callable
 
 from tela.core.models import LockfileData
 from tela.shell.result import Result
-from tela.shell.lockfile import delete_lockfile
+from tela.shell.lockfile import delete_lockfile_if_stale
 
 
 STARTUP_LOCK_DIR = Path.home() / ".tela"
@@ -166,7 +166,7 @@ def _wait_for_owned_live_lockfile(
         if lockfile_result.error is not None and lockfile_result.error.startswith(
             "LOCKFILE_STALE"
         ):
-            _ = delete_lockfile()
+            _ = delete_lockfile_if_stale()
 
         time.sleep(FOLLOWER_WAIT_POLL_SECONDS)
 

@@ -30,6 +30,7 @@ __all__ = [
     "write_lockfile",
     "read_lockfile",
     "delete_lockfile",
+    "delete_lockfile_if_stale",
     "generate_bearer_token",
 ]
 
@@ -176,6 +177,36 @@ def read_lockfile() -> Result[LockfileData, str]:
         )
 
     return Result(value=data)
+
+
+# @shell_orchestration: stale cleanup must re-read current on-disk state to avoid deleting a fresh lockfile published by a newly started live server.
+def delete_lockfile_if_stale() -> Result[bool, str]:
+    """Delete the lockfile only when the current on-disk entry is still stale.
+
+    This is the compare-and-delete form used by discovery/autostart wait loops.
+    It prevents a stale-read caller from deleting a newer live lockfile that was
+    published after the stale read but before cleanup executed.
+    """
+
+    try:
+        raw = LOCKFILE_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return Result(value=False)
+    except OSError as exc:
+        return Result(error=f"LOCKFILE_READ_ERROR: {exc}")
+
+    try:
+        data = LockfileData.model_validate_json(raw)
+    except Exception as exc:
+        return Result(error=f"LOCKFILE_PARSE_ERROR: {exc}")
+
+    if not is_stale(data):
+        return Result(value=False)
+
+    delete_result = delete_lockfile()
+    if delete_result.is_err:
+        return Result(error=delete_result.error)
+    return Result(value=True)
 
 
 @pre(lambda: True)

@@ -245,7 +245,7 @@ Operator-only surfaces (CLI/HTTP, not MCP):
 Important notes:
 
 - in `open` mode, at most one profile may have `default: true`; multi-default shared profile listings are rejected fail-closed
-- custom families are valid, but built-in profiles only cover built-in family sets
+- custom capability groups are valid, but built-in profiles only cover built-in capability sets
 - `tool_overrides` require the nested `overrides` map
 
 ### Built-in profiles

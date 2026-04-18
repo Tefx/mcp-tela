@@ -559,7 +559,7 @@ class TestEmptyCapabilities:
         assert result.denied_by == "family_admission"
 
     def test_empty_capabilities_with_tool_overrides_still_denies(self) -> None:
-        """Empty capabilities with tool overrides still denies (no families admitted)."""
+        """Empty capabilities with tool overrides still denies (no capability group admitted)."""
         from tela.core.models import ResolvedTool
 
         tool = ResolvedTool(

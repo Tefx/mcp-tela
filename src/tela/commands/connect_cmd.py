@@ -49,7 +49,7 @@ from tela.commands.connect_bridge import (
 )
 from tela.commands.serve_cmd import _resolve_bearer_token_cli_or_env
 from tela.shell.result import Result
-from tela.shell.lockfile import delete_lockfile, read_lockfile
+from tela.shell.lockfile import delete_lockfile_if_stale, read_lockfile
 from tela.shell.startup_coordinator import (
     discover_or_autostart as _coordinator_discover_or_autostart,
 )
@@ -349,7 +349,7 @@ def _wait_for_live_lockfile(
         if lockfile_result.error is not None and lockfile_result.error.startswith(
             "LOCKFILE_STALE"
         ):
-            _ = delete_lockfile()
+            _ = delete_lockfile_if_stale()
 
         time.sleep(LOCKFILE_WAIT_POLL_SECONDS)
 
