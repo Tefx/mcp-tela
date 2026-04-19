@@ -42,8 +42,10 @@ tela exposes exactly two built-in MCP tools:
 - `tela_list_providers` — returns a list of configured servers and their runtime status
   - **Input:** empty object `{}`
   - **Output:** list of `ProviderInfo` objects, each containing:
-    - `name` (string): server name as configured in `servers`
+    - `provider_name` (string): server name as configured in `servers`
+    - `profile_id` (string): the admitted caller profile that filtered visibility
     - `status` (string): one of `"connected"`, `"disconnected"`, `"failed"`
+    - `tool_prefix` (string | null): configured prefix applied to exposed tool names
     - `tool_count` (int): number of tools exposed by this server after posture filtering
     - `tool_names` (list[str]): post-enforcement-filter exposed tool names
 

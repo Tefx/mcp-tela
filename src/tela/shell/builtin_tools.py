@@ -47,22 +47,23 @@ def _validate_profile_list_payload(
         legacy_keys = sorted(key for key in entry_keys if key in _LEGACY_PROFILE_KEYS)
         if legacy_keys:
             raise RuntimeError(
-                "legacy_alias: profile payload contains invalid key(s): "
-                + ", ".join(legacy_keys)
+                "legacy_alias: field=" + legacy_keys[0]
+                if len(legacy_keys) == 1
+                else "legacy_alias: fields=" + ",".join(legacy_keys)
             )
 
         missing_keys = sorted(_CANONICAL_PROFILE_KEYS - entry_keys)
         if missing_keys:
             raise RuntimeError(
-                "missing_required_field: profile payload missing key(s): "
-                + ", ".join(missing_keys)
+                "missing_required_field: field=" + missing_keys[0]
+                if len(missing_keys) == 1
+                else "missing_required_field: fields=" + ",".join(missing_keys)
             )
 
         extra_keys = sorted(entry_keys - _CANONICAL_PROFILE_KEYS)
         if extra_keys:
             raise RuntimeError(
-                "extra_key: profile payload contains unexpected key(s): "
-                + ", ".join(extra_keys)
+                "extra_key: rejected_keys=" + ",".join(extra_keys)
             )
 
         profile_id = entry["profile_id"]
@@ -70,11 +71,11 @@ def _validate_profile_list_payload(
         default = entry["default"]
 
         if not isinstance(profile_id, str):
-            raise RuntimeError("wrong_type: profile_id must be a string")
+            raise RuntimeError("wrong_type: field=profile_id")
         if not isinstance(default, bool):
-            raise RuntimeError("wrong_type: default must be a boolean")
+            raise RuntimeError("wrong_type: field=default")
         if not isinstance(capabilities, dict):
-            raise RuntimeError("wrong_type: capabilities must be an object")
+            raise RuntimeError("wrong_type: field=capabilities")
 
         invalid_capabilities = sorted(
             f"{family}={posture}"
@@ -84,7 +85,7 @@ def _validate_profile_list_payload(
             or posture not in _CANONICAL_POSTURES
         )
         if invalid_capabilities:
-            raise RuntimeError("bad_enum: capabilities contains invalid posture values")
+            raise RuntimeError("bad_enum: field=capabilities")
 
         if default:
             default_profiles.append(profile_id)
@@ -243,7 +244,7 @@ async def handle_list_providers(
 
         providers.append(
             {
-                "name": server_name,
+                "provider_name": server_name,
                 "profile_id": profile_id,
                 "status": status,
                 "tool_prefix": tool_prefix,
@@ -257,7 +258,7 @@ async def handle_list_providers(
 
 # @invar:allow shell_result: builtin tools follow FastMCP @tool pattern (raise on error, not Result wrap)
 # @shell_complexity: gateway runtime config access is indirect I/O; function is a Shell boundary adapter
-def handle_list_profiles() -> list["ProfileInfo"]:
+def handle_profiles_list() -> list["ProfileInfo"]:
     """Return per-profile summary from live runtime config.
 
     Reads configured profiles and emits canonical payload:
@@ -276,7 +277,7 @@ def handle_list_profiles() -> list["ProfileInfo"]:
             f"{GATEWAY_NOT_STARTED}: gateway has not been started"
         )
         raise RuntimeError(
-            f"handle_list_profiles requires a valid runtime config: {runtime_error!r}"
+            f"handle_profiles_list requires a valid runtime config: {runtime_error!r}"
         )
     config = config_result.value
 

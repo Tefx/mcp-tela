@@ -43,18 +43,18 @@ class TestProfileConfig:
 
 
 class TestConnectRequest:
-    def test_connect_request_requires_connection_id(self) -> None:
+    def test_connect_request_requires_server_name(self) -> None:
         with pytest.raises(ValidationError):
             ConnectRequest.model_validate({})
 
     def test_connect_request_rejects_wrong_type(self) -> None:
         with pytest.raises(ValidationError):
-            ConnectRequest.model_validate({"connection_id": 1})
+            ConnectRequest.model_validate({"server_name": 1})
 
     def test_connect_request_rejects_extra_keys(self) -> None:
         with pytest.raises(ValidationError):
             ConnectRequest.model_validate(
-                {"connection_id": "bridge_1", "unexpected_key": True}
+                {"server_name": "bridge_1", "unexpected_key": True}
             )
 
 

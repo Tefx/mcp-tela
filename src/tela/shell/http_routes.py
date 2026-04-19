@@ -216,6 +216,7 @@ def handle_status(
         )
     )
 )
+# @shell_complexity: connect endpoint must branch across auth, runtime availability, lifecycle facts, and bridge registration results.
 def handle_connect(
     request_token: str,
     expected_token: str,
@@ -246,7 +247,7 @@ def handle_connect(
         >>> from tela.core.models import ConnectRequest, TelaConfig
         >>> set_runtime_config(TelaConfig())
         >>> set_runtime_running(True)
-        >>> req = ConnectRequest(connection_id="test-conn-1")
+        >>> req = ConnectRequest(server_name="test-conn-1")
         >>> result = handle_connect("valid-token", "valid-token", req)
         >>> result.is_ok
         True
@@ -264,13 +265,13 @@ def handle_connect(
     if lifecycle_result.is_err:
         return Result(error=lifecycle_result.error)
 
-    registration_result = register_bridge_connection(payload.connection_id)
+    registration_result = register_bridge_connection(payload.server_name)
     if registration_result.is_err:
         return Result(error=registration_result.error)
 
     return Result(
         value={
-            "connection_id": payload.connection_id,
+            "connection_id": payload.server_name,
             "status": "connected",
         }
     )
@@ -308,6 +309,7 @@ def handle_connect(
         )
     )
 )
+# @shell_complexity: disconnect endpoint must branch across auth, runtime state, cleanup outcomes, and not-found semantics.
 def handle_disconnect(
     request_token: str,
     expected_token: str,

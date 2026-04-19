@@ -1637,6 +1637,103 @@ def test_handle_tools_call_writes_audit_entry_on_denial(
         set_runtime_config(None)
 
 
+def test_handle_tools_call_writes_audit_entry_on_tool_not_found(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Registry lookup denials must still emit audit entries."""
+    import asyncio
+
+    from tela.core.models import (
+        AuditConfig,
+        AuditLevel,
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        Posture,
+        ProfileConfig,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.audit import clear_audit_entries, get_audit_entries
+    from tela.shell.downstream_registry import DownstreamRegistry
+    from tela.shell.gateway_runtime import set_runtime_config
+    from tela.shell.upstream import handle_tools_call
+
+    monkeypatch.setattr("tela.shell.upstream.get_registry", lambda: DownstreamRegistry())
+
+    clear_audit_entries()
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            audit=AuditConfig(level=AuditLevel.L2),
+            servers={"fs": ServerConfig(name="fs", command="cmd", default_posture=Posture.READ_ONLY)},
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    capabilities={"filesystem": Posture.READ_ONLY},
+                    default=True,
+                )
+            },
+            resolved_default_profile="dev",
+        )
+    )
+
+    connection = ConnectionContext(
+        connection_id="c_missing_tool",
+        profile_id="dev",
+        connected_at="2026-01-01T00:00:00Z",
+    )
+
+    try:
+        result = asyncio.run(handle_tools_call(connection, "missing_tool", {}))
+        assert result.is_err
+        assert result.error is not None
+        assert result.error.code == "TOOL_NOT_FOUND"
+
+        entries = get_audit_entries()
+        assert entries.is_ok and entries.value is not None
+        entry = entries.value[-1]
+        assert entry.tool_name == "missing_tool"
+        assert entry.server_name == "unknown"
+        assert entry.error_code == "TOOL_NOT_FOUND"
+        assert entry.verdict.value == "deny"
+    finally:
+        clear_audit_entries()
+        set_runtime_config(None)
+
+
+def test_handle_tools_call_requires_bound_connection() -> None:
+    """Downstream tools/call must fail closed without an admitted connection."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        Posture,
+        ProfileConfig,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.gateway_runtime import set_runtime_config
+    from tela.shell.upstream import handle_tools_call
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            servers={"fs": ServerConfig(name="fs", command="cmd", default_posture=Posture.READ_ONLY)},
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+            resolved_default_profile="dev",
+        )
+    )
+    try:
+        result = asyncio.run(handle_tools_call(None, "read_file", {}))  # type: ignore[arg-type]
+        assert result.is_err
+        assert result.error is not None
+        assert result.error.code == "missing_bound_connection"
+    finally:
+        set_runtime_config(None)
+
+
 # =============================================================================
 # ADR-006: Expected-Red Surface Contract Tests for Downstream Recovery
 # =============================================================================

@@ -306,7 +306,7 @@ class TestMcpReadinessGate:
             from tela.core.models import ConnectRequest
 
             # Call handle_connect with a valid request
-            req = ConnectRequest(connection_id="test-conn-warming")
+            req = ConnectRequest(server_name="test-conn-warming")
             result = handle_connect("test-token", "test-token", req)
 
             # Connect should NOT return ADMISSION_REJECTED_WARMING error
@@ -457,7 +457,7 @@ class TestMcpReadinessGateIntegration:
             from tela.shell.http_routes import handle_connect
             from tela.core.models import ConnectRequest
 
-            req = ConnectRequest(connection_id="test-boundary-conn")
+            req = ConnectRequest(server_name="test-boundary-conn")
             result = handle_connect("test-token", "test-token", req)
 
             # /connect should either succeed or fail with a non-warming error

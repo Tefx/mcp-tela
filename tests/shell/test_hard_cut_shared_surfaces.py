@@ -194,7 +194,7 @@ class TestConnectResponseStaysUnbound:
         clear_runtime_connections()
         try:
             result = handle_connect(
-                "valid-token", "valid-token", ConnectRequest(connection_id="test-c1")
+                "valid-token", "valid-token", ConnectRequest(server_name="test-c1")
             )
             assert result.is_ok
             assert result.value is not None
@@ -319,9 +319,9 @@ class TestTelaListProfilesBuiltin:
 
 
 class TestListProfilesCanonicalPayload:
-    """handle_list_profiles must emit only canonical keys: profile_id, capabilities, default."""
+    """handle_profiles_list must emit only canonical keys: profile_id, capabilities, default."""
 
-    def test_handle_list_profiles_emits_profile_id(self) -> None:
+    def test_handle_profiles_list_emits_profile_id(self) -> None:
         """Each profile entry must have a 'profile_id' key."""
         from tela.core.models import (
             AuthConfig,
@@ -331,7 +331,7 @@ class TestListProfilesCanonicalPayload:
             Posture,
         )
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(
             TelaConfig(
@@ -346,14 +346,14 @@ class TestListProfilesCanonicalPayload:
             )
         )
         try:
-            result = handle_list_profiles()
+            result = handle_profiles_list()
             assert isinstance(result, list)
             assert len(result) == 1
             assert result[0]["profile_id"] == "dev"
         finally:
             set_runtime_config(None)
 
-    def test_handle_list_profiles_emits_capabilities(self) -> None:
+    def test_handle_profiles_list_emits_capabilities(self) -> None:
         """Each profile entry must have a 'capabilities' key with posture values."""
         from tela.core.models import (
             AuthConfig,
@@ -363,7 +363,7 @@ class TestListProfilesCanonicalPayload:
             Posture,
         )
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(
             TelaConfig(
@@ -378,12 +378,12 @@ class TestListProfilesCanonicalPayload:
             )
         )
         try:
-            result = handle_list_profiles()
+            result = handle_profiles_list()
             assert result[0]["capabilities"] == {"fs": "read_write"}
         finally:
             set_runtime_config(None)
 
-    def test_handle_list_profiles_emits_default(self) -> None:
+    def test_handle_profiles_list_emits_default(self) -> None:
         """Each profile entry must have a 'default' bool key."""
         from tela.core.models import (
             AuthConfig,
@@ -393,7 +393,7 @@ class TestListProfilesCanonicalPayload:
             Posture,
         )
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(
             TelaConfig(
@@ -413,7 +413,7 @@ class TestListProfilesCanonicalPayload:
             )
         )
         try:
-            result = handle_list_profiles()
+            result = handle_profiles_list()
             assert len(result) == 2
             dev_entry = next(e for e in result if e["profile_id"] == "dev")
             rev_entry = next(e for e in result if e["profile_id"] == "reviewer")
@@ -422,7 +422,7 @@ class TestListProfilesCanonicalPayload:
         finally:
             set_runtime_config(None)
 
-    def test_handle_list_profiles_no_legacy_alias_key(self) -> None:
+    def test_handle_profiles_list_no_legacy_alias_key(self) -> None:
         """Profile entries must not contain retired alias keys."""
         from tela.core.models import (
             AuthConfig,
@@ -432,7 +432,7 @@ class TestListProfilesCanonicalPayload:
             Posture,
         )
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(
             TelaConfig(
@@ -447,12 +447,12 @@ class TestListProfilesCanonicalPayload:
             )
         )
         try:
-            result = handle_list_profiles()
+            result = handle_profiles_list()
             assert _LEGACY_PROFILE_KEY not in result[0]
         finally:
             set_runtime_config(None)
 
-    def test_handle_list_profiles_no_legacy_families_key(self) -> None:
+    def test_handle_profiles_list_no_legacy_families_key(self) -> None:
         """Profile entries must NOT contain the retired legacy capability key."""
         from tela.core.models import (
             AuthConfig,
@@ -462,7 +462,7 @@ class TestListProfilesCanonicalPayload:
             Posture,
         )
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(
             TelaConfig(
@@ -477,12 +477,12 @@ class TestListProfilesCanonicalPayload:
             )
         )
         try:
-            result = handle_list_profiles()
+            result = handle_profiles_list()
             assert _LEGACY_FAMILIES_KEY not in result[0]
         finally:
             set_runtime_config(None)
 
-    def test_handle_list_profiles_no_legacy_tools_key(self) -> None:
+    def test_handle_profiles_list_no_legacy_tools_key(self) -> None:
         """Profile entries must not contain the retired legacy key."""
         from tela.core.models import (
             AuthConfig,
@@ -492,7 +492,7 @@ class TestListProfilesCanonicalPayload:
             Posture,
         )
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(
             TelaConfig(
@@ -507,7 +507,7 @@ class TestListProfilesCanonicalPayload:
             )
         )
         try:
-            result = handle_list_profiles()
+            result = handle_profiles_list()
             assert _LEGACY_TOOLS_KEY not in result[0]
         finally:
             set_runtime_config(None)
@@ -547,21 +547,21 @@ class TestProfilesResourceRemoved:
 
 
 # ==============================================================================
-# (11) handle_list_profiles fails closed on missing runtime config
+# (11) handle_profiles_list fails closed on missing runtime config
 # ==============================================================================
 
 
 class TestListProfilesFailClosed:
-    """handle_list_profiles must reject when gateway has no runtime config."""
+    """handle_profiles_list must reject when gateway has no runtime config."""
 
-    def test_handle_list_profiles_raises_on_missing_runtime_config(self) -> None:
-        """handle_list_profiles must raise RuntimeError when no runtime config available."""
+    def test_handle_profiles_list_raises_on_missing_runtime_config(self) -> None:
+        """handle_profiles_list must raise RuntimeError when no runtime config available."""
         import pytest
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
         set_runtime_config(None)
         with pytest.raises(
-            RuntimeError, match="handle_list_profiles requires a valid runtime config"
+            RuntimeError, match="handle_profiles_list requires a valid runtime config"
         ):
-            handle_list_profiles()
+            handle_profiles_list()

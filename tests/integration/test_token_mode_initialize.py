@@ -393,6 +393,45 @@ def test_handle_initialize_token_mode_rejects_missing_token_version_before_admis
         set_runtime_secrets([])
 
 
+def test_handle_initialize_token_mode_rejects_wrong_max_depth_type_before_admission() -> (
+    None
+):
+    """Token mode must classify max_depth type mismatches as wrong_type."""
+
+    secret = "wrong-max-depth-type-secret"
+    token_fields = {
+        **_make_valid_token_fields(profile="dev"),
+        "max_depth": "3",
+    }
+    signed_payload = {
+        **token_fields,
+        "signature": compute_signature(token_fields, secret),
+    }
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"dev": ProfileConfig(name="dev")},
+        )
+    )
+    set_runtime_secrets([secret])
+    clear_runtime_connections()
+
+    async def _run() -> None:
+        result = await handle_initialize(_wrap_client_info(signed_payload))
+        assert result.is_err
+        assert result.error is not None
+        assert "INITIALIZE_REJECTED" in result.error
+        assert "wrong_type" in result.error
+        assert "field=max_depth" in result.error
+
+    try:
+        asyncio.run(_run())
+    finally:
+        set_runtime_config(None)
+        set_runtime_secrets([])
+
+
 def test_handle_initialize_token_mode_expired_token() -> None:
     """Token mode must reject expired tokens.
 

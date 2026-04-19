@@ -181,7 +181,7 @@ class TestB1TransientRetry:
             result = _post_json(
                 url="http://127.0.0.1:9999/connect",
                 bearer_token="test-token",
-                payload={"connection_id": "test"},
+                payload={"server_name": "test"},
             )
 
         assert result.is_ok, f"Expected success after retry, got: {result.error}"

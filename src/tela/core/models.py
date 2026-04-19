@@ -312,7 +312,7 @@ class ResolvedTool(BaseModel):
 class ProviderInfo(TypedDict):
     """Per-provider summary returned by tela_list_providers."""
 
-    name: str
+    provider_name: str
     profile_id: str
     status: str  # "connected" | "disconnected" | "failed"
     tool_prefix: str | None
@@ -474,7 +474,7 @@ class ConnectRequest(BaseModel):
 
     model_config = {"extra": "forbid"}
 
-    connection_id: str = Field(strict=True)
+    server_name: str = Field(strict=True)
 
 
 class DisconnectRequest(BaseModel):

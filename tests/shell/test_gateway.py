@@ -38,6 +38,7 @@ from tela.shell.gateway import (
     gateway_start,
     gateway_status,
 )
+from tela.shell import gateway as gateway_module
 from tela.shell.gateway_runtime import (
     is_runtime_running,
     is_upstream_server_initialized,
@@ -982,9 +983,9 @@ def test_fastmcp_list_profiles_builtin_tool() -> None:
 
     asyncio.run(gateway_start(config, tela_config=tela, tool_lists={}))
     try:
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
 
-        result = handle_list_profiles()
+        result = handle_profiles_list()
         assert isinstance(result, list)
         assert len(result) == 2
 
@@ -1164,7 +1165,7 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
                 assert unauthorized_status.status_code == 401
 
                 unauthorized_connect = client.post(
-                    "/connect", json={"connection_id": "conn-1"}
+                    "/connect", json={"server_name": "conn-1"}
                 )
                 assert unauthorized_connect.status_code == 401
 
@@ -1176,7 +1177,7 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
                 connect = client.post(
                     "/connect",
                     headers=auth_headers,
-                    json={"connection_id": "conn-1"},
+                    json={"server_name": "conn-1"},
                 )
                 assert connect.status_code == 200
 
@@ -1190,6 +1191,78 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
             await gateway_shutdown()
 
     asyncio.run(_scenario())
+
+
+def test_connect_handler_requires_server_name_field() -> None:
+    """Canonical /connect helper must reject missing required request key."""
+
+    set_runtime_config(TelaConfig())
+    set_runtime_running(True)
+    try:
+        result = gateway_module._connect_handler("valid", "valid", {})
+        assert result.is_err
+        assert result.error == "missing_required_field: field=server_name"
+    finally:
+        set_runtime_running(False)
+        set_runtime_config(None)
+
+
+def test_connect_handler_rejects_wrong_server_name_type() -> None:
+    """Canonical /connect helper must reject non-string server_name."""
+
+    set_runtime_config(TelaConfig())
+    set_runtime_running(True)
+    try:
+        result = gateway_module._connect_handler(
+            "valid", "valid", {"server_name": 123}
+        )
+        assert result.is_err
+        assert result.error == "wrong_type: field=server_name"
+    finally:
+        set_runtime_running(False)
+        set_runtime_config(None)
+
+
+def test_connect_handler_rejects_extra_http_keys() -> None:
+    """Canonical /connect helper must fail closed on unexpected keys."""
+
+    set_runtime_config(TelaConfig())
+    set_runtime_running(True)
+    try:
+        result = gateway_module._connect_handler(
+            "valid",
+            "valid",
+            {"server_name": "bridge_http_1", "unexpected_key": True},
+        )
+        assert result.is_err
+        assert result.error == "extra_key: rejected_keys=unexpected_key"
+    finally:
+        set_runtime_running(False)
+        set_runtime_config(None)
+
+
+def test_connect_handler_rejects_token_mode_profile_binding_fields() -> None:
+    """Token-mode /connect helper must reject fabricated profile binding hints."""
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=["secret"]),
+            profiles={"prod": ProfileConfig(name="prod")},
+        )
+    )
+    set_runtime_running(True)
+    try:
+        result = gateway_module._connect_handler(
+            "valid",
+            "valid",
+            {"server_name": "bridge_http_1", "profile_id": "prod"},
+        )
+        assert result.is_err
+        assert result.error is not None
+        assert "fabricated_profile_binding_forbidden" in result.error
+    finally:
+        set_runtime_running(False)
+        set_runtime_config(None)
 
 
 def test_streamable_http_initialize_token_mode_rejects_missing_capability_token() -> (
@@ -1347,6 +1420,93 @@ def test_streamable_http_initialize_token_mode_rejects_unknown_token_profile() -
     asyncio.run(_scenario())
 
 
+def test_streamable_http_initialize_token_mode_rejects_profile_name_alias() -> None:
+    """Actual /mcp initialize must reject legacy token alias fields on alternate path."""
+
+    def _extract_jsonrpc_payload(raw_text: str) -> dict[str, object]:
+        for line in raw_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("data: "):
+                return json.loads(stripped[6:])
+            if stripped.startswith("{"):
+                return json.loads(stripped)
+        raise AssertionError(f"No JSON-RPC payload found in response: {raw_text!r}")
+
+    async def _scenario() -> None:
+        secret = "secret"
+        token_fields = {
+            "token_id": "tok_alias_http_1",
+            "profile_id": "prod",
+            "persona_ref": "persona.prod",
+            "instance_id": "inst-prod",
+            "issued_at": "2026-01-01T00:00:00Z",
+            "expires_at": "2099-12-31T23:59:59Z",
+            "token_version": "0.1.0",
+        }
+        token_payload = {
+            **token_fields,
+            _LEGACY_PROFILE_KEY: "legacy-prod",
+            "signature": compute_signature(token_fields, secret),
+        }
+
+        tela = TelaConfig(
+            auth=AuthConfig(mode=AuthMode.TOKEN, secrets=[secret]),
+            profiles={"prod": ProfileConfig(name="prod")},
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8405,
+            auth_mode=AuthMode.TOKEN,
+            default_profile=None,
+        )
+        start_result = await gateway_start(
+            config,
+            tela_config=tela,
+            expected_bearer_token="mounted-token",
+        )
+        assert start_result.is_ok
+
+        try:
+            app_result = with_upstream_server(lambda s: s.streamable_http_app())
+            assert app_result.is_ok
+            app = app_result.value
+            assert app is not None
+
+            with TestClient(app, base_url="http://127.0.0.1:8405") as client:
+                response = client.post(
+                    "/mcp",
+                    headers={
+                        "Authorization": "Bearer mounted-token",
+                        "Accept": "application/json, text/event-stream",
+                    },
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {},
+                            "clientInfo": {
+                                "name": "bridge-test",
+                                "version": "0.1",
+                                "capability_token": token_payload,
+                            },
+                        },
+                    },
+                )
+                assert response.status_code == 200
+                payload = _extract_jsonrpc_payload(response.text)
+                assert "error" in payload
+                error = payload["error"]
+                assert isinstance(error, dict)
+                assert "alias_field_present" in str(error.get("message"))
+
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
 def test_streamable_http_bridge_initialize_token_mode_binds_after_connect_only_with_valid_token() -> (
     None
 ):
@@ -1408,7 +1568,7 @@ def test_streamable_http_bridge_initialize_token_mode_binds_after_connect_only_w
                 connect = client.post(
                     "/connect",
                     headers={"Authorization": "Bearer mounted-token"},
-                    json={"connection_id": "bridge_http_1"},
+                    json={"server_name": "bridge_http_1"},
                 )
                 assert connect.status_code == 200
                 assert connect.json() == {
@@ -1952,6 +2112,11 @@ def test_gateway_call_tool_dispatches_builtin() -> None:
 
             # Should return a valid result (list of ProviderInfo dicts)
             assert response.root.content is not None  # type: ignore[union-attr]
+            resource_text = getattr(response.root.content[0].resource, "text", None)  # type: ignore[union-attr]
+            assert isinstance(resource_text, str)
+            payload = json.loads(resource_text)
+            assert payload[0]["provider_name"] == "fs"
+            assert "name" not in payload[0]
         finally:
             await gateway_shutdown()
 
@@ -2050,8 +2215,63 @@ def test_gateway_call_tool_rejects_extra_arguments_for_tela_list_profiles() -> N
             )
 
             assert response.root.isError is True  # type: ignore[union-attr]
-            assert "INVALID_TOOL_INPUT" in response.root.content[0].text  # type: ignore[union-attr]
+            assert "extra_key" in response.root.content[0].text  # type: ignore[union-attr]
         finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+@pytest.mark.parametrize("tool_name", ["tela_list_profiles", "tela_list_providers"])
+def test_handle_builtin_call_rejects_extra_arguments_fail_closed(
+    tool_name: str,
+) -> None:
+    """Helper builtin path must reject non-empty args with canonical error code."""
+
+    async def _scenario() -> None:
+        clear_audit_entries()
+        tela = TelaConfig(
+            servers={"fs": ServerConfig(name="fs", command="cmd")},
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+        connection = ConnectionContext(
+            connection_id="conn_builtin_helper",
+            profile_id="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.OPEN,
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists={"fs": []})
+        try:
+            with pytest.raises(RuntimeError, match="extra_key"):
+                await gateway_module._handle_builtin_call(
+                    tool_name,
+                    {"unexpected_key": True},
+                    connection,
+                )
+
+            audit_entries = get_audit_entries()
+            assert audit_entries.is_ok and audit_entries.value is not None
+            entry = audit_entries.value[-1]
+            assert entry.tool_name == tool_name
+            assert entry.server_name == "tela"
+            assert entry.error_code == "extra_key"
+        finally:
+            clear_audit_entries()
             await gateway_shutdown()
 
     asyncio.run(_scenario())
@@ -2161,7 +2381,7 @@ def test_streamable_http_builtin_call_accepts_only_exact_empty_object() -> None:
                 )
             )
             assert null_response.root.isError is True  # type: ignore[union-attr]
-            assert "INVALID_TOOL_INPUT" in null_response.root.content[0].text  # type: ignore[union-attr]
+            assert "wrong_type" in null_response.root.content[0].text  # type: ignore[union-attr]
 
             list_response = await handler_result.value(
                 types.CallToolRequest.model_construct(
@@ -2172,7 +2392,7 @@ def test_streamable_http_builtin_call_accepts_only_exact_empty_object() -> None:
                 )
             )
             assert list_response.root.isError is True  # type: ignore[union-attr]
-            assert "INVALID_TOOL_INPUT" in list_response.root.content[0].text  # type: ignore[union-attr]
+            assert "wrong_type" in list_response.root.content[0].text  # type: ignore[union-attr]
 
             extra_response = await handler_result.value(
                 types.CallToolRequest(
@@ -2183,7 +2403,7 @@ def test_streamable_http_builtin_call_accepts_only_exact_empty_object() -> None:
                 )
             )
             assert extra_response.root.isError is True  # type: ignore[union-attr]
-            assert "INVALID_TOOL_INPUT" in extra_response.root.content[0].text  # type: ignore[union-attr]
+            assert "extra_key" in extra_response.root.content[0].text  # type: ignore[union-attr]
         finally:
             await gateway_shutdown()
 

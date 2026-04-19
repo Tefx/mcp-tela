@@ -67,7 +67,7 @@ proof that downstreams are ready.
 
 ### Connection lifecycle
 
-1. `tela connect` → `POST /connect` → server registers connection
+1. `tela connect` → `POST /connect` with canonical request key `server_name` → server registers connection and returns `connection_id`
 2. Bridge active: stdio ↔ HTTP MCP session
 3. `tela connect` exits → `POST /disconnect` → server deregisters
 4. Last connection gone + idle timeout → server auto-shuts down (if auto-started)
@@ -111,7 +111,7 @@ Implications:
 
 **`tela connect` readiness behavior**:
 - After `POST /connect` registration, the bridge polls `GET /status` for readiness
-- Polling is bounded (`BRIDGE_READINESS_MAX_POLLS = HTTP_TRANSIENT_RETRIES + 1`, default 4 polls)
+- Polling is bounded (`BRIDGE_READINESS_MAX_POLLS = 8`) so recovery keeps waiting through the discovered-gateway readiness window instead of treating lockfile publication as readiness
 - If `GET /status` returns `state: "ready"`, the bridge proceeds to MCP forwarding
 - If `GET /status` returns `state: "degraded"`, the bridge exits cleanly with error
 - If bounded polls exhaust without reaching `ready`, the bridge exits cleanly
@@ -133,7 +133,7 @@ recovery:
 2. Check recovery attempts against `--max-recovery-attempts` (default: 3)
 3. Re-discover gateway via lockfile (`_recover_gateway`)
 4. Re-poll readiness at the recovered endpoint
-5. Re-register via `POST /connect` with the same `connection_id`
+5. Re-register via `POST /connect` with the same opaque bridge identifier carried in request key `server_name` and echoed back as `connection_id`
 6. Resume forwarding MCP frames
 
 **Session semantics**: The bridge maintains the same `connection_id` across
@@ -310,7 +310,7 @@ There is no separate workflow-policy layer in gateway authorization.
 
 Built-in MCP tools:
 - `tela_list_profiles` — MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`; **requires admitted session**
-- `tela_list_providers` — MCP tool returning a list of configured servers and their runtime status; **requires admitted session**
+- `tela_list_providers` — MCP tool returning `provider_name`, caller-bound `profile_id`, `status`, `tool_prefix`, `tool_count`, and `tool_names`; **requires admitted session**
 
 **Canonical builtin semantics:**
 - Built-in tools require an admitted session/connection at call time; there is no builtin-session bypass

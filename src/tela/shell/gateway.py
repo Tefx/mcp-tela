@@ -16,11 +16,12 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 from typing import Awaitable, Callable, cast
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
-from pydantic import AnyUrl, ValidationError
+from pydantic import AnyUrl
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -46,7 +47,7 @@ from tela.shell.audit import audit_close, audit_init, build_audit_entry, audit_w
 from tela.shell.builtin_tools import (
     BUILTIN_TOOLS,
     BUILTIN_TOOL_NAMES,
-    handle_list_profiles,
+    handle_profiles_list,
     handle_list_providers,
     register_builtin_tools,
 )
@@ -73,6 +74,12 @@ from tela.shell import gateway_runtime
 
 logger = logging.getLogger(__name__)
 
+_CANONICAL_CONNECT_KEYS = frozenset({"server_name"})
+_TOKEN_MODE_FORBIDDEN_CONNECT_KEYS = frozenset(
+    {"profile_id", "profile_name", "tools_profile", "default_profile"}
+)
+_ERROR_CODE_PATTERN = re.compile(r"^[a-z_]+$|^[A-Z_]+$")
+
 
 # @invar:allow shell_result: pure helper extracts stable audit classification for the builtin MCP boundary.
 def _builtin_tool_error_details(exc: Exception) -> tuple[str, str]:
@@ -81,9 +88,91 @@ def _builtin_tool_error_details(exc: Exception) -> tuple[str, str]:
     message = str(exc)
     if ": " in message:
         maybe_code, detail = message.split(": ", 1)
-        if maybe_code and all(ch.isupper() or ch == "_" for ch in maybe_code):
+        if maybe_code and _ERROR_CODE_PATTERN.fullmatch(maybe_code) is not None:
             return maybe_code, detail
     return "BUILTIN_TOOL_ERROR", message
+
+
+def _validate_builtin_arguments(
+    tool_name: str,
+    arguments: object,
+) -> Result[dict[str, object], str]:
+    """Require exact empty-object input for builtin shared tools."""
+
+    if not isinstance(arguments, dict):
+        return Result(
+            error=(
+                f"wrong_type: {tool_name} requires an empty object argument payload"
+            )
+        )
+    if arguments:
+        argument_keys = ",".join(sorted(str(key) for key in arguments.keys()))
+        return Result(error=f"extra_key: rejected_keys={argument_keys}")
+    return Result(value=dict(arguments))
+
+
+# @shell_complexity: /connect validation branches across raw-shape checks, token-mode binding forbiddance, canonical requiredness, and extra-key rejection.
+def _validate_connect_request_payload(
+    payload: object,
+    *,
+    auth_mode: AuthMode,
+) -> Result[ConnectRequest, str]:
+    """Validate raw /connect payload against canonical conformance rules."""
+
+    if not isinstance(payload, dict):
+        return Result(error="wrong_type: field=server_name")
+
+    payload_keys = {str(key) for key in payload.keys()}
+    binding_keys = sorted(
+        key for key in payload_keys if key in _TOKEN_MODE_FORBIDDEN_CONNECT_KEYS
+    )
+    if auth_mode == AuthMode.TOKEN and binding_keys:
+        return Result(
+            error=(
+                "fabricated_profile_binding_forbidden: token-mode /connect must "
+                "not carry profile binding fields: " + ",".join(binding_keys)
+            )
+        )
+
+    if "server_name" not in payload_keys:
+        return Result(error="missing_required_field: field=server_name")
+
+    server_name = payload.get("server_name")
+    if not isinstance(server_name, str):
+        return Result(error="wrong_type: field=server_name")
+
+    extra_keys = sorted(payload_keys - _CANONICAL_CONNECT_KEYS)
+    if extra_keys:
+        return Result(error="extra_key: rejected_keys=" + ",".join(extra_keys))
+
+    return Result(value=ConnectRequest(server_name=server_name))
+
+
+def _connect_handler(
+    request_token: str,
+    expected_token: str,
+    payload: object,
+) -> Result[dict[str, object], str]:
+    """Canonical /connect validation + dispatch boundary."""
+
+    config_result = gateway_runtime.get_runtime_config()
+    auth_mode = (
+        config_result.value.auth.mode
+        if config_result.is_ok and config_result.value is not None
+        else AuthMode.OPEN
+    )
+    payload_result = _validate_connect_request_payload(payload, auth_mode=auth_mode)
+    if payload_result.is_err:
+        return Result(error=payload_result.error)
+    assert payload_result.value is not None
+
+    from tela.shell.http_routes import handle_connect
+
+    connect_result = handle_connect(request_token, expected_token, payload_result.value)
+    if connect_result.is_err:
+        return Result(error=connect_result.error)
+    assert connect_result.value is not None
+    return Result(value=dict(connect_result.value))
 
 
 # @invar:allow shell_result: pure helper constructs the raw MCP result required by the builtin MCP boundary.
@@ -226,14 +315,14 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         request_token, expected_token = auth_result.value
 
         try:
-            payload = ConnectRequest.model_validate(await request.json())
-        except (ValidationError, ValueError):
+            raw_payload = await request.json()
+        except ValueError:
             return JSONResponse(
                 status_code=400,
                 content={"error": "INVALID_REQUEST: invalid connect payload"},
             )
 
-        connect_result = handle_connect(request_token, expected_token, payload)
+        connect_result = _connect_handler(request_token, expected_token, raw_payload)
         if connect_result.is_err:
             assert connect_result.error is not None
             return _as_error_response(connect_result.error)
@@ -596,17 +685,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             pass  # No request context (e.g. stdio without session capture)
 
         if tool_name in BUILTIN_TOOL_NAMES:
-            if not isinstance(arguments, dict):
-                raise RuntimeError(
-                    f"INVALID_TOOL_INPUT: {tool_name} requires an empty object argument payload"
-                )
-            if arguments:
-                argument_keys = ", ".join(sorted(arguments.keys()))
-                raise RuntimeError(
-                    f"INVALID_TOOL_INPUT: {tool_name} takes no arguments; got {argument_keys}"
-                )
-            builtin_arguments = arguments
-            return await _handle_builtin_call(tool_name, builtin_arguments, connection)
+            return await _handle_builtin_call(tool_name, arguments, connection)
 
         # Wait for convergence before calling downstream tools.
         converge = gateway_runtime.get_runtime_converge_event().value
@@ -647,10 +726,10 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
 
 
 # @shell_complexity: dispatch across builtin tool variants with protocol-contract branching
-# @invar:allow shell_result: _handle_builtin_call is an async MCP callback invoked by FastMCP's call_tool handler; returning mcp_types.CallToolResult directly satisfies the MCP protocol contract. The function delegates to handle_list_providers/handle_list_profiles (Shell) and returns a raw MCP type rather than Result[T, E], which is intentional — the function IS the boundary between Shell and MCP protocol layer.
+# @invar:allow shell_result: _handle_builtin_call is an async MCP callback invoked by FastMCP's call_tool handler; returning mcp_types.CallToolResult directly satisfies the MCP protocol contract. The function delegates to handle_list_providers/handle_profiles_list (Shell) and returns a raw MCP type rather than Result[T, E], which is intentional — the function IS the boundary between Shell and MCP protocol layer.
 async def _handle_builtin_call(
     tool_name: str,
-    arguments: dict[str, object],
+    arguments: object,
     connection: ConnectionContext,
 ) -> mcp_types.CallToolResult:
     """Handle a builtin tool call with L2 audit trail.
@@ -668,13 +747,19 @@ async def _handle_builtin_call(
     """
     start_time = time.time()
     try:
+        builtin_arguments_result = _validate_builtin_arguments(tool_name, arguments)
+        if builtin_arguments_result.is_err:
+            raise RuntimeError(builtin_arguments_result.error)
+        assert builtin_arguments_result.value is not None
+
         if tool_name == "tela_list_profiles":
-            profiles_result = handle_list_profiles()
+            profiles_result = handle_profiles_list()
             call_result = [dict(p) for p in profiles_result]  # type: ignore[arg-type]
-        else:
-            # Default: tela_list_providers
+        elif tool_name == "tela_list_providers":
             providers_result = await handle_list_providers(connection)
             call_result = [dict(p) for p in providers_result]  # type: ignore[arg-type]
+        else:
+            raise RuntimeError(f"TOOL_NOT_FOUND: builtin tool '{tool_name}' not found")
 
         latency_ms = (time.time() - start_time) * 1000
 
@@ -706,7 +791,11 @@ async def _handle_builtin_call(
                 error_message=error_message,
             ),
             latency_ms=latency_ms,
-            arguments=dict(arguments) if arguments else None,
+            arguments=(
+                dict(arguments)
+                if isinstance(arguments, dict) and arguments
+                else None
+            ),
         )
         if audit_entry_result.is_ok and audit_entry_result.value is not None:
             await audit_write(audit_entry_result.value)

@@ -23,7 +23,7 @@ SurfaceContract := {
 
 | Surface name | Exact kind | Canonical access path | Notes |
 |---|---|---|---|
-| `tela_list_providers` | `tool` | MCP `tools/call` with an admitted session/connection and exact `{}` input | Returns list of ProviderInfo: `{name, status, tool_count, tool_names}` filtered by the calling connection's admitted `profile_id`. |
+| `tela_list_providers` | `tool` | MCP `tools/call` with an admitted session/connection and exact `{}` input | Returns list of ProviderInfo: `{provider_name, profile_id, status, tool_prefix, tool_count, tool_names}` filtered by the calling connection's admitted `profile_id`. |
 | `tela_list_profiles` | `tool` | MCP `tools/call` with an admitted session/connection and exact `{}` input | Returns list of ProfileInfo: `{profile_id, capabilities, default}` as exact JSON payload content; multi-default payloads fail closed. |
 
 ### 1.2 Operator companion surfaces
@@ -89,21 +89,22 @@ completes; endpoint discoverability does not imply readiness.
 - This contract confirms exactly two current built-in MCP tools:
   `tela_list_providers` and `tela_list_profiles`.
 - **Input contract:** Both tools accept strictly `{}` (empty object); additional
-  properties are rejected (`INVALID_TOOL_INPUT`)
+  properties are rejected (`extra_key`) and non-object payloads are rejected (`wrong_type`)
 - **Session contract:** Both tools require an **admitted session/connection** at
   call time; they fail closed if called without one
 - there is no builtin-session bypass and no alternate admission path for builtin tools
 - `tela_list_providers` output: list of `ProviderInfo` objects, each containing
-  `name` (server name), `status` (`"connected"` | `"disconnected"` | `"failed"`),
-  `tool_count` (int), and `tool_names` (list of post-enforcement-filter exposed
-  tool names).
+  `provider_name` (server name), `profile_id` (caller-bound profile truth),
+  `status` (`"connected"` | `"disconnected"` | `"failed"`), `tool_prefix`
+  (configured prefix or `null`), `tool_count` (int), and `tool_names` (list of
+  post-enforcement-filter exposed tool names).
 - `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
   `profile_id` (str), `capabilities` (dict of family→posture string), and
   `default` (bool).
 - `tela_list_profiles` must return the canonical JSON payload itself, not a
   Python `repr(...)`/stringified approximation.
 - more than one `default: true` entry is invalid and must fail closed with
-  `INVALID_DEFAULT_PROFILE_STATE`
+  `invalid_default_profile_state`
 - **Provider listing visibility:** Tools are filtered by the calling
   connection's bound `profile_id`; no cross-profile visibility
 - **Audit attribution:** Builtin tool calls are attributed to the caller's

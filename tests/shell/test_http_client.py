@@ -551,7 +551,7 @@ def test_post_json_once_delegates_to_retry_http_request_success(
     result = connect_bridge.post_json_once(
         url="http://127.0.0.1:8123/disconnect",
         bearer_token="test-token",
-        payload={"connection_id": "bridge_abc123"},
+        payload={"server_name": "bridge_abc123"},
         timeout_seconds=1.0,
     )
 
@@ -594,7 +594,7 @@ def test_post_json_once_delegates_error_from_retry_http_request(
     result = connect_bridge.post_json_once(
         url="http://127.0.0.1:8123/disconnect",
         bearer_token="test-token",
-        payload={"connection_id": "bridge_abc123"},
+        payload={"server_name": "bridge_abc123"},
         timeout_seconds=1.0,
     )
 
@@ -886,7 +886,7 @@ def test_post_json_delegates_to_retry_http_request_success(
     result = connect_bridge.post_json(
         url="http://127.0.0.1:8123/connect",
         bearer_token="test-token",
-        payload={"connection_id": "bridge_test"},
+        payload={"server_name": "bridge_test"},
     )
 
     assert result.is_ok
@@ -928,7 +928,7 @@ def test_post_json_delegates_error_from_retry_http_request(
     result = connect_bridge.post_json(
         url="http://127.0.0.1:8123/connect",
         bearer_token="test-token",
-        payload={"connection_id": "bridge_test"},
+        payload={"server_name": "bridge_test"},
     )
 
     assert result.is_err

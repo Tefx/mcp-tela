@@ -376,7 +376,7 @@ def test_connect_is_lifecycle_plumbing() -> bool:
     assert _bound_port is not None and _bearer_token is not None
     url = f"http://{SERVE_HOST}:{_bound_port}/connect"
     connection_id = "structural-collapse-conn-1"
-    payload = {"connection_id": connection_id}
+    payload = {"server_name": connection_id}
 
     record("CMD", f"POST {url} with {payload}")
 
@@ -788,7 +788,7 @@ def test_connect_not_admission_gated() -> bool:
     # POST /connect should succeed regardless
     url = f"http://{SERVE_HOST}:{_bound_port}/connect"
     conn_id = "admission-test-conn-1"
-    status, body = _http_post(url, {"connection_id": conn_id}, token=_bearer_token)
+    status, body = _http_post(url, {"server_name": conn_id}, token=_bearer_token)
     record(
         "RESPONSE",
         f"HTTP {status}: {json.dumps(body, indent=2) if isinstance(body, dict) else body}",

@@ -111,10 +111,11 @@ profile identity via `profile_id`.
 - `token_version` must equal `0.1.0` (**explicit and required**; no default, no fallback)
 - `issued_at` and `expires_at` must be RFC3339/JSON-schema `date-time` strings with timezone
 - `max_depth`, when present, must be an integer `>= 0`
-- legacy alias fields are rejected fail-closed with local code `TOKEN_ALIAS_FIELD_PRESENT` and an initialize audit log record
+- legacy alias fields are rejected fail-closed with local code `alias_field_present` and an initialize audit log record
 
-At admission, `token_version` is validated explicitly; absence or mismatch results
-in `TOKEN_SCHEMA_INVALID`.
+At admission, `token_version` is validated explicitly; absence returns
+`missing_required_field`, while other canonical schema mismatches return
+`token_schema_invalid`.
 
 ### 3.4 Audit
 
@@ -231,6 +232,23 @@ as conflicts.
 | `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |
+
+`POST /connect` uses canonical request/response wiring:
+
+```json
+{
+  "server_name": "bridge_abc123"
+}
+```
+
+Successful response:
+
+```json
+{
+  "connection_id": "bridge_abc123",
+  "status": "connected"
+}
+```
 
 Current-slice admission boundary:
 - `POST /mcp` is the only new readiness-gated HTTP admission surface in this slice
@@ -464,13 +482,36 @@ content; tela does not emit Python `repr(...)` approximations for this surface.
 
 At most one entry may carry `default: true`. If multiple configured profiles do
 so, tela rejects the shared profile-list surface with
-`INVALID_DEFAULT_PROFILE_STATE` instead of emitting an invalid payload.
+`invalid_default_profile_state` instead of emitting an invalid payload.
+
+### `tela_list_providers` Built-in Tool
+
+`access: tools/call` with an admitted session/connection and exact empty input `{}`.
+
+Runtime-truthful payload shape:
+
+```json
+[
+  {
+    "provider_name": "fs",
+    "profile_id": "developer",
+    "status": "connected",
+    "tool_prefix": null,
+    "tool_count": 2,
+    "tool_names": ["read_file", "write_file"]
+  }
+]
+```
+
+`provider_name`, `profile_id`, `status`, `tool_prefix`, `tool_count`, and
+`tool_names` are the current builtin surface keys. The builtin result carries the
+exact JSON array as `application/json` content.
 
 Canonical builtin rule set for both `tela_list_profiles` and
 `tela_list_providers`:
 
 - calls require a live admitted session/connection; there is no builtin-session bypass
-- arguments must be exactly `{}`; `null`, omitted payloads, or extra keys are rejected with `INVALID_TOOL_INPUT`
+- arguments must be exactly `{}`; non-object payloads are rejected with `wrong_type` and extra keys are rejected with `extra_key`
 - provider visibility binds to the calling connection's admitted `profile_id`
 - builtin audit attribution binds to the calling connection's admitted `profile_id`
 - regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`
@@ -931,8 +972,9 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `GATEWAY_NOT_STARTED` | MCP + HTTP | Gateway runtime not initialized |
 | `TOOL_NOT_FOUND` | MCP | Tool name not in downstream registry |
 | `PROFILE_NOT_FOUND` | MCP | Initialize or subsequent calls reference a profile not present in runtime config |
-| `INVALID_TOOL_NAME` | MCP | Shared MCP tool name is not canonical snake_case |
-| `INVALID_TOOL_INPUT` | MCP | Built-in tela tool received unexpected arguments |
+| `invalid_tool_name` | MCP | Shared MCP tool name is not canonical snake_case |
+| `wrong_type` | MCP | Built-in tela tool received a non-object argument payload |
+| `extra_key` | MCP + HTTP | Built-in tela tool or `POST /connect` received unexpected keys |
 | `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected, call failed, or recovery exhausted (see ADR-006) |
 | `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
 | `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
@@ -951,9 +993,9 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `PROFILE_NOT_FOUND` | Startup | CLI `--default-profile` names unknown profile |
 | `OPEN_MODE_DEFAULT_PROFILE_MISSING` | Startup | Open mode with no default profile |
 | `OPEN_MODE_DEFAULT_PROFILE_AMBIGUOUS` | Startup | Multiple profiles marked `default: true` |
-| `INVALID_DEFAULT_PROFILE_STATE` | MCP | Shared profile-list payload would contain multiple `default: true` entries |
-| `TOKEN_ALIAS_FIELD_PRESENT` | MCP | A legacy alias field appeared on shared token surfaces |
-| `TOKEN_SCHEMA_INVALID` | MCP | CapabilityToken failed canonical schema validation |
+| `invalid_default_profile_state` | MCP | Shared profile-list payload would contain multiple `default: true` entries |
+| `alias_field_present` | MCP | A legacy alias field appeared on shared token surfaces |
+| `token_schema_invalid` | MCP | CapabilityToken failed canonical schema validation |
 | `TOKEN_INVALID` | MCP | CapabilityToken HMAC validation failed |
 | `TOKEN_EXPIRED` | MCP | CapabilityToken past expiry |
 | `LOCKFILE_READ_ERROR` | Discovery | Lockfile missing or unreadable |

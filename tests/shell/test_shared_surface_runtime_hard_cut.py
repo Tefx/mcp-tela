@@ -18,7 +18,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.core.token import compute_signature
-from tela.shell.builtin_tools import handle_list_profiles, handle_list_providers
+from tela.shell.builtin_tools import handle_profiles_list, handle_list_providers
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.gateway_runtime import (
     clear_runtime_connections,
@@ -204,6 +204,8 @@ def test_handle_initialize_rejects_extra_capability_token_fields() -> None:
         assert result.is_err
         assert result.error is not None
         assert "INITIALIZE_REJECTED" in result.error
+        assert "extra_key" in result.error
+        assert "rejected_keys=unexpected" in result.error
         assert "unexpected" in result.error
 
     try:
@@ -393,7 +395,39 @@ def test_handle_list_providers_rejects_non_snake_case_tool_names(
         set_runtime_config(None)
 
 
-def test_handle_list_profiles_rejects_multiple_default_profiles_fail_closed() -> None:
+def test_handle_list_providers_emits_provider_name_only() -> None:
+    """Supporting provider payload must use provider_name, not name."""
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            servers={"fs": ServerConfig(name="fs", command="cmd")},
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"filesystem": Posture.READ_ONLY},
+                )
+            },
+        )
+    )
+
+    try:
+        connection = ConnectionContext(
+            connection_id="c_provider_shape",
+            profile_id="dev",
+            connected_at="2026-01-01T00:00:00Z",
+            init_mode=AuthMode.OPEN,
+        )
+        result = asyncio.run(handle_list_providers(connection))
+        assert result[0]["provider_name"] == "fs"
+        assert "name" not in result[0]
+    finally:
+        set_runtime_config(None)
+
+
+def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() -> None:
     """Shared profile-list tool must reject more than one default profile."""
     set_runtime_config(
         TelaConfig(
@@ -405,7 +439,7 @@ def test_handle_list_profiles_rejects_multiple_default_profiles_fail_closed() ->
     )
     try:
         with pytest.raises(RuntimeError, match="invalid_default_profile_state"):
-            handle_list_profiles()
+            handle_profiles_list()
     finally:
         set_runtime_config(None)
 

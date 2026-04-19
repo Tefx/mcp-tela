@@ -51,7 +51,7 @@ from tela.shell.result import Result
 HTTP_TIMEOUT_SECONDS = 10.0
 HTTP_TRANSIENT_RETRIES = 3
 HTTP_TRANSIENT_BACKOFF_SECONDS = 0.5
-BRIDGE_READINESS_MAX_POLLS = HTTP_TRANSIENT_RETRIES + 1
+BRIDGE_READINESS_MAX_POLLS = 8
 TEARDOWN_RESUME_TIMEOUT_SECONDS = 1.0
 
 
@@ -243,6 +243,9 @@ def recover_gateway(
     discovery_error = (
         "DISCOVERY_DISABLED: explicit server mode disables autostart recovery"
     )
+    recovered_host = host
+    recovered_port = port
+    recovered_bearer_token = bearer_token
 
     if config_path is not None and discover_or_autostart is not None:
         discovery_result = discover_or_autostart(
@@ -252,16 +255,23 @@ def recover_gateway(
         if discovery_result.is_ok:
             assert discovery_result.value is not None
             discovered = discovery_result.value
-            return Result(value=(discovered.host, discovered.port, discovered.token))
-        discovery_error = discovery_result.error or "DISCOVERY_FAILED"
+            recovered_host = discovered.host
+            recovered_port = discovered.port
+            recovered_bearer_token = discovered.token
+            discovery_error = (
+                "DISCOVERY_SUCCEEDED: "
+                f"host={discovered.host} port={discovered.port}"
+            )
+        else:
+            discovery_error = discovery_result.error or "DISCOVERY_FAILED"
 
     readiness_result = _wait_for_gateway_readiness(
-        status_url=f"http://{host}:{port}/status",
-        bearer_token=bearer_token,
+        status_url=f"http://{recovered_host}:{recovered_port}/status",
+        bearer_token=recovered_bearer_token,
         max_polls=BRIDGE_READINESS_MAX_POLLS,
     )
     if readiness_result.is_ok:
-        return Result(value=(host, port, bearer_token))
+        return Result(value=(recovered_host, recovered_port, recovered_bearer_token))
 
     return Result(
         error=(
@@ -806,7 +816,7 @@ def _register_bridge_connection(
     return post_json(
         url=f"{base_url}/connect",
         bearer_token=bearer_token,
-        payload={"connection_id": connection_id},
+        payload={"server_name": connection_id},
     )
 
 

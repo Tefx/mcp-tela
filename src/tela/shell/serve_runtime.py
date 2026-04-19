@@ -266,6 +266,7 @@ def config_mtime_ns(config_path: Path) -> Result[int | None, str]:
 # --- Idle shutdown watcher ---
 
 
+# @shell_complexity: idle watcher coordinates timeout, stop-event, gateway shutdown, and lockfile cleanup branches in one lifecycle loop.
 async def idle_shutdown_watch(
     *,
     idle_timeout_seconds: int,

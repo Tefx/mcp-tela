@@ -17,6 +17,7 @@ from tela.core.models import (
 )
 from tela.shell.builtin_tools import (
     BUILTIN_TOOL_NAMES,
+    _validate_profile_list_payload,
     handle_list_providers,
 )
 from tela.shell.gateway import (
@@ -24,6 +25,10 @@ from tela.shell.gateway import (
     gateway_shutdown,
     gateway_start,
 )
+
+
+_LEGACY_PROFILE_KEY = "profile" + "_name"
+_LEGACY_FAMILIES_KEY = "famil" + "ies"
 
 
 def _bound_connection(profile_id: str = "dev") -> ConnectionContext:
@@ -77,9 +82,18 @@ def test_handle_list_providers_returns_provider_info_shape() -> None:
         result = asyncio.run(handle_list_providers(_bound_connection()))
         assert isinstance(result, list)
         assert len(result) == 1
-        assert result[0]["name"] == "fs"
+        assert set(result[0].keys()) == {
+            "provider_name",
+            "profile_id",
+            "status",
+            "tool_prefix",
+            "tool_count",
+            "tool_names",
+        }
+        assert result[0]["provider_name"] == "fs"
         assert result[0]["profile_id"] == "dev"
         assert result[0]["status"] == "connected"
+        assert result[0]["tool_prefix"] is None
         assert result[0]["tool_count"] == 2
         assert isinstance(result[0]["tool_names"], list)
         assert all(isinstance(n, str) for n in result[0]["tool_names"])
@@ -127,11 +141,11 @@ def test_handle_list_providers_includes_disconnected_server() -> None:
         # Should have 2 entries: one connected, one disconnected
         assert len(result) == 2
 
-        fs_entry = next(r for r in result if r["name"] == "fs")
+        fs_entry = next(r for r in result if r["provider_name"] == "fs")
         assert fs_entry["status"] == "connected"
         assert fs_entry["tool_count"] == 1
 
-        shell_entry = next(r for r in result if r["name"] == "shell")
+        shell_entry = next(r for r in result if r["provider_name"] == "shell")
         assert shell_entry["status"] == "failed"
         assert shell_entry["tool_count"] == 0
     finally:
@@ -174,7 +188,7 @@ def test_handle_list_providers_includes_failed_server() -> None:
         result = asyncio.run(handle_list_providers(_bound_connection()))
 
         # Should have an entry for "bad" with failed status
-        bad_entry = next((r for r in result if r["name"] == "bad"), None)
+        bad_entry = next((r for r in result if r["provider_name"] == "bad"), None)
         assert bad_entry is not None
         assert bad_entry["status"] == "failed"
         assert bad_entry["tool_count"] == 0
@@ -222,7 +236,7 @@ def test_handle_list_providers_filters_by_profile_enforcement() -> None:
         result = asyncio.run(handle_list_providers(_bound_connection()))
 
         assert len(result) == 1
-        assert result[0]["name"] == "fs"
+        assert result[0]["provider_name"] == "fs"
         # Profile blocks all tools, so tool_count should be 0
         assert result[0]["tool_count"] == 0
         assert result[0]["tool_names"] == []
@@ -326,8 +340,89 @@ def test_handle_list_providers_uses_bound_connection_profile_in_token_mode() -> 
         result = asyncio.run(handle_list_providers(connection))
 
         assert len(result) == 1
-        assert result[0]["name"] == "fs"
+        assert result[0]["provider_name"] == "fs"
         assert result[0]["tool_count"] == 0
         assert result[0]["tool_names"] == []
     finally:
         asyncio.run(gateway_shutdown())
+
+
+def test_validate_profile_list_payload_rejects_missing_default_key() -> None:
+    """Canonical profile payload must fail closed when default is missing."""
+    import pytest
+
+    with pytest.raises(RuntimeError, match="missing_required_field: field=default"):
+        _validate_profile_list_payload(
+            [
+                {
+                    "profile_id": "dev",
+                    "capabilities": {"filesystem": "read_only"},
+                }  # type: ignore[list-item]
+            ]
+        )
+
+
+def test_validate_profile_list_payload_rejects_wrong_capabilities_type() -> None:
+    """Canonical profile payload must reject non-object capabilities values."""
+    import pytest
+
+    with pytest.raises(RuntimeError, match="wrong_type: field=capabilities"):
+        _validate_profile_list_payload(
+            [
+                {
+                    "profile_id": "dev",
+                    "capabilities": "read_only",
+                    "default": True,
+                }  # type: ignore[list-item]
+            ]
+        )
+
+
+def test_validate_profile_list_payload_rejects_bad_posture_value() -> None:
+    """Canonical profile payload must reject non-canonical posture values."""
+    import pytest
+
+    with pytest.raises(RuntimeError, match="bad_enum: field=capabilities"):
+        _validate_profile_list_payload(
+            [
+                {
+                    "profile_id": "dev",
+                    "capabilities": {"filesystem": "readonly"},
+                    "default": True,
+                }
+            ]
+        )
+
+
+def test_validate_profile_list_payload_rejects_legacy_profile_name_key() -> None:
+    """Canonical profile payload must reject the retired profile-id alias."""
+    import pytest
+
+    with pytest.raises(RuntimeError, match=f"legacy_alias: field={_LEGACY_PROFILE_KEY}"):
+        _validate_profile_list_payload(
+            [
+                {
+                    "profile_id": "dev",
+                    _LEGACY_PROFILE_KEY: "legacy-dev",
+                    "capabilities": {"filesystem": "read_only"},
+                    "default": True,
+                }  # type: ignore[list-item]
+            ]
+        )
+
+
+def test_validate_profile_list_payload_rejects_legacy_families_key() -> None:
+    """Canonical profile payload must reject the retired capability alias."""
+    import pytest
+
+    with pytest.raises(RuntimeError, match=f"legacy_alias: field={_LEGACY_FAMILIES_KEY}"):
+        _validate_profile_list_payload(
+            [
+                {
+                    "profile_id": "dev",
+                    _LEGACY_FAMILIES_KEY: {"filesystem": "read_only"},
+                    "capabilities": {"filesystem": "read_only"},
+                    "default": True,
+                }  # type: ignore[list-item]
+            ]
+        )

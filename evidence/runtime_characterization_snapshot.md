@@ -84,7 +84,7 @@ None. Only test files written:
 | `GET /health` | 200, `{status:"ok",pid:N}`, no auth required | CONFIRMED |
 | `GET /status` (auth) | 200, full lifecycle snapshot with `state` field | CONFIRMED |
 | `GET /status` (no auth) | 401, AUTH_INVALID_TOKEN | CONFIRMED |
-| `POST /connect` (auth) | 200, `{status:"connected",connection_id}` | CONFIRMED |
+| `POST /connect` (auth) | 200, `{status:"connected",connection_id}` after request key `server_name` | CONFIRMED |
 | `POST /connect` (no auth) | 401 | CONFIRMED |
 | `POST /disconnect` (auth, existing) | 200, `{status:"disconnected",connection_id}` | CONFIRMED |
 | `POST /disconnect` (auth, nonexistent) | 404, CONNECTION_NOT_FOUND | CONFIRMED |
@@ -102,5 +102,5 @@ YES. No blocking issues found.
 
 ## explicit_uncertainty_sources
 1. The `tela connect` bridge probe uses `--server` flag (explicit endpoint) rather than lockfile-based auto-discovery. The lockfile-based path was not exercised in this characterization because it would require stopping the serve process, restarting connect, and waiting for autostart coordination — which adds complexity without adding new behavioral evidence for the endpoints under test.
-2. The `POST /connect` payload tested only `connection_id`. The spec's ConnectRequest may accept additional fields, but these were not tested since the spec-derived fixture only requires `connection_id`.
+2. The `POST /connect` payload tested only canonical `server_name` request wiring and the returned `connection_id`. Additional request keys are fail-closed.
 3. Readiness transition (preparing → bound_discoverable → converging → ready) was not observed in real-time because the no-downstream-server config converges near-instantly. The transition path is confirmed by the final `state: "ready"` observation only.

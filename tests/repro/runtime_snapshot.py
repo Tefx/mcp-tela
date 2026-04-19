@@ -374,7 +374,7 @@ def test_connect_endpoint() -> bool:
     assert _bound_port is not None and _bearer_token is not None
     url = f"http://{SERVE_HOST}:{_bound_port}/connect"
     connection_id = "char-snapshot-conn-1"
-    payload = {"connection_id": connection_id}
+    payload = {"server_name": connection_id}
 
     record("CMD", f"POST {url} with {payload}")
 
@@ -415,7 +415,7 @@ def test_connect_no_auth() -> bool:
     """POST /connect without bearer token must be rejected."""
     assert _bound_port is not None
     url = f"http://{SERVE_HOST}:{_bound_port}/connect"
-    payload = {"connection_id": "no-auth-conn"}
+    payload = {"server_name": "no-auth-conn"}
 
     record("CMD", f"POST {url} (NO auth)")
 
@@ -603,7 +603,7 @@ def test_connection_count_after_lifecycle() -> bool:
 
     # Add a new connection
     conn_id = "snapshot-conn-lifecycle"
-    s, b = _http_post(url_connect, {"connection_id": conn_id}, token=_bearer_token)
+    s, b = _http_post(url_connect, {"server_name": conn_id}, token=_bearer_token)
     record("CONNECT_RESULT", f"HTTP {s}: {b}")
     if s != 200:
         record("FAIL", f"POST /connect failed: {s}")

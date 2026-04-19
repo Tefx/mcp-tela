@@ -1211,6 +1211,94 @@ def test_forward_stdio_http_replays_inflight_message_after_transport_recovery(
     assert '"ok": true' in output.lower()
 
 
+def test_recover_gateway_waits_for_discovered_endpoint_readiness(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Discovery success must still wait for the discovered endpoint to be ready."""
+
+    discovered = LockfileData(
+        pid=54321,
+        host="127.0.0.1",
+        port=9456,
+        token="discovered-token",
+        started_at="2026-04-19T18:00:00Z",
+        config_path="/tmp/tela.yaml",
+        version="0.1.0",
+    )
+    readiness_calls: list[tuple[str, str, int]] = []
+
+    def _fake_wait_for_gateway_readiness(
+        *, status_url: str, bearer_token: str, max_polls: int
+    ) -> Result[None, str]:
+        readiness_calls.append((status_url, bearer_token, max_polls))
+        return Result(value=None)
+
+    _patch_bridge_fn(
+        monkeypatch, "_wait_for_gateway_readiness", _fake_wait_for_gateway_readiness
+    )
+
+    result = connect_cmd._recover_gateway(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="old-token",
+        config_path="/tmp/tela.yaml",
+        default_profile="common",
+        discover_or_autostart=lambda **_: Result(value=discovered),
+    )
+
+    assert result.is_ok
+    assert result.value == (discovered.host, discovered.port, discovered.token)
+    assert readiness_calls == [
+        (
+            f"http://{discovered.host}:{discovered.port}/status",
+            discovered.token,
+            connect_cmd.BRIDGE_READINESS_MAX_POLLS,
+        )
+    ]
+
+
+def test_recover_gateway_fails_if_discovered_endpoint_never_becomes_ready(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Discovery must not bypass readiness for a freshly discovered gateway."""
+
+    discovered = LockfileData(
+        pid=54321,
+        host="127.0.0.1",
+        port=9456,
+        token="discovered-token",
+        started_at="2026-04-19T18:00:00Z",
+        config_path="/tmp/tela.yaml",
+        version="0.1.0",
+    )
+
+    def _fake_wait_for_gateway_readiness(
+        *, status_url: str, bearer_token: str, max_polls: int
+    ) -> Result[None, str]:
+        _ = status_url, bearer_token, max_polls
+        return Result(
+            error="BRIDGE_NOT_READY: bounded readiness wait exhausted state=warming polls=8"
+        )
+
+    _patch_bridge_fn(
+        monkeypatch, "_wait_for_gateway_readiness", _fake_wait_for_gateway_readiness
+    )
+
+    result = connect_cmd._recover_gateway(
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="old-token",
+        config_path="/tmp/tela.yaml",
+        default_profile="common",
+        discover_or_autostart=lambda **_: Result(value=discovered),
+    )
+
+    assert result.is_err
+    assert result.error is not None
+    assert "DISCOVERY_SUCCEEDED" in result.error
+    assert "BRIDGE_NOT_READY" in result.error
+
+
 @pytest.mark.parametrize(
     ("error_message", "expected"),
     [
@@ -1892,6 +1980,9 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         f"Expected 1 interrupt, got {interrupt_count.value}"
     )
     assert resume_count.value == 1, f"Expected 1 resume, got {resume_count.value}"
+    assert len(connect_payloads) == 1
+    assert "server_name" in connect_payloads[0]
+    assert "connection_id" not in connect_payloads[0]
     assert len(resumed_disconnect_payloads) == 1
     # connection_id is dynamically generated, verify format
     resumed_conn_id = resumed_disconnect_payloads[0]["connection_id"]

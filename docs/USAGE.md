@@ -233,7 +233,7 @@ profiles:
 
 Built-in MCP surfaces (require admitted session, accept `{}` only):
 - `tela_list_profiles` — built-in MCP tool returning profile list with `profile_id`, `capabilities`, and `default`
-- `tela_list_providers` — built-in MCP tool returning server status, tool counts, and tool names (filtered by the calling connection's admitted `profile_id`)
+- `tela_list_providers` — built-in MCP tool returning `provider_name`, caller-bound `profile_id`, `status`, `tool_prefix`, `tool_count`, and `tool_names`
 
 Builtin calls fail closed without an admitted session/connection. Builtin audit
 entries and provider visibility both bind to the calling connection's admitted
@@ -244,7 +244,7 @@ Operator-only surfaces (CLI/HTTP, not MCP):
 
 Important notes:
 
-- in `open` mode, at most one profile may have `default: true`; multi-default shared profile listings are rejected fail-closed
+- in `open` mode, at most one profile may have `default: true`; multi-default shared profile listings are rejected fail-closed with `invalid_default_profile_state`
 - custom capability groups are valid, but built-in profiles only cover built-in capability sets
 - `tool_overrides` require the nested `overrides` map
 
@@ -348,8 +348,9 @@ the gateway emits the transient non-ready contract for `POST /mcp`; persistent
 degraded/non-ready status must end in a clean bounded exit.
 
 **Discovery-before-readiness cold-start**: After `tela connect` discovers the
-endpoint via lockfile, the bridge registers via `POST /connect` and then polls
-`GET /status` for readiness. The polling is bounded (default 4 polls); if the
+endpoint via lockfile, the bridge registers via `POST /connect` using canonical
+request key `server_name` and then polls `GET /status` for readiness. The
+polling is bounded (default 8 polls); if the
 gateway remains non-ready, the bridge exits cleanly rather than retrying
 indefinitely.
 
@@ -599,7 +600,7 @@ Query commands discover the running server via `~/.tela/gateway.lock`.
 ### MCP Tools
 
 - `tela_list_profiles` — built-in MCP tool returning configured profiles with `profile_id`, `capabilities`, and `default`; requires an admitted session and exact `{}` input
-- `tela_list_providers` — built-in MCP tool returning server status, tool counts, and tool names; requires an admitted session and exact `{}` input, and visibility binds to the calling connection's admitted `profile_id`
+- `tela_list_providers` — built-in MCP tool returning `provider_name`, caller-bound `profile_id`, `status`, `tool_prefix`, `tool_count`, and `tool_names`; requires an admitted session and exact `{}` input
 
 Builtin audit attribution also binds to the calling connection's admitted
 `profile_id`.

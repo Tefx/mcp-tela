@@ -180,6 +180,7 @@ def read_lockfile() -> Result[LockfileData, str]:
 
 
 # @shell_orchestration: stale cleanup must re-read current on-disk state to avoid deleting a fresh lockfile published by a newly started live server.
+# @shell_complexity: stale compare-and-delete must branch across read failures, parse failures, live/stale distinction, and delete outcome.
 def delete_lockfile_if_stale() -> Result[bool, str]:
     """Delete the lockfile only when the current on-disk entry is still stale.
 

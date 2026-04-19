@@ -358,11 +358,11 @@ class TestTelaListProfilesBuiltinTool:
     ) -> None:
         """tela_list_profiles builtin tool must return canonical profile-list payload.
 
-        This tests the existing handle_list_profiles behavior to ensure it
+        This tests the existing handle_profiles_list behavior to ensure it
         continues to emit canonical profile_id + capabilities + default only.
         """
         from tela.shell.gateway_runtime import set_runtime_config
-        from tela.shell.builtin_tools import handle_list_profiles
+        from tela.shell.builtin_tools import handle_profiles_list
         from tela.core.models import TelaConfig, ProfileConfig, Posture
 
         set_runtime_config(
@@ -377,7 +377,7 @@ class TestTelaListProfilesBuiltinTool:
             )
         )
 
-        result = handle_list_profiles()
+        result = handle_profiles_list()
         assert isinstance(result, list)
         assert len(result) >= 1
 
@@ -395,6 +395,36 @@ class TestTelaListProfilesBuiltinTool:
 
         # Cleanup
         set_runtime_config(None)
+
+
+class TestRepoFacingContractDocsRemainRuntimeTruthful:
+    """Repo-facing docs must match current runtime-exact shared surfaces."""
+
+    def test_duplicate_default_error_code_docs_match_runtime(self) -> None:
+        interfaces = _read_interfaces_doc()
+        confirmed = _read_contract_text()
+        usage = _read_usage_doc()
+
+        for text in (interfaces, confirmed, usage):
+            assert "invalid_default_profile_state" in text
+            assert "INVALID_DEFAULT_PROFILE_STATE" not in text
+
+    def test_provider_shape_docs_match_runtime(self) -> None:
+        docs = {
+            "AGENT_INTERFACE": _read_agent_interface_doc(),
+            "CONFIRMED_SURFACE_CONTRACT": _read_contract_text(),
+            "INTERFACES": _read_interfaces_doc(),
+            "USAGE": _read_usage_doc(),
+            "DESIGN": _read_design_doc(),
+        }
+
+        for doc_name, text in docs.items():
+            assert "tela_list_providers" in text, f"{doc_name} missing provider surface"
+            assert "provider_name" in text, f"{doc_name} missing provider_name"
+            assert "profile_id" in text, f"{doc_name} missing profile_id"
+            assert "tool_prefix" in text, f"{doc_name} missing tool_prefix"
+            assert "tool_count" in text, f"{doc_name} missing tool_count"
+            assert "tool_names" in text, f"{doc_name} missing tool_names"
 
 
 # =============================================================================

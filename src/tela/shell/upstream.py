@@ -52,7 +52,7 @@ from tela.shell.downstream import (
     get_all_tools,
     get_registry,
 )
-from tela.shell.builtin_tools import handle_list_profiles as build_profile_list_payload
+from tela.shell.builtin_tools import handle_profiles_list as build_profile_list_payload
 from tela.shell.gateway_runtime import (
     UpstreamSession,
     add_runtime_connection,
@@ -235,6 +235,7 @@ def _build_client_info_snapshot(
     return snapshot
 
 
+# @shell_complexity: canonical token extraction must branch across reserved keys, legacy aliases, extra fields, and pydantic schema failures before fail-closed rejection.
 def _extract_capability_token(
     client_info: Mapping[object, object],
 ) -> Result[CapabilityToken, str]:
@@ -291,8 +292,8 @@ def _extract_capability_token(
     )
     if extra_fields:
         return _reject_initialize(
-            _TOKEN_SCHEMA_INVALID,
-            "invalid capability_token fields: " + ", ".join(extra_fields),
+            _TOKEN_FIELD_OUTSIDE_CAPABILITY_TOKEN,
+            "rejected_keys=" + ",".join(extra_fields),
             location="capability_token",
         )
 
@@ -718,6 +719,14 @@ async def handle_tools_call(
             )
         )
 
+    if not isinstance(connection, ConnectionContext):
+        return Result(
+            error=TelaError(
+                code="missing_bound_connection",
+                message="tools/call requires an admitted connection",
+            )
+        )
+
     start_time = time.monotonic()
     invalid_tool_name = _invalid_shared_tool_name(tool_name)
     if invalid_tool_name is not None:
@@ -764,6 +773,22 @@ async def handle_tools_call(
 
     tool = get_registry().get_tool(tool_name)
     if tool is None:
+        latency_ms = max(0.0, (time.monotonic() - start_time) * 1000.0)
+        await _audit_tool_call(
+            connection=connection,
+            config_level=config.audit.level,
+            tool_name=tool_name,
+            server_name="unknown",
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="registry_lookup",
+                error_code="TOOL_NOT_FOUND",
+                error_message=f"Tool '{tool_name}' not found",
+            ),
+            latency_ms=latency_ms,
+            arguments=stripped_args,
+            held_meta=held_meta,
+        )
         return Result(
             error=TelaError(
                 code="TOOL_NOT_FOUND", message=f"Tool '{tool_name}' not found"
@@ -772,6 +797,22 @@ async def handle_tools_call(
     routing_name = tool.raw_name or tool.name
     profile = config.profiles.get(connection.profile_id)
     if profile is None:
+        latency_ms = max(0.0, (time.monotonic() - start_time) * 1000.0)
+        await _audit_tool_call(
+            connection=connection,
+            config_level=config.audit.level,
+            tool_name=tool_name,
+            server_name=tool.server_name,
+            result=EnforcementResult(
+                verdict=EnforcementVerdict.DENY,
+                denied_by="profile_lookup",
+                error_code="PROFILE_NOT_FOUND",
+                error_message=f"Profile '{connection.profile_id}' not found",
+            ),
+            latency_ms=latency_ms,
+            arguments=stripped_args,
+            held_meta=held_meta,
+        )
         return Result(
             error=TelaError(
                 code="PROFILE_NOT_FOUND",

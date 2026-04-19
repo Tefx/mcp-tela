@@ -145,7 +145,7 @@ def test_post_json_retries_on_connection_refused_string_reason(
     result = connect_cmd._post_json(
         url="http://127.0.0.1:8123/connect",
         bearer_token="token",
-        payload={"connection_id": "bridge_test"},
+        payload={"server_name": "bridge_test"},
     )
 
     # Expected: should retry HTTP_TRANSIENT_RETRIES+1 times
@@ -177,10 +177,12 @@ def test_discover_or_autostart_handles_stale_lockfile_via_coordinator(
 
     calls = {"deleted": 0}
 
-    def _fake_delete_lockfile() -> None:
+    def _fake_delete_lockfile_if_stale() -> None:
         calls["deleted"] += 1
 
-    monkeypatch.setattr(connect_cmd, "delete_lockfile", _fake_delete_lockfile)
+    monkeypatch.setattr(
+        connect_cmd, "delete_lockfile_if_stale", _fake_delete_lockfile_if_stale
+    )
 
     # The coordinator handles stale lockfiles - this is not a gap
     # Gap is in _get_gateway_status and _post_json retry logic

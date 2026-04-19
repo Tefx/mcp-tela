@@ -170,14 +170,14 @@ class TestHandleConnect:
     """Tests for handle_connect endpoint."""
 
     def test_handle_connect_rejects_invalid_token(self) -> None:
-        req = ConnectRequest(connection_id="test-conn")
+        req = ConnectRequest(server_name="test-conn")
         result = http_routes.handle_connect("wrong-token", "expected-token", req)
         assert result.is_err
         assert result.error is not None
         assert "AUTH_INVALID_TOKEN" in result.error
 
     def test_handle_connect_rejects_when_gateway_not_started(self) -> None:
-        req = ConnectRequest(connection_id="test-conn")
+        req = ConnectRequest(server_name="test-conn")
         result = http_routes.handle_connect("valid", "valid", req)
         assert result.is_err
         assert result.error is not None
@@ -206,7 +206,7 @@ class TestHandleConnect:
             assert facts_result.value is not None
             assert facts_result.value.state == "warming"
 
-            req = ConnectRequest(connection_id="test-conn-warming")
+            req = ConnectRequest(server_name="test-conn-warming")
             result = http_routes.handle_connect("valid", "valid", req)
             assert result.is_ok, (
                 f"/connect must remain available during warming; got: {result.error}"
@@ -229,7 +229,7 @@ class TestHandleConnect:
 
         try:
             # Verify we're in ready state (no servers configured)
-            req = ConnectRequest(connection_id="test-conn-ready")
+            req = ConnectRequest(server_name="test-conn-ready")
             result = http_routes.handle_connect("valid", "valid", req)
             assert result.is_ok, f"Expected ok but got: {result.error}"
             assert result.value is not None
@@ -246,7 +246,7 @@ class TestHandleConnect:
         clear_runtime_connections()
 
         try:
-            req = ConnectRequest(connection_id="test-conn-123")
+            req = ConnectRequest(server_name="test-conn-123")
             result = http_routes.handle_connect("valid", "valid", req)
             assert result.is_ok
             assert result.value is not None
@@ -275,7 +275,7 @@ class TestHandleConnect:
         clear_runtime_connections()
 
         try:
-            req = ConnectRequest(connection_id="token-bridge-123")
+            req = ConnectRequest(server_name="token-bridge-123")
             result = http_routes.handle_connect("valid", "valid", req)
             assert result.is_ok
             assert result.value is not None
@@ -299,7 +299,7 @@ class TestHandleConnect:
         clear_runtime_connections()
 
         try:
-            req = ConnectRequest(connection_id="pending-only-conn")
+            req = ConnectRequest(server_name="pending-only-conn")
             connect_result = http_routes.handle_connect("valid", "valid", req)
             assert connect_result.is_ok
 
