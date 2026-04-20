@@ -10,7 +10,11 @@ conformance inputs published by `opifex`:
 - `../opifex/conformance/forbidden_vocabulary.yaml`
 - `../opifex/conformance/case_matrix/mcp-tela/*`
 
-This repo does not reinterpret shared meaning locally.
+This repo does not reinterpret shared meaning locally. The workflow and gate
+script consume the frozen pin recorded in
+`design/opifex-frozen-authority-packet.json` and derive repo-local scope from
+`conformance/shared_surfaces.yaml` plus the referenced
+`conformance/case_matrix/mcp-tela/*` files.
 
 ## Required green checks
 
@@ -37,16 +41,11 @@ If `opifex` is checked out elsewhere, point `OPIFEX_ROOT` at that checkout root.
 
 ## Shared surfaces covered
 
-The wrapper script verifies the `mcp-tela`-owned shared surfaces from
-`shared_surfaces.yaml` and then runs the matching repo-local tests for:
-
-- `tela_initialize_token_mode`
-- `tela_tools_call_builtin_tela_list_profiles`
-- `tela_tools_call_builtin_tela_list_providers`
-- `tela_tools_call_downstream`
-- `tela_http_connect`
-- `tela_shared_naming_docs`
-- `tela_mcp_server_naming`
+The wrapper script verifies the `mcp-tela`-owned shared surfaces by reading the
+authoritative `shared_surfaces.yaml` entries and then resolving each owned
+surface's `case_matrix` files under `opifex`. That authority-derived scope,
+not a local allowlist, determines which shared surfaces the repo-local gate must
+cover.
 
 The gate is intended to fail fast on:
 

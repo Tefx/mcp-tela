@@ -11,8 +11,6 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
-  OPIFEX_REPOSITORY: ${{ vars.OPIFEX_REPOSITORY || format('{0}/opifex', github.repository_owner) }}
-  OPIFEX_REF: ${{ vars.OPIFEX_REF || 'main' }}
 
 jobs:
   expected-red:
@@ -22,11 +20,25 @@ jobs:
       - name: Check out mcp-tela
         uses: actions/checkout@v4
 
+      - name: Read frozen opifex authority pin
+        id: opifex-authority
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path("design/opifex-frozen-authority-packet.json").read_text(encoding="utf-8"))
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write(f"repository={payload['repository']}\n")
+              handle.write(f"ref={payload['ref']}\n")
+          PY
+
       - name: Check out opifex authority
         uses: actions/checkout@v4
         with:
-          repository: ${{ env.OPIFEX_REPOSITORY }}
-          ref: ${{ env.OPIFEX_REF }}
+          repository: ${{ steps.opifex-authority.outputs.repository }}
+          ref: ${{ steps.opifex-authority.outputs.ref }}
           path: opifex-authority
 
       - name: Set up Python
@@ -54,11 +66,25 @@ jobs:
       - name: Check out mcp-tela
         uses: actions/checkout@v4
 
+      - name: Read frozen opifex authority pin
+        id: opifex-authority
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path("design/opifex-frozen-authority-packet.json").read_text(encoding="utf-8"))
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as handle:
+              handle.write(f"repository={payload['repository']}\n")
+              handle.write(f"ref={payload['ref']}\n")
+          PY
+
       - name: Check out opifex authority
         uses: actions/checkout@v4
         with:
-          repository: ${{ env.OPIFEX_REPOSITORY }}
-          ref: ${{ env.OPIFEX_REF }}
+          repository: ${{ steps.opifex-authority.outputs.repository }}
+          ref: ${{ steps.opifex-authority.outputs.ref }}
           path: opifex-authority
 
       - name: Set up Python
