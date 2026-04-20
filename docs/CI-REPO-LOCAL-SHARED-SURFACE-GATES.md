@@ -3,12 +3,13 @@
 ## Authority basis
 
 These repo-local jobs exist only to verify `mcp-tela` against the canonical and
-conformance inputs published by `opifex`:
+conformance inputs published by `opifex` at the frozen ref pinned in
+`design/opifex-frozen-authority-packet.json`:
 
-- `../opifex/design/final-canonical-contract.md`
-- `../opifex/conformance/shared_surfaces.yaml`
-- `../opifex/conformance/forbidden_vocabulary.yaml`
-- `../opifex/conformance/case_matrix/mcp-tela/*`
+- `opifex/design/final-canonical-contract.md`
+- `opifex/conformance/shared_surfaces.yaml`
+- `opifex/conformance/forbidden_vocabulary.yaml`
+- the `opifex` `case_matrix` files referenced by `shared_surfaces.yaml`
 
 This repo does not reinterpret shared meaning locally. The workflow and gate
 script consume the frozen pin recorded in
@@ -33,19 +34,27 @@ Use the same commands locally and in CI:
 
 ```bash
 uv sync --frozen --group dev
+AUTHORITY_REF=$(python - <<'PY'
+import json
+from pathlib import Path
+print(json.loads(Path("design/opifex-frozen-authority-packet.json").read_text())["ref"])
+PY
+)
+test "$(git -C ../opifex rev-parse HEAD)" = "$AUTHORITY_REF"
 OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
 OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
 ```
 
-If `opifex` is checked out elsewhere, point `OPIFEX_ROOT` at that checkout root.
+If `opifex` is checked out elsewhere, point `OPIFEX_ROOT` at that pinned checkout root.
 
 ## Shared surfaces covered
 
 The wrapper script verifies the `mcp-tela`-owned shared surfaces by reading the
-authoritative `shared_surfaces.yaml` entries and then resolving each owned
-surface's `case_matrix` files under `opifex`. That authority-derived scope,
-not a local allowlist, determines which shared surfaces the repo-local gate must
-cover.
+authoritative `shared_surfaces.yaml` entries, filtering by `owner_repo`,
+deriving switch-blocking scope from `gate_policy.switch_blocking.by_exposure`,
+and then resolving each owned surface's referenced `case_matrix` files under
+`opifex`. That authority-derived scope, not a local allowlist, determines which
+shared surfaces the repo-local gate must cover.
 
 The gate is intended to fail fast on:
 

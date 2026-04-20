@@ -2,31 +2,41 @@
 
 Authority basis:
 - user step `ci_repo_local_rollout.rollout_mcp_tela_ci`
-- `../opifex/conformance/shared_surfaces.yaml`
-- `../opifex/conformance/forbidden_vocabulary.yaml`
-- `../opifex/design/final-canonical-contract.md`
+- `design/opifex-frozen-authority-packet.json`
+- `opifex/conformance/shared_surfaces.yaml`
+- `opifex/conformance/forbidden_vocabulary.yaml`
+- `opifex/design/final-canonical-contract.md`
 
 This wrapper makes the repo-local gate executable in both developer worktrees
-and GitHub Actions by resolving the opifex authority checkout explicitly.
+and GitHub Actions by resolving the pinned opifex authority checkout explicitly
+and deriving repo-local scope from authoritative surface metadata.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 import argparse
-import json
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
 
 import yaml
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from opifex_authority import (  # noqa: E402 - direct script execution needs sibling helper import after sys.path bootstrap
+    AUTHORITY_LOCK_PATH,
+    FrozenAuthorityPin,
+    load_frozen_authority_pin,
+    require_pinned_checkout,
+    resolve_opifex_root,
+)
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-AUTHORITY_LOCK_PATH = Path("design/opifex-frozen-authority-packet.json")
-FULL_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 PYTEST_GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
         "schema-parity",
@@ -77,35 +87,19 @@ class AuthoritySnapshot:
     owned_surface_ids: tuple[str, ...]
     blocking_surface_ids: tuple[str, ...]
     owned_case_matrix_paths: tuple[str, ...]
+    owned_case_classes: tuple[str, ...]
     forbidden_fields: tuple[str, ...]
     forbidden_tool_patterns: tuple[str, ...]
 
 
-def _candidate_opifex_roots() -> tuple[Path, ...]:
-    env_root = os.environ.get("OPIFEX_ROOT")
-    candidates: list[Path] = []
-    if env_root:
-        candidates.append(Path(env_root))
-    candidates.append(PROJECT_ROOT.parent / "opifex")
-    if len(PROJECT_ROOT.parents) >= 5:
-        candidates.append(PROJECT_ROOT.parents[4] / "opifex")
-    candidates.append(Path("/Users/tefx/Projects/opifex"))
-
-    deduped: list[Path] = []
-    for candidate in candidates:
-        if candidate not in deduped:
-            deduped.append(candidate)
-    return tuple(deduped)
-
-
 def _resolve_opifex_root() -> Path:
-    for candidate in _candidate_opifex_roots():
-        if (candidate / "conformance" / "shared_surfaces.yaml").is_file():
-            return candidate
-    raise FileNotFoundError(
-        "Could not locate opifex authority checkout. Set OPIFEX_ROOT to the "
-        "opifex repository root. Tried: "
-        + ", ".join(str(path) for path in _candidate_opifex_roots())
+    return resolve_opifex_root(
+        PROJECT_ROOT,
+        required_paths=(
+            Path("conformance/shared_surfaces.yaml"),
+            Path("conformance/forbidden_vocabulary.yaml"),
+            Path("design/final-canonical-contract.md"),
+        ),
     )
 
 
@@ -117,47 +111,55 @@ def _load_yaml(path: Path) -> dict[str, object]:
     return payload
 
 
-def _load_json(path: Path) -> dict[str, object]:
-    with path.open(encoding="utf-8") as handle:
-        payload = json.load(handle)
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"Expected mapping JSON in {path}")
-    return payload
+def _validate_case_matrix_coverage(
+    *,
+    case_path: Path,
+    surface_id: str,
+    coverage_states: tuple[str, ...],
+    minimum_coverage: tuple[str, ...],
+) -> tuple[str, ...]:
+    case_payload = _load_yaml(case_path)
+    declared_surface_id = case_payload.get("surface_id")
+    if declared_surface_id != surface_id:
+        raise RuntimeError(
+            f"case_matrix surface mismatch for {case_path}: expected {surface_id}, got {declared_surface_id}"
+        )
 
+    coverage = case_payload.get("coverage")
+    if not isinstance(coverage, dict):
+        raise RuntimeError(f"case_matrix {case_path} missing top-level 'coverage' mapping")
+    for coverage_key in minimum_coverage:
+        coverage_state = coverage.get(coverage_key)
+        if not isinstance(coverage_state, str):
+            raise RuntimeError(f"case_matrix {case_path} missing coverage key: {coverage_key}")
+        if coverage_state not in coverage_states:
+            raise RuntimeError(
+                f"case_matrix {case_path} has invalid coverage state for {coverage_key}: {coverage_state}"
+            )
 
-def _git_head(root: Path) -> str | None:
-    if not (root / ".git").exists():
-        return None
-    completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=root,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(f"Failed to resolve git HEAD for {root}: {completed.stderr.strip()}")
-    return completed.stdout.strip()
+    raw_cases = case_payload.get("cases")
+    if not isinstance(raw_cases, list) or not raw_cases:
+        raise RuntimeError(f"case_matrix {case_path} missing non-empty 'cases' list")
+    case_classes: list[str] = []
+    for raw_case in raw_cases:
+        if not isinstance(raw_case, dict):
+            raise RuntimeError(f"case_matrix {case_path} contains a non-mapping case entry")
+        case_class = raw_case.get("class")
+        if not isinstance(case_class, str) or not case_class:
+            raise RuntimeError(f"case_matrix {case_path} contains a case without a non-empty 'class'")
+        if case_class not in case_classes:
+            case_classes.append(case_class)
+    return tuple(case_classes)
 
 
 def load_authority_snapshot() -> AuthoritySnapshot:
     """Load and validate the authoritative opifex conformance inputs."""
 
     opifex_root = _resolve_opifex_root()
-    authority_lock = _load_json(PROJECT_ROOT / AUTHORITY_LOCK_PATH)
+    pin: FrozenAuthorityPin = load_frozen_authority_pin(PROJECT_ROOT)
     shared_surfaces_path = opifex_root / "conformance" / "shared_surfaces.yaml"
     forbidden_vocabulary_path = opifex_root / "conformance" / "forbidden_vocabulary.yaml"
     canonical_contract_path = opifex_root / "design" / "final-canonical-contract.md"
-
-    packet_repository = authority_lock.get("repository")
-    if not isinstance(packet_repository, str) or not packet_repository:
-        raise RuntimeError(f"{AUTHORITY_LOCK_PATH} missing non-empty 'repository'")
-    packet_ref = authority_lock.get("ref")
-    if not isinstance(packet_ref, str) or FULL_SHA_PATTERN.fullmatch(packet_ref) is None:
-        raise RuntimeError(f"{AUTHORITY_LOCK_PATH} must pin a full 40-character git SHA in 'ref'")
-    packet_doc = authority_lock.get("packet_doc")
-    if not isinstance(packet_doc, str) or not packet_doc:
-        raise RuntimeError(f"{AUTHORITY_LOCK_PATH} missing non-empty 'packet_doc'")
 
     shared_surfaces = _load_yaml(shared_surfaces_path)
     forbidden_vocabulary = _load_yaml(forbidden_vocabulary_path)
@@ -165,6 +167,9 @@ def load_authority_snapshot() -> AuthoritySnapshot:
     global_controls = shared_surfaces.get("global_controls")
     if not isinstance(global_controls, dict):
         raise RuntimeError("shared_surfaces.yaml missing top-level 'global_controls' mapping")
+    case_matrix_policy = global_controls.get("case_matrix_policy")
+    if not isinstance(case_matrix_policy, dict):
+        raise RuntimeError("shared_surfaces.yaml missing 'global_controls.case_matrix_policy' mapping")
     gate_policy = shared_surfaces.get("gate_policy")
     if not isinstance(gate_policy, dict):
         raise RuntimeError("shared_surfaces.yaml missing top-level 'gate_policy' mapping")
@@ -179,12 +184,10 @@ def load_authority_snapshot() -> AuthoritySnapshot:
     if not isinstance(frozen_followup_packet_doc, str) or not frozen_followup_packet_doc:
         raise RuntimeError("shared_surfaces.yaml missing 'frozen_followup_packet.packet_doc'")
     if frozen_followup_packet_ref != frozen_followup_packet_doc:
+        raise RuntimeError("shared_surfaces.yaml disagrees on the frozen follow-up packet path")
+    if pin.packet_doc != frozen_followup_packet_ref:
         raise RuntimeError(
-            "shared_surfaces.yaml disagrees on the frozen follow-up packet path"
-        )
-    if packet_doc != frozen_followup_packet_ref:
-        raise RuntimeError(
-            f"{AUTHORITY_LOCK_PATH} packet_doc drift: expected {frozen_followup_packet_ref}, got {packet_doc}"
+            f"{AUTHORITY_LOCK_PATH} packet_doc drift: expected {frozen_followup_packet_ref}, got {pin.packet_doc}"
         )
 
     frozen_required = gate_policy.get("frozen_followup_packet_required_before_downstream_ci")
@@ -192,19 +195,29 @@ def load_authority_snapshot() -> AuthoritySnapshot:
         raise RuntimeError(
             "shared_surfaces.yaml must require a frozen follow-up packet before downstream CI"
         )
+    require_pinned_checkout(PROJECT_ROOT, opifex_root)
 
-    checkout_head = _git_head(opifex_root)
-    if checkout_head is not None and checkout_head != packet_ref:
+    minimum_coverage_raw = case_matrix_policy.get("minimum_coverage")
+    if not isinstance(minimum_coverage_raw, list) or not all(
+        isinstance(coverage_key, str) for coverage_key in minimum_coverage_raw
+    ):
         raise RuntimeError(
-            "OPIFEX_ROOT checkout does not match pinned authority ref: "
-            f"expected {packet_ref}, got {checkout_head}"
+            "shared_surfaces.yaml missing 'global_controls.case_matrix_policy.minimum_coverage' string list"
         )
+    minimum_coverage = tuple(str(coverage_key) for coverage_key in minimum_coverage_raw)
+
+    coverage_states_raw = case_matrix_policy.get("coverage_states")
+    if not isinstance(coverage_states_raw, list) or not all(
+        isinstance(coverage_state, str) for coverage_state in coverage_states_raw
+    ):
+        raise RuntimeError(
+            "shared_surfaces.yaml missing 'global_controls.case_matrix_policy.coverage_states' string list"
+        )
+    coverage_states = tuple(str(coverage_state) for coverage_state in coverage_states_raw)
 
     raw_surfaces = shared_surfaces.get("shared_surfaces")
     if not isinstance(raw_surfaces, list):
-        raise RuntimeError(
-            "shared_surfaces.yaml missing top-level 'shared_surfaces' list"
-        )
+        raise RuntimeError("shared_surfaces.yaml missing top-level 'shared_surfaces' list")
 
     switch_blocking = gate_policy.get("switch_blocking")
     if not isinstance(switch_blocking, dict):
@@ -220,6 +233,7 @@ def load_authority_snapshot() -> AuthoritySnapshot:
     owned_surface_ids_list: list[str] = []
     blocking_surface_ids_list: list[str] = []
     owned_case_matrix_paths: list[str] = []
+    owned_case_classes: list[str] = []
     for surface in raw_surfaces:
         if not isinstance(surface, dict) or surface.get("owner_repo") != "mcp-tela":
             continue
@@ -241,12 +255,14 @@ def load_authority_snapshot() -> AuthoritySnapshot:
                 raise RuntimeError(
                     f"mcp-tela surface {surface_id} case_matrix file missing: {raw_case_path}"
                 )
-            case_payload = _load_yaml(case_path)
-            declared_surface_id = case_payload.get("surface_id")
-            if declared_surface_id != surface_id:
-                raise RuntimeError(
-                    f"case_matrix surface mismatch for {raw_case_path}: expected {surface_id}, got {declared_surface_id}"
-                )
+            for case_class in _validate_case_matrix_coverage(
+                case_path=case_path,
+                surface_id=surface_id,
+                coverage_states=coverage_states,
+                minimum_coverage=minimum_coverage,
+            ):
+                if case_class not in owned_case_classes:
+                    owned_case_classes.append(case_class)
             case_matrix_paths.append(raw_case_path)
         owned_surface_ids_list.append(surface_id)
         owned_case_matrix_paths.extend(case_matrix_paths)
@@ -258,14 +274,9 @@ def load_authority_snapshot() -> AuthoritySnapshot:
     if not blocking_surface_ids_list:
         raise RuntimeError("shared_surfaces.yaml defines no switch-blocking mcp-tela surfaces")
 
-    owned_surface_ids = tuple(owned_surface_ids_list)
-    blocking_surface_ids = tuple(blocking_surface_ids_list)
-
     forbidden_fields_raw = forbidden_vocabulary.get("shared_forbidden_fields")
     if not isinstance(forbidden_fields_raw, list):
-        raise RuntimeError(
-            "forbidden_vocabulary.yaml missing 'shared_forbidden_fields' list"
-        )
+        raise RuntimeError("forbidden_vocabulary.yaml missing 'shared_forbidden_fields' list")
     forbidden_fields = tuple(str(field) for field in forbidden_fields_raw)
 
     tool_names_raw = forbidden_vocabulary.get("forbidden_shared_tool_names")
@@ -281,15 +292,16 @@ def load_authority_snapshot() -> AuthoritySnapshot:
 
     return AuthoritySnapshot(
         opifex_root=opifex_root,
-        packet_repository=packet_repository,
-        packet_ref=packet_ref,
-        packet_doc=packet_doc,
+        packet_repository=pin.repository,
+        packet_ref=pin.ref,
+        packet_doc=pin.packet_doc,
         shared_surfaces_path=shared_surfaces_path,
         forbidden_vocabulary_path=forbidden_vocabulary_path,
         canonical_contract_path=canonical_contract_path,
-        owned_surface_ids=owned_surface_ids,
-        blocking_surface_ids=blocking_surface_ids,
+        owned_surface_ids=tuple(owned_surface_ids_list),
+        blocking_surface_ids=tuple(blocking_surface_ids_list),
         owned_case_matrix_paths=tuple(owned_case_matrix_paths),
+        owned_case_classes=tuple(owned_case_classes),
         forbidden_fields=forbidden_fields,
         forbidden_tool_patterns=forbidden_tool_patterns,
     )
@@ -317,9 +329,7 @@ def _run(command: list[str], *, expect_success: bool) -> subprocess.CompletedPro
     if expect_success and completed.returncode != 0:
         raise SystemExit(completed.returncode)
     if not expect_success and completed.returncode == 0:
-        raise SystemExit(
-            "Expected seeded drift to fail, but pytest exited successfully."
-        )
+        raise SystemExit("Expected seeded drift to fail, but pytest exited successfully.")
     return completed
 
 
@@ -340,6 +350,9 @@ def _print_authority_summary(snapshot: AuthoritySnapshot) -> None:
     print("Owned case-matrix files:")
     for case_matrix_path in snapshot.owned_case_matrix_paths:
         print(f"- {case_matrix_path}")
+    print("Owned case-matrix classes:")
+    for case_class in snapshot.owned_case_classes:
+        print(f"- {case_class}")
     print("Forbidden shared fields:")
     for field in snapshot.forbidden_fields:
         print(f"- {field}")
@@ -382,9 +395,7 @@ def run_expected_red() -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Run mcp-tela repo-local shared-surface CI gates.",
-    )
+    parser = argparse.ArgumentParser(description="Run mcp-tela repo-local shared-surface CI gates.")
     parser.add_argument(
         "mode",
         choices=("expected-red", "green"),

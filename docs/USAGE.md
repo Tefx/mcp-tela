@@ -697,6 +697,13 @@ uv run pytest -q
 uv run pytest --doctest-modules src/tela/
 uv run invar guard --all
 uv sync --frozen --group dev
+AUTHORITY_REF=$(python - <<'PY'
+import json
+from pathlib import Path
+print(json.loads(Path("design/opifex-frozen-authority-packet.json").read_text())["ref"])
+PY
+)
+test "$(git -C ../opifex rev-parse HEAD)" = "$AUTHORITY_REF"
 OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
 OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
 ```

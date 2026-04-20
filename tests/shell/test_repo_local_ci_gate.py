@@ -64,7 +64,21 @@ def _seed_layout(tmp_path: Path) -> tuple[Path, Path, str]:
         json.dumps(
             {
                 "global_controls": {
-                    "frozen_followup_packet_ref": "design/cross-repo-followup-packet.md"
+                    "frozen_followup_packet_ref": "design/cross-repo-followup-packet.md",
+                    "case_matrix_policy": {
+                        "minimum_coverage": [
+                            "happy_path",
+                            "missing_required",
+                            "wrong_type",
+                            "extra_key",
+                            "legacy_alias",
+                            "omit_vs_null",
+                            "bad_enum",
+                            "alternate_path_parity",
+                            "docs_example_parity",
+                        ],
+                        "coverage_states": ["covered", "not_applicable"],
+                    },
                 },
                 "gate_policy": {
                     "switch_blocking": {"by_exposure": ["shared", "alternate", "local_runtime"]},
@@ -103,6 +117,17 @@ def _seed_layout(tmp_path: Path) -> tuple[Path, Path, str]:
         json.dumps(
             {
                 "surface_id": "tela_initialize_token_mode",
+                "coverage": {
+                    "happy_path": "covered",
+                    "missing_required": "covered",
+                    "wrong_type": "covered",
+                    "extra_key": "covered",
+                    "legacy_alias": "covered",
+                    "omit_vs_null": "covered",
+                    "bad_enum": "not_applicable",
+                    "alternate_path_parity": "covered",
+                    "docs_example_parity": "not_applicable",
+                },
                 "cases": [{"id": "happy_path", "class": "happy_path"}],
             },
             indent=2,
@@ -116,6 +141,17 @@ def _seed_layout(tmp_path: Path) -> tuple[Path, Path, str]:
         json.dumps(
             {
                 "surface_id": "tela_tools_call_builtin_tela_list_providers",
+                "coverage": {
+                    "happy_path": "covered",
+                    "missing_required": "covered",
+                    "wrong_type": "not_applicable",
+                    "extra_key": "covered",
+                    "legacy_alias": "not_applicable",
+                    "omit_vs_null": "not_applicable",
+                    "bad_enum": "not_applicable",
+                    "alternate_path_parity": "covered",
+                    "docs_example_parity": "not_applicable",
+                },
                 "cases": [{"id": "happy_path", "class": "happy_path"}],
             },
             indent=2,
@@ -133,7 +169,15 @@ def test_load_authority_snapshot_derives_owned_and_blocking_scope(
     tela_root, opifex_root, frozen_ref = _seed_layout(tmp_path)
     monkeypatch.setattr(module, "PROJECT_ROOT", tela_root)
     monkeypatch.setattr(module, "_resolve_opifex_root", lambda: opifex_root)
-    monkeypatch.setattr(module, "_git_head", lambda root: frozen_ref)
+    monkeypatch.setattr(
+        module,
+        "require_pinned_checkout",
+        lambda project_root, root: module.FrozenAuthorityPin(
+            repository="Tefx/opifex",
+            ref=frozen_ref,
+            packet_doc="design/cross-repo-followup-packet.md",
+        ),
+    )
 
     snapshot = module.load_authority_snapshot()
 
@@ -149,6 +193,7 @@ def test_load_authority_snapshot_derives_owned_and_blocking_scope(
         "conformance/case_matrix/mcp-tela/tela.initialize.token_mode.yaml",
         "conformance/case_matrix/mcp-tela/tela.tools.call.builtin.tela_list_providers.yaml",
     )
+    assert snapshot.owned_case_classes == ("happy_path",)
 
 
 def test_load_authority_snapshot_rejects_head_mismatch(
@@ -160,9 +205,49 @@ def test_load_authority_snapshot_rejects_head_mismatch(
     monkeypatch.setattr(module, "_resolve_opifex_root", lambda: opifex_root)
     monkeypatch.setattr(
         module,
-        "_git_head",
-        lambda root: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "require_pinned_checkout",
+        lambda project_root, root: (_ for _ in ()).throw(
+            RuntimeError(
+                "OPIFEX_ROOT checkout does not match pinned authority ref: expected x, got y"
+            )
+        ),
     )
 
     with pytest.raises(RuntimeError, match="pinned authority ref"):
+        module.load_authority_snapshot()
+
+
+def test_load_authority_snapshot_rejects_case_matrix_missing_minimum_coverage(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_gate_module()
+    tela_root, opifex_root, frozen_ref = _seed_layout(tmp_path)
+    broken_case_matrix = opifex_root / "conformance/case_matrix/mcp-tela/tela.initialize.token_mode.yaml"
+    broken_case_matrix.write_text(
+        json.dumps(
+            {
+                "surface_id": "tela_initialize_token_mode",
+                "coverage": {"happy_path": "covered"},
+                "cases": [{"id": "happy_path", "class": "happy_path"}],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(module, "PROJECT_ROOT", tela_root)
+    monkeypatch.setattr(module, "_resolve_opifex_root", lambda: opifex_root)
+    monkeypatch.setattr(module, "require_pinned_checkout", lambda project_root, root: None)
+    monkeypatch.setattr(
+        module,
+        "load_frozen_authority_pin",
+        lambda project_root: module.FrozenAuthorityPin(
+            repository="Tefx/opifex",
+            ref=frozen_ref,
+            packet_doc="design/cross-repo-followup-packet.md",
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="missing coverage key"):
         module.load_authority_snapshot()
