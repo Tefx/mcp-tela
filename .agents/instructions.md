@@ -100,3 +100,43 @@ directly as a workaround. Use `vectl guide stuck` for troubleshooting.
   - `--evidence-template`: Force workers to provide specific proof (e.g., "Paste logs here").
   - `--refs`: Pin specific files (e.g., "src/auth.py") to the worker's context.
 <!-- VECTL:AGENTS:END -->
+
+---
+
+## Shared Contract Discipline
+
+`mcp-tela` is the shared gateway/profile/token enforcement runtime. It is not
+allowed to redefine canonical contract meaning locally.
+
+### Canonical Inputs
+
+Before changing any shared surface, read:
+
+- `../opifex/design/final-canonical-contract.md`
+- `../opifex/contracts/capability_token.schema.json`
+- `../opifex/contracts/tela_profile_list.schema.json`
+- `../opifex/conformance/shared_surfaces.yaml`
+- `../opifex/conformance/case_matrix/mcp-tela/*`
+
+### Hard Rules
+
+1. Do not invent local interpretations of shared fields.
+2. Do not add compatibility aliases on shared surfaces.
+3. Do not accept-and-clean malformed shared input.
+4. Builtin, downstream, bridge, and HTTP paths must obey the same shared
+   contract.
+5. Profile truth must come from the configured registry state, not hidden
+   fallback behavior.
+6. Shared audit semantics must not be skipped on alternate paths.
+
+### Evidence Standard
+
+For every shared-surface blocker:
+
+- provide pre-fix red proof
+- provide at least one runtime/integration-level proof when applicable
+- rerun full repo tests and `invar guard`
+- rerun docs/tests parity scans
+- perform a fresh self-review before claiming PASS
+
+Never return PASS with `Open Problems` or `Residual Risk` other than `none`.
