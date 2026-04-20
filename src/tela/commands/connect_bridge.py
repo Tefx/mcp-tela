@@ -746,6 +746,7 @@ def forward_stdio_http(
     stdout_buffer: BinaryIO,
     max_recovery_attempts: int = 3,
     recover_transport: Callable[[], Result[tuple[str, str], str]] | None = None,
+    reset_recovery_attempts: Callable[[], None] | None = None,
 ) -> Result[None, str]:
     """Forward MCP stdio frames to HTTP and stream responses back.
 
@@ -796,6 +797,8 @@ def forward_stdio_http(
         )
         if write_result.is_err:
             return Result(error=write_result.error)
+        if reset_recovery_attempts is not None:
+            reset_recovery_attempts()
 
     return Result(value=None)
 
@@ -902,6 +905,7 @@ def _run_bridge_cycle(
                 recovery_default_profile=recovery_default_profile,
                 discover_or_autostart=discover_or_autostart,
             ),
+            reset_recovery_attempts=lambda: setattr(state, "recovery_attempts", 0),
         )
         if forward_result.is_ok:
             return Result(value="done")

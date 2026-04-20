@@ -95,8 +95,10 @@ class TestBridgeReadinessBehavior:
             stdout_buffer: Any,
             max_recovery_attempts: int = 3,
             recover_transport: Any = None,
+            reset_recovery_attempts: Any = None,
         ) -> Result[None, str]:
             assert mcp_url.endswith("/mcp")
+            _ = reset_recovery_attempts
             call_order.append("forward")
             return Result(value=None)
 
@@ -244,7 +246,9 @@ class TestBridgeReadinessBehavior:
             stdout_buffer: Any,
             max_recovery_attempts: int = 3,
             recover_transport: Any = None,
+            reset_recovery_attempts: Any = None,
         ) -> Result[None, str]:
+            _ = reset_recovery_attempts
             call_order.append("forward")
             return Result(value=None)
 

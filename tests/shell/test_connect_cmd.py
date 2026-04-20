@@ -459,8 +459,16 @@ def test_run_bridge_recovery_uses_passed_connect_context(
         stdout_buffer,
         max_recovery_attempts: int = 3,
         recover_transport=None,
+        reset_recovery_attempts=None,
     ) -> Result[None, str]:
-        _ = mcp_url, bearer_token, bridge_connection_id, should_stop, recover_transport
+        _ = (
+            mcp_url,
+            bearer_token,
+            bridge_connection_id,
+            should_stop,
+            recover_transport,
+            reset_recovery_attempts,
+        )
         _ = stdin_buffer, stdout_buffer, max_recovery_attempts
         forward_calls["count"] += 1
         if forward_calls["count"] == 1:
@@ -535,8 +543,16 @@ def test_run_bridge_uses_recovered_bearer_token_for_reconnect(
         stdout_buffer,
         max_recovery_attempts: int = 3,
         recover_transport=None,
+        reset_recovery_attempts=None,
     ) -> Result[None, str]:
-        _ = mcp_url, bearer_token, bridge_connection_id, should_stop, recover_transport
+        _ = (
+            mcp_url,
+            bearer_token,
+            bridge_connection_id,
+            should_stop,
+            recover_transport,
+            reset_recovery_attempts,
+        )
         _ = stdin_buffer, stdout_buffer, max_recovery_attempts
         forward_calls["count"] += 1
         if forward_calls["count"] == 1:
@@ -592,6 +608,7 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         stdout_buffer,
         max_recovery_attempts: int = 3,
         recover_transport=None,
+        reset_recovery_attempts=None,
     ) -> Result[None, str]:
         _ = mcp_url
         _ = bearer_token
@@ -599,7 +616,7 @@ def test_bridge_lifecycle_posts_connect_and_disconnect(
         _ = should_stop
         _ = stdin_buffer
         _ = stdout_buffer
-        _ = recover_transport
+        _ = recover_transport, reset_recovery_attempts
         return Result(value=None)
 
     def _fake_get_gateway_status(
@@ -709,10 +726,11 @@ def test_run_bridge_waits_for_status_ready_before_forwarding(
         stdout_buffer,
         max_recovery_attempts: int = 3,
         recover_transport=None,
+        reset_recovery_attempts=None,
     ) -> Result[None, str]:
         _ = mcp_url, bearer_token, bridge_connection_id, should_stop
         _ = stdin_buffer, stdout_buffer
-        _ = recover_transport
+        _ = recover_transport, reset_recovery_attempts
         forwarded.append(True)
         return Result(value=None)
 
@@ -1209,6 +1227,147 @@ def test_forward_stdio_http_replays_inflight_message_after_transport_recovery(
     ]
     output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
     assert '"ok": true' in output.lower()
+
+
+def test_forward_stdio_http_resets_recovery_budget_after_successful_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A recovered request must reset the shared bridge recovery budget."""
+
+    initialize_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
+    tools_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+    stdin_buffer = io.BytesIO(initialize_request + b"\n" + tools_request + b"\n")
+    stdout_buffer = io.BytesIO()
+    reset_calls = {"count": 0}
+    post_calls: list[int] = []
+
+    def _fake_post_mcp_message(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        payload: bytes,
+        session_id: str | None = None,
+        max_recovery_attempts: int = 3,
+    ) -> Result[tuple[str, bytes, str | None], str]:
+        _ = mcp_url, bearer_token, payload, session_id, max_recovery_attempts
+        post_calls.append(len(post_calls) + 1)
+        if len(post_calls) == 1:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "session-1",
+                )
+            )
+        if len(post_calls) == 2:
+            return Result(error="MCP_FORWARD_FAILED: Connection refused")
+        if len(post_calls) == 3:
+            return Result(
+                value=(
+                    "application/json",
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}).encode(
+                        "utf-8"
+                    ),
+                    "session-2",
+                )
+            )
+        return Result(
+            value=(
+                "application/json",
+                json.dumps({"jsonrpc": "2.0", "id": 2, "result": {"tools": []}}).encode(
+                    "utf-8"
+                ),
+                "session-2",
+            )
+        )
+
+    def _fake_recover_transport() -> Result[tuple[str, str], str]:
+        return Result(value=("http://127.0.0.1:9001/mcp", "recovered-token"))
+
+    _patch_bridge_fn(monkeypatch, "_post_mcp_message", _fake_post_mcp_message)
+
+    result = connect_cmd._forward_stdio_http(
+        mcp_url="http://127.0.0.1:8123/mcp",
+        bearer_token="old-token",
+        bridge_connection_id="bridge_test",
+        should_stop=lambda: False,
+        stdin_buffer=stdin_buffer,
+        stdout_buffer=stdout_buffer,
+        recover_transport=_fake_recover_transport,
+        reset_recovery_attempts=lambda: reset_calls.__setitem__(
+            "count", reset_calls["count"] + 1
+        ),
+    )
+
+    assert result.is_ok
+    assert reset_calls["count"] == 2
+
+
+def test_run_bridge_cycle_resets_state_recovery_attempts_after_forward_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Successful forwarding must clear accumulated recovery attempts."""
+
+    state = connect_bridge.BridgeRuntimeState(
+        base_url="http://127.0.0.1:8123",
+        host="127.0.0.1",
+        port=8123,
+        bearer_token="token",
+        recovery_attempts=2,
+    )
+
+    def _fake_wait_for_gateway_readiness(
+        *, status_url: str, bearer_token: str, max_polls: int
+    ) -> Result[None, str]:
+        _ = status_url, bearer_token, max_polls
+        return Result(value=None)
+
+    def _fake_forward_stdio_http(
+        *,
+        mcp_url: str,
+        bearer_token: str,
+        bridge_connection_id: str,
+        should_stop: Callable[[], bool],
+        stdin_buffer,
+        stdout_buffer,
+        max_recovery_attempts: int = 3,
+        recover_transport=None,
+        reset_recovery_attempts=None,
+    ) -> Result[None, str]:
+        _ = (
+            mcp_url,
+            bearer_token,
+            bridge_connection_id,
+            should_stop,
+            stdin_buffer,
+            stdout_buffer,
+            max_recovery_attempts,
+            recover_transport,
+        )
+        assert reset_recovery_attempts is not None
+        reset_recovery_attempts()
+        return Result(value=None)
+
+    _patch_bridge_fn(
+        monkeypatch, "_wait_for_gateway_readiness", _fake_wait_for_gateway_readiness
+    )
+    _patch_bridge_fn(monkeypatch, "_forward_stdio_http", _fake_forward_stdio_http)
+
+    result = connect_bridge._run_bridge_cycle(
+        state=state,
+        connection_id="bridge_test",
+        stop_requested=connect_bridge.Event(),
+        max_recovery_attempts=3,
+        recovery_config_path="/tmp/tela.yaml",
+        recovery_default_profile="common",
+        discover_or_autostart=None,
+    )
+
+    assert result.is_ok
+    assert result.value == "done"
+    assert state.recovery_attempts == 0
 
 
 def test_recover_gateway_waits_for_discovered_endpoint_readiness(
@@ -1855,10 +2014,11 @@ def test_bridge_teardown_interrupt_does_not_block_process_exit(
         stdout_buffer,
         max_recovery_attempts: int = 3,
         recover_transport=None,
+        reset_recovery_attempts=None,
     ) -> Result[None, str]:
         _ = mcp_url, bearer_token, bridge_connection_id, should_stop
         _ = stdin_buffer, stdout_buffer
-        _ = recover_transport
+        _ = recover_transport, reset_recovery_attempts
         return Result(value=None)
 
     readiness_snapshots = _mock_gateway_status_ready(monkeypatch)
@@ -1936,10 +2096,11 @@ def test_bridge_teardown_interrupt_resumes_cleanup_in_bounded_section(
         stdout_buffer,
         max_recovery_attempts: int = 3,
         recover_transport=None,
+        reset_recovery_attempts=None,
     ) -> Result[None, str]:
         _ = mcp_url, bearer_token, bridge_connection_id, should_stop
         _ = stdin_buffer, stdout_buffer
-        _ = recover_transport
+        _ = recover_transport, reset_recovery_attempts
         return Result(value=None)
 
     def _fake_get_gateway_status(
