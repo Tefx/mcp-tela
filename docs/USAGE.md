@@ -696,11 +696,18 @@ port. Use `--port 0` (default) to let the OS assign an available port.
 uv run pytest -q
 uv run pytest --doctest-modules src/tela/
 uv run invar guard --all
+uv sync --frozen --group dev
+OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
+OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
 ```
+
+For CI job names and branch-protection-ready repo-local shared-surface checks,
+see `docs/CI-REPO-LOCAL-SHARED-SURFACE-GATES.md`.
 
 ## Related files
 
 - `README.md`
+- `docs/CI-REPO-LOCAL-SHARED-SURFACE-GATES.md`
 - `tela.yaml.example`
 - `docs/DESIGN.md`
 - `docs/INTERFACES.md`

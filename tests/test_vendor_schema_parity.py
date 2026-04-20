@@ -11,6 +11,7 @@ vendor/opifex/contracts/ and are read-only by contract.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -26,10 +27,54 @@ LOCAL_CONTRACTS_ROOT = PROJECT_ROOT / "contracts"
 # vendor/opifex/contracts/ is at the worktree/project root level
 VENDOR_ROOT = PROJECT_ROOT / "vendor" / "opifex" / "contracts"
 
-# Source of truth location (sibling repo at /Users/tefx/Projects/opifex)
-# The spec says ../opifex which from mcp-tela project root (/Users/tefx/Projects/mcp-tela/)
-# resolves to /Users/tefx/Projects/opifex
-OPIFEX_ROOT = Path("/Users/tefx/Projects/opifex") / "contracts"
+def _candidate_opifex_contract_roots() -> tuple[Path, ...]:
+    """Return plausible opifex contract roots for local and CI execution.
+
+    Resolution order intentionally prefers explicit CI wiring first, then local
+    sibling layouts, then the historical workstation path used by existing
+    contributors.
+    """
+
+    env_root = os.environ.get("OPIFEX_ROOT")
+    candidates: list[Path] = []
+
+    if env_root:
+        env_path = Path(env_root)
+        candidates.append(env_path / "contracts")
+        candidates.append(env_path)
+
+    candidates.append(PROJECT_ROOT.parent / "opifex" / "contracts")
+
+    if len(PROJECT_ROOT.parents) >= 5:
+        candidates.append(PROJECT_ROOT.parents[4] / "opifex" / "contracts")
+
+    candidates.append(Path("/Users/tefx/Projects/opifex") / "contracts")
+
+    deduped: list[Path] = []
+    for candidate in candidates:
+        if candidate not in deduped:
+            deduped.append(candidate)
+    return tuple(deduped)
+
+
+def _resolve_opifex_root() -> Path:
+    """Resolve the authoritative opifex contracts root.
+
+    Raises:
+        FileNotFoundError: If no candidate contracts directory exists.
+    """
+
+    for candidate in _candidate_opifex_contract_roots():
+        if candidate.is_dir():
+            return candidate
+    raise FileNotFoundError(
+        "Could not locate opifex contracts root. Set OPIFEX_ROOT to the opifex "
+        "checkout root or contracts directory. Tried: "
+        + ", ".join(str(path) for path in _candidate_opifex_contract_roots())
+    )
+
+
+OPIFEX_ROOT = _resolve_opifex_root()
 
 
 # =============================================================================

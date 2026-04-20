@@ -252,7 +252,13 @@ TELA_BEARER_TOKEN="tela_tok_a1b2c3d4..." tela connect --server 192.168.1.10:8080
 uv run pytest -q
 uv run pytest --doctest-modules src/tela/
 uv run invar guard --all
+uv sync --frozen --group dev
+OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
+OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
 ```
+
+See `docs/CI-REPO-LOCAL-SHARED-SURFACE-GATES.md` for the exact branch-protection
+job names and the opifex-authoritative repo-local gate scope.
 
 ## Documentation
 
