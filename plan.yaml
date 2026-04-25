@@ -74956,7 +74956,7 @@ phases:
       - No Manager/Supervisor/event bus introduced.'
   - id: adr008.doctor_cli_recovery
     name: Doctor CLI diagnostics and explicit recovery
-    status: pending
+    status: claimed
     description: Add tela doctor and tela doctor --recover behavior. tela doctor is
       cached/passive and does not probe or mutate without --recover. tela doctor --recover
       is explicit mutation surface. Support --json, --recover, --probe-timeout, --recover-timeout.
@@ -74997,6 +74997,8 @@ phases:
     depends_on:
     - adr008.status_cli_surfaces
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T16:00:28.832205+00:00'
   - id: adr008.workflow_docs_parity
     name: Workflow regressions and docs parity
     status: pending
