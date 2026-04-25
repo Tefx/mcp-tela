@@ -75297,13 +75297,30 @@ phases:
   - id: adr008.final_verify_gate
     name: Final ADR-008 verification gate
     status: pending
-    description: Final verification gate for ADR-008. Block if implementation introduced
-      Manager/Supervisor/event bus lifecycle ownership; core contains I/O or lacks
-      @pre/@post/doctest for new pure helpers; shell persistence fails best-effort
+    description: 'Historical first ADR-008 verification gate attempt. SUPERSEDED for
+      blocking/progression purposes by follow-up remediation path `adr008.gate_blockers_batched_fix`
+      and retest gate `adr008.final_verify_gate_retest`; keep this step for traceability
+      of the initial blocker findings only.
+
+
+      Original gate scope: Final verification gate for ADR-008. Block if implementation
+      introduced Manager/Supervisor/event bus lifecycle ownership; core contains I/O
+      or lacks @pre/@post/doctest for new pure helpers; shell persistence fails best-effort
       behavior or mutates gateway lockfile format; connect exits on request-level
       recovery failure; status or doctor mutates without explicit recovery permission;
       CLI docs contradict argparse behavior; any shared ../opifex canonical contract
-      was redefined locally. This is a full-plan-check protecting phase completion.
+      was redefined locally. This was a full-plan-check protecting phase completion.
+
+
+      Initial blocker families superseded by the retest path:
+
+      1. Full pytest blocked by OPIFEX_ROOT pinned authority mismatch in tests/test_vendor_schema_parity.py.
+
+      2. `uv run invar guard --all` failed escape-hatch budgets: weighted 78/75 and
+      shell_result 19/17.
+
+      3. Static failures: src/tela/shell/gateway.py undefined ValidationError; src/tela/shell/initialize_session_patch.py
+      method assignment error.'
     verification: Run `uv run pytest -q`, `uv run invar guard --all`, and `uv run
       pytest tests/core/test_adr008_attachment_lifecycle.py tests/shell/test_adr008_registry_events.py
       tests/shell/test_adr008_connect_survival.py tests/shell/test_adr008_status_cli.py
