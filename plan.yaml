@@ -76029,13 +76029,13 @@ phases:
       \ command families are green without suppression tactics."
 - id: debt.warning_cleanup_pass3
   name: Debt Warning Cleanup Pass 3
-  status: pending
+  status: in_progress
   depends_on:
   - adr008_issue_cleanup
   steps:
   - id: debt.warning_cleanup_pass3.impl
     name: Reduce non-blocking invar warnings pass 3
-    status: pending
+    status: claimed
     description: 'Technical-debt reduction step for current non-blocking invar guard
       warnings.
 
@@ -76121,6 +76121,8 @@ phases:
       \n\n## Residual Ownership\nRemaining warnings and why they are non-blocking\
       \ for this reduction step:\n- <family/count/reason/future owner>"
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T17:30:22.969056+00:00'
   - id: debt.warning_cleanup_pass3.verify
     name: Verify warning cleanup pass 3
     status: pending
