@@ -76902,8 +76902,7 @@ phases:
       - Gate decision: OPEN | BLOCKED'
     depends_on:
     - tela.operator_p1.red_tests.audit_pagination_cursor
-    - tela.operator_p1.red_tests.probe_diagnostics
-    - tela.operator_p1.red_tests.client_attachment_diagnostics
+    - tela.operator_p1.red_tests.diagnostics_readonly
     - tela.operator_p1.red_tests.recover_decision_behavior
     - tela.operator_p1.red_tests.authorization_explain
     agent: gate-reviewer-tacit
