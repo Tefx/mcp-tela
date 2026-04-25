@@ -75500,3 +75500,135 @@ phases:
     depends_on:
     - adr008.workflow_docs_parity
     agent: python-senior-tacit
+  - id: adr008.final_verify_gate_retest
+    name: ADR-008 final verification gate retest
+    status: pending
+    description: 'Retest gate for the ADR-008 final verification after `adr008.gate_blockers_batched_fix`.
+      This supersedes the first historical gate attempt `adr008.final_verify_gate`
+      for blocking/progression purposes.
+
+
+      step_type: gate
+
+      verification_scope: full-plan-check
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      As an INDEPENDENT REVIEWER (`gate-reviewer-tacit`), assess whether ADR-008 now
+      meets the quality bar after the batched blocker fix. The job is to BLOCK progress
+      if any blocker family remains open, not to rubber-stamp completion.
+
+
+      Required retest focus:
+
+      1. Full pytest no longer blocked by OPIFEX_ROOT pinned authority mismatch in
+      `tests/test_vendor_schema_parity.py`.
+
+      2. `uv run invar guard --all` passes escape-hatch budgets, including weighted
+      <=75 and shell_result <=17.
+
+      3. Static failures are closed: `src/tela/shell/gateway.py` has no undefined
+      `ValidationError`; `src/tela/shell/initialize_session_patch.py` has no method
+      assignment error.
+
+      4. Original ADR-008 gate expectations remain intact: no Manager/Supervisor/event
+      bus lifecycle ownership; Core has no I/O and has required @pre/@post/doctest
+      for new pure helpers; shell persistence remains best-effort and preserves gateway
+      lockfile format; connect does not exit on request-level recovery failure; status/doctor
+      mutation rules remain explicit; CLI docs match argparse behavior; shared ../opifex
+      canonical contracts are not redefined locally.
+
+
+      Gate Decision Basis required: map each blocker family and ADR-008 proof obligation
+      to evidence refs, status, unresolved items, and OPEN/BLOCK recommendation. Any
+      NEEDS_TEST, UNPROVEN, or UNCERTAIN_BLOCKING item must get an explicit remediation
+      path or explicit non-intersection evidence.'
+    verification: 'Re-run the same final gate verification command family from `adr008.final_verify_gate`:
+      `uv run pytest -q`, `uv run invar guard --all`, and `uv run pytest tests/core/test_adr008_attachment_lifecycle.py
+      tests/shell/test_adr008_registry_events.py tests/shell/test_adr008_connect_survival.py
+      tests/shell/test_adr008_status_cli.py tests/shell/test_adr008_doctor_cli.py
+      tests/integration/test_adr008_attachment_workflows.py tests/shell/test_adr008_docs_parity.py
+      -q`. Fresh self-review against ADR-008 verification expectations. Confirm command
+      semantics parity across ADR-008, USAGE, INTERFACES, DESIGN. Confirm no local
+      reinterpretation of ../opifex shared surfaces. Gate may OPEN only if all three
+      blocker families are proven closed and no original ADR-008 gate obligation regressed.'
+    evidence_template: '## Gate Review Retest Report
+
+
+      **Reviewer**: gate-reviewer-tacit (independent of batched fix)
+
+      **Phase**: adr008_client_attachment_lifecycle
+
+      **Retest target**: adr008.gate_blockers_batched_fix
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Command Execution
+
+      Paste actual output for the required command family:
+
+      ```text
+
+      uv run pytest -q
+
+      uv run invar guard --all
+
+      uv run pytest tests/core/test_adr008_attachment_lifecycle.py tests/shell/test_adr008_registry_events.py
+      tests/shell/test_adr008_connect_survival.py tests/shell/test_adr008_status_cli.py
+      tests/shell/test_adr008_doctor_cli.py tests/integration/test_adr008_attachment_workflows.py
+      tests/shell/test_adr008_docs_parity.py -q
+
+      ```
+
+
+      ### Blocker Closure Register
+
+      | Blocker | Evidence Ref | Status | Notes |
+
+      | --- | --- | --- | --- |
+
+      | B1 OPIFEX_ROOT/vendor schema parity | <output/file refs> | PROVEN/UNPROVEN
+      | <notes> |
+
+      | B2 invar escape-hatch budgets | <output/file refs> | PROVEN/UNPROVEN | <weighted
+      and shell_result values> |
+
+      | B3 static ValidationError/method assignment | <output/file refs> | PROVEN/UNPROVEN
+      | <notes> |
+
+
+      ### ADR-008 Gate Decision Basis
+
+      | Requirement Ref | Behavior Claim | Runtime Proof Expected | Evidence Ref |
+      Status | Closure Path | Gate Decision Basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+      | <ref> | <claim> | <proof> | <evidence> | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING
+      | <path> | OPEN/BLOCK reason |
+
+
+      ### Gate Decision
+
+      - [ ] OPEN: batched blockers closed, original ADR-008 gate obligations intact,
+      no unresolved blocker-class proof gaps.
+
+      - [ ] BLOCKED: list required follow-up remediation steps.
+
+
+      **Confidence**: high/medium/low'
+    depends_on:
+    - adr008.gate_blockers_batched_fix
+    agent: gate-reviewer-tacit
