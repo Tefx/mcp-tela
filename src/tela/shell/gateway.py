@@ -252,6 +252,7 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         handle_connect,
         handle_disconnect,
         handle_health,
+        handle_authorization_explain,
         handle_operator_clients,
         handle_operator_probe,
         handle_status,
@@ -363,6 +364,22 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         return JSONResponse(
             content=client_payloads
         )
+
+    @upstream_server.custom_route("/operator/authorization/explain", methods=["GET"])
+    async def _operator_authorization_explain_route(request: Request) -> Response:
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            assert auth_result.error is not None
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+
+        profile_id = request.query_params.get("profile_id")
+        explain_result = handle_authorization_explain(profile_id=profile_id)
+        if explain_result.is_err:
+            assert explain_result.error is not None
+            return _as_error_response(explain_result.error)
+        assert explain_result.value is not None
+        return JSONResponse(content=explain_result.value)
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:

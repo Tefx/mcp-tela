@@ -49,6 +49,7 @@ from tela.shell.gateway_runtime import (
 )
 from tela.shell.http_auth import validate_bearer_token
 from tela.shell.adr008_registry_events import read_attachment_registry
+from tela.shell.authorization_explain import handle_authorization_explain
 
 logger = logging.getLogger(__name__)
 

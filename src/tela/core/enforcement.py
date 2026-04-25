@@ -267,3 +267,134 @@ def enforce(
 
     # Final verdict
     return EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+
+
+@pre(
+    lambda tool_name, tool, profile, token_result, default_posture: (
+        isinstance(tool_name, str)
+        and len(tool_name) > 0
+        and isinstance(tool, ResolvedTool)
+        and isinstance(profile, ProfileConfig)
+        and isinstance(token_result, EnforcementResult)
+        and isinstance(default_posture, Posture)
+    )
+)
+@post(
+    lambda result: (
+        isinstance(result, dict)
+        and isinstance(result.get("visible"), bool)
+        and isinstance(result.get("hidden"), bool)
+        and result.get("hidden") is not result.get("visible")
+        and isinstance(result.get("allowed"), bool)
+        and isinstance(result.get("denied"), bool)
+    )
+)
+def explain_authorization(
+    tool_name: str,
+    tool: ResolvedTool,
+    profile: ProfileConfig,
+    token_result: EnforcementResult,
+    default_posture: Posture,
+) -> dict[str, object]:
+    """Explain the visibility and call authorization outcome for one tool.
+
+    The diagnostic follows the same ordered decision helpers as ``enforce``:
+    token binding, family admission, profile tool override, then posture
+    ceiling/default posture. It does not mutate runtime state or introduce a
+    separate authorization vocabulary.
+
+    Examples:
+        >>> tool = ResolvedTool(name="read_file", server_name="fs", family="fs", posture=Posture.READ_ONLY)
+        >>> profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
+        >>> token = EnforcementResult(verdict=EnforcementVerdict.ALLOW)
+        >>> explain_authorization("read_file", tool, profile, token, Posture.NONE)["allowed"]
+        True
+        >>> denied = ProfileConfig(name="none", capabilities={})
+        >>> explain_authorization("read_file", tool, denied, token, Posture.NONE)["stage"]
+        'family_admission'
+
+    Args:
+        tool_name: Routing name supplied to enforcement.
+        tool: Resolved tool metadata.
+        profile: Profile whose capabilities and overrides are evaluated.
+        token_result: Token/open-mode binding result produced upstream.
+        default_posture: Server default posture for unclassified tools.
+
+    Returns:
+        Diagnostic mapping with visible/hidden and allowed/denied booleans,
+        plus denial stage and reason when authorization denies the tool.
+    """
+
+    if token_result.verdict == EnforcementVerdict.DENY:
+        return _authorization_explain_denied(token_result, "token_validation")
+
+    family_result = check_family_admission(tool.family, profile)
+    if family_result.verdict == EnforcementVerdict.DENY:
+        return _authorization_explain_denied(family_result, "family_admission")
+
+    override_result = check_tool_override(tool_name, tool.family, profile)
+    if override_result is not None and override_result.verdict == EnforcementVerdict.DENY:
+        return _authorization_explain_denied(override_result, "tool_override")
+
+    family_ceiling = profile.capabilities[tool.family]
+    posture_result = check_posture(tool.posture, family_ceiling, default_posture)
+    if posture_result.verdict == EnforcementVerdict.DENY:
+        return _authorization_explain_denied(posture_result, "posture_ceiling")
+
+    return {
+        "visible": True,
+        "hidden": False,
+        "allowed": True,
+        "denied": False,
+        "stage": "allowed",
+        "reason": "authorized",
+    }
+
+
+@pre(
+    lambda result, stage: isinstance(result, EnforcementResult)
+    and result.verdict == EnforcementVerdict.DENY
+    and isinstance(stage, str)
+    and len(stage) > 0
+)
+@post(
+    lambda result: (
+        result["visible"] is False
+        and result["hidden"] is True
+        and result["allowed"] is False
+        and result["denied"] is True
+        and isinstance(result.get("stage"), str)
+        and isinstance(result.get("reason"), str)
+    )
+)
+def _authorization_explain_denied(
+    result: EnforcementResult,
+    stage: str,
+) -> dict[str, object]:
+    """Build a denial explanation payload from an enforcement denial.
+
+    Examples:
+        >>> denied = EnforcementResult(verdict=EnforcementVerdict.DENY, denied_by="family_admission", error_message="Family blocked")
+        >>> _authorization_explain_denied(denied, "family_admission")["hidden"]
+        True
+
+    Args:
+        result: Denying enforcement result.
+        stage: Enforcement stage responsible for the denial.
+
+    Returns:
+        Diagnostic mapping for a hidden and denied tool.
+    """
+
+    detail = result.error_message or result.error_code or result.denied_by or stage
+    reason = f"{stage}: {detail}"
+    return {
+        "visible": False,
+        "hidden": True,
+        "allowed": False,
+        "denied": True,
+        "stage": stage,
+        "reason": reason,
+        "error_code": result.error_code,
+        "denied_by": result.denied_by,
+    }
