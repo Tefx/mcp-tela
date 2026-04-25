@@ -76029,7 +76029,7 @@ phases:
       \ command families are green without suppression tactics."
 - id: debt.warning_cleanup_pass3
   name: Debt Warning Cleanup Pass 3
-  status: in_progress
+  status: done
   depends_on:
   - adr008_issue_cleanup
   steps:
@@ -76229,7 +76229,7 @@ phases:
       - ab6d494'
   - id: debt.warning_cleanup_pass3.verify
     name: Verify warning cleanup pass 3
-    status: claimed
+    status: done
     description: 'Gate verification for debt.warning_cleanup_pass3.
 
 
@@ -76294,3 +76294,21 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-25T17:44:30.427647+00:00'
+    done_at: '2026-04-25T17:51:03.640902+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- AGENTS.md — read (core/shell\
+      \ boundaries and shared-contract hard rules)\n- INVAR.md — read (contracts/doctest\
+      \ discipline and shell I/O boundary)\n\n## Verification Commands\n- `uv run\
+      \ invar guard --all`\n  - passed; files_checked=65; errors=0; warnings=50; infos=20\n\
+      \  - escape hatches: shell_result=16, file_size=7; weighted budget 69/75\n-\
+      \ `uv run pytest -q`\n  - pass; `1321 passed in 142.44s`\n\n## Baseline vs Current\
+      \ Warning Budget\nBaseline (from impl step): total warnings=57; dead_export=7;\
+      \ dead_param=1; dead_assign=1; wiring_gap=1\nCurrent: total warnings=50; dead_export=3;\
+      \ dead_param=0; dead_assign=0; wiring_gap=0\nDelta: -7 total warnings (net-positive\
+      \ reduction)\nBudget margin: weighted budget 69/75 (6 margin), shell_result\
+      \ 16/17 (1 margin)\n\n## Regression Review\n- pytest status: PASS\n- blocker\
+      \ regressions: none\n- broad escape hatches added: none detected in this pass\n\
+      - shared contract risk: no blocker surfaced by required command family\n\n##\
+      \ Closure Fields\nheadline: OPEN\nproof_gap_status: closed\nblocking_status:\
+      \ non_blocking\nverdict: OPEN\nblockers: []\norchestrator_action_hint: CLOSE_PHASE\n\
+      \n## Gate Decision\nOPEN — required commands pass, warning count reduced vs\
+      \ baseline, no blocker-class regression observed."
