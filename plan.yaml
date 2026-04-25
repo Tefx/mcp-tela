@@ -76803,7 +76803,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: tela.operator_p1.red_tests.diagnostics_readonly
     name: Red test read-only probe and client attachment diagnostics
-    status: claimed
+    status: done
     description: 'Write behavior-defining tests only; do not change product code.
       Add expected-red tests for remote operator diagnostics equivalent to `tela status
       --probe` and `tela status --clients`.
@@ -76887,6 +76887,14 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T19:36:58.175407+00:00'
+    done_at: '2026-04-25T21:25:04.249457+00:00'
+    evidence: EXPECTED_RED_ACCEPTED. Red diagnostics tests for remote probe/client
+      read-only behavior are present and verify the intended pre-implementation gap
+      (10 xfailed missing remote surfaces) while read-only guard tests pass (7 passed).
+      Mainline verification command `uv run pytest tests/shell/test_operator_remote_diagnostics_red.py
+      -v --tb=short` produced `7 passed, 10 xfailed`, matching the expected red contract.
+      Subagent branch head 83df043 contained tests-only changes; no product implementation
+      files were modified.
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
