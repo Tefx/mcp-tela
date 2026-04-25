@@ -77040,7 +77040,7 @@ phases:
       expected-red and no product code edits were introduced.'
   - id: tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     name: Retest diagnostics property red-test coverage
-    status: claimed
+    status: done
     description: "Re-run the diagnostics red-test file after tela.operator_p1.red_tests.fix_diagnostics_enum_construction\
       \ and prove the expected-red behavior is behavior-defining rather than pseudo-property\
       \ coverage or enum-construction crashes.\n\nAs an INDEPENDENT TESTER, validate\
@@ -77083,6 +77083,13 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-25T22:39:41.312108+00:00'
+    done_at: '2026-04-25T22:42:50.221345+00:00'
+    evidence: 'Independent verifier confirmed diagnostics red tests are behavior-defining
+      after remediation: generated-state assertions are present for B1/B2 with explicit
+      non-mutation checks, and enum-construction crashes are absent. Verification
+      used normal + --runxfail runs of tests/shell/test_operator_remote_diagnostics_red.py;
+      --runxfail produced expected handler/route-absence assertion failures only (no
+      AttributeError/ValueError). gate_open_allowed=true, blockers none.'
   - id: tela.operator_p1.red_tests.fix_diagnostics_enum_construction
     name: Fix diagnostics enum test construction defects
     status: done
