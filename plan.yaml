@@ -74474,7 +74474,7 @@ phases:
       guard execution and passing status.'
   - id: adr008.shell_registry_events
     name: Shell attachment registry and runtime event persistence
-    status: claimed
+    status: done
     description: 'Implement shell I/O functions for ADR-008 diagnostics: read/write/upsert
       attachment registry, append runtime event, and read runtime events with malformed-line
       count. Use ~/.tela/client-attachments.json and ~/.tela/runtime-events.jsonl.
@@ -74515,6 +74515,122 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T14:40:03.160423+00:00'
+    done_at: '2026-04-25T14:44:51.056923+00:00'
+    evidence: '## refs Read Confirmation
+
+      - INVAR.md — confirmed shell owns I/O and core stays pure.
+
+      - src/tela/core/classification.py — confirmed ADR-008 core models/contracts
+      context.
+
+      - src/tela/shell/lockfile.py — reused file-mode and atomic-write conventions;
+      no schema/path changes.
+
+      - src/tela/shell/result.py — shell boundary conventions reviewed.
+
+      - tests/core/test_adr008_attachment_lifecycle.py — ADR-008 model expectations
+      reviewed.
+
+      - tests/shell/test_adr008_registry_events.py — absent before implementation;
+      created in this step.
+
+
+      ## Expected-Red Proof
+
+      Before implementation:
+
+      - `uv run pytest tests/shell/test_adr008_registry_events.py -q`
+
+      - Output: `ERROR: file or directory not found: tests/shell/test_adr008_registry_events.py`
+
+
+      ## Green Proof
+
+      Mainline post-merge verification:
+
+      - `uv run pytest tests/shell/test_adr008_registry_events.py tests/shell/test_lockfile.py
+      tests/shell/test_connection_reaper.py -q`
+
+      - Output: `39 passed in 0.40s`
+
+
+      Invar guard:
+
+      - Worker step-time: `uv run invar guard --changed` passed (files_checked=1,
+      errors=0).
+
+      - Mainline post-merge: `invar_guard(changed=true)` passed (no remaining unstaged
+      changes).
+
+
+      ## Persistence Proof
+
+      Implemented shell persistence in `src/tela/shell/adr008_registry_events.py`
+      with:
+
+      - Registry path: `~/.tela/client-attachments.json`
+
+      - Events path: `~/.tela/runtime-events.jsonl`
+
+      - Directory mode `0o700`, file mode `0o600`
+
+      - Registry write path uses temp file + atomic replace
+
+      - Event append writes one JSONL line + flush
+
+      - Oversized event rejection at >16 KiB (`RUNTIME_EVENT_TOO_LARGE`)
+
+      - Missing files resolve to empty state
+
+      - Runtime events read reports malformed-line count
+
+      - Malformed registry maps to `ATTACHMENT_REGISTRY_PARSE_ERROR`
+
+
+      ## Boundary Proof
+
+      - No modifications under `src/tela/core/**`
+
+      - No gateway lockfile format/schema changes (`src/tela/shell/lockfile.py` unchanged)
+
+      - No Manager/Supervisor/event bus introduced
+
+      - Implementation confined to shell persistence surface and its tests
+
+
+      ## Test-step semantic reporting
+
+      - step_intent: implement ADR-008 shell registry/event persistence
+
+      - expected_result: expected-red pre-implementation then green targeted verification
+
+      - observed_result: aligned; red file-missing pre-impl and green after implementation
+
+      - failure_alignment: aligned with missing pre-implementation surface
+
+      - verdict: PASS
+
+      - blockers: none
+
+      - product implementation files modified: yes (`src/tela/shell/adr008_registry_events.py`)
+
+
+      ## Commit hash(es)
+
+      - df4fb71
+
+
+      ## Files changed
+
+      - src/tela/shell/adr008_registry_events.py
+
+      - tests/shell/test_adr008_registry_events.py
+
+
+      ## Gaps/Notes
+
+      - Step intentionally does not wire connect callers yet; this is handled by downstream
+      ADR-008 steps.'
   - id: adr008.connect_survival_events
     name: Connect survival, per-request recovery budget, and provider events
     status: pending
