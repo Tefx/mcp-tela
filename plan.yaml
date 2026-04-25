@@ -74343,7 +74343,7 @@ phases:
   steps:
   - id: adr008.core_contracts_and_red_tests
     name: Core classifiers/models contracts and red tests
-    status: claimed
+    status: done
     description: 'Add ADR-008 core-only contracts and expected-red tests, then implement
       pure helpers/models. Cover classify_attachment_display_state, classify_runtime_state,
       classify_recoverability, and local Pydantic models ClientAttachment, AttachmentRegistry,
@@ -74382,6 +74382,96 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T14:26:51.956881+00:00'
+    done_at: '2026-04-25T14:39:35.389292+00:00'
+    evidence: '## refs Read Confirmation
+
+      - src/tela/core/classification.py — existing posture classifier patterns reviewed
+      and ADR-008 classifiers added in same module.
+
+      - src/tela/core/models.py — Pydantic model patterns reviewed; extra-forbid behavior
+      aligned.
+
+      - src/tela/core/contracts.py — @pre/@post contract style reviewed and followed.
+
+      - tests/core/test_classification.py — classifier assertions and conventions
+      reviewed.
+
+      - tests/core/test_models.py — model validation conventions reviewed.
+
+      - plan.yaml (adr008.core_contracts_and_red_tests) — verification and acceptance
+      criteria executed.
+
+
+      ## Expected-Red Proof
+
+      Before implementation, the target ADR-008 test file did not exist:
+
+      - `uv run pytest tests/core/test_adr008_attachment_lifecycle.py -q`
+
+      - Output: `ERROR: file or directory not found: tests/core/test_adr008_attachment_lifecycle.py`
+      / `no tests ran`
+
+
+      ## Green Proof
+
+      Mainline post-merge verification:
+
+      - `uv run pytest tests/core/test_adr008_attachment_lifecycle.py tests/core/test_classification.py
+      tests/core/test_models.py -q`
+
+      - Output: `109 passed in 0.21s`
+
+
+      Invar guard:
+
+      - `invar_guard(changed=true)` passed (static errors=0, warnings=0).
+
+
+      ## Property/Contract Proof
+
+      Added ADR-008 pure classifier helpers with contracts and doctests:
+
+      - classify_attachment_display_state: @pre/@post + doctests
+
+      - classify_runtime_state: @pre/@post + doctests
+
+      - classify_recoverability: @pre/@post + doctests
+
+      Added local models and pure validation behavior for:
+
+      - ClientAttachment
+
+      - AttachmentRegistry
+
+      - RuntimeEvent (+ guard_size doctest)
+
+
+      No core I/O added; logic remains pure and input-dependent (non-constant branching).
+
+
+      ## Stub Exclusion
+
+      Implemented logic is non-stub and branch-driven; outputs vary by runtime/client
+      inputs and state combinations.
+
+
+      ## Commit hash(es)
+
+      - d9cf5db
+
+
+      ## Files changed
+
+      - src/tela/core/classification.py
+
+      - tests/core/test_adr008_attachment_lifecycle.py
+
+
+      ## Gaps/Notes
+
+      - `invar guard --changed` executed post-merge reports no changed files in this
+      working tree state (commit already recorded). Worker evidence includes the step-time
+      guard execution and passing status.'
   - id: adr008.shell_registry_events
     name: Shell attachment registry and runtime event persistence
     status: pending
