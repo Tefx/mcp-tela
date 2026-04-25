@@ -76907,6 +76907,90 @@ phases:
     - tela.operator_p1.red_tests.recover_decision_behavior
     - tela.operator_p1.red_tests.authorization_explain
     agent: gate-reviewer-tacit
+  - id: tela.operator_p1.red_tests.diagnostics_readonly
+    name: Red test read-only probe and client attachment diagnostics
+    status: pending
+    description: 'Write behavior-defining tests only; do not change product code.
+      Add expected-red tests for remote operator diagnostics equivalent to `tela status
+      --probe` and `tela status --clients`.
+
+
+      Requirements:
+
+      - active probe observes the current lockfile/runtime endpoint only
+
+      - active probe does not cold-start an absent runtime
+
+      - active probe does not invoke doctor recovery or mutate recovery state
+
+      - client diagnostics report attached clients/connections using current runtime/attachment
+      state
+
+      - client diagnostics do not register, admit, disconnect, release sessions, or
+      otherwise change admission state
+
+      - preserve `active_connections` count vs `connections` structural semantics
+
+      - property-based or state-machine coverage should vary runtime endpoint presence/staleness/timeouts
+      and pending/attached/stale client states where feasible; pure example-only tests
+      are insufficient
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      modified_files_scope: tests only plus fixtures/helpers'
+    verification: 'Expected-red proof: targeted tests fail before implementation because
+      remote read-only probe/client diagnostics are absent or incomplete. Evidence
+      proves product code untouched, no recovery/cold-start side effect, and no registration/admission/disconnect
+      mutation occurs during diagnostics tests.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Expected-Red Test Evidence
+
+      - Tests added/updated: <paths::test_names>
+
+      - Product code modified: NO
+
+      - Property/state-machine coverage: <runtime endpoint + client attachment state
+      cases>
+
+      - Expected-red command(s):
+
+      ```text
+
+      <targeted pytest command>
+
+      <invar_guard command>
+
+      ```
+
+      - Failing output proving gap:
+
+      ```text
+
+      <paste failure>
+
+      ```
+
+      - Probe mutation guard evidence: cold-start/recovery functions not called
+
+      - Client mutation guard evidence: no register/admit/disconnect/release-session
+      side effect
+
+      - Downstream implementation owner: tela.operator_p1.surfaces.diagnostics_readonly'
+    agent: python-executor
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
