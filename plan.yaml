@@ -74335,3 +74335,8 @@ phases:
       \ true\n- uncertainty_sources: []\n\n### Step Semantics\n- step_intent: gate\n\
       - expected_result: green\n- observed_result: green\n- failure_alignment: none\n\
       - product_files_modified: no (verify-only execution; no product mutations)"
+- id: adr008_client_attachment_lifecycle
+  name: ADR-008 Client-Neutral Attachment Lifecycle and Diagnostics
+  status: pending
+  depends_on:
+  - canonical_gateway_state
