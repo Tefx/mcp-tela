@@ -77559,7 +77559,7 @@ phases:
       -q` => 9 passed; `invar_guard(changed=true)` passed (no static findings).'
   - id: tela.operator_p1.surfaces.recover_behavior
     name: Implement and verify selected recover behavior
-    status: claimed
+    status: done
     description: 'Complete only the recover behavior selected by `tela.operator_p1.scope_decision.recover_exposure_decision`.
 
 
@@ -77665,6 +77665,13 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T23:35:06.901914+00:00'
+    done_at: '2026-04-25T23:37:14.764751+00:00'
+    evidence: 'Implemented selected Branch B CLI-only recover behavior encoding via
+      docs/INTERFACES.md, docs/ADR-008-operator-recovery-exposure.md, and tests/shell/test_adr008_recover_decision_behavior_red.py
+      (worktree commit f81cddd), then squash-merged as [vectl] step-tela.operator_p1.surfaces.recover_behavior
+      completed. Verification: `uv run pytest tests/shell/test_adr008_recover_decision_behavior_red.py
+      -q` => 11 passed; `invar_guard(changed=true)` passed. No remote recover mutation
+      surface, no RBAC, no PersonaSpec/JobSpec/CapabilityToken changes.'
   - id: tela.operator_p1.surfaces.authorization_explain
     name: Implement and verify authorization explain diagnostic surface
     status: pending
