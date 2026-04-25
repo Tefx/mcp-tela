@@ -78164,6 +78164,140 @@ phases:
       mutations. Squash-merged as [vectl] step-tela.operator_p1.surfaces.diagnostics_readonly
       completed. Mainline verification: `uv run pytest tests/shell/test_operator_remote_diagnostics_red.py
       -q` => 17 passed; `invar_guard(changed=true)` passed.'
+  - id: tela.operator_p1.surfaces.fix_w6_w9_wiring_blockers
+    name: Fix W6/W9 wiring audit blockers
+    status: pending
+    description: 'Batched implementation remediation for wiring audit blockers W6-001
+      and W9-001.
+
+
+      Scope:
+
+      - W6-001: Resolve `GatewayStartupConfig.auth_mode` being written but unconsumed
+      in non-test runtime. Either wire the field into the authoritative runtime startup/auth
+      decision path or remove/replace the write if the field is not part of the authoritative
+      runtime contract. Do not create hidden fallback behavior or local compatibility
+      aliases.
+
+      - W9-001: Resolve `audit_query_paginated` being dead-export/stub-reachable.
+      Either wire it to a real runtime caller/route/tool consistent with the selected
+      operator P1 audit query surface, or remove/de-export it if the authoritative
+      surface does not expose it. No stub-only or hardcoded runtime path may remain.
+
+
+      Required work:
+
+      - Update code, tests, and docs as needed to make the implemented runtime surface
+      and documentation agree.
+
+      - Add or update focused regression coverage proving W6 and W9 cannot recur.
+
+      - Preserve shared contract discipline: builtin, downstream, bridge, and HTTP
+      paths must obey the same shared contract; profile truth must come from configured
+      registry state; shared audit semantics must not be skipped on alternate paths.
+
+
+      Failure-mode checklist:
+
+      - Config value written but never read by non-test runtime code.
+
+      - Public/exported audit helper imported but unreachable from runtime route/tool/entrypoint.
+
+      - Stub-only route/tool response masquerading as implementation.
+
+      - Docs claiming a route/tool that runtime does not register, or omitting a documented
+      CLI-only/de-export disposition.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes its inputs and produces
+      outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. `GatewayStartupConfig.auth_mode` still has no non-test runtime consumer.
+
+      2. `audit_query_paginated` remains exported/imported with no route/tool/runtime
+      caller.
+
+      3. Fixes that only silence grep without preserving the authoritative operator
+      P1 surface semantics.
+
+      4. Missing regression proof for either W6-001 or W9-001.'
+    verification: Local-check protecting tela.operator_p1.surfaces.wiring_audit and
+      tela.operator_p1.surfaces.gate. Evidence must show W6 and W9 are both closed,
+      targeted regression tests were added/updated, relevant docs match runtime disposition,
+      and no stub-only runtime path remains.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - ../opifex/design/final-canonical-contract.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/shared_surfaces.yaml — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/case_matrix/mcp-tela/ — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Batched Wiring Remediation Evidence
+
+
+      ### W6-001 Closure
+
+      - Runtime consumer for `GatewayStartupConfig.auth_mode`: <file:line and call
+      path>
+
+      - Regression test(s): <test names / commands>
+
+      - If removed/deprecated instead of consumed: <authoritative disposition and
+      docs update>
+
+
+      ### W9-001 Closure
+
+      - Runtime caller/route/tool for `audit_query_paginated`: <file:line and route/tool
+      path>
+
+      - OR de-export/removal disposition: <file:line and docs update>
+
+      - Regression test(s): <test names / commands>
+
+
+      ### Commands Executed
+
+      ```
+
+      <paste targeted tests and relevant guard/check commands>
+
+      ```
+
+
+      ### Stub Exclusion
+
+      - Remaining `_Runtime*` / `_Stub*` / `_Placeholder*` production dependencies
+      in touched surfaces: <none or justified non-production>
+
+      - Explanation of why the fix is runtime-reachable, not stub-reachable only.
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - tela.operator_p1.surfaces.audit_query_projection
+    - tela.operator_p1.surfaces.diagnostics_readonly
+    - tela.operator_p1.surfaces.recover_behavior
+    - tela.operator_p1.surfaces.authorization_explain
+    - tela.operator_p1.surfaces.docs_status_update
+    agent: python-senior-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
