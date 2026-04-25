@@ -76507,7 +76507,7 @@ phases:
   steps:
   - id: tela.operator_p1.red_tests.audit_pagination_cursor
     name: Red test audit query bounded pagination and deterministic cursor
-    status: claimed
+    status: done
     description: 'Write behavior-defining tests only; do not change product code.
       Add expected-red tests for a dedicated audit query surface that queries history
       beyond `/status.audit_entries` with bounded `limit` and deterministic cursor/next-cursor
@@ -76581,6 +76581,15 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T19:36:03.178524+00:00'
+    done_at: '2026-04-25T21:26:14.664791+00:00'
+    evidence: EXPECTED_RED_ACCEPTED. Added tests/shell/test_audit_paginated_query_red.py
+      defining bounded limit + deterministic cursor behavior for dedicated paginated
+      audit query surface. Orchestrator recovered misplaced uncommitted output by
+      committing the tests in isolated branch and squash-merging as [vectl] step-tela.operator_p1.red_tests.audit_pagination_cursor
+      completed. Mainline verification command `uv run pytest tests/shell/test_audit_paginated_query_red.py
+      -v --tb=short` produced 9/9 failures due to missing `audit_query_paginated`/`AuditPage`,
+      matching the declared pre-implementation red gap; product implementation files
+      unchanged.
   - id: tela.operator_p1.red_tests.recover_decision_behavior
     name: Red test selected recover exposure behavior
     status: pending
