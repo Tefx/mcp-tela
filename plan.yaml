@@ -76848,3 +76848,62 @@ phases:
 
       - Downstream implementation owner: tela.operator_p1.surfaces.authorization_explain'
     agent: python-executor
+  - id: tela.operator_p1.red_tests.gate
+    name: Gate expected-red test coverage
+    status: pending
+    description: 'Gate review for red-tests phase. Confirm behavior-defining tests
+      were added before implementation, are scoped to tests/fixtures only, have real
+      expected-red output, and cover all five P1 targets.
+
+
+      review_depth: STANDARD
+
+      cross_cutting_focus:
+
+      - expected-red output is real, not pseudo-validation
+
+      - tests do not modify product code
+
+      - property-based/symbolic coverage is present or justified
+
+      - recover branch follows the scope decision'
+    verification: 'Phase-check protecting implementation: all P1 red-test steps have
+      expected_result=red evidence, failing output pasted, product code untouched,
+      and downstream implementation owner identified. Block if any target lacks a
+      red proof or if any test encodes RBAC/passive recovery/contract reinterpretation.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Red-Test Gate Review
+
+      - Audit pagination/cursor expected-red: PASS/FAIL
+
+      - Active probe diagnostics expected-red: PASS/FAIL
+
+      - Client attachment diagnostics expected-red: PASS/FAIL
+
+      - Recover decision behavior expected-red: PASS/FAIL
+
+      - Authorization explain expected-red: PASS/FAIL
+
+      - Product-code modification check: PASS/FAIL
+
+      - Property/symbolic coverage check: PASS/FAIL
+
+      - Blockers: <list or none>
+
+      - Gate decision: OPEN | BLOCKED'
+    depends_on:
+    - tela.operator_p1.red_tests.audit_pagination_cursor
+    - tela.operator_p1.red_tests.probe_diagnostics
+    - tela.operator_p1.red_tests.client_attachment_diagnostics
+    - tela.operator_p1.red_tests.recover_decision_behavior
+    - tela.operator_p1.red_tests.authorization_explain
+    agent: gate-reviewer-tacit
