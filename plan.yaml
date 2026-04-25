@@ -77932,3 +77932,87 @@ phases:
     depends_on:
     - tela.operator_p1.gate.spec_conformance
     agent: integration-verifier-tacit
+  - id: tela.operator_p1.gate.operator_client_smoke
+    name: Run external operator-client smoke evidence
+    status: pending
+    description: 'Black-box operator-client smoke verification. Treat `oculus` only
+      as a future external client that calls public operator APIs; do not require
+      UI knowledge.
+
+
+      Using only docs and public runtime surfaces, prove an operator-facing client
+      can:
+
+      - query audit history with bounded cursor/limit
+
+      - request active probe diagnostics without cold-start/recovery
+
+      - inspect client attachment diagnostics without admission mutation
+
+      - observe selected recover behavior: explicit remote mutation if branch A, or
+      documented absence/rejection if branch B
+
+      - request authorization explain for visible/hidden/allowed/denied cases without
+      changing enforcement
+
+
+      This is runtime smoke evidence, not source-code review.
+
+      step_type: verification
+
+      Independence Level: L3 black-box for operator/public surface behavior.'
+    verification: Run public API/CLI/MCP smoke commands against a local test runtime
+      as an external client would. Evidence must include exact commands/requests and
+      actual output; no private file reads as the proof path.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Black-Box Operator Smoke Report
+
+      **Tester**: blind-tester-tacit
+
+      **Independence Level**: L3
+
+
+      ### Public operations exercised
+
+      | Operation | Request/Command | Expected | Actual | Status |
+
+      |---|---|---|---|---|
+
+      | audit query | <request> | bounded cursor/limit | <output> | PASS/FAIL |
+
+      | active probe | <request> | read-only probe | <output> | PASS/FAIL |
+
+      | client attachments | <request> | read-only clients | <output> | PASS/FAIL
+      |
+
+      | recover | <request/CLI-only proof> | selected branch | <output> | PASS/FAIL
+      |
+
+      | authz explain | <request> | diagnostic-only explain | <output> | PASS/FAIL
+      |
+
+
+      ### Side-effect checks
+
+      - Passive probe caused recovery: yes/no
+
+      - Client diagnostics changed admission state: yes/no
+
+      - Explain changed enforcement result: yes/no
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - tela.operator_p1.gate.repo_local_full_gate
+    agent: blind-tester-tacit
