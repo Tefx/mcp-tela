@@ -77437,13 +77437,13 @@ phases:
       gate_open_allowed=true and blockers none.'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
-  status: pending
+  status: in_progress
   depends_on:
   - tela.operator_p1.red_tests
   steps:
   - id: tela.operator_p1.surfaces.audit_query_projection
     name: Implement and verify bounded audit query projection
-    status: pending
+    status: claimed
     description: 'Complete the dedicated operator audit query projection without expanding
       `/status.audit_entries` into long history.
 
@@ -77547,6 +77547,8 @@ phases:
 
       PASS | FAIL'
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T23:24:22.345551+00:00'
   - id: tela.operator_p1.surfaces.recover_behavior
     name: Implement and verify selected recover behavior
     status: pending
