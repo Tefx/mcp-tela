@@ -77083,7 +77083,7 @@ phases:
     agent: integration-verifier-tacit
   - id: tela.operator_p1.red_tests.fix_diagnostics_enum_construction
     name: Fix diagnostics enum test construction defects
-    status: claimed
+    status: done
     description: 'Tests-only remediation for new pre-gate crashes discovered in tela.operator_p1.red_tests.retest_diagnostics_property_coverage.
 
 
@@ -77193,6 +77193,14 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T22:31:52.470252+00:00'
+    done_at: '2026-04-25T22:39:18.013662+00:00'
+    evidence: 'Tests-only enum-construction remediation verified: invalid `RuntimeState.STALE_CANDIDATE`
+      and `AttachmentDisplayState(''PENDING'')` construction crashes were removed
+      by valid mapping (`pending->STARTED`, stale-like runtime to `RuntimeState.IDLE`).
+      Mainline verification command `uv run pytest tests/shell/test_operator_remote_diagnostics_red.py
+      --runxfail -q` produced behavior-defining failures (10 failed, 7 passed) tied
+      to absent remote probe/clients surfaces, with no AttributeError/ValueError construction
+      crashes. Product code remained untouched.'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
