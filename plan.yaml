@@ -75370,7 +75370,7 @@ phases:
     skipped_reason: superseded
   - id: adr008.gate_blockers_batched_fix
     name: ADR-008 batched final-gate blocker fix
-    status: pending
+    status: claimed
     description: "Fix ALL blockers from the superseded first ADR-008 final verification\
       \ gate attempt. This is one batched remediation step; do not fix only the first\
       \ failure family.\n\nwork_type: defect_repair\nstep_type: implementation\nsymbolic_testing:\
@@ -75501,6 +75501,8 @@ phases:
     depends_on:
     - adr008.workflow_docs_parity
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T16:21:41.725509+00:00'
   - id: adr008.final_verify_gate_retest
     name: ADR-008 final verification gate retest
     status: pending
