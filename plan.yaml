@@ -77612,6 +77612,129 @@ phases:
     - tela.operator_p1.surfaces.docs_status_update
     - tela.operator_p1.surfaces.wiring_audit
     agent: gate-reviewer-tacit
+  - id: tela.operator_p1.surfaces.diagnostics_readonly
+    name: Implement and verify read-only probe and client diagnostics
+    status: pending
+    description: 'Complete a remote operator diagnostics surface equivalent to `tela
+      status --probe` and `tela status --clients` while preserving read-only behavior.
+
+
+      Scope:
+
+      - Reuse existing CLI probe/client semantics from `src/tela/commands/status_cmd.py`
+      where practical, without moving I/O into Core.
+
+      - Probe observes only the current lockfile/runtime endpoint.
+
+      - Probe does not cold-start absent runtime.
+
+      - Diagnostics do not call `doctor --recover`, downstream recovery helpers, config
+      reload, connect, disconnect, release sessions, or any recovery/admission mutation.
+
+      - Client diagnostics report connections/clients and derived display state.
+
+      - Preserve `active_connections` as numeric count and `connections` as structural
+      collection.
+
+      - Expose through the selected HTTP/MCP operator surface using existing shell
+      route style.
+
+
+      Failure-mode checklist:
+
+      - no lockfile/runtime absent
+
+      - stale endpoint
+
+      - timeout
+
+      - invalid/unreachable endpoint
+
+      - no clients
+
+      - pending bridge registrations vs admitted connections
+
+      - stale/disconnected clients
+
+      - concurrent attach/detach snapshot consistency
+
+      - diagnostics output cannot mutate runtime/admission/recovery state
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes inputs and produces
+      outputs that vary based on those inputs.
+
+
+      step_type: implementation
+
+      integration: true
+
+      state_semantics: diagnostics are observed runtime state only; recovery/admission
+      mutation remains explicit or absent per scope decision.'
+    verification: 'Main path: targeted active probe and client attachment diagnostics
+      tests pass. Failure path: absent/stale/unreachable runtime tests prove no cold
+      start or recovery mutation, and client diagnostics tests prove no registration/admission/disconnect
+      mutation while preserving count-vs-collection semantics. Full proof: rerun invar_guard
+      on changed files and paste output.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Tool-Enforced Falsifiability
+
+      Before product-code changes, rerun upstream red tests from `tela.operator_p1.red_tests.diagnostics_readonly`
+      and paste expected-red output:
+
+      ```text
+
+      <expected-red output before implementation>
+
+      ```
+
+
+      ## Implementation Evidence
+
+      - Files changed: <paths>
+
+      - Probe endpoint/source observed: <summary>
+
+      - Client/connection fields exposed: <summary>
+
+      - Cold-start guard: <proof>
+
+      - Recovery mutation guard: <proof>
+
+      - Admission-state mutation guard: <proof>
+
+      - Count-vs-collection proof: <summary>
+
+
+      ## Verification Output
+
+      ```text
+
+      <targeted pytest output>
+
+      <invar_guard output>
+
+      ```
+
+
+      ## Headline
+
+      PASS | FAIL'
+    depends_on:
+    - tela.operator_p1.surfaces.audit_query_projection
+    agent: python-senior-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
