@@ -75849,7 +75849,7 @@ phases:
       Residual warnings are non-blocking debt only.'
 - id: adr008_issue_cleanup
   name: ADR-008 Issue Cleanup
-  status: in_progress
+  status: done
   depends_on:
   - adr008_client_attachment_lifecycle
   steps:
@@ -75957,7 +75957,7 @@ phases:
       \n## Commit hash(es)\n- 5858d75"
   - id: adr008.issue.final_verify
     name: ADR-008 issue cleanup final verification
-    status: claimed
+    status: done
     description: 'Step type: gate.
 
 
@@ -76012,3 +76012,18 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-25T17:11:19.535498+00:00'
+    done_at: '2026-04-25T17:17:21.632707+00:00'
+    evidence: "headline: PASS\nproof_gap_status: CLOSED\nblocking_status: NON_BLOCKING\n\
+      verdict: OPEN\nblockers: []\norchestrator_action_hint: CLOSE_PHASE\n\n## refs\
+      \ Read Confirmation (MANDATORY)\n- AGENTS.md — NOT READ (file not present in\
+      \ retest worktree path)\n- INVAR.md — read; core/shell boundaries and guard\
+      \ posture confirmed\n\n## Cleanup Evidence Review\n- Before warning evidence\
+      \ present: YES\n- After warning evidence present: YES\n- Warning root cause\
+      \ fixed rather than suppressed: YES\n- Broad escape hatches added: NO\n- Invar\
+      \ checks weakened: NO\n- Tests removed/weakened: NO\n- Shared-contract behavior\
+      \ preserved: YES\n\n## Required Commands\n- `uv run invar guard --all`\n  -\
+      \ status: passed\n  - errors: 0, warnings: 57, infos: 20\n  - escape hatch budget:\
+      \ 69/75, shell_result 16/17 (in policy)\n- `uv run pytest -q`\n  - `1321 passed\
+      \ in 132.46s`\n\n## Gate Decision\nOPEN — issue-cleanup remediation is validated;\
+      \ targeted warning debt closure is proven by before/after evidence and all required\
+      \ command families are green without suppression tactics."
