@@ -15,17 +15,7 @@ from typing import cast
 
 import pytest
 
-# RED trigger: this import will raise ImportError until the surface is
-# implemented, proving the gap exists.
 from tela.core.enforcement import enforce
-
-
-def _explain_authorization(*args: object, **kwargs: object) -> "dict[str, object]":
-    """Lazy import so tests collect and fail behaviorally at runtime."""
-    from tela.core.enforcement import explain_authorization as _ea  # type: ignore[import-not-found]
-    return cast("dict[str, object]", _ea(*args, **kwargs))  # type: ignore[no-any-return]
-
-
 from tela.core.models import (
     EnforcementResult,
     EnforcementVerdict,
@@ -34,6 +24,12 @@ from tela.core.models import (
     ProfileToolOverrides,
     ResolvedTool,
 )
+
+
+def _explain_authorization(*args: object, **kwargs: object) -> "dict[str, object]":
+    """Lazy import so tests collect and fail behaviorally at runtime."""
+    from tela.core.enforcement import explain_authorization as _ea  # type: ignore[import-not-found]
+    return cast("dict[str, object]", _ea(*args, **kwargs))  # type: ignore[no-any-return]
 
 # ---------------------------------------------------------------------------
 # Shared fixtures / constants
