@@ -76027,3 +76027,8 @@ phases:
       \ in 132.46s`\n\n## Gate Decision\nOPEN — issue-cleanup remediation is validated;\
       \ targeted warning debt closure is proven by before/after evidence and all required\
       \ command families are green without suppression tactics."
+- id: debt.warning_cleanup_pass3
+  name: Debt Warning Cleanup Pass 3
+  status: pending
+  depends_on:
+  - adr008_issue_cleanup
