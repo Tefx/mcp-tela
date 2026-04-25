@@ -76035,7 +76035,7 @@ phases:
   steps:
   - id: debt.warning_cleanup_pass3.impl
     name: Reduce non-blocking invar warnings pass 3
-    status: claimed
+    status: done
     description: 'Technical-debt reduction step for current non-blocking invar guard
       warnings.
 
@@ -76123,6 +76123,110 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T17:30:22.969056+00:00'
+    done_at: '2026-04-25T17:44:01.742699+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      - AGENTS.md (repo root) — read
+
+      - INVAR.md — read
+
+      - ../opifex/design/final-canonical-contract.md — read
+
+      - ../opifex/contracts/capability_token.schema.json — read
+
+      - ../opifex/contracts/tela_profile_list.schema.json — read
+
+      - ../opifex/conformance/shared_surfaces.yaml — read
+
+
+      ## Baseline Warning Inventory
+
+      Command:
+
+      - `uv run invar guard --all`
+
+
+      Baseline summary (worker evidence):
+
+      - errors=0, warnings=57, infos=20
+
+      - key families included dead_export/dead_param/dead_assign/wiring_gap
+
+
+      ## Changes Made
+
+      Targeted files:
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/_downstream_recovery.py
+
+      - src/tela/commands/doctor_cmd.py
+
+
+      Families reduced:
+
+      - dead_export: 7 -> 3
+
+      - dead_param: 1 -> 0
+
+      - dead_assign: 1 -> 0
+
+      - wiring_gap: 1 -> 0
+
+      - total warnings: 57 -> 50
+
+
+      Escape hatches added:
+
+      - none
+
+
+      ## Post-change Warning Inventory
+
+      Mainline full scan:
+
+      - run_id: grd_91fc481163b747d4b71a01b8
+
+      - result: ok=true, errors=0, warnings=50, infos=20
+
+
+      ## Regression Proof
+
+      Mainline:
+
+      - `uv run pytest -q`
+
+      - Output: `1321 passed in 139.60s`
+
+
+      ## Shared Contract Discipline
+
+      - No shared contract schemas were modified.
+
+      - No compatibility aliases or accept-and-clean shared-surface behavior introduced.
+
+      - Behavior preserved via full pytest pass.
+
+
+      ## Closure fields
+
+      headline: "Reduced invar warning debt by 7 without suppressions"
+
+      proof_gap_status: "CLOSED"
+
+      blocking_status: "NON_BLOCKING"
+
+      verdict: "PASS"
+
+      blockers: []
+
+      orchestrator_action_hint: "PROCEED_TO_FINAL_VERIFY"
+
+
+      ## Commit hash(es)
+
+      - ab6d494'
   - id: debt.warning_cleanup_pass3.verify
     name: Verify warning cleanup pass 3
     status: pending
