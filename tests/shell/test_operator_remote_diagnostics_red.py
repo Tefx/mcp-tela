@@ -31,19 +31,19 @@ from starlette.testclient import TestClient
 
 from tela.core.classification import (
     AttachmentDisplayState,
-    AttachmentRegistry,
     ClientAttachment,
     Recoverability,
     RuntimeState,
 )
 from tela.core.models import AuthMode, ConnectionContext, GatewayTransport, TelaConfig
-from tela.shell import gateway as gateway_module
 from tela.shell import http_routes
 from tela.shell.gateway import GatewayStartupConfig, gateway_shutdown, gateway_start
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
     clear_runtime_connections,
+    get_runtime_config,
     get_runtime_connections_snapshot,
+    is_runtime_running,
     set_runtime_config,
     set_runtime_running,
     with_upstream_server,
@@ -147,17 +147,65 @@ class TestRemoteProbeSurfaceIsAbsent:
     def test_remote_probe_behavior_across_endpoint_states(
         self, runtime_present: bool, runtime_stale: bool, timeout_seconds: float
     ) -> None:
-        """Property-based: remote probe must exist and accept endpoint-state variation.
+        """Property-based: remote probe must observe endpoint state without mutation.
 
-        When implemented, this test must exercise absent / stale / present / timeout
-        combinations and verify the returned observation is read-only.
+        Generated state drives behavior expectations:
+        - runtime_present=False -> probe reports absent / not-started
+        - runtime_present=True, runtime_stale=False -> probe reports healthy
+        - runtime_present=True, runtime_stale=True -> probe reports stale/degraded
+        - timeout_seconds is the probe call timeout; must not truncate or default
         """
+        # Setup runtime state from generated parameters
+        clear_runtime_connections()
+        if runtime_present:
+            set_runtime_config(TelaConfig())
+            set_runtime_running(True)
+        else:
+            set_runtime_running(False)
+
+        # Snapshot before probe call — used to prove read-only / non-mutation
+        before_config = get_runtime_config()
+        before_running = is_runtime_running()
+        before_connections = get_runtime_connections_snapshot()
+        assert before_config.is_ok and before_running.is_ok and before_connections.is_ok
+
+        # Red-test gate: handler must exist before behavioral assertions can run
         assert hasattr(http_routes, "handle_operator_probe"), (
             "Remote probe handler absent — cannot exercise endpoint-state matrix."
         )
-        # Once the handler exists, the body should call it with the varied state
-        # and assert no cold-start / recovery side effects.  For now the assertion
-        # above produces the expected-red failure.
+
+        handler = getattr(http_routes, "handle_operator_probe")
+        probe_result = handler(timeout_seconds=timeout_seconds)
+
+        # Behavior-defining assertions driven by generated state
+        if not runtime_present:
+            # Absent runtime must be reported absent; probe must not cold-start
+            assert probe_result.is_err or getattr(probe_result.value, "running", False) is False, (
+                "Probe of absent runtime reported running=True (cold-start side-effect?)"
+            )
+        else:
+            # Present runtime must be reported present
+            assert probe_result.is_ok, f"Probe of present runtime failed: {probe_result.error}"
+            assert probe_result.value is not None, "Probe ok but value is None"
+            snapshot = getattr(probe_result.value, "snapshot", probe_result.value)
+            assert getattr(snapshot, "running", False) is True, (
+                "Probe of running runtime reported running=False"
+            )
+            # Staleness must be reflected in status / degraded_reason
+            if runtime_stale:
+                degraded = getattr(snapshot, "degraded_reason", None)
+                status_state = getattr(snapshot, "state", None)
+                assert degraded is not None or status_state in ("stale", "degraded"), (
+                    "runtime_stale=True but probe returned no staleness indicator"
+                )
+
+        # Non-mutation guarantees: diagnostics must be read-only
+        after_config = get_runtime_config()
+        after_running = is_runtime_running()
+        after_connections = get_runtime_connections_snapshot()
+        assert before_config == after_config, "Probe must not mutate runtime config"
+        assert before_running == after_running, "Probe must not mutate runtime running flag"
+        assert before_connections == after_connections, "Probe must not mutate runtime connections"
 
 
 # =============================================================================
@@ -229,15 +277,112 @@ class TestRemoteClientSurfaceIsAbsent:
         num_attachments: int,
         attachment_state: str,
     ) -> None:
-        """Property-based: remote clients endpoint must exist and report current state.
+        """Property-based: remote clients endpoint must reflect generated state without mutation.
 
-        When implemented, this should iterate over varied attachment states and
-        verify that the returned client list reflects the current registry/runtime
-        snapshot without mutation.
+        Generated state drives behavior expectations:
+        - endpoint_present=False -> endpoint reports empty / absent attachments
+        - endpoint_present=True, endpoint_stale=True -> at least one attachment must show stale indicator
+        - attachment_state varies per generated record -> display_state / runtime_state must match that value when mapped
+        - num_attachments controls list length -> returned count must equal generated count when present
         """
+        # Setup endpoint and registry state from generated parameters
+        from tela.shell.adr008_registry_events import upsert_client_attachment, read_attachment_registry
+
+        if endpoint_present:
+            set_runtime_config(TelaConfig())
+            set_runtime_running(True)
+        else:
+            set_runtime_running(False)
+
+        # Build attachments consistent with generated state
+        registry_before = read_attachment_registry()
+        assert registry_before.is_ok
+        for i in range(num_attachments):
+            disp_state = AttachmentDisplayState(attachment_state.upper()) if attachment_state != "unknown" else AttachmentDisplayState.UNKNOWN
+            runtime_state = RuntimeState.STALE_CANDIDATE if (endpoint_stale and i == 0) else RuntimeState.ACTIVE
+            if attachment_state == "unknown":
+                runtime_state = RuntimeState.UNKNOWN
+            elif attachment_state == "pending":
+                runtime_state = RuntimeState.INITIALIZING
+            elif attachment_state == "stale":
+                runtime_state = RuntimeState.IDLE
+            recov = Recoverability.STALE if endpoint_stale else Recoverability.RECOVERABLE
+            att = ClientAttachment(
+                client_id=f"c-{attachment_state}-{i}",
+                client_kind="cli",
+                display_state=disp_state,
+                runtime_state=runtime_state,
+                recoverability=recov,
+                connected_at="2026-01-01T00:00:00Z",
+                last_heartbeat="2026-01-01T00:02:00Z" if not endpoint_stale else "2026-01-01T00:00:00Z",
+            )
+            upsert_client_attachment(att)
+
+        # Snapshot before endpoint call — used to prove read-only / non-mutation
+        before_config = get_runtime_config()
+        before_running = is_runtime_running()
+        before_connections = get_runtime_connections_snapshot()
+        before_registry = read_attachment_registry()
+        assert before_config.is_ok and before_running.is_ok and before_connections.is_ok and before_registry.is_ok
+
+        # Red-test gate: handler must exist before behavioral assertions can run
         assert hasattr(http_routes, "handle_operator_clients"), (
             "Remote clients handler absent — cannot exercise client-state matrix."
         )
+
+        handler = getattr(http_routes, "handle_operator_clients")
+        result = handler()
+
+        # Behavior-defining assertions driven by generated state
+        if not endpoint_present:
+            # Absent endpoint must not fabricate clients
+            if result.is_ok:
+                clients = getattr(result.value, "clients", result.value)
+                assert not clients or len(clients) == 0, (
+                    "Clients endpoint reported non-empty list when endpoint_present=False"
+                )
+            # else: error is acceptable for absent endpoint (e.g., gateway not started)
+        else:
+            assert result.is_ok, f"Clients endpoint failed when endpoint_present=True: {getattr(result, 'error', 'unknown')}"
+            clients = result.value
+            if isinstance(clients, list):
+                assert len(clients) == num_attachments, (
+                    f"Expected {num_attachments} clients but got {len(clients)}"
+                )
+                # attachment_state "stale" or endpoint_stale must reflect in at least one client
+                if endpoint_stale or attachment_state == "stale":
+                    any_stale = any(
+                        getattr(c, "stale_candidate", False)
+                        or getattr(c, "display_state", "") in ("stale_candidate", "degraded")
+                        or getattr(c, "recoverability", "") == "stale"
+                        for c in clients
+                    )
+                    assert any_stale, (
+                        "Stale state was generated but no client reflects staleness"
+                    )
+            # active_connections count vs connections structural semantics already guarded in TestExistingStatusIsReadOnly
+
+        # Non-mutation guarantees: diagnostics must be read-only
+        after_config = get_runtime_config()
+        after_running = is_runtime_running()
+        after_connections = get_runtime_connections_snapshot()
+        after_registry = read_attachment_registry()
+        if before_config.value is None:
+            assert after_config.value is None, "Clients endpoint mutated runtime config from None"
+        else:
+            assert (
+                before_config.value.model_dump_json() == after_config.value.model_dump_json()
+            ), "Clients endpoint must not mutate runtime config"
+        assert before_running.value == after_running.value, "Clients endpoint must not mutate runtime running flag"
+        assert before_connections == after_connections, "Clients endpoint must not mutate runtime connections"
+        if before_registry.value is not None and after_registry.value is not None:
+            assert (
+                before_registry.value.model_dump_json() == after_registry.value.model_dump_json()
+            ), "Clients endpoint must not mutate attachment registry"
+        elif before_registry.value is None:
+            assert after_registry.value is None or len(getattr(after_registry.value, "attachments", [])) == 0, (
+                "Clients endpoint backfilled a missing registry without authorization"
+            )
 
 
 # =============================================================================
