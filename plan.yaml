@@ -76320,7 +76320,7 @@ phases:
   steps:
   - id: tela.operator_p1.scope_decision.authority_and_source_discovery
     name: Read canonical authority and discover source surfaces
-    status: claimed
+    status: done
     description: Planning-only scope step. Read opifex canonical docs and repo docs,
       confirm tela ownership boundaries, and locate existing code for status, audit,
       clients, probe, recovery, and authorization enforcement. Produce a P1 target
@@ -76360,6 +76360,14 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-25T19:23:19.672948+00:00'
+    done_at: '2026-04-25T19:28:36.567257+00:00'
+    evidence: 'Subagent minimalist-architect-tacit completed planning-only scope discovery
+      and produced evidence file evidence/p1_operator_scope_decision_authority_and_source_discovery.md
+      (commit 6745479 in isolated worktree). Orchestrator squash-merged to main as
+      commit [vectl] step-tela.operator_p1.scope_decision.authority_and_source_discovery
+      completed. Mainline verification: `git show --name-only --pretty="" HEAD` output
+      only `evidence/p1_operator_scope_decision_authority_and_source_discovery.md`,
+      confirming no implementation/code surface changes.'
   - id: tela.operator_p1.scope_decision.recover_exposure_decision
     name: 'Decide recover exposure: remote explicit mutation or CLI-only'
     status: pending
