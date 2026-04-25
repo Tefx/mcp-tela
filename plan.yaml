@@ -77678,3 +77678,97 @@ phases:
   status: locked
   depends_on:
   - tela.operator_p1.surfaces
+  steps:
+  - id: tela.operator_p1.gate.targeted_tests
+    name: Run targeted operator P1 regression tests
+    status: pending
+    description: 'Independent verification: run the targeted green test set for all
+      operator P1 surfaces from a fresh perspective.
+
+
+      Scope:
+
+      - audit query cursor/limit tests
+
+      - active probe diagnostics read-only tests
+
+      - client attachment diagnostics read-only tests
+
+      - selected recover branch tests
+
+      - authorization explain diagnostic-only tests
+
+
+      This is a post-implementation retest step.
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: phase-check protects repo-local full gate and operator-client
+      smoke.'
+    verification: Run targeted operator P1 tests and report exact commands/output.
+      Finding issues is successful verification, but gate cannot open until blockers
+      have remediation ownership.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Verification Report
+
+      **Tester**: integration-verifier-tacit
+
+      **Independence Level**: L1
+
+      **Scope**: targeted operator P1 regression tests
+
+
+      ### Test Execution
+
+      Commands executed:
+
+      ```text
+
+      <actual targeted pytest commands>
+
+      ```
+
+      Output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | docs/INTERFACES.md §7.2a | <claim> | <proof> | <test/output> | PROVEN/NEEDS_TEST/UNPROVEN
+      | <path> | <basis> |
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    agent: integration-verifier-tacit
