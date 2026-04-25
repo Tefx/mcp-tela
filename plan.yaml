@@ -75296,7 +75296,7 @@ phases:
       - `../opifex` canonical contracts were not edited.'
   - id: adr008.final_verify_gate
     name: Final ADR-008 verification gate
-    status: pending
+    status: claimed
     description: Final verification gate for ADR-008. Block if implementation introduced
       Manager/Supervisor/event bus lifecycle ownership; core contains I/O or lacks
       @pre/@post/doctest for new pure helpers; shell persistence fails best-effort
@@ -75350,3 +75350,5 @@ phases:
     depends_on:
     - adr008.workflow_docs_parity
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-25T16:14:51.073450+00:00'
