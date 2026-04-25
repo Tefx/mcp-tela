@@ -76918,7 +76918,7 @@ phases:
       files were modified.
   - id: tela.operator_p1.red_tests.fix_diagnostics_property_coverage
     name: Fix diagnostics property red-test coverage
-    status: pending
+    status: claimed
     description: 'Fix BOTH red-tests gate blockers B1 and B2 in tests/shell/test_operator_remote_diagnostics_red.py
       without modifying product code.
 
@@ -77027,6 +77027,8 @@ phases:
     depends_on:
     - tela.operator_p1.red_tests.diagnostics_readonly
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-25T22:05:27.864739+00:00'
   - id: tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     name: Retest diagnostics property red-test coverage
     status: pending
