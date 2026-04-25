@@ -77442,3 +77442,64 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.recover_behavior
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.docs_status_update
+    name: Update operator P1 docs from target to implemented or CLI-only status
+    status: pending
+    description: 'Sync documentation after implementation. Update docs/INTERFACES.md
+      §7.2a from P1 target language to precise implemented/CLI-only status for each
+      operator surface.
+
+
+      Required doc outcomes:
+
+      - audit query with cursor/limit: documented route/tool, limit bounds, cursor
+      semantics, and `/status.audit_entries` remains recent summary
+
+      - active probe diagnostics: documented as current-endpoint observation only;
+      no cold-start/recovery
+
+      - client attachment diagnostics: documented as read-only connection/client view;
+      no admission-state mutation
+
+      - recover action: document selected branch A remote explicit mutation or B CLI-only
+
+      - authorization explain: documented as diagnostic explanation of existing enforcement
+      result only; no RBAC or second authorization
+
+
+      Do not redefine PersonaSpec, JobSpec, CapabilityToken, or profile semantics.'
+    verification: Docs reflect the implemented/CLI-only branch exactly, remove stale
+      P1-target ambiguity where implementation exists, and preserve hard non-goals.
+      Run docs/tests parity checks if present and paste output.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Documentation Sync Evidence
+
+      - docs/INTERFACES.md sections changed: <sections>
+
+      - Surface status table: audit=<implemented>, probe=<implemented>, clients=<implemented>,
+      recover=<remote explicit | CLI-only>, authz_explain=<implemented>
+
+      - Non-goals preserved: no RBAC, no passive recovery, /status recent-only, no
+      PersonaSpec/JobSpec/CapabilityToken changes
+
+      - Docs/tests parity command(s):
+
+      ```text
+
+      <commands/output>
+
+      ```
+
+      - Remaining doc ambiguity: <none or list>'
+    depends_on:
+    - tela.operator_p1.surfaces.authorization_explain
+    agent: doc-reviewer-tacit
