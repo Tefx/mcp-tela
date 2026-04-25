@@ -74956,7 +74956,7 @@ phases:
       - No Manager/Supervisor/event bus introduced.'
   - id: adr008.doctor_cli_recovery
     name: Doctor CLI diagnostics and explicit recovery
-    status: claimed
+    status: done
     description: Add tela doctor and tela doctor --recover behavior. tela doctor is
       cached/passive and does not probe or mutate without --recover. tela doctor --recover
       is explicit mutation surface. Support --json, --recover, --probe-timeout, --recover-timeout.
@@ -74999,6 +74999,122 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T16:00:28.832205+00:00'
+    done_at: '2026-04-25T16:08:12.267078+00:00'
+    evidence: '## refs Read Confirmation
+
+      - src/tela/commands/status_cmd.py — reused passive/probe diagnostics conventions.
+
+      - src/tela/shell/adr008_registry_events.py — runtime events and registry read
+      APIs used for doctor surfaces.
+
+      - src/tela/core/classification.py — RuntimeEventKind/attachment model semantics
+      aligned.
+
+      - src/tela/shell/lockfile.py — stale/missing/ready lockfile handling aligned.
+
+      - tests/shell/test_adr008_status_cli.py — ADR-008 CLI behavior patterns reused
+      for doctor.
+
+
+      ## Expected-Red Proof
+
+      Before implementation, step test file absent:
+
+      - `uv run pytest tests/shell/test_adr008_doctor_cli.py -q`
+
+      - Output: `ERROR: file or directory not found: tests/shell/test_adr008_doctor_cli.py`
+
+
+      ## Green Proof
+
+      Mainline post-merge verification:
+
+      - `uv run pytest tests/shell/test_adr008_doctor_cli.py tests/shell/test_lockfile.py
+      tests/shell/test_cli_wiring.py -q`
+
+      - Output: `33 passed in 3.56s`
+
+
+      Invar guard:
+
+      - worker step-time `uv run invar guard --changed` passed
+
+      - mainline post-merge `invar_guard(changed=true)` passed
+
+
+      ## Recovery Matrix Proof
+
+      Coverage provided in `tests/shell/test_adr008_doctor_cli.py` for:
+
+      - ready
+
+      - starting/degraded/unknown
+
+      - absent/cold-start-failure
+
+      - stale cleanup True / False / error
+
+      - malformed registry
+
+      - client_attachments_alive liveness-reason priority
+
+
+      ## Event Ordering Proof
+
+      Verified event ordering cases:
+
+      - already-ready: `recovery_probe`
+
+      - non-ready + failed recovery: `recovery_probe`, `recovery_failed`
+
+      - stale cleanup success path: `recovery_probe`, `recovery_probe`, `recovery_succeeded`
+
+      - stale cleanup error path: `recovery_probe`, `recovery_failed`
+
+
+      Runtime events JSONL surface includes last_provider_exit/last_probe_event/last_recovery_event
+      and malformed-line counting.
+
+
+      ## Test-step semantic reporting
+
+      - step_intent: implement ADR-008 doctor passive diagnostics + explicit recovery
+      mutation path
+
+      - expected_result: doctor passive by default; recover explicit; CLI flags/JSON/events/recovery
+      matrix satisfied
+
+      - observed_result: required suite green with expected behaviors
+
+      - failure_alignment: expected-red aligned to absent pre-implementation doctor
+      test surface
+
+      - verdict: PASS
+
+      - blockers: none
+
+      - product implementation files modified: yes (`src/tela/cli.py`, `src/tela/commands/doctor_cmd.py`)
+
+
+      ## Commit hash(es)
+
+      - 52bd18f
+
+
+      ## Files changed
+
+      - src/tela/cli.py
+
+      - src/tela/commands/doctor_cmd.py
+
+      - tests/shell/test_adr008_doctor_cli.py
+
+
+      ## Gaps/Notes
+
+      - No Manager/Supervisor/event bus introduced.
+
+      - Doctor paths do not mutate without `--recover`.'
   - id: adr008.workflow_docs_parity
     name: Workflow regressions and docs parity
     status: pending
