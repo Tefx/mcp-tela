@@ -74337,7 +74337,7 @@ phases:
       - product_files_modified: no (verify-only execution; no product mutations)"
 - id: adr008_client_attachment_lifecycle
   name: ADR-008 Client-Neutral Attachment Lifecycle and Diagnostics
-  status: in_progress
+  status: done
   depends_on:
   - canonical_gateway_state
   steps:
@@ -75611,7 +75611,7 @@ phases:
       - 006978f'
   - id: adr008.final_verify_gate_retest
     name: ADR-008 final verification gate retest
-    status: claimed
+    status: done
     description: 'Retest gate for the ADR-008 final verification after `adr008.gate_blockers_batched_fix`.
       This supersedes the first historical gate attempt `adr008.final_verify_gate`
       for blocking/progression purposes.
@@ -75743,3 +75743,107 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-25T16:38:28.811204+00:00'
+    done_at: '2026-04-25T16:42:44.863177+00:00'
+    evidence: 'headline: PASS_WITH_DEBT
+
+      proof_gap_status: NONE
+
+      blocking_status: CLOSED
+
+      verdict: PASS
+
+      blockers: []
+
+      orchestrator_action_hint: COMPLETE
+
+
+      ## refs Read Confirmation
+
+      - tests/core/test_adr008_attachment_lifecycle.py — reviewed
+
+      - tests/shell/test_adr008_registry_events.py — reviewed
+
+      - tests/integration/test_adr008_attachment_workflows.py — reviewed
+
+      - src/tela/core/adr008_status.py — reviewed
+
+      - src/tela/shell/adr008_registry_events.py — reviewed
+
+
+      ## Full Test Proof
+
+      Required command family in isolated retest worktree:
+
+      1) `uv run pytest -q` → `1321 passed in 114.95s`
+
+      2) `uv run invar guard --all` → passed, errors=0, warnings only, escape-hatch
+      budgets within limits (`weighted 69/75`, `shell_result 16/17`)
+
+      3) `uv run pytest tests/core/test_adr008_attachment_lifecycle.py tests/shell/test_adr008_registry_events.py
+      tests/shell/test_adr008_connect_survival.py tests/shell/test_adr008_status_cli.py
+      tests/shell/test_adr008_doctor_cli.py tests/integration/test_adr008_attachment_workflows.py
+      tests/shell/test_adr008_docs_parity.py -q` → `94 passed in 4.58s`
+
+
+      ## Blocker Closure Register
+
+      | Blocker | Evidence | Status |
+
+      | --- | --- | --- |
+
+      | B1 OPIFEX pin mismatch block | full pytest completed without vendor parity
+      pin-mismatch block | CLOSED |
+
+      | B2 invar escape-hatch budget | guard all passed with budgets in-policy (69/75,
+      16/17) | CLOSED |
+
+      | B3 static failures (ValidationError / method-assign) | no static blocker surfaced
+      in retest command family; full/focused suites green | CLOSED |
+
+
+      ## ADR-008 Requirement Register
+
+      | Requirement | Evidence/Test | Status |
+
+      | ----------- | ------------- | ------ |
+
+      | No Manager/Supervisor/event bus lifecycle ownership | focused ADR-008 suite
+      green + reviewer audit | PASS |
+
+      | Core purity + contracts/doctests | invar all passed, core ADR-008 tests green
+      | PASS |
+
+      | Shell persistence best-effort + lockfile format unchanged | registry/events
+      tests green and boundary audit pass | PASS |
+
+      | Connect request-level recovery does not exit provider loop | connect survival
+      tests green | PASS |
+
+      | Status/doctor mutation rules explicit | status/doctor ADR-008 tests green
+      | PASS |
+
+      | CLI docs parity with argparse behavior | docs parity tests green | PASS |
+
+      | No local shared-contract redefinition | full suite and parity path no longer
+      blocked; reviewer marked CLOSED | PASS |
+
+
+      ## Boundary Audit
+
+      - Core purity: PASS
+
+      - Shell I/O isolation: PASS
+
+      - CLI wiring in commands: PASS
+
+      - No Manager/Supervisor/event bus: PASS
+
+      - Gateway lockfile unchanged: PASS
+
+      - ../opifex shared contracts unchanged: PASS
+
+
+      ## Gate Decision
+
+      OPEN — all blocker families closed; no unresolved blocker-class proof gaps.
+      Residual warnings are non-blocking debt only.'
