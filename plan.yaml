@@ -77215,7 +77215,7 @@ phases:
       crashes. Product code remained untouched.'
   - id: tela.operator_p1.red_tests.fix_static_quality_authorization_import
     name: Fix red-test static quality and authorization import blockers
-    status: claimed
+    status: done
     description: "Batched remediation for latest red-tests gate blockers B1+B2.\n\n\
       Scope: TESTS ONLY. Do not modify product code or shared contract/runtime files.\n\
       \nBlockers to fix (ALL of these, not just the first):\n- B1: tests-only static-quality\
@@ -77293,6 +77293,16 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T22:49:31.027983+00:00'
+    done_at: '2026-04-25T23:17:31.747593+00:00'
+    evidence: 'Batched tests-only remediation completed for B1+B2. Changes applied
+      to tests/core/test_authorization_explain_red.py, tests/shell/test_adr008_recover_decision_behavior_red.py,
+      and tests/shell/test_operator_remote_diagnostics_red.py. Static blockers removed:
+      `uv run ruff check <affected files>` => All checks passed; `uv run pyright <affected
+      files>` => 0 errors. Authorization red test now uses collection-safe lazy import
+      wrapper, so collection no longer aborts at module import time; runtime ImportError
+      remains as intended expected-red behavioral gap (`uv run pytest tests/core/test_authorization_explain_red.py
+      -q --continue-on-collection-errors` yields runtime failures, not collection
+      crash). Product code unchanged.'
   - id: tela.operator_p1.red_tests.retest_static_quality_authorization_import
     name: Retest red-test static quality and authorization import blockers
     status: pending
