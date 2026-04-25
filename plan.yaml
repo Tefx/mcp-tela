@@ -75957,7 +75957,7 @@ phases:
       \n## Commit hash(es)\n- 5858d75"
   - id: adr008.issue.final_verify
     name: ADR-008 issue cleanup final verification
-    status: pending
+    status: claimed
     description: 'Step type: gate.
 
 
@@ -76010,3 +76010,5 @@ phases:
     depends_on:
     - adr008.issue.invar_warning_cleanup
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-25T17:11:19.535498+00:00'
