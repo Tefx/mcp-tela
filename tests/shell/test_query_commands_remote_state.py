@@ -84,7 +84,7 @@ def test_query_commands_use_remote_status_when_lockfile_present(
     tmp_path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """All query commands must read lockfile and query a live HTTP server."""
+    """Remote query commands probe HTTP; passive status stays observational."""
 
     lockfile_path = tmp_path / "gateway.lock"
     token = "query-token"
@@ -159,7 +159,7 @@ def test_query_commands_use_remote_status_when_lockfile_present(
     assert status_result.is_ok
     assert connections_result.is_ok
     assert audit_result.is_ok
-    assert "uptime: 12.5s" in output
+    assert "No active probe was performed." in output
     assert "bridge_123" in output
     assert "ALLOW read_file (fs) profile=dev" in output
 
@@ -220,20 +220,13 @@ def test_bridge_message_catalog_stubs_cover_required_host_states() -> None:
     assert "timeout-only" in degraded.template_stub
 
 
-@pytest.mark.parametrize(
-    "command",
-    [
-        status_command,
-        connections_command,
-        audit_command,
-    ],
-)
+@pytest.mark.parametrize("command", [connections_command, audit_command])
 def test_query_commands_report_missing_or_stale_lockfile(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
     command,
 ) -> None:
-    """Missing or stale lockfile must return a clear no-running-server error."""
+    """Remote-only query commands require a live discovery lockfile."""
 
     lockfile_path = tmp_path / "gateway.lock"
     monkeypatch.setattr("tela.shell.lockfile.LOCKFILE_PATH", lockfile_path)
@@ -259,7 +252,7 @@ def test_query_commands_report_missing_or_stale_lockfile(
 def test_status_reports_orphaned_serve_processes_when_lockfile_missing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Missing lockfile should surface orphaned serve diagnostics when present."""
+    """Passive status reports absent runtime without remote recovery diagnostics."""
 
     monkeypatch.setattr(
         "tela.commands.remote_state.read_lockfile",
@@ -270,12 +263,9 @@ def test_status_reports_orphaned_serve_processes_when_lockfile_missing(
         lambda: [1543, 2168],
     )
 
-    result = status_command()
+    result = status_command(json_output=True)
 
-    assert result.is_err
-    assert result.error is not None
-    assert "NO_RUNNING_SERVER" in result.error
-    assert "orphaned tela serve processes detected: 1543, 2168" in result.error
+    assert result.is_ok
 
 
 # =============================================================================
@@ -352,7 +342,7 @@ def test_diagnostics_state_warming_to_config_mismatch_via_status_command(
     capsys: pytest.CaptureFixture[str],
     state: str,
 ) -> None:
-    """Status command must surface lifecycle state from GET /status across all diagnostic states.
+    """Status --probe must surface lifecycle state from GET /status.
 
     Regression test for diagnostics coverage: warming, ready, degraded, and config_mismatch
     states must be representable via the status command output.
@@ -373,12 +363,15 @@ def test_diagnostics_state_warming_to_config_mismatch_via_status_command(
 
         monkeypatch.setattr("tela.shell.lockfile.LOCKFILE_PATH", lockfile_path)
 
-        status_result = status_command(json_output=False)
+        status_result = status_command(json_output=False, probe=True)
 
     assert status_result.is_ok
     output = capsys.readouterr().out
-    # Status output must contain state information
-    assert state.upper() in output.upper() or "uptime" in output.lower()
+    expected_state = {
+        "warming": "starting",
+        "config_mismatch": "degraded",
+    }.get(state, state)
+    assert expected_state in output.lower()
 
 
 @pytest.mark.parametrize(
@@ -396,7 +389,7 @@ def test_diagnostics_state_warming_to_config_mismatch_via_status_json(
     capsys: pytest.CaptureFixture[str],
     state: str,
 ) -> None:
-    """Status JSON output must include lifecycle state fact across all diagnostic states.
+    """Status --probe JSON output must include lifecycle state facts.
 
     Regression test for diagnostics coverage: status.json surface must include
     the state field for all lifecycle states.
@@ -417,7 +410,7 @@ def test_diagnostics_state_warming_to_config_mismatch_via_status_json(
 
         monkeypatch.setattr("tela.shell.lockfile.LOCKFILE_PATH", lockfile_path)
 
-        status_result = status_command(json_output=True)
+        status_result = status_command(json_output=True, probe=True)
 
     assert status_result.is_ok
     output = capsys.readouterr().out
@@ -456,7 +449,7 @@ def test_degraded_state_does_not_recommend_timeout_only_workaround(
 
         monkeypatch.setattr("tela.shell.lockfile.LOCKFILE_PATH", lockfile_path)
 
-        status_result = status_command(json_output=False)
+        status_result = status_command(json_output=False, probe=True)
 
     assert status_result.is_ok
     output = capsys.readouterr().out
@@ -490,7 +483,7 @@ def test_diagnostic_surfaces_cover_connect_and_serve_stderr(
     tmp_path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Connect and serve diagnostics must share the same fact model as status surfaces.
+    """Connect and serve diagnostics must share the same fact model as status probe surfaces.
 
     Regression test for surface contract: connect.stderr and serve.stderr must
     use the same fact fields as status.human and status.json.
@@ -511,13 +504,13 @@ def test_diagnostic_surfaces_cover_connect_and_serve_stderr(
 
         monkeypatch.setattr("tela.shell.lockfile.LOCKFILE_PATH", lockfile_path)
 
-        # Status command (one consumer surface)
-        status_result = status_command(json_output=False)
+        # Status probe command (one consumer surface)
+        status_result = status_command(json_output=False, probe=True)
 
     assert status_result.is_ok
     output = capsys.readouterr().out
-    # Status output must work (surface is reachable)
-    assert "uptime" in output.lower() or "server" in output.lower()
+    assert "shared runtime" in output.lower()
+    assert "ready" in output.lower()
 
 
 def test_message_catalog_stubs_define_degraded_without_timeout_only_advice() -> None:

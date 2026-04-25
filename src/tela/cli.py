@@ -149,6 +149,27 @@ def main(argv: list[str] | None = None) -> int:
         default=False,
         help="Output in JSON format",
     )
+    status_parser.add_argument(
+        "--probe",
+        dest="probe",
+        action="store_true",
+        default=False,
+        help="Actively probe runtime endpoint (mutually exclusive with --clients)",
+    )
+    status_parser.add_argument(
+        "--clients",
+        dest="clients",
+        action="store_true",
+        default=False,
+        help="List client attachments from registry (mutually exclusive with --probe)",
+    )
+    status_parser.add_argument(
+        "--probe-timeout",
+        dest="probe_timeout",
+        type=float,
+        default=None,
+        help="Timeout for --probe in seconds (default: 5.0, requires --probe)",
+    )
 
     # --- profiles ---
     profiles_parser = subparsers.add_parser("profiles", help="List configured profiles")
@@ -213,7 +234,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.command == "status":
-        status_result = status_command(json_output=args.json_output)
+        status_result = status_command(
+            json_output=args.json_output,
+            probe=args.probe,
+            clients=args.clients,
+            probe_timeout=args.probe_timeout,
+        )
         if status_result.is_err:
             print(f"error: {status_result.error}", file=sys.stderr)
             return 1
