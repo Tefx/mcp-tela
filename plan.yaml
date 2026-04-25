@@ -77955,6 +77955,7 @@ phases:
     - tela.operator_p1.surfaces.diagnostics_readonly
     - tela.operator_p1.surfaces.recover_behavior
     - tela.operator_p1.surfaces.authorization_explain
+    - tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
     agent: wiring-auditor
   - id: tela.operator_p1.surfaces.gate
     name: Gate operator P1 surface implementation
