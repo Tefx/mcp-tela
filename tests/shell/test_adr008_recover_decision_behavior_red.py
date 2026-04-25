@@ -50,7 +50,7 @@ def test_handle_status_does_not_recover_doctor_runtime(monkeypatch: pytest.Monke
         _fake_recover,
     )
 
-    result = http_routes.handle_status("valid-token", "valid-token")
+    http_routes.handle_status("valid-token", "valid-token")
 
     assert not called, "GET /status must not invoke doctor recovery"
 
@@ -137,7 +137,7 @@ def test_remote_recover_returns_documented_rejection_if_present() -> None:
         assert (
             isinstance(result, Result)
             and result.is_err
-            and "REMOTE_RECOVERY_NOT_ALLOWED" in result.error
+            and "REMOTE_RECOVERY_NOT_ALLOWED" in (result.error or "")
         ), (
             "Remote recovery surface must return documented rejection "
             "REMOTE_RECOVERY_NOT_ALLOWED per ADR-008 Branch B."

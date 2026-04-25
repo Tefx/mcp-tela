@@ -11,12 +11,20 @@ token binding).  The downstream implementation step is
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 import pytest
 
 # RED trigger: this import will raise ImportError until the surface is
 # implemented, proving the gap exists.
-from tela.core.enforcement import enforce, explain_authorization
+from tela.core.enforcement import enforce
+
+
+def _explain_authorization(*args: object, **kwargs: object) -> "dict[str, object]":
+    """Lazy import so tests collect and fail behaviorally at runtime."""
+    from tela.core.enforcement import explain_authorization as _ea  # type: ignore[import-not-found]
+    return cast("dict[str, object]", _ea(*args, **kwargs))  # type: ignore[no-any-return]
+
 
 from tela.core.models import (
     EnforcementResult,
@@ -259,7 +267,7 @@ def test_explain_per_tool_outcomes(
     expected: _Expectation,
 ) -> None:
     """explain_authorization must return correct visible/hidden/allowed/denied."""
-    result = explain_authorization(
+    result = _explain_authorization(
         tool_name=tool.name,
         tool=tool,
         profile=profile,
@@ -279,7 +287,7 @@ def test_explain_per_tool_outcomes(
         result["denied"] == expected.denied
     ), f"denied mismatch for {tool.name} under {profile.name}"
     if expected.reason_contains:
-        reason = result.get("reason") or ""
+        reason = cast(str, result.get("reason") or "")
         assert expected.reason_contains in reason, (
             f"reason should mention {expected.reason_contains!r}, got {reason!r}"
         )
@@ -308,7 +316,7 @@ def test_explain_token_binding_outcome(
     """When token_result is DENY every tool must be denied and hidden."""
     profile = ProfileConfig(name="dev", capabilities={"fs": Posture.READ_WRITE})
     tool = TOOLS["fs_read"]
-    result = explain_authorization(
+    result = _explain_authorization(
         tool_name=tool.name,
         tool=tool,
         profile=profile,
@@ -341,7 +349,7 @@ def test_explain_builtin_profile_coverage() -> None:
     # visible/hidden/allowed/denied outcome.
     for profile in BUILTIN_PROFILES.values():
         for tool in tool_space:
-            result = explain_authorization(
+            result = _explain_authorization(
                 tool_name=tool.name,
                 tool=tool,
                 profile=profile,
@@ -388,7 +396,7 @@ def test_explain_is_diagnostic_no_mutation() -> None:
     before = enforce("read_file", tool, profile, _ALLOW, Posture.NONE)
 
     # Explain call (should be pure / no side effects)
-    _ = explain_authorization(
+    _ = _explain_authorization(
         tool_name="read_file",
         tool=tool,
         profile=profile,
@@ -438,7 +446,7 @@ def test_explain_visible_matches_filter_tools_for_profile() -> None:
     for server_name, tools in all_tools.items():
         default_posture = server_defaults[server_name]
         for tool in tools:
-            result = explain_authorization(
+            result = _explain_authorization(
                 tool_name=tool.name,
                 tool=tool,
                 profile=profile,
@@ -493,7 +501,7 @@ def test_explain_all_posture_pairs(
     """Cover the full posture-comparison matrix."""
     profile = ProfileConfig(name="p", capabilities={"fs": ceiling})
     tool = _tool("t", "fs", tool_posture)
-    result = explain_authorization(
+    result = _explain_authorization(
         tool_name="t",
         tool=tool,
         profile=profile,

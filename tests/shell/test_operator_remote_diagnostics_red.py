@@ -377,6 +377,9 @@ class TestRemoteClientSurfaceIsAbsent:
         if before_config.value is None:
             assert after_config.value is None, "Clients endpoint mutated runtime config from None"
         else:
+            assert after_config.value is not None, (
+                "Clients endpoint must not mutate runtime config"
+            )
             assert (
                 before_config.value.model_dump_json() == after_config.value.model_dump_json()
             ), "Clients endpoint must not mutate runtime config"
