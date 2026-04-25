@@ -74552,3 +74552,46 @@ phases:
     depends_on:
     - adr008.status_cli_surfaces
     agent: python-senior-tacit
+  - id: adr008.workflow_docs_parity
+    name: Workflow regressions and docs parity
+    status: pending
+    description: 'Add ADR-008 workflow tests and update docs parity. Required workflow
+      proofs: serve idle shutdown does not terminate connect; next request after idle
+      recovers runtime or fails only that request while provider loop remains alive;
+      lockfile before readiness does not count as ready; recovery budgets do not accumulate
+      across unrelated events; multiple client attachments share one runtime and appear
+      in status --clients; transport EOF exits connect and records HOST_TRANSPORT_CLOSED;
+      status --probe does not cold-start absent runtime; doctor does not mutate without
+      --recover; doctor --recover may cold-start and records recovery events. Update
+      USAGE/INTERFACES/DESIGN to client-neutral attachments. Do not edit ../opifex
+      canonical contracts.'
+    verification: 'Expected red: `uv run pytest tests/integration/test_adr008_attachment_workflows.py
+      tests/shell/test_adr008_docs_parity.py -q`. Green: `uv run pytest tests/integration/test_adr008_attachment_workflows.py
+      tests/shell/test_adr008_docs_parity.py tests/integration/test_end_to_end.py
+      tests/shell/test_repo_local_ci_gate.py -q` and `uv run invar guard --changed`.'
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key passage or NOT READ reason
+
+
+      ## Expected-Red Proof
+
+      Paste failing workflow/parity output before implementation.
+
+
+      ## Green Proof
+
+      Paste targeted pytest and invar guard output.
+
+
+      ## Workflow Matrix
+
+      Map each ADR workflow expectation to a test name and result.
+
+
+      ## Docs Parity Proof
+
+      Paste parity scan/test output and list updated doc sections.'
+    depends_on:
+    - adr008.doctor_cli_recovery
+    agent: python-senior-tacit
