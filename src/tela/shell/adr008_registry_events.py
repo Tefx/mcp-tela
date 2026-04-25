@@ -219,12 +219,10 @@ def append_runtime_event(event: RuntimeEvent) -> Result[None, str]:
         failures are represented in the returned ``Result``.
     """
 
-    payload_result = _runtime_event_jsonl(event)
+    payload_result = _runtime_event_payload(event)
     if payload_result.value is None:
         return Result(error=payload_result.error or "RUNTIME_EVENT_SERIALIZE_ERROR")
     payload = payload_result.value
-    if len(payload.encode("utf-8")) > MAX_RUNTIME_EVENT_BYTES:
-        return Result(error="RUNTIME_EVENT_TOO_LARGE: event exceeds 16 KiB")
 
     path_result = runtime_events_path()
     if path_result.value is None:
@@ -354,11 +352,24 @@ def _replace_attachment_registry_under_lock(
 
 
 def _runtime_event_jsonl(event: RuntimeEvent) -> Result[str, str]:
-    return Result(value=json.dumps(
-        event.model_dump(mode="json"),
-        separators=(",", ":"),
-        sort_keys=True,
-    ) + "\n")
+    return Result(
+        value=json.dumps(
+            event.model_dump(mode="json"),
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        + "\n"
+    )
+
+
+def _runtime_event_payload(event: RuntimeEvent) -> Result[str, str]:
+    payload_result = _runtime_event_jsonl(event)
+    if payload_result.value is None:
+        return Result(error=payload_result.error or "RUNTIME_EVENT_SERIALIZE_ERROR")
+    payload = payload_result.value
+    if len(payload.encode("utf-8")) > MAX_RUNTIME_EVENT_BYTES:
+        return Result(error="RUNTIME_EVENT_TOO_LARGE: event exceeds 16 KiB")
+    return Result(value=payload)
 
 
 def _ensure_tela_directory(path: Path) -> None:
