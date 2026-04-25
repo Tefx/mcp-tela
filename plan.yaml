@@ -76795,7 +76795,7 @@ phases:
     agent: gate-reviewer-tacit
   - id: tela.operator_p1.red_tests.diagnostics_readonly
     name: Red test read-only probe and client attachment diagnostics
-    status: pending
+    status: claimed
     description: 'Write behavior-defining tests only; do not change product code.
       Add expected-red tests for remote operator diagnostics equivalent to `tela status
       --probe` and `tela status --clients`.
@@ -76877,6 +76877,8 @@ phases:
 
       - Downstream implementation owner: tela.operator_p1.surfaces.diagnostics_readonly'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-25T19:36:58.175407+00:00'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
