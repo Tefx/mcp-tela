@@ -75847,3 +75847,8 @@ phases:
 
       OPEN — all blocker families closed; no unresolved blocker-class proof gaps.
       Residual warnings are non-blocking debt only.'
+- id: adr008_issue_cleanup
+  name: ADR-008 Issue Cleanup
+  status: pending
+  depends_on:
+  - adr008_client_attachment_lifecycle
