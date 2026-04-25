@@ -76765,7 +76765,7 @@ phases:
       were not modified.'
   - id: tela.operator_p1.red_tests.gate
     name: Gate expected-red test coverage
-    status: pending
+    status: claimed
     description: 'Gate review for red-tests phase. Confirm behavior-defining tests
       were added before implementation, are scoped to tests/fixtures only, have real
       expected-red output, and cover all five P1 targets.
@@ -76821,6 +76821,8 @@ phases:
     - tela.operator_p1.red_tests.recover_decision_behavior
     - tela.operator_p1.red_tests.authorization_explain
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-25T21:59:46.086662+00:00'
   - id: tela.operator_p1.red_tests.diagnostics_readonly
     name: Red test read-only probe and client attachment diagnostics
     status: done
