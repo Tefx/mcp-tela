@@ -74793,7 +74793,7 @@ phases:
       - No unbounded retry loop introduced.'
   - id: adr008.status_cli_surfaces
     name: Status CLI passive, probe, and clients surfaces
-    status: pending
+    status: claimed
     description: Implement ADR-008 status command surfaces. tela status remains passive
       and prints required observation cue. tela status --probe actively checks current
       lockfile endpoint only; no cold-start, no recovery. tela status --clients lists
@@ -74835,6 +74835,8 @@ phases:
     depends_on:
     - adr008.connect_survival_events
     agent: python-executor
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T15:51:36.719832+00:00'
   - id: adr008.doctor_cli_recovery
     name: Doctor CLI diagnostics and explicit recovery
     status: pending
