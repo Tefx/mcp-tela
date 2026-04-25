@@ -76425,3 +76425,50 @@ phases:
     depends_on:
     - tela.operator_p1.scope_decision.authority_and_source_discovery
     agent: minimalist-architect-tacit
+  - id: tela.operator_p1.scope_decision.gate
+    name: Gate scope decision completeness
+    status: pending
+    description: 'Gate review for the operator P1 scope decision phase. Verify the
+      P1 checklist, source-discovery map, and recover exposure decision are complete
+      before any red tests or implementation planning proceeds.
+
+
+      review_depth: STANDARD
+
+      review_depth_rationale: gateway/profile authorization, audit, diagnostics, and
+      recovery are owner surfaces with security/runtime implications.
+
+
+      Independence: gate-reviewer-tacit is independent of the planning agents.'
+    verification: Phase-check protecting downstream red_tests/surfaces/gate phases.
+      Confirm every P1 target has a named scope outcome, source owner, and non-goal
+      guardrail; block if recover branch is not selected or if any decision adds RBAC/passive
+      recovery/local contract reinterpretation.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - P1 checklist complete: yes/no
+
+      - Recover decision selected: A remote explicit mutation | B CLI-only | MISSING
+
+      - Source discovery adequate: yes/no
+
+      - Non-goals preserved: no RBAC, no PersonaSpec/JobSpec/CapabilityToken changes,
+      no passive recovery, /status.audit_entries remains recent summary
+
+      - Blockers: <list or none>
+
+      - Gate decision: OPEN | BLOCKED'
+    depends_on:
+    - tela.operator_p1.scope_decision.authority_and_source_discovery
+    - tela.operator_p1.scope_decision.recover_exposure_decision
+    agent: gate-reviewer-tacit
