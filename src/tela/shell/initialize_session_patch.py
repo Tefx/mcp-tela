@@ -72,5 +72,5 @@ def install_initialize_session_patch() -> None:
     global _PATCH_INSTALLED
     if _PATCH_INSTALLED:
         return
-    ServerSession._received_request = cast(Any, _patched_received_request)
+    setattr(ServerSession, "_received_request", cast(Any, _patched_received_request))
     _PATCH_INSTALLED = True

@@ -935,10 +935,14 @@ def forward_stdio_http(
         framed_message = message_result.value
         if framed_message is None:
             return Result(value=None)
-        message = inject_bridge_connection_id(
+        bridge_payload_result = inject_bridge_connection_id(
             framed_message.payload,
             connection_id=bridge_connection_id,
         )
+        if bridge_payload_result.is_err:
+            return Result(error=bridge_payload_result.error)
+        assert bridge_payload_result.value is not None
+        message = bridge_payload_result.value
         message_method = extract_jsonrpc_method(message)
         if message_method == "initialize":
             initialize_payload = message

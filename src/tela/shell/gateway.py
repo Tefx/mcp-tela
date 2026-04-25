@@ -21,7 +21,7 @@ from typing import Awaitable, Callable, cast
 
 from mcp import types as mcp_types
 from mcp.server.fastmcp import FastMCP
-from pydantic import AnyUrl
+from pydantic import AnyUrl, ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -81,16 +81,15 @@ _TOKEN_MODE_FORBIDDEN_CONNECT_KEYS = frozenset(
 _ERROR_CODE_PATTERN = re.compile(r"^[a-z_]+$|^[A-Z_]+$")
 
 
-# @invar:allow shell_result: pure helper extracts stable audit classification for the builtin MCP boundary.
-def _builtin_tool_error_details(exc: Exception) -> tuple[str, str]:
+def _builtin_tool_error_details(exc: Exception) -> Result[tuple[str, str], str]:
     """Extract a stable audit error code from a builtin-tool exception."""
 
     message = str(exc)
     if ": " in message:
         maybe_code, detail = message.split(": ", 1)
         if maybe_code and _ERROR_CODE_PATTERN.fullmatch(maybe_code) is not None:
-            return maybe_code, detail
-    return "BUILTIN_TOOL_ERROR", message
+            return Result(value=(maybe_code, detail))
+    return Result(value=("BUILTIN_TOOL_ERROR", message))
 
 
 def _validate_builtin_arguments(
@@ -175,25 +174,26 @@ def _connect_handler(
     return Result(value=dict(connect_result.value))
 
 
-# @invar:allow shell_result: pure helper constructs the raw MCP result required by the builtin MCP boundary.
 def _build_builtin_json_result(
     tool_name: str,
     payload: list[dict[str, object]],
-) -> mcp_types.CallToolResult:
+) -> Result[mcp_types.CallToolResult, str]:
     """Return exact JSON payload for builtin list tools."""
 
-    return mcp_types.CallToolResult(
-        content=[
-            mcp_types.EmbeddedResource(
-                type="resource",
-                resource=mcp_types.TextResourceContents(
-                    uri=AnyUrl(f"tela://builtin/{tool_name}"),
-                    mimeType="application/json",
-                    text=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
-                ),
-            )
-        ],
-        isError=False,
+    return Result(
+        value=mcp_types.CallToolResult(
+            content=[
+                mcp_types.EmbeddedResource(
+                    type="resource",
+                    resource=mcp_types.TextResourceContents(
+                        uri=AnyUrl(f"tela://builtin/{tool_name}"),
+                        mimeType="application/json",
+                        text=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+                    ),
+                )
+            ],
+            isError=False,
+        )
     )
 
 
@@ -775,10 +775,18 @@ async def _handle_builtin_call(
         if audit_entry_result.is_ok and audit_entry_result.value is not None:
             await audit_write(audit_entry_result.value)
 
-        return _build_builtin_json_result(tool_name, call_result)
+        builtin_json_result = _build_builtin_json_result(tool_name, call_result)
+        if builtin_json_result.is_err:
+            raise RuntimeError(builtin_json_result.error)
+        assert builtin_json_result.value is not None
+        return builtin_json_result.value
     except Exception as e:
         latency_ms = (time.time() - start_time) * 1000
-        error_code, error_message = _builtin_tool_error_details(e)
+        error_details_result = _builtin_tool_error_details(e)
+        if error_details_result.is_err:
+            raise RuntimeError(error_details_result.error) from e
+        assert error_details_result.value is not None
+        error_code, error_message = error_details_result.value
         audit_entry_result = build_audit_entry(
             level=AuditLevel.L2,
             connection=connection,

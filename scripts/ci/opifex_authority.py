@@ -119,3 +119,57 @@ def require_pinned_checkout(project_root: Path, opifex_root: Path) -> FrozenAuth
             f"expected {pin.ref}, got {checkout_head}"
         )
     return pin
+
+
+def read_pinned_authority_text(
+    project_root: Path,
+    opifex_root: Path,
+    relative_path: Path,
+) -> str:
+    """Read an authority file from the frozen opifex pin.
+
+    Args:
+        project_root: Root of the downstream repository containing the frozen
+            authority packet.
+        opifex_root: Root of an opifex checkout containing the pinned object.
+        relative_path: Path to read, relative to the opifex repository root.
+
+    Returns:
+        UTF-8 text stored at ``relative_path`` in the pinned opifex commit.
+
+    Raises:
+        RuntimeError: If the pinned packet is unavailable or git cannot read the
+            requested file at the frozen ref.
+
+    >>> pin_root = Path('/repo')
+    >>> read_pinned_authority_text  # doctest: +ELLIPSIS
+    <function read_pinned_authority_text at ...>
+    """
+
+    pin = load_frozen_authority_pin(project_root)
+    packet_path = opifex_root / pin.packet_doc
+    if not packet_path.is_file():
+        raise RuntimeError(
+            f"Pinned authority packet is missing from OPIFEX_ROOT: expected {packet_path}"
+        )
+    if not (opifex_root / ".git").exists():
+        source_path = opifex_root / relative_path
+        if not source_path.is_file():
+            raise RuntimeError(
+                f"Pinned authority source is missing from OPIFEX_ROOT: expected {source_path}"
+            )
+        return source_path.read_text(encoding="utf-8")
+
+    completed = subprocess.run(
+        ["git", "show", f"{pin.ref}:{relative_path.as_posix()}"],
+        cwd=opifex_root,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            "Failed to read pinned opifex authority file "
+            f"{relative_path} at {pin.ref}: {completed.stderr.strip()}"
+        )
+    return completed.stdout

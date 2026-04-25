@@ -7,34 +7,35 @@ import json
 from tela.shell.result import Result
 
 
-# @invar:allow shell_result: pure payload rewrite helper used inside bridge forwarding.
 # @shell_orchestration: bridge payload adaptation is transport glue at the stdio/HTTP boundary.
 # @shell_complexity: initialize payload rewrite branches on malformed/non-initialize JSON.
-def inject_bridge_connection_id(payload: bytes, *, connection_id: str | None) -> bytes:
+def inject_bridge_connection_id(
+    payload: bytes, *, connection_id: str | None
+) -> Result[bytes, str]:
     """Attach bridge connection identity to MCP initialize clientInfo."""
     if connection_id is None:
-        return payload
+        return Result(value=payload)
     try:
         message = json.loads(payload)
     except (TypeError, ValueError):
-        return payload
+        return Result(value=payload)
     if not isinstance(message, dict) or message.get("method") != "initialize":
-        return payload
+        return Result(value=payload)
     params = message.get("params")
     if not isinstance(params, dict):
-        return payload
+        return Result(value=payload)
     client_info = params.get("clientInfo")
     if not isinstance(client_info, dict):
-        return payload
+        return Result(value=payload)
     if client_info.get("tela_bridge_connection_id") == connection_id:
-        return payload
+        return Result(value=payload)
     enriched_message = dict(message)
     enriched_params = dict(params)
     enriched_client_info = dict(client_info)
     enriched_client_info["tela_bridge_connection_id"] = connection_id
     enriched_params["clientInfo"] = enriched_client_info
     enriched_message["params"] = enriched_params
-    return json.dumps(enriched_message).encode("utf-8")
+    return Result(value=json.dumps(enriched_message).encode("utf-8"))
 
 
 def extract_response_messages(

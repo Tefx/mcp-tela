@@ -34,6 +34,7 @@ from tela.core.adr008_status import (
     make_status_recommendation,
 )
 from tela.commands.http_client import retry_http_request
+from tela.commands.remote_state import query_remote_state
 from tela.core.models import LockfileData
 
 # ADR-008 default probe timeout
@@ -147,6 +148,13 @@ def _run_status_command(
     if discovery_result.is_err or discovery_result.value is None:
         return Result(error=discovery_result.error or "STATUS_DISCOVERY_ERROR")
     discovery = discovery_result.value
+    if not json_output and not probe and not discovery.lockfile_present:
+        return Result(
+            error=(
+                "NO_RUNNING_SERVER: no running tela server found via "
+                "~/.tela/gateway.lock (lockfile unavailable)"
+            )
+        )
     attachments_result = _read_status_attachments()
     if attachments_result.is_err:
         registry_error = attachments_result.error
@@ -207,8 +215,13 @@ def _run_status_command(
         },
     )
 
+    remote_payload_result = _read_remote_status_payload(discovery)
+    if remote_payload_result.is_err:
+        return Result(error=remote_payload_result.error)
+    remote_payload = remote_payload_result.value
+
     if json_output:
-        _print_status_json(status_result)
+        _print_status_json(status_result, remote_payload)
         return Result(value=None)
 
     _print_status_human(
@@ -219,8 +232,35 @@ def _run_status_command(
         recoverability_state=recoverability_state,
         last_error=last_error,
         recommendation=recommendation,
+        remote_payload=remote_payload,
     )
     return Result(value=None)
+
+
+def _read_remote_status_payload(
+    discovery: StatusDiscovery,
+) -> Result[dict[str, object] | None, str]:
+    """Read legacy runtime status facts when a live lockfile endpoint exists.
+
+    Args:
+        discovery: Passive lockfile discovery facts.
+
+    Returns:
+        Result containing runtime status payload when the lockfile endpoint
+        responds, otherwise ``None`` so ADR-008 passive status remains
+        non-failing for stale or not-yet-ready lockfiles.
+    """
+
+    if not discovery.lockfile_present or discovery.lockfile_stale:
+        return Result(value=None)
+    remote_result = query_remote_state()
+    if remote_result.is_err or remote_result.value is None:
+        return Result(value=None)
+    remote = remote_result.value
+    payload: dict[str, object] = remote.status.model_dump()
+    payload["connections"] = [conn.model_dump() for conn in remote.connections]
+    payload["audit_entries"] = [entry.model_dump() for entry in remote.audit_entries]
+    return Result(value=payload)
 
 
 # @shell_complexity: Discovery must classify missing, present, stale, and PID probe outcomes without mutating state.
@@ -335,7 +375,10 @@ def _probe_status_runtime(
     )
 
 
-def _print_status_json(status_result: ADR008StatusResult) -> None:
+def _print_status_json(
+    status_result: ADR008StatusResult,
+    remote_payload: dict[str, object] | None,
+) -> None:
     """Print ADR-008 JSON status blocks."""
 
     output_data = {
@@ -346,6 +389,8 @@ def _print_status_json(status_result: ADR008StatusResult) -> None:
         "shared_runtime": status_result.shared_runtime,
         "recoverability": status_result.recoverability,
     }
+    if remote_payload is not None:
+        output_data.update(remote_payload)
     print(json.dumps(output_data, indent=2))
 
 
@@ -357,6 +402,7 @@ def _print_status_human(
     recoverability_state: str,
     last_error: str | None,
     recommendation: str,
+    remote_payload: dict[str, object] | None,
 ) -> None:
     """Print human-readable ADR-008 status diagnostics."""
 
@@ -403,3 +449,10 @@ def _print_status_human(
                     f"{att['runtime_state']:<15} {att['recoverability']:<15} "
                     f"{att['display_state']:<15} {att['last_heartbeat']}"
                 )
+
+    if remote_payload is not None:
+        print()
+        print(f"uptime: {remote_payload.get('uptime_seconds', 0.0)}s")
+        print(f"servers: {remote_payload.get('server_count', 0)}")
+        print(f"active connections: {remote_payload.get('active_connections', 0)}")
+        print(f"profiles: {remote_payload.get('profile_count', 0)}")

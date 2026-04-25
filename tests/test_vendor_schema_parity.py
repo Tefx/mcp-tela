@@ -22,7 +22,7 @@ if str(SCRIPT_CI_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPT_CI_ROOT))
 
 from opifex_authority import (  # noqa: E402 - tests load sibling CI helper from repository path
-    require_pinned_checkout,
+    read_pinned_authority_text,
     resolve_opifex_root,
 )
 
@@ -40,7 +40,7 @@ def _resolve_opifex_contracts_root() -> Path:
 
     Raises:
         FileNotFoundError: If no pinned authority checkout is available.
-        RuntimeError: If the checkout is not pinned to the recorded ref.
+        RuntimeError: If pinned authority content is unavailable.
     """
 
     opifex_root = resolve_opifex_root(
@@ -51,7 +51,6 @@ def _resolve_opifex_contracts_root() -> Path:
             Path("design/cross-repo-followup-packet.md"),
         ),
     )
-    require_pinned_checkout(PROJECT_ROOT, opifex_root)
     return opifex_root / "contracts"
 
 
@@ -102,6 +101,26 @@ def _get_opifex_source(filename: str) -> Path | None:
     return source_path if source_path.exists() else None
 
 
+def _load_pinned_opifex_json(filename: str) -> dict[str, object]:
+    """Load schema JSON from the frozen opifex authority ref.
+
+    Args:
+        filename: Schema filename under ``contracts/``.
+
+    Returns:
+        Parsed JSON mapping from the pinned opifex commit.
+    """
+
+    text = read_pinned_authority_text(
+        PROJECT_ROOT,
+        OPIFEX_ROOT.parent,
+        Path("contracts") / filename,
+    )
+    payload = json.loads(text)
+    assert isinstance(payload, dict)
+    return payload
+
+
 SCHEMA_MIRRORS = [
     "capability_token.schema.json",
     "tela_profile_list.schema.json",
@@ -141,7 +160,7 @@ class TestVendorMirrorParity:
         assert source is not None, f"No opifex source for {schema_filename}"
 
         mirror_content = _load_json(mirror)
-        source_content = _load_json(source)
+        source_content = _load_pinned_opifex_json(schema_filename)
         mirror_stripped = {key: value for key, value in mirror_content.items() if key != "$comment"}
 
         assert mirror_stripped == source_content, (

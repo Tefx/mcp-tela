@@ -778,7 +778,9 @@ def test_inject_bridge_connection_id_enriches_initialize_client_info() -> None:
         connection_id="bridge_abc",
     )
 
-    message = json.loads(result)
+    assert result.is_ok
+    assert result.value is not None
+    message = json.loads(result.value)
     assert message["params"]["clientInfo"]["tela_bridge_connection_id"] == "bridge_abc"
     assert message["params"]["clientInfo"]["name"] == "probe"
 
@@ -793,7 +795,8 @@ def test_inject_bridge_connection_id_leaves_non_initialize_unchanged() -> None:
         connection_id="bridge_abc",
     )
 
-    assert result == payload
+    assert result.is_ok
+    assert result.value == payload
 
 
 def test_read_framed_message_accepts_content_length_frames() -> None:
