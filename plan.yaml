@@ -75611,7 +75611,7 @@ phases:
       - 006978f'
   - id: adr008.final_verify_gate_retest
     name: ADR-008 final verification gate retest
-    status: pending
+    status: claimed
     description: 'Retest gate for the ADR-008 final verification after `adr008.gate_blockers_batched_fix`.
       This supersedes the first historical gate attempt `adr008.final_verify_gate`
       for blocking/progression purposes.
@@ -75741,3 +75741,5 @@ phases:
     depends_on:
     - adr008.gate_blockers_batched_fix
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-25T16:38:28.811204+00:00'
