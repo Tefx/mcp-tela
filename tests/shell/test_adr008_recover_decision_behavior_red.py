@@ -225,12 +225,7 @@ def test_doctor_with_recover_is_mutation(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 class TestDocsStateCliOnlyRecovery:
-    """Expected-red: documentation must explicitly encode CLI-only recovery."""
-
-    pytestmark = pytest.mark.xfail(
-        reason="Docs not yet updated to state CLI-only recovery per ADR-008 Branch B",
-        strict=True,
-    )
+    """Documentation must explicitly encode CLI-only recovery."""
 
     def test_interfaces_doc_states_cli_only_recovery(self) -> None:
         """docs/INTERFACES.md must state that remote recovery is absent or rejected."""

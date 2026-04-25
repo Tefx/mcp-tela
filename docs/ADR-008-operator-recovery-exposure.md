@@ -17,7 +17,7 @@ The relevant boundary is the HTTP/operator surface in `docs/INTERFACES.md` §7.2
 
 ## Decision
 
-Choose **B: CLI-only recovery**.
+Choose **Branch B: CLI-only recovery**.
 
 `tela doctor --recover` remains the only operator recovery mutation path. Remote HTTP/MCP operator clients must either have no recovery endpoint/tool or receive a documented rejection from any attempted remote recovery surface. A later implementation step must add tests proving the remote surface is absent or rejected.
 

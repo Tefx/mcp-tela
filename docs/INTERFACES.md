@@ -36,7 +36,7 @@ visible with `tela status --clients`.
 `tela serve` is the server entry point (HTTP gateway).
 `tela stop` is the local operator stop surface (lockfile discovery + SIGTERM + bounded exit wait + lockfile cleanup).
 `tela status --probe` actively checks only the current lockfile endpoint and does not cold-start an absent runtime.
-`tela doctor` is passive without `--recover`; `tela doctor --recover` may mutate by probing, cleaning stale discovery, cold-starting, and appending recovery diagnostics.
+CLI-only recovery is the operator recovery posture: `tela doctor` is passive without `--recover`, and `tela doctor --recover` is the only recovery mutation path. Remote recovery is absent; if a remote recovery surface is ever introduced by mistake, it must reject explicitly with `REMOTE_RECOVERY_NOT_ALLOWED` rather than performing recovery.
 Query commands (`status`, `connections`, `audit`) discover the running server via
 `~/.tela/gateway.lock` and query over HTTP. Lockfile presence does not imply readiness; runtime readiness belongs to `GET /status` and shared runtime state.
 
