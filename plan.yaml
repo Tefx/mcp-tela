@@ -75367,3 +75367,136 @@ phases:
     depends_on:
     - adr008.workflow_docs_parity
     agent: gate-reviewer-tacit
+  - id: adr008.gate_blockers_batched_fix
+    name: ADR-008 batched final-gate blocker fix
+    status: pending
+    description: "Fix ALL blockers from the superseded first ADR-008 final verification\
+      \ gate attempt. This is one batched remediation step; do not fix only the first\
+      \ failure family.\n\nwork_type: defect_repair\nstep_type: implementation\nsymbolic_testing:\
+      \ true\n\n## refs Read Confirmation (MANDATORY)\nBefore changing code/tests,\
+      \ read the relevant failing tests, affected shell modules, ADR-008/docs touched\
+      \ by this phase, and canonical shared-surface inputs if shared contract behavior\
+      \ is involved. Evidence must cite key passages or mark NOT READ with reason.\n\
+      \n## Blocker Families to Fix (ALL REQUIRED)\n\n### B1: Full pytest blocked by\
+      \ OPIFEX_ROOT pinned authority mismatch\n- Observed blocker: `uv run pytest\
+      \ -q` is blocked by authority mismatch in `tests/test_vendor_schema_parity.py`.\n\
+      - Scope: resolve the pinned OPIFEX_ROOT/canonical-authority behavior so the\
+      \ parity test checks the intended authoritative source without inventing local\
+      \ shared-field interpretations or accepting malformed shared input.\n- Required\
+      \ proof: expected-red or reproduced failing pytest output before fix; after\
+      \ fix, focused parity test and full pytest command family progress without this\
+      \ blocker.\n- Guardrail: Do not weaken shared-surface parity, skip canonical\
+      \ checks, or add compatibility aliases on shared surfaces.\n\n### B2: Invar\
+      \ escape-hatch budgets exceeded\n- Observed blocker: `uv run invar guard --all`\
+      \ fails escape-hatch budgets: weighted 78/75 and shell_result 19/17.\n- Scope:\
+      \ reduce or justify/remove stale escape hatches enough to satisfy the authoritative\
+      \ guard budgets while preserving required shell Result discipline and Core contract\
+      \ rules.\n- Required proof: reproduced budget failure before fix; after fix,\
+      \ guard output showing weighted <=75 and shell_result <=17.\n- Guardrail: Do\
+      \ not hide violations with new broad escape hatches; prefer real cleanup or\
+      \ narrowly justified existing escape reductions.\n\n### B3: Static failures\
+      \ in shell modules\n- Observed blockers:\n  - `src/tela/shell/gateway.py`: undefined\
+      \ `ValidationError`.\n  - `src/tela/shell/initialize_session_patch.py`: method\
+      \ assignment error.\n- Scope: fix the static/type errors at their semantic source\
+      \ without weakening validation or replacing typed behavior with untyped bypasses.\n\
+      - Required proof: reproduced static failure output before fix; after fix, the\
+      \ same static/invar command family no longer reports these errors.\n\n## Root\
+      \ Cause vs Symptom\n- Root cause evidence required: explain the authority/config\
+      \ assumption behind B1, the concrete escape-hatch budget drivers for B2, and\
+      \ the typing/import/modeling seam behind B3.\n- Symptom-only patches are forbidden:\
+      \ do not skip tests, xfail parity, silence guard budgets, or ignore static errors\
+      \ without explaining the semantic closure.\n\n## Completion Criteria (stub exclusion)\n\
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each\
+      \ deliverable MUST contain substantive logic or cleanup that changes the failing\
+      \ behavior. Private stub classes (`_Runtime*`, `_Stub*`, `_Placeholder*`) do\
+      \ not satisfy this requirement.\n\n## Mechanical Adversary / Falsifiability\n\
+      The executor has autonomy to choose the code fix, but ZERO autonomy to self-certify\
+      \ it. Evidence MUST include pre-fix failing output for each blocker family,\
+      \ then post-fix command output proving the blockers are closed. Where new behavior\
+      \ is tested, prefer Hypothesis/property-style coverage or non-vacuous @pre/@post/doctest\
+      \ contracts over pure example-only assertions."
+    verification: '- Pre-fix reproduction: paste failing output for `uv run pytest
+      -q`, `uv run invar guard --all`, and the static failure command family showing
+      the three blocker families.
+
+      - Post-fix proof: `uv run pytest -q` no longer blocks on `tests/test_vendor_schema_parity.py`
+      authority mismatch.
+
+      - Post-fix proof: `uv run invar guard --all` reports escape-hatch budgets within
+      policy, including weighted <=75 and shell_result <=17, and no static failures
+      for `ValidationError` or method assignment.
+
+      - Focused proof: rerun affected ADR-008 and vendor parity tests touched by the
+      fix.
+
+      - Shared contract proof: no local reinterpretation, compatibility aliases, or
+      accept-and-clean behavior added on shared surfaces.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Expected-Red / Reproduction Evidence
+
+      - B1 pytest authority mismatch output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+      - B2 invar escape-hatch budget failure output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+      - B3 static failure output:
+
+      ```text
+
+      <paste output>
+
+      ```
+
+
+      ## Fix Summary
+
+      - Root cause B1:
+
+      - Root cause B2:
+
+      - Root cause B3:
+
+      - Files changed:
+
+
+      ## Post-Fix Verification
+
+      Commands executed and actual output:
+
+      ```text
+
+      <paste `uv run pytest -q`, `uv run invar guard --all`, and focused test output>
+
+      ```
+
+
+      ## Shared Contract Discipline
+
+      - Canonical sources preserved: yes/no
+
+      - Local aliases or accept-and-clean behavior added: yes/no (must be no)
+
+      - Residual risk: none or explain blocker disposition'
+    depends_on:
+    - adr008.workflow_docs_parity
+    agent: python-senior-tacit
