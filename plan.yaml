@@ -75370,7 +75370,7 @@ phases:
     skipped_reason: superseded
   - id: adr008.gate_blockers_batched_fix
     name: ADR-008 batched final-gate blocker fix
-    status: claimed
+    status: done
     description: "Fix ALL blockers from the superseded first ADR-008 final verification\
       \ gate attempt. This is one batched remediation step; do not fix only the first\
       \ failure family.\n\nwork_type: defect_repair\nstep_type: implementation\nsymbolic_testing:\
@@ -75503,6 +75503,112 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T16:21:41.725509+00:00'
+    done_at: '2026-04-25T16:38:00.667443+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+      Subagent evidence confirms review of canonical opifex contract sources and affected
+      shell/tests before implementation.
+
+
+      ## Expected-Red / Reproduction Evidence
+
+      - B1 (vendor parity pin mismatch): reproduced failing `uv run pytest -q` collection
+      error on `tests/test_vendor_schema_parity.py` due OPIFEX_ROOT pinned-ref mismatch.
+
+      - B2 (invar budget): reproduced failing `uv run invar guard --all` with escape-hatch
+      budget overages.
+
+      - B3 (static failures): reproduced mypy failures for undefined `ValidationError`
+      and method assignment.
+
+
+      ## Fix Summary
+
+      Root causes addressed in one batched patch:
+
+      - B1: parity check logic updated to read frozen pinned authority content instead
+      of checkout-HEAD coupling.
+
+      - B2: shell_result escape-hatch pressure reduced as part of remediation; post-fix
+      full guard passes.
+
+      - B3: static/type failures fixed at source (`ValidationError` resolution and
+      method-assignment typing seam).
+
+
+      Files changed (batched):
+
+      - scripts/ci/opifex_authority.py
+
+      - tests/test_vendor_schema_parity.py
+
+      - src/tela/shell/gateway.py
+
+      - src/tela/shell/initialize_session_patch.py
+
+      - src/tela/commands/connect_transport.py
+
+      - src/tela/commands/connect_bridge.py
+
+      - src/tela/commands/status_cmd.py
+
+      - tests/shell/test_connect_cmd.py
+
+
+      ## Post-Fix Verification
+
+      Mainline post-merge verification:
+
+      - `uv run pytest -q`
+
+      - Output: `1321 passed in 113.08s`
+
+
+      Full invar guard:
+
+      - `invar_guard(changed=false)` executed as deferred full scan
+
+      - Run `grd_376174d866f84ef995068bd3` completed with `ok=true`, `errors=0`
+
+
+      Focused parity/static checks were reported green by worker evidence after remediation.
+
+
+      ## Shared Contract Discipline
+
+      - Canonical sources preserved: yes
+
+      - Local aliases or accept-and-clean behavior added: no
+
+      - Residual risk: none reported in blocker families B1/B2/B3
+
+
+      ## Step semantic summary
+
+      - step_intent: fix all ADR-008 final-gate blocker families in one batched implementation
+      step
+
+      - expected_result: full pytest unblocked, invar full-scan budgets/policies pass,
+      static blockers closed
+
+      - observed_result: all required post-fix gates passed on mainline
+
+      - failure_alignment: pre-fix failures matched B1/B2/B3 and were closed
+
+      - verdict: PASS
+
+      - blockers: []
+
+      - product implementation files modified: yes (`src/tela/shell/gateway.py`, `src/tela/shell/initialize_session_patch.py`,
+      `src/tela/commands/connect_transport.py`, `src/tela/commands/connect_bridge.py`,
+      `src/tela/commands/status_cmd.py`)
+
+
+      ## Commit hash(es)
+
+      - 006978f'
   - id: adr008.final_verify_gate_retest
     name: ADR-008 final verification gate retest
     status: pending
