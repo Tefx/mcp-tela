@@ -76592,7 +76592,7 @@ phases:
       unchanged.
   - id: tela.operator_p1.red_tests.recover_decision_behavior
     name: Red test selected recover exposure behavior
-    status: claimed
+    status: done
     description: 'Write behavior-defining tests only; do not change product code.
       Add expected-red tests for the recover branch selected by `tela.operator_p1.scope_decision.recover_exposure_decision`.
 
@@ -76670,6 +76670,15 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T21:26:38.502580+00:00'
+    done_at: '2026-04-25T21:59:27.475236+00:00'
+    evidence: EXPECTED_RED_ACCEPTED. Added tests/shell/test_adr008_recover_decision_behavior_red.py
+      aligned to selected Branch B (CLI-only) recovery posture. Orchestrator recovered
+      misplaced uncommitted output by committing in isolated branch then squash-merging
+      as [vectl] step-tela.operator_p1.red_tests.recover_decision_behavior completed.
+      Mainline verification `uv run pytest tests/shell/test_adr008_recover_decision_behavior_red.py
+      -v --tb=short` returned `9 passed, 2 xfailed`, where xfailed cases encode remaining
+      docs-gap red expectations and guard tests confirm no passive status/probe recovery
+      side effects.
   - id: tela.operator_p1.red_tests.authorization_explain
     name: Red test authorization explain diagnostic-only behavior
     status: done
