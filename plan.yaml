@@ -77225,3 +77225,109 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.active_probe_diagnostics
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.recover_behavior
+    name: Implement and verify selected recover behavior
+    status: pending
+    description: 'Complete only the recover behavior selected by `tela.operator_p1.scope_decision.recover_exposure_decision`.
+
+
+      If branch A (remote explicit mutation) was selected:
+
+      - add only an authenticated explicit recovery action, not a passive status/probe
+      side effect
+
+      - make the mutation auditable through existing audit semantics
+
+      - preserve `doctor --recover` behavior
+
+      - do not add RBAC or runtime-control policy
+
+
+      If branch B (CLI-only) was selected:
+
+      - keep `doctor --recover` as the only recovery mutation path
+
+      - ensure any remote recover surface is absent or returns the documented rejection
+
+      - update tests/docs so operator clients can discover that recover is CLI-only
+
+
+      Failure-mode checklist:
+
+      - passive status/probe never triggers recovery
+
+      - unauthenticated remote recover, if branch A, fails closed
+
+      - branch B remote recovery absent/rejected is explicit and tested
+
+      - recovery state/audit event ordering remains deterministic
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes inputs and produces
+      outputs that vary based on those inputs.
+
+
+      step_type: implementation
+
+      integration: true
+
+      state_semantics: recovery is explicit mutation if remote; otherwise CLI-only.'
+    verification: 'Main path: selected branch tests pass. Failure path: passive probe/status
+      does not recover; branch A unauthenticated/non-explicit recovery fails closed
+      and is auditable when explicit; branch B remote recovery is absent/rejected.
+      Full proof: rerun invar_guard and paste output.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Tool-Enforced Falsifiability
+
+      Before product-code changes, rerun upstream red tests from `tela.operator_p1.red_tests.recover_decision_behavior`
+      and paste expected-red output:
+
+      ```text
+
+      <expected-red output before implementation>
+
+      ```
+
+
+      ## Implementation Evidence
+
+      - Selected branch implemented: A remote explicit mutation | B CLI-only
+
+      - Files changed: <paths>
+
+      - Passive status/probe no-recovery proof: <proof>
+
+      - Audit/rejection proof: <proof>
+
+      - No RBAC / no PersonaSpec/JobSpec/CapabilityToken changes: <statement>
+
+
+      ## Verification Output
+
+      ```text
+
+      <targeted pytest output>
+
+      <invar_guard output>
+
+      ```
+
+
+      ## Headline
+
+      PASS | FAIL'
+    depends_on:
+    - tela.operator_p1.surfaces.client_attachment_diagnostics
+    agent: python-senior-tacit
