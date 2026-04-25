@@ -75117,7 +75117,7 @@ phases:
       - Doctor paths do not mutate without `--recover`.'
   - id: adr008.workflow_docs_parity
     name: Workflow regressions and docs parity
-    status: claimed
+    status: done
     description: 'Add ADR-008 workflow tests and update docs parity. Required workflow
       proofs: serve idle shutdown does not terminate connect; next request after idle
       recovers runtime or fails only that request while provider loop remains alive;
@@ -75160,6 +75160,140 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T16:08:37.477942+00:00'
+    done_at: '2026-04-25T16:14:22.924502+00:00'
+    evidence: '## refs Read Confirmation
+
+      - tests/shell/test_adr008_connect_survival.py — used for request-scoped failure
+      and loop-survival patterns.
+
+      - tests/shell/test_adr008_status_cli.py — used for status passive/probe/client
+      surfaces.
+
+      - tests/shell/test_adr008_doctor_cli.py — used for doctor passive vs recover
+      event ordering.
+
+      - src/tela/commands/connect_bridge.py — workflow hooks for transport close/recovery
+      context.
+
+      - src/tela/core/classification.py — RuntimeEventKind authority for workflow/event
+      assertions.
+
+      - docs/USAGE.md, docs/INTERFACES.md, docs/DESIGN.md — updated for client-neutral
+      attachment lifecycle parity.
+
+
+      ## Expected-Red Proof
+
+      Pre-implementation command failed because required files were absent:
+
+      - `uv run pytest tests/integration/test_adr008_attachment_workflows.py tests/shell/test_adr008_docs_parity.py
+      -q`
+
+      - Output: file/directory not found for `tests/integration/test_adr008_attachment_workflows.py`
+
+
+      ## Green Proof
+
+      Mainline post-merge verification:
+
+      - `uv run pytest tests/integration/test_adr008_attachment_workflows.py tests/shell/test_adr008_docs_parity.py
+      tests/integration/test_end_to_end.py tests/shell/test_repo_local_ci_gate.py
+      -q`
+
+      - Output: `29 passed in 1.22s`
+
+
+      Invar guard:
+
+      - worker step-time guard passed
+
+      - mainline post-merge `invar_guard(changed=true)` passed
+
+
+      ## Workflow Matrix
+
+      Mapped proofs implemented and passing for:
+
+      - serve idle shutdown does not terminate connect
+
+      - next request after idle recovery is request-scoped and loop survives
+
+      - lockfile-before-readiness not counted ready
+
+      - recovery budgets do not accumulate across unrelated events
+
+      - multiple client attachments share one runtime and appear in status --clients
+
+      - transport EOF exits connect and records HOST_TRANSPORT_CLOSED
+
+      - status --probe does not cold-start absent runtime
+
+      - doctor does not mutate without --recover
+
+      - doctor --recover may cold-start and records recovery events
+
+
+      ## Docs Parity Proof
+
+      `tests/shell/test_adr008_docs_parity.py` included in green verification and
+      passing.
+
+      Updated sections:
+
+      - docs/USAGE.md
+
+      - docs/INTERFACES.md
+
+      - docs/DESIGN.md
+
+      All updated to client-neutral attachment semantics; no edits under `../opifex`
+      canonical contracts.
+
+
+      ## Test-step semantic reporting
+
+      - step_intent: add ADR-008 workflow regression proofs + docs parity updates
+
+      - expected_result: workflow/docs parity suite green and docs aligned
+
+      - observed_result: suite green and docs updated
+
+      - failure_alignment: expected-red aligned to absent pre-implementation test
+      artifacts
+
+      - verdict: PASS
+
+      - blockers: none
+
+      - product implementation files modified: yes (`src/tela/commands/connect_bridge.py`,
+      `src/tela/core/classification.py`)
+
+
+      ## Commit hash(es)
+
+      - ea73c3b
+
+
+      ## Files changed
+
+      - docs/DESIGN.md
+
+      - docs/INTERFACES.md
+
+      - docs/USAGE.md
+
+      - src/tela/commands/connect_bridge.py
+
+      - src/tela/core/classification.py
+
+      - tests/integration/test_adr008_attachment_workflows.py
+
+      - tests/shell/test_adr008_docs_parity.py
+
+
+      ## Gaps/Notes
+
+      - `../opifex` canonical contracts were not edited.'
   - id: adr008.final_verify_gate
     name: Final ADR-008 verification gate
     status: pending
