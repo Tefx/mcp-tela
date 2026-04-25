@@ -77041,41 +77041,22 @@ phases:
   - id: tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     name: Retest diagnostics property red-test coverage
     status: pending
-    description: 'Re-run the diagnostics red-test file after tela.operator_p1.red_tests.fix_diagnostics_property_coverage
-      and prove the expected-red behavior is behavior-defining rather than pseudo-property
-      coverage.
-
-
-      As an INDEPENDENT TESTER, validate that the repaired property tests fail for
-      behavioral reasons before implementation, not merely because handlers are absent
-      or callable checks are present.
-
-
-      step_type: test
-
-      step_intent: retest_green
-
-      expected_result: green
-
-
-      Retest obligations:
-
-      - Run the diagnostics red-test file directly.
-
-      - Inspect the failure/output enough to prove generated state now drives expected
-      behavior.
-
-      - Confirm active-probe assertions cover runtime_present/runtime_stale/timeout_seconds
-      behavior and non-mutation.
-
-      - Confirm client diagnostics assertions cover endpoint/client/attachment state
-      behavior and non-mutation.
-
-      - Confirm no product code was modified by the fix step.
-
-
-      A retest that only reports "tests fail" without showing behavior-defining assertion
-      coverage is incomplete.'
+    description: "Re-run the diagnostics red-test file after tela.operator_p1.red_tests.fix_diagnostics_enum_construction\
+      \ and prove the expected-red behavior is behavior-defining rather than pseudo-property\
+      \ coverage or enum-construction crashes.\n\nAs an INDEPENDENT TESTER, validate\
+      \ that the repaired property tests fail for behavioral reasons before implementation,\
+      \ not because handlers are absent, callable checks are present, or test data\
+      \ construction uses invalid enum values.\n\nstep_type: test\nstep_intent: retest_green\n\
+      expected_result: green\n\nRetest obligations:\n- Run the diagnostics red-test\
+      \ file directly.\n- Confirm the previous construction crashes are absent:\n\
+      \  - no AttributeError from RuntimeState.STALE_CANDIDATE\n  - no ValueError\
+      \ from AttachmentDisplayState('PENDING')\n- Inspect the failure/output enough\
+      \ to prove generated state now drives expected behavior.\n- Confirm active-probe\
+      \ assertions cover runtime_present/runtime_stale/timeout_seconds behavior and\
+      \ non-mutation.\n- Confirm client diagnostics assertions cover endpoint/client/attachment\
+      \ state behavior and non-mutation.\n- Confirm no product code was modified by\
+      \ the fix steps.\n\nA retest that only reports \"tests fail\" without showing\
+      \ behavior-defining assertion coverage is incomplete."
     verification: 'Phase-check protecting tela.operator_p1.red_tests.gate: rerun the
       diagnostics red-test file and verify expected-red output is behavior-defining
       for B1 and B2. Evidence must show generated-state-dependent assertions and read-only/non-mutation
@@ -77098,7 +77079,7 @@ phases:
       \ Headline\n- [ ] PASS: Expected-red diagnostics tests now define behavior for\
       \ B1 and B2.\n- [ ] FAIL: Pseudo-property coverage or mutation ambiguity remains."
     depends_on:
-    - tela.operator_p1.red_tests.fix_diagnostics_property_coverage
+    - tela.operator_p1.red_tests.fix_diagnostics_enum_construction
     agent: integration-verifier-tacit
   - id: tela.operator_p1.red_tests.fix_diagnostics_enum_construction
     name: Fix diagnostics enum test construction defects
