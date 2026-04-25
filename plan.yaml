@@ -77210,6 +77210,84 @@ phases:
       --runxfail -q` produced behavior-defining failures (10 failed, 7 passed) tied
       to absent remote probe/clients surfaces, with no AttributeError/ValueError construction
       crashes. Product code remained untouched.'
+  - id: tela.operator_p1.red_tests.fix_static_quality_authorization_import
+    name: Fix red-test static quality and authorization import blockers
+    status: pending
+    description: "Batched remediation for latest red-tests gate blockers B1+B2.\n\n\
+      Scope: TESTS ONLY. Do not modify product code or shared contract/runtime files.\n\
+      \nBlockers to fix (ALL of these, not just the first):\n- B1: tests-only static-quality\
+      \ blockers in red tests:\n  - ruff F841 unused variable in tests/shell/test_adr008_recover_decision_behavior_red.py\n\
+      \  - pyright type errors in tests/shell/test_adr008_recover_decision_behavior_red.py\n\
+      \  - pyright type errors in tests/shell/test_operator_remote_diagnostics_red.py\n\
+      - B2: authorization explain red test collection crash caused by top-level import\
+      \ of missing explain_authorization in tests/core/test_authorization_explain_red.py.\n\
+      \nRequired constraints:\n- Preserve expected-red behavioral intent: tests should\
+      \ still expose missing implementation behavior after collection/static-quality\
+      \ blockers are removed.\n- Fix collection/static-quality defects inside tests\
+      \ only; do not add explain_authorization or any product implementation surface.\n\
+      - Keep completed steps immutable; only change test files required to clear B1+B2.\n\
+      - Avoid masking the future implementation gap with skips/xfails unless already\
+      \ required by the existing red-test convention and justified in evidence.\n\n\
+      Completion criteria:\n- Ruff F841 is removed from the affected test file.\n\
+      - Pyright errors in the two listed shell red-test files are removed through\
+      \ type-correct test code.\n- tests/core/test_authorization_explain_red.py can\
+      \ be collected without importing a missing product symbol at module import time.\n\
+      - The red-test suite slice remains behavior-defining and expected-red rather\
+      \ than turning falsely green."
+    verification: '- Tests-only diff: no product code changes.
+
+      - Static-quality blockers B1+B2 addressed in the listed files.
+
+      - Red-test behavioral intent remains exposed for downstream implementation.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - tests/shell/test_adr008_recover_decision_behavior_red.py — key passage or
+      "NOT READ: <reason>"
+
+      - tests/shell/test_operator_remote_diagnostics_red.py — key passage or "NOT
+      READ: <reason>"
+
+      - tests/core/test_authorization_explain_red.py — key passage or "NOT READ: <reason>"
+
+
+      ## Batched Fix Evidence
+
+
+      **Files changed**:
+
+      - <list test files only>
+
+
+      **B1 static-quality blockers fixed**:
+
+      - ruff F841 location and fix:
+
+      - pyright errors in recover decision red test and fix:
+
+      - pyright errors in remote diagnostics red test and fix:
+
+
+      **B2 collection blocker fixed**:
+
+      - Explain why authorization explain red test no longer imports missing product
+      symbol at module import time.
+
+
+      **Expected-red preservation**:
+
+      - State which behavioral gap remains red for downstream implementation.
+
+
+      **Product code changes**: MUST be `none`.'
+    depends_on:
+    - tela.operator_p1.red_tests.recover_decision_behavior
+    - tela.operator_p1.red_tests.authorization_explain
+    - tela.operator_p1.red_tests.diagnostics_readonly
+    - tela.operator_p1.red_tests.retest_diagnostics_property_coverage
+    agent: python-executor
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
