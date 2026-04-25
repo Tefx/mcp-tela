@@ -23,6 +23,7 @@ import json
 import signal
 import sys
 import time
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from threading import Event
 from types import FrameType
@@ -36,12 +37,21 @@ from tela.core.bridge_protocol import (
     response_requires_bridge_recovery as _response_requires_bridge_recovery,
 )
 from tela.core.models import LockfileData, StatusResponse
+from tela.core.classification import (
+    AttachmentDisplayState,
+    ClientAttachment,
+    Recoverability,
+    RuntimeEvent,
+    RuntimeEventKind,
+    RuntimeState,
+)
 from tela.commands.connect_transport import (
     extract_response_messages,
     inject_bridge_connection_id,
 )
 from tela.commands.http_client import retry_http_request
 from tela.shell.result import Result
+from tela.shell.adr008_registry_events import append_runtime_event, upsert_attachment
 
 
 # ---------------------------------------------------------------------------
@@ -53,6 +63,8 @@ HTTP_TRANSIENT_RETRIES = 3
 HTTP_TRANSIENT_BACKOFF_SECONDS = 0.5
 BRIDGE_READINESS_MAX_POLLS = 8
 TEARDOWN_RESUME_TIMEOUT_SECONDS = 1.0
+HEARTBEAT_INTERVAL_SECONDS = 30.0
+HEARTBEAT_LEASE_SECONDS = 90.0
 
 
 # ---------------------------------------------------------------------------
@@ -77,6 +89,87 @@ def _emit_bridge_diagnostic(message: str, connection_id: str) -> None:
         sys.stderr.flush()
     except OSError:
         pass
+
+
+# @shell_orchestration: timestamp generation belongs at runtime diagnostic boundary.
+def _utc_timestamp() -> Result[str, str]:
+    """Return an ADR-008 UTC timestamp.
+
+    Returns:
+        Result containing ISO-8601 UTC timestamp with ``Z`` suffix.
+    """
+
+    return Result(value=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+
+
+# @shell_orchestration: wraps runtime-event model construction and append side effect.
+def _record_runtime_event_best_effort(
+    *,
+    kind: RuntimeEventKind,
+    client_id: str,
+    client_kind: str,
+    details: dict[str, object] | None = None,
+) -> None:
+    """Append an ADR-008 runtime event without interrupting bridge I/O.
+
+    Args:
+        kind: Event kind to append.
+        client_id: Process-scoped client identifier.
+        client_kind: Client kind label.
+        details: Optional structured event details.
+    """
+
+    timestamp_result = _utc_timestamp()
+    timestamp = timestamp_result.value or "1970-01-01T00:00:00Z"
+    event = RuntimeEvent(
+        kind=kind,
+        client_id=client_id,
+        client_kind=client_kind,
+        timestamp=timestamp,
+        details=details or {},
+    )
+    _ = append_runtime_event(event)
+
+
+# @shell_orchestration: wraps attachment model construction and registry upsert side effect.
+def _heartbeat_attachment_best_effort(
+    *,
+    client_id: str = "client_unknown",
+    client_kind: str = "unknown",
+    connected_at: str = "1970-01-01T00:00:00Z",
+    runtime_state: RuntimeState = RuntimeState.ACTIVE,
+    recoverability: Recoverability = Recoverability.RECOVERABLE,
+    display_state: AttachmentDisplayState = AttachmentDisplayState.HEALTHY,
+) -> None:
+    """Upsert the ADR-008 attachment heartbeat without interrupting bridge I/O.
+
+    Args:
+        client_id: Process-scoped client identifier.
+        client_kind: Client kind label.
+        connected_at: Initial attachment timestamp.
+        runtime_state: Current runtime state.
+        recoverability: Current recoverability state.
+        display_state: Current display state.
+    """
+
+    now_result = _utc_timestamp()
+    now = now_result.value or connected_at
+    attachment = ClientAttachment(
+        client_id=client_id,
+        client_kind=client_kind,
+        display_state=display_state,
+        runtime_state=runtime_state,
+        recoverability=recoverability,
+        connected_at=connected_at,
+        last_heartbeat=now,
+    )
+    _ = upsert_attachment(attachment)
+    _record_runtime_event_best_effort(
+        kind=RuntimeEventKind.HEARTBEAT,
+        client_id=client_id,
+        client_kind=client_kind,
+        details={"lease_seconds": HEARTBEAT_LEASE_SECONDS},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -184,6 +277,77 @@ def write_framed_message(
         )
     except OSError as exc:
         return Result(error=f"BRIDGE_WRITE_FAILED: {exc}")
+    return Result(value=None)
+
+
+# @shell_orchestration: best-effort request-id extraction supports transport error responses.
+def _jsonrpc_request_id(payload: bytes) -> Result[object | None, str]:
+    """Extract a JSON-RPC request id for request-level bridge errors.
+
+    Args:
+        payload: JSON-RPC request bytes.
+
+    Returns:
+        Result containing request id value, or ``None`` if unavailable.
+    """
+
+    try:
+        parsed = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return Result(value=None)
+    if not isinstance(parsed, dict):
+        return Result(value=None)
+    return Result(value=parsed.get("id"))
+
+
+# @shell_orchestration: serializes request-level runtime errors for the transport writer.
+def _jsonrpc_error_response(
+    *, request_id: object | None, code: str, message: str
+) -> Result[bytes, str]:
+    """Build a JSON-RPC error response for one failed request.
+
+    Args:
+        request_id: Original request id, or ``None``.
+        code: Runtime recovery error code string.
+        message: Human-readable diagnostic message.
+
+    Returns:
+        Result containing encoded JSON-RPC error object.
+    """
+
+    return Result(
+        value=json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32000,
+                    "message": f"{code}: {message}",
+                    "data": {"code": code},
+                },
+            },
+            separators=(",", ":"),
+        ).encode("utf-8")
+    )
+
+
+# @shell_orchestration: classifies runtime recovery failures for request-level JSON-RPC.
+def _recovery_error_code(error_text: str) -> Result[str | None, str]:
+    """Classify bridge runtime recovery failures for request-level JSON-RPC.
+
+    Args:
+        error_text: Internal bridge error text.
+
+    Returns:
+        Result containing public request-level error code, or ``None``.
+    """
+
+    if error_text.startswith("BRIDGE_RECOVERY_EXHAUSTED"):
+        return Result(value="BRIDGE_RECOVERY_EXHAUSTED")
+    if error_text.startswith("ATTACH_INTERRUPTED"):
+        return Result(value="ATTACH_INTERRUPTED")
+    if "RECOVERY" in error_text or error_text.startswith("GATEWAY_RECOVERY_FAILED"):
+        return Result(value="RECOVERY_FAILED_FOR_REQUEST")
     return Result(value=None)
 
 
@@ -747,6 +911,7 @@ def forward_stdio_http(
     max_recovery_attempts: int = 3,
     recover_transport: Callable[[], Result[tuple[str, str], str]] | None = None,
     reset_recovery_attempts: Callable[[], None] | None = None,
+    heartbeat: Callable[[], None] | None = None,
 ) -> Result[None, str]:
     """Forward MCP stdio frames to HTTP and stream responses back.
 
@@ -756,8 +921,13 @@ def forward_stdio_http(
 
     session_id: str | None = None
     initialize_payload: bytes | None = None
+    last_heartbeat = 0.0
 
     while not should_stop():
+        now = time.monotonic()
+        if heartbeat is not None and now - last_heartbeat >= HEARTBEAT_INTERVAL_SECONDS:
+            heartbeat()
+            last_heartbeat = now
         message_result = read_framed_message(stdin_buffer)
         if message_result.is_err:
             return Result(error=message_result.error)
@@ -784,7 +954,27 @@ def forward_stdio_http(
             recover_transport=recover_transport,
         )
         if forward_result.is_err:
-            return Result(error=forward_result.error)
+            error_text = forward_result.error or "BRIDGE_RUNTIME_ERROR: unknown bridge failure"
+            recovery_code_result = _recovery_error_code(error_text)
+            recovery_code = recovery_code_result.value
+            if recovery_code is None:
+                return Result(error=error_text)
+            request_id_result = _jsonrpc_request_id(framed_message.payload)
+            error_payload_result = _jsonrpc_error_response(
+                request_id=request_id_result.value,
+                code=recovery_code,
+                message=error_text,
+            )
+            if error_payload_result.is_err or error_payload_result.value is None:
+                return Result(error=error_payload_result.error or error_text)
+            write_error_result = write_framed_message(
+                stdout_buffer,
+                error_payload_result.value,
+                framed=framed_message.is_content_length_framed,
+            )
+            if write_error_result.is_err:
+                return Result(error=write_error_result.error)
+            continue
         assert forward_result.value is not None
         mcp_url = forward_result.value.mcp_url
         bearer_token = forward_result.value.bearer_token
@@ -831,15 +1021,29 @@ def _recover_inflight_transport(
     recovery_config_path: str | None,
     recovery_default_profile: str | None,
     discover_or_autostart: DiscoverOrAutostartFn | None,
+    client_id: str,
+    client_kind: str,
 ) -> Result[tuple[str, str], str]:
     """Recover bridge transport state for an in-flight MCP request."""
 
     if state.recovery_attempts >= max_recovery_attempts:
+        _record_runtime_event_best_effort(
+            kind=RuntimeEventKind.RECOVERY_FAILED,
+            client_id=client_id,
+            client_kind=client_kind,
+            details={"reason": "recovery_exhausted", "attempts": state.recovery_attempts},
+        )
         return Result(
             error="BRIDGE_RECOVERY_EXHAUSTED: in-flight MCP request could not be replayed"
         )
 
     state.recovery_attempts += 1
+    _record_runtime_event_best_effort(
+        kind=RuntimeEventKind.RECOVERY_PROBE,
+        client_id=client_id,
+        client_kind=client_kind,
+        details={"attempt": state.recovery_attempts},
+    )
     gateway_recovery_result = recover_gateway(
         host=state.host,
         port=state.port,
@@ -849,6 +1053,12 @@ def _recover_inflight_transport(
         discover_or_autostart=discover_or_autostart,
     )
     if gateway_recovery_result.is_err:
+        _record_runtime_event_best_effort(
+            kind=RuntimeEventKind.RECOVERY_FAILED,
+            client_id=client_id,
+            client_kind=client_kind,
+            details={"reason": gateway_recovery_result.error or "unknown"},
+        )
         return Result(error=f"BRIDGE_RECOVERY_FAILED: {gateway_recovery_result.error}")
     assert gateway_recovery_result.value is not None
     state.host, state.port, state.bearer_token = gateway_recovery_result.value
@@ -860,10 +1070,22 @@ def _recover_inflight_transport(
         connection_id=connection_id,
     )
     if reconnect_result.is_err:
+        _record_runtime_event_best_effort(
+            kind=RuntimeEventKind.RECOVERY_FAILED,
+            client_id=client_id,
+            client_kind=client_kind,
+            details={"reason": reconnect_result.error or "register_failed"},
+        )
         return Result(
             error=f"BRIDGE_RECOVERY_REGISTER_FAILED: {reconnect_result.error}"
         )
 
+    _record_runtime_event_best_effort(
+        kind=RuntimeEventKind.RECOVERY_SUCCEEDED,
+        client_id=client_id,
+        client_kind=client_kind,
+        details={"attempt": state.recovery_attempts, "host": state.host, "port": state.port},
+    )
     return Result(value=(f"{state.base_url}/mcp", state.bearer_token))
 
 
@@ -877,6 +1099,8 @@ def _run_bridge_cycle(
     recovery_config_path: str | None,
     recovery_default_profile: str | None,
     discover_or_autostart: DiscoverOrAutostartFn | None,
+    client_id: str = "client_unknown",
+    client_kind: str = "unknown",
 ) -> Result[BridgeLoopAction, str]:
     """Run one readiness + forwarding cycle for the active bridge."""
 
@@ -904,6 +1128,8 @@ def _run_bridge_cycle(
                 recovery_config_path=recovery_config_path,
                 recovery_default_profile=recovery_default_profile,
                 discover_or_autostart=discover_or_autostart,
+                client_id=client_id,
+                client_kind=client_kind,
             ),
             reset_recovery_attempts=lambda: setattr(state, "recovery_attempts", 0),
         )
@@ -919,6 +1145,12 @@ def _run_bridge_cycle(
         return Result(error=cycle_error)
 
     if state.recovery_attempts >= max_recovery_attempts:
+        _record_runtime_event_best_effort(
+            kind=RuntimeEventKind.RECOVERY_FAILED,
+            client_id=client_id,
+            client_kind=client_kind,
+            details={"reason": cycle_error, "attempts": state.recovery_attempts},
+        )
         return Result(error=f"BRIDGE_RECOVERY_EXHAUSTED: {cycle_error}")
 
     recovery_result = _recover_inflight_transport(
@@ -928,6 +1160,8 @@ def _run_bridge_cycle(
         recovery_config_path=recovery_config_path,
         recovery_default_profile=recovery_default_profile,
         discover_or_autostart=discover_or_autostart,
+        client_id=client_id,
+        client_kind=client_kind,
     )
     if recovery_result.is_err:
         return Result(error=recovery_result.error)
@@ -944,11 +1178,23 @@ def _run_bridge_attach_loop(
     recovery_config_path: str | None,
     recovery_default_profile: str | None,
     discover_or_autostart: DiscoverOrAutostartFn | None,
+    client_id: str,
+    client_kind: str,
+    connected_at: str,
 ) -> Result[None, str]:
     """Drive repeated readiness/forwarding cycles until completion or failure."""
 
     try:
+        last_heartbeat = 0.0
         while not stop_requested.is_set():
+            now = time.monotonic()
+            if now - last_heartbeat >= HEARTBEAT_INTERVAL_SECONDS:
+                _heartbeat_attachment_best_effort(
+                    client_id=client_id,
+                    client_kind=client_kind,
+                    connected_at=connected_at,
+                )
+                last_heartbeat = now
             cycle_result = _run_bridge_cycle(
                 state=state,
                 connection_id=connection_id,
@@ -957,6 +1203,8 @@ def _run_bridge_attach_loop(
                 recovery_config_path=recovery_config_path,
                 recovery_default_profile=recovery_default_profile,
                 discover_or_autostart=discover_or_autostart,
+                client_id=client_id,
+                client_kind=client_kind,
             )
             if cycle_result.is_err:
                 return Result(error=cycle_result.error)
@@ -965,7 +1213,7 @@ def _run_bridge_attach_loop(
                 return Result(value=None)
     except KeyboardInterrupt:
         _emit_bridge_diagnostic("attach loop interrupted", connection_id)
-        return Result(error="INTERRUPT: bridge attach loop interrupted")
+        return Result(error="ATTACH_INTERRUPTED: bridge attach loop interrupted")
 
     return Result(value=None)
 
@@ -1024,6 +1272,8 @@ def run_bridge(
     recovery_config_path: str | None = None,
     recovery_default_profile: str | None = None,
     discover_or_autostart: DiscoverOrAutostartFn | None = None,
+    client_id: str | None = None,
+    client_kind: str = "unknown",
 ) -> Result[None, str]:
     """Run connect/register/forward/disconnect lifecycle.
 
@@ -1035,11 +1285,16 @@ def run_bridge(
         recovery_config_path: Config path for autostart recovery (None in explicit-server mode).
         recovery_default_profile: Default profile for autostart recovery.
         discover_or_autostart: Callable for gateway discovery during recovery.
+        client_id: Process-scoped ADR-008 client identifier.
+        client_kind: ADR-008 client kind label.
 
     Returns:
         Result with None on success or error string on failure.
     """
 
+    resolved_client_id = client_id if client_id is not None else f"client_{uuid.uuid4().hex}"
+    connected_at_result = _utc_timestamp()
+    connected_at = connected_at_result.value or "1970-01-01T00:00:00Z"
     state = BridgeRuntimeState(
         base_url=f"http://{host}:{port}",
         host=host,
@@ -1048,6 +1303,20 @@ def run_bridge(
     )
     connection_id = f"bridge_{uuid.uuid4().hex}"
     stop_requested = Event()
+
+    _record_runtime_event_best_effort(
+        kind=RuntimeEventKind.CLIENT_ATTACHMENT_STARTED,
+        client_id=resolved_client_id,
+        client_kind=client_kind,
+        details={"connection_id": connection_id, "host": host, "port": port},
+    )
+    _heartbeat_attachment_best_effort(
+        client_id=resolved_client_id,
+        client_kind=client_kind,
+        connected_at=connected_at,
+        runtime_state=RuntimeState.INITIALIZING,
+        display_state=AttachmentDisplayState.STARTED,
+    )
 
     previous_int = signal.getsignal(signal.SIGINT)
     previous_term = signal.getsignal(signal.SIGTERM)
@@ -1090,6 +1359,9 @@ def run_bridge(
             recovery_config_path=recovery_config_path,
             recovery_default_profile=recovery_default_profile,
             discover_or_autostart=discover_or_autostart,
+            client_id=resolved_client_id,
+            client_kind=client_kind,
+            connected_at=connected_at,
         )
     finally:
         teardown_result = _teardown_bridge_connection(
@@ -1107,7 +1379,22 @@ def run_bridge(
         signal.signal(signal.SIGTERM, previous_term)
 
         if teardown_interrupted and bridge_result.is_ok:
-            pass
+            _emit_bridge_diagnostic("disconnect interrupted after bridge completion", connection_id)
+
+        _heartbeat_attachment_best_effort(
+            client_id=resolved_client_id,
+            client_kind=client_kind,
+            connected_at=connected_at,
+            runtime_state=RuntimeState.EXITED,
+            recoverability=Recoverability.NOT_RECOVERABLE,
+            display_state=AttachmentDisplayState.EXITED,
+        )
+        _record_runtime_event_best_effort(
+            kind=RuntimeEventKind.CLIENT_PROVIDER_EXIT,
+            client_id=resolved_client_id,
+            client_kind=client_kind,
+            details={"connection_id": connection_id},
+        )
 
     if bridge_result.is_err:
         if teardown_error is not None:

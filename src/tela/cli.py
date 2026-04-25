@@ -131,6 +131,11 @@ def main(argv: list[str] | None = None) -> int:
         default=3,
         help="Maximum transient error recovery retries (default: 3)",
     )
+    connect_parser.add_argument(
+        "--client-kind",
+        default=None,
+        help="ADR-008 client kind label (default: TELA_CLIENT_KIND, then unknown)",
+    )
 
     # --- stop ---
     subparsers.add_parser("stop", help="Stop the running tela HTTP gateway")
@@ -238,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
             server=args.server,
             token=args.token,
             max_recovery_attempts=args.max_recovery_attempts,
+            client_kind=args.client_kind,
         )
         if connect_result.is_err:
             print(f"error: {connect_result.error}", file=sys.stderr)

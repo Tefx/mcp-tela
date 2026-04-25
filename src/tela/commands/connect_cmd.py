@@ -23,6 +23,8 @@ from __future__ import annotations
 import subprocess
 import sys
 import time
+import os
+import uuid
 
 from tela.core.models import LockfileData
 from tela.commands.connect_bridge import (
@@ -125,6 +127,7 @@ def connect_command(
     server: str | None = None,
     token: str | None = None,
     max_recovery_attempts: int = 3,
+    client_kind: str | None = None,
 ) -> Result[int, str]:
     """Run ``tela connect`` stdio bridge.
 
@@ -134,10 +137,17 @@ def connect_command(
         server: Optional explicit ``host:port`` endpoint.
         token: Optional bearer token override.
         max_recovery_attempts: Maximum transient error recovery retries.
+        client_kind: Optional ADR-008 client kind override.
 
     Returns:
         Result with exit code ``0`` on success.
     """
+
+    if max_recovery_attempts < 0:
+        return Result(error="INVALID_MAX_RECOVERY_ATTEMPTS: must be >= 0")
+
+    resolved_client_kind = _resolve_client_kind(cli_client_kind=client_kind)
+    client_id = f"client_{uuid.uuid4().hex}"
 
     endpoint_result = _resolve_endpoint(
         config_path=config_path,
@@ -161,6 +171,8 @@ def connect_command(
         port=endpoint_result.value.port,
         bearer_token=token_result.value,
         max_recovery_attempts=max_recovery_attempts,
+        client_id=client_id,
+        client_kind=resolved_client_kind,
         recovery_config_path=config_path if server is None else None,
         recovery_default_profile=default_profile if server is None else None,
         discover_or_autostart=_discover_or_autostart_bridge_adapter,
@@ -251,6 +263,25 @@ def _resolve_connect_token(
             "because lockfile discovery is disabled"
         )
     )
+
+
+# @invar:allow shell_result: deterministic CLI/env precedence helper returns plain string for argparse wiring.
+def _resolve_client_kind(*, cli_client_kind: str | None) -> str:
+    """Resolve ADR-008 client kind using CLI, environment, then unknown.
+
+    Args:
+        cli_client_kind: Optional ``--client-kind`` value.
+
+    Returns:
+        Client kind string for diagnostic attachment records.
+    """
+
+    if cli_client_kind is not None and cli_client_kind.strip() != "":
+        return cli_client_kind
+    env_client_kind = os.environ.get("TELA_CLIENT_KIND")
+    if env_client_kind is not None and env_client_kind.strip() != "":
+        return env_client_kind
+    return "unknown"
 
 
 # ---------------------------------------------------------------------------
