@@ -75849,13 +75849,13 @@ phases:
       Residual warnings are non-blocking debt only.'
 - id: adr008_issue_cleanup
   name: ADR-008 Issue Cleanup
-  status: pending
+  status: in_progress
   depends_on:
   - adr008_client_attachment_lifecycle
   steps:
   - id: adr008.issue.invar_warning_cleanup
     name: ADR-008 invar warning cleanup
-    status: pending
+    status: claimed
     description: 'Step type: implementation.
 
 
@@ -75929,6 +75929,8 @@ phases:
       \ output>\n```\n\n## Residual Risk\n\n- Remaining warnings: <none, or list>\n\
       - Non-intersection evidence for any remaining warning: <required if not none>\n"
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T16:57:16.192094+00:00'
   - id: adr008.issue.final_verify
     name: ADR-008 issue cleanup final verification
     status: pending
