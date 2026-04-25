@@ -75117,7 +75117,7 @@ phases:
       - Doctor paths do not mutate without `--recover`.'
   - id: adr008.workflow_docs_parity
     name: Workflow regressions and docs parity
-    status: pending
+    status: claimed
     description: 'Add ADR-008 workflow tests and update docs parity. Required workflow
       proofs: serve idle shutdown does not terminate connect; next request after idle
       recovers runtime or fails only that request while provider loop remains alive;
@@ -75158,6 +75158,8 @@ phases:
     depends_on:
     - adr008.doctor_cli_recovery
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T16:08:37.477942+00:00'
   - id: adr008.final_verify_gate
     name: Final ADR-008 verification gate
     status: pending
