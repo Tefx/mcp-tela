@@ -76696,3 +76696,81 @@ phases:
 
       - Downstream implementation owner: tela.operator_p1.surfaces.client_attachment_diagnostics'
     agent: python-executor
+  - id: tela.operator_p1.red_tests.recover_decision_behavior
+    name: Red test selected recover exposure behavior
+    status: pending
+    description: 'Write behavior-defining tests only; do not change product code.
+      Add expected-red tests for the recover branch selected by `tela.operator_p1.scope_decision.recover_exposure_decision`.
+
+
+      Branch A remote explicit mutation requirements:
+
+      - recovery requires an explicit authenticated state-changing request
+
+      - mutation is audit-visible
+
+      - passive status/probe never triggers recovery
+
+
+      Branch B CLI-only requirements:
+
+      - remote recover surface is absent or returns a documented rejection
+
+      - `tela doctor --recover` remains the only recovery mutation path
+
+      - docs/contract explicitly state CLI-only status
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      modified_files_scope: tests only plus fixtures/helpers'
+    verification: 'Expected-red proof: targeted tests fail before implementation/documentation
+      because the selected recovery posture is not yet encoded. Evidence must show
+      the tests follow the selected branch and forbid passive recovery side effects.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Expected-Red Test Evidence
+
+      - Selected recover branch from scope decision: A remote explicit mutation |
+      B CLI-only
+
+      - Tests added/updated: <paths::test_names>
+
+      - Product code modified: NO
+
+      - Expected-red command(s):
+
+      ```text
+
+      <targeted pytest command>
+
+      <invar_guard command>
+
+      ```
+
+      - Failing output proving gap:
+
+      ```text
+
+      <paste failure>
+
+      ```
+
+      - Passive side-effect guard: status/probe did not recover
+
+      - Downstream implementation owner: tela.operator_p1.surfaces.recover_behavior'
+    depends_on:
+    - tela.operator_p1.red_tests.probe_diagnostics
+    agent: python-executor
