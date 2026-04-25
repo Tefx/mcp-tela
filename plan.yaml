@@ -77530,8 +77530,7 @@ phases:
       **Headline**: PASS | PASS_WITH_DEBT | FAIL'
     depends_on:
     - tela.operator_p1.surfaces.audit_query_projection
-    - tela.operator_p1.surfaces.active_probe_diagnostics
-    - tela.operator_p1.surfaces.client_attachment_diagnostics
+    - tela.operator_p1.surfaces.diagnostics_readonly
     - tela.operator_p1.surfaces.recover_behavior
     - tela.operator_p1.surfaces.authorization_explain
     agent: wiring-auditor
