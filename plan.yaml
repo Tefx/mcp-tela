@@ -75929,3 +75929,58 @@ phases:
       \ output>\n```\n\n## Residual Risk\n\n- Remaining warnings: <none, or list>\n\
       - Non-intersection evidence for any remaining warning: <required if not none>\n"
     agent: python-senior-tacit
+  - id: adr008.issue.final_verify
+    name: ADR-008 issue cleanup final verification
+    status: pending
+    description: 'Step type: gate.
+
+
+      As an INDEPENDENT REVIEWER, decide whether ADR-008 issue cleanup may close.
+
+
+      Scope:
+
+      - Review the cleanup evidence for before/after warning proof.
+
+      - Run the full required verification commands.
+
+      - Confirm no invar checks were weakened, no broad escape hatches were added,
+      no tests were removed, and shared-contract behavior remains intact.
+
+
+      Decision basis:
+
+      - OPEN only if the cleanup evidence is concrete and both required commands pass.
+
+      - BLOCKED if warnings remain without explicit non-intersection proof, commands
+      fail, or evidence indicates warning suppression instead of root-cause cleanup.'
+    verification: 'Run and report exact output for:
+
+      - `uv run invar guard --all`
+
+      - `uv run pytest -q`
+
+
+      Gate decision must be OPEN or BLOCKED with an explicit blocker list. OPEN requires
+      no unresolved blocker-class warning debt and no proof gaps intersecting downstream
+      closure.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- AGENTS.md — key passage or \"NOT READ: <reason>\"\n- INVAR.md — key\
+      \ passage or \"NOT READ: <reason>\"\n\nIf no refs were provided, state: \"No\
+      \ refs for this step.\"\n\n## ADR-008 Issue Cleanup Gate Report\n\nheadline:\
+      \ \"<one-line summary>\"\nproof_gap_status: \"CLOSED|PARTIAL|OPEN\"\nblocking_status:\
+      \ \"NON_BLOCKING|BLOCKING\"\nverdict: \"OPEN|BLOCKED\"\nblockers:\n  - \"<blocker\
+      \ or none>\"\norchestrator_action_hint: \"CLOSE_PHASE|CREATE_FIX_RETEST|BLOCK_DOWNSTREAM\"\
+      \n\n## Cleanup Evidence Review\n\n- Before warning evidence present: YES|NO\n\
+      - After warning evidence present: YES|NO\n- Warning root cause fixed rather\
+      \ than suppressed: YES|NO\n- Broad escape hatches added: YES|NO\n- Invar checks\
+      \ weakened: YES|NO\n- Tests removed/weakened: YES|NO\n- Shared-contract behavior\
+      \ preserved: YES|NO\n\n## Required Commands\n\nCommand:\n```bash\nuv run invar\
+      \ guard --all\n```\nOutput:\n```text\n<paste full relevant output>\n```\n\n\
+      Command:\n```bash\nuv run pytest -q\n```\nOutput:\n```text\n<paste full relevant\
+      \ output>\n```\n\n## Gate Decision Basis\n\n- Unresolved warning debt: <none,\
+      \ or list>\n- Proof gaps: <none, or list>\n- Why each unresolved item blocks\
+      \ or does not intersect closure: <required>\n- Final decision: OPEN|BLOCKED\n"
+    depends_on:
+    - adr008.issue.invar_warning_cleanup
+    agent: gate-reviewer-tacit
