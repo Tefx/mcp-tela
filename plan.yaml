@@ -76314,7 +76314,7 @@ phases:
       \ baseline, no blocker-class regression observed."
 - id: tela.operator_p1.scope_decision
   name: Tela Operator P1 Scope Decision
-  status: in_progress
+  status: done
   depends_on:
   - debt.warning_cleanup_pass3
   steps:
@@ -76446,7 +76446,7 @@ phases:
       change with no implementation mutation.'
   - id: tela.operator_p1.scope_decision.gate
     name: Gate scope decision completeness
-    status: claimed
+    status: done
     description: 'Gate review for the operator P1 scope decision phase. Verify the
       P1 checklist, source-discovery map, and recover exposure decision are complete
       before any red tests or implementation planning proceeds.
@@ -76493,9 +76493,15 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-25T19:32:12.063482+00:00'
+    done_at: '2026-04-25T19:35:39.038703+00:00'
+    evidence: 'Independent gate-reviewer-tacit audit passed with Gate decision OPEN
+      and no blockers; evidence committed in isolated branch as b3a345d at evidence/tela_operator_p1_scope_decision_gate_audit.md.
+      Orchestrator squash-merged to main as [vectl] step-tela.operator_p1.scope_decision.gate
+      completed. Mainline verification: `git show --name-only --pretty="" HEAD` returned
+      only the gate evidence artifact file, confirming read-only gate evidence update.'
 - id: tela.operator_p1.red_tests
   name: Tela Operator P1 Red Tests
-  status: locked
+  status: pending
   depends_on:
   - tela.operator_p1.scope_decision
   steps:
