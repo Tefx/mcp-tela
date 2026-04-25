@@ -76918,7 +76918,7 @@ phases:
       files were modified.
   - id: tela.operator_p1.red_tests.fix_diagnostics_property_coverage
     name: Fix diagnostics property red-test coverage
-    status: claimed
+    status: done
     description: 'Fix BOTH red-tests gate blockers B1 and B2 in tests/shell/test_operator_remote_diagnostics_red.py
       without modifying product code.
 
@@ -77029,6 +77029,15 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-04-25T22:05:27.864739+00:00'
+    done_at: '2026-04-25T22:25:00.134201+00:00'
+    evidence: 'Batched remediation completed for blockers B1/B2: tests/shell/test_operator_remote_diagnostics_red.py
+      now uses generated Hypothesis state in behavior-defining assertions with explicit
+      runtime/client non-mutation invariants, while preserving expected-red surface
+      absence xfails. Orchestrator recovered misplaced uncommitted changes by committing
+      in isolated branch and squash-merging as [vectl] step-tela.operator_p1.red_tests.fix_diagnostics_property_coverage
+      completed. Mainline verification `uv run pytest tests/shell/test_operator_remote_diagnostics_red.py
+      -v --tb=short` returned `7 passed, 10 xfailed`, confirming red-tests remain
+      expected-red and no product code edits were introduced.'
   - id: tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     name: Retest diagnostics property red-test coverage
     status: pending
