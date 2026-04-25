@@ -77305,7 +77305,7 @@ phases:
       crash). Product code unchanged.'
   - id: tela.operator_p1.red_tests.retest_static_quality_authorization_import
     name: Retest red-test static quality and authorization import blockers
-    status: pending
+    status: claimed
     description: 'Independent retest after batched remediation for B1+B2.
 
 
@@ -77417,6 +77417,8 @@ phases:
     depends_on:
     - tela.operator_p1.red_tests.fix_static_quality_authorization_import
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-25T23:17:53.450604+00:00'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
