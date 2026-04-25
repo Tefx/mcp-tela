@@ -75296,7 +75296,7 @@ phases:
       - `../opifex` canonical contracts were not edited.'
   - id: adr008.final_verify_gate
     name: Final ADR-008 verification gate
-    status: pending
+    status: skipped
     description: 'Historical first ADR-008 verification gate attempt. SUPERSEDED for
       blocking/progression purposes by follow-up remediation path `adr008.gate_blockers_batched_fix`
       and retest gate `adr008.final_verify_gate_retest`; keep this step for traceability
@@ -75367,6 +75367,7 @@ phases:
     depends_on:
     - adr008.workflow_docs_parity
     agent: gate-reviewer-tacit
+    skipped_reason: superseded
   - id: adr008.gate_blockers_batched_fix
     name: ADR-008 batched final-gate blocker fix
     status: pending
