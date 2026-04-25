@@ -76626,3 +76626,73 @@ phases:
 
       - Downstream implementation owner: tela.operator_p1.surfaces.active_probe_diagnostics'
     agent: python-executor
+  - id: tela.operator_p1.red_tests.client_attachment_diagnostics
+    name: Red test client attachment diagnostics read-only behavior
+    status: pending
+    description: 'Write behavior-defining tests only; do not change product code.
+      Add expected-red tests for a remote client attachment diagnostics surface equivalent
+      to `tela status --clients`.
+
+
+      Requirements:
+
+      - reports attached clients/connections using current runtime/attachment state
+
+      - does not register, admit, disconnect, or otherwise change admission state
+
+      - preserves `active_connections` count vs `connections` structural semantics
+
+      - property-based/state coverage should vary pending/attached/stale client states
+      where feasible; pure example-only tests are insufficient
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      modified_files_scope: tests only plus fixtures/helpers'
+    verification: 'Expected-red proof: targeted tests fail before implementation because
+      remote client attachment diagnostics are absent or incomplete; evidence proves
+      no admission/runtime mutation occurs during diagnostics tests.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Expected-Red Test Evidence
+
+      - Tests added/updated: <paths::test_names>
+
+      - Product code modified: NO
+
+      - Property/state coverage: <client attachment state cases>
+
+      - Expected-red command(s):
+
+      ```text
+
+      <targeted pytest command>
+
+      <invar_guard command>
+
+      ```
+
+      - Failing output proving gap:
+
+      ```text
+
+      <paste failure>
+
+      ```
+
+      - Mutation guard evidence: no register/admit/disconnect side effect from diagnostics
+
+      - Downstream implementation owner: tela.operator_p1.surfaces.client_attachment_diagnostics'
+    agent: python-executor
