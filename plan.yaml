@@ -75852,3 +75852,80 @@ phases:
   status: pending
   depends_on:
   - adr008_client_attachment_lifecycle
+  steps:
+  - id: adr008.issue.invar_warning_cleanup
+    name: ADR-008 invar warning cleanup
+    status: pending
+    description: 'Step type: implementation.
+
+
+      Identify and fix the invar warning debt implicated by ADR-008 closure.
+
+
+      Scope:
+
+      - Run the warning-producing guard path first and capture BEFORE evidence.
+
+      - Fix the warning debt at its root while preserving all existing passing tests
+      and shared-contract behavior.
+
+      - Keep changes narrowly tied to ADR-008 closure and the warning family found
+      in the before evidence.
+
+
+      Hard constraints:
+
+      - Do NOT weaken invar checks.
+
+      - Do NOT add broad escape hatches or blanket allow comments.
+
+      - Do NOT accept-and-clean malformed shared input or alter canonical shared-surface
+      semantics.
+
+      - Do NOT remove tests or reduce coverage to silence warnings.
+
+
+      Completion Criteria (stub exclusion):
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Any
+      code change must contain substantive logic or structural cleanup that removes
+      the warning cause while preserving behavior.
+
+
+      Required proof discipline:
+
+      - Capture before/after invar warning counts and exact warning text.
+
+      - If a warning cannot be eliminated, document why it is outside ADR-008 cleanup
+      scope and why it does not intersect the final gate; otherwise fix it here.
+
+      - Preserve existing passing tests and shared-contract behavior.'
+    verification: '- BEFORE: warning-producing guard output is captured before code
+      changes.
+
+      - AFTER: the same guard path shows the targeted warning debt removed or explicitly
+      dispositioned with non-intersection evidence.
+
+      - Regression: `uv run pytest -q` still passes.
+
+      - Contract safety: no broad invar escape hatches, weakened checks, removed tests,
+      or shared-contract semantic changes are introduced.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- AGENTS.md — key passage or \"NOT READ: <reason>\"\n- INVAR.md — key\
+      \ passage or \"NOT READ: <reason>\"\n\nIf no refs were provided, state: \"No\
+      \ refs for this step.\"\n\n## ADR-008 Invar Warning Cleanup Evidence\n\nheadline:\
+      \ \"<one-line summary>\"\nproof_gap_status: \"CLOSED|PARTIAL|OPEN\"\nblocking_status:\
+      \ \"NON_BLOCKING|BLOCKING\"\nverdict: \"PASS|PASS_WITH_DEBT|FAIL\"\nblockers:\n\
+      \  - \"<blocker or none>\"\norchestrator_action_hint: \"PROCEED_TO_FINAL_VERIFY|CREATE_FOLLOWUP|BLOCK_DOWNSTREAM\"\
+      \n\n## Before Evidence\n\nCommand(s):\n```bash\n<paste exact command(s) used\
+      \ to expose warnings>\n```\nOutput excerpt:\n```text\n<paste warning output\
+      \ and count>\n```\n\n## Fix Summary\n\n- Warning family/root cause: <describe>\n\
+      - Files changed: <list>\n- Why this is root-cause cleanup, not warning suppression:\
+      \ <explain>\n- Escape hatches added: <none, or list with narrow justification>\n\
+      - Shared-contract behavior impact: <none, or explain with proof>\n\n## After\
+      \ Evidence\n\nCommand(s):\n```bash\n<paste exact repeated guard command(s)>\n\
+      ```\nOutput excerpt:\n```text\n<paste after output and count>\n```\n\n## Regression\
+      \ Evidence\n\nCommand:\n```bash\nuv run pytest -q\n```\nOutput:\n```text\n<paste\
+      \ output>\n```\n\n## Residual Risk\n\n- Remaining warnings: <none, or list>\n\
+      - Non-intersection evidence for any remaining warning: <required if not none>\n"
+    agent: python-senior-tacit
