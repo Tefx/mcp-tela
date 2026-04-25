@@ -76472,3 +76472,8 @@ phases:
     - tela.operator_p1.scope_decision.authority_and_source_discovery
     - tela.operator_p1.scope_decision.recover_exposure_decision
     agent: gate-reviewer-tacit
+- id: tela.operator_p1.red_tests
+  name: Tela Operator P1 Red Tests
+  status: locked
+  depends_on:
+  - tela.operator_p1.scope_decision
