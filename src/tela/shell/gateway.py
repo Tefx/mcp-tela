@@ -252,7 +252,11 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         handle_connect,
         handle_disconnect,
         handle_health,
+        handle_operator_clients,
+        handle_operator_probe,
         handle_status,
+        client_attachment_payload,
+        operator_probe_payload,
     )
 
     def _as_error_response(error: str) -> JSONResponse:
@@ -303,6 +307,62 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
             return _as_error_response(status_result.error)
         assert status_result.value is not None
         return JSONResponse(content=status_result.value.model_dump())
+
+    @upstream_server.custom_route("/operator/probe", methods=["GET"])
+    async def _operator_probe_route(request: Request) -> Response:
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            assert auth_result.error is not None
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+
+        timeout_value = request.query_params.get("timeout_seconds")
+        timeout_seconds = 5.0
+        if timeout_value is not None:
+            try:
+                timeout_seconds = float(timeout_value)
+            except ValueError:
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "INVALID_REQUEST: timeout_seconds must be numeric"},
+                )
+
+        probe_result = handle_operator_probe(timeout_seconds=timeout_seconds)
+        if probe_result.is_err:
+            assert probe_result.error is not None
+            return _as_error_response(probe_result.error)
+        assert probe_result.value is not None
+        payload_result = operator_probe_payload(probe_result.value)
+        if payload_result.is_err:
+            assert payload_result.error is not None
+            return _as_error_response(payload_result.error)
+        assert payload_result.value is not None
+        return JSONResponse(content=payload_result.value)
+
+    @upstream_server.custom_route("/operator/clients", methods=["GET"])
+    async def _operator_clients_route(request: Request) -> Response:
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            assert auth_result.error is not None
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+
+        clients_result = handle_operator_clients()
+        if clients_result.is_err:
+            assert clients_result.error is not None
+            return _as_error_response(clients_result.error)
+        assert clients_result.value is not None
+        client_payloads: list[dict[str, object]] = []
+        for client in clients_result.value:
+            payload_result = client_attachment_payload(client)
+            if payload_result.is_err:
+                assert payload_result.error is not None
+                return _as_error_response(payload_result.error)
+            assert payload_result.value is not None
+            client_payloads.append(payload_result.value)
+        return JSONResponse(
+            content=client_payloads
+        )
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:

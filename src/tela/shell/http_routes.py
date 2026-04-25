@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import asdict, dataclass
 from typing import Mapping
 
 from tela.core.errors import (
@@ -23,6 +24,11 @@ from tela.core.models import (
     HealthResponse,
     StatusResponse,
 )
+from tela.core.classification import (
+    ClientAttachment,
+    Recoverability,
+    classify_attachment_display_state,
+)
 from tela.core.contracts import post, pre
 from tela.shell.result import Result
 from tela.shell.audit import (  # noqa: F401 — audit query surfaces are route-wired exports
@@ -35,14 +41,64 @@ from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_runtime import (
     clear_runtime_connections,  # noqa: F401 — used in doctests
     get_runtime_config,
+    get_runtime_status_snapshot,
     is_runtime_running,
     register_bridge_connection,
     set_runtime_config,  # noqa: F401 — used in doctests
     set_runtime_running,  # noqa: F401 — used in doctests
 )
 from tela.shell.http_auth import validate_bearer_token
+from tela.shell.adr008_registry_events import read_attachment_registry
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class OperatorProbeSnapshot:
+    """Read-only operator probe snapshot for remote diagnostics.
+
+    Attributes:
+        running: Whether the current runtime snapshot is running.
+        state: Lifecycle state observed from the current runtime snapshot.
+        degraded_reason: Optional diagnostic reason when the snapshot is not
+            fully healthy or discovery metadata is incomplete.
+        active_connections: Count of active runtime connections.
+        connections: Structural connection snapshot; distinct from the count.
+    """
+
+    running: bool
+    state: str
+    degraded_reason: str | None
+    active_connections: int
+    connections: list[Mapping[str, object]]
+
+
+def operator_probe_payload(snapshot: OperatorProbeSnapshot) -> Result[dict[str, object], str]:
+    """Return a JSON-serializable probe payload.
+
+    Args:
+        snapshot: Operator probe snapshot to serialize.
+
+    Returns:
+        Result containing a mapping suitable for ``JSONResponse``.
+    """
+
+    return Result(value=asdict(snapshot))
+
+
+def client_attachment_payload(
+    attachment: ClientAttachment,
+) -> Result[dict[str, object], str]:
+    """Return a JSON-serializable client attachment payload.
+
+    Args:
+        attachment: Client attachment model read from the registry.
+
+    Returns:
+        Result containing a JSON-mode model dump preserving ADR-008 field names.
+    """
+
+    return Result(value=attachment.model_dump(mode="json"))
 
 
 @pre(lambda: True)
@@ -191,6 +247,150 @@ def handle_status(
             config_mismatch=False,
         )
     )
+
+
+@pre(lambda timeout_seconds=5.0: isinstance(timeout_seconds, int | float) and timeout_seconds > 0)
+@post(
+    lambda result: (
+        (
+            result.is_ok
+            and result.value is not None
+            and result.value.active_connections == len(result.value.connections)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_gateway_not_started_error(result.error)
+        )
+    )
+)
+def handle_operator_probe(
+    timeout_seconds: float = 5.0,
+) -> Result[OperatorProbeSnapshot, str]:
+    """HTTP-equivalent handler for ``tela status --probe`` diagnostics.
+
+    The handler is intentionally read-only: it observes the current runtime
+    snapshot and never invokes startup, recovery, registration, admission,
+    disconnect, or session-release paths. ``timeout_seconds`` is accepted to
+    mirror the CLI probe surface; this in-process runtime observation does not
+    perform a retry loop or mutate state.
+
+    Args:
+        timeout_seconds: Positive probe timeout supplied by the caller.
+
+    Returns:
+        Result containing the current operator probe snapshot or a not-started
+        error when no runtime is active.
+
+    Examples:
+        >>> set_runtime_config(None)
+        >>> set_runtime_running(False)
+        >>> result = handle_operator_probe(timeout_seconds=0.1)
+        >>> result.is_err
+        True
+    """
+
+    snapshot_result = get_runtime_status_snapshot()
+    if snapshot_result.is_err:
+        return Result(error=snapshot_result.error)
+    assert snapshot_result.value is not None
+    snapshot = snapshot_result.value
+    if snapshot.config is None or not snapshot.running:
+        return Result(error=f"{GATEWAY_NOT_STARTED}: gateway has not been started")
+
+    lifecycle_result = get_lifecycle_status_facts()
+    if lifecycle_result.is_err:
+        return Result(error=lifecycle_result.error)
+    assert lifecycle_result.value is not None
+    facts = lifecycle_result.value
+
+    degraded_reason = facts.degraded_reason
+    if degraded_reason is None:
+        degraded_reason = "lockfile_endpoint_not_verified"
+
+    return Result(
+        value=OperatorProbeSnapshot(
+            running=snapshot.running,
+            state=facts.state,
+            degraded_reason=degraded_reason,
+            active_connections=len(snapshot.connections),
+            connections=[conn.model_dump(mode="json") for conn in snapshot.connections],
+        )
+    )
+
+
+@pre(lambda: True)
+@post(
+    lambda result: (
+        (result.is_ok and result.value is not None and isinstance(result.value, list))
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and is_gateway_not_started_error(result.error)
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and result.error.startswith("ATTACHMENT_REGISTRY_")
+        )
+    )
+)
+def handle_operator_clients() -> Result[list[ClientAttachment], str]:
+    """HTTP-equivalent handler for ``tela status --clients`` diagnostics.
+
+    The handler reads the current runtime snapshot and ADR-008 attachment
+    registry only. It does not register clients, admit sessions, disconnect,
+    release sessions, recover, or rewrite registry contents.
+
+    Returns:
+        Result containing the current client attachments. If the runtime is not
+        active, an empty list is returned to avoid fabricating remote client
+        state for an absent endpoint.
+
+    Examples:
+        >>> set_runtime_config(None)
+        >>> set_runtime_running(False)
+        >>> result = handle_operator_clients()
+        >>> result.is_ok
+        True
+        >>> result.value
+        []
+    """
+
+    snapshot_result = get_runtime_status_snapshot()
+    if snapshot_result.is_err:
+        return Result(error=snapshot_result.error)
+    assert snapshot_result.value is not None
+    snapshot = snapshot_result.value
+    if snapshot.config is None or not snapshot.running:
+        return Result(value=[])
+
+    registry_result = read_attachment_registry()
+    if registry_result.is_err:
+        return Result(error=registry_result.error)
+    if registry_result.value is None:
+        return Result(value=[])
+    clients: list[ClientAttachment] = []
+    for attachment in registry_result.value.attachments:
+        stale_candidate = (
+            attachment.stale_candidate
+            or attachment.recoverability == Recoverability.STALE
+        )
+        display_state = classify_attachment_display_state(
+            attachment.runtime_state,
+            attachment.recoverability,
+            stale_candidate,
+            attachment.unknown_state,
+        )
+        clients.append(
+            attachment.model_copy(
+                update={
+                    "display_state": display_state,
+                    "stale_candidate": stale_candidate,
+                }
+            )
+        )
+    return Result(value=clients)
 
 
 @pre(

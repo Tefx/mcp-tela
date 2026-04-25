@@ -30,6 +30,7 @@ from hypothesis import given, settings, strategies as st
 from starlette.testclient import TestClient
 
 from tela.core.classification import (
+    AttachmentRegistry,
     AttachmentDisplayState,
     ClientAttachment,
     Recoverability,
@@ -95,11 +96,6 @@ class TestRemoteProbeSurfaceIsAbsent:
     These tests assert the existence of a remote probe endpoint that is
     functionally equivalent to ``tela status --probe``.
     """
-
-    pytestmark = pytest.mark.xfail(
-        reason="Remote operator diagnostics not yet implemented",
-        strict=True,
-    )
 
     def test_remote_probe_handler_is_defined(self) -> None:
         """`http_routes` must define a dedicated remote probe handler."""
@@ -220,11 +216,6 @@ class TestRemoteClientSurfaceIsAbsent:
     functionally equivalent to ``tela status --clients``.
     """
 
-    pytestmark = pytest.mark.xfail(
-        reason="Remote operator diagnostics not yet implemented",
-        strict=True,
-    )
-
     def test_remote_clients_handler_is_defined(self) -> None:
         """`http_routes` must define a dedicated remote client-diagnostics handler."""
         assert hasattr(http_routes, "handle_operator_clients"), (
@@ -286,13 +277,19 @@ class TestRemoteClientSurfaceIsAbsent:
         - num_attachments controls list length -> returned count must equal generated count when present
         """
         # Setup endpoint and registry state from generated parameters
-        from tela.shell.adr008_registry_events import upsert_client_attachment, read_attachment_registry
+        from tela.shell.adr008_registry_events import (
+            read_attachment_registry,
+            upsert_client_attachment,
+            write_attachment_registry,
+        )
 
         if endpoint_present:
             set_runtime_config(TelaConfig())
             set_runtime_running(True)
         else:
             set_runtime_running(False)
+
+        write_attachment_registry(AttachmentRegistry(attachments=[]))
 
         # Build attachments consistent with generated state
         registry_before = read_attachment_registry()
@@ -357,7 +354,7 @@ class TestRemoteClientSurfaceIsAbsent:
                     f"Expected {num_attachments} clients but got {len(clients)}"
                 )
                 # attachment_state "stale" or endpoint_stale must reflect in at least one client
-                if endpoint_stale or attachment_state == "stale":
+                if num_attachments > 0 and (endpoint_stale or attachment_state == "stale"):
                     any_stale = any(
                         getattr(c, "stale_candidate", False)
                         or getattr(c, "display_state", "") in ("stale_candidate", "degraded")
@@ -598,11 +595,6 @@ class TestExistingRegistryReadsAreReadOnly:
 
 class TestRemoteDiagnosticsMirrorCliContract:
     """Remote diagnostics must expose the same read-only contract as CLI surfaces."""
-
-    pytestmark = pytest.mark.xfail(
-        reason="Remote operator diagnostics not yet implemented",
-        strict=True,
-    )
 
     def test_probe_cli_flag_has_no_http_analogue(self) -> None:
         """`tela status --probe` must have a read-only HTTP analogue.
