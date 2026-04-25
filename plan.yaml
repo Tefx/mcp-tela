@@ -76370,7 +76370,7 @@ phases:
       confirming no implementation/code surface changes.'
   - id: tela.operator_p1.scope_decision.recover_exposure_decision
     name: 'Decide recover exposure: remote explicit mutation or CLI-only'
-    status: claimed
+    status: done
     description: 'Planning-only authority-adjudication step. Decide exactly one recovery
       posture for P1 operator surfaces:
 
@@ -76437,6 +76437,13 @@ phases:
     agent: minimalist-architect-tacit
     claimed_by: minimalist-architect-tacit
     claimed_at: '2026-04-25T19:29:05.602191+00:00'
+    done_at: '2026-04-25T19:31:53.263405+00:00'
+    evidence: 'Subagent minimalist-architect-tacit selected Branch B (CLI-only recovery
+      posture) and authored docs/ADR-008-operator-recovery-exposure.md in isolated
+      worktree (commit 46b34b9). Orchestrator squash-merged to main as [vectl] step-tela.operator_p1.scope_decision.recover_exposure_decision
+      completed. Mainline verification: `git show --name-only --pretty="" HEAD` returned
+      only docs/ADR-008-operator-recovery-exposure.md, confirming planning/doc-only
+      change with no implementation mutation.'
   - id: tela.operator_p1.scope_decision.gate
     name: Gate scope decision completeness
     status: pending
