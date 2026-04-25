@@ -78298,6 +78298,181 @@ phases:
     - tela.operator_p1.surfaces.authorization_explain
     - tela.operator_p1.surfaces.docs_status_update
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
+    name: Retest W6/W9 wiring audit blockers
+    status: pending
+    description: 'Independent wiring retest after the W6/W9 batched remediation.
+
+
+      As an INDEPENDENT TESTER, verify that the remediation closed both wiring audit
+      blockers and that the operator P1 phase remains wiring-complete.
+
+
+      Scope:
+
+      - W6-001: `GatewayStartupConfig.auth_mode` must either have a non-test runtime
+      consumer in the startup/auth path or no longer be written/exported as runtime
+      config. Verify by import/reference trace, not assertions.
+
+      - W9-001: `audit_query_paginated` must either be reachable through an actual
+      runtime route/tool/caller or no longer be exported/imported as a public runtime
+      surface. Verify by import/reference trace and, if routed, one real route/tool
+      invocation path.
+
+      - Re-run the operator P1 wiring audit checks for route/tool reachability, config/auth/audit
+      consumption, contract strength, and shared registry safety.
+
+
+      Finding issues is a successful audit outcome; record any blocker-class residuals
+      with exact reproduction and gate intersection.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      Independence Level: L1 independent review; agent must not be the implementation
+      agent from the fix step.'
+    verification: 'Phase-check protecting tela.operator_p1.surfaces.wiring_audit and
+      tela.operator_p1.surfaces.gate. Expected result: green. W6 and W9 are closed
+      by runtime reachability or explicit removal/de-export disposition, regression
+      evidence exists, and no new orphan config fields/routes/tools/contracts are
+      introduced.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: wiring-auditor (independent of implementation)
+
+      **Scope**: W6/W9 blocker closure and operator P1 wiring completeness
+
+      **Independence Level**: L1
+
+      **Timestamp**: <ISO 8601>
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - ../opifex/design/final-canonical-contract.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/shared_surfaces.yaml — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/case_matrix/mcp-tela/ — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### W6-001 Retest
+
+      - Reference/import trace for `GatewayStartupConfig.auth_mode`:
+
+      ```
+
+      <paste trace output>
+
+      ```
+
+      - Non-test runtime consumer or removal disposition: <file:line / decision>
+
+      - Targeted regression command/output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ### W9-001 Retest
+
+      - Reference/import trace for `audit_query_paginated`:
+
+      ```
+
+      <paste trace output>
+
+      ```
+
+      - Runtime caller/route/tool invocation OR de-export/removal disposition: <file:line
+      / command>
+
+      - Targeted regression command/output:
+
+      ```
+
+      <paste output>
+
+      ```
+
+
+      ### Wiring Completeness Re-Audit
+
+      **Orphan exports**:
+
+      ```
+
+      <grep/import-trace output or "none found">
+
+      ```
+
+      **Unconsumed config fields**:
+
+      ```
+
+      <grep/import-trace output or "none found">
+
+      ```
+
+      **Unregistered routes/tools**:
+
+      ```
+
+      <trace output or "none found">
+
+      ```
+
+      **Identity-lambda/vacuous contracts**:
+
+      ```
+
+      <trace output or "none found">
+
+      ```
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | W6-001 | auth_mode is consumed or removed | trace + regression | <ref> | PROVEN/NEEDS_TEST/UNPROVEN
+      | <path> | <OPEN/BLOCK basis> |
+
+      | W9-001 | audit_query_paginated reachable or removed | trace + route/tool proof
+      if retained | <ref> | PROVEN/NEEDS_TEST/UNPROVEN | <path> | <OPEN/BLOCK basis>
+      |
+
+
+      ### Headline
+
+      - [ ] PASS: W6 and W9 closed and wiring complete
+
+      - [ ] PASS_WITH_DEBT: Only explicit non-blocking debt remains with non-intersection
+      evidence
+
+      - [ ] FAIL: Blocking wiring issue or proof gap remains
+
+
+      **Confidence**: high/medium/low'
+    depends_on:
+    - tela.operator_p1.surfaces.fix_w6_w9_wiring_blockers
+    agent: wiring-auditor
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
