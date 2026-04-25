@@ -77288,6 +77288,120 @@ phases:
     - tela.operator_p1.red_tests.diagnostics_readonly
     - tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     agent: python-executor
+  - id: tela.operator_p1.red_tests.retest_static_quality_authorization_import
+    name: Retest red-test static quality and authorization import blockers
+    status: pending
+    description: 'Independent retest after batched remediation for B1+B2.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: phase-check protecting tela.operator_p1.red_tests.gate
+
+
+      As an INDEPENDENT TESTER, rerun the P1 red-test suite slice and prove the gate
+      blockers are removed.
+
+
+      Required proof:
+
+      - The affected tests collect; tests/core/test_authorization_explain_red.py must
+      not crash during collection from a missing top-level explain_authorization import.
+
+      - Ruff no longer reports F841 for tests/shell/test_adr008_recover_decision_behavior_red.py.
+
+      - Pyright no longer reports type errors in tests/shell/test_adr008_recover_decision_behavior_red.py
+      or tests/shell/test_operator_remote_diagnostics_red.py.
+
+      - The suite slice remains expected-red for product behavior gaps; do not treat
+      implementation-missing failures as retest failure if they are the intended red
+      proof.
+
+
+      Suggested command family:
+
+      - Targeted pytest collection/run for the affected P1 red-test files.
+
+      - Ruff check for the affected test files.
+
+      - Pyright (or project-equivalent type check) for the affected test files/slice.
+
+
+      Document actual commands and pasted output, not summaries only.'
+    verification: 'Phase-check protecting tela.operator_p1.red_tests.gate: B1+B2 gate
+      blockers are gone, collection/static-quality checks are green for the affected
+      slice, and remaining failures are only intended expected-red behavioral gaps.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of python-executor fix)
+
+      **Scope**: P1 red-test suite slice for B1+B2 blockers
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - tests/shell/test_adr008_recover_decision_behavior_red.py — key passage or
+      "NOT READ: <reason>"
+
+      - tests/shell/test_operator_remote_diagnostics_red.py — key passage or "NOT
+      READ: <reason>"
+
+      - tests/core/test_authorization_explain_red.py — key passage or "NOT READ: <reason>"
+
+
+      ### Commands Executed
+
+      ```text
+
+      <paste exact pytest/ruff/pyright commands>
+
+      ```
+
+
+      ### Actual Output
+
+      ```text
+
+      <paste relevant stdout/stderr proving B1+B2 removed>
+
+      ```
+
+
+      ### Gate Blocker Closure
+
+      - B1 ruff F841 removed: PASS/FAIL
+
+      - B1 pyright errors removed in recover decision red test: PASS/FAIL
+
+      - B1 pyright errors removed in remote diagnostics red test: PASS/FAIL
+
+      - B2 authorization explain collection crash removed: PASS/FAIL
+
+
+      ### Expected-Red Preservation
+
+      - Remaining intended behavioral red failures: <list or none>
+
+      - Confirmation that product code was not implemented in this remediation: yes/no
+
+
+      ### Headline
+
+      - [ ] PASS: B1+B2 removed; only intended expected-red behavior gaps remain.
+
+      - [ ] FAIL: collection/static-quality blocker remains.'
+    depends_on:
+    - tela.operator_p1.red_tests.fix_static_quality_authorization_import
+    agent: integration-verifier-tacit
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
