@@ -74595,3 +74595,59 @@ phases:
     depends_on:
     - adr008.doctor_cli_recovery
     agent: python-senior-tacit
+  - id: adr008.final_verify_gate
+    name: Final ADR-008 verification gate
+    status: pending
+    description: Final verification gate for ADR-008. Block if implementation introduced
+      Manager/Supervisor/event bus lifecycle ownership; core contains I/O or lacks
+      @pre/@post/doctest for new pure helpers; shell persistence fails best-effort
+      behavior or mutates gateway lockfile format; connect exits on request-level
+      recovery failure; status or doctor mutates without explicit recovery permission;
+      CLI docs contradict argparse behavior; any shared ../opifex canonical contract
+      was redefined locally. This is a full-plan-check protecting phase completion.
+    verification: Run `uv run pytest -q`, `uv run invar guard --all`, and `uv run
+      pytest tests/core/test_adr008_attachment_lifecycle.py tests/shell/test_adr008_registry_events.py
+      tests/shell/test_adr008_connect_survival.py tests/shell/test_adr008_status_cli.py
+      tests/shell/test_adr008_doctor_cli.py tests/integration/test_adr008_attachment_workflows.py
+      tests/shell/test_adr008_docs_parity.py -q`. Fresh self-review against ADR-008
+      verification expectations. Confirm command semantics parity across ADR-008,
+      USAGE, INTERFACES, DESIGN. Confirm no local reinterpretation of ../opifex shared
+      surfaces.
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key passage or NOT READ reason
+
+
+      ## Full Test Proof
+
+      Paste output for full pytest, full invar guard, and ADR-008 targeted pytest.
+
+
+      ## ADR-008 Requirement Register
+
+      | Requirement | Evidence/Test | Status |
+
+      | ----------- | ------------- | ------ |
+
+
+      ## Boundary Audit
+
+      - Core purity: PASS/FAIL
+
+      - Shell I/O isolation: PASS/FAIL
+
+      - CLI wiring in commands: PASS/FAIL
+
+      - No Manager/Supervisor/event bus: PASS/FAIL
+
+      - Gateway lockfile unchanged: PASS/FAIL
+
+      - ../opifex shared contracts unchanged: PASS/FAIL
+
+
+      ## Gate Decision
+
+      OPEN or BLOCKED; if BLOCKED, list exact remediation steps needed.'
+    depends_on:
+    - adr008.workflow_docs_parity
+    agent: gate-reviewer-tacit
