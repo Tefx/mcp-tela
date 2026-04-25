@@ -77100,6 +77100,116 @@ phases:
     depends_on:
     - tela.operator_p1.red_tests.fix_diagnostics_property_coverage
     agent: integration-verifier-tacit
+  - id: tela.operator_p1.red_tests.fix_diagnostics_enum_construction
+    name: Fix diagnostics enum test construction defects
+    status: pending
+    description: 'Tests-only remediation for new pre-gate crashes discovered in tela.operator_p1.red_tests.retest_diagnostics_property_coverage.
+
+
+      Scope: repair only enum/test-construction defects in tests/shell/test_operator_remote_diagnostics_red.py
+      property tests for client diagnostics.
+
+
+      Blockers to fix:
+
+      - RuntimeState.STALE_CANDIDATE is not a valid RuntimeState member and currently
+      raises AttributeError before behavior-defining assertions can run.
+
+      - AttachmentDisplayState(''PENDING'') is not a valid enum value and currently
+      raises ValueError before behavior-defining assertions can run.
+
+
+      Constraints:
+
+      - Modify tests only; do not modify product/runtime code.
+
+      - Do not broaden the existing diagnostics behavior assertions beyond the enum
+      construction repair.
+
+      - Preserve expected-red intent: after this fix, crashes from invalid enum construction
+      should be gone so the retest can expose behavior-defining assertions for diagnostics
+      coverage.
+
+      - If an enum replacement is uncertain, inspect the enum definitions and use
+      an existing valid member that preserves the intended stale/pending-like generated
+      state semantics; document the mapping in evidence.
+
+
+      step_type: implementation
+
+      repair_scope: tests_only
+
+      touch_paths:
+
+      - tests/shell/test_operator_remote_diagnostics_red.py
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is a TEST-REPAIR implementation step. Stub-only or skip/xfail-only completion
+      is NOT acceptable. The property tests must construct valid enum values and still
+      execute meaningful assertions.'
+    verification: 'Local-check protecting tela.operator_p1.red_tests.retest_diagnostics_property_coverage
+      and tela.operator_p1.red_tests.gate: targeted diagnostics property test collection/execution
+      reaches behavior assertions without AttributeError for RuntimeState.STALE_CANDIDATE
+      or ValueError for AttachmentDisplayState(''PENDING''). Evidence must confirm
+      no product code changed and expected-red behavior remains behavior-defining
+      rather than construction-crash-only.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - tests/shell/test_operator_remote_diagnostics_red.py — key passage or "NOT
+      READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Test-Only Enum Construction Fix Evidence
+
+
+      **Files changed**:
+
+      - tests/shell/test_operator_remote_diagnostics_red.py only: YES/NO
+
+
+      **Invalid enum repairs**:
+
+      - RuntimeState.STALE_CANDIDATE replacement: <valid member used and why it preserves
+      intended stale-like generated-state semantics>
+
+      - AttachmentDisplayState(''PENDING'') replacement: <valid member used and why
+      it preserves intended pending-like generated-state semantics>
+
+
+      **Crash removal proof**:
+
+      ```
+
+      <paste targeted pytest command/output or collection/output showing AttributeError/ValueError
+      enum-construction crashes are gone>
+
+      ```
+
+
+      **Expected-red preservation**:
+
+      ```
+
+      <paste output showing any remaining failures are behavior-defining diagnostics
+      assertions, not enum construction crashes>
+
+      ```
+
+
+      **Product code modified**: NO (required)
+
+      '
+    depends_on:
+    - tela.operator_p1.red_tests.fix_diagnostics_property_coverage
+    agent: python-executor
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
