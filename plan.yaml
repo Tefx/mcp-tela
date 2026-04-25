@@ -76661,7 +76661,7 @@ phases:
     agent: python-executor
   - id: tela.operator_p1.red_tests.authorization_explain
     name: Red test authorization explain diagnostic-only behavior
-    status: pending
+    status: claimed
     description: 'Write behavior-defining tests only; do not change product code.
       Add expected-red tests for an authorization explain surface that explains visible,
       hidden, allowed, and denied outcomes for the bound profile/connection.
@@ -76733,6 +76733,8 @@ phases:
 
       - Downstream implementation owner: tela.operator_p1.surfaces.authorization_explain'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-25T19:36:50.744036+00:00'
   - id: tela.operator_p1.red_tests.gate
     name: Gate expected-red test coverage
     status: pending
