@@ -76317,3 +76317,34 @@ phases:
   status: pending
   depends_on:
   - debt.warning_cleanup_pass3
+  steps:
+  - id: tela.operator_p1.scope_decision.authority_and_source_discovery
+    name: Read canonical authority and discover source surfaces
+    status: pending
+    description: Planning-only scope step. Read opifex canonical docs and repo docs,
+      confirm tela ownership boundaries, and locate existing code for status, audit,
+      clients, probe, recovery, and authorization enforcement. Produce a P1 target
+      checklist covering audit query cursor/limit, active probe diagnostics, client
+      attachment diagnostics, recover action decision, and authorization explain.
+      Do not implement. Do not redefine PersonaSpec, JobSpec, CapabilityToken, or
+      profile semantics.
+    verification: 'Read-only verification: cite docs/INTERFACES.md §7.2a and opifex
+      ownership/hard-invariant sections; list exact source files and symbols discovered;
+      confirm no plan/code implementation happened in this step.'
+    evidence_template: 'Decision/source-discovery record:
+
+      - Canonical docs read: <paths + sections>
+
+      - P1 target checklist: audit_query, active_probe, client_attachments, recover_decision,
+      authorization_explain
+
+      - Source map: status=<files/symbols>, audit=<files/symbols>, clients=<files/symbols>,
+      probe=<files/symbols>, recovery=<files/symbols>, authorization=<files/symbols>
+
+      - Ownership constraints: tela owns gateway/profile authorization + audit/diagnostics;
+      tela does not own PersonaSpec/JobSpec/agent runtime control
+
+      - Explicit statement: no RBAC added or planned
+
+      - Implementation performed: none'
+    agent: minimalist-architect-tacit
