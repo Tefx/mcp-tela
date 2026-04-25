@@ -74421,3 +74421,47 @@ phases:
     depends_on:
     - adr008.core_contracts_and_red_tests
     agent: python-senior-tacit
+  - id: adr008.connect_survival_events
+    name: Connect survival, per-request recovery budget, and provider events
+    status: pending
+    description: Update tela connect and bridge recovery behavior to satisfy ADR-008.
+      Add --max-recovery-attempts bounds/default and --client-kind with CLI/env/unknown
+      precedence. Generate client_id at process entry. Record client_attachment_started,
+      heartbeat registry every 30s with 90s lease, and client_provider_exit. Runtime
+      recovery failures produce request-level JSON-RPC errors RECOVERY_FAILED_FOR_REQUEST,
+      BRIDGE_RECOVERY_EXHAUSTED, ATTACH_INTERRUPTED. Exhausted recovery budget fails
+      only the in-flight request; provider loop remains alive. Successful MCP response
+      resets recovery_attempts. Connect autostart/recovery appends runtime recovery/probe
+      events best-effort. No unbounded retry loops. No Manager/Supervisor/event bus.
+    verification: 'Expected red: `uv run pytest tests/shell/test_adr008_connect_survival.py
+      -q`. Green: `uv run pytest tests/shell/test_adr008_connect_survival.py tests/shell/test_connect_cmd.py
+      tests/shell/test_connect_recovery_red.py tests/repro/test_connect_runtime_liveness.py
+      -q` and `uv run invar guard --changed`.'
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key passage or NOT READ reason
+
+
+      ## Expected-Red Proof
+
+      Paste failing output showing provider-loop/request-level gap.
+
+
+      ## Green Proof
+
+      Paste targeted pytest and invar guard output.
+
+
+      ## Survival Proof
+
+      Show idle/missing/stale runtime recovery failure does not terminate provider
+      loop.
+
+
+      ## Event Proof
+
+      Show registry/event lines for start, heartbeat, recovery/probe, and provider
+      exit.'
+    depends_on:
+    - adr008.shell_registry_events
+    agent: python-senior-tacit
