@@ -74474,7 +74474,7 @@ phases:
       guard execution and passing status.'
   - id: adr008.shell_registry_events
     name: Shell attachment registry and runtime event persistence
-    status: pending
+    status: claimed
     description: 'Implement shell I/O functions for ADR-008 diagnostics: read/write/upsert
       attachment registry, append runtime event, and read runtime events with malformed-line
       count. Use ~/.tela/client-attachments.json and ~/.tela/runtime-events.jsonl.
@@ -74513,6 +74513,8 @@ phases:
     depends_on:
     - adr008.core_contracts_and_red_tests
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T14:40:03.160423+00:00'
   - id: adr008.connect_survival_events
     name: Connect survival, per-request recovery budget, and provider events
     status: pending
