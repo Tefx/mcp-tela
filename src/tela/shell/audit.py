@@ -11,6 +11,7 @@ import json
 from datetime import datetime, timezone
 import asyncio
 from collections import deque
+from dataclasses import dataclass
 from pathlib import Path
 
 from tela.core.models import (
@@ -129,8 +130,67 @@ def build_audit_entry(
 
 _audit_entries: deque[AuditEntry] = deque(maxlen=10000)
 _AUDIT_MAX_ENTRIES: int = 10000
+_AUDIT_QUERY_DEFAULT_LIMIT: int = 100
+_AUDIT_QUERY_MAX_LIMIT: int = 100
 _audit_lock = asyncio.Lock()
 _audit_log_path: Path | None = None
+
+
+@dataclass(frozen=True)
+class AuditPage:
+    """Bounded page returned by the dedicated audit query projection.
+
+    Args:
+        entries: Audit entries in deterministic append order.
+        next_cursor: Cursor for the next page, or ``None`` at end-of-history.
+        has_more: Whether more entries exist after this page.
+    """
+
+    entries: list[AuditEntry]
+    next_cursor: str | None
+    has_more: bool
+
+
+# @invar:allow shell_result: pure limit normalization has no failure mode and feeds Result-returning shell surfaces.
+# @shell_orchestration: bounded query surfaces share this shell-local pagination policy.
+def _normalize_audit_page_limit(limit: int | None) -> int:
+    """Normalize caller-provided page size to the bounded audit query range.
+
+    Args:
+        limit: Requested page size, or ``None`` to use the default.
+
+    Returns:
+        Positive page size clamped to the hard maximum.
+    """
+
+    if limit is None or limit <= 0:
+        return _AUDIT_QUERY_DEFAULT_LIMIT
+    return min(limit, _AUDIT_QUERY_MAX_LIMIT)
+
+
+# @shell_complexity: cursor validation branches are the explicit malformed-cursor contract.
+def _decode_audit_cursor(cursor: str | None) -> Result[int, str]:
+    """Decode an audit pagination cursor into a zero-based offset.
+
+    Args:
+        cursor: Opaque cursor previously returned as ``AuditPage.next_cursor``.
+
+    Returns:
+        Result containing the decoded offset or an audit query error.
+    """
+
+    if cursor is None:
+        return Result(value=0)
+    if not cursor.startswith("offset:"):
+        return Result(error="AUDIT_QUERY_ERROR: invalid cursor")
+    raw_offset = cursor.removeprefix("offset:")
+    try:
+        offset = int(raw_offset)
+    except ValueError:
+        return Result(error="AUDIT_QUERY_ERROR: invalid cursor")
+    if offset < 0:
+        return Result(error="AUDIT_QUERY_ERROR: invalid cursor")
+    return Result(value=offset)
 
 
 async def audit_init(config: "AuditConfig") -> Result[None, str]:
@@ -187,6 +247,24 @@ async def _audit_set_max_entries(max_entries: int) -> None:
 def _get_audit_entries() -> Result[list[AuditEntry], str]:
     """Return all stored audit entries (for testing)."""
     return Result(value=list(_audit_entries))
+
+
+def get_recent_audit_entries(
+    limit: int | None = _AUDIT_QUERY_DEFAULT_LIMIT,
+) -> Result[list[AuditEntry], str]:
+    """Return the bounded recent audit summary for status surfaces.
+
+    Args:
+        limit: Requested summary size. ``None``, zero, and negative values use
+            the bounded default; values above the hard maximum are clamped.
+
+    Returns:
+        Result containing recent entries in append order, bounded by the audit
+        query hard maximum.
+    """
+
+    page_limit = _normalize_audit_page_limit(limit)
+    return Result(value=list(_audit_entries)[-page_limit:])
 
 
 def _clear_audit_entries() -> None:
@@ -292,6 +370,59 @@ async def audit_query(
         except (ValueError, TypeError):
             return Result(error=f"AUDIT_QUERY_ERROR: invalid timestamp format: {since}")
     return Result(value=entries[-limit:])
+
+
+async def audit_query_paginated(
+    cursor: str | None = None,
+    limit: int | None = None,
+) -> Result[AuditPage, str]:
+    """Query audit entries through a bounded cursor-based projection.
+
+    The cursor is deterministic for a stable in-memory audit store: it encodes
+    the next append-order offset as ``offset:<N>``. The function snapshots the
+    audit deque under the module lock and does not mutate audit state.
+
+    Examples:
+        >>> import asyncio
+        >>> clear_audit_entries()
+        >>> r = asyncio.run(audit_query_paginated(limit=10))
+        >>> r.is_ok
+        True
+        >>> r.value.has_more
+        False
+
+    Args:
+        cursor: Cursor from a previous ``AuditPage.next_cursor``. ``None``
+            starts from the oldest retained audit entry.
+        limit: Requested page size. ``None``, zero, and negative values use the
+            bounded default; values above the hard maximum are clamped.
+
+    Returns:
+        Result containing an ``AuditPage`` or an ``AUDIT_QUERY_ERROR`` string for
+        malformed cursors.
+    """
+
+    offset_result = _decode_audit_cursor(cursor)
+    if offset_result.is_err:
+        return Result(error=offset_result.error)
+    assert offset_result.value is not None
+
+    page_limit = _normalize_audit_page_limit(limit)
+    async with _audit_lock:
+        entries = list(_audit_entries)
+
+    start = min(offset_result.value, len(entries))
+    end = min(start + page_limit, len(entries))
+    page_entries = entries[start:end]
+    has_more = end < len(entries)
+    next_cursor = f"offset:{end}" if has_more else None
+    return Result(
+        value=AuditPage(
+            entries=page_entries,
+            next_cursor=next_cursor,
+            has_more=has_more,
+        )
+    )
 
 
 # Backward-compatible test hooks.

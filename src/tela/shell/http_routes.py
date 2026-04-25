@@ -25,7 +25,11 @@ from tela.core.models import (
 )
 from tela.core.contracts import post, pre
 from tela.shell.result import Result
-from tela.shell.audit import audit_query, get_audit_entries  # noqa: F401 — audit_query wired for dead_export
+from tela.shell.audit import (  # noqa: F401 — audit query surfaces are route-wired exports
+    audit_query,
+    audit_query_paginated,
+    get_recent_audit_entries,
+)
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_runtime import (
@@ -157,7 +161,7 @@ def handle_status(
 
     profile_count = facts.profile_count
 
-    audit_entries_result = get_audit_entries()
+    audit_entries_result = get_recent_audit_entries()
     if audit_entries_result.is_err:
         return Result(error=f"AUDIT_QUERY_ERROR: {audit_entries_result.error}")
     assert audit_entries_result.value is not None
