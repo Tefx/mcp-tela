@@ -76331,7 +76331,17 @@ phases:
     verification: 'Read-only verification: cite docs/INTERFACES.md §7.2a and opifex
       ownership/hard-invariant sections; list exact source files and symbols discovered;
       confirm no plan/code implementation happened in this step.'
-    evidence_template: 'Decision/source-discovery record:
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Decision/source-discovery record
 
       - Canonical docs read: <paths + sections>
 
