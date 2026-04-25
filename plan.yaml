@@ -77503,3 +77503,96 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.authorization_explain
     agent: doc-reviewer-tacit
+  - id: tela.operator_p1.surfaces.wiring_audit
+    name: Audit operator P1 wiring completeness
+    status: pending
+    description: 'Wiring completeness audit: verify every new operator P1 route/tool/helper
+      is reachable at runtime and no public symbol is orphaned.
+
+
+      Required checks:
+
+      1. Route/tool reachability: each implemented operator surface is registered
+      in the actual gateway entrypoint path.
+
+      2. CLI-only recover branch, if selected, is documented and remote route absence/rejection
+      is observable.
+
+      3. Config/auth/audit consumption: any new fields or models are actually used
+      by non-test code.
+
+      4. Contract strength: any new @pre/@post contracts reference real parameters
+      and contain non-vacuous comparisons.
+
+      5. Shared registry safety: no conflicting `tela.`/`tela_` namespace use and
+      no new manager/event bus/RBAC layer.
+
+
+      Use import-trace/grep output as evidence, not assertions.'
+    verification: 'Phase-check protecting final gate: route/tool wiring exists for
+      all implemented surfaces; no orphan exports/commands/config fields/identity-lambda
+      contracts; CLI-only recover branch, if selected, is explicitly absent/rejected
+      remotely.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Wiring Audit Report
+
+      **Operator surfaces checked**: audit_query, active_probe, client_attachments,
+      recover, authorization_explain
+
+      **Route/tool registration evidence**:
+
+      ```text
+
+      <grep/import-trace output>
+
+      ```
+
+      **Orphan exports**:
+
+      ```text
+
+      <none found or evidence>
+
+      ```
+
+      **Unregistered commands/routes/tools**:
+
+      ```text
+
+      <none found or evidence>
+
+      ```
+
+      **Unconsumed config/model fields**:
+
+      ```text
+
+      <none found or evidence>
+
+      ```
+
+      **Identity-lambda/vacuous contracts**:
+
+      ```text
+
+      <none found or evidence>
+
+      ```
+
+      **Headline**: PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - tela.operator_p1.surfaces.audit_query_projection
+    - tela.operator_p1.surfaces.active_probe_diagnostics
+    - tela.operator_p1.surfaces.client_attachment_diagnostics
+    - tela.operator_p1.surfaces.recover_behavior
+    - tela.operator_p1.surfaces.authorization_explain
+    agent: wiring-auditor
