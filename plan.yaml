@@ -76820,6 +76820,7 @@ phases:
     - tela.operator_p1.red_tests.diagnostics_readonly
     - tela.operator_p1.red_tests.recover_decision_behavior
     - tela.operator_p1.red_tests.authorization_explain
+    - tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     agent: gate-reviewer-tacit
   - id: tela.operator_p1.red_tests.diagnostics_readonly
     name: Red test read-only probe and client attachment diagnostics
