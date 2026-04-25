@@ -77596,3 +77596,80 @@ phases:
     - tela.operator_p1.surfaces.recover_behavior
     - tela.operator_p1.surfaces.authorization_explain
     agent: wiring-auditor
+  - id: tela.operator_p1.surfaces.gate
+    name: Gate operator P1 surface implementation
+    status: pending
+    description: 'Gate review for the operator P1 surfaces phase.
+
+
+      review_depth: THOROUGH
+
+      review_depth_rationale:
+
+      - Phase touches gateway/profile authorization, audit, diagnostics, recovery,
+      HTTP/MCP runtime surfaces.
+
+      - Shared contract drift and passive recovery side effects are blocker-class
+      risks.
+
+
+      Gate Preview (what the gate WILL reject):
+
+      1. `/status.audit_entries` repurposed as long-history audit query.
+
+      2. Passive status/probe triggering recovery, cold-start, connect/disconnect,
+      or config reload.
+
+      3. Authorization explain implementing RBAC, alternate profile semantics, or
+      second authorization.
+
+      4. Remote recover without explicit mutation and audit evidence, or CLI-only
+      decision not documented/testable.
+
+      5. New route/tool not registered in runtime entrypoint path.
+
+      6. Stubs or hardcoded responses masquerading as implementation.'
+    verification: Phase-check protecting final operator gate. Review implementation
+      evidence, wiring audit, docs update, expected-red-to-green proof, and behavioral
+      proof register. Block if any P1 target lacks implementation/explicit CLI-only
+      disposition or violates hard non-goals.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Gate Review Report
+
+      - Audit query bounded cursor/limit: PASS/FAIL
+
+      - Active probe diagnostics read-only: PASS/FAIL
+
+      - Client attachment diagnostics read-only: PASS/FAIL
+
+      - Recover selected branch implemented/documented: PASS/FAIL
+
+      - Authorization explain diagnostic-only: PASS/FAIL
+
+      - Wiring audit passed: PASS/FAIL
+
+      - Docs status updated: PASS/FAIL
+
+      - No RBAC / no second authorization / no passive recovery: PASS/FAIL
+
+      - Blockers: <list or none>
+
+      - Gate decision: OPEN | BLOCKED'
+    depends_on:
+    - tela.operator_p1.surfaces.audit_query_projection
+    - tela.operator_p1.surfaces.active_probe_diagnostics
+    - tela.operator_p1.surfaces.client_attachment_diagnostics
+    - tela.operator_p1.surfaces.recover_behavior
+    - tela.operator_p1.surfaces.authorization_explain
+    - tela.operator_p1.surfaces.docs_status_update
+    - tela.operator_p1.surfaces.wiring_audit
+    agent: gate-reviewer-tacit
