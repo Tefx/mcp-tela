@@ -78016,3 +78016,97 @@ phases:
     depends_on:
     - tela.operator_p1.gate.repo_local_full_gate
     agent: blind-tester-tacit
+  - id: tela.operator_p1.gate.final_review
+    name: Final gate review for operator P1 surfaces
+    status: pending
+    description: 'Final independent gate review for the tela operator P1 plan slice.
+
+
+      review_depth: THOROUGH
+
+      cross_cutting_focus:
+
+      - P1 surfaces are public operator APIs owned by tela, not UI implementation.
+
+      - No RBAC, no PersonaSpec/JobSpec/CapabilityToken redefinition, no passive recovery.
+
+      - Authorization explain remains a diagnostic projection of existing enforcement.
+
+      - Recovery branch is explicit and auditable if remote, or CLI-only if selected.
+
+      - `/status.audit_entries` remains recent summary.
+
+
+      Gate may OPEN only when each blocker-class behavioral obligation is PROVEN or
+      has explicit non-intersection evidence.'
+    verification: Full-plan-check decision basis. Review all evidence, unresolved
+      statuses, and closure paths. Block if behavioral runtime evidence is missing,
+      if spec conformance diverges, if full gate fails without remediation ownership,
+      or if operator-client smoke lacks actual public request/output proof.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Final Gate Review Report
+
+      **Reviewer**: gate-reviewer-tacit
+
+      **Phase**: tela.operator_p1.gate
+
+
+      ### Step Review
+
+      | Step ID | Status | Evidence Quality | Concerns |
+
+      |---|---|---|---|
+
+      | tela.operator_p1.gate.targeted_tests | ✅/⚠️/❌ | excellent/adequate/insufficient
+      | <notes> |
+
+      | tela.operator_p1.gate.spec_conformance | ✅/⚠️/❌ | excellent/adequate/insufficient
+      | <notes> |
+
+      | tela.operator_p1.gate.repo_local_full_gate | ✅/⚠️/❌ | excellent/adequate/insufficient
+      | <notes> |
+
+      | tela.operator_p1.gate.operator_client_smoke | ✅/⚠️/❌ | excellent/adequate/insufficient
+      | <notes> |
+
+
+      ### Gate Decision Basis
+
+      | requirement_ref | evidence_ref | unresolved_status | blocks? | rationale |
+
+      |---|---|---|---|---|
+
+
+      ### Non-goal audit
+
+      - No RBAC: PASS/FAIL
+
+      - No PersonaSpec/JobSpec/CapabilityToken redefinition: PASS/FAIL
+
+      - No passive recovery: PASS/FAIL
+
+      - /status.audit_entries recent-only: PASS/FAIL
+
+      - Authorization explain diagnostic-only: PASS/FAIL
+
+
+      ### Gate Decision
+
+      OPEN | BLOCKED
+
+      Blocking issues: <list or none>'
+    depends_on:
+    - tela.operator_p1.gate.targeted_tests
+    - tela.operator_p1.gate.spec_conformance
+    - tela.operator_p1.gate.repo_local_full_gate
+    - tela.operator_p1.gate.operator_client_smoke
+    agent: gate-reviewer-tacit
