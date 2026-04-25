@@ -74380,3 +74380,44 @@ phases:
 
       Confirm implementations vary by input and are not constants.'
     agent: python-executor
+  - id: adr008.shell_registry_events
+    name: Shell attachment registry and runtime event persistence
+    status: pending
+    description: 'Implement shell I/O functions for ADR-008 diagnostics: read/write/upsert
+      attachment registry, append runtime event, and read runtime events with malformed-line
+      count. Use ~/.tela/client-attachments.json and ~/.tela/runtime-events.jsonl.
+      Directory mode 0o700; files 0o600. Use standard-library fcntl locks only. Registry
+      writes use temp file + atomic replace. Event append writes one JSONL line, flushes,
+      rejects events >16 KiB. Missing files mean empty state. Malformed registry returns
+      ATTACHMENT_REGISTRY_PARSE_ERROR. Diagnostic write failure is best-effort for
+      connect callers. No gateway lockfile schema changes. No Manager/Supervisor/event
+      bus.'
+    verification: 'Expected red: `uv run pytest tests/shell/test_adr008_registry_events.py
+      -q`. Green: `uv run pytest tests/shell/test_adr008_registry_events.py tests/shell/test_lockfile.py
+      tests/shell/test_connection_reaper.py -q` and `uv run invar guard --changed`.'
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key passage or NOT READ reason
+
+
+      ## Expected-Red Proof
+
+      Paste failing output before implementation.
+
+
+      ## Green Proof
+
+      Paste targeted pytest and invar guard output.
+
+
+      ## Persistence Proof
+
+      Include temp HOME path, file modes, malformed-line count, oversized-event rejection.
+
+
+      ## Boundary Proof
+
+      Confirm no I/O in src/tela/core/** and gateway lockfile format unchanged.'
+    depends_on:
+    - adr008.core_contracts_and_red_tests
+    agent: python-senior-tacit
