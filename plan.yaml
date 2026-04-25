@@ -76501,7 +76501,7 @@ phases:
       only the gate evidence artifact file, confirming read-only gate evidence update.'
 - id: tela.operator_p1.red_tests
   name: Tela Operator P1 Red Tests
-  status: in_progress
+  status: done
   depends_on:
   - tela.operator_p1.scope_decision
   steps:
@@ -76765,7 +76765,7 @@ phases:
       were not modified.'
   - id: tela.operator_p1.red_tests.gate
     name: Gate expected-red test coverage
-    status: claimed
+    status: done
     description: 'Gate review for red-tests phase. Confirm behavior-defining tests
       were added before implementation, are scoped to tests/fixtures only, have real
       expected-red output, and cover all five P1 targets.
@@ -76827,6 +76827,13 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-25T23:21:06.883525+00:00'
+    done_at: '2026-04-25T23:23:59.938708+00:00'
+    evidence: Independent gate-reviewer-tacit verdict PASS/OPEN. All five expected-red
+      target surfaces validated, diagnostics property tests confirmed behavior-defining
+      (no pseudo-property regressions), B1/B2 blockers verified closed, and static
+      checks (ruff/pyright) green for affected red-test slice. Authorization explain
+      tests now collect and fail at runtime expected-red (no collection crash). Product
+      code immutability for red-test remediation chain confirmed.
   - id: tela.operator_p1.red_tests.diagnostics_readonly
     name: Red test read-only probe and client attachment diagnostics
     status: done
@@ -77430,7 +77437,7 @@ phases:
       gate_open_allowed=true and blockers none.'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
-  status: locked
+  status: pending
   depends_on:
   - tela.operator_p1.red_tests
   steps:
