@@ -76784,8 +76784,10 @@ phases:
       - recover branch follows the scope decision'
     verification: 'Phase-check protecting implementation: all P1 red-test steps have
       expected_result=red evidence, failing output pasted, product code untouched,
-      and downstream implementation owner identified. Block if any target lacks a
-      red proof or if any test encodes RBAC/passive recovery/contract reinterpretation.'
+      downstream implementation owner identified, and latest B1+B2 collection/static-quality
+      gate blockers are closed by tela.operator_p1.red_tests.retest_static_quality_authorization_import.
+      Block if any target lacks a red proof, if B1/B2 recur, or if any test encodes
+      RBAC/passive recovery/contract reinterpretation.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -76821,6 +76823,7 @@ phases:
     - tela.operator_p1.red_tests.recover_decision_behavior
     - tela.operator_p1.red_tests.authorization_explain
     - tela.operator_p1.red_tests.retest_diagnostics_property_coverage
+    - tela.operator_p1.red_tests.retest_static_quality_authorization_import
     agent: gate-reviewer-tacit
   - id: tela.operator_p1.red_tests.diagnostics_readonly
     name: Red test read-only probe and client attachment diagnostics
