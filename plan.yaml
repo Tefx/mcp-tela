@@ -76314,13 +76314,13 @@ phases:
       \ baseline, no blocker-class regression observed."
 - id: tela.operator_p1.scope_decision
   name: Tela Operator P1 Scope Decision
-  status: pending
+  status: in_progress
   depends_on:
   - debt.warning_cleanup_pass3
   steps:
   - id: tela.operator_p1.scope_decision.authority_and_source_discovery
     name: Read canonical authority and discover source surfaces
-    status: pending
+    status: claimed
     description: Planning-only scope step. Read opifex canonical docs and repo docs,
       confirm tela ownership boundaries, and locate existing code for status, audit,
       clients, probe, recovery, and authorization enforcement. Produce a P1 target
@@ -76358,6 +76358,8 @@ phases:
 
       - Implementation performed: none'
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-25T19:23:19.672948+00:00'
   - id: tela.operator_p1.scope_decision.recover_exposure_decision
     name: 'Decide recover exposure: remote explicit mutation or CLI-only'
     status: pending
