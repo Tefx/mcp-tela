@@ -74465,3 +74465,47 @@ phases:
     depends_on:
     - adr008.shell_registry_events
     agent: python-senior-tacit
+  - id: adr008.status_cli_surfaces
+    name: Status CLI passive, probe, and clients surfaces
+    status: pending
+    description: Implement ADR-008 status command surfaces. tela status remains passive
+      and prints required observation cue. tela status --probe actively checks current
+      lockfile endpoint only; no cold-start, no recovery. tela status --clients lists
+      attachment registry with display_state derived read-only. --probe and --clients
+      are mutually exclusive. --probe-timeout is valid only with --probe. --json outputs
+      ADR-008 schema blocks and registry_parse_error. Output uses client-neutral client
+      attachments, not opencode sessions. Status reads must not rewrite attachment
+      registry, cold-start, recover, or delete stale candidates. No Manager/Supervisor/event
+      bus.
+    verification: 'Expected red: `uv run pytest tests/shell/test_adr008_status_cli.py
+      -q`. Green: `uv run pytest tests/shell/test_adr008_status_cli.py tests/shell/test_status_truth_verification.py
+      tests/shell/test_query_commands_remote_state.py tests/shell/test_cli_wiring.py
+      -q` and `uv run invar guard --changed`.'
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key passage or NOT READ reason
+
+
+      ## Expected-Red Proof
+
+      Paste failing output before implementation.
+
+
+      ## Green Proof
+
+      Paste targeted pytest and invar guard output.
+
+
+      ## CLI Output Proof
+
+      Paste representative outputs for status --json, status --probe --json absent
+      runtime, status --clients --json, and rejected invalid flag combinations.
+
+
+      ## Non-Mutation Proof
+
+      Confirm status reads do not cold-start, recover, delete stale candidates, or
+      write registry state.'
+    depends_on:
+    - adr008.connect_survival_events
+    agent: python-executor
