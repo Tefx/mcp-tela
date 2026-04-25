@@ -77674,7 +77674,7 @@ phases:
       surface, no RBAC, no PersonaSpec/JobSpec/CapabilityToken changes.'
   - id: tela.operator_p1.surfaces.authorization_explain
     name: Implement and verify authorization explain diagnostic surface
-    status: claimed
+    status: done
     description: 'Complete an authorization explain diagnostic surface that reports
       why a tool is visible, hidden, allowed, or denied for a bound profile/connection
       by reusing existing enforcement and visibility logic.
@@ -77785,6 +77785,14 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T23:37:38.760545+00:00'
+    done_at: '2026-04-25T23:42:13.202737+00:00'
+    evidence: 'Implemented authorization explain diagnostic surface by adding core
+      helper logic in src/tela/core/enforcement.py (with contracts/doctest), shell
+      helper src/tela/shell/authorization_explain.py, and wiring via src/tela/shell/gateway.py
+      + src/tela/shell/http_routes.py. Worktree branch squash-merged as [vectl] step-tela.operator_p1.surfaces.authorization_explain
+      completed. Mainline verification: `uv run pytest tests/core/test_authorization_explain_red.py
+      tests/shell/test_http_routes.py -q` => 55 passed; `invar_guard(changed=true)`
+      passed. No RBAC/second-authority semantics introduced.'
   - id: tela.operator_p1.surfaces.docs_status_update
     name: Update operator P1 docs from target to implemented or CLI-only status
     status: pending
