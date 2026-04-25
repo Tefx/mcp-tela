@@ -75855,7 +75855,7 @@ phases:
   steps:
   - id: adr008.issue.invar_warning_cleanup
     name: ADR-008 invar warning cleanup
-    status: claimed
+    status: done
     description: 'Step type: implementation.
 
 
@@ -75931,6 +75931,30 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T16:57:16.192094+00:00'
+    done_at: '2026-04-25T17:10:44.864704+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n- AGENTS.md — NOT READ (not\
+      \ present in worktree root path per worker evidence).\n- INVAR.md — read; shell/core\
+      \ contract and guard expectations used.\n\n## ADR-008 Invar Warning Cleanup\
+      \ Evidence\nheadline: \"Removed ADR-008 shell_too_complex info finding in append_runtime_event\
+      \ via root-cause extraction.\"\nproof_gap_status: \"CLOSED\"\nblocking_status:\
+      \ \"NON_BLOCKING\"\nverdict: \"PASS\"\nblockers: []\norchestrator_action_hint:\
+      \ \"PROCEED_TO_FINAL_VERIFY\"\n\n## Before Evidence\n- `uv run invar guard --all`\
+      \ before fix included ADR-008-specific info finding:\n  `shell_too_complex src/tela/shell/adr008_registry_events.py\
+      \ append_runtime_event has 4 branches (max:3)`\n- Summary before: errors=0,\
+      \ warnings=57, infos=21.\n\n## Fix Summary\nRoot cause fixed by separating runtime-event\
+      \ payload validation from filesystem append orchestration.\n\nFiles changed:\n\
+      - src/tela/shell/adr008_registry_events.py\n\nWhy this is root-cause cleanup:\n\
+      - Reduced branch complexity in the shell append function without suppressing\
+      \ checks.\n- Preserved behavior and error semantics; no broad escape hatches\
+      \ added.\n\n## After Evidence\nWorker post-fix:\n- `uv run invar guard --all`\
+      \ summary changed to errors=0, warnings=57, infos=20.\n- ADR-008 append_runtime_event\
+      \ complexity finding removed.\n\nMainline post-merge verification:\n- Full invar\
+      \ scan run `grd_332d2d3530184d73b6079a8e` complete: ok=true, errors=0, warnings=57,\
+      \ infos=20.\n\n## Regression Proof\nMainline post-merge:\n- `uv run pytest -q`\n\
+      - Output: `1321 passed in 145.65s`\n\n## Shared Contract Discipline\n- No shared\
+      \ contract reinterpretation introduced.\n- No accept-and-clean malformed shared\
+      \ input behavior added.\n- No compatibility aliases added.\n- No tests removed.\n\
+      \n## Commit hash(es)\n- 5858d75"
   - id: adr008.issue.final_verify
     name: ADR-008 issue cleanup final verification
     status: pending
