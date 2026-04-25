@@ -298,8 +298,15 @@ class TestRemoteClientSurfaceIsAbsent:
         registry_before = read_attachment_registry()
         assert registry_before.is_ok
         for i in range(num_attachments):
-            disp_state = AttachmentDisplayState(attachment_state.upper()) if attachment_state != "unknown" else AttachmentDisplayState.UNKNOWN
-            runtime_state = RuntimeState.STALE_CANDIDATE if (endpoint_stale and i == 0) else RuntimeState.ACTIVE
+            if attachment_state == "pending":
+                disp_state = AttachmentDisplayState.STARTED
+            elif attachment_state == "attached":
+                disp_state = AttachmentDisplayState.HEALTHY
+            elif attachment_state == "stale":
+                disp_state = AttachmentDisplayState.STALE_CANDIDATE
+            else:  # "unknown"
+                disp_state = AttachmentDisplayState.UNKNOWN
+            runtime_state = RuntimeState.IDLE if (endpoint_stale and i == 0) else RuntimeState.ACTIVE
             if attachment_state == "unknown":
                 runtime_state = RuntimeState.UNKNOWN
             elif attachment_state == "pending":
