@@ -74509,3 +74509,46 @@ phases:
     depends_on:
     - adr008.connect_survival_events
     agent: python-executor
+  - id: adr008.doctor_cli_recovery
+    name: Doctor CLI diagnostics and explicit recovery
+    status: pending
+    description: Add tela doctor and tela doctor --recover behavior. tela doctor is
+      cached/passive and does not probe or mutate without --recover. tela doctor --recover
+      is explicit mutation surface. Support --json, --recover, --probe-timeout, --recover-timeout.
+      Reject doctor --probe-timeout without --recover. Implement ADR-008 recommendation
+      templates and JSON shapes. Read runtime-events for last_provider_exit, last_probe_event,
+      last_recovery_event. For --recover, follow ADR-008 action/event ordering, stale
+      cleanup True/False/error branches, cold-start failure branch, already-ready
+      probe behavior, recovery_succeeded rules, and client_attachments_alive liveness
+      reason priority. Do not revive closed client transports. No Manager/Supervisor/event
+      bus.
+    verification: 'Expected red: `uv run pytest tests/shell/test_adr008_doctor_cli.py
+      -q`. Green: `uv run pytest tests/shell/test_adr008_doctor_cli.py tests/shell/test_lockfile.py
+      tests/shell/test_cli_wiring.py -q` and `uv run invar guard --changed`.'
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key passage or NOT READ reason
+
+
+      ## Expected-Red Proof
+
+      Paste failing output before implementation.
+
+
+      ## Green Proof
+
+      Paste targeted pytest and invar guard output.
+
+
+      ## Recovery Matrix Proof
+
+      Paste test evidence for ready, starting, degraded, unknown, absent, stale cleanup
+      True/False/error, cold-start failure, and malformed registry.
+
+
+      ## Event Ordering Proof
+
+      Paste events_appended arrays and JSONL summaries for each recovery path tested.'
+    depends_on:
+    - adr008.status_cli_surfaces
+    agent: python-senior-tacit
