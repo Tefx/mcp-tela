@@ -76592,7 +76592,7 @@ phases:
       unchanged.
   - id: tela.operator_p1.red_tests.recover_decision_behavior
     name: Red test selected recover exposure behavior
-    status: pending
+    status: claimed
     description: 'Write behavior-defining tests only; do not change product code.
       Add expected-red tests for the recover branch selected by `tela.operator_p1.scope_decision.recover_exposure_decision`.
 
@@ -76668,6 +76668,8 @@ phases:
     depends_on:
     - tela.operator_p1.red_tests.diagnostics_readonly
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-25T21:26:38.502580+00:00'
   - id: tela.operator_p1.red_tests.authorization_explain
     name: Red test authorization explain diagnostic-only behavior
     status: done
