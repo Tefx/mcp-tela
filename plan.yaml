@@ -74337,13 +74337,13 @@ phases:
       - product_files_modified: no (verify-only execution; no product mutations)"
 - id: adr008_client_attachment_lifecycle
   name: ADR-008 Client-Neutral Attachment Lifecycle and Diagnostics
-  status: pending
+  status: in_progress
   depends_on:
   - canonical_gateway_state
   steps:
   - id: adr008.core_contracts_and_red_tests
     name: Core classifiers/models contracts and red tests
-    status: pending
+    status: claimed
     description: 'Add ADR-008 core-only contracts and expected-red tests, then implement
       pure helpers/models. Cover classify_attachment_display_state, classify_runtime_state,
       classify_recoverability, and local Pydantic models ClientAttachment, AttachmentRegistry,
@@ -74380,6 +74380,8 @@ phases:
 
       Confirm implementations vary by input and are not constants.'
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-25T14:26:51.956881+00:00'
   - id: adr008.shell_registry_events
     name: Shell attachment registry and runtime event persistence
     status: pending
