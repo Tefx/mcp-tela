@@ -77795,7 +77795,7 @@ phases:
       passed. No RBAC/second-authority semantics introduced.'
   - id: tela.operator_p1.surfaces.docs_status_update
     name: Update operator P1 docs from target to implemented or CLI-only status
-    status: claimed
+    status: done
     description: 'Sync documentation after implementation. Update docs/INTERFACES.md
       §7.2a from P1 target language to precise implemented/CLI-only status for each
       operator surface.
@@ -77856,6 +77856,14 @@ phases:
     agent: doc-reviewer-tacit
     claimed_by: doc-reviewer-tacit
     claimed_at: '2026-04-25T23:42:36.043690+00:00'
+    done_at: '2026-04-25T23:53:51.853598+00:00'
+    evidence: 'Updated docs/INTERFACES.md to reflect implemented/CLI-only P1 operator
+      surfaces (audit pagination semantics, probe/clients diagnostics read-only behavior,
+      Branch B CLI-only recover, diagnostic-only authorization explain) while preserving
+      non-goals. Squash-merged as [vectl] step-tela.operator_p1.surfaces.docs_status_update
+      completed. Mainline parity verification: `uv run pytest tests/shell/test_surface_contract.py
+      tests/shell/test_adr008_docs_parity.py tests/shell/test_adr008_status_cli.py
+      -q` => 51 passed.'
   - id: tela.operator_p1.surfaces.wiring_audit
     name: Audit operator P1 wiring completeness
     status: claimed
