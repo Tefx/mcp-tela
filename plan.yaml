@@ -76958,109 +76958,6 @@ phases:
 
       PASS | FAIL'
     agent: python-senior-tacit
-  - id: tela.operator_p1.surfaces.active_probe_diagnostics
-    name: Implement and verify active probe diagnostics
-    status: pending
-    description: 'Complete a remote active probe diagnostics surface equivalent to
-      `tela status --probe` while preserving read-only behavior.
-
-
-      Scope:
-
-      - Reuse existing CLI probe semantics from `src/tela/commands/status_cmd.py`
-      where practical, without moving I/O into Core.
-
-      - Observe only the current lockfile/runtime endpoint.
-
-      - Do not cold-start absent runtime.
-
-      - Do not call `doctor --recover`, downstream recovery helpers, config reload,
-      connect, disconnect, or any recovery mutation.
-
-      - Expose through the selected HTTP/MCP operator surface using existing shell
-      route style.
-
-
-      Failure-mode checklist:
-
-      - no lockfile/runtime absent
-
-      - stale endpoint
-
-      - timeout
-
-      - invalid/unreachable endpoint
-
-      - probe request does not append recovery events or mutate recovery state
-
-
-      ## Completion Criteria (stub exclusion)
-
-      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
-      deliverable MUST contain substantive logic that processes inputs and produces
-      outputs that vary based on those inputs.
-
-
-      step_type: implementation
-
-      integration: true
-
-      state_semantics: diagnostics are observed runtime state only; recovery mutation
-      remains explicit/absent per scope decision.'
-    verification: 'Main path: targeted active probe diagnostics tests pass against
-      reachable runtime. Failure path: absent/stale/unreachable runtime tests prove
-      no cold start or recovery mutation. Full proof: rerun invar_guard on changed
-      files and paste output.'
-    evidence_template: '## refs Read Confirmation (MANDATORY)
-
-      For each ref in this step:
-
-      - <filename> — key passage or "NOT READ: <reason>"
-
-
-      If no refs were provided, state: "No refs for this step."
-
-
-      ## Tool-Enforced Falsifiability
-
-      Before product-code changes, rerun upstream red tests from `tela.operator_p1.red_tests.probe_diagnostics`
-      and paste expected-red output:
-
-      ```text
-
-      <expected-red output before implementation>
-
-      ```
-
-
-      ## Implementation Evidence
-
-      - Files changed: <paths>
-
-      - Probe endpoint/source observed: <summary>
-
-      - Cold-start guard: <proof>
-
-      - Recovery mutation guard: <proof>
-
-
-      ## Verification Output
-
-      ```text
-
-      <targeted pytest output>
-
-      <invar_guard output>
-
-      ```
-
-
-      ## Headline
-
-      PASS | FAIL'
-    depends_on:
-    - tela.operator_p1.surfaces.audit_query_projection
-    agent: python-senior-tacit
   - id: tela.operator_p1.surfaces.client_attachment_diagnostics
     name: Implement and verify client attachment diagnostics
     status: pending
@@ -77161,8 +77058,6 @@ phases:
       ## Headline
 
       PASS | FAIL'
-    depends_on:
-    - tela.operator_p1.surfaces.active_probe_diagnostics
     agent: python-senior-tacit
   - id: tela.operator_p1.surfaces.recover_behavior
     name: Implement and verify selected recover behavior
