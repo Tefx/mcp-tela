@@ -77040,7 +77040,7 @@ phases:
       expected-red and no product code edits were introduced.'
   - id: tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     name: Retest diagnostics property red-test coverage
-    status: pending
+    status: claimed
     description: "Re-run the diagnostics red-test file after tela.operator_p1.red_tests.fix_diagnostics_enum_construction\
       \ and prove the expected-red behavior is behavior-defining rather than pseudo-property\
       \ coverage or enum-construction crashes.\n\nAs an INDEPENDENT TESTER, validate\
@@ -77081,6 +77081,8 @@ phases:
     depends_on:
     - tela.operator_p1.red_tests.fix_diagnostics_enum_construction
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-25T22:39:41.312108+00:00'
   - id: tela.operator_p1.red_tests.fix_diagnostics_enum_construction
     name: Fix diagnostics enum test construction defects
     status: done
