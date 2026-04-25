@@ -76312,3 +76312,8 @@ phases:
       \ non_blocking\nverdict: OPEN\nblockers: []\norchestrator_action_hint: CLOSE_PHASE\n\
       \n## Gate Decision\nOPEN — required commands pass, warning count reduced vs\
       \ baseline, no blocker-class regression observed."
+- id: tela.operator_p1.scope_decision
+  name: Tela Operator P1 Scope Decision
+  status: pending
+  depends_on:
+  - debt.warning_cleanup_pass3
