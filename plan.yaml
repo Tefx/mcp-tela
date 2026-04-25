@@ -77772,3 +77772,84 @@ phases:
 
       PASS | PASS_WITH_DEBT | FAIL'
     agent: integration-verifier-tacit
+  - id: tela.operator_p1.gate.spec_conformance
+    name: Verify operator P1 spec conformance
+    status: pending
+    description: 'Independent spec-conformance verification via adversarial divergence
+      hunting. This is not ''tests pass''; it verifies implementation and docs match
+      docs/INTERFACES.md §7.2a and opifex ownership invariants.
+
+
+      Focus areas:
+
+      - audit query bounded pagination/cursor and `/status.audit_entries` recent-summary
+      exclusion
+
+      - active probe diagnostics observes current endpoint only and does not cold-start/recover
+
+      - client attachment diagnostics reports connections/clients without admission-state
+      mutation
+
+      - recover branch exactly matches decision record
+
+      - authorization explain is diagnostic only and does not add RBAC/second authorization
+
+      - no PersonaSpec/JobSpec/CapabilityToken reinterpretation
+
+
+      verification_scope: phase-check protects final gate.'
+    verification: Produce requirements register and 7-verdict evidence table. Blocker-class
+      DIVERGES/PARTIAL/NEEDS_TEST/UNPROVEN items must have remediation/retest or explicit
+      non-intersection closure path.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Spec Conformance Report
+
+      **Spec source**: docs/INTERFACES.md §7.2a + opifex canonical contract
+
+
+      ## Requirements Register
+
+      | R# | Spec Section | Requirement | Level | Checkable? |
+
+      |---|---|---|---|---|
+
+
+      ## Evidence Table
+
+      | R# | Spec Section | Requirement | Implementation | Verdict | Notes |
+
+      |---|---|---|---|---|---|
+
+      Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
+      | SPEC_POSSIBLY_STALE
+
+
+      ## Coverage Summary
+
+      - Total requirements: N
+
+      - CONFORMS: N | DIVERGES: N | PARTIAL: N
+
+      - NEEDS_TEST: N | NOT_FOUND: N | AMBIGUOUS_SPEC: N
+
+
+      ## Closure Paths
+
+      - unresolved items: <explicit remediation/retest or non-intersection evidence>
+
+
+      ## Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - tela.operator_p1.gate.targeted_tests
+    agent: spec-verifier-tacit
