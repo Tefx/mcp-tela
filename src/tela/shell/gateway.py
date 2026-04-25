@@ -1028,14 +1028,14 @@ async def gateway_prepare_startup(
     _wire_reload_notifications()
 
     with gateway_runtime._runtime_lock:
-        gateway_runtime._runtime.total_tool_calls = 0
+        gateway_runtime.set_runtime_total_tool_calls(0)
         gateway_runtime._runtime.config = effective_config
         gateway_runtime._runtime.startup_config = config
         gateway_runtime._runtime.start_time = time.monotonic()
         gateway_runtime._runtime.running = True
-        gateway_runtime._runtime.upstream_server = upstream_server
+        gateway_runtime.set_upstream_server(upstream_server)
         gateway_runtime._runtime.expected_bearer_token = expected_bearer_token
-        gateway_runtime._runtime.secrets = list(effective_config.auth.secrets)
+        gateway_runtime.set_runtime_secrets(list(effective_config.auth.secrets))
 
     _ = await gateway_status()
     _ = await gateway_connections()
@@ -1123,14 +1123,15 @@ async def gateway_shutdown() -> Result[None, str]:
     with gateway_runtime._runtime_lock:
         gateway_runtime._runtime.config = None
         gateway_runtime._runtime.startup_config = None
-        gateway_runtime._runtime.upstream_server = None
+        gateway_runtime.set_upstream_server(None)
         gateway_runtime._runtime.running = False
         gateway_runtime._runtime.start_time = None
-        gateway_runtime._runtime.total_tool_calls = 0
+        gateway_runtime.set_runtime_total_tool_calls(0)
         gateway_runtime._runtime.connections.clear()
         gateway_runtime._runtime.pending_bridge_registrations.clear()
+        gateway_runtime.clear_session_registry()
         gateway_runtime._runtime.expected_bearer_token = None
-        gateway_runtime._runtime.secrets = []
+        gateway_runtime.set_runtime_secrets([])
     return disconnect_result
 
 

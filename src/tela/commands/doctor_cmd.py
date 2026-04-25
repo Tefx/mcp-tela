@@ -460,11 +460,11 @@ def _probe_doctor_runtime(
         return Result(value=DoctorProbeObservation("absent", None, discovery.discovery_error))
     if discovery.lockfile_stale:
         return Result(value=DoctorProbeObservation("stale", None, discovery.discovery_error))
-    data = discovery.lockfile_data
+    lockfile_data = discovery.lockfile_data
     probe_result = retry_http_request(
-        url=f"http://{data.host}:{data.port}/status",
+        url=f"http://{lockfile_data.host}:{lockfile_data.port}/status",
         method="GET",
-        headers={"Authorization": f"Bearer {data.token}", "Accept": "application/json"},
+        headers={"Authorization": f"Bearer {lockfile_data.token}", "Accept": "application/json"},
         max_retries=0,
         timeout_seconds=probe_timeout,
         retry_on_503=False,

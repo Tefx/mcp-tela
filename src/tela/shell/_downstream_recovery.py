@@ -460,7 +460,6 @@ async def _recover_server_client(
             if new_handle.instructions:
                 _ds._server_instructions[server_name] = new_handle.instructions
 
-        new_handle = None
         if old_handle is not None:
             await _close_handle_best_effort(old_handle)
         return Result(value=None)
@@ -514,7 +513,7 @@ async def _handle_tools_list_changed(
 
 async def _handle_reconnect(
     server_name: str,
-    server_config: ServerConfig,
+    _server_config: ServerConfig,
 ) -> None:
     """Attempt downstream reconnect and route updated tools into reload flow.
 
