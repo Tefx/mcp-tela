@@ -12,6 +12,7 @@ import sys
 from tela.commands.audit_cmd import audit_command
 from tela.commands.connect_cmd import connect_command
 from tela.commands.connections_cmd import connections_command
+from tela.commands.doctor_cmd import doctor_command
 from tela.commands.profiles_cmd import profiles_command
 from tela.commands.serve_cmd import serve_command
 from tela.commands.status_cmd import status_command
@@ -171,6 +172,39 @@ def main(argv: list[str] | None = None) -> int:
         help="Timeout for --probe in seconds (default: 5.0, requires --probe)",
     )
 
+    # --- doctor ---
+    doctor_parser = subparsers.add_parser(
+        "doctor", help="Diagnose gateway state and explicitly recover with --recover"
+    )
+    doctor_parser.add_argument(
+        "--json",
+        dest="json_output",
+        action="store_true",
+        default=False,
+        help="Output in JSON format",
+    )
+    doctor_parser.add_argument(
+        "--recover",
+        dest="recover",
+        action="store_true",
+        default=False,
+        help="Explicitly probe and attempt recovery mutations",
+    )
+    doctor_parser.add_argument(
+        "--probe-timeout",
+        dest="probe_timeout",
+        type=float,
+        default=None,
+        help="Timeout for recovery probe in seconds (requires --recover)",
+    )
+    doctor_parser.add_argument(
+        "--recover-timeout",
+        dest="recover_timeout",
+        type=float,
+        default=None,
+        help="Timeout for cold-start recovery in seconds",
+    )
+
     # --- profiles ---
     profiles_parser = subparsers.add_parser("profiles", help="List configured profiles")
     profiles_parser.add_argument(
@@ -245,6 +279,18 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         assert status_result.value is not None
         return status_result.value
+    if args.command == "doctor":
+        doctor_result = doctor_command(
+            json_output=args.json_output,
+            recover=args.recover,
+            probe_timeout=args.probe_timeout,
+            recover_timeout=args.recover_timeout,
+        )
+        if doctor_result.is_err:
+            print(f"error: {doctor_result.error}", file=sys.stderr)
+            return 1
+        assert doctor_result.value is not None
+        return doctor_result.value
     if args.command == "serve":
         serve_result = serve_command(
             config_path=args.config,
