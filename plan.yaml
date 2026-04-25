@@ -74340,3 +74340,43 @@ phases:
   status: pending
   depends_on:
   - canonical_gateway_state
+  steps:
+  - id: adr008.core_contracts_and_red_tests
+    name: Core classifiers/models contracts and red tests
+    status: pending
+    description: 'Add ADR-008 core-only contracts and expected-red tests, then implement
+      pure helpers/models. Cover classify_attachment_display_state, classify_runtime_state,
+      classify_recoverability, and local Pydantic models ClientAttachment, AttachmentRegistry,
+      RuntimeEvent. Core helpers must be pure: no filesystem, process, clock, env,
+      network, or subprocess. Add @pre/@post and doctests before implementation. Pydantic
+      models forbid extra fields and reject persisted stale_candidate/unknown states.
+      RuntimeEvent guard validation is pure only where it remains I/O-free. No Manager/Supervisor/event
+      bus.'
+    verification: 'Expected red: `uv run pytest tests/core/test_adr008_attachment_lifecycle.py
+      -q` and `uv run invar guard --changed`. Green: `uv run pytest tests/core/test_adr008_attachment_lifecycle.py
+      tests/core/test_classification.py tests/core/test_models.py -q` and `uv run
+      invar guard --changed`.'
+    evidence_template: '## refs Read Confirmation
+
+      - <filename> — key ADR/code passage or NOT READ reason
+
+
+      ## Expected-Red Proof
+
+      Paste failing output before implementation.
+
+
+      ## Green Proof
+
+      Paste passing targeted pytest and invar guard output.
+
+
+      ## Property/Contract Proof
+
+      List @pre/@post contracts, doctests, and classifier properties added.
+
+
+      ## Stub Exclusion
+
+      Confirm implementations vary by input and are not constants.'
+    agent: python-executor
