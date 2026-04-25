@@ -77215,7 +77215,7 @@ phases:
       crashes. Product code remained untouched.'
   - id: tela.operator_p1.red_tests.fix_static_quality_authorization_import
     name: Fix red-test static quality and authorization import blockers
-    status: pending
+    status: claimed
     description: "Batched remediation for latest red-tests gate blockers B1+B2.\n\n\
       Scope: TESTS ONLY. Do not modify product code or shared contract/runtime files.\n\
       \nBlockers to fix (ALL of these, not just the first):\n- B1: tests-only static-quality\
@@ -77291,6 +77291,8 @@ phases:
     - tela.operator_p1.red_tests.diagnostics_readonly
     - tela.operator_p1.red_tests.retest_diagnostics_property_coverage
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-04-25T22:49:31.027983+00:00'
   - id: tela.operator_p1.red_tests.retest_static_quality_authorization_import
     name: Retest red-test static quality and authorization import blockers
     status: pending
