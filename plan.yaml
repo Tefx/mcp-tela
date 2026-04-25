@@ -76552,3 +76552,77 @@ phases:
 
       - Downstream implementation owner: tela.operator_p1.surfaces.audit_query_projection'
     agent: python-executor
+  - id: tela.operator_p1.red_tests.probe_diagnostics
+    name: Red test active probe diagnostics read-only behavior
+    status: pending
+    description: 'Write behavior-defining tests only; do not change product code.
+      Add expected-red tests for a remote active probe diagnostics surface equivalent
+      to `tela status --probe`.
+
+
+      Requirements:
+
+      - observes the current lockfile/runtime endpoint only
+
+      - does not cold-start an absent runtime
+
+      - does not invoke doctor recovery or mutate recovery state
+
+      - passive status/probe remains diagnostic only
+
+      - property-based or state-machine coverage should vary runtime endpoint presence/staleness/timeouts
+      where feasible; pure example-only tests are insufficient
+
+
+      step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      modified_files_scope: tests only plus fixtures/helpers'
+    verification: 'Expected-red proof: targeted tests fail before implementation because
+      the remote active probe diagnostics surface is absent or incomplete; evidence
+      must also show product code untouched and no recovery mutation was introduced
+      by tests.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Expected-Red Test Evidence
+
+      - Tests added/updated: <paths::test_names>
+
+      - Product code modified: NO
+
+      - Property/state-machine coverage: <runtime endpoint cases>
+
+      - Expected-red command(s):
+
+      ```text
+
+      <targeted pytest command>
+
+      <invar_guard command>
+
+      ```
+
+      - Failing output proving gap:
+
+      ```text
+
+      <paste failure>
+
+      ```
+
+      - Mutation guard evidence: cold-start/recovery functions not called by probe
+      tests
+
+      - Downstream implementation owner: tela.operator_p1.surfaces.active_probe_diagnostics'
+    agent: python-executor
