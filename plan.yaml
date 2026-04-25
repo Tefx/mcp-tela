@@ -77026,6 +77026,68 @@ phases:
     depends_on:
     - tela.operator_p1.red_tests.diagnostics_readonly
     agent: python-executor
+  - id: tela.operator_p1.red_tests.retest_diagnostics_property_coverage
+    name: Retest diagnostics property red-test coverage
+    status: pending
+    description: 'Re-run the diagnostics red-test file after tela.operator_p1.red_tests.fix_diagnostics_property_coverage
+      and prove the expected-red behavior is behavior-defining rather than pseudo-property
+      coverage.
+
+
+      As an INDEPENDENT TESTER, validate that the repaired property tests fail for
+      behavioral reasons before implementation, not merely because handlers are absent
+      or callable checks are present.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+
+      Retest obligations:
+
+      - Run the diagnostics red-test file directly.
+
+      - Inspect the failure/output enough to prove generated state now drives expected
+      behavior.
+
+      - Confirm active-probe assertions cover runtime_present/runtime_stale/timeout_seconds
+      behavior and non-mutation.
+
+      - Confirm client diagnostics assertions cover endpoint/client/attachment state
+      behavior and non-mutation.
+
+      - Confirm no product code was modified by the fix step.
+
+
+      A retest that only reports "tests fail" without showing behavior-defining assertion
+      coverage is incomplete.'
+    verification: 'Phase-check protecting tela.operator_p1.red_tests.gate: rerun the
+      diagnostics red-test file and verify expected-red output is behavior-defining
+      for B1 and B2. Evidence must show generated-state-dependent assertions and read-only/non-mutation
+      checks; handler-existence-only pseudo-coverage must be absent.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- tests/shell/test_operator_remote_diagnostics_red.py — key passage\
+      \ or \"NOT READ: <reason>\"\n\nIf no refs were provided, state: \"No refs for\
+      \ this step.\"\n\n## Retest Report\n\n**Tester**: integration-verifier-tacit\
+      \ (independent of fix agent)\n**Scope**: tests/shell/test_operator_remote_diagnostics_red.py\n\
+      **Expected result**: expected-red behavior-defining failure before implementation\n\
+      \n### Test Execution\n- Command executed:\n  ```\n  <exact command for diagnostics\
+      \ red-test file>\n  ```\n- Actual output:\n  ```\n  <paste relevant stdout/stderr\
+      \ showing behavior-defining expected-red failure>\n  ```\n\n### Behavior-Defining\
+      \ Proof\n- B1 active-probe generated inputs that affect assertions: <runtime_present/runtime_stale/timeout_seconds\
+      \ evidence>\n- B2 client diagnostics generated inputs that affect assertions:\
+      \ <endpoint/client/attachment state evidence>\n- Non-mutation checks present:\
+      \ <snapshot/invariant evidence>\n- Handler-existence-only pseudo-property checks\
+      \ removed or no longer sufficient: <evidence>\n\n### Product Code Immutability\n\
+      - Product code changed by fix step: YES/NO; if YES, block and explain.\n\n###\
+      \ Headline\n- [ ] PASS: Expected-red diagnostics tests now define behavior for\
+      \ B1 and B2.\n- [ ] FAIL: Pseudo-property coverage or mutation ambiguity remains."
+    depends_on:
+    - tela.operator_p1.red_tests.fix_diagnostics_property_coverage
+    agent: integration-verifier-tacit
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
