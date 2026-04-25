@@ -74633,7 +74633,7 @@ phases:
       ADR-008 steps.'
   - id: adr008.connect_survival_events
     name: Connect survival, per-request recovery budget, and provider events
-    status: pending
+    status: claimed
     description: Update tela connect and bridge recovery behavior to satisfy ADR-008.
       Add --max-recovery-attempts bounds/default and --client-kind with CLI/env/unknown
       precedence. Generate client_id at process entry. Record client_attachment_started,
@@ -74675,6 +74675,8 @@ phases:
     depends_on:
     - adr008.shell_registry_events
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-25T14:46:54.162979+00:00'
   - id: adr008.status_cli_surfaces
     name: Status CLI passive, probe, and clients surfaces
     status: pending
