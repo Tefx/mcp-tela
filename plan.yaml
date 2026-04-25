@@ -74793,7 +74793,7 @@ phases:
       - No unbounded retry loop introduced.'
   - id: adr008.status_cli_surfaces
     name: Status CLI passive, probe, and clients surfaces
-    status: claimed
+    status: done
     description: Implement ADR-008 status command surfaces. tela status remains passive
       and prints required observation cue. tela status --probe actively checks current
       lockfile endpoint only; no cold-start, no recovery. tela status --clients lists
@@ -74837,6 +74837,123 @@ phases:
     agent: python-executor
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T15:51:36.719832+00:00'
+    done_at: '2026-04-25T15:59:57.457505+00:00'
+    evidence: '## refs Read Confirmation
+
+      - tests/shell/test_adr008_status_cli.py — ADR-008 status passive/probe/clients
+      contract assertions.
+
+      - tests/shell/test_query_commands_remote_state.py — legacy status expectations
+      reconciled to ADR-008 passive semantics where status-specific.
+
+      - tests/shell/test_status_truth_verification.py — status truth/readiness expectations
+      covered.
+
+      - tests/shell/test_cli_wiring.py — CLI flag wiring and validation covered.
+
+      - src/tela/cli.py — status flags/wiring (`--probe`, `--clients`, `--probe-timeout`)
+      validated.
+
+      - src/tela/commands/status_cmd.py — passive/probe/client-neutral status behaviors
+      implemented.
+
+      - src/tela/core/adr008_status.py — ADR-008 status payload composition and schema
+      blocks.
+
+
+      ## Expected-Red Proof
+
+      Pre-fix execution had failures in status-related suite (old active-status assumptions
+      + mismatch in status surface), e.g. failing `test_query_commands_remote_state`
+      status paths and missing ADR-008 status contract file state.
+
+
+      ## Green Proof
+
+      Mainline post-merge verification:
+
+      - `uv run pytest tests/shell/test_adr008_status_cli.py tests/shell/test_status_truth_verification.py
+      tests/shell/test_query_commands_remote_state.py tests/shell/test_cli_wiring.py
+      -q`
+
+      - Output: `45 passed in 6.88s`
+
+
+      Invar guard:
+
+      - worker step-time: `uv run invar guard --changed` passed
+
+      - mainline post-merge: `invar_guard(changed=true)` passed
+
+
+      ## CLI Output Proof
+
+      Validated representative outputs/behavior for:
+
+      - `tela status --json` (ADR-008 schema blocks incl `registry_parse_error`)
+
+      - `tela status --probe --json` with absent runtime
+
+      - `tela status --clients --json` attachment registry listing
+
+      - rejected combinations: `--probe` + `--clients`, and `--probe-timeout` without
+      `--probe`
+
+
+      ## Non-Mutation Proof
+
+      Status execution remains read-only:
+
+      - no cold-start or recovery side effects
+
+      - no registry rewrites/deletions during status reads
+
+      - stale candidates not deleted by status path
+
+      - client-neutral attachment output (not opencode session-centric)
+
+
+      ## Test-step semantic reporting
+
+      - step_intent: implement ADR-008 status surfaces and constraints
+
+      - expected_result: status passive by default; probe/clients explicit; required
+      suite green
+
+      - observed_result: required suite green and guard passing
+
+      - failure_alignment: prior failures aligned to missing/legacy status semantics;
+      resolved in final run
+
+      - verdict: PASS
+
+      - blockers: none
+
+      - product implementation files modified: yes (`src/tela/cli.py`, `src/tela/commands/status_cmd.py`,
+      `src/tela/core/adr008_status.py`)
+
+
+      ## Commit hash(es)
+
+      - 4a9a8bf
+
+
+      ## Files changed
+
+      - src/tela/cli.py
+
+      - src/tela/commands/status_cmd.py
+
+      - src/tela/core/adr008_status.py
+
+      - tests/shell/test_adr008_status_cli.py
+
+      - tests/shell/test_query_commands_remote_state.py
+
+
+      ## Gaps/Notes
+
+      - No Manager/Supervisor/event bus introduced.'
   - id: adr008.doctor_cli_recovery
     name: Doctor CLI diagnostics and explicit recovery
     status: pending
