@@ -77305,7 +77305,7 @@ phases:
       crash). Product code unchanged.'
   - id: tela.operator_p1.red_tests.retest_static_quality_authorization_import
     name: Retest red-test static quality and authorization import blockers
-    status: claimed
+    status: done
     description: 'Independent retest after batched remediation for B1+B2.
 
 
@@ -77419,6 +77419,13 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-25T23:17:53.450604+00:00'
+    done_at: '2026-04-25T23:20:47.298031+00:00'
+    evidence: 'Independent verifier confirmed B1/B2 closure on affected P1 red-test
+      files: ruff clean, `uv run pyright` returns 0 errors, and `tests/core/test_authorization_explain_red.py`
+      now collects successfully (27 collected) with expected-red runtime failures
+      instead of collection-time import crash. Diagnostics and recover red-test files
+      preserve expected-red posture (10 xfailed/7 passed and 2 xfailed/9 passed respectively).
+      gate_open_allowed=true and blockers none.'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
