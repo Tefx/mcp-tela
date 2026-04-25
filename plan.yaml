@@ -77443,7 +77443,7 @@ phases:
   steps:
   - id: tela.operator_p1.surfaces.audit_query_projection
     name: Implement and verify bounded audit query projection
-    status: claimed
+    status: done
     description: 'Complete the dedicated operator audit query projection without expanding
       `/status.audit_entries` into long history.
 
@@ -77549,6 +77549,14 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T23:24:22.345551+00:00'
+    done_at: '2026-04-25T23:28:43.978319+00:00'
+    evidence: 'Implemented in src/tela/shell/audit.py and src/tela/shell/http_routes.py
+      (worktree commit b291c0c), then squash-merged to main as [vectl] step-tela.operator_p1.surfaces.audit_query_projection
+      completed. Added AuditPage/audit_query_paginated with bounded default+max limit,
+      deterministic offset cursor semantics, malformed/stale cursor handling, and
+      non-mutating snapshot query path; updated /status audit summary to bounded recent
+      entries only. Mainline verification: `uv run pytest tests/shell/test_audit_paginated_query_red.py
+      -q` => 9 passed; `invar_guard(changed=true)` passed (no static findings).'
   - id: tela.operator_p1.surfaces.recover_behavior
     name: Implement and verify selected recover behavior
     status: pending
