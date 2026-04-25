@@ -974,6 +974,8 @@ def forward_stdio_http(
             )
             if write_error_result.is_err:
                 return Result(error=write_error_result.error)
+            if reset_recovery_attempts is not None:
+                reset_recovery_attempts()
             continue
         assert forward_result.value is not None
         mcp_url = forward_result.value.mcp_url
@@ -1210,6 +1212,12 @@ def _run_bridge_attach_loop(
                 return Result(error=cycle_result.error)
             assert cycle_result.value is not None
             if cycle_result.value == "done":
+                _record_runtime_event_best_effort(
+                    kind=RuntimeEventKind.HOST_TRANSPORT_CLOSED,
+                    client_id=client_id,
+                    client_kind=client_kind,
+                    details={"connection_id": connection_id, "reason": "stdin_eof"},
+                )
                 return Result(value=None)
     except KeyboardInterrupt:
         _emit_bridge_diagnostic("attach loop interrupted", connection_id)

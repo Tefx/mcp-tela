@@ -115,6 +115,7 @@ class RuntimeEventKind(str, Enum):
     CLIENT_ATTACHMENT_STARTED = "client_attachment_started"
     HEARTBEAT = "heartbeat"
     RECOVERY_PROBE = "recovery_probe"
+    HOST_TRANSPORT_CLOSED = "host_transport_closed"
     CLIENT_PROVIDER_EXIT = "client_provider_exit"
     RECOVERY_FAILED = "recovery_failed"
     RECOVERY_SUCCEEDED = "recovery_succeeded"

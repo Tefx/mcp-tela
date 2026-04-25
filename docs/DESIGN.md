@@ -68,10 +68,14 @@ proof that downstreams are ready.
 ### Connection lifecycle
 
 1. `tela connect` → `POST /connect` with canonical request key `server_name` → server registers connection and returns `connection_id`
-2. Bridge active: stdio ↔ HTTP MCP session
-3. `tela connect` exits → `POST /disconnect` → server deregisters
-4. Last connection gone + idle timeout → server auto-shuts down (if auto-started)
+2. Bridge active: stdio ↔ HTTP MCP session; the connect process is recorded as a client-neutral client attachment to the shared runtime
+3. Additional `tela connect` processes attach to the same shared runtime and appear together in `tela status --clients`
+4. `tela connect` exits or receives host transport EOF → `POST /disconnect` → server deregisters; the client side records `host_transport_closed` before provider-exit diagnostics
+5. Last connection gone + idle timeout → server auto-shuts down (if auto-started)
 
+Idle shutdown is a server process lifecycle event, not a command to kill an already-attached host transport. Request-level idle/recovery failures must either recover the next request or fail only that request while keeping the provider loop alive for later client messages. Recovery budgets are per event/request so unrelated events do not accumulate stale exhaustion state.
+
+Operator surfaces preserve the same split: `tela status --probe` observes the current lockfile endpoint and does not cold-start an absent runtime, while `tela doctor` is passive without `--recover`; `tela doctor --recover` is the explicit mutation path that may cold-start and append recovery events.
 ### Discovery and readiness
 
 Runtime lifecycle/readiness truth comes from the in-process runtime status snapshot

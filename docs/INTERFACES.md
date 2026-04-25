@@ -19,21 +19,28 @@ It does not own:
 ## 2. CLI Surface
 
 ```text
-tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
+tela connect [--config path] [--default-profile name] [--server host:port] [--token tok] [--client-kind kind] [--max-recovery-attempts N]
 tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--reaper-sweep-interval sec] [--reaper-native-ttl sec] [--reaper-bridge-ttl sec] [--token tok]
 tela stop
-tela status  [--json]
+tela status  [--json] [--probe] [--probe-timeout sec] [--clients]
+tela doctor  [--json] [--recover] [--probe-timeout sec] [--recover-timeout sec]
 tela profiles [--config path] [--json]
 tela connections [--json]
 tela audit   [--json] [--since ISO-8601] [--limit N]
 ```
 
 `tela connect` is the client entry point (stdio bridge with auto-discover/auto-start).
+Each connect process is recorded as a client-neutral client attachment against
+the shared runtime; multiple attachments can share one gateway runtime and are
+visible with `tela status --clients`.
 `tela serve` is the server entry point (HTTP gateway).
 `tela stop` is the local operator stop surface (lockfile discovery + SIGTERM + bounded exit wait + lockfile cleanup).
+`tela status --probe` actively checks only the current lockfile endpoint and does not cold-start an absent runtime.
+`tela doctor` is passive without `--recover`; `tela doctor --recover` may mutate by probing, cleaning stale discovery, cold-starting, and appending recovery diagnostics.
 Query commands (`status`, `connections`, `audit`) discover the running server via
-`~/.tela/gateway.lock` and query over HTTP.
+`~/.tela/gateway.lock` and query over HTTP. Lockfile presence does not imply readiness; runtime readiness belongs to `GET /status` and shared runtime state.
 
+Recovery budgets are per event/request for `tela connect`; unrelated client events do not inherit exhausted attempts. Host stdio EOF is recorded as `host_transport_closed` before provider-exit diagnostics.
 ## 3. Configuration Contract
 
 Top-level sections:

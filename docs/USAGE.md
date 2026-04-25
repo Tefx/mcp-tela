@@ -330,12 +330,14 @@ tela connect --config tela.yaml
 This is the standard entry point. Your MCP host launches this as a child
 process. Under the hood it:
 
-1. Discovers an existing gateway via `~/.tela/gateway.lock` (discovery only—lockfile presence does not imply downstream servers are ready)
+1. Discovers an existing gateway via `~/.tela/gateway.lock` (discovery only—lockfile presence does not imply readiness or downstream server convergence)
 2. Auto-starts one if needed (random port, detached process)
-3. Bridges stdio ↔ HTTP once the gateway HTTP endpoint is bound
+3. Bridges stdio ↔ HTTP once the gateway HTTP endpoint is bound and `GET /status` reports readiness
 
-Multiple `tela connect` instances share the same server. Downstream servers
-are spawned once by the gateway process.
+Multiple `tela connect` instances share the same server and are represented as
+client-neutral client attachments to one shared runtime. Downstream servers are
+spawned once by the gateway process; `tela status --clients` lists the active
+attachments without implying that each client owns a separate runtime.
 
 **Note on lockfile semantics**: The lockfile provides endpoint discovery only.
 It does not indicate downstream server readiness, tool enumeration completion,
@@ -360,10 +362,21 @@ occur. The bridge attempts bounded recovery:
 - Classification via `_is_recoverable_error`: transient network errors are
   recoverable; persistent degradation or unknown errors are not.
 - Up to `--max-recovery-attempts` recovery cycles (default: 3).
+- Recovery budgets are per event/request and reset after a request-scoped
+  recovery error or a successful forwarded response; unrelated client events do
+  not inherit exhausted attempts.
 - Each cycle: re-discover via lockfile, re-poll readiness, re-register via
   `POST /connect`, then resume forwarding.
-- Recovery is best-effort; exhausted attempts or unrecoverable errors exit
-the bridge cleanly.
+- Recovery is best-effort; exhausted attempts or unrecoverable errors are
+  returned as request-level JSON-RPC errors when possible so the provider loop
+  remains alive for later requests.
+
+**Client attachment lifecycle**: EOF from the host stdio transport is a normal
+client attachment closure. `tela connect` exits, unregisters the bridge, records
+`host_transport_closed`, then records provider exit diagnostics. `tela status
+--probe` observes the current lockfile endpoint only and does not cold-start an
+absent runtime. `tela doctor` is passive without --recover; use `tela doctor --recover`
+when you want explicit recovery mutations and recovery events.
 
 **Session reset semantics**: When recovery succeeds and forwarding resumes,
 the bridge continues with the same `connection_id`. Downstream sessions are
@@ -383,7 +396,6 @@ MCP host configuration:
   }
 }
 ```
-
 ### `tela serve` (explicit server)
 
 ```bash
