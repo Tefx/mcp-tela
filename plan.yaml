@@ -77331,3 +77331,114 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.client_attachment_diagnostics
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.authorization_explain
+    name: Implement and verify authorization explain diagnostic surface
+    status: pending
+    description: 'Complete an authorization explain diagnostic surface that reports
+      why a tool is visible, hidden, allowed, or denied for a bound profile/connection
+      by reusing existing enforcement and visibility logic.
+
+
+      Scope:
+
+      - Explanation must derive from current family admission, profile capabilities,
+      tool overrides, posture ceiling/default posture, token/open-mode binding, and
+      filtering behavior.
+
+      - Explanation must not create a second authorization path, RBAC layer, or alternate
+      profile semantics.
+
+      - The explain call must not alter enforcement results or runtime state.
+
+      - If a pure helper is added under Core, write @pre/@post contracts and at least
+      one doctest before implementation per Invar.
+
+      - Expose through the selected HTTP/MCP operator surface using existing shell
+      route style.
+
+
+      Failure-mode checklist:
+
+      - visible + allowed
+
+      - hidden by family admission/profile capability
+
+      - denied by explicit override
+
+      - denied by posture ceiling/default posture
+
+      - token/open-mode binding failure must be reported without reinterpreting CapabilityToken
+
+      - explain before/after actual enforcement returns same verdict
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes inputs and produces
+      outputs that vary based on those inputs.
+
+
+      step_type: implementation
+
+      integration: true
+
+      security_boundary: diagnostic only; no RBAC or second authority.'
+    verification: 'Main path: visible/hidden/allowed/denied explain tests pass. Failure
+      path: explain does not alter enforcement or profile/token state and does not
+      introduce RBAC/aliases. If Core code changes, invar_guard must prove contracts/doctests
+      are present and non-vacuous.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Tool-Enforced Falsifiability
+
+      Before product-code changes, rerun upstream red tests from `tela.operator_p1.red_tests.authorization_explain`
+      and paste expected-red output:
+
+      ```text
+
+      <expected-red output before implementation>
+
+      ```
+
+
+      ## Implementation Evidence
+
+      - Files changed: <paths>
+
+      - Explain cases covered: visible, hidden, allowed, denied
+
+      - Existing authorization source reused: <functions/symbols>
+
+      - No RBAC / no second authority / no contract reinterpretation: <statement>
+
+      - Enforcement unchanged proof: <before/after verdict evidence>
+
+      - Core contract/doctest proof if Core changed: <output>
+
+
+      ## Verification Output
+
+      ```text
+
+      <targeted pytest output>
+
+      <invar_guard output>
+
+      ```
+
+
+      ## Headline
+
+      PASS | FAIL'
+    depends_on:
+    - tela.operator_p1.surfaces.recover_behavior
+    agent: python-senior-tacit
