@@ -219,10 +219,18 @@ as conflicts.
 |---------|------|---------------|--------|
 | `tela_list_profiles` | MCP tool | `tools/call` with `{}` | Built-in; requires admitted session |
 | `tela_list_providers` | MCP tool | `tools/call` with `{}` | Built-in; requires admitted session |
-| `tela profiles` | CLI/HTTP | `tela profiles` or `GET /status` | Operator-only (not MCP built-in) |
-| `tela status` | CLI/HTTP | `tela status` or `GET /status` | Operator-only (not MCP built-in) |
-| `tela connections` | CLI/HTTP | `tela connections` or via `/status` | Operator-only (not MCP built-in) |
-| `tela audit` | CLI/HTTP | `tela audit` or via `/status` | Operator-only (not MCP built-in) |
+| `tela profiles` | CLI | `tela profiles` | Operator-only (not MCP built-in) |
+| `tela status` | CLI | `tela status` | Operator-only, observation-only diagnostic |
+| `tela status --probe` | CLI | `tela status --probe` | Operator-only, observation-only (no cold-start/recovery) |
+| `tela status --clients` | CLI | `tela status --clients` | Operator-only, read-only attachment registry view |
+| `tela connections` | CLI | `tela connections` | Operator-only (not MCP built-in) |
+| `tela audit` | CLI | `tela audit` | Operator-only, reads recent entries from `/status` |
+| `tela doctor` | CLI | `tela doctor` | Operator-only, observation-only diagnostic |
+| `tela doctor --recover` | CLI | `tela doctor --recover` | Operator-only, **only mutation surface** (explicit recovery) |
+| `GET /status` | HTTP | Bearer token | Full runtime status (includes `audit_entries` recent-only, limit 100) |
+| `GET /operator/probe` | HTTP | Bearer token | Observation-only current-endpoint snapshot; no cold-start/recovery |
+| `GET /operator/clients` | HTTP | Bearer token | Read-only attachment registry; no admission-state mutation |
+| `GET /operator/authorization/explain` | HTTP | Bearer token | Diagnostic-only; no RBAC mutation, no second authority |
 
 **Canonical builtin semantics:**
 - Built-in MCP tools (`tela_list_profiles`, `tela_list_providers`) require an **admitted session/connection** at call time
@@ -230,12 +238,23 @@ as conflicts.
 - Provider listing visibility is filtered by the **calling connection's bound profile**
 - Audit attribution for builtin tool calls uses the caller's `profile_id`
 
+**Operator diagnostic semantics (branch B surfaces):**
+- `GET /status` `audit_entries` are **recent-only** (bounded to 100 entries, no cursor pagination)
+- Distinct paginated audit query (`audit_query_paginated`) provides cursor/limit semantics as an in-process shell surface; it is **not** an HTTP route
+- `GET /operator/probe` and `tela status --probe` are **observation-only**: they read the current runtime snapshot and never invoke startup, recovery, registration, or admission paths
+- `GET /operator/clients` and `tela status --clients` are **read-only**: they read the attachment registry without mutating admission state, registering clients, or deleting stale candidates
+- `GET /operator/authorization/explain` is **diagnostic-only**: it snapshots the current enforcement configuration and explains per-tool verdicts without mutating authorization state, admitting sessions, or introducing a second RBAC authority
+- `tela doctor --recover` is the **only operator surface that performs mutations** (recovery, stale-candidate cleanup); all other operator surfaces are non-mutating
+
 ### 7.2 HTTP Endpoints
 
 | Endpoint | Auth | Purpose |
 |----------|------|---------|
 | `GET /health` | None | Liveness check: `{"status":"ok","pid":N}` |
-| `GET /status` | Bearer token | Full runtime status |
+| `GET /status` | Bearer token | Full runtime status (audit entries: recent-only, limit 100) |
+| `GET /operator/probe` | Bearer token | Observation-only current-endpoint snapshot; no cold-start/recovery |
+| `GET /operator/clients` | Bearer token | Read-only attachment registry; no admission-state mutation |
+| `GET /operator/authorization/explain` | Bearer token | Diagnostic-only authorization visibility; no RBAC mutation |
 | `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |
@@ -268,6 +287,63 @@ Current-slice admission boundary:
 - if `GET /status` continues to report degraded or otherwise non-ready state past the bounded wait policy, `tela connect` must exit cleanly and boundedly instead of looping indefinitely
 
 **Explicit non-goal**: This slice does not expand `shutting_down` lifecycle handling. The `shutting_down` state from ADR-004 remains deferred and is not part of current runtime behavior. Bridge retry/admission must not assume or key off a `shutting_down` state label.
+
+### 7.2a Operator Diagnostic Routes
+
+The three `GET /operator/*` endpoints share a common diagnostic contract:
+
+1. **Read-only**: None of these endpoints mutate gateway state, register clients, admit sessions, disconnect sessions, recover downstream connections, or alter enforcement verdicts.
+2. **No cold-start / no recovery**: `GET /operator/probe` observes the current runtime snapshot without starting, recovering, or waiting for a gateway that is not already running.
+3. **No second authority**: `GET /operator/authorization/explain` is a visibility projection of the single canonical enforcement chain (profile → posture → classification → verdict). It does not introduce a second RBAC authority or mutate authorization state.
+
+#### `GET /operator/probe`
+
+Returns a current-endpoint `OperatorProbeSnapshot` observing runtime state without startup, recovery, or state mutation.
+
+**Request**: `GET /operator/probe?timeout_seconds=5.0`
+
+**Auth**: Bearer token required.
+
+**Query parameters**:
+| Parameter | Type | Default | Semantics |
+|-----------|------|---------|-----------|
+| `timeout_seconds` | float | `5.0` | Probe timeout; this in-process observation does not perform a retry loop |
+
+**Response fields**:
+| Field | Type | Semantics |
+|-------|------|-----------|
+| `running` | bool | Whether the current runtime snapshot is running |
+| `state` | str | Lifecycle state observed from current snapshot: `warming`, `ready`, `degraded` |
+| `degraded_reason` | str \| null | Diagnostic reason when snapshot is not fully healthy |
+| `active_connections` | int | Numeric count of active runtime connections |
+| `connections` | list[dict] | Structural connection snapshot (distinct from count) |
+
+**Contract**: Observation-only. Never invokes startup, recovery, registration, admission, disconnect, or session-release paths. `timeout_seconds` mirrors the CLI probe surface but does not perform retry loops or mutate state.
+
+#### `GET /operator/clients`
+
+Returns client attachments from the ADR-008 attachment registry. Read-only: does not register clients, admit sessions, disconnect, release sessions, recover, or rewrite registry contents.
+
+**Auth**: Bearer token required.
+
+**Response**: JSON array of `ClientAttachment` objects.
+
+When the runtime is not active, returns an empty array to avoid fabricating remote client state for an absent endpoint.
+
+#### `GET /operator/authorization/explain`
+
+Returns a diagnostic projection of the current authorization configuration for one or all profiles. Does not admit sessions, call tools, mutate connections, or alter enforcement verdicts.
+
+**Auth**: Bearer token required.
+
+**Query parameters**:
+| Parameter | Type | Default | Semantics |
+|-----------|------|---------|-----------|
+| `profile_id` | str | null (all profiles) | Optional profile filter; when absent, all configured profiles are included |
+
+**Response**: JSON object with `profiles` array, each containing `profile_id`, `capabilities`, and per-tool authorization explanations.
+
+**Contract**: Diagnostic-only. No RBAC mutation, no second enforcement authority — the single canonical chain (profile → posture → classification → verdict) remains authoritative.
 
 ### 7.2.1 `POST /mcp` transient 503 contract
 
@@ -347,7 +423,7 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 | `profile_count` | int | Number of configured profiles |
 | `total_tool_calls` | int | Cumulative tool calls since startup |
 | `connections` | list[ConnectionContext] | **Structural collection** of connection contexts |
-| `audit_entries` | list[AuditEntry] | Recent audit log entries (limit 100) |
+| `audit_entries` | list[AuditEntry] | **Recent-only** audit log entries (hard limit 100; no cursor pagination) |
 | `state` | str | Lifecycle state: `warming`, `ready`, or `degraded` |
 | `degraded_reason` | str \| null | Machine-readable reason when `state == "degraded"` |
 | `discovery_source` | str \| null | How endpoint was resolved: `lockfile`, `autostart`, `explicit_server`, `startup_follower` |
@@ -366,6 +442,12 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 - any future teardown-state expansion must be planned as a separate architecture slice before this schema changes
 - bridge-local state or lockfile discovery must not be documented as a substitute authority for the `state` field
 - **Non-goal confirmation**: No `shutting_down` expansion in this slice per ADR-004 deferred status
+
+**Audit entries are recent-only**:
+- `audit_entries` in `GET /status` is a **bounded recent summary** with a hard maximum of 100 entries; it is not a paginated query surface
+- For paginated audit access, the in-process `audit_query_paginated` shell surface provides cursor/limit semantics (cursor format: `offset:<N>`; default limit: 100; maximum limit: 100)
+- The CLI `tela audit` command reads the full `audit_entries` from the remote status payload and applies local `--since`/`--limit` filtering client-side; it does not use cursor pagination
+- No HTTP route exposes cursor-based paginated audit queries in the current slice
 
 **Count-vs-Collection Semantics**:
 - `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)
@@ -406,7 +488,6 @@ activity has been recorded since connection establishment.
 - List fields (`connections`, `audit_entries`, `connected_servers`) are guaranteed present and may be empty (`[]`)
 - `active_connections` is guaranteed to be the integer count (never null or omitted)
 - Nullable fields (`degraded_reason`, `discovery_source`, etc.) are guaranteed present but may be `null`
-
 ### 7.3 Lockfile Contract
 
 Location: `~/.tela/gateway.lock`
