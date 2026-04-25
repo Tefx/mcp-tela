@@ -74633,7 +74633,7 @@ phases:
       ADR-008 steps.'
   - id: adr008.connect_survival_events
     name: Connect survival, per-request recovery budget, and provider events
-    status: claimed
+    status: done
     description: Update tela connect and bridge recovery behavior to satisfy ADR-008.
       Add --max-recovery-attempts bounds/default and --client-kind with CLI/env/unknown
       precedence. Generate client_id at process entry. Record client_attachment_started,
@@ -74677,6 +74677,120 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T14:46:54.162979+00:00'
+    done_at: '2026-04-25T14:59:07.584451+00:00'
+    evidence: '## refs Read Confirmation
+
+      - docs/DESIGN.md — bounded connect recovery and attempt-budget semantics confirmed.
+
+      - tests/shell/test_connect_cmd.py — bridge recovery and lifecycle expectations
+      confirmed.
+
+      - tests/shell/test_connect_recovery_red.py — custom recovery attempt behavior
+      verified.
+
+      - tests/repro/test_connect_runtime_liveness.py — runtime liveness regression
+      expectations verified.
+
+      - src/tela/commands/connect_bridge.py — request-scoped error routing, heartbeat,
+      and lifecycle/event hooks implemented.
+
+
+      ## Expected-Red Proof
+
+      Initial expected-red command for `tests/shell/test_adr008_connect_survival.py`
+      failed because file was absent pre-implementation:
+
+      - `uv run pytest tests/shell/test_adr008_connect_survival.py -q`
+
+      - Output: `ERROR: file or directory not found ...`
+
+
+      Compensating pre-fix gap proof was captured in worker evidence showing non-request-scoped
+      failure terminated loop in legacy behavior simulation.
+
+
+      ## Green Proof
+
+      Mainline post-merge exact command:
+
+      - `uv run pytest tests/shell/test_adr008_connect_survival.py tests/shell/test_connect_cmd.py
+      tests/shell/test_connect_recovery_red.py tests/repro/test_connect_runtime_liveness.py
+      -q`
+
+      - Output: `70 passed in 35.93s`
+
+
+      Invar guard:
+
+      - Worker step-time `uv run invar guard --changed` passed.
+
+      - Mainline post-merge `invar_guard(changed=true)` passed.
+
+
+      ## Survival Proof
+
+      Worker runtime proof demonstrated recovery failure is request-scoped JSON-RPC
+      error and provider loop continues to serve subsequent request (alive result
+      returned).
+
+
+      ## Event Proof
+
+      Worker runtime proof demonstrated lifecycle/event recording including:
+
+      - `client_attachment_started`
+
+      - `heartbeat` (periodic)
+
+      - `client_provider_exit`
+
+      - `recovery_probe` / `recovery_failed`
+
+      and registry line updates with client metadata and heartbeat timestamps.
+
+
+      ## Test-step semantic reporting
+
+      - step_intent: implement ADR-008 connect survival and bounded recovery semantics
+
+      - expected_result: bounded retry, request-level errors, loop survival, lifecycle
+      persistence
+
+      - observed_result: targeted verification green, survival/event runtime proof
+      present
+
+      - failure_alignment: expected-red represented missing test artifact pre-implementation
+      + compensating pre-fix gap proof
+
+      - verdict: PASS
+
+      - blockers: none
+
+      - product implementation files modified: yes (`src/tela/cli.py`, `src/tela/commands/connect_cmd.py`,
+      `src/tela/commands/connect_bridge.py`)
+
+
+      ## Commit hash(es)
+
+      - 16d8a9d
+
+
+      ## Files changed
+
+      - src/tela/cli.py
+
+      - src/tela/commands/connect_cmd.py
+
+      - src/tela/commands/connect_bridge.py
+
+      - tests/shell/test_adr008_connect_survival.py
+
+
+      ## Gaps/Notes
+
+      - No Manager/Supervisor/event bus introduced.
+
+      - No unbounded retry loop introduced.'
   - id: adr008.status_cli_surfaces
     name: Status CLI passive, probe, and clients surfaces
     status: pending
