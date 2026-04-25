@@ -76032,3 +76032,92 @@ phases:
   status: pending
   depends_on:
   - adr008_issue_cleanup
+  steps:
+  - id: debt.warning_cleanup_pass3.impl
+    name: Reduce non-blocking invar warnings pass 3
+    status: pending
+    description: 'Technical-debt reduction step for current non-blocking invar guard
+      warnings.
+
+
+      Scope and priority order:
+
+      1. Reduce dead_export, dead_param, dead_assign, and wiring_gap warnings first.
+
+      2. Then reduce shell_pure_logic warnings through appropriate Core/Shell separation
+      or annotations where the logic truly belongs in Shell.
+
+      3. Avoid broad escape hatch additions. Any @invar:allow usage must be narrow,
+      justified, and tied to a runtime/framework entry point or documented unavoidable
+      false positive.
+
+      4. Preserve shared contract behavior across builtin, downstream, bridge, and
+      HTTP paths. Do not add compatibility aliases, accept-and-clean malformed shared
+      input, or redefine canonical shared fields locally.
+
+      5. Preserve full pytest behavior.
+
+
+      This is a reduction step, not a full-family closure step. Completion is valid
+      when it produces a verified net-positive warning-count reduction without introducing
+      regressions. Any remaining warnings must be categorized with downstream residual
+      ownership rather than hidden.
+
+
+      Expected-red falsifiability requirement:
+
+      - Before product changes, capture the current baseline with `uv run invar guard
+      --all` and record warning counts by family. This baseline is the failing/proof-gap
+      state for this debt-reduction pass.
+
+      - After changes, rerun guard and compare against the baseline.
+
+
+      Property/symbolic discipline:
+
+      - For new or moved Core behavior, write @pre/@post contracts and at least one
+      doctest before implementation changes.
+
+      - Do not rely on pure example-only tests for new Core behavior; use contracts/doctests
+      and existing guard enforcement.
+
+
+      Completion Criteria (stub exclusion):
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes its inputs and produces
+      outputs that vary based on those inputs.'
+    verification: '- Baseline captured with `uv run invar guard --all` before code
+      changes.
+
+      - Post-change `uv run invar guard --all` shows a net reduction in non-blocking
+      warnings or documents a precise blocker preventing reduction.
+
+      - `uv run pytest -q` passes after changes.
+
+      - No broad escape hatch additions; any new escape hatch is narrow and justified.
+
+      - Shared contract behavior is preserved.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- AGENTS.md — key passage or \"NOT READ: <reason>\"\n- INVAR.md — key\
+      \ passage or \"NOT READ: <reason>\"\n- ../opifex/design/final-canonical-contract.md\
+      \ — key passage or \"NOT READ: <reason>\"\n- ../opifex/contracts/capability_token.schema.json\
+      \ — key passage or \"NOT READ: <reason>\"\n- ../opifex/contracts/tela_profile_list.schema.json\
+      \ — key passage or \"NOT READ: <reason>\"\n- ../opifex/conformance/shared_surfaces.yaml\
+      \ — key passage or \"NOT READ: <reason>\"\n\n## Baseline Warning Inventory\n\
+      Command:\n```\nuv run invar guard --all\n```\nBaseline warning count by family:\n\
+      - dead_export:\n- dead_param:\n- dead_assign:\n- wiring_gap:\n- shell_pure_logic:\n\
+      - other:\n- total warnings:\n\n## Changes Made\n- Targeted files/symbols:\n\
+      - Warning families reduced:\n- Escape hatches added: none | list with narrow\
+      \ justification\n- Shared contract surfaces checked:\n\n## Post-change Proof\n\
+      Commands executed:\n```\nuv run invar guard --all\nuv run pytest -q\n```\nPost-change\
+      \ warning count by family:\n- dead_export:\n- dead_param:\n- dead_assign:\n\
+      - wiring_gap:\n- shell_pure_logic:\n- other:\n- total warnings:\n\n## Closure\
+      \ Fields\nheadline: \"PASS | PASS_WITH_DEBT | FAIL\"\nproof_gap_status: \"closed\
+      \ | reduced_with_residuals | still_open\"\nblocking_status: \"non_blocking |\
+      \ blocking_regression_detected\"\nverdict: \"warning_count_reduced | no_safe_reduction_found\
+      \ | regression\"\nblockers:\n  - \"<blocker or none>\"\norchestrator_action_hint:\
+      \ \"proceed_to_verify | create_followup_debt_step | create_regression_fix_step\"\
+      \n\n## Residual Ownership\nRemaining warnings and why they are non-blocking\
+      \ for this reduction step:\n- <family/count/reason/future owner>"
+    agent: python-senior-tacit
