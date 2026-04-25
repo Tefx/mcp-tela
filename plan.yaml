@@ -76915,6 +76915,117 @@ phases:
       -v --tb=short` produced `7 passed, 10 xfailed`, matching the expected red contract.
       Subagent branch head 83df043 contained tests-only changes; no product implementation
       files were modified.
+  - id: tela.operator_p1.red_tests.fix_diagnostics_property_coverage
+    name: Fix diagnostics property red-test coverage
+    status: pending
+    description: 'Fix BOTH red-tests gate blockers B1 and B2 in tests/shell/test_operator_remote_diagnostics_red.py
+      without modifying product code.
+
+
+      Scope: tests-only remediation for the completed diagnostics red-test artifact
+      from tela.operator_p1.red_tests.diagnostics_readonly. Keep existing completed
+      red test steps immutable; do not edit product code.
+
+
+      Blockers to repair (ALL of these, not just the first):
+
+      - B1: Active-probe property test currently generates runtime_present/runtime_stale/timeout_seconds
+      but only asserts handler existence. Make generated state drive behavior-defining
+      assertions, including expected diagnostic result/status differences and read-only/non-mutation
+      guarantees.
+
+      - B2: Client diagnostics property test currently generates endpoint/client/attachment
+      states but only asserts handler existence. Make generated state drive behavior-defining
+      assertions, including expected diagnostic result/status differences and read-only/non-mutation
+      guarantees.
+
+
+      Required test semantics:
+
+      - Generated Hypothesis state MUST affect the asserted behavior; do not merely
+      assert callable/handler existence.
+
+      - Assertions MUST prove read-only diagnostics do not mutate runtime/client/attachment
+      state.
+
+      - The repaired tests MUST remain expected-red before implementation: they should
+      expose missing behavior, not pass by weakening expectations.
+
+      - Include comments or assertion names that make the behavior gap explicit enough
+      for the downstream implementation step.
+
+
+      Out of scope:
+
+      - No product-code fixes.
+
+      - No changes to completed red-test steps outside the diagnostics file unless
+      absolutely required by shared test fixtures in tests/.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is a TEST REMEDIATION step. Stub-only or pseudo-property completion is
+      NOT acceptable. Each repaired property must process generated inputs into assertions
+      whose expected outcomes vary based on those inputs.'
+    verification: '- tests/shell/test_operator_remote_diagnostics_red.py is the only
+      intended file changed, except narrowly-scoped test fixture updates if explicitly
+      justified.
+
+      - B1 active-probe property assertions vary with runtime_present/runtime_stale/timeout_seconds
+      and include non-mutation checks.
+
+      - B2 client diagnostics property assertions vary with endpoint/client/attachment
+      state and include non-mutation checks.
+
+      - The diagnostics red-test file remains expected-red before implementation and
+      does not modify product code.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - tests/shell/test_operator_remote_diagnostics_red.py — key passage or "NOT
+      READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Batched Red-Test Fix Evidence
+
+
+      **Blockers repaired**:
+
+      - B1 active-probe pseudo-property: <what changed>
+
+      - B2 client diagnostics pseudo-property: <what changed>
+
+
+      **Generated-state behavioral assertions**:
+
+      - Active probe: <how runtime_present/runtime_stale/timeout_seconds drive expectations>
+
+      - Client diagnostics: <how endpoint/client/attachment states drive expectations>
+
+
+      **Non-mutation assertions added**:
+
+      - <state snapshots or invariants asserted unchanged>
+
+
+      **Files changed**:
+
+      - <list; confirm product code untouched>
+
+
+      **Expected-red preservation**:
+
+      - <why the repaired tests still expose the implementation gap instead of passing
+      trivially>'
+    depends_on:
+    - tela.operator_p1.red_tests.diagnostics_readonly
+    agent: python-executor
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
   status: locked
