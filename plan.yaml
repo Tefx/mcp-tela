@@ -76370,7 +76370,7 @@ phases:
       confirming no implementation/code surface changes.'
   - id: tela.operator_p1.scope_decision.recover_exposure_decision
     name: 'Decide recover exposure: remote explicit mutation or CLI-only'
-    status: pending
+    status: claimed
     description: 'Planning-only authority-adjudication step. Decide exactly one recovery
       posture for P1 operator surfaces:
 
@@ -76435,6 +76435,8 @@ phases:
     depends_on:
     - tela.operator_p1.scope_decision.authority_and_source_discovery
     agent: minimalist-architect-tacit
+    claimed_by: minimalist-architect-tacit
+    claimed_at: '2026-04-25T19:29:05.602191+00:00'
   - id: tela.operator_p1.scope_decision.gate
     name: Gate scope decision completeness
     status: pending
