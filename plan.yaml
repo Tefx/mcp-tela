@@ -78492,6 +78492,103 @@ phases:
       is transitively reachable via GET /operator/audit route. No blocker-class residuals;
       only non-blocking pre-existing debt noted (escape-hatch budget saturation /
       known flaky repro timeout). gate_open_allowed=true.'
+  - id: tela.operator_p1.surfaces.fix_w1_w5_w9_wiring_blockers
+    name: Fix W1/W5/W9 wiring audit blockers
+    status: pending
+    description: 'Batched implementation remediation for latest operator P1 wiring
+      audit blockers W1-1/W9-1, W1-2, and W5-1.
+
+
+      Scope:
+
+      - W1-1/W9-1: Resolve the dead import chain for non-paginated `audit_query` in
+      `src/tela/shell/http_routes.py`. The current F401 route-wired comment is misleading
+      if the imported symbol is not actually route-reachable. Remove the dead import/comment
+      path or wire only the authoritative paginated audit surface; do not leave transitive
+      stub-reachability or a handler-only claim that bypasses runtime reachability.
+
+      - W1-2: Resolve `_ROUTE_HANDLERS` being dead/unreferenced in runtime. Either
+      connect it to a real runtime registration/introspection path or remove/de-export
+      it and update tests/docs that treat the tuple as a public route registry. Do
+      not preserve an orphan registry only to satisfy tests.
+
+      - W5-1: Add non-vacuous `@pre`/`@post` contracts for `handle_operator_audit`
+      in `src/tela/shell/http_routes.py`. Contracts must reference real parameters/result
+      shape and must not be identity lambdas.
+
+
+      Required work:
+
+      - Update code, tests, and docs as needed so route reachability, imports, and
+      documentation agree.
+
+      - Add or update focused regression coverage proving these blockers cannot recur.
+
+      - Preserve shared contract discipline: builtin, downstream, bridge, and HTTP
+      paths must obey the same shared contract; shared audit semantics must not be
+      skipped on alternate paths.
+
+
+      Failure-mode checklist:
+
+      - Dead imports marked as route-wired by comments.
+
+      - Public/private route registry tuple not consumed by runtime or tests relying
+      on a non-runtime registry.
+
+      - Stub reachability mistaken for runtime reachability.
+
+      - Missing or vacuous contracts on shell-facing operator audit handler.
+
+      - Removing tests instead of replacing them with runtime-reachability assertions.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes its inputs and produces
+      outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. `audit_query` remains imported in `http_routes.py` without a real runtime
+      caller.
+
+      2. `_ROUTE_HANDLERS` remains as an unreferenced route registry or test-only
+      artifact.
+
+      3. `handle_operator_audit` still lacks meaningful `@pre`/`@post` contracts.
+
+      4. Regression coverage checks comments or symbols only, rather than runtime
+      reachability and contract strength.
+
+      5. Any fix that weakens the authoritative paginated audit surface or shared
+      audit semantics.'
+    verification: Local-check protecting tela.operator_p1.surfaces.wiring_audit and
+      tela.operator_p1.surfaces.gate. Evidence must show W1-1/W9-1, W1-2, and W5-1
+      are all closed; targeted regressions were added/updated; `handle_operator_audit`
+      has non-vacuous contracts; no orphan runtime registry or misleading dead import
+      remains; and no stub-only route path is introduced.
+    evidence_template: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this\
+      \ step:\n- src/tela/shell/http_routes.py — key passage or \"NOT READ: <reason>\"\
+      \n- src/tela/shell/audit.py — key passage or \"NOT READ: <reason>\"\n- src/tela/shell/gateway.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/shell/test_http_routes.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/shell/test_audit_paginated_query_red.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/shell/test_adr008_recover_decision_behavior_red.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- INVAR.md — key passage or \"NOT\
+      \ READ: <reason>\"\n\n## Fix Evidence\n- Blockers fixed: W1-1/W9-1, W1-2, W5-1\n\
+      - Runtime reachability proof for audit route/import chain:\n  ```\n  <grep/import-trace\
+      \ or route invocation output>\n  ```\n- `_ROUTE_HANDLERS` disposition and proof:\n\
+      \  ```\n  <removed/de-exported or real runtime consumer evidence>\n  ```\n-\
+      \ `handle_operator_audit` contract proof:\n  ```\n  <signature/contract snippet\
+      \ or invar sig output>\n  ```\n- Regression commands and outputs:\n  ```\n \
+      \ <commands and relevant output>\n  ```\n- Stub-only paths remaining: NONE or\
+      \ <justification>\n- Open problems / residual risk: none"
+    depends_on:
+    - tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
+    agent: python-senior-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
