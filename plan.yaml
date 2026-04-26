@@ -78700,7 +78700,7 @@ phases:
       verified. Focused regressions passed: 30/30 test_http_routes and 9/9 test_audit_paginated_query_red.'
   - id: tela.operator_p1.surfaces.fix_gate_b1_b2_b3
     name: Fix surfaces gate blockers B1/B2/B3
-    status: pending
+    status: claimed
     description: 'Batched remediation for latest tela.operator_p1.surfaces.gate blockers.
       Fix ALL of these blockers, not just the first.
 
@@ -78910,6 +78910,8 @@ phases:
     - tela.operator_p1.surfaces.docs_status_update
     - tela.operator_p1.surfaces.wiring_audit
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-26T05:35:28.482842+00:00'
   - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3
     name: Retest surfaces gate blockers B1/B2/B3
     status: pending
