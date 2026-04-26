@@ -78700,7 +78700,7 @@ phases:
       verified. Focused regressions passed: 30/30 test_http_routes and 9/9 test_audit_paginated_query_red.'
   - id: tela.operator_p1.surfaces.fix_gate_b1_b2_b3
     name: Fix surfaces gate blockers B1/B2/B3
-    status: claimed
+    status: done
     description: 'Batched remediation for latest tela.operator_p1.surfaces.gate blockers.
       Fix ALL of these blockers, not just the first.
 
@@ -78912,6 +78912,42 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-26T05:35:28.482842+00:00'
+    done_at: '2026-04-26T05:54:11.159015+00:00'
+    evidence: 'Implemented and merged batched B1/B2/B3 remediation from worktree branch
+      `vectl/step-tela.operator_p1.surfaces.fix_gate_b1_b2_b3` (worker commit `42c2fdd4`).
+      Mainline squash commit: `[vectl] step-tela.operator_p1.surfaces.fix_gate_b1_b2_b3
+      completed`.
+
+
+      Subagent evidence summary:
+
+      - B1: `_build_auth_handoff` now validates bearer token and all operator routes
+      (`/operator/probe`, `/operator/clients`, `/operator/authorization/explain`,
+      `/operator/audit`) use parity auth semantics with `/status`.
+
+      - B2: ruff clean, invar full guard passed, targeted operator tests passed.
+
+      - B3: vacuous `@pre(lambda: True)` pattern removed from affected operator/lockfile
+      surfaces.
+
+
+      Mainline final-state verification barrier (post-merge):
+
+      - `uv run ruff check .` => `All checks passed!`
+
+      - `uv run pytest -q tests/shell/test_lockfile.py tests/shell/test_http_auth.py
+      tests/shell/test_http_routes.py tests/shell/test_gateway.py::test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary`
+      => `71 passed in 1.46s`
+
+      - `uvx invar-tools guard --all` => passed with `errors: 0` (warnings present,
+      non-blocking)
+
+
+      Scope notes:
+
+      - No plan-state files modified by worker.
+
+      - Shared-surface intent preserved (no RBAC redesign / no contract aliasing).'
   - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3
     name: Retest surfaces gate blockers B1/B2/B3
     status: pending
