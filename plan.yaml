@@ -79585,7 +79585,7 @@ phases:
       non-error state confirmed.'
   - id: tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity
     name: Remediate type-check criterion and OPIFEX parity precondition
-    status: pending
+    status: claimed
     description: "Batched remediation for the latest `tela.operator_p1.surfaces.gate`\
       \ blockers. Resolve BOTH blockers in one path before the gate is retried.\n\n\
       work_type: authority_adjudication with technical_debt_remediation pressure\n\
@@ -79737,6 +79737,8 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
     agent: software-architect-tacit
+    claimed_by: software-architect-tacit
+    claimed_at: '2026-04-26T06:52:40.128591+00:00'
   - id: tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity
     name: Retest type-check criterion and OPIFEX parity closure
     status: pending
