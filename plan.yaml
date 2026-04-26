@@ -79163,7 +79163,7 @@ phases:
       and no unresolved proof gaps (`proof_gap_status: NONE`).'
   - id: tela.operator_p1.surfaces.fix_gate_b1_b2_b3_v2
     name: Fix surfaces gate blockers B1/B2/B3 v2
-    status: claimed
+    status: done
     description: 'Batched implementation/remediation for the deferred `tela.operator_p1.surfaces.gate`
       blockers. Fix ALL of B1, B2, and B3 in this single chain; do not split into
       separate blocker-specific branches.
@@ -79396,6 +79396,37 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-26T06:23:04.380035+00:00'
+    done_at: '2026-04-26T06:33:45.567183+00:00'
+    evidence: 'Merged v2 batched remediation from branch `vectl/step-tela.operator_p1.surfaces.fix_gate_b1_b2_b3_v2`
+      (worker commit `95f809b8`; mainline squash commit `[vectl] step-tela.operator_p1.surfaces.fix_gate_b1_b2_b3_v2
+      completed`).
+
+
+      Implemented outcomes:
+
+      - B1: `/operator/probe` route now enforces timeout boundary validation before
+      handler invocation; invalid values (<=0/non-finite/malformed) return controlled
+      4xx and do not leak handler preconditions.
+
+      - B2: `docs/INTERFACES.md` operator audit pagination/limit/status semantics
+      aligned with runtime behavior.
+
+      - B3: deterministic type-check disposition documented as approved scoped command
+      with explicit non-intersection rationale; full mypy inventory captured.
+
+
+      Mainline final-state verification barrier (post-merge):
+
+      - `uv run ruff check .` => `All checks passed!`
+
+      - `uv run --frozen --group dev pytest -q tests/shell/test_gateway.py -k "operator_probe_rejects_invalid_timeout_at_http_boundary
+      or operator_probe_accepts_positive_timeout_at_http_boundary or streamable_http_surface_mounts_liveness_routes_and_auth_boundary"`
+      => `10 passed, 79 deselected in 0.81s`
+
+      - `uvx invar-tools guard --all` => passed (`errors: 0`)
+
+
+      No plan-state files were modified by the execution agent.'
   - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
     name: Retest surfaces gate blockers B1/B2/B3 v2
     status: pending
