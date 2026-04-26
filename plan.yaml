@@ -79588,6 +79588,160 @@ phases:
 
       Additional checks reported by verifier: gateway-targeted tests green, ruff/invar
       non-error state confirmed.'
+  - id: tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity
+    name: Remediate type-check criterion and OPIFEX parity precondition
+    status: pending
+    description: "Batched remediation for the latest `tela.operator_p1.surfaces.gate`\
+      \ blockers. Resolve BOTH blockers in one path before the gate is retried.\n\n\
+      work_type: authority_adjudication with technical_debt_remediation pressure\n\
+      step_type: implementation/remediation\npriority: HIGH\n\n## Blockers to Resolve\
+      \ (ALL of these, not just the first)\n\n### B1: Deterministic accepted type-check\
+      \ criterion\nProblem: Gate evidence is ambiguous because scoped type checks\
+      \ pass, but full `uv run mypy src tests` currently fails with 216 errors. The\
+      \ phase gate needs an unambiguous accepted criterion.\n\nRequired outcome:\n\
+      - Establish the accepted type-check gate criterion for this operator P1 surface\
+      \ phase.\n- Prefer making `uv run mypy src tests` green if the errors intersect\
+      \ this phase or downstream gates.\n- If full-repo mypy failures are broader\
+      \ residual debt, produce an explicit approved non-intersection decision basis\
+      \ that includes:\n  - provenance: pre-existing / introduced_now / out-of-step-origin\
+      \ for each remaining error family\n  - disposition: blocking-now / blocking-later\
+      \ / non-blocking (do NOT use provenance as disposition)\n  - why unresolved\
+      \ full-repo mypy errors do not intersect `tela.operator_p1.surfaces.gate` or\
+      \ `tela.operator_p1.gate`\n  - the exact scoped command(s) accepted for this\
+      \ phase, with rationale and owner for any residual full-repo debt\n- Do not\
+      \ leave two competing criteria (full mypy vs scoped mypy) without a single accepted\
+      \ gate rule.\n\n### B2: OPIFEX pinned reference parity precondition\nProblem:\
+      \ Shared-surface parity gate is blocked by OPIFEX pinned ref mismatch: expected\
+      \ `981a3294...`, found `450281ea...`.\n\nRequired outcome:\n- Determine whether\
+      \ the mismatch can be fixed inside this repository by aligning the local precondition/pin/check\
+      \ configuration to the approved OPIFEX authority.\n- If repo-fixable: update\
+      \ only the repo-owned parity precondition/config/docs needed to make the authoritative\
+      \ expected/found relation deterministic and auditable.\n- If truly external\
+      \ to this repo: encode a bounded external-dependency unblock record in repo-owned\
+      \ evidence/docs/config as appropriate, with:\n  - expected OPIFEX ref: `981a3294...`\n\
+      \  - found OPIFEX ref: `450281ea...`\n  - why the mismatch cannot be changed\
+      \ from this repo\n  - who/what owns the external alignment\n  - exact command\
+      \ output showing the mismatch\n  - explicit gate classification path: BLOCK\
+      \ until external ref aligns, or approved non-blocking/accepted-current-ref decision\
+      \ with authority citation\n- Do not silently accept a different OPIFEX ref without\
+      \ an authority citation.\n\n## Shared-surface authority refs\nRead the canonical\
+      \ shared contract sources before changing or classifying either blocker:\n-\
+      \ `AGENTS.md` — Shared Contract Discipline and evidence standard\n- `../opifex/design/final-canonical-contract.md`\
+      \ — canonical shared surface meaning\n- `../opifex/conformance/shared_surfaces.yaml`\
+      \ — shared-surface parity inventory\n- `../opifex/conformance/case_matrix/mcp-tela/*`\
+      \ — mcp-tela parity cases\n\n## Failure-mode checklist\n- Full mypy failure\
+      \ family intersects operator P1 handler/runtime code: must be fixed or blocking-now.\n\
+      - Full mypy failure family is unrelated repo-wide debt: must have explicit non-intersection\
+      \ evidence and downstream owner.\n- OPIFEX mismatch is local pin/config drift:\
+      \ fix local alignment and provide before/after proof.\n- OPIFEX mismatch is\
+      \ external repo state: provide bounded external-dependency evidence so the gate\
+      \ can classify correctly.\n- No completed steps may be edited or reinterpreted;\
+      \ this remediation must add new evidence and only unblock the pending gate through\
+      \ its retest.\n\n## Completion Criteria (stub exclusion)\nThis is an IMPLEMENTATION/REMEDIATION\
+      \ step. Stub-only completion is NOT acceptable. Completion requires a concrete\
+      \ criterion/disposition artifact and any necessary repo-owned changes; unresolved\
+      \ external dependency is acceptable only with explicit bounded evidence and\
+      \ gate classification requirements."
+    verification: '- B1: Evidence includes the accepted type-check criterion and either
+      `uv run mypy src tests` green output or an approved scoped/non-intersection
+      decision basis covering all remaining full-mypy failure families.
+
+      - B2: Evidence includes OPIFEX parity command output and either repo-owned alignment
+      proof or an explicit bounded external-dependency unblock record with gate classification
+      path.
+
+      - Both blockers are addressed in one evidence package; no completed steps are
+      modified.
+
+      - Main path: accepted criterion and parity precondition are deterministic and
+      auditable.
+
+      - Failure path: unresolved full mypy errors or OPIFEX ref mismatch have explicit
+      blocking/non-blocking disposition, not provenance-only labels.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - AGENTS.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/design/final-canonical-contract.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/shared_surfaces.yaml — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/case_matrix/mcp-tela/ — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Batched Remediation Evidence
+
+
+      ### B1 Type-check criterion
+
+      **Full command:**
+
+      ```
+
+      uv run mypy src tests
+
+      ```
+
+      **Full command result:** PASS | FAIL
+
+      **If FAIL, failure-family register:**
+
+      | Family | Count | Provenance | Disposition | Intersects operator P1 gates?
+      | Owner/closure path |
+
+      |---|---:|---|---|---|---|
+
+
+      **Accepted gate criterion:** <full mypy green OR scoped command set + approved
+      non-intersection basis>
+
+      **Authority/rationale:** <why this criterion is unambiguous>
+
+
+      ### B2 OPIFEX parity precondition
+
+      **Parity command(s):**
+
+      ```
+
+      <paste exact command(s) used to detect expected/found refs>
+
+      ```
+
+      **Expected ref:** 981a3294...
+
+      **Found ref:** 450281ea...
+
+      **Disposition:** repo-fixed | external-blocking | approved-current-ref | non-blocking
+      with citation
+
+      **Authority citation:** <spec/owner/ref>
+
+      **If external:** owner + explicit gate classification path
+
+
+      ### Files changed / records produced
+
+      - <path> — <why>
+
+
+      ### Headline
+
+      - [ ] PASS: Both blockers have deterministic closure evidence.
+
+      - [ ] BLOCKED_EXTERNAL: OPIFEX mismatch is external and gate must classify/block
+      accordingly.
+
+      - [ ] FAIL: Criterion or parity precondition remains ambiguous.'
+    depends_on:
+    - tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
+    agent: software-architect-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
