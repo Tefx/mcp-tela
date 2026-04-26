@@ -468,12 +468,27 @@ class TestAllEndpointsImplemented:
         assert hasattr(http_routes, "handle_disconnect")
         assert callable(http_routes.handle_disconnect)
 
-    def test_route_handlers_tuple_contains_all(self) -> None:
-        """Verify _ROUTE_HANDLERS tuple contains all 4 handlers."""
-        assert hasattr(http_routes, "_ROUTE_HANDLERS")
-        handlers = http_routes._ROUTE_HANDLERS
-        assert len(handlers) == 4
-        assert http_routes.handle_health in handlers
-        assert http_routes.handle_status in handlers
-        assert http_routes.handle_connect in handlers
-        assert http_routes.handle_disconnect in handlers
+    def test_route_handlers_runtime_registry_is_not_exported(self) -> None:
+        """http_routes must not expose a dead runtime route registry."""
+        assert not hasattr(http_routes, "_ROUTE_HANDLERS")
+
+    def test_http_routes_do_not_import_non_paginated_audit_query(self) -> None:
+        """Operator audit route must use the paginated audit projection only."""
+        source = inspect.getsource(http_routes)
+        tree = ast.parse(source)
+        imported_names = {
+            alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ImportFrom) and node.module == "tela.shell.audit"
+            for alias in node.names
+        }
+        assert "audit_query" not in imported_names
+        assert "audit_query_paginated" in imported_names
+
+    def test_handle_operator_audit_has_non_vacuous_contracts(self) -> None:
+        """handle_operator_audit must declare executable pre/post contracts."""
+        source = inspect.getsource(http_routes.handle_operator_audit)
+        assert "@pre(lambda: True)" not in source
+        assert "@pre(" in source
+        assert "@post(" in source
+        assert "AUDIT_QUERY_ERROR" in source

@@ -861,11 +861,13 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 
 ### `http_routes.py`
 
-**Responsibility:** HTTP route handler implementations for all gateway HTTP endpoints (`/health`, `/status`, `/operator/audit`, `/connect`, `/disconnect`). Separated from route mounting (which lives in `gateway.py`).
+**Responsibility:** HTTP route handler implementations for gateway HTTP endpoints (`/health`, `/status`, `/operator/probe`, `/operator/clients`, `/operator/authorization/explain`, `/operator/audit`, `/connect`, `/disconnect`). Separated from route mounting (which lives in `gateway.py`); route reachability is defined by `gateway.py` custom-route registration, not by a secondary handler registry in this module.
 
 **Public API:**
 - `handle_health() -> Result[HealthResponse, str]`
 - `handle_status(request_token: str, expected_token: str) -> Result[StatusResponse, str]`
+- `handle_operator_probe(timeout_seconds: float) -> Result[OperatorProbeSnapshot, str]`
+- `handle_operator_clients() -> Result[list[ClientAttachment], str]`
 - `handle_operator_audit(cursor: str | None, limit: int | None) -> Result[AuditPage, str]`
 - `handle_connect(request_token: str, expected_token: str, payload: ConnectRequest) -> Result[Mapping[str, object], str]`
 - `handle_disconnect(request_token: str, expected_token: str, payload: DisconnectRequest) -> Result[Mapping[str, object], str]`

@@ -13,6 +13,7 @@ per-module.
 from __future__ import annotations
 
 import functools
+import inspect
 from typing import Any, Callable
 
 from deal import post as deal_post
@@ -94,6 +95,16 @@ def pre(predicate: Callable[..., bool]) -> Callable[[Any], Any]:
     """
 
     def decorator(func: Callable) -> Callable:
+        if inspect.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                assert predicate(*args, **kwargs), (
+                    f"Precondition failed for {func.__name__}"
+                )
+                return await func(*args, **kwargs)
+
+            return async_wrapper
+
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             assert predicate(*args, **kwargs), (
@@ -130,6 +141,12 @@ def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
         Traceback (most recent call last):
         ...
         AssertionError: Postcondition failed for bad...
+        >>> import asyncio
+        >>> @post(lambda result: result == 3)
+        ... async def async_add(x: int, y: int) -> int:
+        ...     return x + y
+        >>> asyncio.run(async_add(1, 2))
+        3
 
     Args:
         predicate: Callable that accepts the return value.
@@ -139,6 +156,15 @@ def post(predicate: Callable[[Any], bool]) -> Callable[[Any], Any]:
     """
 
     def decorator(func: Callable) -> Callable:
+        if inspect.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                result = await func(*args, **kwargs)
+                assert predicate(result), f"Postcondition failed for {func.__name__}"
+                return result
+
+            return async_wrapper
+
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)

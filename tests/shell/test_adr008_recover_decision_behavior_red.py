@@ -96,15 +96,9 @@ def test_no_handle_recover_defined() -> None:
     )
 
 
-def test_no_recover_route_in_route_handlers() -> None:
-    """_ROUTE_HANDLERS must not include a recovery endpoint."""
-    handler_names = {h.__name__ for h in http_routes._ROUTE_HANDLERS}
-    recover_names = {"handle_recover", "handle_operator_recover"}
-    overlap = handler_names & recover_names
-    assert not overlap, (
-        f"_ROUTE_HANDLERS contains recovery handler(s): {overlap}. "
-        "ADR-008 Branch B requires CLI-only recovery."
-    )
+def test_no_runtime_route_handler_registry_exported() -> None:
+    """http_routes must not expose a stale runtime route-handler registry."""
+    assert not hasattr(http_routes, "_ROUTE_HANDLERS")
 
 
 def test_builtin_tools_do_not_include_recover() -> None:

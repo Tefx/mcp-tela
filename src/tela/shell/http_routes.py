@@ -31,9 +31,8 @@ from tela.core.classification import (
 )
 from tela.core.contracts import post, pre
 from tela.shell.result import Result
-from tela.shell.audit import (  # noqa: F401 — audit query surfaces are route-wired exports
+from tela.shell.audit import (
     AuditPage,
-    audit_query,
     audit_query_paginated,
     get_recent_audit_entries,
 )
@@ -50,7 +49,9 @@ from tela.shell.gateway_runtime import (
 )
 from tela.shell.http_auth import validate_bearer_token
 from tela.shell.adr008_registry_events import read_attachment_registry
-from tela.shell.authorization_explain import handle_authorization_explain
+from tela.shell.authorization_explain import (  # noqa: F401 — route-wired export
+    handle_authorization_explain,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -414,6 +415,28 @@ def handle_operator_clients() -> Result[list[ClientAttachment], str]:
     return Result(value=clients)
 
 
+@pre(
+    lambda cursor=None, limit=None: (
+        (cursor is None or isinstance(cursor, str))
+        and (limit is None or isinstance(limit, int))
+    )
+)
+@post(
+    lambda result: (
+        (
+            result.is_ok
+            and result.value is not None
+            and isinstance(result.value.entries, list)
+            and isinstance(result.value.has_more, bool)
+            and (result.value.next_cursor is None or isinstance(result.value.next_cursor, str))
+        )
+        or (
+            result.is_err
+            and isinstance(result.error, str)
+            and result.error.startswith("AUDIT_QUERY_ERROR")
+        )
+    )
+)
 async def handle_operator_audit(
     cursor: str | None = None,
     limit: int | None = None,
@@ -624,11 +647,3 @@ def handle_disconnect(
             "status": "disconnected",
         }
     )
-
-
-_ROUTE_HANDLERS = (
-    handle_health,
-    handle_status,
-    handle_connect,
-    handle_disconnect,
-)
