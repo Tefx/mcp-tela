@@ -1260,6 +1260,92 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
     asyncio.run(_scenario())
 
 
+@pytest.mark.parametrize(
+    "timeout_value",
+    ["0", "-1", "nan", "NaN", "inf", "Infinity", "-Infinity", "not-a-number"],
+)
+def test_operator_probe_rejects_invalid_timeout_at_http_boundary(
+    timeout_value: str,
+) -> None:
+    """Invalid probe timeouts fail as controlled client errors before handler preconditions."""
+
+    async def _scenario() -> None:
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8410,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+        start_result = await gateway_start(
+            config,
+            tela_config=TelaConfig(),
+            expected_bearer_token="probe-timeout-token",
+        )
+        assert start_result.is_ok
+
+        try:
+            app_result = with_upstream_server(lambda s: s.streamable_http_app())
+            assert app_result.is_ok
+            app = app_result.value
+            assert app is not None
+
+            with TestClient(app, base_url="http://127.0.0.1:8410") as client:
+                response = client.get(
+                    f"/operator/probe?timeout_seconds={timeout_value}",
+                    headers={"Authorization": "Bearer probe-timeout-token"},
+                )
+
+            assert response.status_code == 400
+            assert response.json()["error"].startswith("INVALID_REQUEST")
+            assert "AssertionError" not in response.text
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
+def test_operator_probe_accepts_positive_timeout_at_http_boundary() -> None:
+    """Positive probe timeout remains accepted and read-only through HTTP."""
+
+    async def _scenario() -> None:
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8411,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+        start_result = await gateway_start(
+            config,
+            tela_config=TelaConfig(),
+            expected_bearer_token="probe-positive-token",
+        )
+        assert start_result.is_ok
+
+        before_running = is_runtime_running()
+        assert before_running.is_ok
+
+        try:
+            app_result = with_upstream_server(lambda s: s.streamable_http_app())
+            assert app_result.is_ok
+            app = app_result.value
+            assert app is not None
+
+            with TestClient(app, base_url="http://127.0.0.1:8411") as client:
+                response = client.get(
+                    "/operator/probe?timeout_seconds=0.25",
+                    headers={"Authorization": "Bearer probe-positive-token"},
+                )
+
+            assert response.status_code == 200
+            assert response.json()["running"] is True
+            after_running = is_runtime_running()
+            assert after_running == before_running
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
 def test_connect_handler_requires_server_name_field() -> None:
     """Canonical /connect helper must reject missing required request key."""
 

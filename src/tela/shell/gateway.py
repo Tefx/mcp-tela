@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -335,6 +336,13 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
                 return JSONResponse(
                     status_code=400,
                     content={"error": "INVALID_REQUEST: timeout_seconds must be numeric"},
+                )
+            if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "error": "INVALID_REQUEST: timeout_seconds must be finite and greater than zero"
+                    },
                 )
 
         probe_result = handle_operator_probe(timeout_seconds=timeout_seconds)

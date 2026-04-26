@@ -310,7 +310,7 @@ Returns a current-endpoint `OperatorProbeSnapshot` observing runtime state witho
 **Query parameters**:
 | Parameter | Type | Default | Semantics |
 |-----------|------|---------|-----------|
-| `timeout_seconds` | float | `5.0` | Probe timeout; this in-process observation does not perform a retry loop |
+| `timeout_seconds` | finite float `> 0` | `5.0` | Probe timeout; this in-process observation does not perform a retry loop. Zero, negative, non-finite, and malformed values are rejected at the HTTP boundary with a controlled 4xx response. |
 
 **Response fields**:
 | Field | Type | Semantics |
@@ -342,8 +342,8 @@ Returns a bounded cursor page from the audit store. Read-only: does not admit se
 **Query parameters**:
 | Parameter | Type | Default | Semantics |
 |-----------|------|---------|-----------|
-| `cursor` | str | null | Opaque cursor from the previous response's `next_cursor`; omitted starts at the oldest retained audit entry |
-| `limit` | int | 100 | Requested page size; values outside the supported range are normalized by `audit_query_paginated` and never produce an unbounded response |
+| `cursor` | str | null | Opaque `offset:<N>` cursor from the previous response's `next_cursor`; omitted starts at the oldest retained audit entry. Malformed cursors return `AUDIT_QUERY_ERROR`. |
+| `limit` | int | 100 | Requested page size. Omitted, zero, and negative values use the default 100; values above the hard maximum are clamped to 100 by `audit_query_paginated`. Non-integer HTTP query values are rejected with 400. |
 
 **Response fields**:
 | Field | Type | Semantics |
@@ -880,9 +880,11 @@ orphaned and idle upstream connections.
 | Limit | Value | Enforced | Source |
 |-------|-------|----------|--------|
 | In-memory buffer max entries | 10,000 | Yes — `deque(maxlen=10000)` | `shell/audit.py` |
-| Query result limit (default) | 100 | Yes — `audit_query(limit=100)` | `shell/audit.py` |
-| Query result limit (max) | No limit enforced | — | Caller may pass any `limit` value |
-| Status endpoint audit entries | 100 (most recent) | Yes — uses `get_audit_entries()` then `[-100:]` in status | `shell/http_routes.py` |
+| Status endpoint audit entries | 100 most recent | Yes — `handle_status()` calls `get_recent_audit_entries()` | `shell/http_routes.py`, `shell/audit.py` |
+| Status summary limit (default/max) | 100 / 100 | Yes — `get_recent_audit_entries()` normalizes omitted, zero, or negative limits to 100 and clamps larger values to 100 | `shell/audit.py` |
+| Paginated audit limit (default/max) | 100 / 100 | Yes — `audit_query_paginated()` normalizes omitted, zero, or negative limits to 100 and clamps larger values to 100 | `shell/audit.py` |
+| Paginated audit cursor | `offset:<N>` | Yes — malformed or negative offsets return `AUDIT_QUERY_ERROR`; omitted cursor starts at offset 0 | `shell/audit.py` |
+| `tela audit` CLI source | Recent `/status.audit_entries` summary | Yes — `audit_command()` queries remote status and applies local `--since`/`--limit` filtering to the returned summary | `commands/audit_cmd.py`, `commands/remote_state.py` |
 
 ### 10.2 Configuration
 
