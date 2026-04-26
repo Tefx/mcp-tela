@@ -27,7 +27,6 @@ from tela.core.models import (
     RuntimeBindingContract,
     InitializeProfileBinding,
     DefaultProfileResolutionStatus,
-    CapabilityToken,
     ConnectRequest,
     DisconnectRequest,
 )
@@ -637,7 +636,6 @@ def test_status_response_accepts_spec_fixture() -> None:
         AuditEntry,
         AuditLevel,
         EnforcementVerdict,
-        GatewayStatus,
         StatusResponse,
     )
 

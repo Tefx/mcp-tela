@@ -41,7 +41,10 @@ class _IsStale:
     def __call__(self, lockfile: LockfileData) -> bool:
         """Return True when lockfile's PID does not resolve to a live process."""
 
-        if _is_zombie_process(lockfile.pid):
+        zombie_result = _is_zombie_process(lockfile.pid)
+        if isinstance(zombie_result, bool):
+            return zombie_result
+        if zombie_result.is_ok and zombie_result.value is True:
             return True
 
         try:
@@ -62,12 +65,11 @@ class _IsStale:
 is_stale = _IsStale()
 
 
-# @invar:allow shell_result: best-effort subprocess inspection returns bool, not a failable boundary.
-def _is_zombie_process(pid: int) -> bool:
+def _is_zombie_process(pid: int) -> Result[bool, str]:
     """Return whether ``pid`` is a zombie process according to ``ps``.
 
-    Best-effort only: any inspection failure is treated as non-zombie so callers
-    fall back to standard liveness checks.
+    Inspection failures are returned explicitly so callers can decide whether
+    to fall back to standard liveness checks.
     """
 
     try:
@@ -77,13 +79,13 @@ def _is_zombie_process(pid: int) -> bool:
             text=True,
             check=False,
         )
-    except OSError:
-        return False
+    except OSError as exc:
+        return Result(error=f"LOCKFILE_ZOMBIE_CHECK_ERROR: {exc}")
 
     if result.returncode != 0:
-        return False
+        return Result(value=False)
 
-    return "Z" in result.stdout.strip().upper()
+    return Result(value="Z" in result.stdout.strip().upper())
 
 
 @pre(lambda data: isinstance(data, LockfileData))
@@ -128,7 +130,6 @@ def write_lockfile(data: LockfileData) -> Result[None, str]:
         return Result(error=f"LOCKFILE_WRITE_ERROR: {exc}")
 
 
-@pre(lambda: True)
 @post(
     lambda result: (
         isinstance(result, Result)
@@ -210,7 +211,6 @@ def delete_lockfile_if_stale() -> Result[bool, str]:
     return Result(value=True)
 
 
-@pre(lambda: True)
 @post(
     lambda result: (
         isinstance(result, Result)
@@ -237,7 +237,6 @@ def delete_lockfile() -> Result[None, str]:
         return Result(error=f"LOCKFILE_DELETE_ERROR: {exc}")
 
 
-@pre(lambda: True)
 @post(
     lambda result: (
         isinstance(result, Result)

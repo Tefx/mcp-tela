@@ -2142,7 +2142,6 @@ def test_handle_initialize_populates_init_mode_open() -> None:
     )
     from tela.shell.idle_shutdown import (
         _reset_idle_manager,
-        get_idle_manager,
         init_idle_manager,
     )
     from tela.shell.upstream import handle_initialize
@@ -2187,7 +2186,6 @@ def test_handle_initialize_populates_client_info_snapshot_open_mode() -> None:
     )
     from tela.shell.idle_shutdown import (
         _reset_idle_manager,
-        get_idle_manager,
         init_idle_manager,
     )
     from tela.shell.upstream import handle_initialize
@@ -2234,7 +2232,6 @@ def test_handle_initialize_bridge_connection_id_populated() -> None:
     )
     from tela.shell.idle_shutdown import (
         _reset_idle_manager,
-        get_idle_manager,
         init_idle_manager,
     )
     from tela.shell.upstream import handle_initialize

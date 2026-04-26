@@ -375,6 +375,7 @@ def test_reconnect_reuses_enumeration_no_double_path():
 
             token = lockfile_data["token"]
             port = lockfile_data["port"]
+            assert isinstance(port, int)
 
             # First connect
             connect_proc = subprocess.Popen(
@@ -692,7 +693,6 @@ def test_convergence_kernel_respects_reconnect_enumeration_contract():
 
     from tela.shell.reload import (
         RECONNECT_ENUMERATION_CONTRACT,
-        ReconnectEnumerationContract,
     )
     from tela.shell.downstream import DOWNSTREAM_CONVERGENCE_CONTRACT
 
@@ -705,7 +705,7 @@ def test_convergence_kernel_respects_reconnect_enumeration_contract():
         in RECONNECT_ENUMERATION_CONTRACT.forbidden_behavior.lower()
     )
 
-    print(f"  P6_EVIDENCE: RECONNECT_ENUMERATION_CONTRACT defined with:")
+    print("  P6_EVIDENCE: RECONNECT_ENUMERATION_CONTRACT defined with:")
     print(f"    - payload: {RECONNECT_ENUMERATION_CONTRACT.authoritative_payload_name}")
     print(
         f"    - fields: {RECONNECT_ENUMERATION_CONTRACT.authoritative_payload_fields}"
@@ -721,7 +721,7 @@ def test_convergence_kernel_respects_reconnect_enumeration_contract():
     )
     assert "registry" in DOWNSTREAM_CONVERGENCE_CONTRACT.authoritative_sources
 
-    print(f"  P6_EVIDENCE: DOWNSTREAM_CONVERGENCE_CONTRACT excludes lockfile:")
+    print("  P6_EVIDENCE: DOWNSTREAM_CONVERGENCE_CONTRACT excludes lockfile:")
     print(
         f"    - authoritative: {DOWNSTREAM_CONVERGENCE_CONTRACT.authoritative_sources}"
     )
@@ -750,7 +750,6 @@ def test_runtime_truth_plane_contracts_defined():
     from tela.shell.gateway_runtime import (
         LOCKFILE_DISCOVERY_CONTRACT,
         STATUS_SNAPSHOT_CONTRACT,
-        RUNTIME_TRUTH_CONTRACTS,
         RUNTIME_TRUTH_BEHAVIORAL_NOTES,
     )
 

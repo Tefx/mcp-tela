@@ -51,11 +51,9 @@ from tela.shell.audit import audit_write, clear_audit_entries, get_audit_entries
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,
     STATUS_SNAPSHOT_CONTRACT,
-    UpstreamSession,
     add_runtime_connection,
     capture_session,
     clear_runtime_connections,
-    clear_session_registry,
     set_runtime_config,
     set_runtime_running,
 )
@@ -1192,9 +1190,33 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
                 assert unauthorized_connect.status_code == 401
 
                 auth_headers = {"Authorization": "Bearer mounted-token"}
+                wrong_auth_headers = {"Authorization": "Bearer wrong-token"}
 
                 status = client.get("/status", headers=auth_headers)
                 assert status.status_code == 200
+
+                operator_routes = (
+                    "/operator/probe",
+                    "/operator/clients",
+                    "/operator/authorization/explain",
+                    "/operator/audit?limit=1",
+                )
+                for route in operator_routes:
+                    wrong_bearer = client.get(route, headers=wrong_auth_headers)
+                    assert wrong_bearer.status_code == 401
+                    assert wrong_bearer.json()["error"].startswith("AUTH_INVALID_TOKEN")
+
+                probe = client.get("/operator/probe", headers=auth_headers)
+                assert probe.status_code == 200
+
+                clients = client.get("/operator/clients", headers=auth_headers)
+                assert clients.status_code == 200
+
+                authorization_explain = client.get(
+                    "/operator/authorization/explain",
+                    headers=auth_headers,
+                )
+                assert authorization_explain.status_code == 200
 
                 clear_audit_entries()
                 write_result = await audit_write(

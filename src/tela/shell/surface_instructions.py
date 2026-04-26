@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from tela.core.surface_manifest import build_manifest_header
-from tela.core.models import ResolvedTool, ServerConfig
+from tela.core.surface_manifest import build_manifest_header as build_manifest_header
 from tela.shell.result import Result
 
 

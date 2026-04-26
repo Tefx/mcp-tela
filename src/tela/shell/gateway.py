@@ -45,7 +45,6 @@ from tela.shell.config_loader import load_config
 from tela.shell.result import Result
 from tela.shell.audit import audit_close, audit_init, build_audit_entry, audit_write
 from tela.shell.builtin_tools import (
-    BUILTIN_TOOLS,
     BUILTIN_TOOL_NAMES,
     handle_profiles_list,
     handle_list_providers,
@@ -70,6 +69,7 @@ from tela.shell.initialize_session_patch import install_initialize_session_patch
 
 from tela.shell.gateway_lifecycle import get_lifecycle_status_facts
 from tela.shell.gateway_http_auth import extract_bearer_token
+from tela.shell.http_auth import validate_bearer_token
 from tela.shell import gateway_runtime
 
 logger = logging.getLogger(__name__)
@@ -248,7 +248,6 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
     """Register mounted HTTP liveness and lifecycle routes on FastMCP app."""
 
     from tela.shell.http_routes import (
-        handle_connect,
         handle_disconnect,
         handle_health,
         handle_authorization_explain,
@@ -291,6 +290,15 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
 
         with gateway_runtime._runtime_lock:
             expected_token = gateway_runtime._runtime.expected_bearer_token or ""
+        validation_result = validate_bearer_token(token_result.value, expected_token)
+        if validation_result.is_err:
+            assert validation_result.error is not None
+            return Result(
+                error=(
+                    validation_result.error,
+                    error_to_http_status(validation_result.error),
+                )
+            )
         return Result(value=(token_result.value, expected_token))
 
     @upstream_server.custom_route("/status", methods=["GET"])

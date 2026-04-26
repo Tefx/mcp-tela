@@ -25,7 +25,6 @@ from tela.core.models import ConnectionContext, TelaConfig
 from tela.shell.connection_reaper import (
     ConnectionReaper,
     ReaperConfig,
-    ReaperSweepOutcome,
 )
 from tela.shell.gateway_runtime import (
     add_runtime_connection,

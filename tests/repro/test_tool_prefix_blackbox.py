@@ -24,14 +24,13 @@ Verification required:
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import pytest
 
 # Public API imports only - no implementation source imports
-from tela.core.conflict import ConflictType, ToolConflict, detect_conflicts
+from tela.core.conflict import ConflictType, detect_conflicts
 from tela.core.family import resolve_tools
-from tela.core.models import Posture, ResolvedTool, ServerConfig, ToolOverride
+from tela.core.models import Posture, ServerConfig, ToolOverride
 
 
 # ---------------------------------------------------------------------------
@@ -527,7 +526,7 @@ def test_prefix_combination_producing_tela_namespace_rejected():
             f"Expected error message about 'tela' or 'reserved', got: {e}"
         )
         print(
-            f"PASS: resolve_tools rejected prefix combination producing 'tela.' namespace"
+            "PASS: resolve_tools rejected prefix combination producing 'tela.' namespace"
         )
 
 

@@ -18,7 +18,10 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.core.token import compute_signature
-from tela.shell.builtin_tools import handle_profiles_list, handle_list_providers
+from tela.shell.builtin_tools import (
+    handle_profiles_list as handle_builtin_profiles_list,
+    handle_list_providers,
+)
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.gateway_runtime import (
     clear_runtime_connections,
@@ -28,7 +31,7 @@ from tela.shell.gateway_runtime import (
 from tela.shell.result import Result
 from tela.shell.upstream import (
     handle_initialize,
-    handle_profiles_list,
+    handle_profiles_list as handle_upstream_profiles_list,
     handle_tools_list,
 )
 
@@ -427,7 +430,7 @@ def test_handle_list_providers_emits_provider_name_only() -> None:
         set_runtime_config(None)
 
 
-def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() -> None:
+def test_builtin_profiles_list_rejects_multiple_default_profiles_fail_closed() -> None:
     """Shared profile-list tool must reject more than one default profile."""
     set_runtime_config(
         TelaConfig(
@@ -439,12 +442,12 @@ def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() ->
     )
     try:
         with pytest.raises(RuntimeError, match="invalid_default_profile_state"):
-            handle_profiles_list()
+            handle_builtin_profiles_list()
     finally:
         set_runtime_config(None)
 
 
-def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() -> None:
+def test_upstream_profiles_list_rejects_multiple_default_profiles_fail_closed() -> None:
     """Result-wrapped profile listing must also fail closed on multi-default."""
     set_runtime_config(
         TelaConfig(
@@ -455,7 +458,7 @@ def test_handle_profiles_list_rejects_multiple_default_profiles_fail_closed() ->
         )
     )
     try:
-        result = handle_profiles_list()
+        result = handle_upstream_profiles_list()
         assert result.is_err
         assert result.error is not None
         assert "invalid_default_profile_state" in result.error

@@ -24,16 +24,14 @@ remediation input, not dismissal of the probe).
 from __future__ import annotations
 
 import asyncio
-import time
 from typing import Any, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from tela.core.models import ServerConfig, TelaError
+from tela.core.models import TelaError
 from tela.shell import downstream
 from tela.shell.downstream import (
-    _acquire_recovery_lock,
     _get_runtime_server_config,
     _prune_recovery_lock_if_unused,
     _recovery_locks,
@@ -161,6 +159,7 @@ class TestR42ConfigReloadRemovesLock:
             return lock
 
         lock = asyncio.run(_setup_lock())
+        assert lock is _recovery_locks[server_name]
 
         # STEP 1: Verify config_missing=True is surfaced
         config_result = _get_runtime_server_config(server_name)
@@ -582,6 +581,7 @@ class TestR13RegistryLockNotHeldDuringAwait:
                         result = await downstream._open_client_for_server(
                             "test_server", None
                         )
+                        assert result is not None
                         # Verify the violation was recorded
                         assert len(lock_state["network_io_while_held"]) == 1, (
                             "Network I/O while lock held should be recorded"
@@ -595,6 +595,7 @@ class TestR13RegistryLockNotHeldDuringAwait:
                     result2 = await downstream._open_client_for_server(
                         "test_server2", None
                     )
+                    assert result2 is not None
                     # This should NOT record a violation
                     # (network_io_while_held should still be 1 from the previous call inside context)
                     assert len(lock_state["network_io_while_held"]) == 1, (
@@ -923,6 +924,7 @@ class TestReEnumerateSurfaceClassification:
                 "that should be removed. Classification as dead export requires "
                 "confirmation it's not referenced in production paths."
             )
+        assert callable(re_enumerate)
 
     def test_re_enumerate_surface_classification_audit(self) -> None:
         """Probe: re_enumerate() surface classification audit.
@@ -1019,6 +1021,7 @@ class TestFastMCPAuthorityTuple:
         assert gateway_file.exists(), "gateway.py not found"
 
         gateway_content = gateway_file.read_text()
+        assert "from mcp.server.fastmcp import FastMCP" in gateway_content
 
         # Check that the translation boundary is documented
         interfaces_doc = Path("docs/INTERFACES.md")

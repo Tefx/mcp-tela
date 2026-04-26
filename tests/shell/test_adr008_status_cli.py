@@ -24,12 +24,10 @@ import pytest
 from tela.commands.status_cmd import status_command
 from tela.shell import lockfile as lockfile_module
 from tela.shell.adr008_registry_events import (
-    attachment_registry_path,
     read_attachment_registry,
     upsert_client_attachment,
     write_attachment_registry,
 )
-from tela.shell.result import Result
 from tela.core.classification import (
     AttachmentDisplayState,
     ClientAttachment,
@@ -310,7 +308,6 @@ def test_status_clients_lists_attachment_registry(
     # Set up attachment registry with test data using correct model fields
     monkeypatch.setenv("HOME", str(tmp_path))
 
-    from pathlib import Path
     tela_dir = tmp_path / ".tela"
     tela_dir.mkdir(mode=0o700, exist_ok=True)
 
@@ -360,7 +357,6 @@ def test_display_state_derived_not_persisted(
 
     monkeypatch.setenv("HOME", str(tmp_path))
 
-    from pathlib import Path
     tela_dir = tmp_path / ".tela"
     tela_dir.mkdir(mode=0o700, exist_ok=True)
 
@@ -408,7 +404,6 @@ def test_status_reads_do_not_mutate_registry(
 
     monkeypatch.setenv("HOME", str(tmp_path))
 
-    from pathlib import Path
     tela_dir = tmp_path / ".tela"
     tela_dir.mkdir(mode=0o700, exist_ok=True)
 
@@ -471,7 +466,6 @@ def test_registry_parse_error_included_in_json_output(
 
     monkeypatch.setenv("HOME", str(tmp_path))
 
-    from pathlib import Path
     tela_dir = tmp_path / ".tela"
     tela_dir.mkdir(mode=0o700, exist_ok=True)
 
@@ -506,7 +500,6 @@ def test_output_is_client_neutral(
 
     monkeypatch.setenv("HOME", str(tmp_path))
 
-    from pathlib import Path
     tela_dir = tmp_path / ".tela"
     tela_dir.mkdir(mode=0o700, exist_ok=True)
 

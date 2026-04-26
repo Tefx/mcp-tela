@@ -32,7 +32,6 @@ from urllib import error as urllib_error
 import uuid
 
 from tela.core.bridge_protocol import (
-    extract_bridge_error_messages as _extract_bridge_error_messages,
     extract_jsonrpc_method,
     response_requires_bridge_recovery as _response_requires_bridge_recovery,
 )

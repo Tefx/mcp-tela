@@ -180,9 +180,7 @@ class TestConnectionReaperSweep:
         async def _shutdown() -> None:
             pass
 
-        idle_mgr = IdleShutdownManager(
-            timeout_seconds=30.0, shutdown_callback=_shutdown
-        )
+        _ = IdleShutdownManager(timeout_seconds=30.0, shutdown_callback=_shutdown)
         reaper = ConnectionReaper()
 
         outcome_result = asyncio.run(reaper.sweep())
@@ -214,9 +212,7 @@ class TestConnectionReaperSweep:
             async def _shutdown() -> None:
                 pass
 
-            idle_mgr = IdleShutdownManager(
-                timeout_seconds=30.0, shutdown_callback=_shutdown
-            )
+            _ = IdleShutdownManager(timeout_seconds=30.0, shutdown_callback=_shutdown)
             # Explicit operator TTL override enables native stale reaping
             reaper = ConnectionReaper(config=ReaperConfig(native_idle_ttl_seconds=10.0))
 

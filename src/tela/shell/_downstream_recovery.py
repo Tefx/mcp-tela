@@ -18,7 +18,7 @@ import logging
 import time
 from typing import Any, Literal
 
-from tela.core.errors import DOWNSTREAM_ERROR, DOWNSTREAM_UNAVAILABLE
+from tela.core.errors import DOWNSTREAM_ERROR
 from tela.core.models import ServerConfig, TelaError
 from tela.core.recovery_helpers import (
     build_recovery_error as _build_recovery_error,

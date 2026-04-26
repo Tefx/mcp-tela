@@ -28,7 +28,6 @@ from pydantic import ValidationError
 from tela.core.errors import (
     CONNECTION_NOT_FOUND,
     GATEWAY_NOT_STARTED,
-    PROFILE_NOT_FOUND,
 )
 from tela.core.models import (
     AuditLevel,
@@ -56,7 +55,7 @@ from tela.shell.builtin_tools import handle_profiles_list as build_profile_list_
 from tela.shell.gateway_runtime import (
     UpstreamSession,
     add_runtime_connection,
-    capture_session,
+    capture_session as capture_session,
     get_captured_session,
     get_connection_id_for_session,
     get_runtime_config,

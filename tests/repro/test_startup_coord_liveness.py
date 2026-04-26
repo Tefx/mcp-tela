@@ -588,11 +588,11 @@ def test_config_mismatch_diagnostics(tmp_path, monkeypatch):
                 assert has_diagnostic, (
                     f"Config mismatch error must have useful diagnostic: {stderr_data}"
                 )
-                print(f"  PASS: config mismatch rejected with diagnostic")
+                print("  PASS: config mismatch rejected with diagnostic")
             else:
                 # Process still alive or exited successfully
                 # Implementation allows config mismatch (current behavior)
-                print(f"  PASS: config mismatch allowed (gateway accepts)")
+                print("  PASS: config mismatch allowed (gateway accepts)")
 
             # Clean up connect
             connect_proc.stdin.close()

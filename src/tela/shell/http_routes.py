@@ -123,7 +123,6 @@ def operator_audit_payload(page: AuditPage) -> Result[dict[str, object], str]:
     )
 
 
-@pre(lambda: True)
 @post(
     lambda result: (
         result.is_ok
@@ -341,7 +340,6 @@ def handle_operator_probe(
     )
 
 
-@pre(lambda: True)
 @post(
     lambda result: (
         (result.is_ok and result.value is not None and isinstance(result.value, list))
