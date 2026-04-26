@@ -80115,7 +80115,7 @@ phases:
       alignment.'
   - id: tela.operator_p1.gate.spec_conformance
     name: Verify operator P1 spec conformance
-    status: pending
+    status: claimed
     description: 'Independent spec-conformance verification via adversarial divergence
       hunting. This is not ''tests pass''; it verifies implementation and docs match
       docs/INTERFACES.md §7.2a and opifex ownership invariants.
@@ -80194,6 +80194,8 @@ phases:
     depends_on:
     - tela.operator_p1.gate.targeted_tests
     agent: spec-verifier-tacit
+    claimed_by: spec-verifier-tacit
+    claimed_at: '2026-04-26T07:22:20.831923+00:00'
   - id: tela.operator_p1.gate.repo_local_full_gate
     name: Run repo-local full gate
     status: pending
