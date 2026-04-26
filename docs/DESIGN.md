@@ -324,7 +324,7 @@ Built-in MCP tools:
 - Regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`, `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`
 
 Operator surfaces (CLI/HTTP, not MCP):
-- `tela profiles`, `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`
+- `tela profiles`, `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`; paginated audit history is also exposed at `GET /operator/audit`
 
 These are operator-facing surfaces (CLI/HTTP) and are **not** built-in MCP tool
 surfaces. The `tela.` prefix is reserved for built-in surfaces.
@@ -861,11 +861,12 @@ Required fields: `event`, `level` (INFO/WARNING), `server_name`, `tool_name` (op
 
 ### `http_routes.py`
 
-**Responsibility:** HTTP route handler implementations for all gateway HTTP endpoints (`/health`, `/status`, `/connect`, `/disconnect`). Separated from route mounting (which lives in `gateway.py`).
+**Responsibility:** HTTP route handler implementations for all gateway HTTP endpoints (`/health`, `/status`, `/operator/audit`, `/connect`, `/disconnect`). Separated from route mounting (which lives in `gateway.py`).
 
 **Public API:**
 - `handle_health() -> Result[HealthResponse, str]`
 - `handle_status(request_token: str, expected_token: str) -> Result[StatusResponse, str]`
+- `handle_operator_audit(cursor: str | None, limit: int | None) -> Result[AuditPage, str]`
 - `handle_connect(request_token: str, expected_token: str, payload: ConnectRequest) -> Result[Mapping[str, object], str]`
 - `handle_disconnect(request_token: str, expected_token: str, payload: DisconnectRequest) -> Result[Mapping[str, object], str]`
 

@@ -154,12 +154,11 @@ def _connect_handler(
 ) -> Result[dict[str, object], str]:
     """Canonical /connect validation + dispatch boundary."""
 
-    config_result = gateway_runtime.get_runtime_config()
-    auth_mode = (
-        config_result.value.auth.mode
-        if config_result.is_ok and config_result.value is not None
-        else AuthMode.OPEN
-    )
+    with gateway_runtime._runtime_lock:
+        startup_config = gateway_runtime._runtime.startup_config
+    if not isinstance(startup_config, GatewayStartupConfig):
+        return Result(error="GATEWAY_NOT_STARTED: startup auth mode is unavailable")
+    auth_mode = startup_config.auth_mode
     payload_result = _validate_connect_request_payload(payload, auth_mode=auth_mode)
     if payload_result.is_err:
         return Result(error=payload_result.error)
@@ -255,8 +254,10 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
         handle_authorization_explain,
         handle_operator_clients,
         handle_operator_probe,
+        handle_operator_audit,
         handle_status,
         client_attachment_payload,
+        operator_audit_payload,
         operator_probe_payload,
     )
 
@@ -380,6 +381,38 @@ def _register_http_routes(upstream_server: FastMCP) -> None:
             return _as_error_response(explain_result.error)
         assert explain_result.value is not None
         return JSONResponse(content=explain_result.value)
+
+    @upstream_server.custom_route("/operator/audit", methods=["GET"])
+    async def _operator_audit_route(request: Request) -> Response:
+        auth_result = _build_auth_handoff(request)
+        if auth_result.is_err:
+            assert auth_result.error is not None
+            error, status_code = auth_result.error
+            return JSONResponse(status_code=status_code, content={"error": error})
+
+        cursor = request.query_params.get("cursor")
+        limit_value = request.query_params.get("limit")
+        limit: int | None = None
+        if limit_value is not None:
+            try:
+                limit = int(limit_value)
+            except ValueError:
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "INVALID_REQUEST: limit must be an integer"},
+                )
+
+        audit_result = await handle_operator_audit(cursor=cursor, limit=limit)
+        if audit_result.is_err:
+            assert audit_result.error is not None
+            return _as_error_response(audit_result.error)
+        assert audit_result.value is not None
+        payload_result = operator_audit_payload(audit_result.value)
+        if payload_result.is_err:
+            assert payload_result.error is not None
+            return _as_error_response(payload_result.error)
+        assert payload_result.value is not None
+        return JSONResponse(content=payload_result.value)
 
     @upstream_server.custom_route("/connect", methods=["POST"])
     async def _connect_route(request: Request) -> Response:

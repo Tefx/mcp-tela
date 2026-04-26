@@ -626,7 +626,8 @@ The following are operator-only surfaces, not MCP built-in tools:
 | `tela profiles` | CLI / via `/status` | List configured profiles and capability ceilings |
 | `tela status` | CLI / `GET /status` | Uptime, server count, connection count |
 | `tela connections` | CLI / via `/status` | Active upstream connections |
-| `tela audit` | CLI / via `/status` | Query audit log entries |
+| `tela audit` | CLI / via `/status` | Query recent audit log entries |
+| `GET /operator/audit` | HTTP | Query paginated audit log entries |
 | `tela stop` | CLI only | Send local SIGTERM to the lockfile-discovered gateway process |
 
 **Note:** These surfaces are accessible via CLI or HTTP, not via MCP `tools/call`.

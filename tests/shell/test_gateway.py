@@ -16,7 +16,10 @@ from starlette.testclient import TestClient
 from tela.core.models import (
     AuthConfig,
     AuthMode,
+    AuditEntry,
+    AuditLevel,
     ConnectionContext,
+    EnforcementVerdict,
     GatewayStatus,
     GatewayTransport,
     Posture,
@@ -44,7 +47,7 @@ from tela.shell.gateway_runtime import (
     is_upstream_server_initialized,
     with_upstream_server,
 )
-from tela.shell.audit import clear_audit_entries, get_audit_entries
+from tela.shell.audit import audit_write, clear_audit_entries, get_audit_entries
 from tela.shell.gateway_runtime import (
     LOCKFILE_DISCOVERY_CONTRACT,
     STATUS_SNAPSHOT_CONTRACT,
@@ -63,6 +66,25 @@ _LEGACY_PROFILE_KEY = "profile" + "_name"
 _LEGACY_PROFILE_RESOURCE = "tela" + ".profiles"
 _LEGACY_TOOLS_KEY = "to" + "ols"
 _LEGACY_FAMILIES_KEY = "famil" + "ies"
+
+
+def _set_startup_auth_mode(auth_mode: AuthMode) -> None:
+    """Install startup auth mode for direct _connect_handler tests."""
+
+    with gateway_runtime._runtime_lock:
+        gateway_runtime._runtime.startup_config = GatewayStartupConfig(
+            transport=GatewayTransport.HTTP,
+            port=8400,
+            auth_mode=auth_mode,
+            default_profile="dev" if auth_mode == AuthMode.OPEN else None,
+        )
+
+
+def _clear_startup_config() -> None:
+    """Clear startup config after direct _connect_handler tests."""
+
+    with gateway_runtime._runtime_lock:
+        gateway_runtime._runtime.startup_config = None
 
 
 # --- Helper for tests requiring a bound MCP session ---
@@ -1174,6 +1196,29 @@ def test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary(
                 status = client.get("/status", headers=auth_headers)
                 assert status.status_code == 200
 
+                clear_audit_entries()
+                write_result = await audit_write(
+                    AuditEntry(
+                        timestamp="2026-01-01T00:00:00Z",
+                        level=AuditLevel.L1,
+                        connection_id="conn-1",
+                        profile_id="dev",
+                        tool_name="tool_one",
+                        server_name="srv",
+                        verdict=EnforcementVerdict.ALLOW,
+                    )
+                )
+                assert write_result.is_ok
+
+                audit_page = client.get(
+                    "/operator/audit?limit=1",
+                    headers=auth_headers,
+                )
+                assert audit_page.status_code == 200
+                assert audit_page.json()["entries"][0]["tool_name"] == "tool_one"
+                assert audit_page.json()["next_cursor"] is None
+                assert audit_page.json()["has_more"] is False
+
                 connect = client.post(
                     "/connect",
                     headers=auth_headers,
@@ -1198,11 +1243,13 @@ def test_connect_handler_requires_server_name_field() -> None:
 
     set_runtime_config(TelaConfig())
     set_runtime_running(True)
+    _set_startup_auth_mode(AuthMode.OPEN)
     try:
         result = gateway_module._connect_handler("valid", "valid", {})
         assert result.is_err
         assert result.error == "missing_required_field: field=server_name"
     finally:
+        _clear_startup_config()
         set_runtime_running(False)
         set_runtime_config(None)
 
@@ -1212,6 +1259,7 @@ def test_connect_handler_rejects_wrong_server_name_type() -> None:
 
     set_runtime_config(TelaConfig())
     set_runtime_running(True)
+    _set_startup_auth_mode(AuthMode.OPEN)
     try:
         result = gateway_module._connect_handler(
             "valid", "valid", {"server_name": 123}
@@ -1219,6 +1267,7 @@ def test_connect_handler_rejects_wrong_server_name_type() -> None:
         assert result.is_err
         assert result.error == "wrong_type: field=server_name"
     finally:
+        _clear_startup_config()
         set_runtime_running(False)
         set_runtime_config(None)
 
@@ -1228,6 +1277,7 @@ def test_connect_handler_rejects_extra_http_keys() -> None:
 
     set_runtime_config(TelaConfig())
     set_runtime_running(True)
+    _set_startup_auth_mode(AuthMode.OPEN)
     try:
         result = gateway_module._connect_handler(
             "valid",
@@ -1237,6 +1287,7 @@ def test_connect_handler_rejects_extra_http_keys() -> None:
         assert result.is_err
         assert result.error == "extra_key: rejected_keys=unexpected_key"
     finally:
+        _clear_startup_config()
         set_runtime_running(False)
         set_runtime_config(None)
 
@@ -1251,6 +1302,7 @@ def test_connect_handler_rejects_token_mode_profile_binding_fields() -> None:
         )
     )
     set_runtime_running(True)
+    _set_startup_auth_mode(AuthMode.TOKEN)
     try:
         result = gateway_module._connect_handler(
             "valid",
@@ -1261,6 +1313,34 @@ def test_connect_handler_rejects_token_mode_profile_binding_fields() -> None:
         assert result.error is not None
         assert "fabricated_profile_binding_forbidden" in result.error
     finally:
+        _clear_startup_config()
+        set_runtime_running(False)
+        set_runtime_config(None)
+
+
+def test_connect_handler_uses_startup_config_auth_mode_not_runtime_config_fallback() -> None:
+    """Regression for W6-001: /connect validation consumes GatewayStartupConfig.auth_mode."""
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            profiles={"dev": ProfileConfig(name="dev", default=True)},
+            resolved_default_profile="dev",
+        )
+    )
+    set_runtime_running(True)
+    _set_startup_auth_mode(AuthMode.TOKEN)
+    try:
+        result = gateway_module._connect_handler(
+            "valid",
+            "valid",
+            {"server_name": "bridge_http_1", "profile_id": "dev"},
+        )
+        assert result.is_err
+        assert result.error is not None
+        assert "fabricated_profile_binding_forbidden" in result.error
+    finally:
+        _clear_startup_config()
         set_runtime_running(False)
         set_runtime_config(None)
 

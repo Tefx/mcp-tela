@@ -32,6 +32,7 @@ from tela.core.classification import (
 from tela.core.contracts import post, pre
 from tela.shell.result import Result
 from tela.shell.audit import (  # noqa: F401 — audit query surfaces are route-wired exports
+    AuditPage,
     audit_query,
     audit_query_paginated,
     get_recent_audit_entries,
@@ -100,6 +101,25 @@ def client_attachment_payload(
     """
 
     return Result(value=attachment.model_dump(mode="json"))
+
+
+def operator_audit_payload(page: AuditPage) -> Result[dict[str, object], str]:
+    """Return a JSON-serializable paginated audit payload.
+
+    Args:
+        page: Bounded audit page returned by ``handle_operator_audit``.
+
+    Returns:
+        Result containing the operator audit response body.
+    """
+
+    return Result(
+        value={
+            "entries": [entry.model_dump(mode="json") for entry in page.entries],
+            "next_cursor": page.next_cursor,
+            "has_more": page.has_more,
+        }
+    )
 
 
 @pre(lambda: True)
@@ -392,6 +412,23 @@ def handle_operator_clients() -> Result[list[ClientAttachment], str]:
             )
         )
     return Result(value=clients)
+
+
+async def handle_operator_audit(
+    cursor: str | None = None,
+    limit: int | None = None,
+) -> Result[AuditPage, str]:
+    """HTTP-equivalent handler for the paginated operator audit surface.
+
+    Args:
+        cursor: Cursor returned by a previous audit page.
+        limit: Requested page size; normalized by ``audit_query_paginated``.
+
+    Returns:
+        Result containing a bounded audit page or an audit query error.
+    """
+
+    return await audit_query_paginated(cursor=cursor, limit=limit)
 
 
 @pre(

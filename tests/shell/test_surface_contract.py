@@ -211,6 +211,7 @@ class TestCanonicalSurfaceMatrix:
             ("tela connections", "CLI"),
             ("tela audit", "CLI"),
             ("GET /status", "HTTP"),
+            ("GET /operator/audit", "HTTP"),
             ("GET /health", "HTTP"),
             ("POST /connect", "HTTP"),
             ("POST /disconnect", "HTTP"),

@@ -23,7 +23,7 @@ upstream MCP clients connecting to the tela gateway.
 ## Gateway capabilities
 
 - Built-in MCP tools: `tela_list_providers`, `tela_list_profiles`.
-- Operator-only surfaces (not MCP built-ins): `tela profiles`, `tela status`, `tela connections`, `tela audit`, `GET /status`, `GET /health`, `POST /connect`, `POST /disconnect`, `POST /mcp`.
+- Operator-only surfaces (not MCP built-ins): `tela profiles`, `tela status`, `tela connections`, `tela audit`, `GET /status`, `GET /operator/audit`, `GET /health`, `POST /connect`, `POST /disconnect`, `POST /mcp`.
 - Gateway does not proxy or forward to operator surfaces.
 
 ## Server instructions

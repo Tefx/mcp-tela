@@ -24,7 +24,8 @@ The following surfaces are **operator-only** and accessible via CLI/HTTP. They a
 | `tela profiles` | CLI/HTTP | `tela profiles` command or via `GET /status`; not an MCP resource |
 | `tela status` | CLI/HTTP | `tela status` command or `GET /status` endpoint |
 | `tela connections` | CLI/HTTP | `tela connections` command or via `GET /status` |
-| `tela audit` | CLI/HTTP | `tela audit` command or via `GET /status` |
+| `tela audit` | CLI/HTTP | `tela audit` command or via `GET /status`; paginated audit via `GET /operator/audit` |
+| `GET /operator/audit` | HTTP | Paginated operator audit endpoint; not an MCP resource |
 
 **Important:** Do not attempt to call `tela profiles`, `tela status`, `tela connections`, or `tela audit` via MCP `tools/call`. These are not MCP tools.
 
@@ -109,6 +110,7 @@ Instruction composition is ordered and non-commutative:
 |----------|------|---------|
 | `GET /health` | None | Liveness check |
 | `GET /status` | Bearer token | Full runtime status (operator) |
+| `GET /operator/audit` | Bearer token | Read-only paginated audit projection |
 | `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |

@@ -230,6 +230,7 @@ as conflicts.
 | `GET /status` | HTTP | Bearer token | Full runtime status (includes `audit_entries` recent-only, limit 100) |
 | `GET /operator/probe` | HTTP | Bearer token | Observation-only current-endpoint snapshot; no cold-start/recovery |
 | `GET /operator/clients` | HTTP | Bearer token | Read-only attachment registry; no admission-state mutation |
+| `GET /operator/audit` | HTTP | Bearer token | Read-only paginated audit projection; no admission-state mutation |
 | `GET /operator/authorization/explain` | HTTP | Bearer token | Diagnostic-only; no RBAC mutation, no second authority |
 
 **Canonical builtin semantics:**
@@ -240,7 +241,7 @@ as conflicts.
 
 **Operator diagnostic semantics (branch B surfaces):**
 - `GET /status` `audit_entries` are **recent-only** (bounded to 100 entries, no cursor pagination)
-- Distinct paginated audit query (`audit_query_paginated`) provides cursor/limit semantics as an in-process shell surface; it is **not** an HTTP route
+- Distinct paginated audit query (`audit_query_paginated`) provides cursor/limit semantics and is wired to the read-only `GET /operator/audit` operator route
 - `GET /operator/probe` and `tela status --probe` are **observation-only**: they read the current runtime snapshot and never invoke startup, recovery, registration, or admission paths
 - `GET /operator/clients` and `tela status --clients` are **read-only**: they read the attachment registry without mutating admission state, registering clients, or deleting stale candidates
 - `GET /operator/authorization/explain` is **diagnostic-only**: it snapshots the current enforcement configuration and explains per-tool verdicts without mutating authorization state, admitting sessions, or introducing a second RBAC authority
@@ -254,6 +255,7 @@ as conflicts.
 | `GET /status` | Bearer token | Full runtime status (audit entries: recent-only, limit 100) |
 | `GET /operator/probe` | Bearer token | Observation-only current-endpoint snapshot; no cold-start/recovery |
 | `GET /operator/clients` | Bearer token | Read-only attachment registry; no admission-state mutation |
+| `GET /operator/audit` | Bearer token | Read-only paginated audit projection; no admission-state mutation |
 | `GET /operator/authorization/explain` | Bearer token | Diagnostic-only authorization visibility; no RBAC mutation |
 | `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
@@ -290,11 +292,12 @@ Current-slice admission boundary:
 
 ### 7.2a Operator Diagnostic Routes
 
-The three `GET /operator/*` endpoints share a common diagnostic contract:
+The `GET /operator/*` endpoints share a common diagnostic contract:
 
 1. **Read-only**: None of these endpoints mutate gateway state, register clients, admit sessions, disconnect sessions, recover downstream connections, or alter enforcement verdicts.
 2. **No cold-start / no recovery**: `GET /operator/probe` observes the current runtime snapshot without starting, recovering, or waiting for a gateway that is not already running.
 3. **No second authority**: `GET /operator/authorization/explain` is a visibility projection of the single canonical enforcement chain (profile → posture → classification → verdict). It does not introduce a second RBAC authority or mutate authorization state.
+4. **Bounded audit pagination**: `GET /operator/audit` delegates to `audit_query_paginated`; it does not expand `GET /status.audit_entries` or expose unbounded history.
 
 #### `GET /operator/probe`
 
@@ -329,6 +332,27 @@ Returns client attachments from the ADR-008 attachment registry. Read-only: does
 **Response**: JSON array of `ClientAttachment` objects.
 
 When the runtime is not active, returns an empty array to avoid fabricating remote client state for an absent endpoint.
+
+#### `GET /operator/audit`
+
+Returns a bounded cursor page from the audit store. Read-only: does not admit sessions, call tools, disconnect, recover, or mutate audit entries.
+
+**Auth**: Bearer token required.
+
+**Query parameters**:
+| Parameter | Type | Default | Semantics |
+|-----------|------|---------|-----------|
+| `cursor` | str | null | Opaque cursor from the previous response's `next_cursor`; omitted starts at the oldest retained audit entry |
+| `limit` | int | 100 | Requested page size; values outside the supported range are normalized by `audit_query_paginated` and never produce an unbounded response |
+
+**Response fields**:
+| Field | Type | Semantics |
+|-------|------|-----------|
+| `entries` | list[AuditEntry] | Audit entries in deterministic append order for the requested page |
+| `next_cursor` | str \| null | Cursor for the next page, or null at end-of-history |
+| `has_more` | bool | Whether more entries exist after this page |
+
+**Contract**: Observation-only and distinct from `GET /status.audit_entries`, which remains recent-only and bounded to 100 entries without cursor pagination.
 
 #### `GET /operator/authorization/explain`
 

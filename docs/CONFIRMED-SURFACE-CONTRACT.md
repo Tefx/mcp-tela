@@ -36,6 +36,7 @@ SurfaceContract := {
 | `tela audit` | `CLI` | Local/operator audit query. |
 | `GET /status` | `HTTP` | Runtime status endpoint consumed by operator/CLI flows. |
 | `GET /health` | `HTTP` | Liveness endpoint. |
+| `GET /operator/audit` | `HTTP` | Read-only paginated audit projection. |
 | `POST /connect` | `HTTP` | Bridge registration endpoint; non-readiness lifecycle plumbing only. |
 | `POST /disconnect` | `HTTP` | Bridge deregistration endpoint. |
 | `POST /mcp` | `HTTP` | Streamable HTTP MCP transport endpoint and readiness-gated admission surface. |
@@ -128,8 +129,8 @@ completes; endpoint discoverability does not imply readiness.
   `resource`.
 - `tela profiles` (CLI companion), `tela status`, `tela connections`, and
   `tela audit` are confirmed operator surfaces.
-- `GET /status` is an operator/runtime HTTP endpoint and must not be relabeled
-  as a dotted MCP surface.
+- `GET /status` and `GET /operator/audit` are operator/runtime HTTP endpoints
+  and must not be relabeled as dotted MCP surfaces.
 
 ## 3. Capability wording
 
