@@ -78495,7 +78495,7 @@ phases:
       known flaky repro timeout). gate_open_allowed=true.'
   - id: tela.operator_p1.surfaces.fix_w1_w5_w9_wiring_blockers
     name: Fix W1/W5/W9 wiring audit blockers
-    status: claimed
+    status: done
     description: 'Batched implementation remediation for latest operator P1 wiring
       audit blockers W1-1/W9-1, W1-2, and W5-1.
 
@@ -78592,6 +78592,17 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-26T00:34:52.853702+00:00'
+    done_at: '2026-04-26T04:58:51.586616+00:00'
+    evidence: 'Batched W1/W5/W9 remediation merged from worktree branch 57cf9627 as
+      [vectl] step-tela.operator_p1.surfaces.fix_w1_w5_w9_wiring_blockers completed.
+      Closed W1/W9 dead import/route-reachability issues by removing stale non-paginated
+      audit import chain and dead `_ROUTE_HANDLERS` registry, and closed W5 by adding
+      non-vacuous `@pre/@post` contracts for `handle_operator_audit` with async-aware
+      contract wrapper support in core contracts. Mainline verification: `uv run pytest
+      -q tests/shell/test_http_routes.py tests/shell/test_adr008_recover_decision_behavior_red.py
+      tests/shell/test_gateway.py::test_streamable_http_surface_mounts_liveness_routes_and_auth_boundary
+      tests/shell/test_surface_contract.py tests/shell/test_adr008_docs_parity.py`
+      => 79 passed; `invar_guard(changed=true)` passed.'
   - id: tela.operator_p1.surfaces.retest_w1_w5_w9_wiring_blockers
     name: Retest W1/W5/W9 wiring audit blockers
     status: pending
