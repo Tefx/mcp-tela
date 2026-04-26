@@ -79388,6 +79388,128 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.retest_gate_b1_b2_b3
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
+    name: Retest surfaces gate blockers B1/B2/B3 v2
+    status: pending
+    description: "Independent retest/gate-support step for the batched B1/B2/B3 v2\
+      \ remediation.\n\nstep_type: test\nstep_intent: retest_green\nexpected_result:\
+      \ green\nverification_scope: phase-check\nindependence_level: L2\nagent_source:\
+      \ default\n\nAs an INDEPENDENT TESTER, verify closure of the deferred `tela.operator_p1.surfaces.gate`\
+      \ blockers before the phase gate reruns. Finding unresolved issues is valuable;\
+      \ record any blocker-class residuals with exact reproduction and gate intersection.\n\
+      \n## Required closure proofs\n1. B1 HTTP-boundary validation:\n   - Exercise\
+      \ `/operator/probe?timeout_seconds=-1` with a valid bearer and prove it returns\
+      \ a controlled 4xx, not AssertionError/500.\n   - Exercise `timeout_seconds=0`,\
+      \ another negative value, malformed input, and non-finite values where the HTTP/client\
+      \ stack can represent them.\n   - Exercise a positive timeout happy path to\
+      \ prove validation is not deny-all.\n   - Confirm invalid timeout is rejected\
+      \ before the handler precondition leaks across the HTTP boundary.\n2. B2 docs\
+      \ parity:\n   - Review `docs/INTERFACES.md` operator audit pagination/limits/current\
+      \ implementation claims against actual runtime/test behavior.\n   - Flag any\
+      \ stale target-language, wrong default/hard limit, wrong cursor semantics, or\
+      \ `/status.audit_entries` long-history confusion as blocker-class drift.\n3.\
+      \ B3 type-check criterion:\n   - Verify the exact type-check criterion chosen\
+      \ by the fix step.\n   - If gate-clean disposition was chosen, run and require\
+      \ green: `uv run --frozen --group dev mypy src tests`.\n   - If approved-scoped\
+      \ disposition was chosen, run the exact scoped command, verify it is green,\
+      \ and independently assess the non-intersection inventory for remaining repo-wide\
+      \ errors.\n\n## Behavioral proof register requirement\nFor each B1/B2/B3 closure\
+      \ item, record: `requirement_ref`, `behavior_claim`, `runtime_proof_expected`,\
+      \ `evidence_ref`, `status`, `closure_path`, and `gate_decision_basis`. `NEEDS_TEST`,\
+      \ `UNPROVEN`, or `UNCERTAIN_BLOCKING` must block this retest and identify remediation\
+      \ ownership.\n\nThis retest protects `tela.operator_p1.surfaces.gate`; the phase\
+      \ gate must not run until this step is green."
+    verification: '- B1: controlled 4xx proof for valid bearer + invalid `timeout_seconds`;
+      no AssertionError/500; positive timeout still works.
+
+      - B2: docs parity review confirms operator audit pagination/limits/current implementation
+      status match runtime behavior.
+
+      - B3: chosen mypy criterion is green and unambiguous; scoped disposition, if
+      used, includes explicit non-intersection with the phase gate.
+
+      - Retest expected result is green; unresolved blocker-class runtime/type-check/docs
+      obligations must block the phase gate.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: B1/B2/B3 retest for `tela.operator_p1.surfaces.gate`
+
+      **Independence Level**: L2
+
+      **Timestamp**: <ISO 8601>
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - docs/INTERFACES.md — key passage or "NOT READ: <reason>"
+
+      - src/tela/shell/http_routes.py — key passage or "NOT READ: <reason>"
+
+      - tests — key test file/passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### B1 HTTP-boundary validation proof
+
+      - Commands/tests executed:
+
+      - Actual output:
+
+      - Invalid timeout cases and responses:
+
+      - Positive timeout proof:
+
+      - AssertionError/500 absence proof:
+
+
+      ### B2 Docs parity proof
+
+      - INTERFACES sections reviewed:
+
+      - Runtime/test sources compared:
+
+      - Verdict: CONFORMS | DIVERGES | PARTIAL
+
+      - Drift found:
+
+
+      ### B3 Type-check proof
+
+      - Chosen criterion from fix evidence:
+
+      - Exact command executed:
+
+      - Actual output:
+
+      - If scoped: non-intersection assessment for remaining repo-wide mypy errors:
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+
+      ### Headline
+
+      - [ ] PASS: B1/B2/B3 closed and gate may rerun
+
+      - [ ] FAIL: blocker-class gap remains
+
+
+      **Confidence**: high/medium/low'
+    depends_on:
+    - tela.operator_p1.surfaces.fix_gate_b1_b2_b3_v2
+    agent: integration-verifier-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
