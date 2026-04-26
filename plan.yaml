@@ -79767,7 +79767,7 @@ phases:
       No plan-state files were modified by execution agent.'
   - id: tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity
     name: Retest type-check criterion and OPIFEX parity closure
-    status: pending
+    status: claimed
     description: "Independent retest for the batched remediation of type-check criterion\
       \ ambiguity and OPIFEX parity precondition mismatch.\n\nstep_type: test\nstep_intent:\
       \ retest_green\nexpected_result: green\nverification_scope: phase-check protecting\
@@ -79900,6 +79900,8 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-26T07:03:00.813802+00:00'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
