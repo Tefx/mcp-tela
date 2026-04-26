@@ -77969,7 +77969,7 @@ phases:
       path reachability and untested CLI parameter coverage). Verdict: PASS_WITH_DEBT.'
   - id: tela.operator_p1.surfaces.gate
     name: Gate operator P1 surface implementation
-    status: claimed
+    status: pending
     description: 'Gate review for the operator P1 surfaces phase.
 
 
@@ -78043,8 +78043,6 @@ phases:
     - tela.operator_p1.surfaces.docs_status_update
     - tela.operator_p1.surfaces.wiring_audit
     agent: gate-reviewer-tacit
-    claimed_by: gate-reviewer-tacit
-    claimed_at: '2026-04-26T05:24:24.539317+00:00'
   - id: tela.operator_p1.surfaces.diagnostics_readonly
     name: Implement and verify read-only probe and client diagnostics
     status: done
