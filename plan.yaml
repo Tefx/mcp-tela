@@ -77437,7 +77437,7 @@ phases:
       gate_open_allowed=true and blockers none.'
 - id: tela.operator_p1.surfaces
   name: Tela Operator P1 Surfaces
-  status: in_progress
+  status: done
   depends_on:
   - tela.operator_p1.red_tests
   steps:
@@ -77969,7 +77969,7 @@ phases:
       path reachability and untested CLI parameter coverage). Verdict: PASS_WITH_DEBT.'
   - id: tela.operator_p1.surfaces.gate
     name: Gate operator P1 surface implementation
-    status: claimed
+    status: done
     description: 'Gate review for the operator P1 surfaces phase.
 
 
@@ -78049,6 +78049,48 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-26T07:09:24.628282+00:00'
+    done_at: '2026-04-26T07:18:33.771695+00:00'
+    evidence: 'Final gate review returned semantic pass with open-gate decision.
+
+
+      Closure fields:
+
+      - headline: PASS_WITH_DEBT
+
+      - proof_gap_status: NON_BLOCKING
+
+      - blocking_status: CLOSED
+
+      - verdict: PASS
+
+      - blockers: []
+
+      - gate_decision: OPEN
+
+      - gate_open_allowed: true
+
+      - orchestrator_action_hint: COMPLETE
+
+
+      Validated gate obligations (from reviewer evidence):
+
+      - operator-route wrong bearer rejection parity proven
+
+      - probe invalid-timeout boundary returns controlled 4xx; no AssertionError leak
+
+      - docs parity for INTERFACES operator surfaces confirmed
+
+      - OPIFEX shared-surface green and expected-red checks deterministic
+
+      - type-check criterion unambiguous for this phase
+
+      - no passive recovery/RBAC/second auth regressions
+
+      - ruff clean and invar errors=0
+
+
+      Decision basis is sufficient to advance beyond `tela.operator_p1.surfaces` phase
+      gate.'
   - id: tela.operator_p1.surfaces.diagnostics_readonly
     name: Implement and verify read-only probe and client diagnostics
     status: done
@@ -79941,7 +79983,7 @@ phases:
       criterion and OPIFEX parity closure.'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
-  status: locked
+  status: pending
   depends_on:
   - tela.operator_p1.surfaces
   steps:
