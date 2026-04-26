@@ -79585,7 +79585,7 @@ phases:
       non-error state confirmed.'
   - id: tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity
     name: Remediate type-check criterion and OPIFEX parity precondition
-    status: claimed
+    status: done
     description: "Batched remediation for the latest `tela.operator_p1.surfaces.gate`\
       \ blockers. Resolve BOTH blockers in one path before the gate is retried.\n\n\
       work_type: authority_adjudication with technical_debt_remediation pressure\n\
@@ -79739,6 +79739,32 @@ phases:
     agent: software-architect-tacit
     claimed_by: software-architect-tacit
     claimed_at: '2026-04-26T06:52:40.128591+00:00'
+    done_at: '2026-04-26T07:02:45.582328+00:00'
+    evidence: 'Merged remediation from `vectl/step-tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity`
+      (worker commit `7729838c`; mainline squash commit `[vectl] step-tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity
+      completed`).
+
+
+      Delivered outcomes:
+
+      - B1 deterministic type-check criterion established as `uv run mypy src` with
+      failure-family register and non-intersection rationale recorded in `evidence/operator_p1_surfaces_remediate_typecheck_and_opifex_parity.md`.
+
+      - B2 OPIFEX parity precondition aligned repo-owned frozen authority packet to
+      active OPIFEX ref `450281eae8a481f2f63cf4540112c529cc976548` (`design/opifex-frozen-authority-packet.json`).
+
+
+      Mainline final-state verification barrier (post-merge):
+
+      - `uv run mypy src` => `Success: no issues found in 65 source files`
+
+      - `OPIFEX_ROOT="/Users/tefx/Projects/opifex" uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      green` => all groups passed (schema-parity/shared-surface-runtime/shared-surface-contract)
+
+      - `uv run invar guard` => passed (errors=0 warnings=0)
+
+
+      No plan-state files were modified by execution agent.'
   - id: tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity
     name: Retest type-check criterion and OPIFEX parity closure
     status: pending
