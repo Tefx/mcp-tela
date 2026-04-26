@@ -78605,7 +78605,7 @@ phases:
       => 79 passed; `invar_guard(changed=true)` passed.'
   - id: tela.operator_p1.surfaces.retest_w1_w5_w9_wiring_blockers
     name: Retest W1/W5/W9 wiring audit blockers
-    status: claimed
+    status: done
     description: 'Independent wiring retest after the W1/W5/W9 batched remediation.
 
 
@@ -78679,6 +78679,13 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-26T04:59:26.100997+00:00'
+    done_at: '2026-04-26T05:05:46.505074+00:00'
+    evidence: 'Independent wiring-auditor retest passed with no blockers: (1) `http_routes`
+      no longer imports non-paginated `audit_query` and retains only paginated path,
+      (2) `_ROUTE_HANDLERS` export absent, (3) `handle_operator_audit` now has non-vacuous
+      `@pre/@post` contracts with real parameter/result checks, and (4) transitive
+      runtime reachability for `/operator/audit` -> `handle_operator_audit` -> `audit_query_paginated`
+      verified. Focused regressions passed: 30/30 test_http_routes and 9/9 test_audit_paginated_query_red.'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
