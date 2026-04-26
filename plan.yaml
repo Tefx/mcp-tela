@@ -78589,6 +78589,80 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.retest_w1_w5_w9_wiring_blockers
+    name: Retest W1/W5/W9 wiring audit blockers
+    status: pending
+    description: 'Independent wiring retest after the W1/W5/W9 batched remediation.
+
+
+      As an INDEPENDENT TESTER, verify that the remediation closed all latest wiring
+      blockers and that the operator P1 phase remains wiring-complete.
+
+
+      Scope:
+
+      - W1-1/W9-1: `audit_query` must no longer be a dead import chain in `http_routes.py`
+      with misleading route-wired commentary. Verify by import/reference trace and
+      route reachability evidence for the authoritative paginated audit path.
+
+      - W1-2: `_ROUTE_HANDLERS` must either have a real runtime consumer or be removed/de-exported
+      with tests/docs updated to assert runtime registration instead of a dead tuple.
+
+      - W5-1: `handle_operator_audit` must have non-vacuous `@pre`/`@post` contracts.
+      Verify contract strength, not only decorator presence.
+
+      - Re-run the operator P1 wiring audit checks for route/tool reachability, config/auth/audit
+      consumption, contract strength, and shared registry safety.
+
+
+      Finding issues is a successful audit outcome; record any blocker-class residuals
+      with exact reproduction and gate intersection.
+
+
+      step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      Independence Level: L1 independent review; agent must not be the implementation
+      agent from the fix step.'
+    verification: 'Phase-check protecting tela.operator_p1.surfaces.wiring_audit and
+      tela.operator_p1.surfaces.gate. Expected result: green. W1-1/W9-1, W1-2, and
+      W5-1 are closed by runtime reachability or explicit removal/de-export disposition;
+      contract strength is proven; focused regressions exist; and no new orphan routes/tools/contracts
+      are introduced.'
+    evidence_template: "## Verification Report\n\n**Tester**: wiring-auditor (independent\
+      \ of implementation)\n**Scope**: W1/W5/W9 wiring blocker closure\n**Independence\
+      \ Level**: L1\n**Timestamp**: <ISO 8601>\n\n### refs Read Confirmation (MANDATORY)\n\
+      For each ref in this step:\n- src/tela/shell/http_routes.py — key passage or\
+      \ \"NOT READ: <reason>\"\n- src/tela/shell/audit.py — key passage or \"NOT READ:\
+      \ <reason>\"\n- src/tela/shell/gateway.py — key passage or \"NOT READ: <reason>\"\
+      \n- tests/shell/test_http_routes.py — key passage or \"NOT READ: <reason>\"\n\
+      - INVAR.md — key passage or \"NOT READ: <reason>\"\n\n### Closure Proof\n- W1-1/W9-1\
+      \ dead `audit_query` import chain status:\n  ```\n  <reference trace and authoritative\
+      \ audit route/path proof>\n  ```\n- W1-2 `_ROUTE_HANDLERS` status:\n  ```\n\
+      \  <runtime consumer proof or removal/de-export proof>\n  ```\n- W5-1 `handle_operator_audit`\
+      \ contract strength:\n  ```\n  <invar sig / contract grep / non-vacuous comparison\
+      \ proof>\n  ```\n\n### Test Execution\n- Commands executed:\n  ```\n  <actual\
+      \ commands>\n  ```\n- Output summary: <key results>\n\n### Issues Found\n| Severity\
+      \ | Description | Location | Reproduction |\n| --- | --- | --- | --- |\n| blocker\
+      \ | <issue or none> | <file:line> | <steps> |\n| should_fix | <issue or none>\
+      \ | <file:line> | <steps> |\n\n### Behavioral Proof Register\n| requirement_ref\
+      \ | behavior_claim | runtime_proof_expected | evidence_ref | status | closure_path\
+      \ | gate_decision_basis |\n| --- | --- | --- | --- | --- | --- | --- |\n| W1-1/W9-1\
+      \ | No dead non-paginated audit import chain remains | reference trace / route\
+      \ path | <evidence> | PROVEN/UNPROVEN | <path> | <OPEN/BLOCK> |\n| W1-2 | `_ROUTE_HANDLERS`\
+      \ is runtime-reachable or removed | runtime consumer/removal proof | <evidence>\
+      \ | PROVEN/UNPROVEN | <path> | <OPEN/BLOCK> |\n| W5-1 | `handle_operator_audit`\
+      \ has non-vacuous contracts | contract-strength proof | <evidence> | PROVEN/UNPROVEN\
+      \ | <path> | <OPEN/BLOCK> |\n\n### Headline\n- [ ] PASS: No blocking issues\
+      \ found and coverage justified\n- [ ] PASS_WITH_DEBT: Only explicit non-blocking\
+      \ debt remains\n- [ ] FAIL: Blocking issues or proof gaps remain\n\n**Confidence**:\
+      \ high/medium/low"
+    depends_on:
+    - tela.operator_p1.surfaces.fix_w1_w5_w9_wiring_blockers
+    agent: wiring-auditor
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
