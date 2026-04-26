@@ -78950,7 +78950,7 @@ phases:
       - Shared-surface intent preserved (no RBAC redesign / no contract aliasing).'
   - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3
     name: Retest surfaces gate blockers B1/B2/B3
-    status: claimed
+    status: done
     description: "Independent retest/gate step for the batched B1/B2/B3 remediation.\n\
       \nstep_type: test\nstep_intent: retest_green\nexpected_result: green\nverification_scope:\
       \ phase-check\nindependence_level: L2\nagent_source: project\n\nAs an INDEPENDENT\
@@ -79118,6 +79118,43 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-26T05:54:28.558769+00:00'
+    done_at: '2026-04-26T06:07:43.042706+00:00'
+    evidence: 'Independent L2 retest/gate verification completed by integration-verifier-tacit.
+
+
+      Semantic closure fields from verifier report:
+
+      - step_intent: retest_green
+
+      - expected_result: green
+
+      - observed_result: green
+
+      - verdict: PASS
+
+      - blockers: []
+
+      - gate_open_allowed: true
+
+      - orchestrator_action_hint: COMPLETE
+
+      - product_implementation_files_modified: false
+
+
+      B1/B2/B3 coverage validated:
+
+      - B1: operator route auth parity with `/status` verified; wrong bearer rejected
+      and accepted-bearer path proven for operator route family.
+
+      - B2: `uv run ruff check .` clean; `uvx invar-tools guard --all` returned errors=0;
+      targeted operator route/auth tests passed.
+
+      - B3: vacuous `@pre(lambda: True)` absence and non-vacuous replacement contract
+      checks on affected operator handlers.
+
+
+      Behavioral proof register included in verifier evidence with all status PASS
+      and no unresolved proof gaps (`proof_gap_status: NONE`).'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
