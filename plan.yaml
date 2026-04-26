@@ -78167,7 +78167,7 @@ phases:
       -q` => 17 passed; `invar_guard(changed=true)` passed.'
   - id: tela.operator_p1.surfaces.fix_w6_w9_wiring_blockers
     name: Fix W6/W9 wiring audit blockers
-    status: claimed
+    status: done
     description: 'Batched implementation remediation for wiring audit blockers W6-001
       and W9-001.
 
@@ -78301,6 +78301,14 @@ phases:
     agent: python-senior-tacit
     claimed_by: python-senior-tacit
     claimed_at: '2026-04-25T23:56:19.706395+00:00'
+    done_at: '2026-04-26T00:14:41.830435+00:00'
+    evidence: 'Batched remediation merged for wiring blockers W6/W9 from worktree
+      branch 4d636bac as [vectl] step-tela.operator_p1.surfaces.fix_w6_w9_wiring_blockers
+      completed. W6 closed by consuming GatewayStartupConfig.auth_mode in connect
+      validation path; W9 closed by wiring GET /operator/audit to audit_query_paginated
+      and aligning docs/surface contracts. Mainline regressions passed: 12/12 targeted
+      W6/W9 + audit pagination tests, 66/66 additional surface/connect checks. `invar_guard(changed=true)`
+      passed.'
   - id: tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
     name: Retest W6/W9 wiring audit blockers
     status: pending
