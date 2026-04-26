@@ -78907,6 +78907,174 @@ phases:
     - tela.operator_p1.surfaces.docs_status_update
     - tela.operator_p1.surfaces.wiring_audit
     agent: python-senior-tacit
+  - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3
+    name: Retest surfaces gate blockers B1/B2/B3
+    status: pending
+    description: "Independent retest/gate step for the batched B1/B2/B3 remediation.\n\
+      \nstep_type: test\nstep_intent: retest_green\nexpected_result: green\nverification_scope:\
+      \ phase-check\nindependence_level: L2\nagent_source: project\n\nAs an INDEPENDENT\
+      \ TESTER, prove closure of the latest `tela.operator_p1.surfaces.gate` blockers\
+      \ before the phase gate reruns. Finding unresolved issues is valuable and must\
+      \ be reported with reproduction details.\n\n## Required closure proofs\n1. B1\
+      \ security auth checks:\n   - Exercise `/operator/probe`, `/operator/clients`,\
+      \ `/operator/authorization/explain`, and `/operator/audit` with a wrong bearer\
+      \ and prove each rejects it with the same authorization semantics as `/status`.\n\
+      \   - Exercise at least one accepted bearer path for the same route family or\
+      \ a representative route, plus `/status`, to show the validation path is not\
+      \ simply denying everything.\n   - Include missing/malformed bearer behavior\
+      \ when the existing `/status` tests define that behavior.\n2. B2 quality gate:\n\
+      \   - Run the exact ruff command used by the repo/phase gate.\n   - Run the\
+      \ full invar guard budget command: `uvx invar-tools guard --all` unless the\
+      \ local project command contract requires an equivalent `uv run ...` form; record\
+      \ the exact command used.\n   - Run relevant targeted tests for operator P1\
+      \ surfaces/auth routes.\n3. B3 contract quality:\n   - Prove `@pre(lambda: True)`\
+      \ is absent from `handle_operator_clients` and related operator shell/route\
+      \ handlers, or prove any remaining occurrence is outside this remediation scope\
+      \ and non-intersecting with the phase gate.\n   - Verify replacement contracts\
+      \ are non-vacuous: they reference real parameters and contain a meaningful predicate/comparison.\n\
+      \n## Behavioral proof register requirement\nFor each B1/B2/B3 closure item,\
+      \ record: `requirement_ref`, `behavior_claim`, `runtime_proof_expected`, `evidence_ref`,\
+      \ `status`, `closure_path`, and `gate_decision_basis`. `NEEDS_TEST`, `UNPROVEN`,\
+      \ or `UNCERTAIN_BLOCKING` must block this retest and identify remediation ownership.\n\
+      \n## Commands expected in evidence\nUse exact project commands if names differ,\
+      \ but evidence must include these command families:\n- security route tests\
+      \ / live-route checks for wrong bearer and accepted bearer parity with `/status`\n\
+      - `ruff check ...` (repo gate scope or precise configured ruff invocation)\n\
+      - `uvx invar-tools guard --all` (or documented project-local equivalent)\n-\
+      \ targeted pytest for operator P1 surfaces/auth routes\n\nThis retest protects\
+      \ `tela.operator_p1.surfaces.gate`; the phase gate must not run until this step\
+      \ is green."
+    verification: 'Must-green phase-check: wrong bearer rejected for all four operator
+      routes with `/status` parity; accepted bearer path still works; ruff is clean;
+      full invar guard budget is clean; targeted operator P1 route/auth tests pass;
+      vacuous `@pre(lambda: True)` contract pattern is absent from the affected operator
+      handler family or explicitly proven non-intersecting.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of implementation)
+
+      **Scope**: B1/B2/B3 closure for tela.operator_p1.surfaces
+
+      **Independence Level**: L2
+
+      **Expected Result**: green
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - ../opifex/design/final-canonical-contract.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/contracts/capability_token.schema.json — key passage or "NOT READ:
+      <reason>"
+
+      - ../opifex/conformance/shared_surfaces.yaml — key passage or "NOT READ: <reason>"
+
+      - AGENTS.md — key passage or "NOT READ: <reason>"
+
+      - INVAR.md — key passage or "NOT READ: <reason>"
+
+
+      ### B1 Security Auth Checks
+
+      | Route | Wrong bearer rejected? | Accepted bearer works? | `/status` parity
+      evidence ref |
+
+      | --- | --- | --- | --- |
+
+      | `/operator/probe` | | | |
+
+      | `/operator/clients` | | | |
+
+      | `/operator/authorization/explain` | | | |
+
+      | `/operator/audit` | | | |
+
+
+      Paste commands/output:
+
+      ```
+
+      <actual security commands and output>
+
+      ```
+
+
+      ### B2 Quality Gate Commands
+
+      Ruff command/output:
+
+      ```
+
+      <actual ruff command and output>
+
+      ```
+
+
+      Invar guard command/output:
+
+      ```
+
+      <actual uvx invar-tools guard --all or documented equivalent output>
+
+      ```
+
+
+      Targeted pytest command/output:
+
+      ```
+
+      <actual targeted pytest command(s) and output>
+
+      ```
+
+
+      ### B3 Contract Quality Checks
+
+      Vacuous contract search:
+
+      ```
+
+      <grep/search output for @pre(lambda: True), handle_operator_clients, related
+      operator handlers>
+
+      ```
+
+
+      Non-vacuous contract assessment:
+
+      - Functions checked:
+
+      - Predicate references real parameters: yes/no
+
+      - Meaningful predicate/comparison present: yes/no
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+      | B1 | | | | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING | | |
+
+      | B2 | | | | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING | | |
+
+      | B3 | | | | PROVEN/NEEDS_TEST/UNPROVEN/UNCERTAIN_BLOCKING | | |
+
+
+      ### Headline
+
+      - [ ] PASS: B1/B2/B3 all PROVEN and green
+
+      - [ ] FAIL: blocker remains; create/route follow-up remediation before phase
+      gate'
+    depends_on:
+    - tela.operator_p1.surfaces.fix_gate_b1_b2_b3
+    agent: integration-verifier-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
