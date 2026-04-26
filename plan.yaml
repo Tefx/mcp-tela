@@ -79989,7 +79989,7 @@ phases:
   steps:
   - id: tela.operator_p1.gate.targeted_tests
     name: Run targeted operator P1 regression tests
-    status: claimed
+    status: done
     description: 'Independent verification: run the targeted green test set for all
       operator P1 surfaces from a fresh perspective.
 
@@ -80082,6 +80082,37 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-26T07:18:52.864609+00:00'
+    done_at: '2026-04-26T07:21:59.647019+00:00'
+    evidence: 'Independent targeted operator P1 regression verification passed.
+
+
+      Semantic fields from verifier:
+
+      - step_intent: retest_green
+
+      - expected_result: green
+
+      - observed_result: green
+
+      - headline/verdict: PASS
+
+      - blockers: []
+
+      - gate_open_allowed: true
+
+      - orchestrator_action_hint: COMPLETE
+
+
+      Execution summary:
+
+      - Combined targeted suite => `64 passed in 8.78s`
+
+      - Surfaces covered: audit pagination/cursor limits, probe read-only diagnostics,
+      client read-only diagnostics, recover branch behavior (CLI-only), authorization
+      explain diagnostic behavior.
+
+      - Runtime symbol checks and behavior register included in evidence; no failure
+      alignment.'
   - id: tela.operator_p1.gate.spec_conformance
     name: Verify operator P1 spec conformance
     status: pending
