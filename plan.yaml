@@ -80470,7 +80470,7 @@ phases:
       - explain mutated enforcement: no'
   - id: tela.operator_p1.gate.final_review
     name: Final gate review for operator P1 surfaces
-    status: pending
+    status: claimed
     description: 'Final independent gate review for the tela operator P1 plan slice.
 
 
@@ -80562,3 +80562,5 @@ phases:
     - tela.operator_p1.gate.repo_local_full_gate
     - tela.operator_p1.gate.operator_client_smoke
     agent: gate-reviewer-tacit
+    claimed_by: gate-reviewer-tacit
+    claimed_at: '2026-04-26T10:16:18.461226+00:00'
