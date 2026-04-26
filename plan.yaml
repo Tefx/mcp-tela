@@ -78495,7 +78495,7 @@ phases:
       known flaky repro timeout). gate_open_allowed=true.'
   - id: tela.operator_p1.surfaces.fix_w1_w5_w9_wiring_blockers
     name: Fix W1/W5/W9 wiring audit blockers
-    status: pending
+    status: claimed
     description: 'Batched implementation remediation for latest operator P1 wiring
       audit blockers W1-1/W9-1, W1-2, and W5-1.
 
@@ -78590,6 +78590,8 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
     agent: python-senior-tacit
+    claimed_by: python-senior-tacit
+    claimed_at: '2026-04-26T00:34:52.853702+00:00'
   - id: tela.operator_p1.surfaces.retest_w1_w5_w9_wiring_blockers
     name: Retest W1/W5/W9 wiring audit blockers
     status: pending
