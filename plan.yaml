@@ -80349,7 +80349,7 @@ phases:
       with non-intersection rationale.'
   - id: tela.operator_p1.gate.operator_client_smoke
     name: Run external operator-client smoke evidence
-    status: claimed
+    status: done
     description: 'Black-box operator-client smoke verification. Treat `oculus` only
       as a future external client that calls public operator APIs; do not require
       UI knowledge.
@@ -80433,6 +80433,41 @@ phases:
     agent: blind-tester-tacit
     claimed_by: blind-tester-tacit
     claimed_at: '2026-04-26T07:30:08.640582+00:00'
+    done_at: '2026-04-26T10:16:02.650875+00:00'
+    evidence: 'Independent black-box operator-client smoke verification passed.
+
+
+      Semantic outcome:
+
+      - headline: PASS
+
+      - blockers: []
+
+      - gate_open_allowed: true
+
+      - orchestrator_action_hint: COMPLETE
+
+
+      Public operations verified by tester evidence:
+
+      - audit query bounded cursor/limit behavior
+
+      - probe diagnostics read-only behavior
+
+      - client attachment diagnostics read-only behavior
+
+      - recovery branch behavior (no passive remote recovery surface)
+
+      - authorization explain diagnostic-only visible/hidden/allow/deny behavior
+
+
+      Side-effect checks all negative:
+
+      - passive probe recovery: no
+
+      - client diagnostics mutation: no
+
+      - explain mutated enforcement: no'
   - id: tela.operator_p1.gate.final_review
     name: Final gate review for operator P1 surfaces
     status: pending
