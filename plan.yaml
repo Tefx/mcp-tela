@@ -79742,6 +79742,141 @@ phases:
     depends_on:
     - tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
     agent: software-architect-tacit
+  - id: tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity
+    name: Retest type-check criterion and OPIFEX parity closure
+    status: pending
+    description: "Independent retest for the batched remediation of type-check criterion\
+      \ ambiguity and OPIFEX parity precondition mismatch.\n\nstep_type: test\nstep_intent:\
+      \ retest_green\nexpected_result: green\nverification_scope: phase-check protecting\
+      \ `tela.operator_p1.surfaces.gate` and downstream `tela.operator_p1.gate`\n\
+      Independence Level: L2 (semi-blind: verify commands and decision basis without\
+      \ relying on implementation-process claims)\n\nAs an INDEPENDENT TESTER, validate\
+      \ that BOTH blockers from the latest gate attempt are closed or correctly classified\
+      \ before `tela.operator_p1.surfaces.gate` reruns.\n\nRequired exact commands/evidence:\n\
+      1. Run the full type-check command:\n   `uv run mypy src tests`\n2. Run any\
+      \ scoped type-check command(s) accepted by the remediation evidence, if full\
+      \ mypy remains red.\n3. Run the shared-surface OPIFEX parity/precondition command(s)\
+      \ used by this repo to compare the expected and found OPIFEX refs.\n4. Re-run\
+      \ the relevant operator P1 targeted regression/runtime proof commands cited\
+      \ by the prior retest evidence if needed to prove the accepted scoped criterion\
+      \ still covers this phase.\n\nRetest decision rules:\n- PASS only if B1 has\
+      \ a single unambiguous accepted type-check criterion and B2 has deterministic\
+      \ parity-precondition closure or explicit gate-classifiable external dependency\
+      \ evidence.\n- If full `uv run mypy src tests` still fails, PASS requires an\
+      \ approved failure-family register with non-intersection evidence for remaining\
+      \ errors and exact scoped command(s) accepted for this phase.\n- If OPIFEX expected/found\
+      \ refs still differ, PASS requires explicit external-blocking or approved-current-ref\
+      \ classification with authority citation; otherwise mark FAIL/BLOCKED.\n- A\
+      \ test that discovers unresolved ambiguity is successful verification work but\
+      \ must return FAIL/BLOCKED in the headline so the gate does not open."
+    verification: '- Run exactly: `uv run mypy src tests` and paste actual output
+      summary.
+
+      - Run the accepted scoped type-check command(s), if any, and paste actual output.
+
+      - Run the OPIFEX parity/precondition command(s) and paste expected/found ref
+      output.
+
+      - Verify B1 decision basis is unambiguous: full green OR scoped/non-intersection
+      approval with residual owner.
+
+      - Verify B2 decision basis is unambiguous: repo-fixed OR bounded external dependency
+      / approved current ref with authority citation.
+
+      - Produce a behavioral proof register with `requirement_ref`, `behavior_claim`,
+      `runtime_proof_expected`, `evidence_ref`, `status`, `closure_path`, and `gate_decision_basis`
+      for both blockers.'
+    evidence_template: '## Verification Report
+
+
+      **Tester**: integration-verifier-tacit (independent of remediation)
+
+      **Scope**: type-check criterion + OPIFEX parity precondition for `tela.operator_p1.surfaces.gate`
+
+      **Independence Level**: L2
+
+      **Timestamp**: <ISO 8601>
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - AGENTS.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/design/final-canonical-contract.md — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/shared_surfaces.yaml — key passage or "NOT READ: <reason>"
+
+      - ../opifex/conformance/case_matrix/mcp-tela/ — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Exact Commands Executed
+
+      ```
+
+      uv run mypy src tests
+
+      <accepted scoped mypy command(s), if full command remains red>
+
+      <OPIFEX parity/precondition command(s)>
+
+      <operator P1 targeted regression/runtime command(s), if used>
+
+      ```
+
+
+      ### Actual Output
+
+      ```
+
+      <paste stdout/stderr summaries with enough detail to verify pass/fail and expected/found
+      refs>
+
+      ```
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | B1 type-check criterion | <claim> | `uv run mypy src tests` plus accepted
+      scoped criterion if needed | <output ref> | PROVEN / NEEDS_TEST / UNPROVEN /
+      UNCERTAIN_BLOCKING | <path> | <OPEN/BLOCK basis> |
+
+      | B2 OPIFEX parity precondition | <claim> | parity command output with expected/found
+      refs | <output ref> | PROVEN / NEEDS_TEST / UNPROVEN / UNCERTAIN_BLOCKING |
+      <path> | <OPEN/BLOCK basis> |
+
+
+      ### Issues Found
+
+      | Severity | Description | Location | Reproduction |
+
+      |---|---|---|---|
+
+
+      ### Headline
+
+      - [ ] PASS: Both blockers are closed or explicitly gate-classifiable with authority.
+
+      - [ ] PASS_WITH_EXTERNAL_BLOCK: OPIFEX mismatch is external and should block/open
+      only per documented authority path.
+
+      - [ ] FAIL: Accepted type-check criterion or OPIFEX parity disposition remains
+      ambiguous.
+
+
+      **Confidence**: high/medium/low'
+    depends_on:
+    - tela.operator_p1.surfaces.remediate_typecheck_and_opifex_parity
+    agent: integration-verifier-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
