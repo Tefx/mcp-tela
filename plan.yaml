@@ -80239,7 +80239,7 @@ phases:
       primary §7.2a scope; no implementation blocker.'
   - id: tela.operator_p1.gate.repo_local_full_gate
     name: Run repo-local full gate
-    status: pending
+    status: claimed
     description: 'Independent full-plan-check for repo-local quality after P1 operator
       surfaces. Run the repository''s authoritative guard/test commands from a clean
       state.
@@ -80316,6 +80316,8 @@ phases:
     depends_on:
     - tela.operator_p1.gate.spec_conformance
     agent: integration-verifier-tacit
+    claimed_by: integration-verifier-tacit
+    claimed_at: '2026-04-26T07:25:13.888568+00:00'
   - id: tela.operator_p1.gate.operator_client_smoke
     name: Run external operator-client smoke evidence
     status: pending
