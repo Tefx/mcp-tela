@@ -79429,7 +79429,7 @@ phases:
       No plan-state files were modified by the execution agent.'
   - id: tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
     name: Retest surfaces gate blockers B1/B2/B3 v2
-    status: claimed
+    status: done
     description: "Independent retest/gate-support step for the batched B1/B2/B3 v2\
       \ remediation.\n\nstep_type: test\nstep_intent: retest_green\nexpected_result:\
       \ green\nverification_scope: phase-check\nindependence_level: L2\nagent_source:\
@@ -79551,6 +79551,43 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-26T06:34:02.371373+00:00'
+    done_at: '2026-04-26T06:41:53.569760+00:00'
+    evidence: 'Independent retest v2 completed with semantic PASS.
+
+
+      Closure fields from verifier report:
+
+      - step_intent: retest_green
+
+      - expected_result: green
+
+      - observed_result: green
+
+      - verdict: PASS
+
+      - blockers: []
+
+      - gate_open_allowed: true
+
+      - orchestrator_action_hint: COMPLETE
+
+      - product_implementation_files_modified: false
+
+
+      Verified outcomes:
+
+      - B1: invalid `/operator/probe` timeout inputs (`0`, negatives, malformed, non-finite
+      variants) return controlled 400 with no AssertionError/500 leakage; positive
+      timeout path remains successful.
+
+      - B2: `docs/INTERFACES.md` operator audit/probe semantics match runtime behavior.
+
+      - B3: scoped mypy criterion for affected operator files is clean and evidence
+      includes inventory/non-intersection rationale for remaining full-run debt.
+
+
+      Additional checks reported by verifier: gateway-targeted tests green, ruff/invar
+      non-error state confirmed.'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
