@@ -79983,7 +79983,7 @@ phases:
       criterion and OPIFEX parity closure.'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
-  status: in_progress
+  status: done
   depends_on:
   - tela.operator_p1.surfaces
   steps:
@@ -80470,7 +80470,7 @@ phases:
       - explain mutated enforcement: no'
   - id: tela.operator_p1.gate.final_review
     name: Final gate review for operator P1 surfaces
-    status: claimed
+    status: done
     description: 'Final independent gate review for the tela operator P1 plan slice.
 
 
@@ -80564,3 +80564,69 @@ phases:
     agent: gate-reviewer-tacit
     claimed_by: gate-reviewer-tacit
     claimed_at: '2026-04-26T10:16:18.461226+00:00'
+    done_at: '2026-04-26T10:20:46.896516+00:00'
+    evidence: '## refs Read Confirmation (MANDATORY)
+
+      No refs for this step.
+
+
+      ## Final Gate Review Report
+
+      Reviewer: gate-reviewer-tacit
+
+      Phase: tela.operator_p1.gate
+
+
+      headline: PASS_WITH_DEBT
+
+      proof_gap_status: NON_BLOCKING
+
+      blocking_status: CLOSED
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_decision: OPEN
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      ### Step Review
+
+      - tela.operator_p1.gate.targeted_tests: PASS (adequate) — Targeted suite reported
+      64 passed; covers audit pagination, probe/client diagnostics, recover branch,
+      and authorization explain.
+
+      - tela.operator_p1.gate.spec_conformance: PASS_WITH_DEBT (adequate) — 9/9 requirements
+      conform; only non-blocking stale-doc note outside primary scope.
+
+      - tela.operator_p1.gate.repo_local_full_gate: PASS (excellent) — Fresh auditor
+      rerun: invar_guard full_scan ok=true errors=0; shared-surface gate green: 9+59+210
+      tests passed.
+
+      - tela.operator_p1.gate.operator_client_smoke: PASS (adequate) — Plan evidence
+      says public operations and negative side effects verified; auditor additionally
+      ran public operator route smoke test: 1 passed.
+
+
+      ### Gate Decision Basis
+
+      - behavioral obligations — evidence: behavioral_proof_register + fresh invar_guard
+      full_scan; unresolved_status: none blocking; blocks: false; rationale: R13/R42/SURFACE/AUTH
+      blocker families are PROVEN/CLOSED; skipped healthy-neighbor concurrency probe
+      is explicitly RESOLVED_NON_BLOCKING and non-intersecting.
+
+      - no RBAC / no second authorization — evidence: enforcement explain path + shell
+      explain + spec conformance evidence; unresolved_status: none; blocks: false.
+
+      - no passive recovery — evidence: ADR-008 operator recovery exposure + CLI help
+      for status/doctor; unresolved_status: none; blocks: false.
+
+      - shared-surface invariants — evidence: uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      green; unresolved_status: none; blocks: false.
+
+
+      Residual debt: non-blocking stale-doc note outside primary scope (non-intersecting).'
