@@ -80239,7 +80239,7 @@ phases:
       primary §7.2a scope; no implementation blocker.'
   - id: tela.operator_p1.gate.repo_local_full_gate
     name: Run repo-local full gate
-    status: claimed
+    status: done
     description: 'Independent full-plan-check for repo-local quality after P1 operator
       surfaces. Run the repository''s authoritative guard/test commands from a clean
       state.
@@ -80318,6 +80318,35 @@ phases:
     agent: integration-verifier-tacit
     claimed_by: integration-verifier-tacit
     claimed_at: '2026-04-26T07:25:13.888568+00:00'
+    done_at: '2026-04-26T07:29:53.533093+00:00'
+    evidence: 'Independent repo-local full gate verification passed.
+
+
+      Outcome fields:
+
+      - headline: PASS
+
+      - blockers: []
+
+      - gate_open_allowed: true
+
+      - orchestrator_action_hint: COMPLETE
+
+
+      Verified commands:
+
+      - `uv run invar guard --all` => passed (errors=0)
+
+      - `uv run pytest --tb=short -q` => `1398 passed`
+
+      - `uv run python scripts/ci/mcp_tela_shared_surface_gate.py green` => all groups
+      passed
+
+      - docs/parity checks cited by verifier passed
+
+
+      Broad-gate findings were warning/info only and explicitly classified as non-blocking
+      with non-intersection rationale.'
   - id: tela.operator_p1.gate.operator_client_smoke
     name: Run external operator-client smoke evidence
     status: pending
