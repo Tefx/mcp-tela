@@ -78002,46 +78002,40 @@ phases:
       6. Stubs or hardcoded responses masquerading as implementation.'
     verification: 'Phase-check protecting final operator gate. Review implementation
       evidence, wiring audit, docs update, expected-red-to-green proof, behavioral
-      proof register, prior B1/B2/B3 retest evidence, and v2 B1/B2/B3 retest evidence.
-      Block if any P1 target lacks implementation/explicit CLI-only disposition, violates
-      hard non-goals, accepts wrong bearer on operator routes, leaks handler AssertionError/500
-      for invalid operator probe timeout, leaves docs parity drift in `docs/INTERFACES.md`,
+      proof register, prior B1/B2/B3 retest evidence, v2 B1/B2/B3 retest evidence,
+      and the batched type-check/OPIFEX parity retest evidence. Block if any P1 target
+      lacks implementation/explicit CLI-only disposition, violates hard non-goals,
+      accepts wrong bearer on operator routes, leaks handler AssertionError/500 for
+      invalid operator probe timeout, leaves docs parity drift in `docs/INTERFACES.md`,
       leaves ambiguous mypy/type-check gate criteria, leaves ruff/invar guard budget
-      failures, or leaves vacuous `@pre(lambda: True)` contracts in affected operator
-      handler surfaces. Gate may OPEN only when the new `tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2`
-      evidence is green and includes B3 full-green or approved scoped non-intersection
-      decision basis.'
-    evidence_template: '## refs Read Confirmation (MANDATORY)
-
-      For each ref in this step:
-
-      - <filename> — key passage or "NOT READ: <reason>"
-
-
-      If no refs were provided, state: "No refs for this step."
-
-
-      ## Gate Review Report
-
-      - Audit query bounded cursor/limit: PASS/FAIL
-
-      - Active probe diagnostics read-only: PASS/FAIL
-
-      - Client attachment diagnostics read-only: PASS/FAIL
-
-      - Recover selected branch implemented/documented: PASS/FAIL
-
-      - Authorization explain diagnostic-only: PASS/FAIL
-
-      - Wiring audit passed: PASS/FAIL
-
-      - Docs status updated: PASS/FAIL
-
-      - No RBAC / no second authorization / no passive recovery: PASS/FAIL
-
-      - Blockers: <list or none>
-
-      - Gate decision: OPEN | BLOCKED'
+      failures, leaves vacuous `@pre(lambda: True)` contracts in affected operator
+      handler surfaces, or leaves OPIFEX expected/found parity mismatch without an
+      explicit authority-approved gate classification. Gate may OPEN only when `tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2`
+      is green and `tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity`
+      proves B1/B2 closure or bounded external-dependency classification with decision
+      basis.'
+    evidence_template: "## Gate Review Report\n\n**Reviewer**: gate-reviewer-tacit\
+      \ (independent of phase implementation)\n**Phase**: tela.operator_p1.surfaces\n\
+      **Timestamp**: <ISO 8601>\n\n### refs Read Confirmation (MANDATORY)\nFor each\
+      \ ref in this step:\n- AGENTS.md — key passage or \"NOT READ: <reason>\"\n-\
+      \ ../opifex/design/final-canonical-contract.md — key passage or \"NOT READ:\
+      \ <reason>\"\n- ../opifex/conformance/shared_surfaces.yaml — key passage or\
+      \ \"NOT READ: <reason>\"\n- ../opifex/conformance/case_matrix/mcp-tela/ — key\
+      \ passage or \"NOT READ: <reason>\"\n\nIf no refs were provided, state: \"No\
+      \ refs for this step.\"\n\n### Required Retest Evidence\n- `tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2`:\
+      \ green or approved gate-classifiable disposition.\n- `tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity`:\
+      \ B1/B2 proof register present.\n\n### Gate Decision Basis\nFor each behavioral/runtime\
+      \ proof obligation, include:\n- requirement_ref\n- behavior_claim\n- runtime_proof_expected\n\
+      - evidence_ref\n- status\n- closure_path\n- gate_decision_basis\n\n### Step-by-Step\
+      \ Review\n| Step ID | Status | Evidence Quality | Concerns |\n|---|---|---|---|\n\
+      \n### Issues Identified\n| Severity | Description | Related Step | Blocking?\
+      \ |\n|---|---|---|---|\n\n### Phase Assessment\n- All phase steps completed:\
+      \ ✅/❌\n- Evidence quality acceptable: ✅/❌\n- Type-check criterion unambiguous:\
+      \ ✅/❌\n- OPIFEX parity precondition classified by authority: ✅/❌\n- Blocking\
+      \ issues resolved or explicitly external-blocking: ✅/❌\n\n### Gate Decision\n\
+      - [ ] OPEN: Phase passes gate, proceed to next phase\n- [ ] BLOCKED: Issues\
+      \ must be resolved before proceeding\n  - Blocking issues: <list>\n  - Required\
+      \ actions: <what needs to happen>"
     depends_on:
     - tela.operator_p1.surfaces.audit_query_projection
     - tela.operator_p1.surfaces.diagnostics_readonly
@@ -78051,6 +78045,7 @@ phases:
     - tela.operator_p1.surfaces.wiring_audit
     - tela.operator_p1.surfaces.retest_gate_b1_b2_b3
     - tela.operator_p1.surfaces.retest_gate_b1_b2_b3_v2
+    - tela.operator_p1.surfaces.retest_typecheck_and_opifex_parity
     agent: gate-reviewer-tacit
   - id: tela.operator_p1.surfaces.diagnostics_readonly
     name: Implement and verify read-only probe and client diagnostics
