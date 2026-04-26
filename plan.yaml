@@ -78311,7 +78311,7 @@ phases:
       passed.'
   - id: tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
     name: Retest W6/W9 wiring audit blockers
-    status: claimed
+    status: done
     description: 'Independent wiring retest after the W6/W9 batched remediation.
 
 
@@ -78486,6 +78486,12 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-04-26T00:15:04.459759+00:00'
+    done_at: '2026-04-26T00:25:43.058527+00:00'
+    evidence: 'Independent wiring-auditor retest validated W6/W9 closure: GatewayStartupConfig.auth_mode
+      has non-test runtime consumer in connect validation path, and audit_query_paginated
+      is transitively reachable via GET /operator/audit route. No blocker-class residuals;
+      only non-blocking pre-existing debt noted (escape-hatch budget saturation /
+      known flaky repro timeout). gate_open_allowed=true.'
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
