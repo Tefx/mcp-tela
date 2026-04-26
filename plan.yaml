@@ -77866,7 +77866,7 @@ phases:
       -q` => 51 passed.'
   - id: tela.operator_p1.surfaces.wiring_audit
     name: Audit operator P1 wiring completeness
-    status: pending
+    status: claimed
     description: 'Wiring completeness audit: verify every new operator P1 route/tool/helper
       is reachable at runtime and no public symbol is orphaned.
 
@@ -77958,6 +77958,8 @@ phases:
     - tela.operator_p1.surfaces.retest_w6_w9_wiring_blockers
     - tela.operator_p1.surfaces.retest_w1_w5_w9_wiring_blockers
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-04-26T05:06:21.036749+00:00'
   - id: tela.operator_p1.surfaces.gate
     name: Gate operator P1 surface implementation
     status: pending
