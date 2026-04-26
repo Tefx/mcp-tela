@@ -79155,6 +79155,239 @@ phases:
 
       Behavioral proof register included in verifier evidence with all status PASS
       and no unresolved proof gaps (`proof_gap_status: NONE`).'
+  - id: tela.operator_p1.surfaces.fix_gate_b1_b2_b3_v2
+    name: Fix surfaces gate blockers B1/B2/B3 v2
+    status: pending
+    description: 'Batched implementation/remediation for the deferred `tela.operator_p1.surfaces.gate`
+      blockers. Fix ALL of B1, B2, and B3 in this single chain; do not split into
+      separate blocker-specific branches.
+
+
+      work_type: defect_repair
+
+      step_type: implementation
+
+      agent_source: default
+
+      symbolic_testing: true
+
+      command_family_lock: B3 must use `uv run --frozen --group dev mypy src tests`
+      as the reported failing command unless this step records an explicit approved
+      scoped type-check criterion for this phase and why repo-wide mypy does not intersect
+      the phase gate.
+
+
+      ## Blockers to Fix (ALL required)
+
+
+      ### B1: HTTP-boundary validation for `/operator/probe?timeout_seconds=-1`
+
+      Problem: `/operator/probe?timeout_seconds=-1` with a valid bearer reaches handler
+      preconditions and triggers `AssertionError` instead of a controlled 4xx response.
+
+
+      Required remediation:
+
+      - Validate `timeout_seconds` at the HTTP boundary before calling the handler.
+
+      - Reject `timeout_seconds <= 0`, non-finite values (`NaN`, `Infinity`, `-Infinity`),
+      malformed values, and any equivalent invalid value with a controlled 4xx response.
+
+      - Add focused regression coverage for valid bearer + invalid timeout proving
+      the handler precondition is not surfaced as a 500/AssertionError.
+
+      - Preserve existing accepted positive timeout behavior and read-only probe semantics.
+
+      - Search sibling operator query parsing paths for the same handler-precondition
+      leak pattern before claiming done.
+
+
+      Grep/search hints for executor evidence:
+
+      - `/operator/probe`
+
+      - `timeout_seconds`
+
+      - `handle_operator_probe`
+
+      - `AssertionError`
+
+
+      ### B2: docs parity drift in `docs/INTERFACES.md`
+
+      Problem: `docs/INTERFACES.md` contains stale claims around operator audit pagination,
+      limits, and current implementation status.
+
+
+      Required remediation:
+
+      - Update `docs/INTERFACES.md` so operator audit pagination, default/hard limit
+      behavior, cursor behavior, and current implemented/CLI-only status match the
+      actual runtime implementation.
+
+      - Remove stale target-language that claims behavior not implemented or omits
+      current limits.
+
+      - Keep `/status.audit_entries` documented as recent summary only if that remains
+      the implementation.
+
+      - Do not redefine canonical shared contracts, add compatibility aliases, or
+      accept-and-clean malformed shared input.
+
+
+      ### B3: deterministic type-check gate decision/remediation
+
+      Problem: `uv run --frozen --group dev mypy src tests` reports 216 errors, so
+      gate evidence cannot be green or unambiguous.
+
+
+      Required remediation:
+
+      Choose and document exactly ONE of these dispositions in the implementation
+      evidence and code/docs/tests as needed:
+
+      1. **Gate-clean disposition**: remediate type-check failures intersecting this
+      phase until `uv run --frozen --group dev mypy src tests` is green; OR
+
+      2. **Approved scoped disposition**: define a precise scoped mypy verification
+      criterion for this phase (exact command, included paths/modules/tests, excluded
+      repo-wide debt inventory, and non-intersection rationale explaining why remaining
+      repo-wide errors do not intersect `tela.operator_p1.surfaces.gate`).
+
+
+      Hard constraints for B3:
+
+      - Do not label failures merely as `pre-existing` or `out-of-scope` unless the
+      evidence includes explicit non-intersection with the phase gate and downstream
+      required gates.
+
+      - If scoped mypy is chosen, update the gate/retest evidence path so reviewers
+      know the exact approved command and decision basis.
+
+      - If any mypy error intersects operator HTTP routes, operator audit docs/runtime,
+      probe validation, or phase tests, it is blocker-class and must be owned here.
+
+
+      ## Root Cause vs Symptom
+
+      - Root cause: the operator P1 phase gate lacks a closed boundary-validation
+      and type-check disposition path, and docs drifted from implemented audit pagination/limit
+      behavior.
+
+      - Symptoms: invalid HTTP query reaches handler assertion; `docs/INTERFACES.md`
+      is stale; repo-wide mypy failure makes gate evidence ambiguous.
+
+      - Why this fix is not surface-level: executor must close the HTTP boundary leak,
+      sync authoritative docs to runtime behavior, and produce a deterministic type-check
+      criterion with gate-intersection reasoning.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes inputs and produces
+      outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      ## Failure-mode checklist
+
+      - valid bearer + `timeout_seconds=-1` returns controlled 4xx, not AssertionError/500
+
+      - zero, negative, non-finite, and malformed timeout values are rejected before
+      handler invocation
+
+      - positive timeout still works on the intended happy path
+
+      - docs/INTERFACES.md matches runtime audit pagination/limit/cursor behavior
+      and current implementation status
+
+      - B3 evidence records either full mypy green or an approved scoped mypy command
+      plus explicit non-intersection inventory
+
+
+      ## Out-of-scope guardrail
+
+      Do not redesign operator authorization, route names, audit storage, profile
+      semantics, or shared canonical contract meaning. Scope is boundary validation,
+      docs parity, and deterministic type-check gate disposition for this phase.'
+    verification: '- B1: targeted regression proves `/operator/probe?timeout_seconds=-1`
+      with valid bearer returns controlled 4xx before handler call; include zero,
+      negative, non-finite/malformed cases where representable.
+
+      - B2: docs diff aligns `docs/INTERFACES.md` operator audit pagination/limits/current
+      status with actual runtime behavior.
+
+      - B3: evidence includes either green `uv run --frozen --group dev mypy src tests`
+      OR an exact approved scoped mypy command with non-intersection inventory for
+      remaining errors.
+
+      - Main path: positive timeout/operator probe behavior remains working and read-only.
+
+      - Failure path: invalid timeout does not surface AssertionError/500.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+
+      For each ref in this step:
+
+      - docs/INTERFACES.md — key passage or "NOT READ: <reason>"
+
+      - src/tela/shell/http_routes.py — key passage or "NOT READ: <reason>"
+
+      - tests — key test file/passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ## Batched Remediation Evidence
+
+
+      ### B1 HTTP-boundary validation
+
+      - Code locations changed:
+
+      - Invalid timeout cases covered:
+
+      - Regression test names:
+
+      - Proof valid bearer + invalid timeout returns controlled 4xx, not AssertionError/500:
+
+
+      ### B2 Docs parity
+
+      - `docs/INTERFACES.md` sections updated:
+
+      - Runtime behavior used as source of truth:
+
+      - Stale claims removed/changed:
+
+
+      ### B3 Type-check disposition
+
+      - Chosen disposition: gate-clean | approved-scoped
+
+      - Exact mypy command used/approved:
+
+      - Result summary:
+
+      - If scoped: remaining repo-wide errors inventory and explicit non-intersection
+      rationale with `tela.operator_p1.surfaces.gate`:
+
+
+      ### Root Cause vs Symptom
+
+      - Root cause addressed:
+
+      - Why this is not a symptom-only patch:
+
+
+      ### Completion
+
+      - Remaining blocker-class gaps: none | list with owner'
+    depends_on:
+    - tela.operator_p1.surfaces.retest_gate_b1_b2_b3
+    agent: python-senior-tacit
 - id: tela.operator_p1.gate
   name: Tela Operator P1 Final Gate
   status: locked
