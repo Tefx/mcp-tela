@@ -78000,10 +78000,12 @@ phases:
       5. New route/tool not registered in runtime entrypoint path.
 
       6. Stubs or hardcoded responses masquerading as implementation.'
-    verification: Phase-check protecting final operator gate. Review implementation
-      evidence, wiring audit, docs update, expected-red-to-green proof, and behavioral
-      proof register. Block if any P1 target lacks implementation/explicit CLI-only
-      disposition or violates hard non-goals.
+    verification: 'Phase-check protecting final operator gate. Review implementation
+      evidence, wiring audit, docs update, expected-red-to-green proof, behavioral
+      proof register, and B1/B2/B3 retest evidence. Block if any P1 target lacks implementation/explicit
+      CLI-only disposition, violates hard non-goals, accepts wrong bearer on operator
+      routes, leaves ruff/invar guard budget failures, or leaves vacuous `@pre(lambda:
+      True)` contracts in affected operator handler surfaces.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this step:
@@ -78042,6 +78044,7 @@ phases:
     - tela.operator_p1.surfaces.authorization_explain
     - tela.operator_p1.surfaces.docs_status_update
     - tela.operator_p1.surfaces.wiring_audit
+    - tela.operator_p1.surfaces.retest_gate_b1_b2_b3
     agent: gate-reviewer-tacit
   - id: tela.operator_p1.surfaces.diagnostics_readonly
     name: Implement and verify read-only probe and client diagnostics
