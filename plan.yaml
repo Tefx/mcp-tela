@@ -80961,7 +80961,7 @@ phases:
       \ verification."
   - id: adr009_runtime_regression
     name: Runtime regression proof for slow MCP requests and replay safety
-    status: claimed
+    status: done
     description: 'Dynamically verify the integrated ADR-009 behavior from outside
       the narrow unit-test seam. Prefer a generic synthetic MCP request/tool that
       waits longer than the old bridge response timeout and returns successfully;
@@ -81004,6 +81004,46 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-05-04T03:33:53.381605+00:00'
+    done_at: '2026-05-04T03:38:29.785051+00:00'
+    evidence: "Runtime regression verification passed; verification-focused step changed\
+      \ no files.\n\nExternal/Tasca proof:\n- Skipped as non-blocking because no external\
+      \ provider/Tasca environment was required or assumed. Local synthetic downstream/gateway\
+      \ harnesses were used, matching the step requirement to avoid depending on Tasca/table_wait/wait_ms/specific\
+      \ downstream tools.\n\nPublic CLI/connect bridge path + slow generic MCP proof:\n\
+      - Command family run by integration-verifier: synthetic FastMCP downstream with\
+      \ slow_echo(delay=11.5); started `python -m tela serve --port 0`; started `python\
+      \ -m tela connect --config ...`; sent initialize, tools/list, tools/call slow_echo\
+      \ through connect stdio; queried `python -m tela status --json` before/after\
+      \ connect/disconnect.\n- Key output:\n  - STATUS_BEFORE: active_connections=0,\
+      \ state=ready.\n  - CONNECT_ALIVE_AFTER_START True.\n  - INITIALIZE_RESPONSE\
+      \ returned JSON-RPC result.\n  - STATUS_AFTER_CONNECT: active_connections=1\
+      \ with bridge_connection_id.\n  - TOOLS_LIST_RESPONSE included generic slow_echo\
+      \ and ping_tool plus builtins.\n  - SLOW_CALL_ELAPSED_SECONDS 11.514.\n  - SLOW_CALL_RESPONSE\
+      \ returned `slow:ok:11.5`, isError=false.\n  - NO_BRIDGE_RECOVERY_EXHAUSTED_IN_RESPONSE\
+      \ True.\n  - STATUS_AFTER_DISCONNECT: active_connections=0, total_tool_calls=1,\
+      \ latency_ms≈11510.9.\n- Covers public /status, /connect, /mcp forwarding, and\
+      \ /disconnect via deployed `python -m tela serve/connect/status` paths.\n\n\
+      Replay safety dynamic proof:\n- Command family run by integration-verifier:\
+      \ local ThreadingHTTPServer synthetic MCP endpoint aborting TCP after reading\
+      \ first request body; exercised connect_bridge.forward_stdio_http runtime loop;\
+      \ counted POSTs and recovery calls.\n- Safe replay results:\n  - tools/list\
+      \ counts {\"tools/list\": 2}, recover=1, stdout replayed result, ok=true.\n\
+      \  - ping counts {\"ping\": 2}, recover=1, stdout replayed result, ok=true.\n\
+      - Unsafe replay result:\n  - tools/call counts {\"tools/call\": 1}, recover=0,\
+      \ ok=true, stdout request-level error with data.code MCP_RESPONSE_INTERRUPTED.\
+      \ This proves no unsafe tools/call replay.\n- Notification post-send unknown\
+      \ admission:\n  - post_counts {\"notifications/cancelled\": 1, \"ping\": 1},\
+      \ recover_calls=0.\n  - stderr: `tela connect [bridge_body_probe]: notification\
+      \ delivery unknown: response_body: IncompleteRead(16 bytes read, 100 more expected)`.\n\
+      \  - stdout contained only next ping response; notification wrote no stdout\
+      \ and loop continued.\n\nControl-plane recovery / bounded behavior:\n- Synthetic\
+      \ readiness harness: /status returned warming 503 twice then valid ready payload.\n\
+      \  - WARMING_503_READINESS_VALID_STATUS {ok: true, error: null, polls: 3}.\n\
+      - Synthetic /connect connection-refused window then endpoint appears.\n  - CONTROL_CONNECT_REFUSED_RECOVERY\
+      \ {ok: true, error: null, elapsed_seconds: 0.158, posts: 1}.\n\nGuard:\n- invar_guard(path=/Users/tefx/Projects/mcp-tela,\
+      \ changed=True): passed, errors=0, warnings=5, doctest passed. Warnings are\
+      \ static quality warnings already tracked by implementation steps; no guard\
+      \ errors.\n\nRisk/residual blockers: none for this runtime regression step."
   - id: adr009_docs_sync
     name: Documentation sync for ADR-009 runtime contract
     status: pending
