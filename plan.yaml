@@ -80645,7 +80645,7 @@ phases:
   steps:
   - id: adr009_contract_tests
     name: ADR-009 contract and regression tests
-    status: claimed
+    status: done
     description: 'Read docs/ADR-009-mcp-bridge-request-lifecycle.md first and turn
       its acceptance criteria + validation matrix into executable tests. Scope is
       tests/fixtures only; do not implement production behavior in this step. Required
@@ -80688,6 +80688,51 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-05-04T02:44:24.644274+00:00'
+    done_at: '2026-05-04T02:51:56.491456+00:00'
+    evidence: 'Implemented tests-only ADR-009 red contract suite.
+
+
+      Files added/changed:
+
+      - tests/shell/test_adr009_contract_red.py
+
+
+      Coverage mapping:
+
+      - Core replay policy: test_adr009_core_replay_policy_is_deterministic_and_fail_closed;
+      test_adr009_jsonrpc_helpers_classify_notifications_and_batch_fail_closed
+
+      - Narrowed recovery marker behavior: test_adr009_response_recovery_only_for_gateway_owned_error_envelopes;
+      test_adr009_tool_result_marker_text_does_not_trigger_recovery
+
+      - Phase-aware MCP HTTP executor: test_adr009_phase_http_executor_connect_and_write_phase_contract;
+      test_adr009_phase_http_executor_invalid_timeout_contract; test_adr009_phase_http_executor_deadline_and_warming_status_contracts;
+      test_adr009_invalid_timeout_inputs_are_rejected_before_network
+
+      - No synthetic timeout/recovery for generic slow MCP request: test_adr009_response_timeout_none_does_not_synthesize_recovery
+
+      - connect_bridge lifecycle/replay behavior: test_adr009_connect_bridge_presend_failure_recovers_and_sends_original_once;
+      test_adr009_connect_bridge_sent_unsafe_tools_call_interruption_is_not_replayed;
+      test_adr009_connect_bridge_postsend_notification_unknown_admission_continues;
+      test_adr009_connect_bridge_safe_request_may_recover_and_replay; test_adr009_empty_2xx_notification_succeeds_without_stdout;
+      test_adr009_empty_2xx_request_or_batch_gets_forward_failed
+
+
+      Verification run:
+
+      - uv run pytest tests/shell/test_adr009_contract_red.py -q
+
+      - Result: expected RED, 27 collected; 21 failed, 6 passed in 0.22s.
+
+      - Failures are ADR-009 contract gaps, not syntax/import mistakes: missing BridgeReplayPolicy/bridge_replay_policy/jsonrpc_request_id/jsonrpc_is_notification;
+      result.isError marker text still triggers recovery; missing tela.commands.bridge_http
+      seam with BridgeHttpError/BridgeHttpResponse/post_mcp_http; bridge loop still
+      returns raw MCP_REQUEST_TIMEOUT/MCP_RESPONSE_INTERRUPTED instead of ADR-009
+      request-level handling; empty 2xx request/batch currently emits no MCP_FORWARD_FAILED
+      frame.
+
+
+      No production behavior was implemented. plan.yaml was not edited directly.'
   - id: adr009_core_replay_policy
     name: Core replay policy and reconnect-marker narrowing
     status: pending
