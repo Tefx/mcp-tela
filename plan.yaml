@@ -80904,24 +80904,30 @@ phases:
       empty 2xx notification/request behavior matches ADR; post-send notification
       unknown-admission failure emits specified stderr diagnostic, writes no stdout,
       does not replay, and continues loop; tool-result marker-like text never authorizes
-      recovery/replay; Core contracts/doctests satisfy invar. Also inspect implementation
-      boundaries: http_client remains control-plane, bridge_http owns MCP data-plane,
-      bridge_protocol Core stays pure, connect_bridge owns orchestration. Dependency
-      rationale: depends on docs sync so final gate validates code, runtime proof,
-      and documentation together. Blocker behavior: any failing acceptance criterion,
-      residual risk, skipped required proof, or broad unsafe replay path is a hard
-      FAIL; return exact failing test/command and reproduction, do not mark complete
-      with open problems.'
+      recovery/replay; Core contracts/doctests satisfy invar. Confirm the public CLI
+      bridge path and live HTTP server lifecycle endpoints remain operational: CLI/connect
+      command starts bridge forwarding, /status readiness authority is unchanged,
+      /connect registration/warming behavior is preserved, MCP /mcp forwarding works,
+      and /disconnect cleanup still runs. Also inspect implementation boundaries:
+      http_client remains control-plane, bridge_http owns MCP data-plane, bridge_protocol
+      Core stays pure, connect_bridge owns orchestration. Dependency rationale: depends
+      on docs sync so final gate validates code, runtime proof, and documentation
+      together. Blocker behavior: any failing acceptance criterion, residual risk,
+      skipped required proof, or broad unsafe replay path is a hard FAIL; return exact
+      failing test/command and reproduction, do not mark complete with open problems.'
     verification: Run full targeted ADR-009 tests, full repo test suite, invar guard,
       and any docs/tests parity scans available. Perform static grep/inspection for
       forbidden special-casing (Tasca/table_wait/wait_ms in bridge lifecycle), fixed
       MCP response timeout in data-plane response wait, result.isError marker recovery,
-      and unexpected shared-surface aliases. Completion requires all checks green
-      and Open Problems/Residual Risk = none.
+      and unexpected shared-surface aliases. Perform public CLI/connect + live/synthetic
+      gateway lifecycle proof covering /status, /connect, /mcp forwarding, and /disconnect
+      cleanup. Completion requires all checks green and Open Problems/Residual Risk
+      = none.
     evidence_template: 'Paste full command list and outputs (targeted tests, full
       tests, invar guard, docs parity); provide acceptance-criteria checklist 1-13
-      with PASS evidence; include static inspection results for forbidden patterns;
-      state Open Problems: none and Residual Risk: none.'
+      with PASS evidence; include public CLI/connect lifecycle proof; include static
+      inspection results for forbidden patterns; state Open Problems: none and Residual
+      Risk: none.'
     depends_on:
     - adr009_docs_sync
     agent: integration-verifier
