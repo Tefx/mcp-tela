@@ -80818,31 +80818,39 @@ phases:
       the narrow unit-test seam. Prefer a generic synthetic MCP request/tool that
       waits longer than the old bridge response timeout and returns successfully;
       the proof must not depend on Tasca, table_wait, wait_ms, or any specific downstream
-      tool. If a real Tasca table_wait environment is already available, run it as
-      an additional regression proof, but do not make it the only proof. Also verify
-      replay safety dynamically: a sent unsafe tools/call with unknown admission/interrupted
-      response must not be invoked twice; a safe tools/list or ping recovery path
-      may replay under bounded recovery; notification post-send unknown-admission
-      failure emits stderr diagnostic/no stdout and loop continuation. Confirm warming
-      503/connection-refused recovery still works and control-plane bounded behavior
-      was not erased. Dependency rationale: depends on connect_bridge integration
-      being implemented because this step tests runtime wiring rather than individual
-      functions. Blocker behavior: if external providers are unavailable, use a local
-      synthetic downstream/repro harness and state that Tasca-specific proof was skipped
-      as external; if a dynamic proof exposes a product bug, return FAIL with exact
-      reproduction and do not paper over with unit-test-only evidence; if long real
-      sleeps are infeasible in CI, use a controlled test harness that proves response_timeout_seconds=None/no
+      tool. Include at least one deployability-bearing proof through the public bridge
+      command path, not only direct helper calls: exercise the bridge as invoked by
+      the CLI/connect command surface against a live or synthetic local gateway/server.
+      Verify /status, /connect, MCP forwarding, and /disconnect behavior remain bounded
+      and compatible. If a full CLI subprocess is infeasible, document the closest
+      public entrypoint used and why it still covers the deployed bridge path. If
+      a real Tasca table_wait environment is already available, run it as an additional
+      regression proof, but do not make it the only proof. Also verify replay safety
+      dynamically: a sent unsafe tools/call with unknown admission/interrupted response
+      must not be invoked twice; a safe tools/list or ping recovery path may replay
+      under bounded recovery; notification post-send unknown-admission failure emits
+      stderr diagnostic/no stdout and loop continuation. Confirm warming 503/connection-refused
+      recovery still works and control-plane bounded behavior was not erased. Dependency
+      rationale: depends on connect_bridge integration being implemented because this
+      step tests runtime wiring rather than individual functions. Blocker behavior:
+      if external providers are unavailable, use a local synthetic downstream/repro
+      harness and state that Tasca-specific proof was skipped as external; if a dynamic
+      proof exposes a product bug, return FAIL with exact reproduction and do not
+      paper over with unit-test-only evidence; if long real sleeps are infeasible
+      in CI, use a controlled test harness that proves response_timeout_seconds=None/no
       response cap rather than hardcoding a shorter timeout.'
     verification: 'Run targeted integration/black-box/repro commands that prove: slow
       generic MCP request succeeds without BRIDGE_RECOVERY_EXHAUSTED; unsafe tools/call
       is not double-invoked after post-send interruption; safe protocol replay still
-      works; notification failure diagnostic/continue behavior works; readiness/control-plane
+      works; notification failure diagnostic/continue behavior works; public CLI/connect
+      bridge path exercises /status, /connect, /mcp forwarding, and /disconnect; readiness/control-plane
       recovery still works. Capture command outputs and any stderr diagnostics. This
       step is verification-focused; full repo gate is in the final step.'
     evidence_template: Paste reproduction commands and outputs; include slow-request
       elapsed time or harness proof of unbounded response wait; include invocation
-      counts proving no unsafe replay; include control-plane recovery proof; list
-      any unavailable external/Tasca proof as non-blocking with reason.
+      counts proving no unsafe replay; include public CLI/connect and live/synthetic
+      gateway lifecycle proof; include control-plane recovery proof; list any unavailable
+      external/Tasca proof as non-blocking with reason.
     depends_on:
     - adr009_connect_bridge_integration
     agent: integration-verifier
