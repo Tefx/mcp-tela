@@ -80686,3 +80686,37 @@ phases:
       to test names; paste targeted pytest command/output showing expected red failures;
       note any intentionally skipped blocker tests with exact reason.
     agent: python-senior
+  - id: adr009_core_replay_policy
+    name: Core replay policy and reconnect-marker narrowing
+    status: pending
+    description: 'Implement the Core protocol pieces from ADR-009. In src/tela/core/bridge_protocol.py
+      add BridgeReplayPolicy(SAFE, UNSAFE), jsonrpc_request_id(payload: bytes) ->
+      object | None, jsonrpc_is_notification(payload: bytes) -> bool, and bridge_replay_policy(payload:
+      bytes) -> BridgeReplayPolicy. Per AGENTS.md Core rules, write @pre/@post contracts
+      and doctests before implementation; Core code must stay pure and must not import
+      I/O, network, env, time, randomness, or subprocess. Required behavior: initialize,
+      ping, tools/list requests are SAFE; tools/call, unknown methods, malformed JSON,
+      non-object JSON, notifications for duplicate replay, and JSON-RPC batch arrays
+      are UNSAFE/fail-closed. Narrow response_requires_bridge_recovery(response_messages:
+      list[bytes]) so replay-authorizing recovery is true only for gateway-owned JSON-RPC
+      error envelopes whose error.message contains RECONNECT_REQUIRED: or bridge initialize
+      requires pre-registered connection. Plain tool-result content, including result.isError=true
+      content text containing RECONNECT_REQUIRED:, must be treated as ordinary MCP
+      response content and must not authorize recovery/replay. Preserve existing extract_jsonrpc_method
+      behavior unless ADR tests require a contract-safe adjustment. Dependency rationale:
+      depends on adr009_contract_tests so Core behavior is driven by executable ADR
+      assertions. Blocker behavior: if old tests assert broad result.isError marker
+      recovery, update/replace those tests to the accepted ADR semantics and cite
+      ADR lines; if a Core helper would need I/O, stop and report because it violates
+      Core/Shell discipline.'
+    verification: Run targeted Core/doctest/pytest coverage for bridge_protocol and
+      ADR-009 replay-policy tests. Run invar guard on changed files (or full invar
+      guard if required) and ensure Core contract/doctest checks pass. Completion
+      requires all Core ADR tests green and no regressions in existing bridge_protocol
+      tests; downstream Shell/bridge tests may remain red until later steps.
+    evidence_template: List Core symbols added/changed with contract/doctest summary;
+      paste targeted test output; paste invar guard output or changed-file guard status;
+      note any old test updated due to ADR semantic narrowing.
+    depends_on:
+    - adr009_contract_tests
+    agent: python-senior
