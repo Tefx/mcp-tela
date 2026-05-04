@@ -80630,3 +80630,15 @@ phases:
 
 
       Residual debt: non-blocking stale-doc note outside primary scope (non-intersecting).'
+- id: adr009_bridge_lifecycle
+  name: ADR-009 MCP Bridge Request Lifecycle
+  status: pending
+  gate: 'All ADR-009 acceptance criteria pass: no MCP data-plane request without explicit
+    response deadline fails solely due to old fixed bridge timeout; no Tasca/table_wait/wait_ms/tool-specific
+    branch; connection refused and warming 503 still recover; sent tools/call is not
+    replayed when admission is unknown; safe protocol requests retain bounded recovery/replay;
+    request-level error.data.code values are stable; notification failure diagnostics/continuation
+    obey ADR; JSON-RPC batches fail closed; docs are synced; full tests and invar
+    guard pass.'
+  depends_on:
+  - tela.operator_p1.gate
