@@ -81164,7 +81164,7 @@ phases:
     agent: integration-verifier
   - id: adr009_gate_remediation
     name: ADR-009 final gate remediation
-    status: claimed
+    status: done
     description: 'Fix the hard blockers found by adr009_final_gate before re-running
       the gate. Scope: (1) full repo failure tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved,
       likely an obsolete seam test that monkeypatches connect_bridge.retry_http_request
@@ -81191,3 +81191,34 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-05-04T03:50:47.274453+00:00'
+    done_at: '2026-05-04T04:07:01.825127+00:00'
+    evidence: "Fixed ADR-009 final gate blockers.\n\nFiles changed:\n- tests/shell/test_http_client.py\n\
+      - src/tela/core/bridge_protocol.py\n- src/tela/commands/bridge_http.py\n- src/tela/commands/connect_bridge.py\n\
+      \nExact full-suite failure fix:\n- Obsolete test tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved\
+      \ patched connect_bridge.retry_http_request, but ADR-009 moved MCP data-plane\
+      \ execution to bridge_http.post_mcp_http. The fake no longer intercepted and\
+      \ a real connection attempt returned MCP_CONNECT_FAILED.\n- Updated the test\
+      \ to patch the accepted ADR-009 boundary, connect_bridge.post_mcp_http, returning\
+      \ BridgeHttpError(phase='http_status', message='MCP_FORWARD_FAILED: http 503',\
+      \ request_sent=True, mcp_admitted=None, status_code=503).\n- Did not restore\
+      \ MCP data-plane use of http_client; http_client remains control-plane.\n\n\
+      Escape-hatch/budget reduction:\n- Moved pure helper logic into Core with @pre/@post\
+      \ contracts and doctests:\n  - is_mcp_transient_warming_body\n  - bridge_http_timeouts_valid\n\
+      \  - bridge_http_headers\n  - bridge_mcp_http_error_text\n- Updated bridge_http.py\
+      \ and connect_bridge.py to consume Core helpers.\n- No new escape hatches added.\n\
+      - Before final gate: shell_result budget 20/17, weighted escape hatch budget\
+      \ 81/75.\n- After remediation via authoritative `uvx invar-tools guard --all`:\
+      \ shell_result budget 16/17, weighted budget 69/75, errors=0.\n\nVerification\
+      \ run by orchestrator:\n- uv run pytest tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved\
+      \ -q\n  - 1 passed in 0.11s\n- uv run pytest tests/shell/test_adr009_contract_red.py\
+      \ tests/shell/test_bridge_http.py -q\n  - 33 passed in 0.12s\n- uv run python\
+      \ -m doctest -v src/tela/core/bridge_protocol.py\n  - 24 passed, 0 failed\n\
+      - uv run pytest -q\n  - 1431 passed in 118.35s\n- invar_guard(path=/Users/tefx/Projects/mcp-tela,\
+      \ changed=False)\n  - complete: ok=true, errors=0, warnings=55, infos=26, files_checked=67\n\
+      - uvx invar-tools guard --all\n  - command exited successfully; summary includes\
+      \ files_checked=67, errors=0, warnings=55, infos=26, doctest passed; escape_hatches\
+      \ by_rule shell_result=16 and file_size=7; budget used 69/75.\n\nPreserved ADR-009\
+      \ behavior:\n- No fixed MCP response timeout by default.\n- No Tasca/table_wait/wait_ms/specific\
+      \ downstream special-casing introduced.\n- No unsafe tools/call replay introduced.\n\
+      - bridge_http still owns MCP data-plane; bridge_protocol Core stays pure; connect_bridge\
+      \ owns orchestration.\n\nNo plan.yaml edits."
