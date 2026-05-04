@@ -81046,7 +81046,7 @@ phases:
       \ errors.\n\nRisk/residual blockers: none for this runtime regression step."
   - id: adr009_docs_sync
     name: Documentation sync for ADR-009 runtime contract
-    status: pending
+    status: claimed
     description: 'Synchronize user-facing and architecture documentation with the
       implemented ADR-009 contract. Update docs/DESIGN.md discovery/readiness/connect
       recovery sections and module-boundary sections to describe MCP data-plane vs
@@ -81078,6 +81078,8 @@ phases:
     depends_on:
     - adr009_runtime_regression
     agent: project-guide
+    claimed_by: project-guide
+    claimed_at: '2026-05-04T03:38:39.668538+00:00'
   - id: adr009_final_gate
     name: Final ADR-009 conformance and full verification gate
     status: pending
