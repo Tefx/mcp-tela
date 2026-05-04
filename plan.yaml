@@ -81121,7 +81121,7 @@ phases:
       \ reported by the docs agent."
   - id: adr009_final_gate
     name: Final ADR-009 conformance and full verification gate
-    status: pending
+    status: claimed
     description: 'Perform a fresh-context final gate for ADR-009. Read the ADR first,
       then verify implementation and docs against every acceptance criterion. Required
       checks: no MCP data-plane request without explicit response deadline fails solely
@@ -81162,6 +81162,8 @@ phases:
     depends_on:
     - adr009_gate_remediation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-05-04T04:07:06.878827+00:00'
   - id: adr009_gate_remediation
     name: ADR-009 final gate remediation
     status: done
