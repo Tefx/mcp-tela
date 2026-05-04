@@ -80720,3 +80720,44 @@ phases:
     depends_on:
     - adr009_contract_tests
     agent: python-senior
+  - id: adr009_bridge_http_executor
+    name: Phase-aware MCP data-plane HTTP executor
+    status: pending
+    description: 'Create the Shell data-plane HTTP executor specified by ADR-009,
+      preferably src/tela/commands/bridge_http.py. It must return Result[BridgeHttpResponse,
+      BridgeHttpError], use only standard library http.client.HTTPConnection/HTTPSConnection
+      plus urllib.parse, and must not expand tela.commands.http_client beyond its
+      control-plane retry/backoff responsibility. Implement frozen dataclasses BridgeHttpError(phase
+      Literal connect/write/response_headers/response_body/http_status, message, request_sent
+      bool|None, mcp_admitted bool|None, status_code int|None=None, retryable_warming
+      bool=False) and BridgeHttpResponse(content_type, body, session_id). Implement
+      post_mcp_http keyword-only args exactly as ADR: mcp_url, bearer_token, payload,
+      session_id, connect_timeout_seconds, write_timeout_seconds, response_timeout_seconds,
+      is_503_retryable. Preserve headers: Authorization Bearer, Content-Type application/json,
+      Accept application/json, text/event-stream, optional mcp-session-id. Validate
+      timeouts with exact INVALID_TIMEOUT message from ADR. Execution semantics: parse
+      only http/https URLs; connect phase failures -> request_sent=False mcp_admitted=None;
+      set request_sent=True only after full request payload send completes; before-body
+      write failure -> False; partial/unknown write -> None; before response read
+      set socket timeout to None for unbounded default or finite explicit deadline;
+      any 2xx status returns BridgeHttpResponse even with empty body; 503 warming
+      body recognized only through is_503_retryable(bytes) and returns request_sent=True
+      mcp_admitted=False retryable_warming=True; plain 503 and any other non-2xx return
+      phase=http_status request_sent=True mcp_admitted=None retryable_warming=False
+      and do not scan bodies for reconnect markers; always close connections. Dependency
+      rationale: depends on Core replay-marker narrowing because Shell executor must
+      feed bridge lifecycle state without owning JSON-RPC replay semantics. Blocker
+      behavior: if http.client cannot prove whether any body bytes were sent on an
+      exception, set request_sent=None and fail closed; do not reintroduce string-only
+      ''timed out'' recovery; do not parse tool names or wait_ms.'
+    verification: Run targeted Shell tests for bridge_http/post_mcp_http phase mapping,
+      timeout validation, warming vs non-warming status, 2xx empty response, and response_timeout_seconds=None
+      behavior. Existing control-plane retry_http_request tests must remain green.
+      No connect_bridge integration is required to be fully green until the next step,
+      but direct bridge_http contract tests must pass.
+    evidence_template: List new module/classes/functions; paste targeted pytest output
+      for bridge_http and existing http_client control-plane tests; show at least
+      one proof each for request_sent False/None/True and mcp_admitted False/None.
+    depends_on:
+    - adr009_core_replay_policy
+    agent: python-senior
