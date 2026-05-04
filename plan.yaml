@@ -80870,7 +80870,7 @@ phases:
       \ deadline.\n\nNo connect_bridge integration was implemented in this step."
   - id: adr009_connect_bridge_integration
     name: Integrate ADR-009 lifecycle classifier into connect bridge
-    status: pending
+    status: claimed
     description: 'Wire the phase-aware data-plane executor and Core replay policy
       into the live tela connect bridge. Implement the ADR-009 lifecycle classifier
       matrix in connect_bridge without changing control-plane recovery semantics.
@@ -80917,6 +80917,8 @@ phases:
     - adr009_core_replay_policy
     - adr009_bridge_http_executor
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-05-04T03:00:26.832488+00:00'
   - id: adr009_runtime_regression
     name: Runtime regression proof for slow MCP requests and replay safety
     status: pending
