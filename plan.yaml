@@ -80632,7 +80632,7 @@ phases:
       Residual debt: non-blocking stale-doc note outside primary scope (non-intersecting).'
 - id: adr009_bridge_lifecycle
   name: ADR-009 MCP Bridge Request Lifecycle
-  status: pending
+  status: in_progress
   gate: 'All ADR-009 acceptance criteria pass: no MCP data-plane request without explicit
     response deadline fails solely due to old fixed bridge timeout; no Tasca/table_wait/wait_ms/tool-specific
     branch; connection refused and warming 503 still recover; sent tools/call is not
@@ -80645,7 +80645,7 @@ phases:
   steps:
   - id: adr009_contract_tests
     name: ADR-009 contract and regression tests
-    status: pending
+    status: claimed
     description: 'Read docs/ADR-009-mcp-bridge-request-lifecycle.md first and turn
       its acceptance criteria + validation matrix into executable tests. Scope is
       tests/fixtures only; do not implement production behavior in this step. Required
@@ -80686,6 +80686,8 @@ phases:
       to test names; paste targeted pytest command/output showing expected red failures;
       note any intentionally skipped blocker tests with exact reason.
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-05-04T02:44:24.644274+00:00'
   - id: adr009_core_replay_policy
     name: Core replay policy and reconnect-marker narrowing
     status: pending
