@@ -80761,3 +80761,51 @@ phases:
     depends_on:
     - adr009_core_replay_policy
     agent: python-senior
+  - id: adr009_connect_bridge_integration
+    name: Integrate ADR-009 lifecycle classifier into connect bridge
+    status: pending
+    description: 'Wire the phase-aware data-plane executor and Core replay policy
+      into the live tela connect bridge. Implement the ADR-009 lifecycle classifier
+      matrix in connect_bridge without changing control-plane recovery semantics.
+      The bridge must: (1) use response_timeout_seconds=None by default for MCP data-plane
+      response headers/body; connect/write timeouts use current HTTP_TIMEOUT_SECONDS
+      value (10.0 today) only for connect/send phases; (2) recover + send original
+      frame once when request_sent=False or mcp_admitted=False; (3) recover/replay
+      sent/unknown SAFE protocol requests (initialize, ping, tools/list) where the
+      matrix allows; (4) never automatically replay sent tools/call when admission/execution
+      is unknown; instead write request-level MCP_RESPONSE_INTERRUPTED and continue
+      if stdout write succeeds; (5) emit MCP_REQUEST_TIMEOUT only for explicit finite
+      response deadlines, not for default slow responses; (6) preserve BRIDGE_RECOVERY_EXHAUSTED
+      only for pre-send, non-admitted, or replay-safe recovery budget exhaustion;
+      (7) map recovery infrastructure failure before exhaustion to RECOVERY_FAILED_FOR_REQUEST;
+      (8) map non-warming HTTP/protocol forwarding failures to MCP_FORWARD_FAILED;
+      (9) for post-send notification unknown-admission failure, call _emit_bridge_diagnostic
+      with ''notification delivery unknown: {phase}: {message}'', write no stdout,
+      do not replay, and continue the forwarding loop; if pre-send/non-admitted notification
+      recovery fails/exhausts, emit diagnostic and continue; (10) treat empty 2xx
+      notification response as success/no stdout and empty 2xx request/batch as request-level
+      MCP_FORWARD_FAILED/no recovery; (11) apply reconnect-required recovery only
+      for parsed 2xx gateway-owned JSON-RPC error envelopes listed in ADR, not result.isError
+      tool-result text; (12) preserve existing initialize/session id bootstrap semantics
+      and existing connect_cmd backward-compatible internal aliases where needed.
+      Do not special-case Tasca, table_wait, wait_ms, or downstream tool names. Dependency
+      rationale: depends on bridge_http because integration must consume structured
+      phase/admission state instead of string errors. Blocker behavior: if existing
+      tests require obsolete broad result.isError marker recovery or fixed MCP response
+      timeout, update them to ADR-009 and cite the ADR; if an unsafe replay ambiguity
+      is not covered by the matrix, fail closed with MCP_RESPONSE_INTERRUPTED and
+      document; do not silently widen replay safety.'
+    verification: 'Run targeted bridge tests: connect_cmd/connect_bridge ADR-009 tests,
+      ADR-008 connect survival tests, attachment workflow tests affected by recovery
+      budget reset, and existing post_mcp_message/forward_stdio_http tests. Required
+      green proofs: generic slow MCP response does not produce BRIDGE_RECOVERY_EXHAUSTED;
+      warming 503 and connection refused still recover; unsafe sent tools/call does
+      not replay; notification diagnostic/continue behavior holds; tool-result marker-like
+      text does not recover; empty 2xx behavior matches ADR. Run invar guard for changed
+      Python files.'
+    evidence_template: List integration functions changed; paste targeted pytest commands/output;
+      paste invar guard status; include explicit evidence for no fixed response deadline,
+      no table_wait/wait_ms branch, and no unsafe tools/call replay.
+    depends_on:
+    - adr009_bridge_http_executor
+    agent: python-senior
