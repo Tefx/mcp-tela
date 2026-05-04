@@ -80745,21 +80745,22 @@ phases:
       mcp_admitted=False retryable_warming=True; plain 503 and any other non-2xx return
       phase=http_status request_sent=True mcp_admitted=None retryable_warming=False
       and do not scan bodies for reconnect markers; always close connections. Dependency
-      rationale: depends on Core replay-marker narrowing because Shell executor must
-      feed bridge lifecycle state without owning JSON-RPC replay semantics. Blocker
-      behavior: if http.client cannot prove whether any body bytes were sent on an
-      exception, set request_sent=None and fail closed; do not reintroduce string-only
-      ''timed out'' recovery; do not parse tool names or wait_ms.'
+      rationale: depends on adr009_contract_tests so the phase-aware data-plane executor
+      is driven by frozen ADR assertions. It is intentionally independent of Core
+      replay policy; connect_bridge integration combines both. Blocker behavior: if
+      http.client cannot prove whether any body bytes were sent on an exception, set
+      request_sent=None and fail closed; do not reintroduce string-only ''timed out''
+      recovery; do not parse tool names or wait_ms.'
     verification: Run targeted Shell tests for bridge_http/post_mcp_http phase mapping,
       timeout validation, warming vs non-warming status, 2xx empty response, and response_timeout_seconds=None
       behavior. Existing control-plane retry_http_request tests must remain green.
-      No connect_bridge integration is required to be fully green until the next step,
-      but direct bridge_http contract tests must pass.
+      No connect_bridge integration is required to be fully green until the integration
+      step, but direct bridge_http contract tests must pass.
     evidence_template: List new module/classes/functions; paste targeted pytest output
       for bridge_http and existing http_client control-plane tests; show at least
       one proof each for request_sent False/None/True and mcp_admitted False/None.
     depends_on:
-    - adr009_core_replay_policy
+    - adr009_contract_tests
     agent: python-senior
   - id: adr009_connect_bridge_integration
     name: Integrate ADR-009 lifecycle classifier into connect bridge
