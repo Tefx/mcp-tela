@@ -80795,7 +80795,7 @@ phases:
       \ ADR tests may stay red for later steps."
   - id: adr009_bridge_http_executor
     name: Phase-aware MCP data-plane HTTP executor
-    status: pending
+    status: claimed
     description: 'Create the Shell data-plane HTTP executor specified by ADR-009,
       preferably src/tela/commands/bridge_http.py. It must return Result[BridgeHttpResponse,
       BridgeHttpError], use only standard library http.client.HTTPConnection/HTTPSConnection
@@ -80835,6 +80835,8 @@ phases:
     depends_on:
     - adr009_contract_tests
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-05-04T02:55:22.947655+00:00'
   - id: adr009_connect_bridge_integration
     name: Integrate ADR-009 lifecycle classifier into connect bridge
     status: pending
