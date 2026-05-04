@@ -80632,7 +80632,7 @@ phases:
       Residual debt: non-blocking stale-doc note outside primary scope (non-intersecting).'
 - id: adr009_bridge_lifecycle
   name: ADR-009 MCP Bridge Request Lifecycle
-  status: in_progress
+  status: done
   gate: 'All ADR-009 acceptance criteria pass: no MCP data-plane request without explicit
     response deadline fails solely due to old fixed bridge timeout; no Tasca/table_wait/wait_ms/tool-specific
     branch; connection refused and warming 503 still recover; sent tools/call is not
@@ -81121,7 +81121,7 @@ phases:
       \ reported by the docs agent."
   - id: adr009_final_gate
     name: Final ADR-009 conformance and full verification gate
-    status: claimed
+    status: done
     description: 'Perform a fresh-context final gate for ADR-009. Read the ADR first,
       then verify implementation and docs against every acceptance criterion. Required
       checks: no MCP data-plane request without explicit response deadline fails solely
@@ -81164,6 +81164,58 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-05-04T04:07:06.878827+00:00'
+    done_at: '2026-05-04T04:12:58.198982+00:00'
+    evidence: "Final ADR-009 conformance gate PASS.\n\nCommands and outputs:\n- uv\
+      \ run pytest tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py\
+      \ tests/shell/test_connect_bridge_readiness_contract_freeze.py tests/shell/test_connect_bridge_readiness_gaps_red.py\n\
+      \  - 42 passed in 0.29s; collect-only confirmed 42 tests collected.\n- uv run\
+      \ pytest\n  - 1431 passed in 117.95s.\n- uvx invar-tools guard --all\n  - Exit\
+      \ 0; files_checked=67; errors=0; warnings=55; infos=26; doctest.passed=true.\n\
+      - uv run pytest tests/shell/test_adr008_docs_parity.py tests/test_vendor_schema_parity.py\n\
+      \  - 12 passed in 0.10s.\n- Public live CLI/connect lifecycle probe via uv run\
+      \ python harness\n  - /status 200 ready active_connections=0.\n  - /connect\
+      \ 200 connected for adr009-direct-bridge.\n  - Direct /mcp initialize and tools/list\
+      \ worked.\n  - /disconnect 200 disconnected.\n  - CLI `tela connect` returned\
+      \ initialize result and tools/list result, exited 0, stderr empty; status after\
+      \ CLI active_connections=0; serve shutdown complete.\n- plan.yaml checks:\n\
+      \  - git status --short -- plan.yaml: no output.\n  - git diff -- plan.yaml:\
+      \ no output.\n\nStatic inspection:\n- Forbidden special-casing: grep for Tasca/tasca/table_wait/wait_ms\
+      \ in src/tela/commands and src/tela/core/bridge_protocol.py returned no matches.\n\
+      - Marker recovery: grep for isError/result.isError/RECONNECT_REQUIRED in src/tela/commands/connect_bridge.py\
+      \ returned no matches.\n- Data-plane boundary: grep for retry_http_request in\
+      \ src/tela/commands/bridge_http.py returned no matches.\n- Timeout split: connect_bridge\
+      \ uses response_timeout_seconds=None for MCP data-plane; HTTP_TIMEOUT_SECONDS\
+      \ remains only on connect/write and control-plane status/connect/disconnect.\n\
+      - Shared-surface aliases: only max_recovery_attempts backward-compatible internal\
+      \ alias comment in connect_bridge.py; no public shared-surface aliasing introduced.\n\
+      \nAcceptance checklist:\n1. PASS — no MCP data-plane request without explicit\
+      \ response deadline fails due old fixed timeout; post_mcp_message passes response_timeout_seconds=None\
+      \ and targeted test test_adr009_response_timeout_none_does_not_synthesize_recovery\
+      \ passed.\n2. PASS — no Tasca/table_wait/wait_ms/specific downstream special-casing;\
+      \ static grep clean.\n3. PASS — connection refused and warming 503 bounded recovery\
+      \ preserved; targeted readiness/recovery tests passed.\n4. PASS — sent tools/call\
+      \ is not automatically replayed on unknown admission/execution; targeted unsafe\
+      \ interruption test passed and bridge_replay_policy classifies tools/call UNSAFE.\n\
+      5. PASS — initialize/ping/tools/list safe bounded recovery/replay retained;\
+      \ replay-policy and safe bridge recovery tests passed.\n6. PASS — request-level\
+      \ JSON-RPC errors have stable error.data.code via _jsonrpc_error_response/_recovery_error_code;\
+      \ targeted error-code tests passed.\n7. PASS — bridge stays alive after request-level\
+      \ errors when stdout succeeds/upstream open; targeted continuation tests passed.\n\
+      8. PASS — batches are replay-unsafe; replay-policy tests and empty-batch MCP_FORWARD_FAILED\
+      \ tests passed.\n9. PASS — empty 2xx notification succeeds/no stdout; empty\
+      \ 2xx request/batch returns MCP_FORWARD_FAILED; targeted tests passed.\n10.\
+      \ PASS — post-send notification unknown-admission diagnostic/no stdout/no replay/continue\
+      \ behavior passed.\n11. PASS — tool-result marker-like text never authorizes\
+      \ recovery/replay; core doctest and targeted tests passed; connect_bridge has\
+      \ no marker scan.\n12. PASS — Core contracts/doctests satisfy invar; uvx invar-tools\
+      \ guard --all passed with errors=0 and doctest.passed=true.\n13. PASS — public\
+      \ CLI bridge path and live HTTP lifecycle endpoints operational; live probe\
+      \ covered /status, /connect, /mcp initialize/tools-list, /disconnect, CLI connect\
+      \ startup/forwarding/cleanup.\n\nBoundary inspection:\n- http_client remains\
+      \ control-plane retry/backoff.\n- bridge_http owns MCP data-plane using stdlib\
+      \ http.client/urllib.parse.\n- bridge_protocol Core stays pure with contracts/doctests.\n\
+      - connect_bridge owns orchestration/recovery/forwarding.\n\nOpen Problems: none.\n\
+      Residual Risk: none."
   - id: adr009_gate_remediation
     name: ADR-009 final gate remediation
     status: done
