@@ -80844,3 +80844,37 @@ phases:
     depends_on:
     - adr009_connect_bridge_integration
     agent: integration-verifier
+  - id: adr009_docs_sync
+    name: Documentation sync for ADR-009 runtime contract
+    status: pending
+    description: 'Synchronize user-facing and architecture documentation with the
+      implemented ADR-009 contract. Update docs/DESIGN.md discovery/readiness/connect
+      recovery sections and module-boundary sections to describe MCP data-plane vs
+      control-plane timeout split, phase-aware bridge_http responsibility, request_sent/mcp_admitted
+      lifecycle semantics, replay-safe vs unsafe rules, notification diagnostic/continue
+      behavior, narrowed reconnect-required marker semantics, and unchanged GET /status
+      readiness authority. Update docs/INTERFACES.md runtime/transport limits to state
+      MCP response timeout default is None/no bridge-imposed response cap, while MCP
+      connect/write timeouts use current HTTP_TIMEOUT_SECONDS value and control-plane
+      remains finite. Update docs/USAGE.md troubleshooting so slow/long-running tools
+      are no longer described as bridge recovery failures; mention request-level errors
+      MCP_REQUEST_TIMEOUT only for explicit future deadlines, MCP_RESPONSE_INTERRUPTED
+      for unsafe unknown-admission interruptions, and BRIDGE_RECOVERY_EXHAUSTED only
+      for recovery budget exhaustion. Do not introduce public compatibility aliases
+      or local shared-surface reinterpretations. Dependency rationale: docs must reflect
+      actual runtime proof from adr009_runtime_regression, not just intended design.
+      Blocker behavior: if implementation diverges from accepted ADR, do not rewrite
+      the ADR silently; stop and report the mismatch for planner/architect decision.
+      If docs contain stale fixed-response-timeout or table_wait-specific language,
+      update or flag it.'
+    verification: Run documentation consistency checks available in the repo plus
+      targeted searches proving no stale claim says MCP data-plane responses use a
+      fixed 10s bridge timeout or that table_wait is special-cased. Verify DESIGN/INTERFACES/USAGE
+      align with docs/ADR-009 and implemented code. If docs parity scans exist, run
+      them and capture output.
+    evidence_template: List docs changed and sections updated; paste targeted stale-text
+      searches/parity scan output; summarize how each ADR-009 public/runtime contract
+      is now documented outside the ADR.
+    depends_on:
+    - adr009_runtime_regression
+    agent: project-guide
