@@ -81046,7 +81046,7 @@ phases:
       \ errors.\n\nRisk/residual blockers: none for this runtime regression step."
   - id: adr009_docs_sync
     name: Documentation sync for ADR-009 runtime contract
-    status: claimed
+    status: done
     description: 'Synchronize user-facing and architecture documentation with the
       implemented ADR-009 contract. Update docs/DESIGN.md discovery/readiness/connect
       recovery sections and module-boundary sections to describe MCP data-plane vs
@@ -81080,6 +81080,45 @@ phases:
     agent: project-guide
     claimed_by: project-guide
     claimed_at: '2026-05-04T03:38:39.668538+00:00'
+    done_at: '2026-05-04T03:43:13.919404+00:00'
+    evidence: "Synchronized docs with implemented ADR-009 runtime contract. No plan.yaml\
+      \ edits.\n\nDocs changed and sections updated:\n- docs/DESIGN.md\n  - Runtime\
+      \ Architecture / tela connect runtime recovery: now distinguishes control plane,\
+      \ MCP data-plane send, and MCP data-plane response wait.\n  - Replay Safety\
+      \ and Admission: documents request_sent/mcp_admitted semantics, replay-safe\
+      \ methods vs unsafe tools/call, notification diagnostic/continue behavior, and\
+      \ narrowed reconnect-required marker authority.\n  - Module Boundaries: documents\
+      \ core/bridge_protocol.py as JSON-RPC classification/replay policy owner; commands/bridge_http.py\
+      \ as phase-aware data-plane executor; commands/connect_bridge.py as lifecycle/recovery\
+      \ orchestrator.\n  - GET /status readiness authority remains unchanged.\n- docs/INTERFACES.md\n\
+      \  - Operational Limits / 10.5 HTTP / Transport: documents MCP response timeout\
+      \ as None/unbounded, MCP connect/write timeouts as 10.0s, and control-plane\
+      \ HTTP timeout as 10.0s.\n- docs/USAGE.md\n  - Troubleshooting / Slow or long-running\
+      \ tools: documents that long-running MCP tools wait without a bridge-imposed\
+      \ timeout and are not bridge recovery failures.\n  - Defines MCP_RESPONSE_INTERRUPTED,\
+      \ MCP_REQUEST_TIMEOUT, and BRIDGE_RECOVERY_EXHAUSTED user-facing meanings.\n\
+      \nTargeted stale-text/search proof run by orchestrator:\n- Search `wait_ms|table_wait`\
+      \ in docs/*.md:\n  - Matches only docs/ADR-009-mcp-bridge-request-lifecycle.md\
+      \ lines 19, 44, 392, 449, 491. No public docs outside the ADR contain table_wait/wait_ms-specific\
+      \ language.\n- Search `10s|10 seconds|fixed.*timeout|response timeout|bridge-imposed\
+      \ timeout` in docs/*.md:\n  - Expected new public matches: docs/USAGE.md line\
+      \ 672 says slow tools wait without a bridge-imposed timeout; docs/INTERFACES.md\
+      \ line 934 says MCP response timeout is None/unbounded.\n  - Remaining fixed-timeout\
+      \ historical references are only in docs/ADR-009-mcp-bridge-request-lifecycle.md.\n\
+      - Markdown TOC checks run for docs/DESIGN.md, docs/INTERFACES.md, docs/USAGE.md\
+      \ and confirmed updated sections exist: DESIGN Runtime Architecture / Discovery\
+      \ and readiness / Module Boundaries / bridge_http.py; INTERFACES 10.5 HTTP /\
+      \ Transport; USAGE Troubleshooting / Slow or long-running tools.\n\nADR-009\
+      \ contract mapping outside ADR:\n- Control-plane vs MCP data-plane timeout split:\
+      \ docs/INTERFACES.md 10.5 and docs/DESIGN.md runtime recovery.\n- request_sent/mcp_admitted\
+      \ semantics: docs/DESIGN.md replay safety/admission.\n- Replay-safe vs unsafe\
+      \ rules: docs/DESIGN.md replay safety/admission.\n- Notification diagnostic/continue\
+      \ behavior: docs/DESIGN.md replay safety/admission.\n- Narrowed reconnect-required\
+      \ markers: docs/DESIGN.md replay safety/admission.\n- Phase-aware bridge_http\
+      \ responsibility: docs/DESIGN.md module boundaries.\n- Request-level error vocabulary:\
+      \ docs/USAGE.md troubleshooting.\n- GET /status readiness authority unchanged:\
+      \ docs/DESIGN.md discovery/readiness.\n\nNo implementation/ADR divergence was\
+      \ reported by the docs agent."
   - id: adr009_final_gate
     name: Final ADR-009 conformance and full verification gate
     status: pending
