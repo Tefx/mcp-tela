@@ -80808,6 +80808,7 @@ phases:
       paste invar guard status; include explicit evidence for no fixed response deadline,
       no table_wait/wait_ms branch, and no unsafe tools/call replay.
     depends_on:
+    - adr009_core_replay_policy
     - adr009_bridge_http_executor
     agent: python-senior
   - id: adr009_runtime_regression
