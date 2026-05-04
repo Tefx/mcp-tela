@@ -80735,7 +80735,7 @@ phases:
       No production behavior was implemented. plan.yaml was not edited directly.'
   - id: adr009_core_replay_policy
     name: Core replay policy and reconnect-marker narrowing
-    status: claimed
+    status: done
     description: 'Implement the Core protocol pieces from ADR-009. In src/tela/core/bridge_protocol.py
       add BridgeReplayPolicy(SAFE, UNSAFE), jsonrpc_request_id(payload: bytes) ->
       object | None, jsonrpc_is_notification(payload: bytes) -> bool, and bridge_replay_policy(payload:
@@ -80769,6 +80769,30 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-05-04T02:52:24.404719+00:00'
+    done_at: '2026-05-04T02:55:13.084915+00:00'
+    evidence: "Implemented ADR-009 Core replay policy and reconnect-marker narrowing.\n\
+      \nCore symbols added/changed:\n- src/tela/core/bridge_protocol.py\n  - Added\
+      \ BridgeReplayPolicy enum with SAFE and UNSAFE.\n  - Added contracted/doctested\
+      \ jsonrpc_request_id(payload: bytes) -> object | None.\n  - Added contracted/doctested\
+      \ jsonrpc_is_notification(payload: bytes) -> bool.\n  - Added contracted/doctested\
+      \ bridge_replay_policy(payload: bytes) -> BridgeReplayPolicy.\n  - Narrowed\
+      \ extract_bridge_error_messages / response_requires_bridge_recovery so only\
+      \ gateway-owned JSON-RPC error.message envelopes can authorize bridge recovery;\
+      \ result.isError tool content containing RECONNECT_REQUIRED is ordinary response\
+      \ content.\n  - Preserved extract_jsonrpc_method behavior.\n- tests/shell/test_connect_cmd.py\n\
+      \  - Updated old broad result.isError reconnect-marker expectations to ADR-009\
+      \ semantics.\n\nTargeted verification run by orchestrator:\n- uv run pytest\
+      \ --doctest-modules src/tela/core/bridge_protocol.py\n  - 6 passed in 0.07s\n\
+      - uv run pytest tests/shell/test_adr009_contract_red.py -k 'core_replay_policy\
+      \ or jsonrpc_helpers or response_recovery or tool_result_marker'\n  - 14 passed,\
+      \ 13 deselected in 0.11s\n- uv run pytest tests/shell/test_connect_cmd.py -k\
+      \ 'response_requires_bridge_recovery or tool_call_result_mentions_reconnect\
+      \ or tool_call_error_payload'\n  - 5 passed, 45 deselected in 0.25s\n\nInvar\
+      \ guard:\n- invar_guard(path=/Users/tefx/Projects/mcp-tela, changed=True): passed.\n\
+      - Static: 0 errors, 0 warnings, 6 infos (redundant_type_contract informational\
+      \ hints only).\n- Doctest: passed.\n\nNo Shell behavior was implemented in this\
+      \ step beyond tests updated to ADR-009 semantic narrowing. Remaining Shell/connect_bridge\
+      \ ADR tests may stay red for later steps."
   - id: adr009_bridge_http_executor
     name: Phase-aware MCP data-plane HTTP executor
     status: pending
