@@ -80878,3 +80878,40 @@ phases:
     depends_on:
     - adr009_runtime_regression
     agent: project-guide
+  - id: adr009_final_gate
+    name: Final ADR-009 conformance and full verification gate
+    status: pending
+    description: 'Perform a fresh-context final gate for ADR-009. Read the ADR first,
+      then verify implementation and docs against every acceptance criterion. Required
+      checks: no MCP data-plane request without explicit response deadline fails solely
+      due to old fixed timeout; no code path special-cases Tasca/table_wait/wait_ms/specific
+      downstream tools; connection refused and warming 503 still trigger bounded recovery
+      when request was not sent or gateway proves non-admission; sent tools/call is
+      never automatically replayed when admission/execution is unknown; initialize/ping/tools/list
+      retain safe bounded recovery/replay where semantically safe; all request-level
+      JSON-RPC errors have stable error.data.code values; bridge stays alive after
+      request-level errors when stdout write succeeds/upstream open; batches are replay-unsafe;
+      empty 2xx notification/request behavior matches ADR; post-send notification
+      unknown-admission failure emits specified stderr diagnostic, writes no stdout,
+      does not replay, and continues loop; tool-result marker-like text never authorizes
+      recovery/replay; Core contracts/doctests satisfy invar. Also inspect implementation
+      boundaries: http_client remains control-plane, bridge_http owns MCP data-plane,
+      bridge_protocol Core stays pure, connect_bridge owns orchestration. Dependency
+      rationale: depends on docs sync so final gate validates code, runtime proof,
+      and documentation together. Blocker behavior: any failing acceptance criterion,
+      residual risk, skipped required proof, or broad unsafe replay path is a hard
+      FAIL; return exact failing test/command and reproduction, do not mark complete
+      with open problems.'
+    verification: Run full targeted ADR-009 tests, full repo test suite, invar guard,
+      and any docs/tests parity scans available. Perform static grep/inspection for
+      forbidden special-casing (Tasca/table_wait/wait_ms in bridge lifecycle), fixed
+      MCP response timeout in data-plane response wait, result.isError marker recovery,
+      and unexpected shared-surface aliases. Completion requires all checks green
+      and Open Problems/Residual Risk = none.
+    evidence_template: 'Paste full command list and outputs (targeted tests, full
+      tests, invar guard, docs parity); provide acceptance-criteria checklist 1-13
+      with PASS evidence; include static inspection results for forbidden patterns;
+      state Open Problems: none and Residual Risk: none.'
+    depends_on:
+    - adr009_docs_sync
+    agent: integration-verifier
