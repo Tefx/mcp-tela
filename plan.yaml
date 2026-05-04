@@ -80870,7 +80870,7 @@ phases:
       \ deadline.\n\nNo connect_bridge integration was implemented in this step."
   - id: adr009_connect_bridge_integration
     name: Integrate ADR-009 lifecycle classifier into connect bridge
-    status: claimed
+    status: done
     description: 'Wire the phase-aware data-plane executor and Core replay policy
       into the live tela connect bridge. Implement the ADR-009 lifecycle classifier
       matrix in connect_bridge without changing control-plane recovery semantics.
@@ -80919,6 +80919,46 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-05-04T03:00:26.832488+00:00'
+    done_at: '2026-05-04T03:33:40.848743+00:00'
+    evidence: "Integrated ADR-009 lifecycle classifier into live connect bridge.\n\
+      \nIntegration functions changed:\n- src/tela/commands/connect_bridge.py\n  -\
+      \ post_mcp_message delegates data-plane HTTP to bridge_http.post_mcp_http while\
+      \ preserving backward-compatible return shape and connect_cmd aliases.\n  -\
+      \ _forward_request_with_recovery uses Core bridge_replay_policy/jsonrpc notification\
+      \ classification and structured BridgeHttpError state.\n  - Maps request-level\
+      \ MCP_REQUEST_TIMEOUT, MCP_RESPONSE_INTERRUPTED, MCP_FORWARD_FAILED, RECOVERY_FAILED_FOR_REQUEST,\
+      \ and BRIDGE_RECOVERY_EXHAUSTED according to ADR-009.\n  - Handles empty 2xx\
+      \ notification success/no stdout and empty 2xx request/batch as MCP_FORWARD_FAILED.\n\
+      \  - Emits notification delivery unknown diagnostics and continues for post-send\
+      \ unknown notification admission.\n- Existing control-plane retry/recovery semantics\
+      \ remain through retry_http_request.\n\nTests updated due to ADR semantic narrowing:\n\
+      - Existing broad result.isError / tool-result RECONNECT_REQUIRED recovery expectations\
+      \ were updated to assert marker-like tool-result text is ordinary MCP content\
+      \ and does not authorize recovery/replay.\n\nTargeted verification run by orchestrator:\n\
+      - uv run pytest tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py\
+      \ tests/shell/test_connect_cmd.py tests/shell/test_connect_bridge_readiness_gaps_red.py\
+      \ tests/shell/test_connect_bridge_readiness_contract_freeze.py tests/shell/test_connect_recovery_red.py\
+      \ -q\n  - 100 passed in 10.23s\n- uv run pytest tests/repro/test_connect_runtime_liveness.py\
+      \ tests/repro/test_gate_blocker_regressions.py -q\n  - 23 passed in 26.82s\n\
+      - uv run pytest tests/integration/test_adr008_attachment_workflows.py tests/core/test_adr008_attachment_lifecycle.py\
+      \ -q\n  - 56 passed in 0.87s\n- uv run pytest tests/shell/test_adr009_contract_red.py\
+      \ tests/shell/test_bridge_http.py -q\n  - 33 passed in 0.13s\n\nInvar guard:\n\
+      - invar_guard(path=/Users/tefx/Projects/mcp-tela, changed=True): passed.\n-\
+      \ Static: 0 errors, 5 warnings, 6 infos. Warnings are existing/accepted shell\
+      \ size/pure-logic findings and ADR phase-matrix size warning; no blocking errors.\
+      \ Doctest passed.\n\nExplicit ADR evidence:\n- No fixed MCP data-plane response\
+      \ deadline: grep found connect_bridge.py passes response_timeout_seconds=None\
+      \ at line 563; connect/write retain HTTP_TIMEOUT_SECONDS for send phases.\n\
+      - No table_wait/wait_ms branch: grep for table_wait|wait_ms in src/tela/commands/connect_bridge.py\
+      \ returned no matches.\n- No unsafe tools/call replay: connect_bridge.py imports/uses\
+      \ bridge_replay_policy (line 808) and MCP_RESPONSE_INTERRUPTED mapping (lines\
+      \ 355-356, 583, 588, 822); ADR tests prove sent unsafe tools/call does not recover/replay.\n\
+      - Warming 503 and connection-refused recovery, notification diagnostic/continue,\
+      \ tool-result marker forwarding, empty 2xx behavior, and generic slow MCP no\
+      \ BRIDGE_RECOVERY_EXHAUSTED are covered by the green targeted suites above.\n\
+      \nFull uv run pytest -q was not required for this integration step and was not\
+      \ used as completion evidence; final phase gate remains responsible for full-suite\
+      \ verification."
   - id: adr009_runtime_regression
     name: Runtime regression proof for slow MCP requests and replay safety
     status: pending
