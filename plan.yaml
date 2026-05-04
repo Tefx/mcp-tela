@@ -80735,7 +80735,7 @@ phases:
       No production behavior was implemented. plan.yaml was not edited directly.'
   - id: adr009_core_replay_policy
     name: Core replay policy and reconnect-marker narrowing
-    status: pending
+    status: claimed
     description: 'Implement the Core protocol pieces from ADR-009. In src/tela/core/bridge_protocol.py
       add BridgeReplayPolicy(SAFE, UNSAFE), jsonrpc_request_id(payload: bytes) ->
       object | None, jsonrpc_is_notification(payload: bytes) -> bool, and bridge_replay_policy(payload:
@@ -80767,6 +80767,8 @@ phases:
     depends_on:
     - adr009_contract_tests
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-05-04T02:52:24.404719+00:00'
   - id: adr009_bridge_http_executor
     name: Phase-aware MCP data-plane HTTP executor
     status: pending
