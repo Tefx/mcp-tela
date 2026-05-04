@@ -80795,7 +80795,7 @@ phases:
       \ ADR tests may stay red for later steps."
   - id: adr009_bridge_http_executor
     name: Phase-aware MCP data-plane HTTP executor
-    status: claimed
+    status: done
     description: 'Create the Shell data-plane HTTP executor specified by ADR-009,
       preferably src/tela/commands/bridge_http.py. It must return Result[BridgeHttpResponse,
       BridgeHttpError], use only standard library http.client.HTTPConnection/HTTPSConnection
@@ -80837,6 +80837,37 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-05-04T02:55:22.947655+00:00'
+    done_at: '2026-05-04T03:00:13.013508+00:00'
+    evidence: "Implemented ADR-009 Shell data-plane HTTP executor.\n\nNew module/classes/functions:\n\
+      - src/tela/commands/bridge_http.py\n  - BridgeHttpError(frozen dataclass): phase,\
+      \ message, request_sent, mcp_admitted, status_code=None, retryable_warming=False.\n\
+      \  - BridgeHttpResponse(frozen dataclass): content_type, body, session_id.\n\
+      \  - post_mcp_http(...) -> Result[BridgeHttpResponse, BridgeHttpError], keyword-only\
+      \ ADR-009 surface.\n- tests/shell/test_bridge_http.py added direct Shell executor\
+      \ coverage.\n\nImplementation notes:\n- Uses standard library http.client.HTTPConnection/HTTPSConnection\
+      \ and urllib.parse.urlsplit.\n- Did not expand tela.commands.http_client.\n\
+      - Preserves Authorization Bearer, Content-Type application/json, Accept application/json,\
+      \ text/event-stream, and optional mcp-session-id headers.\n- Parses only http/https\
+      \ URLs; closes connections on all paths; does not scan non-2xx bodies for reconnect\
+      \ markers or parse tool names/wait_ms.\n\nTargeted verification run by orchestrator:\n\
+      - uv run pytest tests/shell/test_bridge_http.py -q\n  - 6 passed in 0.10s\n\
+      - uv run pytest tests/shell/test_adr009_contract_red.py -q -k 'phase_http_executor\
+      \ or invalid_timeout_inputs'\n  - 4 passed, 23 deselected in 0.12s\n- uv run\
+      \ pytest tests/shell/test_http_client.py -q\n  - 34 passed in 0.13s\n\nInvar\
+      \ guard:\n- invar_guard(path=/Users/tefx/Projects/mcp-tela, changed=True): passed.\n\
+      - Static: 0 errors, 2 warnings, 6 infos. Warnings are non-blocking for this\
+      \ step: post_mcp_http size due ADR phase matrix, and dead_export because connect_bridge\
+      \ integration is intentionally deferred to a later step. Doctest passed.\n\n\
+      Evidence examples:\n- request_sent=False: test_post_mcp_http_connect_failure_is_definitely_not_sent\
+      \ covers connect failure phase=connect request_sent=False mcp_admitted=None;\
+      \ same test covers before-body header/write failure phase=write request_sent=False.\n\
+      - request_sent=None: test_post_mcp_http_body_write_failure_is_unknown_partial_send\
+      \ covers body-send exception phase=write request_sent=None fail-closed.\n- request_sent=True\
+      \ and mcp_admitted=False: test_post_mcp_http_warming_503_sets_non_admission_and_plain_503_does_not\
+      \ covers retryable warming 503 body accepted only via is_503_retryable(body),\
+      \ retryable_warming=True.\n- request_sent=True and mcp_admitted=None: same test\
+      \ covers plain 503 non-warming body, and deadline tests cover explicit response\
+      \ deadline.\n\nNo connect_bridge integration was implemented in this step."
   - id: adr009_connect_bridge_integration
     name: Integrate ADR-009 lifecycle classifier into connect bridge
     status: pending
