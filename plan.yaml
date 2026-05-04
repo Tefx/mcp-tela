@@ -81164,7 +81164,7 @@ phases:
     agent: integration-verifier
   - id: adr009_gate_remediation
     name: ADR-009 final gate remediation
-    status: pending
+    status: claimed
     description: 'Fix the hard blockers found by adr009_final_gate before re-running
       the gate. Scope: (1) full repo failure tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved,
       likely an obsolete seam test that monkeypatches connect_bridge.retry_http_request
@@ -81189,3 +81189,5 @@ phases:
     depends_on:
     - adr009_docs_sync
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-05-04T03:50:47.274453+00:00'
