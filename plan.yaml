@@ -81162,3 +81162,30 @@ phases:
     depends_on:
     - adr009_docs_sync
     agent: integration-verifier
+  - id: adr009_gate_remediation
+    name: ADR-009 final gate remediation
+    status: pending
+    description: 'Fix the hard blockers found by adr009_final_gate before re-running
+      the gate. Scope: (1) full repo failure tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved,
+      likely an obsolete seam test that monkeypatches connect_bridge.retry_http_request
+      after ADR-009 moved MCP data-plane to bridge_http.post_mcp_http; update the
+      test or implementation only to the accepted ADR-009 boundary without restoring
+      data-plane use of http_client. (2) invar guard --all failures: Project rule
+      budget shell_result 20/17 and escape hatch weighted budget 81/75. Remove or
+      reduce new/nearby shell_result escape hatches by moving pure helper logic to
+      Core with @pre/@post/doctests or by making helpers private/local so guard budgets
+      pass; do not paper over with new escape hatches or budget changes. Preserve
+      ADR-009 runtime behavior: no fixed MCP response timeout, no Tasca/table_wait/wait_ms
+      special-casing, no unsafe tools/call replay. Blocker behavior: if budget failures
+      are pre-existing and cannot be reduced without unrelated refactor, provide exact
+      git evidence; otherwise fix them. Do not edit plan.yaml directly.'
+    verification: Run uv run pytest tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved
+      -q, uv run pytest -q, uvx invar-tools guard --all, targeted ADR-009 shell tests,
+      and any affected doctests. Completion requires full suite green and invar guard
+      --all green with no new escape hatches. Capture command outputs.
+    evidence_template: List files changed; explain exact full-suite failure fix; explain
+      escape-hatch/budget reduction with before/after counts; paste pytest full-suite
+      and uvx invar-tools guard --all outputs; paste targeted ADR-009 regression output.
+    depends_on:
+    - adr009_docs_sync
+    agent: python-senior
