@@ -81160,7 +81160,7 @@ phases:
       inspection results for forbidden patterns; state Open Problems: none and Residual
       Risk: none.'
     depends_on:
-    - adr009_docs_sync
+    - adr009_gate_remediation
     agent: integration-verifier
   - id: adr009_gate_remediation
     name: ADR-009 final gate remediation
