@@ -80642,3 +80642,47 @@ phases:
     guard pass.'
   depends_on:
   - tela.operator_p1.gate
+  steps:
+  - id: adr009_contract_tests
+    name: ADR-009 contract and regression tests
+    status: pending
+    description: 'Read docs/ADR-009-mcp-bridge-request-lifecycle.md first and turn
+      its acceptance criteria + validation matrix into executable tests. Scope is
+      tests/fixtures only; do not implement production behavior in this step. Required
+      test coverage: (1) Core replay policy: initialize/ping/tools/list SAFE; tools/call,
+      unknown, malformed JSON, non-object JSON, notification duplicate replay, and
+      JSON-RPC batch UNSAFE/fail-closed. (2) Narrowed response_requires_bridge_recovery:
+      gateway-owned JSON-RPC error envelopes with RECONNECT_REQUIRED: or bridge initialize
+      requires pre-registered connection trigger recovery; result.isError tool-result
+      text containing marker-like text is forwarded normally and does not trigger
+      recovery. (3) phase-aware MCP HTTP executor contract: connect failure -> BridgeHttpError
+      phase=connect request_sent=False; before-body write failure -> request_sent=False;
+      partial/unknown write -> request_sent=None; response_timeout_seconds=None does
+      not synthesize timeout/recovery; finite response deadline -> MCP_REQUEST_TIMEOUT
+      path; warming 503 body -> request_sent=True mcp_admitted=False retryable_warming=True;
+      plain/non-warming status -> MCP_FORWARD_FAILED/no recovery; invalid timeout
+      returns INVALID_TIMEOUT error. (4) connect_bridge behavior: pre-send failure
+      recovers and sends original frame once; sent unsafe tools/call interruption
+      writes MCP_RESPONSE_INTERRUPTED and does not replay or consume recovery budget;
+      post-send notification unknown-admission failure emits the specified stderr
+      diagnostic, writes no stdout frame, does not replay, and continues the loop;
+      safe tools/list or ping may recover/replay; empty 2xx notification succeeds
+      with no stdout; empty 2xx request/batch yields MCP_FORWARD_FAILED; generic slow
+      MCP request (not Tasca-specific and not wait_ms-specific) no longer maps to
+      BRIDGE_RECOVERY_EXHAUSTED. Dependency rationale: this is the phase-start contract
+      freeze so implementation agents in fresh contexts can rely on failing tests
+      instead of prose. Blocker behavior: if a required test cannot be expressed without
+      a production seam, add the smallest test fixture/seam description as a failing
+      test or skipped-with-blocker marker and stop with exact missing seam; do not
+      implement product code here; do not special-case Tasca, table_wait, wait_ms,
+      or tool names beyond JSON-RPC method policy in ADR.'
+    verification: 'Run targeted pytest for the new/changed ADR-009 tests and capture
+      expected RED output. Passing criteria for this step: tests exist, are deterministic,
+      fail for missing/current wrong behavior rather than syntax/import mistakes unrelated
+      to ADR, and each ADR acceptance criterion maps to at least one test. If targeted
+      tests unexpectedly pass before implementation, inspect for false positives and
+      strengthen them. Do not require full suite green in this red-test step.'
+    evidence_template: List test files added/changed; map each ADR acceptance criterion
+      to test names; paste targeted pytest command/output showing expected red failures;
+      note any intentionally skipped blocker tests with exact reason.
+    agent: python-senior
