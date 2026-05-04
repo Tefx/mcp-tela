@@ -80961,7 +80961,7 @@ phases:
       \ verification."
   - id: adr009_runtime_regression
     name: Runtime regression proof for slow MCP requests and replay safety
-    status: pending
+    status: claimed
     description: 'Dynamically verify the integrated ADR-009 behavior from outside
       the narrow unit-test seam. Prefer a generic synthetic MCP request/tool that
       waits longer than the old bridge response timeout and returns successfully;
@@ -81002,6 +81002,8 @@ phases:
     depends_on:
     - adr009_connect_bridge_integration
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-05-04T03:33:53.381605+00:00'
   - id: adr009_docs_sync
     name: Documentation sync for ADR-009 runtime contract
     status: pending
