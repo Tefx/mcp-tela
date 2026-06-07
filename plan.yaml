@@ -83825,7 +83825,7 @@ phases:
       \ preserved, no Tasca-special casing introduced."
   - id: adr009_reland.full_verification
     name: Full verification gate for ADR-009 relanding
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -83926,6 +83926,33 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-07T16:01:19.621546+00:00'
+    done_at: '2026-06-07T16:01:32.197292+00:00'
+    evidence: 'Full verification completed from supplied integration-verifier evidence.
+
+
+      Checklist receipt:
+
+      - git status --short --branch: exit 0; dirty tracked/staged changes listed;
+      untracked only `.hypothesis/`; no untracked ADR files; `tests/shell/test_adr009_contract_red.py`
+      staged as added.
+
+      - git diff --check: exit 0, no output.
+
+      - git diff --check --cached: exit 0, no output.
+
+      - Focused ADR pytest: `uv run pytest tests/shell/test_adr009_contract_red.py
+      tests/shell/test_bridge_http.py -q` -> 46 passed in 0.11s.
+
+      - Full repo pytest: `uv run pytest -q` -> 1455 passed in 117.90s (0:01:57).
+
+      - Invar guard: `uv run invar guard` -> passed; errors 0; warnings/infos only.
+
+      - Blocker disposition: none for ADR-009 or remote_headers; no blocker-class
+      verifier result dismissed as pre-existing/out-of-scope.
+
+
+      Caveat: `.hypothesis/` is an untracked generated test artifact and was not cleaned
+      per worktree safety policy.'
   - id: adr009_reland.gate
     name: Final ADR-009 corrective relanding gate
     status: pending
