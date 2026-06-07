@@ -81501,7 +81501,7 @@ phases:
       tests pass)'
   - id: remote_headers.runtime
     name: Runtime header forwarding for Streamable HTTP and SSE
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       expected_result: green after implementation
@@ -81663,6 +81663,71 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-07T13:30:03.243731+00:00'
+    done_at: '2026-06-07T13:31:34.367120+00:00'
+    evidence: "## refs Read Confirmation\nNo explicit refs were attached to the step,\
+      \ but I inspected the relevant surfaces/diffs before completion:\n- `vectl_show\
+      \ remote_headers.runtime` — confirmed pending implementation step, dependency\
+      \ on `remote_headers.contract`, target files, scope, risk probes, and checklist\
+      \ obligations.\n- `src/tela/core/models.py` diff — `ServerConfig.headers` now\
+      \ defaults to an empty `dict[str, str]` mapping.\n- `src/tela/core/config.py`\
+      \ diff — `SERVER_HEADERS_WITH_STDIO` is emitted only for non-empty headers on\
+      \ command/stdio servers.\n- `src/tela/shell/downstream_clients.py` diff — SSE\
+      \ calls `sse_client(url=..., headers=dict(...))` when configured; Streamable\
+      \ HTTP creates a managed `httpx.AsyncClient(headers=dict(...))` and passes it\
+      \ through `streamable_http_client(url=..., http_client=...)`; empty headers\
+      \ preserve prior call shape; configured header values are redacted from transport\
+      \ error text.\n- `tests/core/test_config.py` diff — covers default empty mapping,\
+      \ empty-header stdio behavior, non-empty stdio rejection, env expansion, and\
+      \ non-string key/value rejection.\n- `tests/shell/test_downstream_runtime_connection.py`\
+      \ diff — covers Streamable HTTP propagation, SSE propagation, omitted/empty\
+      \ behavior, and transport error redaction.\n\n## Pre-Fix Red Proof\n- Source:\
+      \ python-senior/user-provided implementation receipt before runtime forwarding.\n\
+      - Result: expected-red transport tests failed before runtime changes; targeted\
+      \ Streamable HTTP and SSE tests observed configured headers being dropped (`assert\
+      \ None == configured headers`).\n- Alignment: this is the declared `expected_result:\
+      \ red` proof from `remote_headers.contract`; no unrelated product-code forcing\
+      \ was reported for the red stage.\n\n## Runtime Implementation Receipt\n- Files\
+      \ changed for this step:\n  - `src/tela/core/models.py`\n  - `src/tela/core/config.py`\n\
+      \  - `src/tela/shell/downstream_clients.py`\n  - `tests/core/test_config.py`\n\
+      \  - `tests/shell/test_downstream_runtime_connection.py`\n- SDK signature probe\
+      \ run after inspection:\n  - command: `uv run python - <<'PY' ... inspect.signature(streamable_http_client),\
+      \ inspect.signature(sse_client), httpx.__version__ ... PY`\n  - observed: `streamable_http_client(url:\
+      \ str, *, http_client: httpx.AsyncClient | None = None, terminate_on_close:\
+      \ bool = True)`; `sse_client(url: str, headers: dict[str, Any] | None = None,\
+      \ ...)`; `httpx 0.28.1` available.\n- Dependency evidence: no diff in `pyproject.toml`/lock/dependency\
+      \ manifest for new packages; `httpx` is already available through the installed\
+      \ project/MCP SDK environment.\n\n## Verification Commands\n- command: `uv run\
+      \ pytest tests/core/test_config.py tests/shell/test_downstream_runtime_connection.py\
+      \ -q`\n- result: `41 passed in 0.78s`\n- command: `uv run invar guard`\n- result:\
+      \ static passed with `errors: 0`; command exit 1 during doctest collection because\
+      \ unrelated dirty/untracked ADR-009 worktree file `src/tela/commands/bridge_http.py`\
+      \ imports missing `bridge_http_headers` from `tela.core.bridge_protocol`; warnings\
+      \ also point only at `src/tela/commands/bridge_http.py`. This is unrelated to\
+      \ the remote_headers runtime changes and matches the user's supplied blocker\
+      \ context. No ADR-009 files were edited by this bookkeeping action.\n\n## Checklist\
+      \ Receipt\n- Pre-fix expected-red proof: SATISFIED by python-senior/user-provided\
+      \ focused failures showing Streamable HTTP and SSE configured headers were not\
+      \ forwarded before runtime changes.\n- Streamable HTTP forwarding: SATISFIED\
+      \ by diff and targeted green test; configured headers are carried via managed\
+      \ `httpx.AsyncClient` into the SDK-supported `http_client` path.\n- SSE forwarding:\
+      \ SATISFIED by diff and targeted green test; configured headers are passed via\
+      \ `sse_client(..., headers=...)`.\n- Stdio rejection: SATISFIED by `validate_config`\
+      \ non-empty-header rejection and targeted config test.\n- Omitted/empty behavior:\
+      \ SATISFIED by default empty mapping and HTTP/SSE/stdio empty-header tests.\n\
+      - Strict header typing: SATISFIED by parse/validation tests rejecting non-string\
+      \ keys/values with no coercion/cleanup behavior accepted.\n- No new dependency:\
+      \ SATISFIED by manifest diff check and SDK/httpx probe showing `httpx 0.28.1`\
+      \ already available.\n- Secret non-exposure: SATISFIED by redaction helper and\
+      \ targeted HTTP/SSE error redaction tests; status/audit/provider surfaces were\
+      \ not modified by this step.\n- Targeted tests plus invar: SATISFIED/BLOCKED-AS-UNRELATED\
+      \ — targeted tests pass; `uv run invar guard` static layer passes with 0 errors,\
+      \ but doctest collection is blocked by unrelated ADR-009 dirty/untracked `bridge_http.py`\
+      \ import failure.\n- Checklist receipt mapping: SATISFIED by this section.\n\
+      \n## Gaps / Notes\n- Invar doctest blocker is not caused by `remote_headers.runtime`;\
+      \ it belongs to unrelated ADR-009 dirty worktree state (`src/tela/commands/bridge_http.py`\
+      \ and associated untracked ADR-009 files).\n- No source/docs/tests were edited\
+      \ during this bookkeeping finalization; only vectl claim/checklist/complete\
+      \ bookkeeping was performed."
   - id: remote_headers.docs_verify
     name: Docs and focused verification for downstream headers
     status: pending
