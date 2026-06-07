@@ -83054,3 +83054,94 @@ phases:
     - adr009_reland.core_impl
     - adr009_reland.http_executor
     agent: python-senior
+  - id: adr009_reland.focused_tests
+    name: Focused ADR-009 must-green test gate
+    status: pending
+    description: 'step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      verification_scope: phase-check
+
+      agent_source: project
+
+
+      PROOF ARTIFACT:
+
+      As an independent verifier, run focused ADR-009 tests from a fresh perspective
+      after Core, bridge_http, and connect_bridge integration. This protects the `adr009_reland.gate`
+      and any downstream finalization from accepting source/test residue without green
+      behavioral proof.
+
+
+      SCOPE:
+
+      - ADR-009 contract tests and bridge_http tests.
+
+      - Existing connect_bridge/readiness/http_client tests needed to prove control-plane
+      behavior remains finite and unaffected.
+
+      - Remote_headers dirty worktree preservation must be checked, but this verifier
+      must not clean it.
+
+
+      YOUR GOAL IS TO FIND PROBLEMS, not to rubber-stamp. Finding failures is a successful
+      verification artifact; completion requires a clear PASS/PASS_WITH_DEBT/FAIL
+      headline and remediation ownership for blockers.
+
+
+      <side_effect_budget>
+
+      Allowed: read/run tests and produce evidence; add no product implementation.
+      Forbidden: source edits, docs edits, plan lifecycle edits, cleanup of unrelated
+      dirty/untracked files.
+
+
+      <risk_probes>
+
+      - Mock-heavy unit tests are insufficient unless they prove lifecycle fields
+      and replay counters; require at least one seam-level connect_bridge path proof.
+
+      - Confirm expected-red tests have become must-green for implemented behavior
+      rather than being weakened or skipped.
+
+      - Confirm old remote_headers focused tests are not broken by ADR-009 changes
+      when touched/available.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Run focused ADR command including `tests/shell/test_adr009_contract_red.py`
+      and `tests/shell/test_bridge_http.py`; raw output is pasted and green.
+
+      - [ ] Run or justify relevant existing connect_bridge/http_client/readiness
+      tests; raw output or non-intersection evidence is provided.
+
+      - [ ] Verify no ADR-009 tests were skipped/weakened without explicit authoritative
+      reason.
+
+      - [ ] Behavioral proof register marks each blocker-class ADR-009 requirement
+      PROVEN or gives a concrete remediation/retest path.
+
+      - [ ] Worktree safety evidence confirms no unrelated dirty/untracked cleanup
+      occurred.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Verification\
+      \ Report\n**Tester**: integration-verifier (independent of implementation)\n\
+      **Scope**: ADR-009 focused phase-check\n**Independence Level**: L2\n\n## Test\
+      \ Execution\n- focused_command: `uv run pytest tests/shell/test_adr009_contract_red.py\
+      \ tests/shell/test_bridge_http.py -q`\n- focused_raw_output: |\n    <paste raw\
+      \ stdout/stderr>\n- focused_exit_code: <code>\n- supplemental_commands: |\n\
+      \    <commands for connect_bridge/http_client/readiness or NOT RUN with non-intersection\
+      \ reason>\n- supplemental_raw_output: |\n    <paste>\n\n## Behavioral Proof\
+      \ Register\n| requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref\
+      \ | status | closure_path | gate_decision_basis |\n|---|---|---|---|---|---|---|\n\
+      \n## Issues Found\n| Severity | Description | Location | Reproduction | Remediation\
+      \ owner |\n|---|---|---|---|---|\n\n## Headline\n- [ ] PASS: focused ADR-009\
+      \ checks green and coverage justified\n- [ ] PASS_WITH_DEBT: only explicit non-blocking\
+      \ debt remains with non-intersection proof\n- [ ] FAIL: blocking issue/proof\
+      \ gap remains and needs fix/retest\n\n## Checklist Receipt\n- checklist_receipt:\
+      \ <satisfied/failed/blocked/unobserved per item>"
+    depends_on:
+    - adr009_reland.bridge_integration
+    agent: integration-verifier
