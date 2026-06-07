@@ -83439,7 +83439,7 @@ phases:
       - remote_headers/unrelated dirty files preserved.'
   - id: adr009_reland.focused_tests
     name: Focused ADR-009 must-green test gate
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       step_intent: retest_green
@@ -83528,6 +83528,8 @@ phases:
     depends_on:
     - adr009_reland.integration_remediation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-06-07T14:47:35.518641+00:00'
   - id: adr009_reland.runtime_regression
     name: Black-box ADR-009 runtime regression proof
     status: pending
