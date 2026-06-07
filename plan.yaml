@@ -82888,3 +82888,169 @@ phases:
     depends_on:
     - adr009_reland.core_impl
     agent: python-senior
+  - id: adr009_reland.bridge_integration
+    name: Integrate ADR-009 lifecycle semantics into connect_bridge
+    status: pending
+    description: 'step_type: implementation
+
+      tags: integration
+
+      agent_source: project
+
+
+      TARGET STATE:
+
+      `src/tela/commands/connect_bridge.py` uses the phase-aware MCP data-plane executor
+      for `POST /mcp` forwarding while leaving control-plane calls on existing `retry_http_request`.
+      Recovery/replay decisions use per-request `request_sent`, `mcp_admitted`, JSON-RPC
+      replay policy, request id/notification classification, and existing recovery
+      budget/session ownership. Slow MCP responses without an explicit response deadline
+      do not fail solely due to the old fixed bridge timeout. Unsafe sent `tools/call`
+      with unknown admission is not replayed. JSON-RPC batches fail closed for replay.
+      No Tasca/table_wait/wait_ms/tool-specific branch exists.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - Core replay/helper logic from `adr009_reland.core_impl`.
+
+      - `BridgeHttpError`, `BridgeHttpResponse`, and `post_mcp_http` from `adr009_reland.http_executor`.
+
+      - Expected-red/focused tests from `adr009_reland.audit_red`.
+
+
+      ERROR CONTRACT:
+
+      Request-level JSON-RPC errors use stable `error.data.code` values where applicable:
+      `MCP_REQUEST_TIMEOUT`, `MCP_RESPONSE_INTERRUPTED`, `MCP_FORWARD_FAILED`, `BRIDGE_RECOVERY_EXHAUSTED`,
+      `RECOVERY_FAILED_FOR_REQUEST`. Notifications with unknown post-send outcome
+      emit diagnostics and continue when safe; they do not synthesize stdout responses.
+
+
+      CONTROL-PLANE BOUNDARY:
+
+      `retry_http_request` remains for `/status`, `/connect`, `/disconnect`, discovery,
+      readiness, and lifecycle calls with finite bounded timeouts. Do not change upstream/gateway
+      bearer token semantics or remote_headers downstream header support.
+
+
+      STATE SEMANTICS:
+
+      - `request_sent` and `mcp_admitted` are per-request facts, never globals.
+
+      - Recovery budget remains per bridge/request event as current architecture requires.
+
+      - Replay allowed only when request definitely not sent, gateway proved non-admission,
+      or payload is protocol-safe (`initialize`, `ping`, `tools/list`).
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes inputs and produces
+      outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      <side_effect_budget>
+
+      Allowed: bounded edits in `src/tela/commands/connect_bridge.py` and focused
+      tests for lifecycle/replay classifier. Forbidden: generic control-plane retry
+      changes, new readiness authority, tool-specific exceptions, new dependencies,
+      remote_headers regressions, or old phase state edits.
+
+
+      <risk_probes>
+
+      - Generic string `timed out` must not authorize replay for a sent unknown-admission
+      MCP request.
+
+      - Notification and empty-2xx behavior must avoid false stdout responses while
+      keeping loop liveness.
+
+      - Safe protocol replay must remain bounded; recovery exhaustion must be request-level
+      and stable-code annotated.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Focused lifecycle tests prove no old fixed bridge timeout is imposed on
+      default MCP response wait.
+
+      - [ ] Focused replay tests prove pre-send/non-admitted recovery, safe protocol
+      replay, unsafe sent `tools/call` no-replay, notification diagnostics/continuation,
+      and batch fail-closed behavior.
+
+      - [ ] Error evidence shows stable request-level `error.data.code` values for
+      ADR-009 failure classes.
+
+      - [ ] Grep evidence shows no Tasca/table_wait/wait_ms/tool-specific branch and
+      no MCP data-plane path through `retry_http_request(... timeout_seconds=HTTP_TIMEOUT_SECONDS)`.
+
+      - [ ] Control-plane finite timeout behavior remains covered and remote_headers
+      changes are preserved.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Integration Evidence
+
+      **Command or test exercising data-plane through connect_bridge**:
+
+      ```
+
+      <exact focused command>
+
+      ```
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+      **Path exercised**: upstream stdio JSON-RPC -> `connect_bridge` -> `bridge_http.post_mcp_http`
+      -> recovery/error writer
+
+
+      ## Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      |---|---|---|---|---|---|---|
+
+      | ADR009-R1 | no default MCP response timeout | focused slow request test/log
+      | | PROVEN/NEEDS_TEST | | |
+
+      | ADR009-R2 | unsafe sent tools/call not replayed | replay counter evidence
+      | | PROVEN/NEEDS_TEST | | |
+
+      | ADR009-R3 | safe protocol replay bounded | retry counter evidence | | PROVEN/NEEDS_TEST
+      | | |
+
+      | ADR009-R4 | stable JSON-RPC error data codes | stdout JSON proof | | PROVEN/NEEDS_TEST
+      | | |
+
+
+      ## Grep / Boundary Evidence
+
+      - no_tool_specific_special_case: <grep output>
+
+      - mcp_data_plane_not_retry_http_timeout: <grep output>
+
+      - control_plane_retry_http_preserved: <file:line evidence>
+
+      - remote_headers_preserved: <evidence>
+
+
+      ## Checklist Receipt
+
+      - checklist_receipt: <satisfied/failed/blocked/unobserved per item>'
+    depends_on:
+    - adr009_reland.core_impl
+    - adr009_reland.http_executor
+    agent: python-senior
