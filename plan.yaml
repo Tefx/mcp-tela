@@ -81730,7 +81730,7 @@ phases:
       \ bookkeeping was performed."
   - id: remote_headers.docs_verify
     name: Docs and focused verification for downstream headers
-    status: claimed
+    status: done
     description: "step_type: documentation + verification\nexpected_result: green\n\
       agent_source: project\n\nPROOF / DOC ARTIFACT:\nOperator documentation and examples\
       \ describe how to configure custom HTTP headers for remote downstream MCP servers,\
@@ -81807,6 +81807,25 @@ phases:
     agent: project-guide
     claimed_by: Project Guide
     claimed_at: '2026-06-07T13:32:16.673597+00:00'
+    done_at: '2026-06-07T13:34:03.573655+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\n\nFor each ref in this step:\n\
+      - docs/USAGE.md — read and modified correctly without affecting dirty ADR-009\
+      \ edits\n- tela.yaml.example — read and modified correctly\n- tests/core/test_config.py\
+      \ — verified test presence (`test_validate_config_server_headers_with_command_rejected`,\
+      \ `test_parse_config_server_headers_expands_placeholders` etc.)\n- tests/shell/test_downstream_runtime_connection.py\
+      \ — verified test presence (`test_open_streamable_http_client_propagates_headers`\
+      \ etc.)\n- src/tela/core/config.py — test verification relies on tests explicitly\
+      \ passing\n- src/tela/shell/downstream_clients.py — rely on tests explicitly\
+      \ passing\n\n## Documentation Changes\n- docs/USAGE.md sections changed: Modified\
+      \ `### servers` section.\n- tela.yaml.example sections changed: Added `resofeed`\
+      \ example to `Section: servers`.\n- required_resofeed_example_present: yes Example\
+      \ snippet is correctly copied.\n- real_secret_values_present: none\n- alias_or_transport_drift:\
+      \ none\n\n## Focused Verification Receipt\n- config_test_command: `uv run pytest\
+      \ tests/core/test_config.py tests/shell/test_downstream_runtime_connection.py\
+      \ -q`\n- config_test_raw_stdout: |\n    warning: `VIRTUAL_ENV=/Users/tefx/Projects/larva/.venv`\
+      \ does not match the project environment path `.venv` and will be ignored; use\
+      \ `--active` to target the active environment instead\n    .........................................\
+      \                                [100%]\n    41 passed in 0.75s"
   - id: remote_headers.gate
     name: Gate remote downstream header support
     status: pending
