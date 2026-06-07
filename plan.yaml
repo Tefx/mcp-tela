@@ -83955,7 +83955,7 @@ phases:
       per worktree safety policy.'
   - id: adr009_reland.gate
     name: Final ADR-009 corrective relanding gate
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       verification_scope: full-plan-check
@@ -84124,6 +84124,8 @@ phases:
     - adr009_reland.full_verification_remediation
     - adr009_reland.full_verification
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-07T16:06:16.876869+00:00'
   - id: adr009_reland.integration_remediation
     name: Remediate ADR-009 focused integration blockers
     status: done
