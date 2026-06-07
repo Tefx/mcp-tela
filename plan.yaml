@@ -82164,7 +82164,7 @@ phases:
       again).'
   - id: gate_remediation
     name: Gate remediation for remote downstream headers
-    status: pending
+    status: claimed
     description: 'step_type: remediation
 
       agent_source: project
@@ -82351,3 +82351,5 @@ phases:
     depends_on:
     - remote_headers.gate
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-06-07T13:40:36.353981+00:00'
