@@ -83825,7 +83825,7 @@ phases:
       \ preserved, no Tasca-special casing introduced."
   - id: adr009_reland.full_verification
     name: Full verification gate for ADR-009 relanding
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: full-plan-check
@@ -83924,6 +83924,8 @@ phases:
     - adr009_reland.docs_remediation
     - adr009_reland.full_verification_remediation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-06-07T16:01:19.621546+00:00'
   - id: adr009_reland.gate
     name: Final ADR-009 corrective relanding gate
     status: pending
