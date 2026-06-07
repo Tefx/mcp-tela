@@ -83198,7 +83198,7 @@ phases:
       preserved: PROVEN requested-only staging action and selected status check.'
   - id: adr009_reland.bridge_integration
     name: Integrate ADR-009 lifecycle semantics into connect_bridge
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       tags: integration
@@ -83362,6 +83362,8 @@ phases:
     - adr009_reland.core_impl
     - adr009_reland.http_executor
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-07T14:27:39.764795+00:00'
   - id: adr009_reland.focused_tests
     name: Focused ADR-009 must-green test gate
     status: pending
