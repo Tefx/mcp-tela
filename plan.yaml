@@ -83494,19 +83494,19 @@ phases:
       when touched/available.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] Run focused ADR command including `tests/shell/test_adr009_contract_red.py`
+      - [x] Run focused ADR command including `tests/shell/test_adr009_contract_red.py`
       and `tests/shell/test_bridge_http.py`; raw output is pasted and green.
 
-      - [ ] Run or justify relevant existing connect_bridge/http_client/readiness
+      - [x] Run or justify relevant existing connect_bridge/http_client/readiness
       tests; raw output or non-intersection evidence is provided.
 
-      - [ ] Verify no ADR-009 tests were skipped/weakened without explicit authoritative
+      - [x] Verify no ADR-009 tests were skipped/weakened without explicit authoritative
       reason.
 
-      - [ ] Behavioral proof register marks each blocker-class ADR-009 requirement
+      - [x] Behavioral proof register marks each blocker-class ADR-009 requirement
       PROVEN or gives a concrete remediation/retest path.
 
-      - [ ] Worktree safety evidence confirms no unrelated dirty/untracked cleanup
+      - [x] Worktree safety evidence confirms no unrelated dirty/untracked cleanup
       occurred.'
     evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
       \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Verification\
