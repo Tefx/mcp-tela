@@ -83547,7 +83547,7 @@ phases:
       \ cleanup; no source/docs/tests edits performed for this bookkeeping action."
   - id: adr009_reland.runtime_regression
     name: Black-box ADR-009 runtime regression proof
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -83644,6 +83644,8 @@ phases:
     depends_on:
     - adr009_reland.integration_remediation
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-06-07T14:48:52.964669+00:00'
   - id: adr009_reland.docs_sync
     name: Synchronize ADR-009 documentation with landed behavior
     status: pending
