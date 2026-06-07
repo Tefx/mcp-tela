@@ -83688,7 +83688,7 @@ phases:
       - Inline black-box runtime harness -> PASS.'
   - id: adr009_reland.docs_sync
     name: Synchronize ADR-009 documentation with landed behavior
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: project
@@ -83769,6 +83769,8 @@ phases:
     - adr009_reland.focused_tests
     - adr009_reland.runtime_regression
     agent: project-guide
+    claimed_by: Project Guide
+    claimed_at: '2026-06-07T14:56:06.082333+00:00'
   - id: adr009_reland.full_verification
     name: Full verification gate for ADR-009 relanding
     status: pending
