@@ -83439,7 +83439,7 @@ phases:
       - remote_headers/unrelated dirty files preserved.'
   - id: adr009_reland.focused_tests
     name: Focused ADR-009 must-green test gate
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: retest_green
@@ -83530,6 +83530,21 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-07T14:47:35.518641+00:00'
+    done_at: '2026-06-07T14:48:05.039307+00:00'
+    evidence: "Verdict: PASS. Blockers closed; no proof gaps.\n\nChecklist evidence:\n\
+      - [x] Focused ADR command green: `uv run pytest -q tests/shell/test_adr009_contract_red.py\
+      \ tests/shell/test_bridge_http.py` -> 46 passed.\n- [x] Relevant existing connect_bridge/http_client/readiness\
+      \ tests green:\n  - `uv run pytest -q tests/shell/test_connect_cmd.py tests/shell/test_connect_bridge_readiness_contract_freeze.py\
+      \ tests/shell/test_connect_bridge_readiness_gaps_red.py tests/shell/test_http_client.py`\
+      \ -> 93 passed.\n  - `uv run pytest -q tests/integration/test_adr008_attachment_workflows.py\
+      \ tests/repro/test_connect_runtime_liveness.py tests/repro/test_gate_blocker_regressions.py`\
+      \ -> 32 passed.\n  - `uv run pytest -q tests/core/test_config.py tests/shell/test_downstream_runtime_connection.py`\
+      \ -> 41 passed.\n- [x] ADR-009 skip/weaken check: ADR collect-only -> 159 tests\
+      \ collected; ADR skip/xfail grep -> no matches.\n- [x] Behavioral proof register:\
+      \ each blocker-class ADR-009 requirement is PROVEN by the listed green focused\
+      \ and seam-level test runs; blockers closed; no remediation path needed.\n-\
+      \ [x] Worktree safety: git status before/after unchanged; no unrelated dirty/untracked\
+      \ cleanup; no source/docs/tests edits performed for this bookkeeping action."
   - id: adr009_reland.runtime_regression
     name: Black-box ADR-009 runtime regression proof
     status: pending
