@@ -83688,7 +83688,7 @@ phases:
       - Inline black-box runtime harness -> PASS.'
   - id: adr009_reland.docs_sync
     name: Synchronize ADR-009 documentation with landed behavior
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: project
@@ -83771,6 +83771,58 @@ phases:
     agent: project-guide
     claimed_by: Project Guide
     claimed_at: '2026-06-07T14:56:06.082333+00:00'
+    done_at: '2026-06-07T15:02:33.948098+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - `docs/ADR-009-mcp-bridge-request-lifecycle.md` — Read and updated status.\n\
+      - `docs/DESIGN.md` — Updated with `bridge_http.py` responsibilities and cleared\
+      \ `test_connect_bridge` confusion.\n- `docs/INTERFACES.md` — Added timeouts\
+      \ configuration table entries.\n- `docs/USAGE.md` — Added troubleshooting section\
+      \ for slow or long-running tools.\n\n## Documentation Sync Report\n| doc | ADR-009\
+      \ sections changed | implementation evidence ref | remote_headers preservation\
+      \ evidence | status |\n|---|---|---|---|---|\n| ADR-009 | Status changed to\
+      \ Accepted | code conforms | N/A | OK |\n| DESIGN.md | Connect commands documentation\
+      \ updated to reflect `bridge_http.py` vs `connect_bridge.py` splits | code conforms\
+      \ | Verified diffs manually | OK |\n| INTERFACES.md | Re-added timeout specifications\
+      \ explicitly mapped to `shell/connect_bridge.py` and `shell/bridge_http.py`\
+      \ | `HTTP_TIMEOUT_SECONDS` references in `connect_bridge.py` | Verified diffs\
+      \ manually | OK |\n| USAGE.md | Troubleshooting section covers `MCP_REQUEST_TIMEOUT`\
+      \ | implemented as handled gracefully | Verified diffs manually | OK |\n\n##\
+      \ ADR Status Decision\n- focused_tests_status: PASS\n- runtime_regression_status:\
+      \ PASS\n- ADR_status_after_edit: Accepted\n- justification: Implementation matches\
+      \ the core rules defined in the ADR (phases, timeouts separated, recovery logic\
+      \ separated, bounded connection handling, etc.)\n\n## Diff Evidence\n- command:\
+      \ `git diff -- docs/ADR-009-mcp-bridge-request-lifecycle.md docs/DESIGN.md docs/INTERFACES.md\
+      \ docs/USAGE.md`\n- relevant_diff_hunks: |\n    -Status: Proposed\n    +Status:\
+      \ Accepted\n    \n    -CLI entrypoints only:\n    +CLI entrypoints and bridge\
+      \ infrastructure:\n     - `connect_cmd.py`: client entry (auto-discover, auto-start,\
+      \ bridge)\n     - `serve_cmd.py`: server entry (HTTP gateway, lockfile, idle\
+      \ shutdown)\n     - `status_cmd.py`, `connections_cmd.py`, `audit_cmd.py`, `profiles_cmd.py`:\
+      \ query commands\n    +\n    +#### `connect_bridge.py`\n    +\n    +**Responsibility:**\
+      \ Bridge lifecycle, recovery orchestration, session ID handling, JSON-RPC error\
+      \ serialization, and integration with replay policy. Owns control-plane HTTP\
+      \ calls using `retry_http_request`.\n    +\n    +#### `bridge_http.py`\n   \
+      \ +\n    +**Responsibility:** MCP data-plane HTTP executor. Phase-aware (connect,\
+      \ write, response wait) using standard `http.client`. Enforces timeout isolation:\
+      \ connect/write use `HTTP_TIMEOUT_SECONDS`, while response wait uses `response_timeout_seconds=None`\
+      \ (unbounded). Evaluates contract 503 warming to prove non-admission.\n    \
+      \ \n     #### `http_client.py`\n     \n    +| MCP connect timeout | `10.0` seconds\
+      \ | Yes — `HTTP_TIMEOUT_SECONDS` | `shell/connect_bridge.py` |\n    +| MCP write\
+      \ timeout | `10.0` seconds | Yes — `HTTP_TIMEOUT_SECONDS` | `shell/connect_bridge.py`\
+      \ |\n    +| MCP response timeout | `None` (unbounded) | Yes | `shell/bridge_http.py`\
+      \ |\n    +| Control-plane HTTP timeout | `10.0` seconds | Yes — `HTTP_TIMEOUT_SECONDS`\
+      \ | `shell/http_client.py` |\n    \n    +### Slow or long-running tools\n  \
+      \  +\n    +Slow or long-running MCP tools (such as long-polling, large file\
+      \ operations, or human approvals) wait without a bridge-imposed timeout. Slow\
+      \ tools are not bridge recovery failures.\n    +\n    +If a tool call is interrupted:\n\
+      \    +- `MCP_RESPONSE_INTERRUPTED`: The connection was lost after sending an\
+      \ unsafe request (like `tools/call`) and execution is unknown. The request is\
+      \ not automatically replayed to avoid duplicate side effects.\n    +- `MCP_REQUEST_TIMEOUT`:\
+      \ An explicit future deadline expired (not used by default).\n    +- `BRIDGE_RECOVERY_EXHAUSTED`:\
+      \ Only occurs when the bridge exhausts its bounded attempts to recover gateway\
+      \ reachability or start a session, never just because a tool took too long.\n\
+      \    +\n\n## Checklist Receipt\n- checklist_receipt: satisfied all points. ADR\
+      \ doc is tracked, DESIGN/INTERFACES/USAGE are aligned, remote headers docs are\
+      \ preserved, no Tasca-special casing introduced."
   - id: adr009_reland.full_verification
     name: Full verification gate for ADR-009 relanding
     status: pending
