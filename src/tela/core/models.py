@@ -141,6 +141,7 @@ class ServerConfig(BaseModel):
     url: str | None = None
     transport: Literal["http", "sse"] | None = None
     env: dict[str, str] = Field(default_factory=dict)
+    headers: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
     tool_prefix: str | None = None
     # NOTE: Acceptance contract only. Prefix is part of exposed-name resolution

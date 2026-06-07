@@ -32,7 +32,11 @@ from urllib import error as urllib_error
 import uuid
 
 from tela.core.bridge_protocol import (
+    BridgeReplayPolicy,
+    bridge_replay_policy,
     extract_jsonrpc_method,
+    jsonrpc_is_notification,
+    jsonrpc_request_id as _core_jsonrpc_request_id,
     response_requires_bridge_recovery as _response_requires_bridge_recovery,
 )
 from tela.core.models import LockfileData, StatusResponse
@@ -48,6 +52,7 @@ from tela.commands.connect_transport import (
     extract_response_messages,
     inject_bridge_connection_id,
 )
+from tela.commands.bridge_http import BridgeHttpError, BridgeHttpResponse, post_mcp_http
 from tela.commands.http_client import retry_http_request
 from tela.shell.result import Result
 from tela.shell.adr008_registry_events import append_runtime_event, upsert_attachment
@@ -290,13 +295,7 @@ def _jsonrpc_request_id(payload: bytes) -> Result[object | None, str]:
         Result containing request id value, or ``None`` if unavailable.
     """
 
-    try:
-        parsed = json.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        return Result(value=None)
-    if not isinstance(parsed, dict):
-        return Result(value=None)
-    return Result(value=parsed.get("id"))
+    return Result(value=_core_jsonrpc_request_id(payload))
 
 
 # @shell_orchestration: serializes request-level runtime errors for the transport writer.
@@ -331,6 +330,7 @@ def _jsonrpc_error_response(
 
 
 # @shell_orchestration: classifies runtime recovery failures for request-level JSON-RPC.
+# @shell_complexity: stable public bridge error code mapping is intentionally centralized.
 def _recovery_error_code(error_text: str) -> Result[str | None, str]:
     """Classify bridge runtime recovery failures for request-level JSON-RPC.
 
@@ -341,6 +341,12 @@ def _recovery_error_code(error_text: str) -> Result[str | None, str]:
         Result containing public request-level error code, or ``None``.
     """
 
+    if error_text.startswith("MCP_REQUEST_TIMEOUT"):
+        return Result(value="MCP_REQUEST_TIMEOUT")
+    if error_text.startswith("MCP_RESPONSE_INTERRUPTED"):
+        return Result(value="MCP_RESPONSE_INTERRUPTED")
+    if error_text.startswith("MCP_FORWARD_FAILED"):
+        return Result(value="MCP_FORWARD_FAILED")
     if error_text.startswith("BRIDGE_RECOVERY_EXHAUSTED"):
         return Result(value="BRIDGE_RECOVERY_EXHAUSTED")
     if error_text.startswith("ATTACH_INTERRUPTED"):
@@ -483,9 +489,32 @@ def _recover_bridge_transport_state(
 # ---------------------------------------------------------------------------
 
 
-# @shell_complexity: HTTP POST with MCP-specific 503 contract retry and SSE/JSON
-# content-type dispatch. Delegates retry/backoff to shared helper; caller
-# retains response interpretation, session management, and MCP error semantics.
+# @invar:allow shell_result: predicate callback shape required by bridge_http.post_mcp_http
+# @shell_orchestration: parses gateway-owned warming admission body at HTTP boundary.
+def _is_mcp_transient_warming_body(body: bytes) -> bool:
+    """Return True when a 503 body matches the MCP warming admission contract."""
+
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return False
+
+    if not isinstance(payload, dict):
+        return False
+    retry = payload.get("retry")
+    if not isinstance(retry, dict):
+        return False
+    return (
+        payload.get("code") == "ADMISSION_REJECTED_WARMING"
+        and payload.get("transient") is True
+        and retry.get("authorized") is True
+        and retry.get("basis") == "gateway_signal"
+        and retry.get("expectation") == "bounded"
+        and payload.get("gateway_state") == "warming"
+    )
+
+
+# @shell_complexity: legacy facade delegates MCP data-plane I/O to ADR-009 phase-aware executor.
 def post_mcp_message(
     *,
     mcp_url: str,
@@ -494,83 +523,43 @@ def post_mcp_message(
     session_id: str | None = None,
     max_recovery_attempts: int = 3,
 ) -> Result[tuple[str, bytes, str | None], str]:
-    """POST payload to MCP Streamable HTTP endpoint with transient retry.
+    """POST payload to MCP Streamable HTTP endpoint once.
 
-    Retries up to ``max_recovery_attempts`` times on transient connection
-    errors (connection refused, reset, broken pipe) that occur when the
-    gateway is still starting up. Non-transient errors are returned immediately.
-
-    503 responses are retried only when the response body matches the MCP
-    transient warming contract (``_is_mcp_transient_warming_error``); other
-    503 responses fail immediately. This preserves the caller-owned contract
-    interpretation while delegating request/retry/backoff to the shared
-    ``retry_http_request`` helper.
-
-    Returns ``(content_type, body, session_id)`` where *session_id* is the
-    ``mcp-session-id`` returned by the server (may be ``None``).
+    This compatibility facade preserves the historical return shape while the
+    production MCP data-plane uses ``post_mcp_http`` for phase-aware lifecycle
+    facts.  Recovery/replay is owned by the forwarding loop, not by this HTTP
+    helper; ``max_recovery_attempts`` is accepted for API compatibility only.
     """
 
-    headers: dict[str, str] = {
-        "Authorization": f"Bearer {bearer_token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
-    }
-    if session_id is not None:
-        headers["mcp-session-id"] = session_id
-
-    def _mcp_error_from(helper_error: str) -> str:
-        """Transform ``retry_http_request`` error format to MCP-specific format.
-
-        ``retry_http_request`` returns ``HTTP_{code}: {url}`` for HTTP errors
-        and ``HTTP_CONNECT_ERROR: {reason}`` for connection errors. MCP
-        forwarding uses ``MCP_FORWARD_FAILED: http {code}`` and
-        ``MCP_FORWARD_FAILED: {reason}`` respectively — these are caller-owned
-        error semantics that must not leak into the shared helper.
-
-        The ``HTTP_CONNECT_ERROR`` check MUST precede the generic ``HTTP_``
-        check because ``HTTP_CONNECT_ERROR`` also starts with ``HTTP_``.
-        """
-        if helper_error.startswith("HTTP_CONNECT_ERROR: "):
-            # HTTP_CONNECT_ERROR: {reason} → MCP_FORWARD_FAILED: {reason}
-            reason = helper_error[len("HTTP_CONNECT_ERROR: ") :]
-            return f"MCP_FORWARD_FAILED: {reason}"
-        if helper_error.startswith("HTTP_"):
-            # HTTP_{code}: {url} → MCP_FORWARD_FAILED: http {code}
-            # Extract HTTP code between "HTTP_" and ":"
-            code_end = helper_error.index(":")
-            code = helper_error[len("HTTP_") : code_end]
-            return f"MCP_FORWARD_FAILED: http {code}"
-        return f"MCP_FORWARD_FAILED: {helper_error}"
-
-    result = retry_http_request(
-        url=mcp_url,
-        method="POST",
-        headers=headers,
-        data=payload,
-        max_retries=max_recovery_attempts,
-        timeout_seconds=HTTP_TIMEOUT_SECONDS,
-        backoff_seconds=HTTP_TRANSIENT_BACKOFF_SECONDS,
-        retry_on_503=True,
-        retry_on_transient=True,
-        is_503_retryable=lambda exc: is_mcp_transient_warming_error(exc).value is True,
+    _ = max_recovery_attempts
+    result = post_mcp_http(
+        mcp_url=mcp_url,
+        bearer_token=bearer_token,
+        payload=payload,
+        session_id=session_id,
+        connect_timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        write_timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        response_timeout_seconds=None,
+        is_503_retryable=_is_mcp_transient_warming_body,
     )
     if result.is_err:
-        return Result(error=_mcp_error_from(result.error or ""))
+        error_detail = result.error
+        if error_detail is None:
+            return Result(error="MCP_FORWARD_FAILED: unknown MCP HTTP failure")
+        message = error_detail.message
+        if message.startswith("HTTP_"):
+            status = message.split(":", 1)[0].removeprefix("HTTP_")
+            return Result(error=f"MCP_FORWARD_FAILED: http {status}")
+        if message.startswith(("MCP_", "INVALID_TIMEOUT:")):
+            return Result(error=message)
+        return Result(error=f"MCP_FORWARD_FAILED: {message}")
     assert result.value is not None
+    return Result(
+        value=(result.value.content_type, result.value.body, result.value.session_id)
+    )
 
-    try:
-        content_type = result.value.headers.get("Content-Type", "")
-        resp_session_id = result.value.headers.get("mcp-session-id")
-        response_body = result.value.read()
-    except Exception as exc:
-        return Result(error=f"MCP_FORWARD_FAILED: {exc}")
-    finally:
-        try:
-            result.value.close()
-        except OSError:
-            pass
 
-    return Result(value=(content_type, response_body, resp_session_id))
+_ORIGINAL_POST_MCP_MESSAGE = post_mcp_message
 
 
 # @shell_complexity: HTTP POST with transient retry — delegates retry/backoff to
@@ -784,7 +773,85 @@ def is_mcp_transient_warming_error(exc: urllib_error.HTTPError) -> Result[bool, 
     return Result(value=is_contract_match)
 
 
-# @shell_complexity: request forwarding helper owns transport retry, response parsing, and protocol-level stale-session recovery in one bounded bridge step.
+# @invar:allow shell_result: adapter returns typed BridgeHttpError for legacy monkeypatch seam
+# @shell_orchestration: compatibility adapter lives beside the shell monkeypatch seam it protects.
+# @shell_complexity: legacy error strings need conservative phase/admission reconstruction.
+def _legacy_bridge_http_error(error_text: str) -> BridgeHttpError:
+    """Adapt monkeypatched legacy string errors into ADR-009 error facts."""
+
+    normalized = error_text.lower()
+    if error_text.startswith("MCP_REQUEST_TIMEOUT"):
+        return BridgeHttpError(
+            phase="response_headers",
+            message=error_text,
+            request_sent=True,
+            mcp_admitted=None,
+        )
+    if error_text.startswith("MCP_RESPONSE_INTERRUPTED"):
+        return BridgeHttpError(
+            phase="response_body",
+            message=error_text,
+            request_sent=True,
+            mcp_admitted=None,
+        )
+    definitely_presend = any(
+        marker in normalized
+        for marker in (
+            "mcp_connect_failed",
+            "connection refused",
+            "failed before body send",
+        )
+    )
+    return BridgeHttpError(
+        phase="connect" if definitely_presend else "response_body",
+        message=error_text,
+        request_sent=False if definitely_presend else True,
+        mcp_admitted=None,
+    )
+
+
+# @shell_orchestration: production path uses phase-aware HTTP; legacy path supports tests that monkeypatch post_mcp_message.
+def _post_mcp_for_forwarding(
+    *,
+    mcp_url: str,
+    bearer_token: str,
+    payload: bytes,
+    session_id: str | None,
+) -> Result[BridgeHttpResponse, BridgeHttpError]:
+    """POST one MCP data-plane payload and return phase-aware result facts."""
+
+    if post_mcp_message is not _ORIGINAL_POST_MCP_MESSAGE:
+        legacy_result = post_mcp_message(
+            mcp_url=mcp_url,
+            bearer_token=bearer_token,
+            payload=payload,
+            session_id=session_id,
+        )
+        if legacy_result.is_err:
+            return Result(error=_legacy_bridge_http_error(legacy_result.error or ""))
+        assert legacy_result.value is not None
+        content_type, body, response_session_id = legacy_result.value
+        return Result(
+            value=BridgeHttpResponse(
+                content_type=content_type,
+                body=body,
+                session_id=response_session_id,
+            )
+        )
+
+    return post_mcp_http(
+        mcp_url=mcp_url,
+        bearer_token=bearer_token,
+        payload=payload,
+        session_id=session_id,
+        connect_timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        write_timeout_seconds=HTTP_TIMEOUT_SECONDS,
+        response_timeout_seconds=None,
+        is_503_retryable=_is_mcp_transient_warming_body,
+    )
+
+
+# @shell_complexity: request forwarding helper owns phase-aware lifecycle, recovery, response parsing, and protocol-level stale-session recovery in one bounded bridge step.
 def _forward_request_with_recovery(
     *,
     mcp_url: str,
@@ -795,30 +862,71 @@ def _forward_request_with_recovery(
     initialize_payload: bytes | None,
     max_recovery_attempts: int,
     recover_transport: Callable[[], Result[tuple[str, str], str]] | None,
+    bridge_connection_id: str,
 ) -> Result[ForwardedBridgeResponse, str]:
-    """Forward one MCP request, recovering transport when bridge state is stale."""
+    """Forward one MCP request, recovering/replaying only when ADR-009 allows it."""
 
     current_mcp_url = mcp_url
     current_bearer_token = bearer_token
     current_session_id = session_id
+    replay_policy = bridge_replay_policy(message)
+    is_notification = jsonrpc_is_notification(message)
 
     while True:
-        http_result = post_mcp_message(
+        http_result = _post_mcp_for_forwarding(
             mcp_url=current_mcp_url,
             bearer_token=current_bearer_token,
             payload=message,
             session_id=current_session_id,
-            max_recovery_attempts=max_recovery_attempts,
         )
         if http_result.is_err:
-            error_text = http_result.error or "MCP_FORWARD_FAILED: unknown error"
-            recoverable_result = is_recoverable_error(error_text)
-            if (
-                recover_transport is None
-                or recoverable_result.is_err
-                or not recoverable_result.value
-            ):
+            http_error = http_result.error or BridgeHttpError(
+                phase="response_body",
+                message="MCP_FORWARD_FAILED: unknown MCP HTTP failure",
+                request_sent=True,
+                mcp_admitted=None,
+            )
+            error_text = http_error.message or "MCP_FORWARD_FAILED: unknown MCP HTTP failure"
+
+            if error_text.startswith("MCP_REQUEST_TIMEOUT"):
                 return Result(error=error_text)
+
+            if http_error.phase == "http_status" and not http_error.retryable_warming:
+                return Result(error=error_text)
+
+            can_recover_and_replay = (
+                http_error.request_sent is False
+                or http_error.mcp_admitted is False
+                or replay_policy is BridgeReplayPolicy.SAFE
+            )
+            if not can_recover_and_replay:
+                if is_notification and http_error.mcp_admitted is None:
+                    _emit_bridge_diagnostic(
+                        (
+                            "notification delivery unknown: "
+                            f"{http_error.phase} {error_text}"
+                        ),
+                        bridge_connection_id,
+                    )
+                    return Result(
+                        value=ForwardedBridgeResponse(
+                            mcp_url=current_mcp_url,
+                            bearer_token=current_bearer_token,
+                            session_id=current_session_id,
+                            response_messages=[],
+                        )
+                    )
+                return Result(
+                    error=(
+                        "MCP_RESPONSE_INTERRUPTED: MCP response interrupted after "
+                        "request send; unsafe JSON-RPC payload was not replayed"
+                    )
+                )
+
+            if recover_transport is None:
+                return Result(
+                    error="RECOVERY_FAILED_FOR_REQUEST: no recovery transport available"
+                )
 
             recovery_result = _recover_bridge_transport_state(
                 recover_transport=recover_transport,
@@ -835,19 +943,29 @@ def _forward_request_with_recovery(
             continue
 
         assert http_result.value is not None
-        content_type, response_body, response_session_id = http_result.value
+        response = http_result.value
         response_messages_result = extract_response_messages(
-            content_type=content_type,
-            response_body=response_body,
+            content_type=response.content_type,
+            response_body=response.body,
         )
         if response_messages_result.is_err:
             return Result(error=response_messages_result.error)
         assert response_messages_result.value is not None
         response_messages = response_messages_result.value
 
+        if not response_messages and not is_notification:
+            return Result(error="MCP_FORWARD_FAILED: empty MCP HTTP response")
+
         if recover_transport is not None and _response_requires_bridge_recovery(
             response_messages
         ):
+            # Gateway-owned reconnect-required JSON-RPC error envelopes are
+            # proof that the stale bridge rejected admission before downstream
+            # execution.  Unlike unknown post-send transport interruptions,
+            # this non-admission signal permits bounded recovery/replay even
+            # for otherwise unsafe requests such as tools/call.  Ordinary
+            # tool-result marker text is excluded by
+            # response_requires_bridge_recovery and still fails closed.
             recovery_result = _recover_bridge_transport_state(
                 recover_transport=recover_transport,
                 message_method=message_method,
@@ -863,8 +981,8 @@ def _forward_request_with_recovery(
             continue
 
         next_session_id = (
-            response_session_id
-            if response_session_id is not None
+            response.session_id
+            if response.session_id is not None
             else current_session_id
         )
         return Result(
@@ -955,6 +1073,7 @@ def forward_stdio_http(
             initialize_payload=initialize_payload,
             max_recovery_attempts=max_recovery_attempts,
             recover_transport=recover_transport,
+            bridge_connection_id=bridge_connection_id,
         )
         if forward_result.is_err:
             error_text = forward_result.error or "BRIDGE_RUNTIME_ERROR: unknown bridge failure"

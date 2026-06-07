@@ -390,10 +390,18 @@ Downstream (gateway → MCP servers):
 
 ### `commands/`
 
-CLI entrypoints only:
+CLI entrypoints and bridge infrastructure:
 - `connect_cmd.py`: client entry (auto-discover, auto-start, bridge)
 - `serve_cmd.py`: server entry (HTTP gateway, lockfile, idle shutdown)
 - `status_cmd.py`, `connections_cmd.py`, `audit_cmd.py`, `profiles_cmd.py`: query commands
+
+#### `connect_bridge.py`
+
+**Responsibility:** Bridge lifecycle, recovery orchestration, session ID handling, JSON-RPC error serialization, and integration with replay policy. Owns control-plane HTTP calls using `retry_http_request`.
+
+#### `bridge_http.py`
+
+**Responsibility:** MCP data-plane HTTP executor. Phase-aware (connect, write, response wait) using standard `http.client`. Enforces timeout isolation: connect/write use `HTTP_TIMEOUT_SECONDS`, while response wait uses `response_timeout_seconds=None` (unbounded). Evaluates contract 503 warming to prove non-admission.
 
 #### `http_client.py`
 

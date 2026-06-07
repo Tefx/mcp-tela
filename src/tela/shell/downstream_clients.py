@@ -10,6 +10,8 @@ from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from typing import Any
 
+import httpx
+
 from mcp.client.session import ClientSession, MessageHandlerFnT
 from mcp.client.sse import sse_client
 from mcp.client.stdio import StdioServerParameters, stdio_client
@@ -27,6 +29,18 @@ class _ClientHandle:
     session: ClientSession
     stack: AsyncExitStack
     instructions: str | None = None
+
+
+# @invar:allow shell_result: pure local redaction helper; callers return Result
+# @shell_orchestration: transport-error redaction stays at the SDK exception boundary
+def _redact_header_values(message: str, headers: dict[str, str]) -> str:
+    """Remove configured header values from downstream error text."""
+
+    redacted = message
+    for value in headers.values():
+        if value:
+            redacted = redacted.replace(value, "[redacted]")
+    return redacted
 
 
 def _validate_transport_mode(
@@ -109,7 +123,14 @@ async def _open_sse_client(
 
     stack = AsyncExitStack()
     try:
-        read_stream, write_stream = await stack.enter_async_context(sse_client(url=url))
+        if server_config.headers:
+            transport_context = sse_client(
+                url=url,
+                headers=dict(server_config.headers),
+            )
+        else:
+            transport_context = sse_client(url=url)
+        read_stream, write_stream = await stack.enter_async_context(transport_context)
         session = await stack.enter_async_context(
             ClientSession(
                 read_stream,
@@ -127,10 +148,11 @@ async def _open_sse_client(
         )
     except Exception as exc:
         await stack.aclose()
+        detail = _redact_header_values(str(exc), server_config.headers)
         return Result(
             error=(
                 f"{DOWNSTREAM_CONNECT_FAILED}: "
-                f"server '{server_name}' sse connect failed: {exc}"
+                f"server '{server_name}' sse connect failed: {detail}"
             )
         )
 
@@ -150,8 +172,18 @@ async def _open_streamable_http_client(
 
     stack = AsyncExitStack()
     try:
+        if server_config.headers:
+            http_client = await stack.enter_async_context(
+                httpx.AsyncClient(headers=dict(server_config.headers))
+            )
+            transport_context = streamable_http_client(
+                url=url,
+                http_client=http_client,
+            )
+        else:
+            transport_context = streamable_http_client(url=url)
         read_stream, write_stream, _ = await stack.enter_async_context(
-            streamable_http_client(url=url)
+            transport_context
         )
         session = await stack.enter_async_context(
             ClientSession(
@@ -170,10 +202,11 @@ async def _open_streamable_http_client(
         )
     except Exception as exc:
         await stack.aclose()
+        detail = _redact_header_values(str(exc), server_config.headers)
         return Result(
             error=(
                 f"{DOWNSTREAM_CONNECT_FAILED}: "
-                f"server '{server_name}' streamable http connect failed: {exc}"
+                f"server '{server_name}' streamable http connect failed: {detail}"
             )
         )
 

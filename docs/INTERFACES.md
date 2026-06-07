@@ -924,6 +924,10 @@ orphaned and idle upstream connections.
 | Limit | Value | Enforced | Source |
 |-------|-------|----------|--------|
 | Request body max size | No limit enforced | — | Starlette/uvicorn defaults apply |
+| MCP connect timeout | `10.0` seconds | Yes — `HTTP_TIMEOUT_SECONDS` | `shell/connect_bridge.py` |
+| MCP write timeout | `10.0` seconds | Yes — `HTTP_TIMEOUT_SECONDS` | `shell/connect_bridge.py` |
+| MCP response timeout | `None` (unbounded) | Yes | `shell/bridge_http.py` |
+| Control-plane HTTP timeout | `10.0` seconds | Yes — `HTTP_TIMEOUT_SECONDS` | `shell/http_client.py` |
 | Bearer token length | ≥43 chars (generated) | Post-condition enforced on generation | `shell/lockfile.py` |
 | Bearer token entropy | 32 bytes (`secrets.token_urlsafe(32)`) | Yes | `shell/lockfile.py` |
 | Startup leadership retries | 3 | Yes — `START_RACE_RETRIES` | `shell/startup_coordinator.py` |

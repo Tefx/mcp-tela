@@ -304,6 +304,318 @@ def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:
     assert cleanup.is_ok
 
 
+def test_open_streamable_http_client_propagates_headers(monkeypatch: Any) -> None:
+    """RH-5: Streamable HTTP forwards configured headers via SDK client path."""
+    passed_headers: dict[str, str] | None = None
+    constructed_headers: dict[str, str] | None = None
+
+    class FakeHttpClient:
+        def __init__(self, *, headers: dict[str, str]) -> None:
+            nonlocal constructed_headers
+            constructed_headers = headers
+            self.headers = headers
+
+        async def __aenter__(self) -> "FakeHttpClient":
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            del args
+
+    def fake_streamable_http_client(
+        url: str,
+        *,
+        http_client: Any | None = None,
+        terminate_on_close: bool = True,
+    ) -> Any:
+        nonlocal passed_headers
+        del url
+        del terminate_on_close
+        if http_client is not None:
+            passed_headers = http_client.headers
+        import contextlib
+
+        @contextlib.asynccontextmanager
+        async def fake_cm():
+            yield None, None, None
+
+        return fake_cm()
+
+    import tela.shell.downstream_clients as clients_module
+
+    monkeypatch.setattr(clients_module.httpx, "AsyncClient", FakeHttpClient)
+    monkeypatch.setattr(
+        clients_module, "streamable_http_client", fake_streamable_http_client
+    )
+
+    server_config = ServerConfig(
+        name="remote",
+        url="http://x",
+        headers={"Custom": "Test", "Authorization": "Bearer token"},
+    )
+
+    class FakeSession:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            del args
+            del kwargs
+
+        async def __aenter__(self) -> "FakeSession":
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            del args
+
+        async def initialize(self) -> Any:
+            import collections
+
+            InitResult = collections.namedtuple("InitResult", ["instructions"])
+            return InitResult(instructions=None)
+
+    monkeypatch.setattr(clients_module, "ClientSession", FakeSession)
+
+    result = asyncio.run(
+        clients_module._open_streamable_http_client("remote", server_config)
+    )
+    assert result.is_ok
+    assert constructed_headers == server_config.headers
+    assert passed_headers == server_config.headers
+
+
+def test_open_sse_client_propagates_headers(monkeypatch: Any) -> None:
+    """RH-5: SSE forwards configured headers to the SDK transport."""
+    passed_headers: dict[str, str] | None = None
+
+    def fake_sse_client(url: str, headers: dict[str, str] | None = None) -> Any:
+        nonlocal passed_headers
+        del url
+        passed_headers = headers
+        import contextlib
+
+        @contextlib.asynccontextmanager
+        async def fake_cm():
+            yield None, None
+
+        return fake_cm()
+
+    import tela.shell.downstream_clients as clients_module
+
+    monkeypatch.setattr(clients_module, "sse_client", fake_sse_client)
+
+    server_config = ServerConfig(
+        name="remote",
+        url="http://x",
+        transport="sse",
+        headers={"X-Test": "Sse"},
+    )
+
+    class FakeSession:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            del args
+            del kwargs
+
+        async def __aenter__(self) -> "FakeSession":
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            del args
+
+        async def initialize(self) -> Any:
+            import collections
+
+            InitResult = collections.namedtuple("InitResult", ["instructions"])
+            return InitResult(instructions=None)
+
+    monkeypatch.setattr(clients_module, "ClientSession", FakeSession)
+
+    result = asyncio.run(clients_module._open_sse_client("remote", server_config))
+    assert result.is_ok
+    assert passed_headers == server_config.headers
+
+
+def test_open_streamable_http_client_omits_empty_headers(monkeypatch: Any) -> None:
+    """RH-5: Empty Streamable HTTP headers preserve the existing SDK call shape."""
+    passed_http_client: Any | None = "not-called"
+
+    def fake_streamable_http_client(
+        url: str,
+        *,
+        http_client: Any | None = None,
+        terminate_on_close: bool = True,
+    ) -> Any:
+        nonlocal passed_http_client
+        del url
+        del terminate_on_close
+        passed_http_client = http_client
+        import contextlib
+
+        @contextlib.asynccontextmanager
+        async def fake_cm():
+            yield None, None, None
+
+        return fake_cm()
+
+    import tela.shell.downstream_clients as clients_module
+
+    monkeypatch.setattr(
+        clients_module, "streamable_http_client", fake_streamable_http_client
+    )
+
+    class FakeSession:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            del args
+            del kwargs
+
+        async def __aenter__(self) -> "FakeSession":
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            del args
+
+        async def initialize(self) -> Any:
+            import collections
+
+            InitResult = collections.namedtuple("InitResult", ["instructions"])
+            return InitResult(instructions=None)
+
+    monkeypatch.setattr(clients_module, "ClientSession", FakeSession)
+
+    result = asyncio.run(
+        clients_module._open_streamable_http_client(
+            "remote", ServerConfig(name="remote", url="http://x")
+        )
+    )
+    assert result.is_ok
+    assert passed_http_client is None
+
+
+def test_open_sse_client_omits_empty_headers(monkeypatch: Any) -> None:
+    """RH-5: Empty SSE headers preserve the existing SDK call shape."""
+    passed_headers: dict[str, str] | None | str = "not-called"
+
+    def fake_sse_client(url: str, headers: dict[str, str] | None = None) -> Any:
+        nonlocal passed_headers
+        del url
+        passed_headers = headers
+        import contextlib
+
+        @contextlib.asynccontextmanager
+        async def fake_cm():
+            yield None, None
+
+        return fake_cm()
+
+    import tela.shell.downstream_clients as clients_module
+
+    monkeypatch.setattr(clients_module, "sse_client", fake_sse_client)
+
+    class FakeSession:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            del args
+            del kwargs
+
+        async def __aenter__(self) -> "FakeSession":
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            del args
+
+        async def initialize(self) -> Any:
+            import collections
+
+            InitResult = collections.namedtuple("InitResult", ["instructions"])
+            return InitResult(instructions=None)
+
+    monkeypatch.setattr(clients_module, "ClientSession", FakeSession)
+
+    result = asyncio.run(
+        clients_module._open_sse_client(
+            "remote", ServerConfig(name="remote", url="http://x", transport="sse")
+        )
+    )
+    assert result.is_ok
+    assert passed_headers is None
+
+
+def test_open_streamable_http_client_redacts_header_values_from_errors(
+    monkeypatch: Any,
+) -> None:
+    """RH-5: Streamable HTTP errors must not serialize configured header values."""
+
+    def fake_streamable_http_client(
+        url: str,
+        *,
+        http_client: Any | None = None,
+        terminate_on_close: bool = True,
+    ) -> Any:
+        del url
+        del http_client
+        del terminate_on_close
+        import contextlib
+
+        @contextlib.asynccontextmanager
+        async def fake_cm():
+            raise RuntimeError("connect failed with Bearer secret-token")
+            yield None, None, None
+
+        return fake_cm()
+
+    import tela.shell.downstream_clients as clients_module
+
+    monkeypatch.setattr(
+        clients_module, "streamable_http_client", fake_streamable_http_client
+    )
+
+    result = asyncio.run(
+        clients_module._open_streamable_http_client(
+            "remote",
+            ServerConfig(
+                name="remote",
+                url="http://x",
+                headers={"Authorization": "Bearer secret-token"},
+            ),
+        )
+    )
+    assert result.is_err
+    assert result.error is not None
+    assert "Bearer secret-token" not in result.error
+    assert "[redacted]" in result.error
+
+
+def test_open_sse_client_redacts_header_values_from_errors(monkeypatch: Any) -> None:
+    """RH-5: SSE errors must not serialize configured header values."""
+
+    def fake_sse_client(url: str, headers: dict[str, str] | None = None) -> Any:
+        del url
+        del headers
+        import contextlib
+
+        @contextlib.asynccontextmanager
+        async def fake_cm():
+            raise RuntimeError("connect failed with sse-secret")
+            yield None, None
+
+        return fake_cm()
+
+    import tela.shell.downstream_clients as clients_module
+
+    monkeypatch.setattr(clients_module, "sse_client", fake_sse_client)
+
+    result = asyncio.run(
+        clients_module._open_sse_client(
+            "remote",
+            ServerConfig(
+                name="remote",
+                url="http://x",
+                transport="sse",
+                headers={"X-Secret": "sse-secret"},
+            ),
+        )
+    )
+    assert result.is_err
+    assert result.error is not None
+    assert "sse-secret" not in result.error
+    assert "[redacted]" in result.error
+
+
 def test_call_tool_returns_real_downstream_result() -> None:
     """call_tool forwards to connected downstream session and returns payload."""
 

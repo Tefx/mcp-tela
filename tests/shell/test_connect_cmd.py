@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from email.message import Message
 import io
 import json
 import os
@@ -1589,8 +1588,8 @@ def test_forward_stdio_http_recovers_when_response_requests_bridge_reconnect(
     assert '"tools": []' in output
 
 
-def test_response_requires_bridge_recovery_for_tool_call_error_payload() -> None:
-    """CallToolResult isError payloads must also trigger bridge recovery."""
+def test_response_requires_bridge_recovery_ignores_tool_call_result_text() -> None:
+    """CallToolResult text is downstream data and must not trigger recovery."""
 
     payload = json.dumps(
         {
@@ -1608,13 +1607,13 @@ def test_response_requires_bridge_recovery_for_tool_call_error_payload() -> None
         }
     ).encode("utf-8")
 
-    assert connect_bridge._response_requires_bridge_recovery([payload]) is True
+    assert connect_bridge._response_requires_bridge_recovery([payload]) is False
 
 
-def test_forward_stdio_http_recovers_when_tool_call_result_requires_reconnect(
+def test_forward_stdio_http_does_not_recover_from_tool_call_result_text(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """tools/call isError reconnect responses must trigger bridge recovery."""
+    """tools/call result text is downstream data and must not trigger recovery."""
 
     initialize_request = b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'
     tool_call_request = b'{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"value":"after-idle"}}}'
@@ -1711,73 +1710,34 @@ def test_forward_stdio_http_recovers_when_tool_call_result_requires_reconnect(
     )
 
     assert result.is_ok
-    assert recover_calls["count"] == 1
+    assert recover_calls["count"] == 0
     assert post_calls == [
         ("http://127.0.0.1:8123/mcp", "old-token", None),
         ("http://127.0.0.1:8123/mcp", "old-token", "session-1"),
-        ("http://127.0.0.1:9001/mcp", "recovered-token", None),
-        ("http://127.0.0.1:9001/mcp", "recovered-token", "recovered-session"),
     ]
     output = stdout_buffer.getvalue().decode("utf-8", errors="replace")
-    assert '"after-idle"' in output
+    assert "RECONNECT_REQUIRED" in output
+    assert '"after-idle"' not in output
 
 
-def test_post_mcp_message_retries_only_for_transient_contract_signal(
+def test_post_mcp_message_delegates_once_to_phase_aware_executor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """503 retry must require gateway transient contract fields."""
+    """Legacy facade delegates MCP data-plane I/O to post_mcp_http once."""
 
-    class _FakeResponse:
-        def __init__(self, body: bytes) -> None:
-            self._body = body
-            self.headers = {
-                "Content-Type": "application/json",
-                "mcp-session-id": "s-1",
-            }
+    calls: list[dict[str, object]] = []
 
-        def __enter__(self) -> "_FakeResponse":
-            return self
-
-        def __exit__(self, exc_type, exc, tb) -> None:  # type: ignore[no-untyped-def]
-            _ = exc_type, exc, tb
-
-        def read(self) -> bytes:
-            return self._body
-
-        def close(self) -> None:
-            pass
-
-    transient_payload = {
-        "error": "ADMISSION_REJECTED_WARMING: gateway not ready for MCP admission",
-        "code": "ADMISSION_REJECTED_WARMING",
-        "transient": True,
-        "retry": {
-            "authorized": True,
-            "basis": "gateway_signal",
-            "expectation": "bounded",
-        },
-        "gateway_state": "warming",
-    }
-
-    calls = {"count": 0}
-
-    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
-        _ = request, timeout
-        calls["count"] += 1
-        if calls["count"] == 1:
-            raise urllib_error.HTTPError(
-                "http://127.0.0.1:8123/mcp",
-                503,
-                "Service Unavailable",
-                Message(),
-                io.BytesIO(json.dumps(transient_payload).encode("utf-8")),
+    def _fake_post_mcp_http(**kwargs: object) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
+        calls.append(dict(kwargs))
+        return Result(
+            value=connect_bridge.BridgeHttpResponse(
+                content_type="application/json",
+                body=b'{"jsonrpc":"2.0","id":1,"result":{}}',
+                session_id="s-1",
             )
-        return _FakeResponse(b'{"jsonrpc":"2.0","id":1,"result":{}}')
+        )
 
-    monkeypatch.setattr(
-        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
-    )
-    monkeypatch.setattr("tela.commands.http_client.time.sleep", lambda _seconds: None)
+    monkeypatch.setattr(connect_bridge, "post_mcp_http", _fake_post_mcp_http)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1786,30 +1746,31 @@ def test_post_mcp_message_retries_only_for_transient_contract_signal(
     )
 
     assert result.is_ok
-    assert calls["count"] == 2
+    assert calls[0]["response_timeout_seconds"] is None
+    assert len(calls) == 1
 
 
-def test_post_mcp_message_does_not_retry_on_plain_503_without_contract(
+def test_post_mcp_message_maps_plain_non_2xx_executor_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Plain 503 without transient contract must not authorize retry."""
+    """Legacy facade preserves MCP_FORWARD_FAILED formatting for HTTP status errors."""
 
     calls = {"count": 0}
 
-    def _fake_urlopen(request, timeout=0):  # type: ignore[no-untyped-def]
-        _ = request, timeout
+    def _fake_post_mcp_http(**_kwargs: object) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
         calls["count"] += 1
-        raise urllib_error.HTTPError(
-            "http://127.0.0.1:8123/mcp",
-            503,
-            "Service Unavailable",
-            Message(),
-            io.BytesIO(b'{"error":"unstructured 503"}'),
+        return Result(
+            error=connect_bridge.BridgeHttpError(
+                phase="http_status",
+                message="MCP_FORWARD_FAILED: http 503 Service Unavailable",
+                request_sent=True,
+                mcp_admitted=None,
+                status_code=503,
+                retryable_warming=False,
+            )
         )
 
-    monkeypatch.setattr(
-        "tela.commands.http_client.urllib_request.urlopen", _fake_urlopen
-    )
+    monkeypatch.setattr(connect_bridge, "post_mcp_http", _fake_post_mcp_http)
 
     result = connect_cmd._post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1818,7 +1779,7 @@ def test_post_mcp_message_does_not_retry_on_plain_503_without_contract(
     )
 
     assert result.is_err
-    assert result.error == "MCP_FORWARD_FAILED: http 503"
+    assert result.error == "MCP_FORWARD_FAILED: http 503 Service Unavailable"
     assert calls["count"] == 1
 
 

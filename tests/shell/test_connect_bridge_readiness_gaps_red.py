@@ -8,17 +8,12 @@ behavior. Those assertions are obsolete now that ``_run_bridge`` calls
 
 from __future__ import annotations
 
-import json
-import urllib.error
-from email.message import Message
-from io import BytesIO
 from typing import Any
 
 import pytest
 
 import tela.commands.connect_cmd as connect_cmd
 import tela.commands.connect_bridge as connect_bridge
-import tela.commands.http_client as http_client
 from tela.core.models import StatusResponse
 from tela.shell.result import Result
 
@@ -172,37 +167,29 @@ class TestBridgeReadinessBehavior:
             == "BRIDGE_NOT_READY: state=degraded degraded_reason=upstream_unreachable"
         )
 
-    def test_post_mcp_message_retries_boundedly_on_transient_503(
+    def test_post_mcp_message_delegates_transient_503_to_phase_aware_executor(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Transient warming 503 responses must use bounded retry budget."""
+        """MCP data-plane no longer owns an internal transient-503 retry loop."""
         request_count = 0
-        transient_body = json.dumps(
-            {
-                "code": "ADMISSION_REJECTED_WARMING",
-                "transient": True,
-                "retry": {
-                    "authorized": True,
-                    "basis": "gateway_signal",
-                    "expectation": "bounded",
-                },
-                "gateway_state": "warming",
-            }
-        ).encode("utf-8")
 
-        def _fake_urlopen(*_args: Any, **_kwargs: Any) -> Any:
+        def _fake_post_mcp_http(**_kwargs: Any) -> Result[
+            connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError
+        ]:
             nonlocal request_count
             request_count += 1
-            raise urllib.error.HTTPError(
-                url="http://127.0.0.1:8000/mcp",
-                code=503,
-                msg="Service Unavailable",
-                hdrs=Message(),
-                fp=BytesIO(transient_body),
+            return Result(
+                error=connect_bridge.BridgeHttpError(
+                    phase="http_status",
+                    message="HTTP_503: gateway warming",
+                    request_sent=True,
+                    mcp_admitted=False,
+                    status_code=503,
+                    retryable_warming=True,
+                )
             )
 
-        monkeypatch.setattr(http_client.urllib_request, "urlopen", _fake_urlopen)
-        monkeypatch.setattr(connect_bridge.time, "sleep", lambda _seconds: None)
+        monkeypatch.setattr(connect_bridge, "post_mcp_http", _fake_post_mcp_http)
 
         result = connect_bridge.post_mcp_message(
             mcp_url="http://127.0.0.1:8000/mcp",
@@ -213,7 +200,7 @@ class TestBridgeReadinessBehavior:
 
         assert result.is_err
         assert result.error == "MCP_FORWARD_FAILED: http 503"
-        assert request_count == connect_cmd.HTTP_TRANSIENT_RETRIES + 1
+        assert request_count == 1
 
     def test_readiness_authority_uses_get_gateway_status_not_post_json(
         self, monkeypatch: pytest.MonkeyPatch

@@ -1018,28 +1018,26 @@ def test_get_gateway_status_delegates_to_retry_http_request(
 def test_post_mcp_message_error_format_preserved(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """_post_mcp_message must transform retry_http_request errors to MCP format."""
+    """_post_mcp_message maps phase-aware post_mcp_http errors to MCP format."""
 
     from tela.commands import connect_bridge
 
     from tela.shell.result import Result
 
-    def _fake_retry_http_request(  # type: ignore[no-untyped-def]
-        *,
-        url: str,
-        method: str,
-        headers: dict[str, str],
-        data: bytes | None = None,
-        max_retries: int,
-        timeout_seconds: float,
-        backoff_seconds: float = 0.5,
-        retry_on_503: bool = True,
-        retry_on_transient: bool = True,
-        is_503_retryable: Callable | None = None,
-    ) -> "Result[http.client.HTTPResponse, str]":
-        return Result(error="HTTP_503: http://127.0.0.1:8123/mcp")
+    def _fake_post_mcp_http_status(
+        **_kwargs: object,
+    ) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
+        return Result(
+            error=connect_bridge.BridgeHttpError(
+                phase="http_status",
+                message="HTTP_503: http://127.0.0.1:8123/mcp",
+                request_sent=True,
+                mcp_admitted=None,
+                status_code=503,
+            )
+        )
 
-    monkeypatch.setattr(connect_bridge, "retry_http_request", _fake_retry_http_request)
+    monkeypatch.setattr(connect_bridge, "post_mcp_http", _fake_post_mcp_http_status)
 
     result = connect_bridge.post_mcp_message(
         mcp_url="http://127.0.0.1:8123/mcp",
@@ -1050,24 +1048,20 @@ def test_post_mcp_message_error_format_preserved(
     assert result.is_err
     assert result.error == "MCP_FORWARD_FAILED: http 503"
 
-    # URLError case
-    def _fake_retry_http_request_connect_error(  # type: ignore[no-untyped-def]
-        *,
-        url: str,
-        method: str,
-        headers: dict[str, str],
-        data: bytes | None = None,
-        max_retries: int,
-        timeout_seconds: float,
-        backoff_seconds: float = 0.5,
-        retry_on_503: bool = True,
-        retry_on_transient: bool = True,
-        is_503_retryable: Callable | None = None,
-    ) -> "Result[http.client.HTTPResponse, str]":
-        return Result(error="HTTP_CONNECT_ERROR: Connection refused")
+    def _fake_post_mcp_http_connect_error(
+        **_kwargs: object,
+    ) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
+        return Result(
+            error=connect_bridge.BridgeHttpError(
+                phase="connect",
+                message="Connection refused",
+                request_sent=False,
+                mcp_admitted=None,
+            )
+        )
 
     monkeypatch.setattr(
-        connect_bridge, "retry_http_request", _fake_retry_http_request_connect_error
+        connect_bridge, "post_mcp_http", _fake_post_mcp_http_connect_error
     )
 
     result2 = connect_bridge.post_mcp_message(

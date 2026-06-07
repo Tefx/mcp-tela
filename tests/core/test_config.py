@@ -167,6 +167,29 @@ def test_validate_config_server_valid_url_only() -> None:
     assert errors == []
 
 
+def test_validate_config_server_headers_with_command_rejected() -> None:
+    """RH-4: Command transport with non-empty headers is rejected."""
+    config = TelaConfig(
+        servers={"bad": ServerConfig(name="bad", command="cmd", headers={"x": "y"})},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    errors = validate_config(config)
+    assert len(errors) == 1
+    assert "SERVER_HEADERS_WITH_STDIO" in errors[0]
+    assert "uses 'command' transport, but 'headers' are configured" in errors[0]
+
+
+def test_validate_config_server_empty_headers_with_command_allowed() -> None:
+    """RH-4: Empty headers preserve stdio behavior."""
+    config = TelaConfig(
+        servers={"ok": ServerConfig(name="ok", command="cmd", headers={})},
+        profiles={"dev": ProfileConfig(name="dev", default=True)},
+        auth=AuthConfig(mode=AuthMode.OPEN),
+    )
+    assert validate_config(config) == []
+
+
 def test_parse_config_injects_name_from_dict_keys() -> None:
     """B3: YAML key IS the server/profile name per INTERFACES.md."""
     config = parse_config(
@@ -228,6 +251,67 @@ def test_parse_config_server_env_expands_placeholders() -> None:
         "API_KEY": "abc123",
         "PREFIXED": "token-abc123",
     }
+
+
+def test_parse_config_server_headers_defaults_to_empty_mapping() -> None:
+    """RH-1: omitted headers default to an empty mapping."""
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {"remote": {"url": "http://x"}},
+            "auth": {"mode": "open"},
+        },
+        {},
+    )
+    assert config.servers["remote"].headers == {}
+
+
+def test_parse_config_server_headers_expands_placeholders() -> None:
+    """RH-1: headers expand using existing env expansion."""
+    config = parse_config(
+        {
+            "profiles": {"dev": {"default": True}},
+            "servers": {
+                "remote": {
+                    "url": "http://x",
+                    "headers": {
+                        "Authorization": "Bearer ${KEY}",
+                        "X-Custom": "$KEY",
+                    },
+                }
+            },
+            "auth": {"mode": "open"},
+        },
+        {"KEY": "abc123"},
+    )
+    assert config.servers["remote"].headers == {
+        "Authorization": "Bearer abc123",
+        "X-Custom": "abc123",
+    }
+
+
+def test_parse_config_server_headers_rejects_non_string() -> None:
+    """RH-2, RH-3: headers must be dict[str, str], non-string fails parse."""
+    with pytest.raises(ConfigContractError) as exc:
+        parse_config(
+            {
+                "profiles": {"dev": {"default": True}},
+                "servers": {
+                    "remote": {
+                        "url": "http://x",
+                        "headers": {
+                            "X-Num": 123,
+                            "X-Bool": True,
+                            42: "bad-key",
+                        },
+                    }
+                },
+                "auth": {"mode": "open"},
+            },
+            {},
+        )
+    assert exc.value.code == "CONFIG_PARSE_ERROR"
+    assert "headers" in exc.value.message
 
 
 def test_parse_config_server_env_missing_and_explicit_empty_are_equivalent() -> None:

@@ -232,6 +232,10 @@ def validate_config(
             errors.append(
                 f"SERVER_AMBIGUOUS_TRANSPORT: server '{name}' must define either 'command' or 'url', not both."
             )
+        elif has_command and server.headers:
+            errors.append(
+                f"SERVER_HEADERS_WITH_STDIO: server '{name}' uses 'command' transport, but 'headers' are configured. Headers are only supported for 'url' HTTP/SSE transports."
+            )
 
         if server.tool_prefix is not None and (
             server.tool_prefix.startswith("tela_")

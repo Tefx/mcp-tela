@@ -15,18 +15,19 @@ from urllib import error as urllib_error
 
 import pytest
 
+from tela.commands import connect_bridge
 from tela.commands.connect_bridge import (
     HTTP_TRANSIENT_RETRIES,
 )
 from tela.commands.connect_cmd import (
     _autostart_serve,
     _post_json,
-    _post_mcp_message,
     _wait_for_live_lockfile,
 )
 from tela.commands.http_client import _is_transient_url_error
 from tela.core.models import LockfileData
 from tela.shell import lockfile
+from tela.shell.result import Result
 
 
 # ---------------------------------------------------------------------------
@@ -60,96 +61,151 @@ class TestB1TransientRetry:
         exc = urllib_error.URLError("unknown host")
         assert _is_transient_url_error(exc) is False
 
-    def test_post_mcp_message_retries_on_transient_error(self) -> None:
-        """_post_mcp_message must retry on transient URLError, then succeed."""
-        call_count = 0
+    def test_post_mcp_message_retries_on_transient_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Phase-aware MCP forwarding recovers/replays transient pre-send errors."""
+        post_calls = 0
+        recovery_calls = 0
 
-        class FakeResponse:
-            headers = {"Content-Type": "application/json", "mcp-session-id": None}
-
-            def read(self) -> bytes:
-                return b'{"result": "ok"}'
-
-            def close(self) -> None:
-                return None
-
-            def __enter__(self) -> "FakeResponse":
-                return self
-
-            def __exit__(self, *args: object) -> None:
-                pass
-
-        def mock_urlopen(req: object, timeout: float = 0) -> FakeResponse:
-            nonlocal call_count
-            call_count += 1
-            if call_count <= 2:
-                raise urllib_error.URLError(
-                    ConnectionRefusedError("Connection refused")
+        def fake_post_mcp_http(
+            **_kwargs: object,
+        ) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
+            nonlocal post_calls
+            post_calls += 1
+            if post_calls <= 2:
+                return Result(
+                    error=connect_bridge.BridgeHttpError(
+                        phase="connect",
+                        message="Connection refused",
+                        request_sent=False,
+                        mcp_admitted=None,
+                    )
                 )
-            return FakeResponse()
-
-        with (
-            patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
-            patch("tela.commands.connect_bridge.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
-        ):
-            result = _post_mcp_message(
-                mcp_url="http://127.0.0.1:9999/mcp",
-                bearer_token="test-token",
-                payload=b'{"method": "initialize"}',
+            return Result(
+                value=connect_bridge.BridgeHttpResponse(
+                    content_type="application/json",
+                    body=b'{"jsonrpc":"2.0","id":"ping","result":{"ok":true}}',
+                    session_id=None,
+                )
             )
 
-        assert result.is_ok, f"Expected success after retries, got: {result.error}"
-        assert call_count == 3, (
-            f"Expected 3 attempts (2 retries + 1 success), got {call_count}"
+        def recover_transport() -> Result[tuple[str, str], str]:
+            nonlocal recovery_calls
+            recovery_calls += 1
+            return Result(value=("http://127.0.0.1:10000/mcp", "recovered-token"))
+
+        monkeypatch.setattr(connect_bridge, "post_mcp_http", fake_post_mcp_http)
+
+        result = connect_bridge._forward_request_with_recovery(
+            mcp_url="http://127.0.0.1:9999/mcp",
+            bearer_token="test-token",
+            message=b'{"jsonrpc":"2.0","id":"ping","method":"ping"}',
+            session_id=None,
+            message_method="ping",
+            initialize_payload=None,
+            max_recovery_attempts=HTTP_TRANSIENT_RETRIES,
+            recover_transport=recover_transport,
+            bridge_connection_id="bridge-b1",
         )
 
-    def test_post_mcp_message_fails_after_max_retries(self) -> None:
-        """_post_mcp_message must fail after exhausting retries."""
-        call_count = 0
+        assert result.is_ok, f"Expected success after recovery, got: {result.error}"
+        assert post_calls == 3
+        assert recovery_calls == 2
 
-        def mock_urlopen(req: object, timeout: float = 0) -> None:
-            nonlocal call_count
-            call_count += 1
-            raise urllib_error.URLError(ConnectionRefusedError("Connection refused"))
+    def test_post_mcp_message_fails_after_max_retries(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Phase-aware MCP forwarding stops when bounded recovery is exhausted."""
+        post_calls = 0
+        recovery_calls = 0
 
-        with (
-            patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen),
-            patch("tela.commands.connect_bridge.HTTP_TRANSIENT_BACKOFF_SECONDS", 0.01),
-        ):
-            result = _post_mcp_message(
-                mcp_url="http://127.0.0.1:9999/mcp",
-                bearer_token="test-token",
-                payload=b'{"method": "initialize"}',
+        def fake_post_mcp_http(
+            **_kwargs: object,
+        ) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
+            nonlocal post_calls
+            post_calls += 1
+            return Result(
+                error=connect_bridge.BridgeHttpError(
+                    phase="connect",
+                    message="Connection refused",
+                    request_sent=False,
+                    mcp_admitted=None,
+                )
             )
+
+        def recover_transport() -> Result[tuple[str, str], str]:
+            nonlocal recovery_calls
+            recovery_calls += 1
+            if recovery_calls > HTTP_TRANSIENT_RETRIES:
+                return Result(error="BRIDGE_RECOVERY_EXHAUSTED: test budget exhausted")
+            return Result(value=("http://127.0.0.1:10000/mcp", "recovered-token"))
+
+        monkeypatch.setattr(connect_bridge, "post_mcp_http", fake_post_mcp_http)
+
+        result = connect_bridge._forward_request_with_recovery(
+            mcp_url="http://127.0.0.1:9999/mcp",
+            bearer_token="test-token",
+            message=b'{"jsonrpc":"2.0","id":"ping","method":"ping"}',
+            session_id=None,
+            message_method="ping",
+            initialize_payload=None,
+            max_recovery_attempts=HTTP_TRANSIENT_RETRIES,
+            recover_transport=recover_transport,
+            bridge_connection_id="bridge-b1",
+        )
 
         assert result.is_err
-        assert "MCP_FORWARD_FAILED" in (result.error or "")
-        assert call_count == HTTP_TRANSIENT_RETRIES + 1
+        assert result.error == "BRIDGE_RECOVERY_EXHAUSTED: test budget exhausted"
+        assert post_calls == HTTP_TRANSIENT_RETRIES + 1
+        assert recovery_calls == HTTP_TRANSIENT_RETRIES + 1
 
-    def test_post_mcp_message_no_retry_on_http_error(self) -> None:
-        """HTTP errors (4xx/5xx) must NOT be retried."""
-        call_count = 0
+    def test_post_mcp_message_no_retry_on_http_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Plain HTTP status errors must not trigger bridge recovery/replay."""
+        post_calls = 0
+        recovery_calls = 0
 
-        def mock_urlopen(req: object, timeout: float = 0) -> None:
-            nonlocal call_count
-            call_count += 1
-            raise urllib_error.HTTPError(
-                "http://test/mcp",
-                500,
-                "Server Error",
-                {},
-                None,  # type: ignore[arg-type]
+        def fake_post_mcp_http(
+            **_kwargs: object,
+        ) -> Result[connect_bridge.BridgeHttpResponse, connect_bridge.BridgeHttpError]:
+            nonlocal post_calls
+            post_calls += 1
+            return Result(
+                error=connect_bridge.BridgeHttpError(
+                    phase="http_status",
+                    message="MCP_FORWARD_FAILED: http 500 Server Error",
+                    request_sent=True,
+                    mcp_admitted=None,
+                    status_code=500,
+                    retryable_warming=False,
+                )
             )
 
-        with patch("tela.commands.http_client.urllib_request.urlopen", mock_urlopen):
-            result = _post_mcp_message(
-                mcp_url="http://127.0.0.1:9999/mcp",
-                bearer_token="test-token",
-                payload=b'{"method": "initialize"}',
-            )
+        def recover_transport() -> Result[tuple[str, str], str]:
+            nonlocal recovery_calls
+            recovery_calls += 1
+            return Result(value=("http://127.0.0.1:10000/mcp", "recovered-token"))
+
+        monkeypatch.setattr(connect_bridge, "post_mcp_http", fake_post_mcp_http)
+
+        result = connect_bridge._forward_request_with_recovery(
+            mcp_url="http://127.0.0.1:9999/mcp",
+            bearer_token="test-token",
+            message=b'{"jsonrpc":"2.0","id":"ping","method":"ping"}',
+            session_id=None,
+            message_method="ping",
+            initialize_payload=None,
+            max_recovery_attempts=HTTP_TRANSIENT_RETRIES,
+            recover_transport=recover_transport,
+            bridge_connection_id="bridge-b1",
+        )
 
         assert result.is_err
-        assert call_count == 1, "HTTP errors must not trigger retry"
+        assert result.error == "MCP_FORWARD_FAILED: http 500 Server Error"
+        assert post_calls == 1
+        assert recovery_calls == 0
 
     def test_post_json_retries_on_transient_error(self) -> None:
         """_post_json must retry on transient URLError for connect/disconnect."""

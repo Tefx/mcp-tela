@@ -115,6 +115,25 @@ servers:
     # instructions: false
 
   # ===========================================================================
+  # Example: Remote Streamable HTTP server with authorization
+  # ===========================================================================
+  resofeed:
+    # URL transport (Streamable HTTP is the default when 'transport' is omitted)
+    url: "https://resofeed.tefx.one/mcp"
+
+    # OPTIONAL: HTTP headers passed to the downstream server per-request.
+    # Notes:
+    # - Valid only for `url` transports (Streamable HTTP, or `transport: sse`).
+    # - Invalid and rejected for `command` (stdio) transports.
+    # - Must be exactly a dict[str, str].
+    # - Preserves existing parse-time env expansion rules (${VAR} / $VAR);
+    #   DO NOT hardcode real secrets directly in config files!
+    headers:
+      Authorization: "${RESOFEED_AUTHORIZATION}"
+
+    family: "resofeed"
+
+  # ===========================================================================
   # Example: Remote SSE-based MCP server (legacy)
   # ===========================================================================
   # github_sse:

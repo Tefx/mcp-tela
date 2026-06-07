@@ -26,6 +26,7 @@ from pydantic import AnyUrl, ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from tela.core.bridge_protocol import response_requires_bridge_recovery
 from tela.core.errors import (
     error_to_http_status,
 )
@@ -844,7 +845,21 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
                 )
             )
         except Exception as exc:
-            return upstream_server._mcp_server._make_error_result(str(exc))
+            error_message = str(exc)
+            gateway_error_payload = json.dumps(
+                {"error": {"message": error_message}}, separators=(",", ":")
+            ).encode("utf-8")
+            if (
+                req.params.name not in BUILTIN_TOOL_NAMES
+                and response_requires_bridge_recovery([gateway_error_payload])
+            ):
+                try:
+                    request_ctx.get()
+                except LookupError:
+                    pass
+                else:
+                    raise
+            return upstream_server._mcp_server._make_error_result(error_message)
 
     upstream_server._mcp_server.request_handlers[mcp_types.CallToolRequest] = (
         _call_tool_request

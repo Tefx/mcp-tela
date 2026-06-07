@@ -85,6 +85,20 @@ servers:
     family: "git"
 ```
 
+Minimal Streamable HTTP example with `remote_headers`:
+
+```yaml
+servers:
+  resofeed:
+    url: "https://resofeed.tefx.one/mcp"
+    headers:
+      Authorization: "${RESOFEED_AUTHORIZATION}"
+      X-Custom-Auth: "fixed-value"
+    family: "resofeed"
+```
+
+The `headers` field is a `dict[str, str]` representing literal header keys and values. It supports the existing parse-time `${VAR}` / `$VAR` expansion. `headers` is only valid for URL transports (Streamable HTTP and `transport: sse`); it is strictly rejected for stdio `command` servers. This is downstream transit configuration, entirely distinct from the `auth` section (which controls upstream client access to the gateway).
+
 Minimal SSE example (legacy):
 
 ```yaml
@@ -666,6 +680,15 @@ Common variables:
 - `HOME`
 
 ## Troubleshooting
+
+### Slow or long-running tools
+
+Slow or long-running MCP tools (such as long-polling, large file operations, or human approvals) wait without a bridge-imposed timeout. Slow tools are not bridge recovery failures.
+
+If a tool call is interrupted:
+- `MCP_RESPONSE_INTERRUPTED`: The connection was lost after sending an unsafe request (like `tools/call`) and execution is unknown. The request is not automatically replayed to avoid duplicate side effects.
+- `MCP_REQUEST_TIMEOUT`: An explicit future deadline expired (not used by default).
+- `BRIDGE_RECOVERY_EXHAUSTED`: Only occurs when the bridge exhausts its bounded attempts to recover gateway reachability or start a session, never just because a tool took too long.
 
 ### `open` mode fails to start cleanly
 
