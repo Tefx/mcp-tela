@@ -84358,3 +84358,113 @@ phases:
       - No docs edits.
 
       - remote_headers/unrelated dirty changes preserved.'
+  - id: docs_remediation
+    name: Remediate docs regression after ADR-009 docs sync
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: project
+
+
+      TARGET STATE:
+
+      `docs/USAGE.md` again documents the `remote_headers` / resofeed headers usage
+      that was lost after `adr009_reland.docs_sync`, while ADR-009 slow-tool lifecycle
+      documentation remains intact. The untracked temporary artifact `fix_adr009_docs.py`
+      is removed, and no other dirty, tracked, or untracked work is disturbed.
+
+
+      BOUNDING BOX:
+
+      - Primary doc: `docs/USAGE.md`
+
+      - Temporary artifact allowed for removal: `fix_adr009_docs.py`
+
+      - Preserve ADR-009 documentation content already landed by `adr009_reland.docs_sync`.
+
+      - Preserve all remote_headers implementation/test changes and unrelated dirty
+      state.
+
+
+      CONSTRAINTS:
+
+      - Restore only the missing `remote_headers` / resofeed headers documentation
+      section or equivalent usage coverage in `docs/USAGE.md`.
+
+      - Do NOT weaken, rewrite, or remove ADR-009 slow-tool / lifecycle documentation.
+
+      - Remove only `fix_adr009_docs.py`; do NOT clean, reset, stash, or delete any
+      other untracked/dirty files.
+
+      - Do NOT modify source files, tests, implementation behavior, or remote_headers
+      code/tests.
+
+      - Inspect `git status --short` before and after changes and explicitly account
+      for protected unrelated dirty state.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is a DOCS REMEDIATION implementation step. Completion requires concrete
+      tracked documentation restoration and targeted cleanup; narrative claims are
+      not sufficient.
+
+
+      <side_effect_budget>
+
+      Allowed: edit `docs/USAGE.md` narrowly to restore remote_headers/resofeed headers
+      documentation; remove `fix_adr009_docs.py` only if it exists and is the temporary
+      artifact. Forbidden: edits to source files, tests, plan state, ADR-009 behavior,
+      remote_headers implementation/test changes, unrelated dirty/untracked files,
+      git reset/clean/stash/checkout.
+
+
+      <risk_probes>
+
+      - Evidence from `adr009_reland.docs_sync` was contradicted by post-check; verify
+      actual file content with grep, not memory or previous evidence.
+
+      - ADR-009 slow-tool docs and remote_headers docs must coexist in `docs/USAGE.md`;
+      restoring one must not regress the other.
+
+      - Worktree cleanup must be surgical: only `fix_adr009_docs.py` may be removed,
+      and unrelated dirty state must be preserved verbatim.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Pre-change `git status --short --branch` is captured and identifies `fix_adr009_docs.py`
+      plus any unrelated/protected dirty state.
+
+      - [ ] `docs/USAGE.md` contains restored `remote_headers` / resofeed headers
+      documentation without removing ADR-009 slow-tool lifecycle documentation.
+
+      - [ ] `fix_adr009_docs.py` is removed if present, and no other untracked/dirty
+      files are removed or altered.
+
+      - [ ] Grep proof is pasted showing ADR-009 slow-tool docs and remote_headers/resofeed
+      headers docs both present in `docs/USAGE.md`.
+
+      - [ ] `git diff --check -- docs/USAGE.md` raw output and exit code are provided
+      and clean.
+
+      - [ ] Post-change `git status --short --branch` is captured and demonstrates
+      remote_headers implementation/test changes and unrelated dirty state were preserved.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- docs/USAGE.md — key passage confirming ADR-009 slow-tool docs before/after\
+      \ remediation and key passage confirming restored remote_headers/resofeed headers\
+      \ docs, or \"NOT READ: <reason>\"\n\n## Docs Remediation Receipt\n- pre_status:\
+      \ <paste `git status --short --branch`>\n- restored_remote_headers_passage:\
+      \ <paste the restored docs/USAGE.md passage>\n- preserved_adr009_passage: <paste\
+      \ ADR-009 slow-tool/lifecycle passage still present>\n- temp_artifact_cleanup:\
+      \ <state whether fix_adr009_docs.py existed and exact removal result>\n\n##\
+      \ Required Commands and Raw Output\n- command: `grep -nEi 'ADR-009|slow tool|slow-tool|timeout|replay|lifecycle'\
+      \ docs/USAGE.md`\n  raw_output: |\n    <paste output>\n  exit_code: <code>\n\
+      - command: `grep -nEi 'remote_headers|resofeed|headers' docs/USAGE.md`\n  raw_output:\
+      \ |\n    <paste output>\n  exit_code: <code>\n- command: `git diff --check --\
+      \ docs/USAGE.md`\n  raw_output: |\n    <paste output>\n  exit_code: <code>\n\
+      - post_status: <paste `git status --short --branch`>\n\n## Preservation Ledger\n\
+      - remote_headers implementation/test changes preserved: <evidence from status/diff\
+      \ summary>\n- unrelated dirty state preserved: <evidence from pre/post status\
+      \ comparison>\n- source/test files edited: <must be NONE>"
+    depends_on:
+    - adr009_reland.docs_sync
+    agent: project-guide
