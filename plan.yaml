@@ -82419,7 +82419,7 @@ phases:
   steps:
   - id: adr009_reland.audit_red
     name: Audit ADR-009 residue and establish expected-red baseline
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: test_define_red
@@ -82539,6 +82539,57 @@ phases:
     agent: python-executor
     claimed_by: Python Executor
     claimed_at: '2026-06-07T13:56:13.371952+00:00'
+    done_at: '2026-06-07T13:57:58.575797+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - `docs/ADR-009-mcp-bridge-request-lifecycle.md` — ADR outlines requirements,\
+      \ classifying requests into SAFE and UNSAFE, with `HTTP_TIMEOUT_SECONDS` split\
+      \ into explicit lifecycle timeouts for send and response waiting.\n- `src/tela/commands/bridge_http.py`\
+      \ — Residue file containing HTTP phase executor implementations. Read signature\
+      \ and logic.\n- `tests/shell/test_adr009_contract_red.py` — Residue test file\
+      \ declaring red expectations for ADR009 features not yet integrated.\n- `src/tela/commands/connect_bridge.py`\
+      \ — Tracked code verified to have legacy `HTTP_TIMEOUT_SECONDS = 10.0` implementations,\
+      \ generic `timed out` recoverability list, and `retry_http_request`.\n\n## Worktree\
+      \ Safety\n- status_before:\n```\n## main...origin/main [ahead 381]\n M docs/DESIGN.md\n\
+      \ M docs/INTERFACES.md\n M docs/USAGE.md\nMM src/tela/core/config.py\nMM src/tela/core/models.py\n\
+      \ M src/tela/shell/downstream_clients.py\n M tela.yaml.example\nMM tests/core/test_config.py\n\
+      MM tests/shell/test_downstream_runtime_connection.py\n?? docs/ADR-009-mcp-bridge-request-lifecycle.md\n\
+      ?? src/tela/commands/bridge_http.py\n?? tests/shell/test_adr009_contract_red.py\n\
+      ?? tests/shell/test_bridge_http.py\n```\n- tracked_residue_check: `git ls-files\
+      \ docs/ADR-009-mcp-bridge-request-lifecycle.md src/tela/commands/bridge_http.py\
+      \ tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py` —\
+      \ returned no output since they are completely untracked residue.\n- protected_dirty_files_observed:\
+      \ `docs/DESIGN.md`, `docs/INTERFACES.md`, `docs/USAGE.md`, `src/tela/core/config.py`,\
+      \ `src/tela/core/models.py`, `src/tela/shell/downstream_clients.py`, `tela.yaml.example`,\
+      \ `tests/core/test_config.py`, `tests/shell/test_downstream_runtime_connection.py`.\n\
+      - unrelated_changes_preserved: PASS (no dirty files modified, no fast git commands\
+      \ performed removing untracked).\n\n## Requirement Traceability Matrix\n| requirement_id\
+      \ | source_ref + key passage | obligation | owning_step_id | checklist_item\
+      \ | evidence_field | status | non_intersection_or_escalation |\n| ADR009-R1\
+      \ | ADR/user basis | no bridge-imposed MCP response timeout by default | adr009_reland.bridge_integration\
+      \ | focused slow-request proof | red_proof/current_failure | OWNED | n/a |\n\
+      | ADR009-R2 | ADR/user basis | unsafe sent tools/call with unknown admission\
+      \ is not replayed | adr009_reland.bridge_integration | replay safety proof |\
+      \ red_proof/current_failure | OWNED | n/a |\n| ADR009-R3 | ADR/user basis |\
+      \ safe initialize/ping/tools/list may replay; JSON-RPC batches fail closed |\
+      \ adr009_reland.core_impl | replay policy tests | red_proof/current_failure\
+      \ | OWNED | n/a |\n| ADR009-R4 | ADR/user basis | request-level error.data.code\
+      \ is stable | adr009_reland.bridge_integration | JSON-RPC error evidence | red_proof/current_failure\
+      \ | OWNED | n/a |\n| ADR009-R5 | ADR/user basis | no Tasca/table_wait/wait_ms/tool-specific\
+      \ branch | adr009_reland.full_verification | grep/runtime evidence | red_proof/current_failure\
+      \ | OWNED | n/a |\n\n## Expected-Red Proof\n- command: `uv run pytest tests/shell/test_adr009_contract_red.py`\n\
+      - raw_stdout_stderr: (Truncated output for length) `FAILED tests/shell/test_adr009_contract_red.py::test_adr009_core_replay_policy_is_deterministic_and_fail_closed[{\"\
+      jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}-SAFE]` -> Fails on `assert\
+      \ policy_enum is not None, \"BridgeReplayPolicy enum is required by ADR-009\"\
+      `. Missing module and contract dependencies.\n- exit_code: 1\n- red_failures:\
+      \ `tela.core.bridge_protocol` lacks `BridgeReplayPolicy` and related logic.\
+      \ `tela.commands.bridge_http` is unable to be legitimately imported from tests\
+      \ since it relies on missing core components. Codebase completely lacks ADR\
+      \ implementation. This qualifies as expected-red proof documenting the gap.\n\
+      \n## Current Tracked-Code Evidence\n- timeout_constant_evidence: `src/tela/commands/connect_bridge.py:60`,\
+      \ `HTTP_TIMEOUT_SECONDS = 10.0`\n- mcp_data_plane_retry_evidence: `src/tela/commands/connect_bridge.py:551`\
+      \ -> `timeout_seconds=HTTP_TIMEOUT_SECONDS` within `retry_http_request` used\
+      \ by `post_mcp_message`.\n- timed_out_recoverability_evidence: `src/tela/commands/connect_bridge.py:368`\
+      \ -> `timed out` is actively checked inside `is_recoverable_error`."
   - id: adr009_reland.core_contract
     name: Define ADR-009 Core replay and HTTP helper contracts
     status: pending
