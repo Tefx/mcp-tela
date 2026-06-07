@@ -81678,3 +81678,145 @@ phases:
     depends_on:
     - remote_headers.runtime
     agent: project-guide
+  - id: remote_headers.gate
+    name: Gate remote downstream header support
+    status: pending
+    description: 'step_type: gate
+
+      verification_scope: phase-check
+
+      agent_source: project
+
+
+      DECISION ARTIFACT:
+
+      As an INDEPENDENT REVIEWER, decide whether the `remote_headers` feature slice
+      is safe to proceed/ship. This gate protects the feature phase boundary after
+      contract, runtime, and docs verification steps.
+
+
+      QUALITY BAR:
+
+      - All `remote_headers.*` non-gate steps completed with concrete evidence.
+
+      - Requirement traceability rows RH-1 through RH-7 have positive proof or explicit
+      blocking disposition.
+
+      - Expected-red proof exists before runtime changes and green proof exists after
+      runtime/docs changes.
+
+      - Streamable HTTP and SSE header forwarding are both proven through the real
+      downstream-client wiring seam or faithful monkeypatch of the MCP SDK client
+      call boundary.
+
+      - Stdio `command + headers` is rejected by `validate_config` with `SERVER_HEADERS_WITH_STDIO`.
+
+      - Non-string header keys/values are rejected rather than coerced.
+
+      - Header secret values are not newly logged or exposed in status/audit/provider/error
+      output.
+
+      - Docs/examples match implemented behavior and preserve dirty ADR-009 changes.
+
+      - No new transport alias, upstream/gateway bearer-token semantic change, or
+      dependency addition occurred.
+
+
+      REJECT CONDITIONS:
+
+      - Approving from sampled evidence while any RH-* row is unproven.
+
+      - Treating source/build evidence as a substitute for header propagation proof.
+
+      - Treating docs updates as sufficient without focused runtime tests.
+
+      - Ignoring dirty worktree preservation evidence for docs/USAGE.md.
+
+
+      <side_effect_budget>
+
+      Allowed: read code/docs/tests/evidence and run verification commands. Forbidden:
+      modifying source/docs/tests, completing lifecycle, or hiding residual blockers
+      as non-blocking without non-intersection evidence.
+
+      </side_effect_budget>
+
+
+      <risk_probes>
+
+      - Verify no Authorization/header secret literal appears in final status/audit/provider
+      outputs or error strings introduced by the slice.
+
+      - Verify SSE and Streamable HTTP are independently checked; one transport''s
+      proof cannot stand in for the other.
+
+      - Verify the docs wording cannot be mistaken for tela upstream/gateway bearer-token
+      configuration.
+
+      </risk_probes>'
+    verification: '- [ ] Gate decision basis maps RH-1 through RH-7 to evidence artifacts
+      and statuses (`PROVEN`, `UNPROVEN`, `NEEDS_TEST`, `BLOCKED`) with no orphan
+      requirements.
+
+      - [ ] All non-gate step evidence includes refs read confirmation, raw command
+      output, checklist receipt, and dirty-worktree preservation evidence where relevant.
+
+      - [ ] Config parsing/validation proof covers headers dict[str,str], env expansion,
+      non-string rejection, omitted/empty compatibility, and `SERVER_HEADERS_WITH_STDIO`.
+
+      - [ ] Runtime proof covers both Streamable HTTP and SSE header propagation and
+      confirms stdio does not consume headers.
+
+      - [ ] Secret non-exposure proof checks status/audit/provider/error surfaces
+      touched by the feature.
+
+      - [ ] Docs proof shows docs/USAGE.md and tela.yaml.example are synced without
+      real secrets, new transport aliases, or bearer-token semantic drift.
+
+      - [ ] Targeted tests and invar guard evidence are green, or blockers are explicitly
+      listed with required remediation before OPEN.
+
+      - [ ] Final gate verdict is `OPEN` only if all blocker-class obligations are
+      `PROVEN`; otherwise `BLOCKED` with required fix/retest actions.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- src/tela/core/models.py — key passage or \"NOT READ: <reason>\"\n\
+      - src/tela/core/config.py — key passage or \"NOT READ: <reason>\"\n- src/tela/shell/downstream_clients.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/core/test_config.py — key\
+      \ passage or \"NOT READ: <reason>\"\n- tests/shell/test_downstream_runtime_connection.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- docs/USAGE.md — key passage or\
+      \ \"NOT READ: <reason>\"\n- tela.yaml.example — key passage or \"NOT READ: <reason>\"\
+      \n- pyproject.toml — key passage or \"NOT READ: <reason>\"\n\n## Gate Decision\
+      \ Basis\n| requirement_id | behavior_claim | evidence_ref | status | closure_path\
+      \ | gate_decision_basis |\n| --- | --- | --- | --- | --- | --- |\n| RH-1 | headers\
+      \ parse as dict[str,str] with env expansion | <artifact> | <PROVEN/UNPROVEN/NEEDS_TEST/BLOCKED>\
+      \ | <path> | <basis> |\n| RH-2 | non-string headers rejected without coercion\
+      \ | <artifact> | <status> | <path> | <basis> |\n| RH-3 | stdio command+headers\
+      \ rejected with SERVER_HEADERS_WITH_STDIO | <artifact> | <status> | <path> |\
+      \ <basis> |\n| RH-4 | no transport alias or bearer semantic drift | <artifact>\
+      \ | <status> | <path> | <basis> |\n| RH-5 | Streamable HTTP and SSE receive\
+      \ headers | <artifact> | <status> | <path> | <basis> |\n| RH-6 | header secrets\
+      \ not exposed in status/audit/provider/error output | <artifact> | <status>\
+      \ | <path> | <basis> |\n| RH-7 | docs/examples synced | <artifact> | <status>\
+      \ | <path> | <basis> |\n\n## Evidence Review\n| Step ID | Status | Evidence\
+      \ Quality | Checklist Receipt Present | Concerns |\n| --- | --- | --- | ---\
+      \ | --- |\n| remote_headers.contract | <status> | <quality> | <yes/no> | <notes>\
+      \ |\n| remote_headers.runtime | <status> | <quality> | <yes/no> | <notes> |\n\
+      | remote_headers.docs_verify | <status> | <quality> | <yes/no> | <notes> |\n\
+      \n## Independent Commands / Artifacts Reviewed\n- commands: |\n    <commands\
+      \ rerun or reviewed>\n- raw_output: |\n    <paste output or artifact refs>\n\
+      \n## Issues Identified\n| Severity | Description | Related Step | Blocking?\
+      \ | Required action |\n| --- | --- | --- | --- | --- |\n| <blocker/should_fix/suggestion/tech_debt>\
+      \ | <issue> | <step> | <YES/NO> | <action> |\n\n## Gate Verdict\n- [ ] OPEN:\
+      \ all blocker-class requirements are PROVEN and evidence is sufficient.\n- [\
+      \ ] BLOCKED: one or more blocker-class obligations remain unresolved.\n\n##\
+      \ Checklist Receipt\n- traceability_matrix_complete: <satisfied/failed/blocked/unobserved>\n\
+      - evidence_quality_complete: <satisfied/failed/blocked/unobserved>\n- config_contract_proven:\
+      \ <satisfied/failed/blocked/unobserved>\n- runtime_forwarding_proven: <satisfied/failed/blocked/unobserved>\n\
+      - secret_non_exposure_proven: <satisfied/failed/blocked/unobserved>\n- docs_synced:\
+      \ <satisfied/failed/blocked/unobserved>\n- tests_and_invar_green_or_blocked:\
+      \ <satisfied/failed/blocked/unobserved>\n- verdict_valid: <satisfied/failed/blocked/unobserved>"
+    depends_on:
+    - remote_headers.contract
+    - remote_headers.runtime
+    - remote_headers.docs_verify
+    agent: gate-reviewer
