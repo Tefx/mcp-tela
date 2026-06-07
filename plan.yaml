@@ -84097,27 +84097,27 @@ phases:
       only gateway-proven non-admission authorizes recovery.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] Rerun `uv run pytest -q tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved
+      - [x] Rerun `uv run pytest -q tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved
       tests/repro/test_connect_runtime_liveness.py::test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap
       tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry` and paste
       raw green output.
 
-      - [ ] Rerun the focused ADR suite used by `adr009_reland.focused_tests` (at
+      - [x] Rerun the focused ADR suite used by `adr009_reland.focused_tests` (at
       minimum `uv run pytest -q tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py`
       plus the relevant connect_bridge/http_client/readiness repro tests) and paste
       raw green output.
 
-      - [ ] Provide seam evidence that MCP data-plane forwarding still uses `post_mcp_http`/`bridge_http`
+      - [x] Provide seam evidence that MCP data-plane forwarding still uses `post_mcp_http`/`bridge_http`
       and does not call `retry_http_request` for `/mcp` forwarding.
 
-      - [ ] Provide idle-reap evidence showing gateway-owned `RECONNECT_REQUIRED`
+      - [x] Provide idle-reap evidence showing gateway-owned `RECONNECT_REQUIRED`
       JSON-RPC error envelope leads to bounded recovery/replay and the test observes
       `after-idle`.
 
-      - [ ] Provide negative replay evidence that unsafe `tools/call` with sent/unknown
+      - [x] Provide negative replay evidence that unsafe `tools/call` with sent/unknown
       admission is still not replayed.
 
-      - [ ] Provide worktree safety evidence that remote_headers and unrelated dirty/untracked
+      - [x] Provide worktree safety evidence that remote_headers and unrelated dirty/untracked
       changes were preserved.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
