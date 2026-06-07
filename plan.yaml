@@ -83547,7 +83547,7 @@ phases:
       \ cleanup; no source/docs/tests edits performed for this bookkeeping action."
   - id: adr009_reland.runtime_regression
     name: Black-box ADR-009 runtime regression proof
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -83646,6 +83646,46 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-06-07T14:48:52.964669+00:00'
+    done_at: '2026-06-07T14:55:32.068956+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      proof_gaps: []
+
+
+      Checklist evidence:
+
+      - [x] Exact launch/command/harness path recorded: real subprocess `python -m
+      tela connect --server 127.0.0.1:<port> --token runtime-token --max-recovery-attempts
+      1` against local controlled HTTP gateway exposing `/status`, `/connect`, `/disconnect`,
+      `/mcp`, with JSON-RPC/stdout boundary exercised.
+
+      - [x] Delayed MCP response runtime proof: `slow_response` elapsed 11.254s and
+      returned JSON-RPC result; no old 10s cutoff and no `BRIDGE_RECOVERY_EXHAUSTED`.
+
+      - [x] Unsafe/safe replay proof: unsafe sent `tools/call` unknown admission had
+      `mcp_count` 1 and `error.data.code = MCP_RESPONSE_INTERRUPTED`; safe ping unknown
+      admission replay had `mcp_count` 2 and second request returned success.
+
+      - [x] Batch fail-closed proof: batch unknown admission had `mcp_count` 1, id
+      null, and `error.data.code = MCP_RESPONSE_INTERRUPTED`.
+
+      - [x] Real bridge/data-plane distinction: proof used real bridge/data-plane
+      path via subprocess and controlled HTTP gateway, not mock-only; no Tasca/table_wait/wait_ms
+      branch, generic tools/call/ping/batch used.
+
+
+      Commands/results:
+
+      - `uv run pytest -q tests/repro/test_connect_runtime_liveness.py tests/repro/test_gate_blocker_regressions.py`
+      -> 23 passed.
+
+      - `uv run pytest -q tests/shell/test_adr009_contract_red.py` -> 33 passed.
+
+      - Inline black-box runtime harness -> PASS.'
   - id: adr009_reland.docs_sync
     name: Synchronize ADR-009 documentation with landed behavior
     status: pending
