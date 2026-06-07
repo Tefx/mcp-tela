@@ -84092,6 +84092,7 @@ phases:
     - adr009_reland.runtime_regression
     - adr009_reland.docs_sync
     - adr009_reland.docs_remediation
+    - adr009_reland.full_verification_remediation
     - adr009_reland.full_verification
     agent: gate-reviewer
   - id: adr009_reland.integration_remediation
