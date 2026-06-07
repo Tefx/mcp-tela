@@ -81828,7 +81828,7 @@ phases:
       \                                [100%]\n    41 passed in 0.75s"
   - id: remote_headers.gate
     name: Gate remote downstream header support
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       verification_scope: phase-check
@@ -81968,3 +81968,5 @@ phases:
     - remote_headers.runtime
     - remote_headers.docs_verify
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-07T13:35:02.687741+00:00'
