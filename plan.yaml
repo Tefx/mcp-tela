@@ -83327,3 +83327,102 @@ phases:
     - adr009_reland.focused_tests
     - adr009_reland.runtime_regression
     agent: project-guide
+  - id: adr009_reland.full_verification
+    name: Full verification gate for ADR-009 relanding
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: full-plan-check
+
+      agent_source: project
+
+
+      PROOF ARTIFACT:
+
+      Run the repository-level verification gates required before final ADR-009 acceptance:
+      whitespace/diff integrity, focused ADR tests, full repo tests when feasible,
+      and `invar guard`. This step protects `adr009_reland.gate` and downstream plan
+      closure from hidden broad failures.
+
+
+      REQUIRED COMMAND FAMILIES:
+
+      - `git diff --check`
+
+      - Focused ADR tests: `uv run pytest tests/shell/test_adr009_contract_red.py
+      tests/shell/test_bridge_http.py -q`
+
+      - Full repo tests if feasible: `uv run pytest`
+
+      - Invar guard: `uv run invar guard`
+
+
+      DIRTY STATE POLICY:
+
+      If unrelated dirty state blocks full repo tests or invar guard, do not hide
+      it as pre-existing/out-of-scope. Provide exact failing output, map affected
+      files to ADR-009/remote_headers/non-intersecting ownership, and return a blocker/remediation
+      request for any failure that intersects this phase or remaining gates. A PASS
+      requires either green commands or explicit non-intersection evidence plus remediation
+      ownership for unrelated blockers.
+
+
+      WORKTREE SAFETY:
+
+      Inspect staged/unstaged/untracked before running or reporting. Do not clean/reset/stash.
+      Preserve remote_headers changes and ADR-009 tracked files.
+
+
+      <side_effect_budget>
+
+      Allowed: run verification commands and produce evidence. Forbidden: source/docs/test
+      edits, cleanup, lifecycle completion, or masking broad verifier failures.
+
+
+      <risk_probes>
+
+      - `invar guard` must see Core contracts/doctests and Shell Result boundaries,
+      not just focused pytest.
+
+      - Full pytest failures in dirty remote_headers files must be triaged for intersection,
+      not dismissed.
+
+      - `git diff --check` must include untracked ADR-009 files once added/tracked
+      or explicitly note if untracked files are not covered by the command.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] `git status --short --branch` is captured before verification and protected
+      dirty/untracked files are listed.
+
+      - [ ] `git diff --check` raw output and exit code are provided; any whitespace
+      failure has remediation ownership.
+
+      - [ ] Focused ADR pytest command raw output is green.
+
+      - [ ] Full repo `uv run pytest` raw output is green, or infeasibility/blockage
+      is documented with exact non-intersection evidence and remediation ownership.
+
+      - [ ] `uv run invar guard` raw output is green, or blockage is documented with
+      exact non-intersection evidence and remediation ownership.
+
+      - [ ] No blocker-class verifier result is dismissed as merely pre-existing/out-of-scope
+      without gate non-intersection proof.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Worktree\
+      \ Inventory\n- status_before: `<paste git status --short --branch>`\n- staged_unstaged_untracked_summary:\
+      \ <summary>\n- protected_remote_headers_files: <observed/preserved>\n\n## Command\
+      \ Receipts\n### git diff --check\n- command: `git diff --check`\n- raw_output:\
+      \ |\n    <paste>\n- exit_code: <code>\n\n### Focused ADR pytest\n- command:\
+      \ `uv run pytest tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py\
+      \ -q`\n- raw_output: |\n    <paste>\n- exit_code: <code>\n\n### Full repo pytest\n\
+      - command: `uv run pytest`\n- raw_output_or_blocker: |\n    <paste>\n- exit_code:\
+      \ <code or NOT RUN>\n- feasibility_or_non_intersection: <evidence>\n\n### Invar\
+      \ guard\n- command: `uv run invar guard`\n- raw_output_or_blocker: |\n    <paste>\n\
+      - exit_code: <code or NOT RUN>\n- feasibility_or_non_intersection: <evidence>\n\
+      \n## Failure Disposition Ledger\n| failure | provenance | gate_intersection\
+      \ | remediation_owner_or_step_request | disposition |\n|---|---|---|---|---|\n\
+      \n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
+      \ per item>"
+    depends_on:
+    - adr009_reland.docs_sync
+    agent: integration-verifier
