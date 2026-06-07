@@ -83526,7 +83526,7 @@ phases:
       \ gap remains and needs fix/retest\n\n## Checklist Receipt\n- checklist_receipt:\
       \ <satisfied/failed/blocked/unobserved per item>"
     depends_on:
-    - adr009_reland.bridge_integration
+    - adr009_reland.integration_remediation
     agent: integration-verifier
   - id: adr009_reland.runtime_regression
     name: Black-box ADR-009 runtime regression proof
