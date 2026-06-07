@@ -83977,7 +83977,7 @@ phases:
     - adr009_reland.docs_sync
     - adr009_reland.full_verification
     agent: gate-reviewer
-  - id: integration_remediation
+  - id: adr009_reland.integration_remediation
     name: Remediate ADR-009 focused integration blockers
     status: pending
     description: 'step_type: implementation
