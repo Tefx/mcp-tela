@@ -84535,7 +84535,7 @@ phases:
       \    203:The merged instructions appear in the upstream server's `instructions`\
       \ field as Markdown with H2 headers for each server.\n  exit_code: 0\n- command:\
       \ `git diff --check -- docs/USAGE.md`\n  raw_output: |\n  exit_code: 0"
-  - id: full_verification_remediation
+  - id: adr009_reland.full_verification_remediation
     name: Remediate ADR-009 full verification blockers
     status: pending
     description: 'step_type: implementation
