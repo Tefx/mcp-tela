@@ -82815,17 +82815,17 @@ phases:
       contracts.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] Targeted Core/doctest proof shows replay policy, request-id, notification,
+      - [x] Targeted Core/doctest proof shows replay policy, request-id, notification,
       header, timeout, and recovery-marker helpers pass their ADR-009 cases.
 
-      - [ ] Failure-path evidence covers malformed JSON, non-object JSON, JSON-RPC
+      - [x] Failure-path evidence covers malformed JSON, non-object JSON, JSON-RPC
       batch, unsafe `tools/call`, and tool-result marker text not triggering recovery.
 
-      - [ ] Core purity is preserved: no Shell/I/O imports or external dependencies.
+      - [x] Core purity is preserved: no Shell/I/O imports or external dependencies.
 
-      - [ ] No stub-only implementation remains in the owned Core symbols.
+      - [x] No stub-only implementation remains in the owned Core symbols.
 
-      - [ ] Worktree safety evidence confirms remote_headers/unrelated dirty files
+      - [x] Worktree safety evidence confirms remote_headers/unrelated dirty files
       are preserved.'
     evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
       \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Implementation\
