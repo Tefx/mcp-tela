@@ -81667,7 +81667,7 @@ phases:
       \ Receipt\n- config_test_command: <exact command>\n- config_test_raw_stdout:\
       \ |\n    <paste output>\n- downstream_header_test_command: <exact command>\n\
       - downstream_header_test_raw_stdout: |\n    <paste output>\n- additional_checks:\
-      \ <grep/parity commands and raw output>\n\n## Worktree Safety\n- docs_US方式_current_dirty_content_inspected:\
+      \ <grep/parity commands and raw output>\n\n## Worktree Safety\n- docs_USAGE_current_dirty_content_inspected:\
       \ <yes/no + evidence>\n- unrelated_ADR009_changes_preserved: <evidence>\n- bulk_rewrite_avoided:\
       \ <yes/no>\n\n## Checklist Receipt\n- USAGE_docs: <satisfied/failed/blocked/unobserved>\n\
       - example_docs: <satisfied/failed/blocked/unobserved>\n- stdio_invalid_docs:\
