@@ -82379,3 +82379,17 @@ phases:
       \  ?? tests/shell/test_bridge_http.py\n\n## Whitespace Remediation\n- changed_file:\
       \ `tela.yaml.example` cleaned of reported trailing whitespace. `git diff --check`\
       \ passed."
+- id: adr009_reland
+  name: ADR-009 Corrective Relanding
+  status: pending
+  gate: 'Open only when ADR-009 is truly landed in tracked source/tests/docs without
+    reopening old completed steps: residue is audited, expected-red proof exists on
+    tracked baseline, Core contracts/doctests and Shell data-plane implementation
+    are tracked, connect_bridge uses phase-aware MCP data-plane lifecycle semantics,
+    remote_headers and unrelated dirty worktree changes are preserved, no Tasca/table_wait/wait_ms/tool-specific
+    special-casing exists, focused ADR tests pass, runtime regression proves slow
+    MCP requests are not bridge-timeout replayed, docs are synchronized, git diff
+    --check is clean, full repo tests and invar guard are green or blocked only with
+    explicit non-intersection evidence plus remediation ownership.'
+  depends_on:
+  - remote_headers
