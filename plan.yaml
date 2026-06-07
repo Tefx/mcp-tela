@@ -82381,7 +82381,7 @@ phases:
       \ passed."
 - id: adr009_reland
   name: ADR-009 Corrective Relanding
-  status: pending
+  status: in_progress
   gate: 'Open only when ADR-009 is truly landed in tracked source/tests/docs without
     reopening old completed steps: residue is audited, expected-red proof exists on
     tracked baseline, Core contracts/doctests and Shell data-plane implementation
@@ -82396,7 +82396,7 @@ phases:
   steps:
   - id: adr009_reland.audit_red
     name: Audit ADR-009 residue and establish expected-red baseline
-    status: pending
+    status: claimed
     description: 'step_type: test
 
       step_intent: test_define_red
@@ -82514,6 +82514,8 @@ phases:
       \n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
       \ per item>"
     agent: python-executor
+    claimed_by: Python Executor
+    claimed_at: '2026-06-07T13:56:13.371952+00:00'
   - id: adr009_reland.core_contract
     name: Define ADR-009 Core replay and HTTP helper contracts
     status: pending
