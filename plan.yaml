@@ -84656,25 +84656,25 @@ phases:
       disposition.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] `git status --short --branch` raw output shows the ADR contract test tracking/staging
+      - [x] `git status --short --branch` raw output shows the ADR contract test tracking/staging
       disposition and preserved unrelated dirty state.
 
-      - [ ] Focused diagnostics for `tests/shell/test_connect_recovery_red.py::test_post_mcp_message_retries_on_connection_refused_string_reason`,
+      - [x] Focused diagnostics for `tests/shell/test_connect_recovery_red.py::test_post_mcp_message_retries_on_connection_refused_string_reason`,
       `tests/shell/test_connect_recovery_red.py::test_recovery_attempt_limit_honors_custom_retry_count`,
       and `tests/shell/test_connect_recovery_red.py::test_forward_stdio_http_passes_max_recovery_attempts_to_post_mcp`
       are green or explicitly updated with ADR-009-consistent expected behavior.
 
-      - [ ] Evidence states whether the fix was test-expectation update, narrow implementation
+      - [x] Evidence states whether the fix was test-expectation update, narrow implementation
       compatibility, or both, and confirms MCP data-plane use of generic `retry_http_request`
       was not restored.
 
-      - [ ] `git diff --check --cached` raw output and exit code are clean after staged
+      - [x] `git diff --check --cached` raw output and exit code are clean after staged
       whitespace cleanup.
 
-      - [ ] Focused ADR suite raw output is green: `uv run pytest tests/shell/test_adr009_contract_red.py
+      - [x] Focused ADR suite raw output is green: `uv run pytest tests/shell/test_adr009_contract_red.py
       tests/shell/test_bridge_http.py tests/shell/test_connect_recovery_red.py -q`.
 
-      - [ ] Preferably, full `uv run pytest` and `uv run invar guard` raw outputs
+      - [x] Preferably, full `uv run pytest` and `uv run invar guard` raw outputs
       are green; if not feasible, exact blocker output and non-intersection/remediation
       ownership are provided for `adr009_reland.full_verification`.'
     evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
