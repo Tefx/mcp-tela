@@ -82731,3 +82731,160 @@ phases:
     depends_on:
     - adr009_reland.core_contract
     agent: python-senior
+  - id: adr009_reland.http_executor
+    name: Land phase-aware MCP data-plane HTTP executor
+    status: pending
+    description: 'step_type: implementation
+
+      tags: integration
+
+      agent_source: project
+
+
+      TARGET STATE:
+
+      `src/tela/commands/bridge_http.py` is tracked and owns only phase-aware stdlib
+      `POST /mcp` data-plane execution. It returns `Result[BridgeHttpResponse, BridgeHttpError]`,
+      uses `http.client`/`urllib.parse`, distinguishes connect/write/response_headers/response_body/http_status
+      phases, records per-request `request_sent` and `mcp_admitted` facts, preserves
+      bearer/session headers, defaults response wait to no bridge-imposed deadline
+      when `response_timeout_seconds=None`, and never expands `http_client.py` into
+      data-plane lifecycle semantics.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - `src/tela/core/bridge_protocol.py` from `adr009_reland.core_impl` — Core helpers
+      are AUTHORITATIVE.
+
+      - Residue `src/tela/commands/bridge_http.py` may be reused only after inspection;
+      it currently imports helpers that tracked Core does not yet provide.
+
+      - Tests from `adr009_reland.audit_red` are PROTECTED.
+
+
+      INTEGRATION PATH:
+
+      Core bridge helpers -> `bridge_http.post_mcp_http` -> later `connect_bridge`
+      orchestration.
+
+
+      CONSTRAINTS:
+
+      - No new packages or external dependencies.
+
+      - Only `/mcp` data-plane uses this executor; `/status`, `/connect`, `/disconnect`,
+      discovery, readiness, and lifecycle calls stay on `retry_http_request`.
+
+      - HTTP 503 warming can set `mcp_admitted=False` only when `is_503_retryable(body)`
+      proves non-admission; plain 503/non-2xx remains unknown admission.
+
+      - Invalid timeout args return `BridgeHttpError`, not exceptions.
+
+      - Preserve remote_headers downstream header support; do not alter `ServerConfig.headers`,
+      config expansion, or downstream clients.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes its inputs and produces
+      outputs that vary based on those inputs.
+
+
+      <side_effect_budget>
+
+      Allowed: create/repair tracked `src/tela/commands/bridge_http.py` and focused
+      tests for this executor. Forbidden: changing generic `http_client.py` semantics,
+      remote downstream header parsing/forwarding, connect_bridge orchestration, docs
+      status promotion, or new dependencies.
+
+
+      <risk_probes>
+
+      - Concurrent/partial send ambiguity: body-send failure must not claim `request_sent=False`
+      if partial send cannot be proven absent.
+
+      - Response timeout `None` must set no bridge-imposed response deadline; finite
+      deadline must map to request-level timeout, not bridge recovery.
+
+      - Plain HTTP 503 must not be treated as gateway non-admission unless the warming
+      predicate proves it.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] `src/tela/commands/bridge_http.py` is tracked or staged for tracking and
+      imports only existing Core helpers from `bridge_protocol.py`.
+
+      - [ ] Focused bridge_http tests pass for success, connect failure, pre-body
+      write failure, partial/unknown body write failure, explicit response deadline,
+      response-timeout `None`, warming 503, and plain non-2xx.
+
+      - [ ] `http_client.py` remains a control-plane retry skeleton; no ADR-009 data-plane
+      lifecycle logic is added there.
+
+      - [ ] No new dependency is introduced in `pyproject.toml` or imports.
+
+      - [ ] Worktree safety evidence confirms remote_headers/unrelated dirty files
+      are preserved.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Integration Evidence
+
+      **Command or test exercising Core -> bridge_http path**:
+
+      ```
+
+      <exact command, e.g. uv run pytest tests/shell/test_bridge_http.py -q>
+
+      ```
+
+      **Actual output**:
+
+      ```
+
+      <paste stdout/stderr>
+
+      ```
+
+      **Path exercised**: `tela.core.bridge_protocol` -> `tela.commands.bridge_http`
+
+
+      ## Lifecycle Phase Evidence
+
+      | phase/case | request_sent | mcp_admitted | evidence_ref |
+
+      |---|---:|---:|---|
+
+      | connect failure | False | None | |
+
+      | pre-body write failure | False | None | |
+
+      | partial/unknown body failure | None | None | |
+
+      | response timeout finite | True | None | |
+
+      | warming 503 | True | False | |
+
+      | plain non-2xx | True | None | |
+
+
+      ## Guardrails
+
+      - http_client_unchanged_for_data_plane: <evidence>
+
+      - dependency_scan: <evidence>
+
+      - remote_headers_preserved: <evidence>
+
+
+      ## Checklist Receipt
+
+      - checklist_receipt: <satisfied/failed/blocked/unobserved per item>'
+    depends_on:
+    - adr009_reland.core_impl
+    agent: python-senior
