@@ -84362,7 +84362,7 @@ phases:
       - remote_headers/unrelated dirty changes preserved.'
   - id: adr009_reland.docs_remediation
     name: Remediate docs regression after ADR-009 docs sync
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: project
@@ -84472,3 +84472,66 @@ phases:
     agent: project-guide
     claimed_by: Project Guide
     claimed_at: '2026-06-07T15:06:17.674206+00:00'
+    done_at: '2026-06-07T15:07:02.956606+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - docs/USAGE.md — read, confirmed ADR-009 docs present, added missing remote_headers\
+      \ docs\n\n## Docs Remediation Receipt\n- pre_status: \n```\n## main...origin/main\
+      \ [ahead 418]\nA  docs/ADR-009-mcp-bridge-request-lifecycle.md\nM  docs/DESIGN.md\n\
+      M  docs/INTERFACES.md\nM  docs/USAGE.md\nA  src/tela/commands/bridge_http.py\n\
+      \ M src/tela/commands/connect_bridge.py\n M src/tela/core/bridge_protocol.py\n\
+      MM src/tela/core/config.py\nMM src/tela/core/models.py\n M src/tela/shell/downstream_clients.py\n\
+      \ M src/tela/shell/gateway.py\n M tela.yaml.example\nMM tests/core/test_config.py\n\
+      \ M tests/repro/test_gate_blocker_regressions.py\nA  tests/shell/test_bridge_http.py\n\
+      \ M tests/shell/test_connect_bridge_readiness_gaps_red.py\n M tests/shell/test_connect_cmd.py\n\
+      MM tests/shell/test_downstream_runtime_connection.py\n M tests/shell/test_http_client.py\n\
+      ?? fix_adr009_docs.py\n?? tests/shell/test_adr009_contract_red.py\n```\n- restored_remote_headers_passage:\
+      \ \n```yaml\nMinimal Streamable HTTP example with `remote_headers`:\n\n```yaml\n\
+      servers:\n  resofeed:\n    url: \"https://resofeed.tefx.one/mcp\"\n    headers:\n\
+      \      Authorization: \"${RESOFEED_AUTHORIZATION}\"\n      X-Custom-Auth: \"\
+      fixed-value\"\n    family: \"resofeed\"\n```\n\nThe `headers` field is a `dict[str,\
+      \ str]` representing literal header keys and values. It supports the existing\
+      \ parse-time `${VAR}` / `$VAR` expansion. `headers` is only valid for URL transports\
+      \ (Streamable HTTP and `transport: sse`); it is strictly rejected for stdio\
+      \ `command` servers. This is downstream transit configuration, entirely distinct\
+      \ from the `auth` section (which controls upstream client access to the gateway).\n\
+      ```\n- preserved_adr009_passage: \n```\n### Slow or long-running tools\n\nSlow\
+      \ or long-running MCP tools (such as long-polling, large file operations, or\
+      \ human approvals) wait without a bridge-imposed timeout. Slow tools are not\
+      \ bridge recovery failures.\n\nIf a tool call is interrupted:\n- `MCP_RESPONSE_INTERRUPTED`:\
+      \ The connection was lost after sending an unsafe request (like `tools/call`)\
+      \ and execution is unknown. The request is not automatically replayed to avoid\
+      \ duplicate side effects.\n- `MCP_REQUEST_TIMEOUT`: An explicit future deadline\
+      \ expired (not used by default).\n- `BRIDGE_RECOVERY_EXHAUSTED`: Only occurs\
+      \ when the bridge exhausts its bounded attempts to recover gateway reachability\
+      \ or start a session, never just because a tool took too long.\n```\n- temp_artifact_cleanup:\
+      \ `fix_adr009_docs.py` existed and was removed successfully with `rm fix_adr009_docs.py`.\n\
+      \n## Required Commands and Raw Output\n- command: `grep -nEi 'ADR-009|slow tool|slow-tool|timeout|replay|lifecycle'\
+      \ docs/USAGE.md`\n  raw_output: |\n    360:gateway runtime lifecycle plus `GET\
+      \ /status` remains the sole readiness authority.\n    374:`Connection refused`,\
+      \ `Connection reset`, `HTTP 503`, readiness timeouts) may\n    388:**Client\
+      \ attachment lifecycle**: EOF from the host stdio transport is a normal\n  \
+      \  446:Configurable via `--idle-timeout`. Set to `0` to keep the server running\n\
+      \    450:tela serve --config tela.yaml --port 8080 --idle-timeout 0\n    594:tela\
+      \ serve [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout\
+      \ sec] [--reaper-sweep-interval sec] [--reaper-native-ttl sec] [--reaper-bridge-ttl\
+      \ sec] [--token tok]\n    601:- `--idle-timeout`: seconds before auto-shutdown\
+      \ on idle (default: `300`, `0` to disable)\n    686:Slow or long-running MCP\
+      \ tools (such as long-polling, large file operations, or human approvals) wait\
+      \ without a bridge-imposed timeout. Slow tools are not bridge recovery failures.\n\
+      \    689:- `MCP_RESPONSE_INTERRUPTED`: The connection was lost after sending\
+      \ an unsafe request (like `tools/call`) and execution is unknown. The request\
+      \ is not automatically replayed to avoid duplicate side effects.\n    690:-\
+      \ `MCP_REQUEST_TIMEOUT`: An explicit future deadline expired (not used by default).\n\
+      \  exit_code: 0\n- command: `grep -nEi 'remote_headers|resofeed|headers' docs/USAGE.md`\n\
+      \  raw_output: |\n    88:Minimal Streamable HTTP example with `remote_headers`:\n\
+      \    92:  resofeed:\n    93:    url: \"https://resofeed.tefx.one/mcp\"\n   \
+      \ 94:    headers:\n    95:      Authorization: \"${RESOFEED_AUTHORIZATION}\"\
+      \n    97:    family: \"resofeed\"\n    100:The `headers` field is a `dict[str,\
+      \ str]` representing literal header keys and values. It supports the existing\
+      \ parse-time `${VAR}` / `$VAR` expansion. `headers` is only valid for URL transports\
+      \ (Streamable HTTP and `transport: sse`); it is strictly rejected for stdio\
+      \ `command` servers. This is downstream transit configuration, entirely distinct\
+      \ from the `auth` section (which controls upstream client access to the gateway).\n\
+      \    203:The merged instructions appear in the upstream server's `instructions`\
+      \ field as Markdown with H2 headers for each server.\n  exit_code: 0\n- command:\
+      \ `git diff --check -- docs/USAGE.md`\n  raw_output: |\n  exit_code: 0"
