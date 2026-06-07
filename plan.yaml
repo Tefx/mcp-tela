@@ -81288,7 +81288,7 @@ phases:
   depends_on:
   - adr009_bridge_lifecycle
   steps:
-  - id: contract
+  - id: remote_headers.contract
     name: Contract and expected-red tests for downstream headers
     status: pending
     description: 'step_type: contract + test_define_red
