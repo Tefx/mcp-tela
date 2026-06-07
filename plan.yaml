@@ -81730,7 +81730,7 @@ phases:
       \ bookkeeping was performed."
   - id: remote_headers.docs_verify
     name: Docs and focused verification for downstream headers
-    status: pending
+    status: claimed
     description: "step_type: documentation + verification\nexpected_result: green\n\
       agent_source: project\n\nPROOF / DOC ARTIFACT:\nOperator documentation and examples\
       \ describe how to configure custom HTTP headers for remote downstream MCP servers,\
@@ -81805,6 +81805,8 @@ phases:
     depends_on:
     - remote_headers.runtime
     agent: project-guide
+    claimed_by: Project Guide
+    claimed_at: '2026-06-07T13:32:16.673597+00:00'
   - id: remote_headers.gate
     name: Gate remote downstream header support
     status: pending
