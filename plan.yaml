@@ -83145,3 +83145,102 @@ phases:
     depends_on:
     - adr009_reland.bridge_integration
     agent: integration-verifier
+  - id: adr009_reland.runtime_regression
+    name: Black-box ADR-009 runtime regression proof
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: project
+
+
+      PROOF ARTIFACT:
+
+      Run a seam-level or black-box runtime proof against the bridge path showing
+      ADR-009 behavior at the user-observable JSON-RPC/stdout boundary. This is separate
+      from unit tests: build/source evidence alone is insufficient for the runnable
+      MCP bridge surface.
+
+
+      RUNTIME SURFACE:
+
+      `tela connect` / connect_bridge stdio JSON-RPC forwarding to gateway `/mcp`
+      or the closest existing runtime harness that exercises the real connect_bridge
+      entrypoint and phase-aware data-plane executor without mocks at the bridge/data-plane
+      boundary.
+
+
+      REQUIRED PROOFS:
+
+      - A slow MCP request or controlled delayed response is not cut off by the old
+      fixed 10s data-plane timeout when no explicit response deadline exists.
+
+      - Unsafe sent `tools/call` with unknown admission is not replayed; evidence
+      includes request/replay counters or equivalent logs.
+
+      - Safe `initialize`, `ping`, or `tools/list` replay remains bounded when pre-send
+      or non-admission is proven.
+
+      - JSON-RPC batch payloads fail closed for replay.
+
+      - No Tasca/table_wait/wait_ms/tool-specific branch is involved.
+
+
+      ANTI-DEADLOCK:
+
+      Do not require live third-party tools or real Tasca credentials. Use a local
+      controlled gateway/fixture server if needed. If a live environment is unavailable,
+      provide exact blocker and non-intersection evidence; do not replace runtime
+      proof with mock-only unit tests.
+
+
+      <side_effect_budget>
+
+      Allowed: launch local processes/fixture servers, run CLI/harness commands, collect
+      stdout/stderr/logs. Forbidden: source/docs edits, hidden mocks at the bridge/data-plane
+      boundary, remote_headers cleanup, or dependency additions.
+
+
+      <risk_probes>
+
+      - Confirm observed stdout JSON uses stable `error.data.code` values, not only
+      human-readable strings.
+
+      - Confirm response wait behavior is runtime-observed, not inferred from code
+      inspection.
+
+      - Confirm bridge remains alive/continues after notification unknown-delivery
+      diagnostics where applicable.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Exact launch/command/harness path is recorded for the bridge runtime surface.
+
+      - [ ] Runtime artifact (stdout/stderr/logs) proves a delayed MCP response is
+      not failed by old fixed bridge timeout by default.
+
+      - [ ] Runtime artifact proves unsafe sent `tools/call` unknown admission is
+      not replayed and safe protocol replay remains bounded when allowed.
+
+      - [ ] Runtime artifact proves batch fail-closed or documents exact blocker with
+      remediation ownership.
+
+      - [ ] Evidence distinguishes real bridge/data-plane path from mock-only unit
+      tests.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Runtime\
+      \ Surface Evidence\n- surface_class: CLI/MCP bridge stdio\n- launch_or_harness_command:\
+      \ `<exact command>`\n- runtime_logs_stdout_stderr: |\n    <paste raw output/logs>\n\
+      - entrypoint_path: <entry -> connect_bridge -> bridge_http -> fixture/gateway>\n\
+      - mocks_at_boundary: NONE or <justification/blocker>\n\n## Behavioral Runtime\
+      \ Proof Register\n| requirement_ref | behavior_claim | runtime_proof_expected\
+      \ | evidence_ref | status | closure_path | gate_decision_basis |\n|---|---|---|---|---|---|---|\n\
+      \n## Replay / Timeout Counters\n- delayed_response_observation: <evidence>\n\
+      - unsafe_tools_call_replay_count: <evidence>\n- safe_protocol_replay_count:\
+      \ <evidence>\n- batch_replay_decision: <evidence>\n\n## Issues Found\n| Severity\
+      \ | Description | Location | Reproduction | Remediation owner |\n|---|---|---|---|---|\n\
+      \n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
+      \ per item>"
+    depends_on:
+    - adr009_reland.bridge_integration
+    agent: blind-tester
