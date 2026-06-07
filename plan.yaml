@@ -82592,7 +82592,7 @@ phases:
       \ -> `timed out` is actively checked inside `is_recoverable_error`."
   - id: adr009_reland.core_contract
     name: Define ADR-009 Core replay and HTTP helper contracts
-    status: claimed
+    status: done
     description: 'step_type: contract
 
       contract_purity: ENFORCED
@@ -82711,6 +82711,38 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-06-07T13:58:49.003481+00:00'
+    done_at: '2026-06-07T14:01:53.071664+00:00'
+    evidence: "## refs Read Confirmation (MANDATORY)\nFor each ref in this step:\n\
+      - INVAR.md — Read syntax rules for `@pre`/`@post` and Core/Shell distinction.\n\
+      - src/tela/core/bridge_protocol.py — Read existing implementation, identified\
+      \ parameter types, verified `extract_bridge_error_messages` structure.\n\n##\
+      \ Contract Surface\n| symbol | signature | contract/doctest evidence | stub_or_existing\
+      \ | deviations |\n|---|---|---|---|---|\n| `BridgeReplayPolicy` | `(enum.Enum)`\
+      \ | Verified values | added | none |\n| `jsonrpc_request_id` | `(payload: bytes)\
+      \ -> object \\| None` | `@pre` bytes, `@post` bounds matching id type | fully\
+      \ functional stub | none |\n| `jsonrpc_is_notification` | `(payload: bytes)\
+      \ -> bool` | Doctests cover empty/malformed json | fully functional stub | none\
+      \ |\n| `bridge_replay_policy` | `(payload: bytes) -> BridgeReplayPolicy` | Returns\
+      \ `SAFE`/`UNSAFE` based on method/id | fully functional stub | none |\n| `bridge_http_headers`\
+      \ | `(*, bearer_token: str, payload_length: int, session_id: str \\| None) ->\
+      \ dict[str, str]` | Kwargs via proxy `lambda *,` and checks scalar bounds |\
+      \ fully functional stub | none |\n| `bridge_http_timeouts_valid` | `(*, connect...\
+      \ float, write... float, response... float \\| None) -> bool` | `> 0` guard\
+      \ checks, `None` tolerance | fully functional stub | none |\n| `response_requires_bridge_recovery`\
+      \ | `(response_messages: list[bytes]) -> bool` | Doctests test gateway envelopes\
+      \ natively | modified existing | Narrowed explicitly to `{\"error\": ...}` schema\
+      \ to avoid tool error false positives |\n\n## Core Purity Evidence\n- imports_review:\n\
+      \  ```python\n  import enum\n  import json\n  from tela.core.contracts import\
+      \ post, pre\n  ```\n  No IO, external, shell, or randomness imports added. Core\
+      \ constraints are cleanly obeyed.\n- invar_contract_notes: `uv run invar guard\
+      \ src/tela/core/bridge_protocol.py` returns `status: passed` (0 errors, 0 warnings).\
+      \ The `param_mismatch` invar issue with kwonly variables was solved smoothly\
+      \ using `lambda *, ...`. \n\n## Worktree Safety\n- status_before_after: Git\
+      \ index/working tree is untouched outside `src/tela/core/bridge_protocol.py`\
+      \ (and transient `test_*` scripts locally created for isolated checks).\n- protected_dirty_files_preserved:\
+      \ PASS\n\n## Checklist Receipt\n- checklist_receipt: satisfied all requirements\
+      \ (contracts laid out, static checks passed, stubs functional-level, core purity\
+      \ enforced, external worktree un-wiped)."
   - id: adr009_reland.core_impl
     name: Complete ADR-009 Core replay and helper logic
     status: pending
