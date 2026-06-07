@@ -81501,7 +81501,7 @@ phases:
       tests pass)'
   - id: remote_headers.runtime
     name: Runtime header forwarding for Streamable HTTP and SSE
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       expected_result: green after implementation
@@ -81661,6 +81661,8 @@ phases:
     depends_on:
     - remote_headers.contract
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-07T13:30:03.243731+00:00'
   - id: remote_headers.docs_verify
     name: Docs and focused verification for downstream headers
     status: pending
