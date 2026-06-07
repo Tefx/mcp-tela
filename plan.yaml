@@ -81276,3 +81276,14 @@ phases:
       \ downstream special-casing introduced.\n- No unsafe tools/call replay introduced.\n\
       - bridge_http still owns MCP data-plane; bridge_protocol Core stays pure; connect_bridge\
       \ owns orchestration.\n\nNo plan.yaml edits."
+- id: remote_headers
+  name: Remote Downstream HTTP Headers
+  status: pending
+  gate: Open only when headers are parsed as dict[str, str], env-expanded by existing
+    recursive string-leaf expansion, rejected for stdio command transports with SERVER_HEADERS_WITH_STDIO,
+    forwarded to Streamable HTTP and SSE clients, omitted/empty headers preserve old
+    behavior, no new transport alias/dependency is introduced, header secret values
+    are not exposed in status/audit/provider outputs, docs/examples are synced, targeted
+    tests are green, and invar guard is addressed.
+  depends_on:
+  - adr009_bridge_lifecycle
