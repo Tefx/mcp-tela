@@ -82745,7 +82745,7 @@ phases:
       \ enforced, external worktree un-wiped)."
   - id: adr009_reland.core_impl
     name: Complete ADR-009 Core replay and helper logic
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: project
@@ -82841,6 +82841,8 @@ phases:
     depends_on:
     - adr009_reland.core_contract
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-07T14:07:26.143773+00:00'
   - id: adr009_reland.http_executor
     name: Land phase-aware MCP data-plane HTTP executor
     status: pending
