@@ -81601,3 +81601,80 @@ phases:
     depends_on:
     - remote_headers.contract
     agent: python-senior
+  - id: remote_headers.docs_verify
+    name: Docs and focused verification for downstream headers
+    status: pending
+    description: "step_type: documentation + verification\nexpected_result: green\n\
+      agent_source: project\n\nPROOF / DOC ARTIFACT:\nOperator documentation and examples\
+      \ describe how to configure custom HTTP headers for remote downstream MCP servers,\
+      \ using the approved config shape only. Documentation must state that headers\
+      \ are only valid for url transports (Streamable HTTP default and `transport:\
+      \ sse` legacy), are `dict[str, str]`, use existing `${VAR}` parse-time expansion\
+      \ for secrets, and are invalid with stdio `command` transports.\n\nREQUIRED\
+      \ DOC EXAMPLE:\n```yaml\nservers:\n  resofeed:\n    url: \"https://resofeed.tefx.one/mcp\"\
+      \n    headers:\n      Authorization: \"${RESOFEED_AUTHORIZATION}\"\n    family:\
+      \ \"resofeed\"\n```\n\nDOC NON-GOALS:\n- Do not document or add `type: remote`.\n\
+      - Do not imply a new env expansion mechanism; use the existing parse-time `${VAR}`\
+      \ / `$VAR` behavior.\n- Do not paste real Authorization values or secrets into\
+      \ docs/examples.\n- Do not change tela upstream/gateway bearer token semantics.\n\
+      \nFINAL VERIFICATION SCOPE:\nThis is a phase-check protecting `remote_headers.gate`.\
+      \ It must collect focused green evidence from the new config and downstream-client\
+      \ tests and must include enough raw output for the final gate to decide OPEN/BLOCK\
+      \ without rerunning context discovery.\n\nWORKTREE WARNING:\n`docs/USAGE.md`\
+      \ is already dirty with unrelated ADR-009 work. Inspect current contents before\
+      \ editing, preserve unrelated changes, and avoid bulk rewrites. Do not overwrite\
+      \ unrelated dirty ADR-009 source/test files.\n\n<side_effect_budget>\nAllowed:\
+      \ update `docs/USAGE.md` and `tela.yaml.example`; run focused verification commands;\
+      \ optionally adjust wording only where needed for this feature. Forbidden: source/runtime/test\
+      \ implementation changes, new dependencies, real secret values in docs, new\
+      \ transport aliases, or overwriting unrelated ADR-009 edits.\n</side_effect_budget>\n\
+      \n<risk_probes>\n- Verify docs distinguish downstream server headers from tela\
+      \ upstream/gateway bearer-token auth.\n- Verify examples show headers only under\
+      \ remote `url` server entries, never under stdio `command` entries.\n- Verify\
+      \ docs and example preserve existing Streamable HTTP default vs legacy `transport:\
+      \ sse` wording.\n</risk_probes>"
+    verification: '- [ ] `docs/USAGE.md` documents downstream remote headers with
+      the required `resofeed` example and clearly states `dict[str, str]` plus existing
+      env expansion semantics.
+
+      - [ ] `tela.yaml.example` includes a remote HTTP headers example or comment
+      block using placeholder secrets only, not real secret values.
+
+      - [ ] Docs explicitly state headers are valid only for `url` transports and
+      invalid for stdio `command` transports with `SERVER_HEADERS_WITH_STDIO`.
+
+      - [ ] Docs/examples do not introduce `type: remote`, new transport names, or
+      changed upstream/gateway bearer-token semantics.
+
+      - [ ] Focused green verification evidence includes targeted config tests and
+      targeted downstream HTTP/SSE header propagation tests.
+
+      - [ ] Evidence confirms docs/USAGE.md dirty ADR-009 edits were inspected and
+      unrelated changes preserved.
+
+      - [ ] Checklist receipt maps each docs/final-verification item to satisfied/failed/blocked/unobserved
+      status.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- docs/USAGE.md — key passage or \"NOT READ: <reason>\"\n- tela.yaml.example\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/core/test_config.py — key\
+      \ passage or \"NOT READ: <reason>\"\n- tests/shell/test_downstream_runtime_connection.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- src/tela/core/config.py — key passage\
+      \ or \"NOT READ: <reason>\"\n- src/tela/shell/downstream_clients.py — key passage\
+      \ or \"NOT READ: <reason>\"\n\n## Documentation Changes\n- docs/USAGE.md sections\
+      \ changed: <list>\n- tela.yaml.example sections changed: <list>\n- required_resofeed_example_present:\
+      \ <yes/no + snippet>\n- real_secret_values_present: <none|required blocker>\n\
+      - alias_or_transport_drift: <none|required blocker>\n\n## Focused Verification\
+      \ Receipt\n- config_test_command: <exact command>\n- config_test_raw_stdout:\
+      \ |\n    <paste output>\n- downstream_header_test_command: <exact command>\n\
+      - downstream_header_test_raw_stdout: |\n    <paste output>\n- additional_checks:\
+      \ <grep/parity commands and raw output>\n\n## Worktree Safety\n- docs_US方式_current_dirty_content_inspected:\
+      \ <yes/no + evidence>\n- unrelated_ADR009_changes_preserved: <evidence>\n- bulk_rewrite_avoided:\
+      \ <yes/no>\n\n## Checklist Receipt\n- USAGE_docs: <satisfied/failed/blocked/unobserved>\n\
+      - example_docs: <satisfied/failed/blocked/unobserved>\n- stdio_invalid_docs:\
+      \ <satisfied/failed/blocked/unobserved>\n- no_alias_or_token_semantic_drift:\
+      \ <satisfied/failed/blocked/unobserved>\n- focused_green_tests: <satisfied/failed/blocked/unobserved>\n\
+      - dirty_worktree_safety: <satisfied/failed/blocked/unobserved>\n\n## Deviations\n\
+      - <type, what, why, impact, follow-up owner or none>"
+    depends_on:
+    - remote_headers.runtime
+    agent: project-guide
