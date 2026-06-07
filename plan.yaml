@@ -83625,7 +83625,7 @@ phases:
       \n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
       \ per item>"
     depends_on:
-    - adr009_reland.bridge_integration
+    - adr009_reland.integration_remediation
     agent: blind-tester
   - id: adr009_reland.docs_sync
     name: Synchronize ADR-009 documentation with landed behavior
