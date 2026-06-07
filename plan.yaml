@@ -83426,3 +83426,171 @@ phases:
     depends_on:
     - adr009_reland.docs_sync
     agent: integration-verifier
+  - id: adr009_reland.gate
+    name: Final ADR-009 corrective relanding gate
+    status: pending
+    description: 'step_type: gate
+
+      verification_scope: full-plan-check
+
+      review_depth: THOROUGH
+
+      agent_source: project
+
+
+      DECISION ARTIFACT:
+
+      As an independent gate reviewer, decide whether ADR-009 is truly landed in tracked
+      code/tests/docs after the previous `adr009_bridge_lifecycle` false completion.
+      Your job is to BLOCK progress if evidence is missing, stale, untracked-only,
+      or contradicted by runtime/source proof.
+
+
+      GATE DECISION BASIS MUST REVIEW:
+
+      - Requirement traceability matrix from `adr009_reland.audit_red` and all behavioral
+      proof registers.
+
+      - Tracked source/test/doc evidence, not old vectl evidence.
+
+      - Worktree safety evidence showing remote_headers and unrelated dirty files
+      were preserved.
+
+      - Focused ADR tests, runtime regression proof, docs sync, `git diff --check`,
+      full repo tests if feasible, and `uv run invar guard`.
+
+
+      BLOCKING CONDITIONS:
+
+      - Any ADR-009 requirement is ORPHAN, UNPROVEN, NEEDS_TEST, or UNCERTAIN_BLOCKING
+      without explicit non-intersection and remediation ownership.
+
+      - ADR implementation exists only as untracked residue or tests are green only
+      because they were weakened/skipped.
+
+      - MCP data-plane still uses old fixed `HTTP_TIMEOUT_SECONDS` through `retry_http_request`
+      for default response wait.
+
+      - Generic `timed out` still authorizes recovery/replay for sent unknown-admission
+      MCP data-plane requests.
+
+      - Unsafe sent `tools/call` can be replayed on unknown admission.
+
+      - Tasca/table_wait/wait_ms/tool-specific special-casing appears.
+
+      - Remote_headers changes are lost/regressed.
+
+      - `git diff --check`, focused tests, full tests, or invar guard fail with an
+      intersecting blocker.
+
+
+      <side_effect_budget>
+
+      Allowed: read plan evidence, run read-only review commands if needed, and report
+      gate decision/remediation requests. Forbidden: source/docs/test edits, lifecycle
+      completion, old phase reopening, cleanup/reset/stash.
+
+
+      <risk_probes>
+
+      - Compare actual tracked files via `git ls-files`/`git status`, not just filesystem
+      presence.
+
+      - Verify docs Accepted status is justified by implementation/runtime proof rather
+      than plan intent.
+
+      - Re-check remote_headers protected paths for accidental deletion or semantics
+      regression.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Gate decision basis maps every ADR-009 requirement row to positive proof
+      (`PROVEN`) or blocks with remediation ownership; sampled/no-blocker review is
+      rejected.
+
+      - [ ] Evidence review confirms ADR-009 source/tests/docs are tracked or staged
+      and not merely untracked residue.
+
+      - [ ] Evidence review confirms remote_headers protected changes and unrelated
+      dirty files were preserved.
+
+      - [ ] Gate reviews raw outputs for `git diff --check`, focused ADR tests, full
+      repo tests if feasible, and `uv run invar guard`.
+
+      - [ ] Gate explicitly records OPEN or BLOCKED; OPEN is allowed only with no
+      unresolved blocker-class runtime/spec/invar/worktree-safety gaps.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Gate Review Report
+
+      **Reviewer**: gate-reviewer (independent of phase implementation)
+
+      **Phase**: adr009_reland
+
+      **Review depth**: THOROUGH
+
+
+      ## Execution / Evidence Review
+
+      | Step ID | Status | Evidence Quality | Checklist Receipt Reviewed | Concerns
+      |
+
+      |---|---|---|---|---|
+
+
+      ## Requirement-to-Checklist Decision Basis
+
+      | requirement_id | owning_step_id | evidence_ref | proof_status | unresolved_status
+      | blocks_gate? | rationale |
+
+      |---|---|---|---|---|---|---|
+
+
+      ## Command Gate Review
+
+      | command gate | raw evidence step | verdict | blocker? |
+
+      |---|---|---|---|
+
+      | git diff --check | adr009_reland.full_verification | | |
+
+      | focused ADR tests | adr009_reland.full_verification | | |
+
+      | full repo pytest | adr009_reland.full_verification | | |
+
+      | uv run invar guard | adr009_reland.full_verification | | |
+
+
+      ## Issues Identified
+
+      | Severity | Description | Related Step | Blocking? | Required action |
+
+      |---|---|---|---|---|
+
+
+      ## Gate Decision
+
+      - [ ] OPEN: ADR-009 relanding passes; tracked code/tests/docs are aligned and
+      verifiers are green or non-intersecting with remediation ownership.
+
+      - [ ] BLOCKED: Issues must be resolved before proceeding.
+
+
+      ## Checklist Receipt
+
+      - checklist_receipt: <satisfied/failed/blocked/unobserved per item>'
+    depends_on:
+    - adr009_reland.audit_red
+    - adr009_reland.core_contract
+    - adr009_reland.core_impl
+    - adr009_reland.http_executor
+    - adr009_reland.bridge_integration
+    - adr009_reland.focused_tests
+    - adr009_reland.runtime_regression
+    - adr009_reland.docs_sync
+    - adr009_reland.full_verification
+    agent: gate-reviewer
