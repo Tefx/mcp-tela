@@ -81278,7 +81278,7 @@ phases:
       \ owns orchestration.\n\nNo plan.yaml edits."
 - id: remote_headers
   name: Remote Downstream HTTP Headers
-  status: pending
+  status: in_progress
   gate: Open only when headers are parsed as dict[str, str], env-expanded by existing
     recursive string-leaf expansion, rejected for stdio command transports with SERVER_HEADERS_WITH_STDIO,
     forwarded to Streamable HTTP and SSE clients, omitted/empty headers preserve old
@@ -81290,7 +81290,7 @@ phases:
   steps:
   - id: remote_headers.contract
     name: Contract and expected-red tests for downstream headers
-    status: pending
+    status: claimed
     description: 'step_type: contract + test_define_red
 
       expected_result: red before runtime implementation where forwarding is not yet
@@ -81439,6 +81439,8 @@ phases:
       \ constraints preserved: <satisfied/failed/blocked/unobserved>\n\n## Deviations\n\
       - <type, what, why, impact, follow-up owner or none>"
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-06-07T13:10:52.839624+00:00'
   - id: remote_headers.runtime
     name: Runtime header forwarding for Streamable HTTP and SSE
     status: pending
