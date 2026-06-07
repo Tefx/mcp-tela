@@ -82509,7 +82509,7 @@ phases:
       - [x] `git status --short --branch` and `git ls-files <ADR residue paths>` prove
       which files are tracked vs residue.
 
-      - [ ] Requirement traceability matrix records every ADR-009 obligation as OWNED/DEFERRED/EXCLUDED/AMBIGUOUS
+      - [x] Requirement traceability matrix records every ADR-009 obligation as OWNED/DEFERRED/EXCLUDED/AMBIGUOUS
       with no orphan requirements.
 
       - [x] Focused expected-red command is run against current tracked baseline or
