@@ -82978,19 +82978,19 @@ phases:
       predicate proves it.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] `src/tela/commands/bridge_http.py` is tracked or staged for tracking and
+      - [x] `src/tela/commands/bridge_http.py` is tracked or staged for tracking and
       imports only existing Core helpers from `bridge_protocol.py`.
 
-      - [ ] Focused bridge_http tests pass for success, connect failure, pre-body
+      - [x] Focused bridge_http tests pass for success, connect failure, pre-body
       write failure, partial/unknown body write failure, explicit response deadline,
       response-timeout `None`, warming 503, and plain non-2xx.
 
-      - [ ] `http_client.py` remains a control-plane retry skeleton; no ADR-009 data-plane
+      - [x] `http_client.py` remains a control-plane retry skeleton; no ADR-009 data-plane
       lifecycle logic is added there.
 
-      - [ ] No new dependency is introduced in `pyproject.toml` or imports.
+      - [x] No new dependency is introduced in `pyproject.toml` or imports.
 
-      - [ ] Worktree safety evidence confirms remote_headers/unrelated dirty files
+      - [x] Worktree safety evidence confirms remote_headers/unrelated dirty files
       are preserved.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
