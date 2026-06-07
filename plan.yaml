@@ -81287,3 +81287,155 @@ phases:
     tests are green, and invar guard is addressed.
   depends_on:
   - adr009_bridge_lifecycle
+  steps:
+  - id: contract
+    name: Contract and expected-red tests for downstream headers
+    status: pending
+    description: 'step_type: contract + test_define_red
+
+      expected_result: red before runtime implementation where forwarding is not yet
+      wired
+
+      agent_source: project
+
+
+      TARGET ARTIFACT:
+
+      Define the executable contract for per-server downstream HTTP headers without
+      changing transport behavior yet. The contract must cover `ServerConfig.headers`
+      as static config state, existing recursive env expansion for header string leaves,
+      stdio rejection, and expected-red transport propagation tests that expose current
+      missing forwarding.
+
+
+      REQUIREMENT TRACEABILITY MATRIX:
+
+      | requirement_id | source_ref + key passage | obligation | owning_step_id |
+      checklist_item | evidence_field | status | non_intersection_or_escalation |
+
+      | RH-1 | user architecture basis > runtime_contract | `servers.<name>.headers`
+      accepts `dict[str, str]` and example Authorization header uses existing `${VAR}`
+      expansion | remote_headers.contract | headers model/parse tests | requirements_register.RH-1
+      | OWNED | none |
+
+      | RH-2 | user architecture basis > runtime_contract | non-string header names/values
+      fail parse/validation rather than accepted-and-cleaned | remote_headers.contract
+      | non-string rejection tests | requirements_register.RH-2 | OWNED | none |
+
+      | RH-3 | user architecture basis > runtime_contract | `command + headers` is
+      rejected by `validate_config` with `SERVER_HEADERS_WITH_STDIO` | remote_headers.contract
+      | stdio rejection test | requirements_register.RH-3 | OWNED | none |
+
+      | RH-4 | user architecture basis > transport_boundary_rules | only url transports
+      consume headers; no `type: remote` alias or upstream bearer-token semantic changes
+      | remote_headers.runtime | runtime non-goal tests | requirements_register.RH-4
+      | OWNED | none |
+
+      | RH-5 | user architecture basis > service_catalog | Streamable HTTP and SSE
+      clients receive configured headers; stdio never does | remote_headers.runtime
+      | HTTP/SSE propagation tests | requirements_register.RH-5 | OWNED | none |
+
+      | RH-6 | user architecture basis > state_strata | header secret values are not
+      logged or exposed in status/audit/provider output as part of this feature |
+      remote_headers.runtime | secret non-exposure evidence | requirements_register.RH-6
+      | OWNED | none |
+
+      | RH-7 | user architecture basis > docs/config UX | docs/USAGE.md and tela.yaml.example
+      document remote headers | remote_headers.docs_verify | docs/example sync | requirements_register.RH-7
+      | OWNED | none |
+
+
+      BOUNDING BOX:
+
+      Start from `src/tela/core/models.py`, `src/tela/core/config.py`, `tests/core/test_config.py`,
+      and `tests/shell/test_downstream_runtime_connection.py`. This bounding box does
+      not replace the refs list.
+
+
+      CONSTRAINTS:
+
+      - Contract/test scope only: add/adjust model contract, validation contract,
+      and tests; do not complete downstream transport forwarding in this step.
+
+      - If adding any Core validator/helper function, follow Invar discipline: `@pre`,
+      `@post`, and at least one doctest before implementation logic.
+
+      - Non-string header values must fail, not be coerced to strings or silently
+      cleaned.
+
+      - Do not introduce a `type: remote` alias or any new transport names.
+
+      - Do not change tela upstream/gateway bearer-token semantics.
+
+      - Worktree warning: current git worktree is dirty with unrelated ADR-009 files;
+      inspect target files before editing and do not overwrite unrelated changes.
+
+
+      <side_effect_budget>
+
+      Allowed: modify `src/tela/core/models.py`, `src/tela/core/config.py`, `tests/core/test_config.py`,
+      and focused downstream-client test files for acceptance definition only. Forbidden:
+      downstream transport implementation, docs edits, dependency changes, status/audit/provider
+      output changes, gateway bearer-token semantics changes, or overwriting unrelated
+      ADR-009 edits.
+
+      </side_effect_budget>
+
+
+      <risk_probes>
+
+      - Verify Pydantic/config behavior does not coerce header values such as `123`
+      into `''123''`.
+
+      - Verify env expansion uses existing parse_config recursive string-leaf expansion
+      and does not add a second secret/env mechanism.
+
+      - Verify expected-red transport tests fail for missing header forwarding rather
+      than because fixtures are malformed.
+
+      </risk_probes>'
+    verification: '- [ ] Contract/tests define `headers: dict[str, str]` behavior
+      on `ServerConfig` and `parse_config`, including omitted/empty headers preserving
+      `{}` or equivalent empty behavior.
+
+      - [ ] Tests prove `${RESOFEED_AUTHORIZATION}` inside `servers.resofeed.headers.Authorization`
+      expands through the existing parse_config recursive string-leaf expansion.
+
+      - [ ] Tests prove non-string header values and/or keys fail parse/validation
+      rather than being accepted or coerced.
+
+      - [ ] Tests prove `command + headers` is rejected by `validate_config` with
+      `SERVER_HEADERS_WITH_STDIO`.
+
+      - [ ] Expected-red downstream transport tests exist for both Streamable HTTP
+      and SSE header propagation and fail before runtime forwarding is implemented
+      for the intended reason.
+
+      - [ ] No transport implementation, dependency addition, docs edit, or upstream
+      bearer-token semantic change is included in this contract/test step.
+
+      - [ ] Checklist receipt maps each RH-* requirement above to satisfied/failed/blocked/unobserved
+      status.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- src/tela/core/models.py — key passage or \"NOT READ: <reason>\"\n\
+      - src/tela/core/config.py — key passage or \"NOT READ: <reason>\"\n- tests/core/test_config.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/shell/test_downstream_runtime_connection.py\
+      \ — key passage or \"NOT READ: <reason>\"\n\n## Requirements Register\n| requirement_id\
+      \ | evidence | status |\n| --- | --- | --- |\n| RH-1 | <test/model evidence>\
+      \ | <OWNED/PROVEN/RED> |\n| RH-2 | <test evidence> | <OWNED/PROVEN/RED> |\n\
+      | RH-3 | <test evidence> | <OWNED/PROVEN/RED> |\n| RH-4 | <non-goal assertion\
+      \ evidence> | <OWNED/RED/NOT_YET_RUNTIME> |\n| RH-5 | <expected-red transport\
+      \ evidence> | <OWNED/RED> |\n| RH-6 | <non-exposure test plan or rationale>\
+      \ | <OWNED/NOT_YET_RUNTIME> |\n| RH-7 | <deferred to remote_headers.docs_verify>\
+      \ | DEFERRED |\n\n## Expected-Red Test Receipt\n- command: <exact targeted pytest\
+      \ command(s)>\n- raw_stdout: |\n    <paste output>\n- exit_code: <code>\n- expected_failures:\
+      \ <which tests fail red and why>\n- product_code_scope: <confirm no downstream\
+      \ transport forwarding implementation>\n\n## Worktree Safety\n- dirty_files_inspected_before_edit:\
+      \ <yes/no + list>\n- unrelated_ADR009_changes_preserved: <evidence>\n\n## Checklist\
+      \ Receipt\n- headers model/parse tests: <satisfied/failed/blocked/unobserved>\n\
+      - env expansion tests: <satisfied/failed/blocked/unobserved>\n- non-string rejection\
+      \ tests: <satisfied/failed/blocked/unobserved>\n- stdio rejection test: <satisfied/failed/blocked/unobserved>\n\
+      - expected-red transport tests: <satisfied/failed/blocked/unobserved>\n- scope\
+      \ constraints preserved: <satisfied/failed/blocked/unobserved>\n\n## Deviations\n\
+      - <type, what, why, impact, follow-up owner or none>"
+    agent: python-executor
