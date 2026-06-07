@@ -84535,3 +84535,165 @@ phases:
       \    203:The merged instructions appear in the upstream server's `instructions`\
       \ field as Markdown with H2 headers for each server.\n  exit_code: 0\n- command:\
       \ `git diff --check -- docs/USAGE.md`\n  raw_output: |\n  exit_code: 0"
+  - id: full_verification_remediation
+    name: Remediate ADR-009 full verification blockers
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: project
+
+      work_type: proof_closure
+
+
+      TARGET STATE:
+
+      ADR-009 full verification blockers are remediated without reopening old completed
+      steps or weakening ADR-009 semantics. The obsolete bridge recovery expectations
+      in `tests/shell/test_connect_recovery_red.py` are reconciled with the accepted
+      ADR-009 `post_mcp_http` / bridge recovery seam, staged remote_headers whitespace
+      is cleaned only where `git diff --check --cached` reports trailing whitespace,
+      and required ADR contract coverage in `tests/shell/test_adr009_contract_red.py`
+      is tracked/staged if it is part of this phase''s acceptance evidence.
+
+
+      BOUNDING BOX:
+
+      - Primary tests: `tests/shell/test_connect_recovery_red.py`, `tests/shell/test_adr009_contract_red.py`,
+      `tests/shell/test_downstream_runtime_connection.py`.
+
+      - Primary implementation seam only if test update alone is wrong: ADR-009 bridge
+      HTTP/recovery data-plane seam around `post_mcp_http` and connect-bridge forwarding.
+
+      - Do not broaden into unrelated remote_headers behavior or generic HTTP retry
+      redesign.
+
+
+      REQUIREMENT TRACEABILITY MATRIX:
+
+      | requirement_id | source_ref + key passage | obligation | owning_step_id |
+      checklist_item | evidence_field | status | non_intersection_or_escalation |
+
+      | --- | --- | --- | --- | --- | --- | --- | --- |
+
+      | ADR009-FV-B1 | orchestrator blocker report: `test_connect_recovery_red.py`
+      failures/timeouts target old retry call-count behavior | Update obsolete recovery
+      tests or a narrow compatible seam so ADR-009 bridge recovery proof aligns with
+      accepted `post_mcp_http` lifecycle semantics | adr009_reland.full_verification_remediation
+      | `test_connect_recovery_red.py` failures/timeouts are resolved without restoring
+      generic retry data-plane routing | `recovery_tests_raw_output`, `seam_disposition`
+      | OWNED | Blocks `adr009_reland.full_verification` |
+
+      | ADR009-FV-B2 | orchestrator blocker report: `git diff --check --cached` trailing
+      whitespace in RH-5 tests | Remove only staged trailing whitespace in affected
+      `tests/shell/test_downstream_runtime_connection.py` RH-5 lines | adr009_reland.full_verification_remediation
+      | staged whitespace check is clean | `cached_diff_check_raw_output` | OWNED
+      | Blocks `adr009_reland.full_verification` |
+
+      | ADR009-FV-B3 | orchestrator blocker report: untracked `tests/shell/test_adr009_contract_red.py`
+      required ADR coverage | Track/stage the ADR contract test when it is part of
+      this phase; otherwise produce explicit non-inclusion rationale accepted by gate
+      | adr009_reland.full_verification_remediation | ADR contract test tracked/staged
+      disposition is explicit | `git_status_raw_output`, `adr_contract_tracking_disposition`
+      | OWNED | Blocks `adr009_reland.full_verification` |
+
+
+      CONSTRAINTS:
+
+      - Explicitly forbidden: restoring MCP data-plane use of generic `retry_http_request`
+      for bridge recovery/data-plane semantics.
+
+      - Do not reintroduce old fixed retry-count call-count expectations if ADR-009
+      accepted semantics route through `post_mcp_http` or phase-aware recovery logic.
+
+      - Do not weaken, skip, xfail, or delete ADR-009 coverage to make tests green.
+
+      - Do not clean/reset/stash unrelated dirty state; preserve remote_headers work.
+
+      - Whitespace edits are limited to the staged trailing-whitespace lines reported
+      by `git diff --check --cached`.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION remediation step. Stub-only or skip-only completion
+      is NOT acceptable. Any compatibility change must contain substantive logic that
+      preserves ADR-009 data-plane lifecycle semantics.
+
+
+      <side_effect_budget>
+
+      Allowed: focused edits to obsolete recovery tests or the narrow ADR-009 bridge
+      recovery seam, staged whitespace cleanup at reported RH-5 lines, and staging/tracking
+      the ADR contract test if appropriate. Forbidden: source/docs/test edits outside
+      the blocker surfaces above, restoring MCP data-plane use of generic `retry_http_request`,
+      deleting/xfailing blocker tests, or modifying unrelated dirty worktree content.
+
+
+      <risk_probes>
+
+      - Verify old retry call-count assertions are not merely replaced by no-op expectations;
+      the accepted recovery seam must still be exercised.
+
+      - Confirm data-plane MCP requests are not routed back through `retry_http_request`
+      and unsafe replay semantics remain closed.
+
+      - Confirm `git diff --check --cached` coverage includes the staged remote_headers
+      whitespace after remediation, and untracked ADR test status is explicitly resolved.
+
+
+      ## Gate Preview (what the gate WILL reject)
+
+      1. Any MCP data-plane path restored to generic `retry_http_request`.
+
+      2. Tests made green by skip/xfail/deletion or by removing ADR-009 behavioral
+      coverage.
+
+      3. `git diff --check --cached` still reporting RH-5 trailing whitespace.
+
+      4. Required ADR contract test remaining untracked without explicit accepted
+      disposition.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] `git status --short --branch` raw output shows the ADR contract test tracking/staging
+      disposition and preserved unrelated dirty state.
+
+      - [ ] Focused diagnostics for `tests/shell/test_connect_recovery_red.py::test_post_mcp_message_retries_on_connection_refused_string_reason`,
+      `tests/shell/test_connect_recovery_red.py::test_recovery_attempt_limit_honors_custom_retry_count`,
+      and `tests/shell/test_connect_recovery_red.py::test_forward_stdio_http_passes_max_recovery_attempts_to_post_mcp`
+      are green or explicitly updated with ADR-009-consistent expected behavior.
+
+      - [ ] Evidence states whether the fix was test-expectation update, narrow implementation
+      compatibility, or both, and confirms MCP data-plane use of generic `retry_http_request`
+      was not restored.
+
+      - [ ] `git diff --check --cached` raw output and exit code are clean after staged
+      whitespace cleanup.
+
+      - [ ] Focused ADR suite raw output is green: `uv run pytest tests/shell/test_adr009_contract_red.py
+      tests/shell/test_bridge_http.py tests/shell/test_connect_recovery_red.py -q`.
+
+      - [ ] Preferably, full `uv run pytest` and `uv run invar guard` raw outputs
+      are green; if not feasible, exact blocker output and non-intersection/remediation
+      ownership are provided for `adr009_reland.full_verification`.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- tests/shell/test_connect_recovery_red.py — key passage or \"NOT READ:\
+      \ <reason>\"\n- tests/shell/test_adr009_contract_red.py — key passage or \"\
+      NOT READ: <reason>\"\n- tests/shell/test_downstream_runtime_connection.py —\
+      \ key passage or \"NOT READ: <reason>\"\n- src/mcp_tela/shell — key passage\
+      \ or \"NOT READ: <reason>\"\n\n## Remediation Disposition\n- seam_disposition:\
+      \ <test update | narrow implementation compatibility | both>\n- retry_http_request_forbidden_check:\
+      \ <evidence that MCP data-plane was not routed back through generic retry_http_request>\n\
+      - adr_contract_tracking_disposition: <tracked/staged or explicit rationale>\n\
+      - remote_headers_whitespace_scope: <exact staged lines fixed>\n\n## Receipt\n\
+      - git_status_raw_output: |\n    <paste raw output>\n- recovery_tests_raw_output:\
+      \ |\n    <paste raw output>\n- cached_diff_check_raw_output: |\n    <paste raw\
+      \ output and exit code>\n- focused_adr_suite_raw_output: |\n    <paste raw output>\n\
+      - full_pytest_raw_output_or_blocker: |\n    <paste raw output or blocker/non-intersection>\n\
+      - invar_guard_raw_output_or_blocker: |\n    <paste raw output or blocker/non-intersection>\n\
+      \n## Checklist Receipt\n- recovery_seam_aligned: PASS|FAIL|BLOCKED\n- no_generic_retry_data_plane_restore:\
+      \ PASS|FAIL|BLOCKED\n- staged_whitespace_clean: PASS|FAIL|BLOCKED\n- adr_contract_test_tracked_or_dispositioned:\
+      \ PASS|FAIL|BLOCKED\n- full_verification_ready: PASS|FAIL|BLOCKED"
+    depends_on:
+    - adr009_reland.integration_remediation
+    - adr009_reland.docs_remediation
+    agent: python-senior
