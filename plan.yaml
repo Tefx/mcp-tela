@@ -9,6 +9,29 @@
 version: 1
 project: tela
 context: Implementation plan for tela.
+clipboard:
+  author: Python Executor
+  summary: audit facts
+  content: '`docs/ADR-009-mcp-bridge-request-lifecycle.md` exists as untracked.
+
+    `src/tela/commands/bridge_http.py` exists as untracked.
+
+    `tests/shell/test_adr009_contract_red.py` exists as untracked.
+
+    `tests/shell/test_bridge_http.py` exists as untracked.
+
+
+    Unrelated remote_headers modifications are kept dirty safely.
+
+    Expected red proof was achieved by executing untracked `pytest tests/shell/test_adr009_contract_red.py`,
+    which failed precisely due to lack of the ADR-009 mechanisms in current `tela`
+    codebase.
+
+    `HTTP_TIMEOUT_SECONDS = 10.0` was proven in `src/tela/commands/connect_bridge.py`.
+
+    '
+  written_at: '2026-06-07T13:57:06.901469Z'
+  expires_at: '2026-06-08T13:57:06.901469Z'
 phases:
 - id: meta.discovery
   name: meta.discovery
