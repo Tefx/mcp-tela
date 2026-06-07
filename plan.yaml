@@ -81278,7 +81278,7 @@ phases:
       \ owns orchestration.\n\nNo plan.yaml edits."
 - id: remote_headers
   name: Remote Downstream HTTP Headers
-  status: done
+  status: in_progress
   gate: Open only when headers are parsed as dict[str, str], env-expanded by existing
     recursive string-leaf expansion, rejected for stdio command transports with SERVER_HEADERS_WITH_STDIO,
     forwarded to Streamable HTTP and SSE clients, omitted/empty headers preserve old
@@ -82162,3 +82162,192 @@ phases:
       expected-red proof, then rerun focused tests, SDK probe if desired, `git diff
       --check`, and `uv run invar guard` (or document the same ADR-009 non-intersection
       again).'
+  - id: gate_remediation
+    name: Gate remediation for remote downstream headers
+    status: pending
+    description: 'step_type: remediation
+
+      agent_source: project
+
+      verification_scope: phase-check
+
+      work_type: proof_closure
+
+
+      TARGET STATE:
+
+      The blocked `remote_headers.gate` has a bounded follow-up receipt proving both
+      reported blockers are closed: `tela.yaml.example` has no feature-doc trailing
+      whitespace, the strengthened downstream header forwarding tests have raw expected-red
+      proof from a safe pre-runtime reconstruction, focused green tests pass afterward,
+      and unrelated ADR-009 dirty/staged changes are preserved.
+
+
+      BOUNDING BOX:
+
+      - Primary artifact: `tela.yaml.example` lines 123 and 133 trailing whitespace
+      reported by `git diff --check`.
+
+      - Runtime proof artifacts: `tests/shell/test_downstream_runtime_connection.py`
+      forwarding tests and the runtime forwarding seam in `src/tela/shell/downstream_clients.py`.
+
+      - Worktree safety artifacts: `git status --short`, staged/dirty/untracked ADR-009
+      files, and any temporary worktree/copy/patch path used for expected-red reconstruction.
+
+
+      REQUIREMENT-TO-CHECKLIST TRACEABILITY MATRIX:
+
+      | requirement_id | source_ref + key passage | obligation | owning_step_id |
+      checklist_item | evidence_field | status | non_intersection_or_escalation |
+
+      | --- | --- | --- | --- | --- | --- | --- | --- |
+
+      | RH-GR-1 | `remote_headers.gate` evidence blocker `DOC_DIFF_CHECK_FAILED`:
+      `tela.yaml.example:123` and `:133` trailing whitespace | Remove only the feature-doc
+      trailing whitespace and prove `git diff --check` is clean for the remote_headers
+      touched files | remote_headers.gate_remediation | `tela.yaml.example` trailing
+      whitespace removed and `git diff --check` rerun clean | `diff_check_output`
+      | OWNED | Intersects RH-7 docs artifact gate; no deferral allowed |
+
+      | RH-GR-2 | `remote_headers.gate` evidence blocker `EXPECTED_RED_PROOF_MISSING_OR_CONTRADICTED`:
+      need raw pre-runtime failure output | Reconstruct or obtain raw expected-red
+      output where strengthened transport tests fail before runtime forwarding with
+      `None != configured headers` | remote_headers.gate_remediation | Safe isolated
+      expected-red proof collected without losing current worktree state | `expected_red_command`,
+      `expected_red_raw_output`, `isolation_method` | OWNED | Intersects RH-5 expected-red
+      proof gate; no deferral allowed |
+
+      | RH-GR-3 | Gate warning: unrelated ADR-009 dirty/untracked files may affect
+      `invar guard` | Preserve unrelated ADR-009 changes and document non-intersection
+      if `invar guard` is rerun and remains red for ADR-009 | remote_headers.gate_remediation
+      | Unrelated ADR-009 preservation and invar guard disposition documented | `adr009_preservation_status`,
+      `invar_guard_status` | OWNED | ADR-009 may remain outside this feature only
+      if explicitly identified and not introduced/modified by this remediation |
+
+
+      SCOPE:
+
+      - Allowed to remove trailing whitespace in `tela.yaml.example` at the reported
+      lines only.
+
+      - Allowed to use a safe isolated temporary method for expected-red reconstruction,
+      such as a temp worktree/copy/patch, provided current dirty/staged/untracked
+      changes are not lost or rewritten.
+
+      - Allowed to run focused remote_headers tests, `git diff --check`, and optionally
+      `uv run invar guard`.
+
+      - Do NOT alter the runtime implementation merely to manufacture red proof in
+      the main worktree.
+
+      - Do NOT modify unrelated ADR-009 source/docs/tests except to preserve them
+      untouched.
+
+
+      EXPECTED-RED PROOF CONTRACT:
+
+      If the main worktree already contains runtime forwarding implementation, reconstruct
+      expected-red proof only in isolation. The raw output must show the strengthened
+      header propagation assertions failing before runtime forwarding, with a mismatch
+      equivalent to `None != configured headers` for Streamable HTTP and/or SSE as
+      applicable. Summaries without raw failure text are insufficient.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is a REMEDIATION step. Stub-only or summary-only completion is NOT acceptable.
+      Each claimed closure must include raw command output snippets and preserved-worktree
+      evidence.
+
+
+      <side_effect_budget>
+
+      Allowed: edit only the reported trailing whitespace in `tela.yaml.example`;
+      create/remove safe temporary proof artifacts outside the main dirty/staged changes;
+      run verification commands. Forbidden: editing plan state directly, rewriting
+      product behavior to fabricate red proof, discarding/stashing/overwriting unrelated
+      ADR-009 changes without explicit preservation evidence, changing transport semantics,
+      adding dependencies, or marking the gate open.
+
+      </side_effect_budget>
+
+
+      <risk_probes>
+
+      - Verify the expected-red proof truly predates runtime forwarding semantics,
+      not merely a failing typo or altered assertion in the already-green implementation.
+
+      - Verify the temp worktree/copy/patch method does not consume, reset, hide,
+      or overwrite unrelated ADR-009 dirty/staged/untracked changes.
+
+      - Verify `git diff --check` is run on the remote_headers touched files and specifically
+      no longer reports `tela.yaml.example:123` or `tela.yaml.example:133`.
+
+      </risk_probes>'
+    verification: 'ACCEPTABLE RECEIPT (minimum deterministic proof; narrative summaries
+      will be rejected):
+
+      - [ ] `tela.yaml.example` lines 123 and 133 trailing whitespace are removed
+      without unrelated documentation edits.
+
+      - [ ] Raw expected-red pre-runtime proof is collected safely, showing strengthened
+      header forwarding tests fail before runtime forwarding with `None != configured
+      headers` or an equivalent concrete mismatch.
+
+      - [ ] The expected-red reconstruction method preserves current dirty/staged/untracked
+      ADR-009 changes and reports the isolation method used.
+
+      - [ ] Focused green tests for remote headers are rerun after remediation and
+      raw stdout/stderr snippets are included.
+
+      - [ ] `git diff --check -- src/tela/core/models.py src/tela/core/config.py src/tela/shell/downstream_clients.py
+      tests/core/test_config.py tests/shell/test_downstream_runtime_connection.py
+      docs/USAGE.md tela.yaml.example` is rerun and raw output shows no trailing-whitespace
+      failures.
+
+      - [ ] If `uv run invar guard` is rerun, its raw output and ADR-009 non-intersection
+      disposition are documented; unrelated ADR-009 failures must not be hidden or
+      attributed to remote_headers.
+
+      - [ ] Final remediation receipt explicitly states whether blockers `DOC_DIFF_CHECK_FAILED`
+      and `EXPECTED_RED_PROOF_MISSING_OR_CONTRADICTED` are closed.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- `tela.yaml.example` — key passage/line context or `NOT READ: <reason>`\n\
+      - `tests/shell/test_downstream_runtime_connection.py` — key passage/test names\
+      \ or `NOT READ: <reason>`\n- `src/tela/shell/downstream_clients.py` — key runtime\
+      \ forwarding seam passage or `NOT READ: <reason>`\n\n## Worktree Preservation\n\
+      - before_status_command: `git status --short`\n- before_status_raw_output: |\n\
+      \  <paste raw output, highlighting ADR-009 dirty/staged/untracked files>\n-\
+      \ isolation_method_for_expected_red: <temp worktree | temp copy | patch reversal\
+      \ in isolated copy | other safe method>\n- adr009_preservation_status: <explicit\
+      \ statement that unrelated ADR-009 changes were preserved untouched, or exact\
+      \ caveat>\n- after_status_command: `git status --short`\n- after_status_raw_output:\
+      \ |\n  <paste raw output>\n\n## Whitespace Remediation\n- changed_file: `tela.yaml.example`\n\
+      - exact_scope: <lines/sections touched; must be limited to trailing whitespace\
+      \ removal unless explicitly justified>\n- diff_check_command: `git diff --check\
+      \ -- src/tela/core/models.py src/tela/core/config.py src/tela/shell/downstream_clients.py\
+      \ tests/core/test_config.py tests/shell/test_downstream_runtime_connection.py\
+      \ docs/USAGE.md tela.yaml.example`\n- diff_check_exit_code: <code>\n- diff_check_output:\
+      \ |\n  <paste raw stdout/stderr; must show no tela.yaml.example trailing-whitespace\
+      \ failures>\n\n## Expected-Red Proof\n- expected_red_command: <exact command\
+      \ run in isolated pre-runtime reconstruction>\n- expected_red_exit_code: <code;\
+      \ failure expected>\n- expected_red_raw_output: |\n  <paste raw failure output\
+      \ showing `None != configured headers` or equivalent mismatch>\n- strengthened_tests_identified:\
+      \ <test names asserting configured headers>\n- pre_runtime_state_basis: <commit/copy/patch\
+      \ description proving runtime forwarding was absent in the proof environment>\n\
+      \n## Focused Green Retest\n- focused_tests_command: <exact focused pytest command>\n\
+      - focused_tests_exit_code: <code>\n- focused_tests_raw_output: |\n  <paste raw\
+      \ stdout/stderr>\n\n## Optional Invar Guard / ADR-009 Disposition\n- invar_guard_command:\
+      \ <exact command or `NOT RERUN`>\n- invar_guard_exit_code: <code or n/a>\n-\
+      \ invar_guard_raw_output: |\n  <paste raw output if run>\n- adr009_non_intersection:\
+      \ <why any ADR-009 failure is unrelated to this remediation, or `none` if green/not\
+      \ rerun>\n\n## Blocker Closure\n- DOC_DIFF_CHECK_FAILED: <CLOSED | STILL_BLOCKED\
+      \ with reason>\n- EXPECTED_RED_PROOF_MISSING_OR_CONTRADICTED: <CLOSED | STILL_BLOCKED\
+      \ with reason>\n- caveats: <none or explicit residuals>\n\n## checklist_receipt\n\
+      - [ ] All verification checklist items satisfied, failed, blocked, or unobserved\
+      \ with reasons.\n- [ ] Raw command snippets included for expected-red, focused\
+      \ green, and diff-check proof.\n- [ ] Unrelated ADR-009 preservation explicitly\
+      \ documented."
+    depends_on:
+    - remote_headers.gate
+    agent: python-executor
