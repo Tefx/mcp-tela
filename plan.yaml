@@ -83244,3 +83244,86 @@ phases:
     depends_on:
     - adr009_reland.bridge_integration
     agent: blind-tester
+  - id: adr009_reland.docs_sync
+    name: Synchronize ADR-009 documentation with landed behavior
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: project
+
+
+      TARGET STATE:
+
+      Project documentation matches the tracked ADR-009 implementation and remote_headers
+      documentation changes remain intact. The ADR document is reused as valuable
+      design context, reconciled with actual code/tests, and promoted from Proposed
+      only when implementation and runtime/focused proofs in this corrective phase
+      support acceptance. If proof is not green, leave the ADR as Proposed/Blocked
+      and report the blocker instead of pretending acceptance.
+
+
+      DOCS SCOPE:
+
+      - `docs/ADR-009-mcp-bridge-request-lifecycle.md` — reconcile as tracked ADR
+      document; status handling must reflect proof state.
+
+      - `docs/DESIGN.md` — align bridge lifecycle/runtime contract without deleting
+      remote_headers content.
+
+      - `docs/INTERFACES.md` — align MCP bridge/error semantics if public/user-visible.
+
+      - `docs/USAGE.md` — align user-facing behavior/diagnostics if applicable.
+
+
+      WORKTREE SAFETY:
+
+      Docs files are already dirty from remote_headers. Before edits, inspect existing
+      diffs and preserve unrelated remote_headers sections. No broad rewrites. Use
+      precise edits and show before/after diff hunks for ADR-009-relevant sections.
+
+
+      <side_effect_budget>
+
+      Allowed: documentation edits limited to ADR-009 and directly affected bridge
+      lifecycle/error semantics. Forbidden: remote_headers doc regression, code/test
+      edits, dependency changes, old phase lifecycle edits, or declaring Accepted
+      without implementation/runtime proof.
+
+
+      <risk_probes>
+
+      - Docs must not document Tasca/table_wait-specific behavior.
+
+      - Docs must not claim `retry_http_request` owns data-plane lifecycle semantics.
+
+      - Error code tables must match actual emitted `error.data.code` values from
+      runtime/focused proof.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] ADR doc is tracked or staged for tracking and its status is justified
+      by focused/runtime proof state.
+
+      - [ ] DESIGN/INTERFACES/USAGE bridge lifecycle text matches actual implementation
+      and stable error codes.
+
+      - [ ] Remote_headers documentation changes are preserved; before/after diff
+      hunks show no unrelated header content deletion/regression.
+
+      - [ ] No docs text introduces Tasca/table_wait/wait_ms special-casing or new
+      dependencies.
+
+      - [ ] Worktree safety evidence confirms unrelated dirty files remain preserved.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Documentation\
+      \ Sync Report\n| doc | ADR-009 sections changed | implementation evidence ref\
+      \ | remote_headers preservation evidence | status |\n|---|---|---|---|---|\n\
+      \n## ADR Status Decision\n- focused_tests_status: <PASS/FAIL ref>\n- runtime_regression_status:\
+      \ <PASS/FAIL ref>\n- ADR_status_after_edit: Proposed/Accepted/Blocked\n- justification:\
+      \ <why status is valid>\n\n## Diff Evidence\n- command: `git diff -- docs/ADR-009-mcp-bridge-request-lifecycle.md\
+      \ docs/DESIGN.md docs/INTERFACES.md docs/USAGE.md`\n- relevant_diff_hunks: |\n\
+      \    <paste hunk excerpts>\n\n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
+      \ per item>"
+    depends_on:
+    - adr009_reland.focused_tests
+    - adr009_reland.runtime_regression
+    agent: project-guide
