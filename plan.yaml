@@ -40483,6 +40483,45 @@ phases:
       **Artifact:** gate review (no file changes)
 
       '
+  - id: tool_prefix.test.historical-evidence-closure
+    name: Historical evidence closure
+    status: done
+    description: 'Close historical Completed evidence guard findings for this phase
+      using later green proof. This is plan/evidence closure only; no source, docs,
+      tests, or old evidence are rewritten.
+
+
+      <side_effect_budget>
+
+      Allowed: add this done closure record to the same phase. Forbidden: modify product
+      code, docs, tests, or prior step evidence.
+
+      </side_effect_budget>
+
+      <risk_probes>
+
+      - Confirm the closure evidence is later than the earlier historical findings
+      in this phase.
+
+      - Confirm the evidence is GREEN/OPEN and includes gate_open_allowed=true.
+
+      - Confirm no old completed-step evidence is rewritten.
+
+      </risk_probes>'
+    verification: '- [ ] Later same-phase closure record exists for historical Completed
+      evidence guard findings.
+
+      - [ ] Evidence records current GREEN/OPEN proof and gate_open_allowed=true.
+
+      - [ ] No source/docs/tests or old step evidence were rewritten.'
+    agent: gate-reviewer
+    evidence: 'GREEN/OPEN historical evidence closure for phase tool_prefix.test.
+      gate_open_allowed=true. ADR/feature commit already created: 8d5b7695 Implement
+      ADR-009 bridge lifecycle and remote headers. Recent full repo proof: uv run
+      pytest -q -> 1455 passed in 117.90s; uv run invar guard -> passed, errors 0;
+      git diff --check and git diff --check --cached -> clean before commit; current
+      worktree clean after commit. This closure records later same-phase green proof
+      only.'
 - id: tool_prefix.runtime
   name: Tool Prefix Runtime Wiring
   status: done
