@@ -83922,6 +83922,7 @@ phases:
     depends_on:
     - adr009_reland.docs_sync
     - adr009_reland.docs_remediation
+    - adr009_reland.full_verification_remediation
     agent: integration-verifier
   - id: adr009_reland.gate
     name: Final ADR-009 corrective relanding gate
