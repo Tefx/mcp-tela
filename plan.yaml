@@ -84539,7 +84539,7 @@ phases:
       \ `git diff --check -- docs/USAGE.md`\n  raw_output: |\n  exit_code: 0"
   - id: adr009_reland.full_verification_remediation
     name: Remediate ADR-009 full verification blockers
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: project
@@ -84701,3 +84701,51 @@ phases:
     agent: python-senior
     claimed_by: vectl-planner
     claimed_at: '2026-06-07T15:56:31.734776+00:00'
+    done_at: '2026-06-07T15:56:44.713980+00:00'
+    evidence: 'Completed ADR-009 full verification remediation using supplied python-senior
+      evidence.
+
+
+      Remediation summary:
+
+      - Files changed/remediated: `tests/shell/test_connect_recovery_red.py`, `tests/shell/test_downstream_runtime_connection.py`,
+      `tests/shell/test_adr009_contract_red.py`, `src/tela/shell/gateway.py`.
+
+      - Recovery tests updated to the accepted ADR-009 seam; MCP data-plane use of
+      generic `retry_http_request` was not restored.
+
+      - Seam proof: `_post_mcp_for_forwarding` delegates to `post_mcp_http` and does
+      not call `retry_http_request`.
+
+      - Staged trailing whitespace cleaned; `git diff --check --cached` clean.
+
+      - `tests/shell/test_adr009_contract_red.py` staged/tracked as required ADR coverage.
+
+
+      Verification:
+
+      - Targeted command: `uv run pytest -q tests/shell/test_connect_recovery_red.py::test_post_mcp_message_retries_on_connection_refused_string_reason
+      tests/shell/test_connect_recovery_red.py::test_recovery_attempt_limit_honors_custom_retry_count
+      tests/shell/test_connect_recovery_red.py::test_forward_stdio_http_passes_max_recovery_attempts_to_post_mcp
+      -vv` -> `3 passed`.
+
+      - Focused suite: `uv run pytest -q tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py
+      tests/shell/test_connect_recovery_red.py tests/shell/test_gateway.py::test_builtin_call_rejects_unbound_multi_bridge_session_instead_of_auditing_first_connection`
+      -> `55 passed`.
+
+      - Gateway regression target: `uv run pytest -q tests/shell/test_gateway.py::test_builtin_call_rejects_unbound_multi_bridge_session_instead_of_auditing_first_connection
+      -vv` -> `1 passed`.
+
+      - `git diff --check --cached` -> clean.
+
+      - `uv run invar guard` -> passed, warnings only.
+
+      - `uv run pytest -q` -> `1455 passed in 117.69s`.
+
+
+      Checklist receipt: all six verification checklist items were marked satisfied
+      before completion.
+
+
+      Caveat: evidence was accepted from the supplied python-senior report; commands
+      were not rerun in-session.'
