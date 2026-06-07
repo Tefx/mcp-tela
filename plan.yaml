@@ -82745,7 +82745,7 @@ phases:
       \ enforced, external worktree un-wiped)."
   - id: adr009_reland.core_impl
     name: Complete ADR-009 Core replay and helper logic
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: project
@@ -82843,6 +82843,60 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-07T14:07:26.143773+00:00'
+    done_at: '2026-06-07T14:07:55.414719+00:00'
+    evidence: 'Completed ADR-009 Core implementation bookkeeping for `adr009_reland.core_impl`
+      based on supplied independent verification evidence.
+
+
+      Files changed by implementation:
+
+      - `src/tela/core/bridge_protocol.py` only.
+
+
+      Implemented behavior recorded:
+
+      - Explicit `BridgeReplayPolicy` values.
+
+      - Replay safety is fail-closed: only `initialize`, `ping`, and `tools/list`
+      JSON-RPC requests with usable request id are safe.
+
+      - Notifications, batches, malformed payloads, non-object payloads, unknown methods,
+      and `tools/call` are unsafe.
+
+      - Request-id and notification helpers fail closed.
+
+      - Response recovery is limited to gateway-owned JSON-RPC error envelopes; downstream
+      tool-result marker text does not trigger recovery.
+
+      - Header helper uses `Authorization`, `Content-Type`, `Accept`, `Content-Length`,
+      and optional `mcp-session-id`.
+
+      - Timeout validation is finite and bounded.
+
+
+      Checklist evidence:
+
+      - Targeted Core/doctest proof: `uv run pytest tests/shell/test_adr009_contract_red.py
+      -k ''core_replay_policy or jsonrpc_helpers or response_recovery or tool_result_marker''
+      -q` -> 14 passed, 13 deselected; `uv run python -m doctest -v src/tela/core/bridge_protocol.py`
+      -> 43 passed, 0 failed.
+
+      - Failure paths covered: malformed JSON, non-object JSON, JSON-RPC batch, unsafe
+      `tools/call`, and tool-result marker text not triggering recovery, via targeted
+      ADR-009 pytest selection and doctests above.
+
+      - Core purity preserved: implementation limited to `src/tela/core/bridge_protocol.py`;
+      Python-senior ran `uv run invar guard src/tela/core/bridge_protocol.py` -> passed,
+      0 errors, 0 warnings.
+
+      - No stub-only implementation remains in owned Core symbols: substantive input-varying
+      Core logic verified by targeted pytest and doctest results above.
+
+      - Worktree safety: remote_headers/unrelated dirty files preserved.
+
+
+      No source/docs/tests edits were performed by this bookkeeping action; plan state
+      was updated only through vectl tools.'
   - id: adr009_reland.http_executor
     name: Land phase-aware MCP data-plane HTTP executor
     status: pending
