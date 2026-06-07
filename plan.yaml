@@ -83614,18 +83614,18 @@ phases:
       diagnostics where applicable.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] Exact launch/command/harness path is recorded for the bridge runtime surface.
+      - [x] Exact launch/command/harness path is recorded for the bridge runtime surface.
 
-      - [ ] Runtime artifact (stdout/stderr/logs) proves a delayed MCP response is
+      - [x] Runtime artifact (stdout/stderr/logs) proves a delayed MCP response is
       not failed by old fixed bridge timeout by default.
 
-      - [ ] Runtime artifact proves unsafe sent `tools/call` unknown admission is
+      - [x] Runtime artifact proves unsafe sent `tools/call` unknown admission is
       not replayed and safe protocol replay remains bounded when allowed.
 
-      - [ ] Runtime artifact proves batch fail-closed or documents exact blocker with
+      - [x] Runtime artifact proves batch fail-closed or documents exact blocker with
       remediation ownership.
 
-      - [ ] Evidence distinguishes real bridge/data-plane path from mock-only unit
+      - [x] Evidence distinguishes real bridge/data-plane path from mock-only unit
       tests.'
     evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
       \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Runtime\
