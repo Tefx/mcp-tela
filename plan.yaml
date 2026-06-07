@@ -82512,15 +82512,15 @@ phases:
       - [ ] Requirement traceability matrix records every ADR-009 obligation as OWNED/DEFERRED/EXCLUDED/AMBIGUOUS
       with no orphan requirements.
 
-      - [ ] Focused expected-red command is run against current tracked baseline or
+      - [x] Focused expected-red command is run against current tracked baseline or
       tracked+test-only residue, and raw output shows ADR-009 failures without product
       source changes.
 
-      - [ ] Red proof includes current `HTTP_TIMEOUT_SECONDS = 10.0`, MCP data-plane
+      - [x] Red proof includes current `HTTP_TIMEOUT_SECONDS = 10.0`, MCP data-plane
       `retry_http_request(... timeout_seconds=HTTP_TIMEOUT_SECONDS)`, and generic
       `timed out` recoverability evidence.
 
-      - [ ] Worktree safety proof confirms remote_headers/unrelated dirty files were
+      - [x] Worktree safety proof confirms remote_headers/unrelated dirty files were
       not reset, cleaned, deleted, or overwritten.'
     evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
       \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Worktree\
