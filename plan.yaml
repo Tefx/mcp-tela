@@ -82514,3 +82514,122 @@ phases:
       \n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
       \ per item>"
     agent: python-executor
+  - id: adr009_reland.core_contract
+    name: Define ADR-009 Core replay and HTTP helper contracts
+    status: pending
+    description: 'step_type: contract
+
+      contract_purity: ENFORCED
+
+      contract_outputs: signatures, type_defs, interfaces, stubs, @pre/@post contracts,
+      doctests
+
+      agent_source: project
+
+
+      ACCEPTED CONTRACT ARTIFACT:
+
+      Define the ADR-009 Core contract surface in `src/tela/core/bridge_protocol.py`
+      before implementation logic. Core remains pure: no file, network, env, time,
+      randomness, subprocess, socket, or Shell imports. Every new Core function must
+      have `@pre`, `@post`, and at least one doctest before stub completion.
+
+
+      PINNED INTERFACES:
+
+      - `BridgeReplayPolicy` with `SAFE` and `UNSAFE` members.
+
+      - `jsonrpc_request_id(payload: bytes) -> object | None`.
+
+      - `jsonrpc_is_notification(payload: bytes) -> bool`.
+
+      - `bridge_replay_policy(payload: bytes) -> BridgeReplayPolicy`.
+
+      - `bridge_http_headers(*, bearer_token: str, payload_length: int, session_id:
+      str | None) -> dict[str, str]` if used by Shell data-plane.
+
+      - `bridge_http_timeouts_valid(*, connect_timeout_seconds: float, write_timeout_seconds:
+      float, response_timeout_seconds: float | None) -> bool` if used by Shell data-plane.
+
+      - `response_requires_bridge_recovery(response_messages: list[bytes]) -> bool`
+      semantics narrowed to gateway-owned JSON-RPC error envelopes only.
+
+
+      CONSTRAINTS:
+
+      - Stubs/`NotImplementedError` are allowed only in this contract step.
+
+      - Do not add public helper surfaces beyond the pinned interfaces unless the
+      audit matrix marks the existing interface insufficient and escalates.
+
+      - Do not modify Shell data-plane or connect_bridge implementation here.
+
+      - Preserve remote_headers dirty changes and unrelated worktree state.
+
+
+      <side_effect_budget>
+
+      Allowed: contract-only edits in `src/tela/core/bridge_protocol.py` and doctest/contract
+      comments. Forbidden: executable Shell I/O, connect_bridge changes, http_client
+      changes, docs status changes, source behavior completion beyond stubs.
+
+
+      <risk_probes>
+
+      - Doctests must show batches and malformed/non-object payloads fail closed.
+
+      - Contracts must be non-vacuous and reference real parameters, not identity
+      lambdas.
+
+      - Header helper must preserve upstream/gateway bearer token semantics and not
+      affect remote downstream header support.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Core contract surface exists in tracked `src/tela/core/bridge_protocol.py`
+      with the pinned interfaces or documented contract deviation.
+
+      - [ ] Every new Core function has `@pre`, `@post`, and doctest examples before
+      implementation completion.
+
+      - [ ] Contract step remains pure Core: no I/O imports and no Shell dependencies.
+
+      - [ ] Stubs are explicit and limited to contract outputs; implementation logic
+      is not claimed here.
+
+      - [ ] Worktree safety evidence confirms remote_headers/unrelated dirty files
+      are preserved.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Contract Surface
+
+      | symbol | signature | contract/doctest evidence | stub_or_existing | deviations
+      |
+
+      |---|---|---|---|---|
+
+
+      ## Core Purity Evidence
+
+      - imports_review: <paste relevant import scan>
+
+      - invar_contract_notes: <non-vacuous @pre/@post evidence>
+
+
+      ## Worktree Safety
+
+      - status_before_after: <paste>
+
+      - protected_dirty_files_preserved: PASS/FAIL
+
+
+      ## Checklist Receipt
+
+      - checklist_receipt: <satisfied/failed/blocked/unobserved per item>'
+    depends_on:
+    - adr009_reland.audit_red
+    agent: python-executor
