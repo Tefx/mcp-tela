@@ -82404,7 +82404,7 @@ phases:
       \ passed."
 - id: adr009_reland
   name: ADR-009 Corrective Relanding
-  status: in_progress
+  status: done
   gate: 'Open only when ADR-009 is truly landed in tracked source/tests/docs without
     reopening old completed steps: residue is audited, expected-red proof exists on
     tracked baseline, Core contracts/doctests and Shell data-plane implementation
@@ -83955,7 +83955,7 @@ phases:
       per worktree safety policy.'
   - id: adr009_reland.gate
     name: Final ADR-009 corrective relanding gate
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       verification_scope: full-plan-check
@@ -84126,6 +84126,43 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-07T16:06:16.876869+00:00'
+    done_at: '2026-06-07T16:06:29.976196+00:00'
+    evidence: 'Gate reviewer evidence accepted as adequate for the full-plan-check
+      gate.
+
+
+      Checklist receipt:
+
+      - Gate decision basis maps every ADR-009 requirement row to positive proof or
+      no blocker-class gap: PASS / OPEN; no ORPHAN, UNPROVEN, NEEDS_TEST, or UNCERTAIN_BLOCKING
+      blocker-class gaps reported.
+
+      - Tracked/staged evidence confirmed: `git ls-files` lists `docs/ADR-009-mcp-bridge-request-lifecycle.md`,
+      `src/tela/commands/bridge_http.py`, `tests/shell/test_adr009_contract_red.py`,
+      and `tests/shell/test_bridge_http.py`; implementation is not merely untracked
+      residue.
+
+      - ADR/source/runtime requirements confirmed: ADR status is `Accepted`; data-plane
+      uses `post_mcp_http` rather than generic `retry_http_request`; default `response_timeout_seconds=None`
+      verified; phase-aware `BridgeHttpError` exists; unsafe sent unknown-admission
+      request is not replayed; safe replay/batch fail-closed behavior is proven by
+      tests; generic `timed out` remains only a control-plane fallback and not MCP
+      data-plane replay authority; no Tasca/table_wait/wait_ms special casing found;
+      `remote_headers` preserved in docs/code/tests; ADR slow-tool docs present.
+
+      - Worktree/format/test evidence reviewed: `git diff --check` exit 0; `git diff
+      --check --cached` exit 0; focused ADR pytest rerun reported `46 passed`; `uv
+      run invar guard` passed with errors 0; recent full verification evidence `uv
+      run pytest -q` reported `1455 passed`.
+
+      - Gate decision: OPEN / PASS. No unresolved blocker-class runtime/spec/invar/worktree-safety
+      gaps reported.
+
+
+      Caveats recorded: final gate did not rerun the full pytest suite itself, but
+      accepted recent full verification evidence (`1455 passed`); `.hypothesis/` remains
+      an untracked generated artifact and is non-blocking for this gate because ADR
+      docs/source/tests are tracked/staged and no blocker-class residue was reported.'
   - id: adr009_reland.integration_remediation
     name: Remediate ADR-009 focused integration blockers
     status: done
