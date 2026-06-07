@@ -83980,7 +83980,7 @@ phases:
     agent: gate-reviewer
   - id: adr009_reland.integration_remediation
     name: Remediate ADR-009 focused integration blockers
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: project
@@ -84177,3 +84177,5 @@ phases:
     depends_on:
     - adr009_reland.bridge_integration
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-07T14:43:57.877115+00:00'
