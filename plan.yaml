@@ -82483,7 +82483,7 @@ phases:
     verification: 'ACCEPTABLE RECEIPT (minimum deterministic proof; expected red before
       implementation):
 
-      - [ ] `git status --short --branch` and `git ls-files <ADR residue paths>` prove
+      - [x] `git status --short --branch` and `git ls-files <ADR residue paths>` prove
       which files are tracked vs residue.
 
       - [ ] Requirement traceability matrix records every ADR-009 obligation as OWNED/DEFERRED/EXCLUDED/AMBIGUOUS
