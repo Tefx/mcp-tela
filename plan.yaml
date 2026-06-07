@@ -82899,7 +82899,7 @@ phases:
       was updated only through vectl tools.'
   - id: adr009_reland.http_executor
     name: Land phase-aware MCP data-plane HTTP executor
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       tags: integration
@@ -83056,6 +83056,146 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-07T14:12:59.762403+00:00'
+    done_at: '2026-06-07T14:14:00.440434+00:00'
+    evidence: '## refs Read Confirmation
+
+      - No refs were defined on this step.
+
+
+      ## Integration Evidence
+
+      **Staging action**:
+
+      ```text
+
+      git add -- src/tela/commands/bridge_http.py tests/shell/test_bridge_http.py
+
+      ```
+
+      Result: the two requested files are staged for tracking:
+
+      ```text
+
+      A  src/tela/commands/bridge_http.py
+
+      A  tests/shell/test_bridge_http.py
+
+      ```
+
+      Docs residue remains unstaged/untracked; plan.yaml was not staged by this action.
+      Worktree file contents were not edited.
+
+
+      **Command or test exercising Core -> bridge_http path**:
+
+      ```text
+
+      uv run pytest tests/shell/test_bridge_http.py -q
+
+      ```
+
+      **Actual output**:
+
+      ```text
+
+      13 passed
+
+      ```
+
+      **Path exercised**: `tela.core.bridge_protocol` -> `tela.commands.bridge_http`
+
+
+      **ADR-009 focused regression command**:
+
+      ```text
+
+      uv run pytest tests/shell/test_adr009_contract_red.py -k ''phase_http_executor
+      or invalid_timeout_inputs'' -q
+
+      ```
+
+      **Actual output**:
+
+      ```text
+
+      4 passed, 23 deselected
+
+      ```
+
+
+      **Invar guard evidence from python-senior**:
+
+      ```text
+
+      uv run invar guard src/tela/commands/bridge_http.py
+
+      ```
+
+      Result: passed with warnings only (`function_size`, `dead_export` seam until
+      `connect_bridge` integration references it).
+
+
+      ## Lifecycle Phase Evidence
+
+      | phase/case | request_sent | mcp_admitted | evidence_ref |
+
+      |---|---:|---:|---|
+
+      | connect failure | False | None | `tests/shell/test_bridge_http.py` focused
+      test suite: 13 passed |
+
+      | pre-body write failure | False | None | `tests/shell/test_bridge_http.py`
+      focused test suite: 13 passed |
+
+      | partial/unknown body failure | None | None | `tests/shell/test_bridge_http.py`
+      focused test suite: 13 passed |
+
+      | response timeout finite | True | None | `tests/shell/test_bridge_http.py`
+      focused test suite: 13 passed |
+
+      | response-timeout None | True | None | `tests/shell/test_bridge_http.py` focused
+      test suite: 13 passed |
+
+      | warming 503 | True | False | `tests/shell/test_bridge_http.py` focused test
+      suite: 13 passed |
+
+      | plain non-2xx | True | None | `tests/shell/test_bridge_http.py` focused test
+      suite: 13 passed |
+
+
+      ## Guardrails
+
+      - http_client_unchanged_for_data_plane: `http_client.py` unchanged; no ADR-009
+      data-plane lifecycle logic added there.
+
+      - dependency_scan: dependency files unchanged; no new package/dependency introduced.
+
+      - remote_headers_preserved: remote_headers files and unrelated dirty docs/ADR
+      residue were not staged by this action.
+
+      - worktree_safety: worktree safety preserved; only the requested untracked `bridge_http.py`
+      and `test_bridge_http.py` files were staged by this action.
+
+
+      ## Checklist Receipt
+
+      - `src/tela/commands/bridge_http.py` is tracked or staged for tracking and imports
+      only existing Core helpers from `bridge_protocol.py`: PROVEN by staged `A` status
+      and python-senior verification.
+
+      - Focused bridge_http tests pass for success, connect failure, pre-body write
+      failure, partial/unknown body write failure, explicit response deadline, response-timeout
+      `None`, warming 503, and plain non-2xx: PROVEN by `uv run pytest tests/shell/test_bridge_http.py
+      -q` -> 13 passed.
+
+      - `http_client.py` remains a control-plane retry skeleton; no ADR-009 data-plane
+      lifecycle logic is added there: PROVEN unchanged.
+
+      - No new dependency is introduced in `pyproject.toml` or imports: PROVEN dependency
+      files unchanged.
+
+      - Worktree safety evidence confirms remote_headers/unrelated dirty files are
+      preserved: PROVEN requested-only staging action and selected status check.'
   - id: adr009_reland.bridge_integration
     name: Integrate ADR-009 lifecycle semantics into connect_bridge
     status: pending
