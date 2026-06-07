@@ -81598,37 +81598,37 @@ phases:
       accidental serialization of `ServerConfig.headers` values.
 
       </risk_probes>'
-    verification: '- [ ] Pre-fix proof captures the expected-red failure or monkeypatch
+    verification: '- [x] Pre-fix proof captures the expected-red failure or monkeypatch
       evidence that configured headers were not forwarded before runtime changes.
 
-      - [ ] Streamable HTTP downstream connection forwards exactly the configured
+      - [x] Streamable HTTP downstream connection forwards exactly the configured
       headers to the MCP SDK-supported client path, with a targeted green test proving
       the call path.
 
-      - [ ] SSE downstream connection forwards exactly the configured headers via
+      - [x] SSE downstream connection forwards exactly the configured headers via
       `sse_client(..., headers=...)`, with a targeted green test proving the call
       path.
 
-      - [ ] Stdio transport rejects `headers` via `validate_config` with `SERVER_HEADERS_WITH_STDIO`
+      - [x] Stdio transport rejects `headers` via `validate_config` with `SERVER_HEADERS_WITH_STDIO`
       and no stdio client consumes headers.
 
-      - [ ] Omitted and empty headers preserve existing behavior for HTTP/SSE/stdio
+      - [x] Omitted and empty headers preserve existing behavior for HTTP/SSE/stdio
       tests.
 
-      - [ ] Non-string header keys/values fail parse/validation; no accept-and-clean
+      - [x] Non-string header keys/values fail parse/validation; no accept-and-clean
       or string coercion behavior remains.
 
-      - [ ] No new external dependency is added; if `httpx` or another client path
+      - [x] No new external dependency is added; if `httpx` or another client path
       is used, evidence proves it was already available through the project/MCP SDK
       path.
 
-      - [ ] Secret non-exposure evidence confirms header values are not introduced
+      - [x] Secret non-exposure evidence confirms header values are not introduced
       into status/audit/provider output or error messages touched by this feature.
 
-      - [ ] Targeted tests plus `uv run invar guard` (or documented repo-standard
+      - [x] Targeted tests plus `uv run invar guard` (or documented repo-standard
       invar command) pass or have explicit blocker output for orchestrator remediation.
 
-      - [ ] Checklist receipt maps each runtime checklist item to satisfied/failed/blocked/unobserved
+      - [x] Checklist receipt maps each runtime checklist item to satisfied/failed/blocked/unobserved
       status.'
     evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
       \ step:\n- src/tela/core/models.py — key passage or \"NOT READ: <reason>\"\n\
