@@ -81439,3 +81439,165 @@ phases:
       \ constraints preserved: <satisfied/failed/blocked/unobserved>\n\n## Deviations\n\
       - <type, what, why, impact, follow-up owner or none>"
     agent: python-executor
+  - id: remote_headers.runtime
+    name: Runtime header forwarding for Streamable HTTP and SSE
+    status: pending
+    description: 'step_type: implementation
+
+      expected_result: green after implementation
+
+      agent_source: project
+
+
+      TARGET STATE:
+
+      Remote downstream servers may declare static `headers: dict[str, str]` in local
+      tela YAML. Parsed and validated headers are forwarded to url-based downstream
+      MCP transports: Streamable HTTP and legacy SSE. Stdio servers reject headers
+      during config validation. Empty or omitted headers preserve current behavior.
+      Header values, especially Authorization secrets, are not emitted through status,
+      audit, provider, or error output as part of this feature.
+
+
+      Fill in the existing contract from `remote_headers.contract`; do not redesign
+      public config semantics.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - `remote_headers.contract` — headers contract, validation tests, and expected-red
+      transport forwarding tests are AUTHORITATIVE.
+
+      - Protected tests from `remote_headers.contract` must not be weakened or rewritten
+      to fit implementation.
+
+
+      YOUR SCOPE:
+
+      Complete the implementation within existing source boundaries: `src/tela/core/models.py`,
+      `src/tela/core/config.py`, and `src/tela/shell/downstream_clients.py`. Use existing
+      project dependencies only. For Streamable HTTP, first use any MCP SDK-supported
+      `headers` argument if present; if the SDK requires an `http_client` path, use
+      only an already available SDK/project dependency and document why. For SSE,
+      use the MCP SDK `sse_client` headers parameter. Do not add packages.
+
+
+      PRE-FIX PROOF REQUIREMENT:
+
+      Before modifying runtime forwarding logic, run the expected-red transport tests
+      from `remote_headers.contract` and capture raw failure output showing headers
+      are currently dropped/not forwarded (or an equivalent monkeypatch proof showing
+      `streamable_http_client` and `sse_client` are called without configured headers).
+
+
+      GATE PREVIEW (what the gate WILL reject):
+
+      1. Header values accepted via coercion/cleanup instead of strict `dict[str,
+      str]` validation.
+
+      2. `headers` accepted on `command`/stdio servers.
+
+      3. HTTP forwarding implemented but SSE forwarding missed, or vice versa.
+
+      4. New transport alias such as `type: remote` or changes to upstream/gateway
+      bearer-token semantics.
+
+      5. Header/Authorization values printed in status/audit/provider/error output.
+
+      6. New external dependency added for header forwarding.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes its inputs and produces
+      outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      <side_effect_budget>
+
+      Allowed: complete core model/validation and downstream client forwarding for
+      remote headers; add/update focused tests required for green proof. Forbidden:
+      modify gateway/upstream bearer token semantics, introduce new transport names
+      or compatibility aliases, add external packages, log or expose header secrets,
+      change unrelated ADR-009 files, or rewrite docs (owned by `remote_headers.docs_verify`).
+
+      </side_effect_budget>
+
+
+      <risk_probes>
+
+      - Check both Streamable HTTP and SSE client signatures at the current installed
+      MCP SDK surface before choosing the header-passing path.
+
+      - Confirm omitted/empty headers do not change current stdio, HTTP, or SSE behavior
+      and do not pass empty objects where the SDK path treats them differently.
+
+      - Search status/audit/provider/error output paths touched by this feature for
+      accidental serialization of `ServerConfig.headers` values.
+
+      </risk_probes>'
+    verification: '- [ ] Pre-fix proof captures the expected-red failure or monkeypatch
+      evidence that configured headers were not forwarded before runtime changes.
+
+      - [ ] Streamable HTTP downstream connection forwards exactly the configured
+      headers to the MCP SDK-supported client path, with a targeted green test proving
+      the call path.
+
+      - [ ] SSE downstream connection forwards exactly the configured headers via
+      `sse_client(..., headers=...)`, with a targeted green test proving the call
+      path.
+
+      - [ ] Stdio transport rejects `headers` via `validate_config` with `SERVER_HEADERS_WITH_STDIO`
+      and no stdio client consumes headers.
+
+      - [ ] Omitted and empty headers preserve existing behavior for HTTP/SSE/stdio
+      tests.
+
+      - [ ] Non-string header keys/values fail parse/validation; no accept-and-clean
+      or string coercion behavior remains.
+
+      - [ ] No new external dependency is added; if `httpx` or another client path
+      is used, evidence proves it was already available through the project/MCP SDK
+      path.
+
+      - [ ] Secret non-exposure evidence confirms header values are not introduced
+      into status/audit/provider output or error messages touched by this feature.
+
+      - [ ] Targeted tests plus `uv run invar guard` (or documented repo-standard
+      invar command) pass or have explicit blocker output for orchestrator remediation.
+
+      - [ ] Checklist receipt maps each runtime checklist item to satisfied/failed/blocked/unobserved
+      status.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- src/tela/core/models.py — key passage or \"NOT READ: <reason>\"\n\
+      - src/tela/core/config.py — key passage or \"NOT READ: <reason>\"\n- src/tela/shell/downstream_clients.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- tests/core/test_config.py — key\
+      \ passage or \"NOT READ: <reason>\"\n- tests/shell/test_downstream_runtime_connection.py\
+      \ — key passage or \"NOT READ: <reason>\"\n- pyproject.toml — key passage or\
+      \ \"NOT READ: <reason>\"\n\n## Pre-Fix Red Proof\n- command: <exact command\
+      \ run before runtime edits>\n- raw_stdout: |\n    <paste output>\n- exit_code:\
+      \ <code>\n- red_failure_reason: <headers dropped/not forwarded or equivalent\
+      \ proof>\n\n## Runtime Implementation Receipt\n- files_changed: <list>\n- sdk_signature_checked:\
+      \ <streamable_http_client and sse_client header path evidence>\n- streamable_http_header_path:\
+      \ <direct headers arg or http_client path + why>\n- sse_header_path: <headers\
+      \ parameter evidence>\n- stdio_rejection_path: <validate_config evidence>\n\
+      - dependency_change: <none or explain already-existing dependency path>\n\n\
+      ## Test Execution\n- targeted_commands: |\n    <commands>\n- targeted_raw_stdout:\
+      \ |\n    <paste output>\n- invar_command: <command>\n- invar_raw_stdout: |\n\
+      \    <paste output or blocker>\n\n## Secret Non-Exposure Evidence\n- surfaces_checked:\
+      \ <status/audit/provider/error paths checked>\n- grep_or_test_output: |\n  \
+      \  <paste proof>\n- header_values_observed_in_outputs: <none|required blocker>\n\
+      \n## Worktree Safety\n- dirty_files_inspected_before_edit: <yes/no + list>\n\
+      - unrelated_ADR009_changes_preserved: <evidence>\n\n## Checklist Receipt\n-\
+      \ pre_fix_red_proof: <satisfied/failed/blocked/unobserved>\n- streamable_http_forwarding:\
+      \ <satisfied/failed/blocked/unobserved>\n- sse_forwarding: <satisfied/failed/blocked/unobserved>\n\
+      - stdio_rejection: <satisfied/failed/blocked/unobserved>\n- empty_omitted_compatibility:\
+      \ <satisfied/failed/blocked/unobserved>\n- strict_string_validation: <satisfied/failed/blocked/unobserved>\n\
+      - no_new_dependency: <satisfied/failed/blocked/unobserved>\n- secret_non_exposure:\
+      \ <satisfied/failed/blocked/unobserved>\n\n## Deviations\n- <type, what, why,\
+      \ impact, follow-up owner or none>"
+    depends_on:
+    - remote_headers.contract
+    agent: python-senior
