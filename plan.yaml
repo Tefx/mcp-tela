@@ -83977,3 +83977,202 @@ phases:
     - adr009_reland.docs_sync
     - adr009_reland.full_verification
     agent: gate-reviewer
+  - id: integration_remediation
+    name: Remediate ADR-009 focused integration blockers
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: project
+
+      provenance: focused verifier failure from adr009_reland.focused_tests
+
+
+      TARGET STATE:
+
+      Only the three focused-test blockers reported by `adr009_reland.focused_tests`
+      are remediated. Tests and/or implementation are aligned to the accepted ADR-009
+      boundary: MCP data-plane forwarding uses `post_mcp_http` / `tela.commands.bridge_http`,
+      while `retry_http_request` remains generic control-plane infrastructure only.
+      `connect_bridge` treats gateway-owned reconnect-required JSON-RPC error envelopes
+      from successful 2xx MCP responses as proof of non-admission/stale bridge and
+      allows bounded recovery/replay according to ADR-009, including recovery after
+      idle bridge reap for the reported path. Transient retry tests target the current
+      accepted HTTP seam without forcing MCP data-plane traffic back through `retry_http_request`.
+
+
+      BLOCKERS TO FIX (ALL OF THESE, NOT JUST THE FIRST):
+
+      1. `tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved`
+      currently expects the obsolete `retry_http_request` patched seam and reached
+      a real refused connection; update the test seam to the accepted ADR-009 boundary
+      or preserve compatibility without routing MCP data-plane through generic retry.
+
+      2. `tests/repro/test_connect_runtime_liveness.py::test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap`
+      returned `RECONNECT_REQUIRED: no live session or connection available...` instead
+      of `after-idle`; fix the ADR-009 recovery/replay classification so gateway-owned
+      reconnect-required JSON-RPC error envelopes prove non-admission and permit bounded
+      recovery even for unsafe `tools/call` when the gateway, not the tool, rejected
+      admission.
+
+      3. `tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry::*` patched
+      the old urlopen path and saw `call_count == 0`; update these tests to the phase-aware
+      `post_mcp_http` data-plane seam or add a narrowly scoped compatible seam that
+      does not restore old MCP data-plane use of `retry_http_request`.
+
+
+      REQUIREMENT TRACEABILITY MATRIX:
+
+      | requirement_id | source_ref + key passage | obligation | owning_step_id |
+      checklist_item | evidence_field | status | non_intersection_or_escalation |
+
+      | --- | --- | --- | --- | --- | --- | --- | --- |
+
+      | ADR009-R1 | docs/ADR-009-mcp-bridge-request-lifecycle.md > Modules and ownership:
+      `bridge_http` owns MCP data-plane; `http_client` remains control-plane | Do
+      not route MCP data-plane through `retry_http_request` | adr009_reland.integration_remediation
+      | forbid generic retry restoration | mcp_dataplane_seam_evidence | OWNED | Blocks
+      focused_tests and adr009_reland.gate |
+
+      | ADR009-R2 | docs/ADR-009-mcp-bridge-request-lifecycle.md > Reconnect-required
+      marker contract | Gateway-owned JSON-RPC error envelopes prove non-admission/stale
+      bridge | adr009_reland.integration_remediation | idle-reap replay recovered
+      | idle_reap_test_output | OWNED | Blocks focused_tests and runtime regression
+      |
+
+      | ADR009-R3 | docs/ADR-009-mcp-bridge-request-lifecycle.md > Lifecycle classifier
+      matrix | Replays are allowed for non-admitted responses, while unsafe sent/unknown
+      `tools/call` still fails closed | adr009_reland.integration_remediation | no
+      unsafe unknown replay regression | focused_suite_output | OWNED | Blocks ADR-009
+      gate |
+
+      | ADR009-R4 | remote_headers phase gate / current worktree safety | Preserve
+      remote_headers and unrelated dirty worktree changes | adr009_reland.integration_remediation
+      | remote_headers preserved | worktree_safety_evidence | OWNED | Blocks adr009_reland.gate
+      |
+
+
+      CONSTRAINTS:
+
+      - Fix only the three focused-test blockers above and directly necessary adjacent
+      assertions.
+
+      - Explicitly forbidden: restoring MCP data-plane use of generic `retry_http_request`
+      or making `retry_http_request` responsible for ADR-009 phase-aware MCP lifecycle
+      semantics.
+
+      - Preserve remote_headers changes, downstream header behavior, and unrelated
+      dirty/untracked worktree state.
+
+      - Do not add Tasca/table_wait/wait_ms/tool-specific special casing.
+
+      - Keep Core/Shell boundaries intact: Core replay classifiers remain pure/contracted;
+      Shell owns HTTP/runtime I/O.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic or test adaptation that exercises
+      the current ADR-009 seam.
+
+
+      <side_effect_budget>
+
+      Allowed: focused edits to ADR-009 bridge runtime and the three named test areas
+      required to close the blockers. Forbidden: docs edits, broad refactors, unrelated
+      test rewrites, remote_headers rollback, source cleanup outside the blocker paths,
+      and any restoration of MCP data-plane routing through `retry_http_request`.
+
+
+      <risk_probes>
+
+      - Confirm patched tests exercise the accepted `post_mcp_http` / `bridge_http`
+      seam rather than passing by monkeypatching a dead path.
+
+      - Confirm gateway-owned reconnect-required JSON-RPC errors are distinguished
+      from ordinary tool-result text containing marker-like strings.
+
+      - Confirm `tools/call` remains non-replayed for sent/unknown admission failures;
+      only gateway-proven non-admission authorizes recovery.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Rerun `uv run pytest -q tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap
+      tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry` and paste
+      raw green output.
+
+      - [ ] Rerun the focused ADR suite used by `adr009_reland.focused_tests` (at
+      minimum `uv run pytest -q tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py`
+      plus the relevant connect_bridge/http_client/readiness repro tests) and paste
+      raw green output.
+
+      - [ ] Provide seam evidence that MCP data-plane forwarding still uses `post_mcp_http`/`bridge_http`
+      and does not call `retry_http_request` for `/mcp` forwarding.
+
+      - [ ] Provide idle-reap evidence showing gateway-owned `RECONNECT_REQUIRED`
+      JSON-RPC error envelope leads to bounded recovery/replay and the test observes
+      `after-idle`.
+
+      - [ ] Provide negative replay evidence that unsafe `tools/call` with sent/unknown
+      admission is still not replayed.
+
+      - [ ] Provide worktree safety evidence that remote_headers and unrelated dirty/untracked
+      changes were preserved.'
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this step:
+
+      - docs/ADR-009-mcp-bridge-request-lifecycle.md — <key passage proving MCP data-plane
+      ownership, reconnect-required marker contract, and lifecycle classifier>
+
+      - DESIGN.md — <key passage proving bridge_http/http_client ownership split>
+
+
+      ## Remediation Ledger
+
+      - blocker_1_http_client_obsolete_seam: <test/code change and why it targets
+      current boundary>
+
+      - blocker_2_idle_reap_reconnect_required: <root cause and fix>
+
+      - blocker_3_b1_transient_retry_obsolete_seam: <test/code change and why it targets
+      current boundary>
+
+
+      ## Commands / Raw Output
+
+      - failed_blocker_command: `uv run pytest -q tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap
+      tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry`
+
+      - failed_blocker_raw_stdout: <paste raw output>
+
+      - focused_adr_command: <paste exact focused ADR command>
+
+      - focused_adr_raw_stdout: <paste raw output>
+
+
+      ## Seam and ADR Semantics Evidence
+
+      - mcp_dataplane_seam_evidence: <grep/AST/test evidence showing /mcp uses post_mcp_http/bridge_http,
+      not retry_http_request>
+
+      - idle_reap_test_output: <evidence of after-idle recovery>
+
+      - unsafe_unknown_tools_call_non_replay: <evidence preserved>
+
+      - remote_headers_preserved: <evidence>
+
+
+      ## Checklist Receipt
+
+      - checklist_satisfied: <items>
+
+      - checklist_failed: <items>
+
+      - checklist_blocked: <items>
+
+      - checklist_unobserved: <items>'
+    depends_on:
+    - adr009_reland.bridge_integration
+    agent: python-senior
