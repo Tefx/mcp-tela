@@ -84362,7 +84362,7 @@ phases:
       - remote_headers/unrelated dirty changes preserved.'
   - id: adr009_reland.docs_remediation
     name: Remediate docs regression after ADR-009 docs sync
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: project
@@ -84470,3 +84470,5 @@ phases:
     depends_on:
     - adr009_reland.docs_sync
     agent: project-guide
+    claimed_by: Project Guide
+    claimed_at: '2026-06-07T15:06:17.674206+00:00'
