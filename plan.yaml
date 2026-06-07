@@ -83980,7 +83980,7 @@ phases:
     agent: gate-reviewer
   - id: adr009_reland.integration_remediation
     name: Remediate ADR-009 focused integration blockers
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       agent_source: project
@@ -84179,3 +84179,69 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-07T14:43:57.877115+00:00'
+    done_at: '2026-06-07T14:44:31.536873+00:00'
+    evidence: 'Checklist evidence recorded and all six verification checklist items
+      toggled complete via vectl_vectl_check.
+
+
+      Files changed by implementation:
+
+      - src/tela/commands/connect_bridge.py
+
+      - src/tela/shell/gateway.py
+
+      - tests/shell/test_http_client.py
+
+      - tests/repro/test_gate_blocker_regressions.py
+
+
+      Blockers remediated:
+
+      1. Obsolete retry_http_request seam test updated to accepted post_mcp_http seam.
+
+      2. Idle-reap reconnect-required gateway-owned JSON-RPC error envelope now proves
+      non-admission and allows bounded recovery/replay, including tools/call when
+      gateway rejected before execution.
+
+      3. B1 transient retry tests updated to current phase-aware MCP forwarding/recovery
+      seam without restoring data-plane retry_http_request.
+
+
+      Raw verification output provided by implementation rerun:
+
+      - `uv run pytest -q tests/shell/test_http_client.py::test_post_mcp_message_error_format_preserved
+      tests/repro/test_connect_runtime_liveness.py::test_bridge_recovers_downstream_tool_call_after_idle_bridge_reap
+      tests/repro/test_gate_blocker_regressions.py::TestB1TransientRetry` -> 10 passed.
+
+      - `uv run pytest -q tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py
+      tests/shell/test_connect_cmd.py tests/shell/test_connect_bridge_readiness_contract_freeze.py
+      tests/shell/test_connect_bridge_readiness_gaps_red.py tests/shell/test_http_client.py`
+      -> 139 passed.
+
+      - `uv run invar guard` -> passed.
+
+
+      Seam proof:
+
+      - post_mcp_message: post_mcp_http=1 retry_http_request=0.
+
+      - _post_mcp_for_forwarding: post_mcp_http=1 retry_http_request=0.
+
+      - Control-plane helpers still use retry_http_request.
+
+
+      Replay/recovery proof:
+
+      - Idle-reap recovery test passed and proves gateway-owned RECONNECT_REQUIRED
+      JSON-RPC error envelope leads to bounded recovery/replay with observed after-idle
+      behavior.
+
+      - Negative replay proof: relevant ADR tests passed for unsafe sent/unknown tools/call
+      no replay.
+
+
+      Worktree safety:
+
+      - No docs edits.
+
+      - remote_headers/unrelated dirty changes preserved.'
