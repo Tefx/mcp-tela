@@ -82592,7 +82592,7 @@ phases:
       \ -> `timed out` is actively checked inside `is_recoverable_error`."
   - id: adr009_reland.core_contract
     name: Define ADR-009 Core replay and HTTP helper contracts
-    status: pending
+    status: claimed
     description: 'step_type: contract
 
       contract_purity: ENFORCED
@@ -82709,6 +82709,8 @@ phases:
     depends_on:
     - adr009_reland.audit_red
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-06-07T13:58:49.003481+00:00'
   - id: adr009_reland.core_impl
     name: Complete ADR-009 Core replay and helper logic
     status: pending
