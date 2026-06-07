@@ -84358,7 +84358,7 @@ phases:
       - No docs edits.
 
       - remote_headers/unrelated dirty changes preserved.'
-  - id: docs_remediation
+  - id: adr009_reland.docs_remediation
     name: Remediate docs regression after ADR-009 docs sync
     status: pending
     description: 'step_type: implementation
