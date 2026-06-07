@@ -83198,7 +83198,7 @@ phases:
       preserved: PROVEN requested-only staging action and selected status check.'
   - id: adr009_reland.bridge_integration
     name: Integrate ADR-009 lifecycle semantics into connect_bridge
-    status: claimed
+    status: done
     description: 'step_type: implementation
 
       tags: integration
@@ -83364,6 +83364,79 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-07T14:27:39.764795+00:00'
+    done_at: '2026-06-07T14:28:07.434781+00:00'
+    evidence: 'Completed ADR-009 bridge integration bookkeeping using user-provided
+      implementation evidence; no source/docs/tests edits were performed by orchestrator.
+
+
+      Files changed by implementation:
+
+      - src/tela/commands/connect_bridge.py
+
+      - tests/shell/test_adr009_contract_red.py
+
+      - tests/shell/test_connect_cmd.py
+
+      - tests/shell/test_connect_bridge_readiness_gaps_red.py
+
+
+      Implementation evidence:
+
+      - Integrated post_mcp_http for MCP /mcp data-plane forwarding.
+
+      - Control-plane retry_http_request remains for /status, /connect, /disconnect,
+      readiness/lifecycle.
+
+      - Default MCP data-plane response wait passes response_timeout_seconds=None.
+
+      - Connect/write continue to use finite HTTP_TIMEOUT_SECONDS.
+
+      - Replay matrix implemented using BridgeReplayPolicy, request_sent, mcp_admitted,
+      request id, and notification classification.
+
+      - Python-senior reported AST inspection: MCP data-plane helpers do not call
+      retry_http_request; they call post_mcp_http.
+
+
+      Checklist evidence:
+
+      - Focused lifecycle tests prove no old fixed bridge timeout is imposed on default
+      MCP response wait.
+
+      - Focused replay tests prove pre-send/non-admitted recovery, safe protocol replay,
+      unsafe sent tools/call no-replay, notification diagnostics/continuation, and
+      batch fail-closed behavior.
+
+      - Stable request-level error.data.code behavior is covered for ADR-009 failure
+      classes by focused tests.
+
+      - Grep evidence shows no Tasca/table_wait/wait_ms/tool-specific branch: `grep
+      -E ''table_wait|wait_ms|tela_tasca'' src/tela/commands/connect_bridge.py` ->
+      no matches.
+
+      - Control-plane finite timeout behavior remains covered and remote_headers/unrelated
+      dirty files were preserved.
+
+
+      Verification rerun:
+
+      - `uv run pytest -q tests/shell/test_adr009_contract_red.py tests/shell/test_bridge_http.py
+      tests/shell/test_connect_cmd.py tests/shell/test_connect_bridge_readiness_contract_freeze.py
+      tests/shell/test_connect_bridge_readiness_gaps_red.py tests/integration/test_adr008_attachment_workflows.py`
+      -> 114 passed.
+
+      - `uv run ruff check ...` -> passed.
+
+      - `uv run invar guard src/tela/commands/connect_bridge.py` -> passed with existing
+      function-size warnings only.
+
+      - AST inspection confirmed MCP data-plane helpers call post_mcp_http and do
+      not call retry_http_request.
+
+
+      Worktree safety:
+
+      - remote_headers/unrelated dirty files preserved.'
   - id: adr009_reland.focused_tests
     name: Focused ADR-009 must-green test gate
     status: pending
