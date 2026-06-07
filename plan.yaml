@@ -82633,3 +82633,101 @@ phases:
     depends_on:
     - adr009_reland.audit_red
     agent: python-executor
+  - id: adr009_reland.core_impl
+    name: Complete ADR-009 Core replay and helper logic
+    status: pending
+    description: 'step_type: implementation
+
+      agent_source: project
+
+
+      TARGET STATE:
+
+      Complete the implementation within existing/pinned Core signatures from `adr009_reland.core_contract`.
+      JSON-RPC replay classification is deterministic and fail-closed: only single
+      `initialize`, `ping`, and `tools/list` requests are replay-safe; `tools/call`,
+      notifications after possible send, unknown methods, malformed payloads, non-object
+      JSON, and batches are unsafe unless request was definitely not sent or gateway
+      proves non-admission at the Shell/orchestration layer.
+
+
+      UPSTREAM ARTIFACTS:
+
+      - `src/tela/core/bridge_protocol.py` from `adr009_reland.core_contract` — signatures,
+      contracts, doctests are AUTHORITATIVE.
+
+      - Expected-red tests from `adr009_reland.audit_red` — ADR-009 behavior gaps
+      are PROTECTED.
+
+
+      YOUR SCOPE:
+
+      Replace stub markers (`NotImplementedError` / `pass` / `...`) with pure working
+      logic. Use Edit tool to modify bodies only where practical; if the contract
+      artifact is wrong or incomplete, document a deviation record instead of silently
+      rewriting the interface.
+
+
+      STATE SEMANTICS:
+
+      - Core does not know request_sent or mcp_admitted; it only classifies JSON-RPC
+      payload replay safety and pure header/timeout validity.
+
+      - `response_requires_bridge_recovery` must not authorize recovery from downstream
+      tool-result text (`result.isError.content[].text`); only gateway-owned JSON-RPC
+      error envelopes count.
+
+
+      ## Completion Criteria (stub exclusion)
+
+      This is an IMPLEMENTATION step. Stub-only completion is NOT acceptable. Each
+      deliverable MUST contain substantive logic that processes inputs and produces
+      outputs that vary based on those inputs. Private stub classes (`_Runtime*`,
+      `_Stub*`, `_Placeholder*`) do not satisfy this requirement.
+
+
+      <side_effect_budget>
+
+      Allowed: pure Core implementation and doctest updates inside `src/tela/core/bridge_protocol.py`.
+      Forbidden: Shell I/O, HTTP networking, connect_bridge replay orchestration,
+      docs status promotion, new dependencies, or remote_headers changes.
+
+
+      <risk_probes>
+
+      - Batch JSON-RPC arrays must fail closed even if all contained methods appear
+      safe.
+
+      - Notification classification must not accidentally make post-send notification
+      replay safe.
+
+      - Core contracts/doctests must satisfy `invar guard` expectations without tautological
+      contracts.'
+    verification: 'ACCEPTABLE RECEIPT:
+
+      - [ ] Targeted Core/doctest proof shows replay policy, request-id, notification,
+      header, timeout, and recovery-marker helpers pass their ADR-009 cases.
+
+      - [ ] Failure-path evidence covers malformed JSON, non-object JSON, JSON-RPC
+      batch, unsafe `tools/call`, and tool-result marker text not triggering recovery.
+
+      - [ ] Core purity is preserved: no Shell/I/O imports or external dependencies.
+
+      - [ ] No stub-only implementation remains in the owned Core symbols.
+
+      - [ ] Worktree safety evidence confirms remote_headers/unrelated dirty files
+      are preserved.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Implementation\
+      \ Receipt\n- files_changed: <paths>\n- contract_deviations: <none or table:\
+      \ type/what/why/impact>\n- stub_exclusion_evidence: <grep or code refs>\n\n\
+      ## Test/Doctest Proof\n- command: <exact focused command>\n- raw_stdout_stderr:\
+      \ |\n    <paste raw output>\n- exit_code: <code>\n\n## Failure Path Coverage\n\
+      | case | evidence_ref | status |\n|---|---|---|\n| malformed/non-object | |\
+      \ |\n| batch fail-closed | | |\n| unsafe tools/call | | |\n| tool-result marker\
+      \ ignored | | |\n\n## Worktree Safety\n- status_before_after: <paste>\n- protected_dirty_files_preserved:\
+      \ PASS/FAIL\n\n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
+      \ per item>"
+    depends_on:
+    - adr009_reland.core_contract
+    agent: python-senior
