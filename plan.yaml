@@ -84539,7 +84539,7 @@ phases:
       \ `git diff --check -- docs/USAGE.md`\n  raw_output: |\n  exit_code: 0"
   - id: adr009_reland.full_verification_remediation
     name: Remediate ADR-009 full verification blockers
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       agent_source: project
@@ -84699,3 +84699,5 @@ phases:
     - adr009_reland.integration_remediation
     - adr009_reland.docs_remediation
     agent: python-senior
+    claimed_by: vectl-planner
+    claimed_at: '2026-06-07T15:56:31.734776+00:00'
