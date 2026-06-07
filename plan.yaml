@@ -83280,20 +83280,20 @@ phases:
       and stable-code annotated.'
     verification: 'ACCEPTABLE RECEIPT:
 
-      - [ ] Focused lifecycle tests prove no old fixed bridge timeout is imposed on
+      - [x] Focused lifecycle tests prove no old fixed bridge timeout is imposed on
       default MCP response wait.
 
-      - [ ] Focused replay tests prove pre-send/non-admitted recovery, safe protocol
+      - [x] Focused replay tests prove pre-send/non-admitted recovery, safe protocol
       replay, unsafe sent `tools/call` no-replay, notification diagnostics/continuation,
       and batch fail-closed behavior.
 
-      - [ ] Error evidence shows stable request-level `error.data.code` values for
+      - [x] Error evidence shows stable request-level `error.data.code` values for
       ADR-009 failure classes.
 
-      - [ ] Grep evidence shows no Tasca/table_wait/wait_ms/tool-specific branch and
+      - [x] Grep evidence shows no Tasca/table_wait/wait_ms/tool-specific branch and
       no MCP data-plane path through `retry_http_request(... timeout_seconds=HTTP_TIMEOUT_SECONDS)`.
 
-      - [ ] Control-plane finite timeout behavior remains covered and remote_headers
+      - [x] Control-plane finite timeout behavior remains covered and remote_headers
       changes are preserved.'
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
