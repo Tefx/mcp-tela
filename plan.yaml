@@ -82899,7 +82899,7 @@ phases:
       was updated only through vectl tools.'
   - id: adr009_reland.http_executor
     name: Land phase-aware MCP data-plane HTTP executor
-    status: pending
+    status: claimed
     description: 'step_type: implementation
 
       tags: integration
@@ -83054,6 +83054,8 @@ phases:
     depends_on:
     - adr009_reland.core_impl
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-07T14:12:59.762403+00:00'
   - id: adr009_reland.bridge_integration
     name: Integrate ADR-009 lifecycle semantics into connect_bridge
     status: pending
