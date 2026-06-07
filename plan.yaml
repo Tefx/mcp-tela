@@ -83972,6 +83972,7 @@ phases:
     - adr009_reland.core_impl
     - adr009_reland.http_executor
     - adr009_reland.bridge_integration
+    - adr009_reland.integration_remediation
     - adr009_reland.focused_tests
     - adr009_reland.runtime_regression
     - adr009_reland.docs_sync
