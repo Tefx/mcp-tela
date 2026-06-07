@@ -82393,3 +82393,124 @@ phases:
     explicit non-intersection evidence plus remediation ownership.'
   depends_on:
   - remote_headers
+  steps:
+  - id: adr009_reland.audit_red
+    name: Audit ADR-009 residue and establish expected-red baseline
+    status: pending
+    description: 'step_type: test
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      agent_source: project
+
+
+      DIAGNOSIS / PROOF ARTIFACT:
+
+      Reconcile ADR-009 residue against tracked truth and produce an expected-red
+      proof that current tracked code still violates ADR-009. Do not reopen or edit
+      old `adr009_bridge_lifecycle` steps. Treat untracked ADR files as candidate
+      residue to inspect/reuse, not as trusted implementation evidence.
+
+
+      BOUNDING BOX:
+
+      - Residue: `docs/ADR-009-mcp-bridge-request-lifecycle.md`, `src/tela/commands/bridge_http.py`,
+      `tests/shell/test_adr009_contract_red.py`, `tests/shell/test_bridge_http.py`.
+
+      - Tracked truth: `src/tela/core/bridge_protocol.py`, `src/tela/commands/connect_bridge.py`,
+      `src/tela/commands/http_client.py`, `docs/DESIGN.md`, `docs/INTERFACES.md`,
+      `docs/USAGE.md`, `INVAR.md`.
+
+
+      WORKTREE SAFETY (MANDATORY):
+
+      - Before any edit, record `git status --short --branch` and `git ls-files` for
+      the residue paths.
+
+      - Preserve remote_headers changes in `docs/DESIGN.md`, `docs/INTERFACES.md`,
+      `docs/USAGE.md`, `src/tela/core/config.py`, `src/tela/core/models.py`, `src/tela/shell/downstream_clients.py`,
+      `tela.yaml.example`, `tests/core/test_config.py`, and `tests/shell/test_downstream_runtime_connection.py`.
+
+      - No `git reset`, `git clean`, broad overwrite, stash-pop, or deletion of unrelated
+      dirty/untracked files.
+
+
+      REQUIREMENT TRACEABILITY MATRIX (create/update in evidence):
+
+      | requirement_id | source_ref + key passage | obligation | owning_step_id |
+      checklist_item | evidence_field | status | non_intersection_or_escalation |
+
+      | ADR009-R1 | ADR/user basis | no bridge-imposed MCP response timeout by default
+      | adr009_reland.bridge_integration | focused slow-request proof | red_proof/current_failure
+      | OWNED | n/a |
+
+      | ADR009-R2 | ADR/user basis | unsafe sent tools/call with unknown admission
+      is not replayed | adr009_reland.bridge_integration | replay safety proof | red_proof/current_failure
+      | OWNED | n/a |
+
+      | ADR009-R3 | ADR/user basis | safe initialize/ping/tools/list may replay; JSON-RPC
+      batches fail closed | adr009_reland.core_impl | replay policy tests | red_proof/current_failure
+      | OWNED | n/a |
+
+      | ADR009-R4 | ADR/user basis | request-level error.data.code is stable | adr009_reland.bridge_integration
+      | JSON-RPC error evidence | red_proof/current_failure | OWNED | n/a |
+
+      | ADR009-R5 | ADR/user basis | no Tasca/table_wait/wait_ms/tool-specific branch
+      | adr009_reland.full_verification | grep/runtime evidence | red_proof/current_failure
+      | OWNED | n/a |
+
+
+      <side_effect_budget>
+
+      Allowed: add or repair ADR-009 test files and ADR residue classification notes
+      needed for expected-red proof. Forbidden: product source implementation, docs
+      status promotion to Accepted, remote_headers cleanup, unrelated dirty-file changes,
+      or old phase lifecycle edits.
+
+
+      <risk_probes>
+
+      - Prove current tracked code still has `HTTP_TIMEOUT_SECONDS = 10.0` on the
+      MCP data-plane and `timed out` recoverability before implementation changes.
+
+      - Distinguish untracked residue from tracked implementation truth using `git
+      ls-files`, not visual file presence.
+
+      - Ensure tests are spec-derived minimal fixtures, not convenience cases that
+      would miss production parsing/replay bugs.'
+    verification: 'ACCEPTABLE RECEIPT (minimum deterministic proof; expected red before
+      implementation):
+
+      - [ ] `git status --short --branch` and `git ls-files <ADR residue paths>` prove
+      which files are tracked vs residue.
+
+      - [ ] Requirement traceability matrix records every ADR-009 obligation as OWNED/DEFERRED/EXCLUDED/AMBIGUOUS
+      with no orphan requirements.
+
+      - [ ] Focused expected-red command is run against current tracked baseline or
+      tracked+test-only residue, and raw output shows ADR-009 failures without product
+      source changes.
+
+      - [ ] Red proof includes current `HTTP_TIMEOUT_SECONDS = 10.0`, MCP data-plane
+      `retry_http_request(... timeout_seconds=HTTP_TIMEOUT_SECONDS)`, and generic
+      `timed out` recoverability evidence.
+
+      - [ ] Worktree safety proof confirms remote_headers/unrelated dirty files were
+      not reset, cleaned, deleted, or overwritten.'
+    evidence_template: "## refs Read Confirmation (MANDATORY)\nFor each ref in this\
+      \ step:\n- <filename> — key passage or \"NOT READ: <reason>\"\n\n## Worktree\
+      \ Safety\n- status_before: `<paste git status --short --branch>`\n- tracked_residue_check:\
+      \ `<paste git ls-files ...>`\n- protected_dirty_files_observed: `<list>`\n-\
+      \ unrelated_changes_preserved: PASS/FAIL with evidence\n\n## Requirement Traceability\
+      \ Matrix\n| requirement_id | source_ref + key passage | obligation | owning_step_id\
+      \ | checklist_item | evidence_field | status | non_intersection_or_escalation\
+      \ |\n|---|---|---|---|---|---|---|---|\n\n## Expected-Red Proof\n- command:\
+      \ `<exact command>`\n- raw_stdout_stderr: |\n    <paste raw output>\n- exit_code:\
+      \ <code>\n- red_failures: <ADR009 gaps exposed>\n\n## Current Tracked-Code Evidence\n\
+      - timeout_constant_evidence: <file:line + passage>\n- mcp_data_plane_retry_evidence:\
+      \ <file:line + passage>\n- timed_out_recoverability_evidence: <file:line + passage>\n\
+      \n## Checklist Receipt\n- checklist_receipt: <satisfied/failed/blocked/unobserved\
+      \ per item>"
+    agent: python-executor
