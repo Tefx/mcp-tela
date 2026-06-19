@@ -65,7 +65,7 @@ from tela.shell.adr008_registry_events import append_runtime_event, upsert_attac
 HTTP_TIMEOUT_SECONDS = 10.0
 HTTP_TRANSIENT_RETRIES = 3
 HTTP_TRANSIENT_BACKOFF_SECONDS = 0.5
-BRIDGE_READINESS_MAX_POLLS = 8
+BRIDGE_READINESS_MAX_POLLS = 20
 TEARDOWN_RESUME_TIMEOUT_SECONDS = 1.0
 HEARTBEAT_INTERVAL_SECONDS = 30.0
 HEARTBEAT_LEASE_SECONDS = 90.0
@@ -668,20 +668,19 @@ def _wait_for_gateway_readiness(
             return Result(value=None)
 
         if status.state == "degraded":
-            degraded_reason = status.degraded_reason or "unknown"
-            return Result(
-                error=(
-                    "BRIDGE_NOT_READY: state=degraded "
-                    f"degraded_reason={degraded_reason}"
-                )
-            )
+            return Result(value=None)
 
         if poll_index == max_polls - 1:
             state = status.state or "unknown"
+            detail = (
+                f"state={state} polls={max_polls}"
+                if status.degraded_reason is None
+                else f"state={state} polls={max_polls} degraded_reason={status.degraded_reason}"
+            )
             return Result(
                 error=(
                     "BRIDGE_NOT_READY: bounded readiness wait exhausted "
-                    f"state={state} polls={max_polls}"
+                    f"{detail}"
                 )
             )
 

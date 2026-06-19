@@ -14,6 +14,7 @@ from tela.core.models import (
     TelaConfig,
 )
 from tela.shell.result import Result
+from tela.shell.downstream import DownstreamStartupSnapshot, ProviderStartupFailure
 from tela.shell.gateway import gateway_status
 from tela.shell.gateway_runtime import (
     add_runtime_connection,
@@ -62,9 +63,24 @@ def status_authority_snapshot(monkeypatch: pytest.MonkeyPatch) -> str:
             }
         )
 
+    def _mock_startup_snapshot() -> Result[DownstreamStartupSnapshot, str]:
+        return Result(
+            value=DownstreamStartupSnapshot(
+                attempted_servers=("fs", "shell"),
+                successful_servers=("fs",),
+                failed_servers={},
+                in_progress_servers=(),
+                complete=True,
+                degraded_reason=None,
+            )
+        )
+
     import tela.shell.gateway_lifecycle as gateway_lifecycle
 
     monkeypatch.setattr(gateway_lifecycle, "get_all_tools", _mock_get_all_tools)
+    monkeypatch.setattr(
+        gateway_lifecycle, "get_downstream_startup_snapshot", _mock_startup_snapshot
+    )
 
     try:
         yield "status_authority_snapshot"
@@ -119,3 +135,52 @@ def test_gateway_and_http_status_share_lifecycle_authority(
         "connections",
         "audit_entries",
     }
+
+
+def test_status_reports_degraded_provider_timeout_without_connected_servers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A completed failed convergence is degraded, never indefinite warming."""
+
+    config = TelaConfig(servers={"slow": ServerConfig(name="slow", command="cmd")})
+    set_runtime_config(config)
+    set_runtime_running(True)
+
+    def _mock_get_all_tools() -> Result[dict[str, list[ResolvedTool]], str]:
+        return Result(value={})
+
+    def _mock_startup_snapshot() -> Result[DownstreamStartupSnapshot, str]:
+        failure = ProviderStartupFailure(
+            server_name="slow",
+            phase="tools_list",
+            reason="timeout",
+            timeout=True,
+        )
+        return Result(
+            value=DownstreamStartupSnapshot(
+                attempted_servers=("slow",),
+                successful_servers=(),
+                failed_servers={"slow": failure},
+                in_progress_servers=(),
+                complete=True,
+                degraded_reason="provider_tools_list_timeout:slow",
+            )
+        )
+
+    import tela.shell.gateway_lifecycle as gateway_lifecycle
+
+    monkeypatch.setattr(gateway_lifecycle, "get_all_tools", _mock_get_all_tools)
+    monkeypatch.setattr(
+        gateway_lifecycle, "get_downstream_startup_snapshot", _mock_startup_snapshot
+    )
+
+    try:
+        result = asyncio.run(gateway_status())
+    finally:
+        set_runtime_running(False)
+        set_runtime_config(None)
+
+    assert result.is_ok
+    assert result.value is not None
+    assert result.value.state == "degraded"
+    assert result.value.degraded_reason == "provider_tools_list_timeout:slow"

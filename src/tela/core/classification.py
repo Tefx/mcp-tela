@@ -119,6 +119,12 @@ class RuntimeEventKind(str, Enum):
     CLIENT_PROVIDER_EXIT = "client_provider_exit"
     RECOVERY_FAILED = "recovery_failed"
     RECOVERY_SUCCEEDED = "recovery_succeeded"
+    PROVIDER_STARTING = "provider_starting"
+    PROVIDER_INITIALIZED = "provider_initialized"
+    PROVIDER_TOOLS_LIST_STARTED = "provider_tools_list_started"
+    PROVIDER_TOOLS_LIST_COMPLETED = "provider_tools_list_completed"
+    PROVIDER_FAILED = "provider_failed"
+    PROVIDER_TIMEOUT = "provider_timeout"
 
 
 class RuntimeEvent(BaseModel):

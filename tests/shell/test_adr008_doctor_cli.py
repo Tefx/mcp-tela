@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from threading import Thread
@@ -266,6 +267,15 @@ def test_doctor_json_reports_malformed_registry_and_last_events(
             details={"exit_code": 1},
         )
     )
+    append_runtime_event(
+        RuntimeEvent(
+            kind=RuntimeEventKind.PROVIDER_TIMEOUT,
+            client_id="provider:slow",
+            client_kind="downstream_provider",
+            timestamp="2026-04-25T12:01:00Z",
+            details={"provider_name": "slow", "phase": "tools_list"},
+        )
+    )
     events_file = runtime_events_path().value
     assert events_file is not None
     events_file.write_text(events_file.read_text(encoding="utf-8") + "not-json\n", encoding="utf-8")
@@ -276,6 +286,8 @@ def test_doctor_json_reports_malformed_registry_and_last_events(
     parsed = json.loads(capsys.readouterr().out)
     assert "ATTACHMENT_REGISTRY_PARSE_ERROR" in parsed["client_attachments"]["registry_parse_error"]
     assert parsed["runtime_events"]["last_provider_exit"]["kind"] == "client_provider_exit"
+    assert parsed["runtime_events"]["last_provider_startup_event"]["kind"] == "provider_timeout"
+    assert parsed["runtime_events"]["last_provider_startup_event"]["details"]["provider_name"] == "slow"
     assert parsed["runtime_events"]["malformed_line_count"] == 1
 
 
@@ -293,8 +305,8 @@ def test_doctor_client_attachments_alive_liveness_priority(
             display_state=AttachmentDisplayState.HEALTHY,
             runtime_state=RuntimeState.ACTIVE,
             recoverability=Recoverability.RECOVERABLE,
-            connected_at="2026-04-25T12:00:00Z",
-            last_heartbeat="2026-04-25T12:01:00Z",
+            connected_at=datetime.now(UTC).isoformat(),
+            last_heartbeat=datetime.now(UTC).isoformat(),
         )
     )
     append_runtime_event(
@@ -312,3 +324,30 @@ def test_doctor_client_attachments_alive_liveness_priority(
     parsed = json.loads(capsys.readouterr().out)
     assert parsed["client_attachments"]["client_attachments_alive"] is True
     assert parsed["client_attachments"]["liveness_reason"] == "client_attachments_alive"
+
+
+def test_doctor_ignores_stale_active_attachment_heartbeat(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
+    lockfile_path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile_module, "LOCKFILE_PATH", lockfile_path)
+    _write_lockfile(lockfile_path, host="127.0.0.1", port=59999)
+    upsert_client_attachment(
+        ClientAttachment(
+            client_id="client-stale",
+            client_kind="test",
+            display_state=AttachmentDisplayState.HEALTHY,
+            runtime_state=RuntimeState.ACTIVE,
+            recoverability=Recoverability.RECOVERABLE,
+            connected_at="2020-01-01T00:00:00Z",
+            last_heartbeat="2020-01-01T00:00:00Z",
+        )
+    )
+
+    result = doctor_command(json_output=True)
+
+    assert result.is_ok
+    parsed = json.loads(capsys.readouterr().out)
+    assert parsed["client_attachments"]["client_attachments_alive"] is False
+    assert parsed["client_attachments"]["liveness_reason"] == "no_live_client_attachments"

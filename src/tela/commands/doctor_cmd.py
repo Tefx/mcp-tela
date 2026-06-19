@@ -32,6 +32,7 @@ from tela.shell.result import Result
 
 DEFAULT_PROBE_TIMEOUT_SECONDS = 5.0
 DEFAULT_RECOVER_TIMEOUT_SECONDS = 5.0
+ATTACHMENT_HEARTBEAT_STALE_SECONDS = 90.0
 DOCTOR_EVENT_CLIENT_ID = "doctor"
 DOCTOR_EVENT_CLIENT_KIND = "tela_cli"
 
@@ -63,6 +64,7 @@ class DoctorRuntimeEventsSummary:
     """Last ADR-008 runtime events relevant to doctor diagnostics."""
 
     last_provider_exit: dict[str, object] | None
+    last_provider_startup_event: dict[str, object] | None
     last_probe_event: dict[str, object] | None
     last_recovery_event: dict[str, object] | None
     malformed_line_count: int
@@ -220,6 +222,7 @@ def _run_doctor_command(
         ),
         runtime_events={
             "last_provider_exit": runtime_events.last_provider_exit,
+            "last_provider_startup_event": runtime_events.last_provider_startup_event,
             "last_probe_event": runtime_events.last_probe_event,
             "last_recovery_event": runtime_events.last_recovery_event,
             "malformed_line_count": runtime_events.malformed_line_count,
@@ -296,15 +299,26 @@ def _read_doctor_runtime_events() -> Result[DoctorRuntimeEventsSummary, str]:
 
     events_result = read_runtime_events()
     if events_result.is_err or events_result.value is None:
-        return Result(value=DoctorRuntimeEventsSummary(None, None, None, 0, events_result.error))
+        return Result(value=DoctorRuntimeEventsSummary(None, None, None, None, 0, events_result.error))
 
+    provider_startup_kinds = {
+        RuntimeEventKind.PROVIDER_STARTING,
+        RuntimeEventKind.PROVIDER_INITIALIZED,
+        RuntimeEventKind.PROVIDER_TOOLS_LIST_STARTED,
+        RuntimeEventKind.PROVIDER_TOOLS_LIST_COMPLETED,
+        RuntimeEventKind.PROVIDER_FAILED,
+        RuntimeEventKind.PROVIDER_TIMEOUT,
+    }
     last_provider_exit: dict[str, object] | None = None
+    last_provider_startup_event: dict[str, object] | None = None
     last_probe_event: dict[str, object] | None = None
     last_recovery_event: dict[str, object] | None = None
     for event in events_result.value.events:
         payload = event.model_dump(mode="json")
         if event.kind == RuntimeEventKind.CLIENT_PROVIDER_EXIT:
             last_provider_exit = payload
+        elif event.kind in provider_startup_kinds:
+            last_provider_startup_event = payload
         elif event.kind == RuntimeEventKind.RECOVERY_PROBE:
             last_probe_event = payload
         elif event.kind in {
@@ -315,6 +329,7 @@ def _read_doctor_runtime_events() -> Result[DoctorRuntimeEventsSummary, str]:
 
     return Result(value=DoctorRuntimeEventsSummary(
         last_provider_exit=last_provider_exit,
+        last_provider_startup_event=last_provider_startup_event,
         last_probe_event=last_probe_event,
         last_recovery_event=last_recovery_event,
         malformed_line_count=events_result.value.malformed_line_count,
@@ -337,11 +352,13 @@ def _read_doctor_attachment_summary(
         ))
 
     registry: AttachmentRegistry = registry_result.value
+    now = datetime.now(UTC)
     alive_ids = [
         attachment.client_id
         for attachment in registry.attachments
         if attachment.runtime_state
         in {RuntimeState.ACTIVE, RuntimeState.INITIALIZING, RuntimeState.RECOVERING}
+        and _attachment_heartbeat_is_fresh(attachment.last_heartbeat, now)
     ]
     if alive_ids:
         reason = "client_attachments_alive"
@@ -355,6 +372,22 @@ def _read_doctor_attachment_summary(
         count=len(registry.attachments),
         alive_client_ids=alive_ids,
     ))
+
+
+# @invar:allow shell_result: pure heartbeat freshness predicate used inside doctor summary
+# @shell_orchestration: parses persisted shell diagnostic timestamps for liveness reporting
+def _attachment_heartbeat_is_fresh(last_heartbeat: str, now: datetime) -> bool:
+    """Return True only when an attachment heartbeat is inside its lease."""
+
+    try:
+        normalized = last_heartbeat.replace("Z", "+00:00")
+        heartbeat = datetime.fromisoformat(normalized)
+    except ValueError:
+        return False
+    if heartbeat.tzinfo is None:
+        heartbeat = heartbeat.replace(tzinfo=UTC)
+    age_seconds = (now - heartbeat.astimezone(UTC)).total_seconds()
+    return 0 <= age_seconds <= ATTACHMENT_HEARTBEAT_STALE_SECONDS
 
 
 # @shell_orchestration: explicit recovery returns a complete action/event summary even for failed branches.
@@ -375,7 +408,11 @@ def _recover_doctor_runtime(
     first_probe = first_probe_result.value
     _append_doctor_event(
         RuntimeEventKind.RECOVERY_PROBE,
-        {"state": first_probe.state, "error": first_probe.error},
+        {
+            "state": first_probe.state,
+            "degraded_reason": first_probe.degraded_reason,
+            "error": first_probe.error,
+        },
         events_appended,
     )
     actions.append("probe")
@@ -401,7 +438,11 @@ def _recover_doctor_runtime(
             refreshed_probe = refreshed_probe_result.value
             _append_doctor_event(
                 RuntimeEventKind.RECOVERY_PROBE,
-                {"state": refreshed_probe.state, "error": refreshed_probe.error},
+                {
+                    "state": refreshed_probe.state,
+                    "degraded_reason": refreshed_probe.degraded_reason,
+                    "error": refreshed_probe.error,
+                },
                 events_appended,
             )
             actions.append("probe_after_stale_cleanup_false")
@@ -435,7 +476,11 @@ def _recover_doctor_runtime(
     final_probe = final_probe_result.value
     _append_doctor_event(
         RuntimeEventKind.RECOVERY_PROBE,
-        {"state": final_probe.state, "error": final_probe.error},
+        {
+            "state": final_probe.state,
+            "degraded_reason": final_probe.degraded_reason,
+            "error": final_probe.error,
+        },
         events_appended,
     )
     actions.append("probe_after_cold_start")

@@ -6,6 +6,7 @@ This module holds transport/session lifecycle primitives used by
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from typing import Any
@@ -98,6 +99,12 @@ async def _open_stdio_client(
                 instructions=init_result.instructions,
             )
         )
+    except asyncio.CancelledError:
+        try:
+            await stack.aclose()
+        except BaseException:
+            pass
+        raise
     except Exception as exc:
         await stack.aclose()
         return Result(
@@ -146,6 +153,12 @@ async def _open_sse_client(
                 instructions=init_result.instructions,
             )
         )
+    except asyncio.CancelledError:
+        try:
+            await stack.aclose()
+        except BaseException:
+            pass
+        raise
     except Exception as exc:
         await stack.aclose()
         detail = _redact_header_values(str(exc), server_config.headers)
@@ -200,6 +213,12 @@ async def _open_streamable_http_client(
                 instructions=init_result.instructions,
             )
         )
+    except asyncio.CancelledError:
+        try:
+            await stack.aclose()
+        except BaseException:
+            pass
+        raise
     except Exception as exc:
         await stack.aclose()
         detail = _redact_header_values(str(exc), server_config.headers)

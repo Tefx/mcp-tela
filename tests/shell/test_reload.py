@@ -14,7 +14,12 @@ import asyncio
 import pytest
 
 from tela.core.models import ServerConfig, TelaConfig
-from tela.shell.downstream import connect_all, disconnect_all, get_tool_server
+from tela.shell.downstream import (
+    connect_all,
+    disconnect_all,
+    get_downstream_startup_snapshot,
+    get_tool_server,
+)
 from tela.shell.reload import (
     RECONNECT_ENUMERATION_CONTRACT,
     on_config_changed,
@@ -232,12 +237,8 @@ def test_on_config_changed_identical_config_no_reconnect() -> None:
         _teardown()
 
 
-def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
-    """on_config_changed triggers reconnect when servers change.
-
-    This test verifies the reconnect path is attempted. For actual connection
-    tests, use the integration tests with real MCP servers.
-    """
+def test_on_config_changed_server_change_records_reconnect_failure() -> None:
+    """on_config_changed records failed providers without rejecting reload."""
 
     old_config_ref = _get_config()
 
@@ -264,11 +265,12 @@ def test_on_config_changed_server_change_triggers_reconnect_error() -> None:
         new_config = TelaConfig(servers=new_servers)
 
         result = asyncio.run(on_config_changed(new_config))
-        # Fails because command doesn't exist - proves reconnect was attempted
-        assert result.is_err
-        assert "DOWNSTREAM_CONNECT_FAILED" in (result.error or "")
+        assert result.is_ok
+        snapshot = get_downstream_startup_snapshot().value
+        assert snapshot is not None
+        assert snapshot.degraded_reason == "provider_initialize_failed:new_srv"
 
-        # Runtime config should still be updated (even on failure)
+        # Runtime config should still be updated even when the provider failed.
         assert _get_config() == new_config
     finally:
         _set_config(old_config_ref)

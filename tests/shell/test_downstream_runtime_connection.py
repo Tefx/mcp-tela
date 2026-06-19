@@ -48,6 +48,72 @@ def test_connect_all_enumerates_real_stdio_server() -> None:
     assert downstream.get_all_tools().value == {}
 
 
+def test_connect_all_times_out_hanging_initialize_and_publishes_other_stdio(
+    monkeypatch: Any,
+) -> None:
+    """A real stdio provider stuck in initialize must not block other providers."""
+
+    fixture_dir = Path(__file__).resolve().parents[1] / "fixtures"
+    monkeypatch.setattr(downstream, "PROVIDER_INITIALIZE_TIMEOUT_SECONDS", 2.0)
+    servers = {
+        "ok": ServerConfig(
+            name="ok",
+            command=sys.executable,
+            args=[str(fixture_dir / "fastmcp_stdio_server.py")],
+        ),
+        "hung": ServerConfig(
+            name="hung",
+            command=sys.executable,
+            args=[str(fixture_dir / "mcp_initialize_hang_server.py")],
+        ),
+    }
+
+    try:
+        result = asyncio.run(downstream.connect_all(servers))
+
+        assert result.is_ok
+        assert downstream.get_tool_server("ping").value == "ok"
+        snapshot = downstream.get_downstream_startup_snapshot().value
+        assert snapshot is not None
+        assert snapshot.degraded_reason == "provider_initialize_timeout:hung"
+    finally:
+        cleanup = asyncio.run(downstream.disconnect_all())
+        assert cleanup.is_ok
+
+
+def test_connect_all_times_out_hanging_tools_list_and_publishes_other_stdio(
+    monkeypatch: Any,
+) -> None:
+    """A real stdio provider stuck in tools/list must not block other providers."""
+
+    fixture_dir = Path(__file__).resolve().parents[1] / "fixtures"
+    monkeypatch.setattr(downstream, "PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS", 0.2)
+    servers = {
+        "ok": ServerConfig(
+            name="ok",
+            command=sys.executable,
+            args=[str(fixture_dir / "fastmcp_stdio_server.py")],
+        ),
+        "hung": ServerConfig(
+            name="hung",
+            command=sys.executable,
+            args=[str(fixture_dir / "mcp_tools_list_hang_server.py")],
+        ),
+    }
+
+    try:
+        result = asyncio.run(downstream.connect_all(servers))
+
+        assert result.is_ok
+        assert downstream.get_tool_server("ping").value == "ok"
+        snapshot = downstream.get_downstream_startup_snapshot().value
+        assert snapshot is not None
+        assert snapshot.degraded_reason == "provider_tools_list_timeout:hung"
+    finally:
+        cleanup = asyncio.run(downstream.disconnect_all())
+        assert cleanup.is_ok
+
+
 def test_connect_all_enumerates_mocked_session(monkeypatch: Any) -> None:
     """connect_all can populate registry from a mocked MCP session path."""
 
@@ -242,11 +308,18 @@ def test_connect_all_closes_successful_handles_when_parallel_peer_fails(
     }
 
     result = asyncio.run(downstream.connect_all(servers))
-    assert result.is_err
-    assert "DOWNSTREAM_CONNECT_FAILED" in (result.error or "")
-    assert stacks["good"].closed is True
+    assert result.is_ok
+    assert stacks["good"].closed is False
     assert stacks["bad"].closed is True
-    assert downstream._clients == {}
+    assert set(downstream._clients) == {"good"}
+    assert downstream.get_tool_server("ok_tool").value == "good"
+    snapshot = downstream.get_downstream_startup_snapshot().value
+    assert snapshot is not None
+    assert snapshot.degraded_reason == "provider_tools_list_failed:bad"
+
+    cleanup = asyncio.run(downstream.disconnect_all())
+    assert cleanup.is_ok
+    assert stacks["good"].closed is True
 
 
 def test_connect_all_uses_sse_transport_when_url_set(monkeypatch: Any) -> None:

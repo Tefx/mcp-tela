@@ -9,7 +9,9 @@ extracted to ``tela.shell._downstream_recovery``; this module re-exports
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from mcp import types as mcp_types
 from mcp.shared.session import RequestResponder
 from typing import Literal
@@ -27,6 +29,8 @@ from tela.shell.downstream_clients import (
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.result import Result
 from tela.shell.gateway_runtime import get_runtime_config
+from tela.core.classification import RuntimeEvent, RuntimeEventKind
+from tela.shell.adr008_registry_events import append_runtime_event_best_effort
 
 # Recovery constants and functions live in _downstream_recovery.
 # Re-exported here for monkeypatching compatibility and public surface stability.
@@ -61,6 +65,9 @@ _server_instructions: dict[str, str] = {}
 _server_config_hints: dict[str, ServerConfig] = {}
 _attempted_servers: set[str] = set()
 _successful_servers: set[str] = set()
+_failed_servers: dict[str, ProviderStartupFailure] = {}
+_in_progress_servers: set[str] = set()
+_startup_complete: bool = True
 _recovery_locks: dict[str, asyncio.Lock] = {}
 
 
@@ -92,6 +99,33 @@ DOWNSTREAM_CONVERGENCE_CONTRACT = DownstreamConvergenceContract(
 )
 
 
+PROVIDER_INITIALIZE_TIMEOUT_SECONDS = 30.0
+PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS = 30.0
+
+
+@dataclass(frozen=True)
+class ProviderStartupFailure:
+    """Diagnostic for one downstream provider startup failure."""
+
+    server_name: str
+    phase: str
+    reason: str
+    timeout: bool = False
+    elapsed_ms: float | None = None
+
+
+@dataclass(frozen=True)
+class DownstreamStartupSnapshot:
+    """Detached snapshot of the current/last downstream startup convergence."""
+
+    attempted_servers: tuple[str, ...]
+    successful_servers: tuple[str, ...]
+    failed_servers: dict[str, ProviderStartupFailure]
+    in_progress_servers: tuple[str, ...]
+    complete: bool
+    degraded_reason: str | None
+
+
 @dataclass(frozen=True)
 class _ConnectedServerData:
     """Temporary successful downstream startup result before registry publish."""
@@ -102,12 +136,127 @@ class _ConnectedServerData:
     instructions: str | None = None
 
 
+# @invar:allow shell_result: pure timestamp formatting for best-effort diagnostic events
+# @shell_orchestration: timestamp creation belongs at runtime diagnostic boundary
+def _utc_timestamp() -> str:
+    """Return a UTC timestamp for downstream diagnostic events."""
+
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+# @shell_orchestration: wraps runtime-event model construction and append side effect
+def _provider_event(
+    kind: RuntimeEventKind,
+    *,
+    server_name: str,
+    phase: str,
+    details: dict[str, object] | None = None,
+) -> None:
+    """Append one best-effort downstream provider startup event."""
+
+    payload: dict[str, object] = {"provider_name": server_name, "phase": phase}
+    if details:
+        payload.update(details)
+    append_runtime_event_best_effort(
+        RuntimeEvent(
+            kind=kind,
+            client_id=f"provider:{server_name}",
+            client_kind="downstream_provider",
+            timestamp=_utc_timestamp(),
+            details=payload,
+        )
+    )
+
+
+# @shell_orchestration: status diagnostic token formatting stays local to startup state
+def _failure_reason(failure: ProviderStartupFailure) -> Result[str, str]:
+    """Return a compact status degraded_reason token for one provider failure."""
+
+    suffix = "timeout" if failure.timeout else "failed"
+    return Result(value=f"provider_{failure.phase}_{suffix}:{failure.server_name}")
+
+
+# @shell_orchestration: aggregates shell-owned provider failure diagnostics for /status
+def _degraded_reason_from_failures(
+    failures: dict[str, ProviderStartupFailure],
+) -> Result[str | None, str]:
+    """Return stable semicolon-separated provider diagnostics for /status."""
+
+    if not failures:
+        return Result(value=None)
+    reasons: list[str] = []
+    for name in sorted(failures.keys()):
+        reason_result = _failure_reason(failures[name])
+        if reason_result.is_err or reason_result.value is None:
+            return Result(error=reason_result.error or "PROVIDER_FAILURE_REASON_ERROR")
+        reasons.append(reason_result.value)
+    return Result(value=";".join(reasons))
+
+
+# @shell_orchestration: mutates module-owned startup convergence diagnostics
+def _mark_startup_begin(server_names: set[str]) -> None:
+    """Reset startup tracking for a new convergence attempt."""
+
+    global _startup_complete
+    _attempted_servers.clear()
+    _successful_servers.clear()
+    _failed_servers.clear()
+    _in_progress_servers.clear()
+    _attempted_servers.update(server_names)
+    _in_progress_servers.update(server_names)
+    _startup_complete = not server_names
+
+
+# @shell_orchestration: mutates module-owned startup convergence diagnostics
+def _mark_startup_finished(
+    *,
+    successful: set[str],
+    failures: dict[str, ProviderStartupFailure],
+) -> None:
+    """Publish final startup tracking after one convergence attempt settles."""
+
+    global _startup_complete
+    _successful_servers.clear()
+    _successful_servers.update(successful)
+    _failed_servers.clear()
+    _failed_servers.update(failures)
+    _in_progress_servers.clear()
+    _startup_complete = True
+
+
+def get_downstream_startup_snapshot() -> Result[DownstreamStartupSnapshot, str]:
+    """Return detached downstream startup/convergence diagnostics."""
+
+    failures = dict(_failed_servers)
+    degraded_reason_result = _degraded_reason_from_failures(failures)
+    if degraded_reason_result.is_err:
+        return Result(error=degraded_reason_result.error)
+    return Result(
+        value=DownstreamStartupSnapshot(
+            attempted_servers=tuple(sorted(_attempted_servers)),
+            successful_servers=tuple(sorted(_successful_servers)),
+            failed_servers=failures,
+            in_progress_servers=tuple(sorted(_in_progress_servers)),
+            complete=_startup_complete,
+            degraded_reason=degraded_reason_result.value,
+        )
+    )
+
+
+def begin_downstream_startup_tracking(server_names: set[str]) -> Result[None, str]:
+    """Mark downstream startup as in-progress before convergence begins."""
+
+    _mark_startup_begin(set(server_names))
+    return Result(value=None)
+
+
+# @shell_orchestration: closes transport/session stack and suppresses cleanup failures
 async def _close_handle_best_effort(handle: _ClientHandle) -> None:
     """Close one temporary handle without surfacing cleanup failures."""
 
     try:
         await handle.stack.aclose()
-    except Exception:
+    except BaseException:
         return
 
 
@@ -140,24 +289,105 @@ async def _connect_server(
     server_name: str,
     server_config: ServerConfig,
 ) -> Result[_ConnectedServerData, str]:
-    """Open one downstream client and enumerate its tools."""
+    """Open one downstream client and enumerate its tools with bounded phases."""
 
-    open_result = await _open_client_for_server(
-        server_name,
-        server_config,
-        message_handler=_build_downstream_message_handler(server_name, server_config),
+    _provider_event(
+        RuntimeEventKind.PROVIDER_STARTING,
+        server_name=server_name,
+        phase="initialize",
     )
+    initialize_started = time.monotonic()
+    try:
+        open_result = await asyncio.wait_for(
+            _open_client_for_server(
+                server_name,
+                server_config,
+                message_handler=_build_downstream_message_handler(
+                    server_name, server_config
+                ),
+            ),
+            timeout=PROVIDER_INITIALIZE_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        elapsed_ms = (time.monotonic() - initialize_started) * 1000.0
+        _provider_event(
+            RuntimeEventKind.PROVIDER_TIMEOUT,
+            server_name=server_name,
+            phase="initialize",
+            details={
+                "timeout_seconds": PROVIDER_INITIALIZE_TIMEOUT_SECONDS,
+                "elapsed_ms": elapsed_ms,
+            },
+        )
+        return Result(
+            error=(
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
+                f"provider_initialize_timeout:{server_name} "
+                f"timeout_seconds={PROVIDER_INITIALIZE_TIMEOUT_SECONDS}"
+            )
+        )
+
     if open_result.is_err:
+        elapsed_ms = (time.monotonic() - initialize_started) * 1000.0
+        _provider_event(
+            RuntimeEventKind.PROVIDER_FAILED,
+            server_name=server_name,
+            phase="initialize",
+            details={"error": open_result.error or "unknown", "elapsed_ms": elapsed_ms},
+        )
         return Result(error=open_result.error)
     assert open_result.value is not None
     client_handle = open_result.value
+    _provider_event(
+        RuntimeEventKind.PROVIDER_INITIALIZED,
+        server_name=server_name,
+        phase="initialize",
+        details={"elapsed_ms": (time.monotonic() - initialize_started) * 1000.0},
+    )
 
-    tools_result = await _enumerate_tools(client_handle.session)
+    _provider_event(
+        RuntimeEventKind.PROVIDER_TOOLS_LIST_STARTED,
+        server_name=server_name,
+        phase="tools_list",
+    )
+    tools_started = time.monotonic()
+    try:
+        tools_result = await asyncio.wait_for(
+            _enumerate_tools(client_handle.session),
+            timeout=PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        elapsed_ms = (time.monotonic() - tools_started) * 1000.0
+        await _close_handle_best_effort(client_handle)
+        _provider_event(
+            RuntimeEventKind.PROVIDER_TIMEOUT,
+            server_name=server_name,
+            phase="tools_list",
+            details={
+                "timeout_seconds": PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS,
+                "elapsed_ms": elapsed_ms,
+            },
+        )
+        return Result(
+            error=(
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
+                f"provider_tools_list_timeout:{server_name} "
+                f"timeout_seconds={PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS}"
+            )
+        )
+    except asyncio.CancelledError:
+        await _close_handle_best_effort(client_handle)
+        raise
+
     if tools_result.is_err:
-        try:
-            await client_handle.stack.aclose()
-        except Exception:
-            pass
+        elapsed_ms = (time.monotonic() - tools_started) * 1000.0
+        await _close_handle_best_effort(client_handle)
+        _provider_event(
+            RuntimeEventKind.PROVIDER_FAILED,
+            server_name=server_name,
+            phase="tools_list",
+            details={"error": tools_result.error or "unknown", "elapsed_ms": elapsed_ms},
+        )
         return Result(
             error=(
                 f"{DOWNSTREAM_CONNECT_FAILED}: "
@@ -165,6 +395,15 @@ async def _connect_server(
             )
         )
     assert tools_result.value is not None
+    _provider_event(
+        RuntimeEventKind.PROVIDER_TOOLS_LIST_COMPLETED,
+        server_name=server_name,
+        phase="tools_list",
+        details={
+            "tool_count": len(tools_result.value),
+            "elapsed_ms": (time.monotonic() - tools_started) * 1000.0,
+        },
+    )
     return Result(
         value=_ConnectedServerData(
             server_name=server_name,
@@ -175,6 +414,7 @@ async def _connect_server(
     )
 
 
+# @shell_orchestration: builds callbacks that delegate downstream notifications to recovery/reload handlers
 def _build_downstream_message_handler(
     server_name: str,
     server_config: ServerConfig,
@@ -207,6 +447,7 @@ def _build_downstream_message_handler(
     return _message_handler
 
 
+# @shell_orchestration: closes module-owned downstream client sessions under registry lock
 async def _close_all_clients_locked() -> None:
     """Close all connected downstream sessions/processes best-effort."""
 
@@ -215,8 +456,26 @@ async def _close_all_clients_locked() -> None:
     for handle in handles:
         try:
             await handle.stack.aclose()
-        except Exception:
+        except BaseException:
             continue
+
+
+# @invar:allow shell_result: pure diagnostic classifier for shell-owned provider startup errors
+# @shell_orchestration: maps shell exception text into startup status diagnostics
+def _startup_failure_from_error(
+    server_name: str,
+    error: str | None,
+) -> ProviderStartupFailure:
+    """Classify a provider startup error into phase-aware diagnostics."""
+
+    message = error or "unknown"
+    if f"provider_initialize_timeout:{server_name}" in message:
+        return ProviderStartupFailure(server_name, "initialize", message, timeout=True)
+    if f"provider_tools_list_timeout:{server_name}" in message:
+        return ProviderStartupFailure(server_name, "tools_list", message, timeout=True)
+    if "enumeration failed" in message or "DOWNSTREAM_ENUMERATE_FAILED" in message:
+        return ProviderStartupFailure(server_name, "tools_list", message)
+    return ProviderStartupFailure(server_name, "initialize", message)
 
 
 # @invar:allow shell_result: returns registry object directly, not a failable I/O boundary.
@@ -225,40 +484,42 @@ def get_registry() -> DownstreamRegistry:
     return _registry
 
 
-# @shell_complexity: startup path coordinates transport connection, enumeration, and conflict rollback.
+# @shell_complexity: startup path coordinates bounded transport connection, partial publication, and conflict rollback.
 async def connect_all(
     servers: dict[str, ServerConfig],
     tool_lists: dict[str, list[dict]] | None = None,
 ) -> Result[None, str]:
-    """Connect all servers, register resolved tools, and fail on conflicts."""
+    """Connect servers, publish successful providers, and record failures.
+
+    Startup convergence is intentionally partial: one failed or timed-out
+    downstream provider must not prevent successfully enumerated providers from
+    being registered. Conflicts among successful providers remain fail-closed
+    because the exposed tool namespace would be ambiguous.
+    """
 
     async with _registry_lock:
         await _close_all_clients_locked()
         _registry.clear()
         _server_instructions.clear()
         _server_config_hints.clear()
+        _mark_startup_begin(set(servers.keys()))
 
         all_resolved: dict[str, list[ResolvedTool]] = {}
         connected: dict[str, _ConnectedServerData] = {}
-
-        for server_name, server_config in servers.items():
-            validation_result = _validate_transport_mode(server_name, server_config)
-            if validation_result.is_err:
-                await _close_all_clients_locked()
-                _registry.clear()
-                return Result(error=validation_result.error)
-
-        _attempted_servers.clear()
-        _successful_servers.clear()
+        failures: dict[str, ProviderStartupFailure] = {}
 
         if tool_lists is not None:
             for server_name in servers:
-                _attempted_servers.add(server_name)
-                if server_name in tool_lists:
-                    _successful_servers.add(server_name)
+                if server_name not in tool_lists:
+                    failures[server_name] = ProviderStartupFailure(
+                        server_name=server_name,
+                        phase="initialize",
+                        reason="pre_enumerated_tool_list_missing",
+                    )
+                    continue
                 connected[server_name] = _ConnectedServerData(
                     server_name=server_name,
-                    raw_tools=tool_lists.get(server_name, []),
+                    raw_tools=tool_lists[server_name],
                 )
         else:
             startup_results = await asyncio.gather(
@@ -267,44 +528,49 @@ async def connect_all(
                     for server_name, server_config in servers.items()
                 ]
             )
-            temporary_handles: list[_ClientHandle] = []
             server_names_list = list(servers.keys())
             for idx, startup_result in enumerate(startup_results):
+                server_name = server_names_list[idx]
                 if startup_result.is_err:
-                    _attempted_servers.add(server_names_list[idx])
-                    await _close_client_handles(temporary_handles)
-                    _registry.clear()
-                    return Result(error=startup_result.error)
+                    failures[server_name] = _startup_failure_from_error(
+                        server_name, startup_result.error
+                    )
+                    continue
                 assert startup_result.value is not None
                 startup = startup_result.value
-                _attempted_servers.add(startup.server_name)
                 connected[startup.server_name] = startup
-                if startup.client_handle is not None:
-                    temporary_handles.append(startup.client_handle)
 
-        for server_name, server_config in servers.items():
-            startup = connected[server_name]
+        for server_name, startup in connected.items():
+            server_config = servers[server_name]
+            resolved = resolve_tools(server_name, server_config, startup.raw_tools)
+            all_resolved[server_name] = resolved
+
+        conflicts = detect_conflicts(all_resolved)
+        if conflicts:
+            await _close_client_handles(
+                [
+                    startup.client_handle
+                    for startup in connected.values()
+                    if startup.client_handle is not None
+                ]
+            )
+            _registry.clear()
+            conflict_desc = "; ".join(
+                f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
+            )
+            _mark_startup_finished(successful=set(), failures=failures)
+            return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+
+        for server_name, startup in connected.items():
+            server_config = servers[server_name]
             _server_config_hints[server_name] = server_config
             if startup.client_handle is not None:
                 _clients[server_name] = startup.client_handle
             if startup.instructions:
                 _server_instructions[server_name] = startup.instructions
-            resolved = resolve_tools(server_name, server_config, startup.raw_tools)
-            all_resolved[server_name] = resolved
-            _registry.register(server_name, resolved)
+            _registry.register(server_name, all_resolved[server_name])
 
-        if tool_lists is None:
-            for server_name in servers:
-                _successful_servers.add(server_name)
-
-        conflicts = detect_conflicts(all_resolved)
-        if conflicts:
-            await _close_all_clients_locked()
-            _registry.clear()
-            conflict_desc = "; ".join(
-                f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
-            )
-            return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
+        _mark_startup_finished(successful=set(connected.keys()), failures=failures)
 
     return Result(value=None)
 
@@ -312,6 +578,7 @@ async def connect_all(
 async def disconnect_all() -> Result[None, str]:
     """Disconnect all servers and clear registry and connection tracking."""
 
+    global _startup_complete
     async with _registry_lock:
         await _close_all_clients_locked()
         _registry.clear()
@@ -319,6 +586,9 @@ async def disconnect_all() -> Result[None, str]:
         _server_config_hints.clear()
         _attempted_servers.clear()
         _successful_servers.clear()
+        _failed_servers.clear()
+        _in_progress_servers.clear()
+        _startup_complete = True
         _recovery_locks.clear()
     return Result(value=None)
 

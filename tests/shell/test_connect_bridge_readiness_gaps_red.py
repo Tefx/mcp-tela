@@ -138,10 +138,10 @@ class TestBridgeReadinessBehavior:
         assert "state=warming" in result.error
         assert poll_count == 3
 
-    def test_wait_for_gateway_readiness_exits_on_degraded_state(
+    def test_wait_for_gateway_readiness_accepts_degraded_state(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Degraded state must fail immediately with degraded reason."""
+        """Degraded state is serveable when partial providers are published."""
 
         def _fake_get_gateway_status(
             *, status_url: str, bearer_token: str
@@ -149,7 +149,7 @@ class TestBridgeReadinessBehavior:
             return Result(
                 value=_status(
                     state="degraded",
-                    degraded_reason="upstream_unreachable",
+                    degraded_reason="provider_tools_list_timeout:slow",
                 )
             )
 
@@ -161,11 +161,7 @@ class TestBridgeReadinessBehavior:
             max_polls=4,
         )
 
-        assert result.is_err
-        assert (
-            result.error
-            == "BRIDGE_NOT_READY: state=degraded degraded_reason=upstream_unreachable"
-        )
+        assert result.is_ok
 
     def test_post_mcp_message_delegates_transient_503_to_phase_aware_executor(
         self, monkeypatch: pytest.MonkeyPatch

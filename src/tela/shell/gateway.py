@@ -55,6 +55,7 @@ from tela.shell.builtin_tools import (
 from tela.shell.connection_lifecycle import cleanup_connection_by_id
 from tela.shell.connection_reaper import ConnectionReaper, ReaperConfig
 from tela.shell.downstream import (
+    begin_downstream_startup_tracking,
     connect_all,
     disconnect_all,
     get_all_tools,
@@ -1178,6 +1179,7 @@ async def gateway_prepare_startup(
         gateway_runtime._runtime.expected_bearer_token = expected_bearer_token
         gateway_runtime.set_runtime_secrets(list(effective_config.auth.secrets))
 
+    begin_downstream_startup_tracking(set(effective_config.servers.keys()))
     _ = await gateway_status()
     _ = await gateway_connections()
     return Result(value=None)
