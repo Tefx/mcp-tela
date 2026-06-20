@@ -86725,6 +86725,20 @@ phases:
       ### Headline
 
       PASS | PASS_WITH_DEBT | FAIL'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - src/tela/shell/downstream.py
+    - src/tela/shell/reload.py
+    - src/tela/shell/downstream_registry.py
+    - src/tela/shell/builtin_tools.py
+    - src/tela/shell/upstream.py
+    - tests/shell/test_nested_gateway_runtime.py
+    - tests/shell/test_reload.py
+    - tests/shell/test_downstream.py
+    - tests/shell/test_builtin_tools.py
+    - tests/shell/test_upstream.py
     depends_on:
     - ngw.runtime_wiring.wiring_audit
     agent: integration-verifier
