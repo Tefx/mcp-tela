@@ -87143,9 +87143,13 @@ phases:
       to evidence or owner path.
 
       - Exact diagnostic scenarios are proven or have owner work: `nested_gateway:
-      true` without `tool_prefix` fails with `NESTED_TELA_PREFIX_REQUIRED`; child
-      Tela raw built-ins without `tool_prefix` fail with the same code; omitted `nested_gateway`
-      plus valid `tool_prefix` preserves prefixed child built-ins unless excluded.
+      true` with omitted or empty `tool_prefix` fails with `NESTED_TELA_PREFIX_REQUIRED`;
+      child Tela raw built-ins with omitted or empty `tool_prefix` fail with the same
+      code; omitted `nested_gateway` plus valid `tool_prefix` preserves prefixed child
+      built-ins unless excluded.
+
+      - ADR trigger wording is exact: downstream exposes `tela_list_providers` or
+      `tela_list_profiles` with omitted or empty `tool_prefix`.
 
       - Final exposed MCP names are snake_case; no dotted-prefix examples or runtime
       receipts are accepted.
