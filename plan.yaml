@@ -87102,7 +87102,7 @@ phases:
 
       - Check config parsing/validation, raw-name filtering, nested effective excludes,
       diagnostics, provider metadata, call routing, reload/re-enumeration, default
-      compatibility, and parent builtin preservation.
+      compatibility, parent builtin preservation, and exposed-name snake_case.
 
 
       FOCUS AREAS:
@@ -87111,7 +87111,14 @@ phases:
       silent auto-hide.
 
       - Boundary/defaults: omitted fields preserve prior behavior; prefix-only mode
-      preserves child built-ins.
+      with valid non-reserved prefixes such as `host_` preserves child built-ins.
+
+      - Diagnostics: `nested_gateway: true` without `tool_prefix` and child Tela raw
+      built-ins without `tool_prefix` both fail closed with deterministic actionable
+      `NESTED_TELA_PREFIX_REQUIRED`.
+
+      - Naming: final exposed MCP names remain snake_case; dotted prefixes are not
+      valid examples.
 
       - Omission drift: every MUST/Acceptance Criteria line in ADR-010 has runtime
       or test evidence.
@@ -87120,10 +87127,16 @@ phases:
 
 
       Behavioral precedence claims must be mapped to runtime proof or marked NEEDS_TEST/UNPROVEN
-      with owner path.'
+      with owner path.
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step, evidence must cite the key passage or state `NOT
+      READ: <reason>`.'
     verification: phase-check protecting final documentation/full-suite gate. Produce
-      a conformance report with requirement register and evidence table; blockers
-      must map to owner steps.
+      a conformance report with requirement register, refs-read key passages, and
+      evidence table; blockers must map to owner steps.
     evidence_template: '## Spec Conformance Report
 
 
@@ -87169,6 +87182,25 @@ phases:
       ## Headline
 
       PASS | PASS_WITH_DEBT | FAIL'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - docs/AGENT_INTERFACE.md
+    - README.md
+    - tela.yaml.example
+    - src/tela/core/models.py
+    - src/tela/core/config.py
+    - src/tela/core/errors.py
+    - src/tela/core/family.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/reload.py
+    - src/tela/shell/builtin_tools.py
+    - src/tela/shell/upstream.py
+    - tests/core/test_nested_gateway_contract.py
+    - tests/shell/test_nested_gateway_runtime.py
     depends_on:
     - ngw.runtime_verify.blackbox_nested_gateway
     agent: spec-verifier
