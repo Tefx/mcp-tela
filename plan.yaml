@@ -87397,14 +87397,23 @@ phases:
       snake_case; examples use underscore prefixes such as `host_`, `prod_`, and `work_`,
       not dotted prefixes.
 
-      - Exact diagnostic scenarios are proven: `nested_gateway: true` without `tool_prefix`
-      fails with `NESTED_TELA_PREFIX_REQUIRED`; child Tela raw built-ins without `tool_prefix`
-      fail with the same actionable code; omitted `nested_gateway` with valid non-reserved
-      `tool_prefix` keeps prefixed child built-ins visible unless `exclude_tools`
-      is configured.
+      - Documentation keeps CLI and HTTP operator surfaces split instead of using
+      `CLI/HTTP` as a combined kind.
 
-      - Full suite, doctests, invar guard, and shared-surface gates are green or have
-      explicit blocker-owner steps.
+      - Documentation preserves `headers` and `instructions` ServerConfig contracts/cross-references
+      while adding nested-gateway fields.
+
+      - Exact diagnostic scenarios are proven: `nested_gateway: true` with omitted
+      or empty `tool_prefix` fails with `NESTED_TELA_PREFIX_REQUIRED`; child Tela
+      raw built-ins with omitted or empty `tool_prefix` fail with the same actionable
+      code; omitted `nested_gateway` with valid non-reserved `tool_prefix` keeps prefixed
+      child built-ins visible unless `exclude_tools` is configured.
+
+      - ADR trigger wording is exact: downstream exposes `tela_list_providers` or
+      `tela_list_profiles` with omitted or empty `tool_prefix`.
+
+      - Full suite, doctests, invar guard, repo-local nested-gateway doc parity check,
+      and shared-surface gates are green or have explicit blocker-owner steps.
 
       - Parent built-ins remain gateway-owned; child built-ins are filtered only by
       explicit `exclude_tools` or `nested_gateway=True`.
@@ -87424,34 +87433,90 @@ phases:
       - Shared canonical surface wording drifts from docs/CONFIRMED-SURFACE-CONTRACT.md
       or opifex-owned inputs.
 
+      - Documentation or examples contain dotted exposed tool-name examples for nested
+      gateway behavior.
+
+      - The final evidence table omits NGW-R9.
+
 
       ### refs Read Confirmation (MANDATORY)
 
       For each ref in this step, evidence must cite the key passage or state `NOT
       READ: <reason>`. Include upstream evidence-bearing step IDs reviewed: `ngw.runtime_verify.gate`,
       `ngw.doc_sync_gate.docs_sync`, and `ngw.doc_sync_gate.full_suite`.'
-    verification: full-plan-check final gate. Return OPEN only with complete evidence
-      table, refs-read key passages, and no unresolved blocker-class debt.
-    evidence_template: '## refs Read Confirmation (MANDATORY)
+    verification: full-plan-check final gate. Return OPEN only with complete NGW-R1..NGW-R9
+      evidence table, refs-read key passages, raw command receipts, and no unresolved
+      blocker-class debt.
+    evidence_template: '## Final Nested-Gateway Gate Report
 
-      For each ref in this final gate step:
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof/review step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ## Final Gate Decision Basis
+      Include upstream evidence-bearing step IDs reviewed: `ngw.runtime_verify.gate`,
+      `ngw.doc_sync_gate.docs_sync`, and `ngw.doc_sync_gate.full_suite`.
 
-      - Upstream evidence-bearing steps reviewed: all ngw phase gates, ngw.runtime_verify.spec_conformance,
-      ngw.doc_sync_gate.docs_sync, ngw.doc_sync_gate.full_suite.
 
-      - NGW-R1..NGW-R8 status with evidence refs.
+      ## Requirement Evidence Table (MANDATORY)
 
-      - Diagnostic, compatibility, non-hiding, parent-builtin, snake_case, docs parity,
-      shared-surface, and full-suite evidence reviewed.
+      Evidence MUST cover every contract matrix row NGW-R1..NGW-R9.
 
-      - Unresolved issues table with owner step for each blocker.
 
-      - Final decision: OPEN | BLOCKED.'
+      | requirement_id | evidence_ref | evidence_class | status | blocker_owner_if_unproven
+      |
+
+      | --- | --- | --- | --- | --- |
+
+      | NGW-R1 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R2 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R3 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R4 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R5 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R6 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R7 | <runtime/test/docs receipt> | artifact_review | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R8 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+      | NGW-R9 | <runtime/test/docs receipt> | runtime_probe | PROVEN/UNPROVEN/BLOCKED
+      | <step or none> |
+
+
+      ## Required Raw Receipts
+
+      - Full suite / doctest / invar guard outputs from `ngw.doc_sync_gate.full_suite`.
+
+      - Nested-gateway doc parity check output proving explicit `nested_gateway: true`,
+      raw-name `exclude_tools`, snake_case underscore prefixes with no dotted exposed
+      examples, `NESTED_TELA_PREFIX_REQUIRED` scenarios, no silent auto-hide claims,
+      split CLI and HTTP operator wording, and `headers`/`instructions` ServerConfig
+      cross-reference preservation.
+
+      - Runtime black-box receipts from `ngw.runtime_verify.blackbox_nested_gateway`.
+
+
+      ## Gate Decision
+
+      - OPEN only if NGW-R1..NGW-R9 are PROVEN and no blocker-class debt is unresolved.
+
+      - BLOCKED if any row is UNPROVEN/BLOCKED without a pending blocker-owner step.'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
