@@ -86199,20 +86199,20 @@ phases:
       - `exclude_tools` entries match raw downstream names exactly; prefixed exposed\
       \ names do not match.\n- `nested_gateway=True` adds raw child built-ins `tela_list_providers`\
       \ and `tela_list_profiles` to the effective raw-name exclude set.\n- `nested_gateway=True`\
-      \ without `tool_prefix` fails closed with `NESTED_TELA_PREFIX_REQUIRED` from\
-      \ `src/tela/core/errors.py`.\n- If downstream raw tools include child Tela built-ins\
-      \ (`tela_list_providers` or `tela_list_profiles`) and no `tool_prefix`, the\
-      \ reserved namespace / likely-nested failure is deterministic and actionable\
-      \ as `NESTED_TELA_PREFIX_REQUIRED`.\n- `nested_gateway=False` plus a valid non-reserved\
-      \ snake_case `tool_prefix` (for example `host_`) does not auto-hide child built-ins;\
-      \ they remain exposed with the prefix unless `exclude_tools` is configured.\n\
-      - Parent Tela built-ins are not part of this downstream filtering function and\
-      \ remain gateway-owned.\n- Likely nested Tela detection is diagnostic-only.\
-      \ It must not silently mutate or hide the returned resolved tool list unless\
-      \ `exclude_tools` or `nested_gateway=True` is configured.\n- Final exposed MCP\
-      \ names remain snake_case; dotted prefixes are invalid examples and must not\
-      \ be introduced.\n- Any new Core helper has `@pre`, `@post`, and doctests before\
-      \ implementation logic.\n\nUPSTREAM ARTIFACTS:\n- `ngw.core_impl.config_model_validation`\
+      \ with omitted or empty `tool_prefix` fails closed with `NESTED_TELA_PREFIX_REQUIRED`\
+      \ from `src/tela/core/errors.py`.\n- If downstream raw tools include child Tela\
+      \ built-ins (`tela_list_providers` or `tela_list_profiles`) with omitted or\
+      \ empty `tool_prefix`, the reserved namespace / likely-nested failure is deterministic\
+      \ and actionable as `NESTED_TELA_PREFIX_REQUIRED`.\n- `nested_gateway=False`\
+      \ plus a valid non-reserved snake_case `tool_prefix` (for example `host_`) does\
+      \ not auto-hide child built-ins; they remain exposed with the prefix unless\
+      \ `exclude_tools` is configured.\n- Parent Tela built-ins are not part of this\
+      \ downstream filtering function and remain gateway-owned.\n- Likely nested Tela\
+      \ detection is diagnostic-only. It must not silently mutate or hide the returned\
+      \ resolved tool list unless `exclude_tools` or `nested_gateway=True` is configured.\n\
+      - Final exposed MCP names remain snake_case; dotted prefixes are invalid examples\
+      \ and must not be introduced.\n- Any new Core helper has `@pre`, `@post`, and\
+      \ doctests before implementation logic.\n\nUPSTREAM ARTIFACTS:\n- `ngw.core_impl.config_model_validation`\
       \ — authoritative model fields and stable diagnostic constant location.\n- `ngw.contract_tests.core_expected_red`\
       \ — protected expected-red assertions.\n- `ngw.contract_tests.runtime_expected_red`\
       \ — protected runtime diagnostics and compatibility scenarios.\n\nSCOPE BOUNDARY:\n\
