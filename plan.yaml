@@ -87027,3 +87027,48 @@ phases:
     checks, and final gate review are green with no unresolved blockers.
   depends_on:
   - ngw.runtime_verify
+  steps:
+  - id: ngw.doc_sync_gate.docs_sync
+    name: Sync nested-gateway documentation and examples
+    status: pending
+    description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
+      \ ponytail-coder]\n\nSync documentation and example configuration with the implemented\
+      \ nested-gateway runtime behavior.\n\nTARGET STATE:\n- docs/ADR-010-nested-gateway-ergonomics.md\
+      \ remains aligned with actual implementation and final decision; no v1/v2 split\
+      \ language.\n- docs/INTERFACES.md accurately documents `ServerConfig.tool_prefix`,\
+      \ `exclude_tools`, and `nested_gateway` semantics.\n- docs/USAGE.md and `tela.yaml.example`\
+      \ contain operator examples for explicit nested mode and generic `exclude_tools`\
+      \ using raw child names.\n- README.md summarizes the feature without implying\
+      \ silent auto-hide.\n- docs/AGENT_INTERFACE.md and docs/CONFIRMED-SURFACE-CONTRACT.md\
+      \ continue to state that parent `tela_list_providers` and `tela_list_profiles`\
+      \ are the only gateway-owned built-in MCP tools.\n- Any implementation-specific\
+      \ nuance discovered during runtime verification is reflected or explicitly documented\
+      \ as non-goal.\n\nSCOPE BOUNDARY:\n- Documentation only. Do not modify `src/**`\
+      \ or `tests/**`.\n- Do not redefine shared opifex canonical contract meaning.\n\
+      - Do not add unimplemented behavior claims.\n\n<intent_closure_contract>\nallowed_paths:\n\
+      \  - \"docs/ADR-010-nested-gateway-ergonomics.md\"\n  - \"docs/INTERFACES.md\"\
+      \n  - \"docs/USAGE.md\"\n  - \"docs/DESIGN.md\"\n  - \"docs/AGENT_INTERFACE.md\"\
+      \n  - \"docs/CONFIRMED-SURFACE-CONTRACT.md\"\n  - \"README.md\"\n  - \"tela.yaml.example\"\
+      \nblocked_paths:\n  - \"src/**\"\n  - \"tests/**\"\n  - \"../opifex/**\"\nrequired_claims:\n\
+      \  - docs_match_runtime_behavior\n  - examples_cover_explicit_nested_gateway\n\
+      \  - no_silent_autohide_claims\n  - shared_surface_wording_preserved\nrequired_checks:\n\
+      \  - id: docs_surface_contract_tests\n    command: [\"uv\", \"run\", \"pytest\"\
+      , \"tests/shell/test_surface_contract.py\", \"tests/shell/test_repo_local_ci_gate.py\"\
+      , \"-q\"]\n    covers_claims:\n      - shared_surface_wording_preserved\n  \
+      \    - docs_match_runtime_behavior\n  - id: shared_surface_gate_green\n    command:\
+      \ [\"env\", \"OPIFEX_ROOT=../opifex\", \"uv\", \"run\", \"python\", \"scripts/ci/mcp_tela_shared_surface_gate.py\"\
+      , \"green\"]\n    covers_claims:\n      - shared_surface_wording_preserved\n\
+      \      - no_silent_autohide_claims\n      - examples_cover_explicit_nested_gateway\n\
+      </intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    evidence_template: '## Intent-Closure Evidence
+
+      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
+      checks.
+
+
+      ## Documentation Parity Notes
+
+      Map every changed doc/example to the runtime evidence or source requirement
+      it reflects.'
+    agent: doc-reviewer
