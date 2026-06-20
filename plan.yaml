@@ -86155,32 +86155,44 @@ phases:
       \ conflict detection, registry registration, provider metadata, and call routing.\n\
       - `exclude_tools` entries match raw downstream names exactly; prefixed exposed\
       \ names do not match.\n- `nested_gateway=True` adds raw child built-ins `tela_list_providers`\
-      \ and `tela_list_profiles` to the effective raw-name exclude set.\n- `nested_gateway=False`\
-      \ plus `tool_prefix` does not auto-hide child built-ins; they remain exposed\
-      \ with the prefix.\n- Parent Tela built-ins are not part of this downstream\
-      \ filtering function and remain gateway-owned.\n- Likely nested Tela detection\
-      \ is diagnostic-only. It must not mutate the returned resolved tool list unless\
-      \ `exclude_tools` or `nested_gateway=True` is configured.\n- Any new Core helper\
-      \ has `@pre`, `@post`, and doctests before implementation logic.\n\nUPSTREAM\
-      \ ARTIFACTS:\n- `ngw.core_impl.config_model_validation` — authoritative model\
-      \ fields.\n- `ngw.contract_tests.core_expected_red` — protected expected-red\
-      \ assertions.\n\nSCOPE BOUNDARY:\n- Preserve `ResolvedTool.name` as the exposed\
-      \ name and `ResolvedTool.raw_name` as the downstream routing name.\n- Preserve\
-      \ existing `tool_prefix` reserved namespace checks, including composition checks\
-      \ that produce `tela.`/`tela_` exposed names.\n- Do not edit Shell runtime wiring\
-      \ in this step.\n\nGate Preview (what the gate WILL reject):\n1. Filtering after\
-      \ prefix/classification/registration; this violates NGW-R1.\n2. Silent auto-hide\
-      \ when `nested_gateway` is omitted; this violates NGW-R4/NGW-R6.\n3. Lost `raw_name`\
-      \ causing call routing to strip prefixes heuristically.\n\n<intent_closure_contract>\n\
-      allowed_paths:\n  - \"src/tela/core/family.py\"\n  - \"src/tela/core/models.py\"\
-      \n  - \"src/tela/core/config.py\"\n  - \"src/tela/core/**nested*gateway*.py\"\
+      \ and `tela_list_profiles` to the effective raw-name exclude set.\n- `nested_gateway=True`\
+      \ without `tool_prefix` fails closed with `NESTED_TELA_PREFIX_REQUIRED` from\
+      \ `src/tela/core/errors.py`.\n- If downstream raw tools include child Tela built-ins\
+      \ (`tela_list_providers` or `tela_list_profiles`) and no `tool_prefix`, the\
+      \ reserved namespace / likely-nested failure is deterministic and actionable\
+      \ as `NESTED_TELA_PREFIX_REQUIRED`.\n- `nested_gateway=False` plus a valid non-reserved\
+      \ snake_case `tool_prefix` (for example `host_`) does not auto-hide child built-ins;\
+      \ they remain exposed with the prefix unless `exclude_tools` is configured.\n\
+      - Parent Tela built-ins are not part of this downstream filtering function and\
+      \ remain gateway-owned.\n- Likely nested Tela detection is diagnostic-only.\
+      \ It must not silently mutate or hide the returned resolved tool list unless\
+      \ `exclude_tools` or `nested_gateway=True` is configured.\n- Final exposed MCP\
+      \ names remain snake_case; dotted prefixes are invalid examples and must not\
+      \ be introduced.\n- Any new Core helper has `@pre`, `@post`, and doctests before\
+      \ implementation logic.\n\nUPSTREAM ARTIFACTS:\n- `ngw.core_impl.config_model_validation`\
+      \ — authoritative model fields and stable diagnostic constant location.\n- `ngw.contract_tests.core_expected_red`\
+      \ — protected expected-red assertions.\n- `ngw.contract_tests.runtime_expected_red`\
+      \ — protected runtime diagnostics and compatibility scenarios.\n\nSCOPE BOUNDARY:\n\
+      - Preserve `ResolvedTool.name` as the exposed name and `ResolvedTool.raw_name`\
+      \ as the downstream routing name.\n- Preserve existing `tool_prefix` reserved\
+      \ namespace checks, including `tela.`/`tela_` reserved inputs, while enforcing\
+      \ final exposed-name snake_case where the current contract requires it.\n- Do\
+      \ not edit Shell runtime wiring in this step.\n\nGate Preview (what the gate\
+      \ WILL reject):\n1. Filtering after prefix/classification/registration; this\
+      \ violates NGW-R1.\n2. Silent auto-hide when `nested_gateway` is omitted; this\
+      \ violates NGW-R4/NGW-R6.\n3. Lost `raw_name` causing call routing to strip\
+      \ prefixes heuristically.\n4. Ad hoc diagnostic strings instead of the stable\
+      \ Core error-code surface.\n\n<intent_closure_contract>\nallowed_paths:\n  -\
+      \ \"src/tela/core/family.py\"\n  - \"src/tela/core/models.py\"\n  - \"src/tela/core/config.py\"\
+      \n  - \"src/tela/core/errors.py\"\n  - \"src/tela/core/**nested*gateway*.py\"\
       \n  - \"tests/core/test_nested_gateway_contract.py\"\nblocked_paths:\n  - \"\
       src/tela/shell/**\"\n  - \"docs/**\"\n  - \"../opifex/**\"\nrequired_claims:\n\
       \  - raw_excludes_before_resolution\n  - nested_effective_excludes_added\n \
-      \ - no_silent_autohide_preserved\n  - raw_name_routing_contract_preserved\n\
-      required_checks:\n  - id: core_nested_filtering_tests\n    command: [\"uv\"\
-      , \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\", \"-q\"\
-      ]\n    covers_claims:\n      - raw_excludes_before_resolution\n      - nested_effective_excludes_added\n\
+      \ - deterministic_nested_prefix_diagnostics_preserved\n  - no_silent_autohide_preserved\n\
+      \  - raw_name_routing_contract_preserved\nrequired_checks:\n  - id: core_nested_filtering_tests\n\
+      \    command: [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
+      , \"-q\"]\n    covers_claims:\n      - raw_excludes_before_resolution\n    \
+      \  - nested_effective_excludes_added\n      - deterministic_nested_prefix_diagnostics_preserved\n\
       \      - no_silent_autohide_preserved\n      - raw_name_routing_contract_preserved\n\
       \  - id: core_family_doctests\n    command: [\"uv\", \"run\", \"pytest\", \"\
       --doctest-modules\", \"src/tela/core\", \"-q\"]\n    covers_claims:\n      -\
@@ -86197,6 +86209,16 @@ phases:
 
       State the helper/function that computes effective raw excludes and show the
       doctest proving nested child built-ins are filtered only when configured.'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - src/tela/core/family.py
+    - src/tela/core/models.py
+    - src/tela/core/config.py
+    - src/tela/core/errors.py
+    - tests/core/test_nested_gateway_contract.py
     depends_on:
     - ngw.core_impl.config_model_validation
     agent: python-executor
