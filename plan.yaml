@@ -86724,7 +86724,8 @@ phases:
 
       Decision basis required:
 
-      - All same-phase implementation steps are complete and have sidecar evidence.
+      - All same-phase implementation steps are complete and have raw required_checks
+      command receipts with exit codes and command-to-claim coverage.
 
       - `ngw.runtime_wiring.wiring_audit` shows config fields and helpers are consumed
       by real runtime paths.
