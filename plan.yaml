@@ -86689,6 +86689,91 @@ phases:
     evidence show the runtime surface matches ADR-010 and the interface docs.
   depends_on:
   - ngw.runtime_wiring
+  steps:
+  - id: ngw.runtime_verify.probe_harness
+    name: Prepare nested-gateway black-box probe harness
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: project
+
+
+      Probe / Discovery step for nested Tela runtime verification. Build or select
+      a minimal dependency-light probe that can run against the true local tela runtime
+      surfaces.
+
+
+      PROOF ARTIFACT:
+
+      - A probe script or pytest target under `artifacts/` or a temporary path that
+      launches or exercises real `tela serve`/MCP HTTP paths with a child-like downstream
+      exposing tools named `tela_list_providers`, `tela_list_profiles`, and at least
+      one ordinary tool.
+
+      - The probe must capture raw stdout/stderr, parent `tools/list` names, provider
+      metadata payload, and any error diagnostics.
+
+      - The probe must avoid modifying product files and must clean up child/parent
+      processes or use existing in-process fixtures with equivalent runtime boundary
+      proof.
+
+
+      Anti-vacuum rule: mocked unit tests are insufficient. The probe must run against
+      the true host/runtime boundary or clearly name the missing environment blocker.
+
+
+      Required scenarios:
+
+      - nested_gateway=true + tool_prefix=host_ hides child built-ins and keeps ordinary
+      child tool.
+
+      - tool_prefix=host_ without nested_gateway keeps prefixed child built-ins visible.
+
+      - likely nested child without tool_prefix fails with `NESTED_TELA_PREFIX_REQUIRED`.
+
+      - parent built-ins remain callable/visible in the parent surface.
+
+      - changing exclude/nested config produces a tool-surface change signal.'
+    verification: local-check protecting runtime black-box proof. Produce the probe
+      artifact path and run a dry invocation or explain exact missing runtime blocker.
+      Provide raw stdout/stderr.
+    evidence_template: '## Probe Harness Evidence
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this probe step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Probe Artifact
+
+      - path or command: <exact>
+
+      - cleanup strategy: <exact>
+
+
+      ### Dry Run / Discovery Output
+
+      ```text
+
+      <paste stdout/stderr and exit code>
+
+      ```
+
+
+      ### Scenario Coverage Map
+
+      | scenario | probe field/output | status |
+
+      | --- | --- | --- |
+
+
+      ### Blockers
+
+      <none or exact missing runtime/environment blocker>'
+    agent: integration-verifier
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
   status: locked
