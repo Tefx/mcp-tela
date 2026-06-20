@@ -85810,3 +85810,10 @@ phases:
     evidence show the runtime surface matches ADR-010 and the interface docs.
   depends_on:
   - ngw.runtime_wiring
+- id: ngw.doc_sync_gate
+  name: Nested Gateway Documentation Sync and Final Gate
+  status: locked
+  gate: Complete only when documentation parity, full pytest/doctest/invar/shared-surface
+    checks, and final gate review are green with no unresolved blockers.
+  depends_on:
+  - ngw.runtime_verify
