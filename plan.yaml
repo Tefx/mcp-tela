@@ -86531,6 +86531,80 @@ phases:
     - ngw.runtime_wiring.startup_reload_surface
     - ngw.runtime_wiring.metadata_call_routing
     agent: wiring-auditor
+  - id: ngw.runtime_wiring.green_retest
+    name: Retest runtime wiring green
+    status: pending
+    description: 'step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      agent_source: project
+
+
+      Independent retest for runtime wiring. Finding issues is successful verification,
+      but any blocker must get explicit remediation ownership before the gate opens.
+
+
+      Required runtime/seam evidence:
+
+      - `tests/shell/test_nested_gateway_runtime.py` passes green.
+
+      - Existing reload/downstream/builtin/upstream regression suites remain green.
+
+      - Raw stdout/stderr includes exact commands and exit codes.
+
+      - Behavioral proof register maps NGW-R1, NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R8
+      to evidence.
+
+
+      Anti-vacuum rule: unit tests with mocks alone are not enough for final plan
+      completion. This step protects runtime wiring, while launched/black-box nested
+      gateway proof is owned by `ngw.runtime_verify`.'
+    verification: Run `uv run pytest tests/shell/test_nested_gateway_runtime.py tests/shell/test_reload.py
+      tests/shell/test_downstream.py tests/shell/test_builtin_tools.py tests/shell/test_upstream.py
+      -q`; provide raw stdout/stderr and proof register.
+    evidence_template: '## Verification Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Commands Executed
+
+      ```text
+
+      <paste exact command, exit code, stdout/stderr>
+
+      ```
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+
+      ### Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - ngw.runtime_wiring.wiring_audit
+    agent: integration-verifier
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
