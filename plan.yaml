@@ -86261,43 +86261,24 @@ phases:
     verification: Run `uv run pytest tests/core/test_nested_gateway_contract.py -q`,
       `uv run pytest --doctest-modules src/tela/core -q`, and `uv run invar guard
       --all`; provide raw stdout/stderr and a PROVEN/UNPROVEN register.
-    evidence_template: '## Verification Report
-
-
-      ### refs Read Confirmation (MANDATORY)
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this proof step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Commands Executed
+      ## Core Retest Evidence
 
-      ```text
+      - Commands executed with exit codes and raw stdout/stderr.
 
-      <paste exact commands, exit codes, stdout/stderr>
+      - Behavioral proof register for NGW-R2, NGW-R3, NGW-R5, NGW-R6, NGW-R7.
 
-      ```
-
-
-      ### Behavioral Proof Register
-
-      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
-      status | closure_path | gate_decision_basis |
-
-      | --- | --- | --- | --- | --- | --- | --- |
+      - Blocker disposition table; any blocker must name an owner step before gate
+      open.
 
 
-      ### Findings
-
-      | Severity | Description | Location | Reproduction |
-
-      | --- | --- | --- | --- |
-
-
-      ### Headline
-
-      PASS | PASS_WITH_DEBT | FAIL'
+      Headline: PASS | FAIL'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
