@@ -87228,15 +87228,31 @@ phases:
       - `ngw.runtime_verify.spec_conformance` maps every ADR-010 acceptance criterion
       to evidence or owner path.
 
+      - Exact diagnostic scenarios are proven or have owner work: `nested_gateway:
+      true` without `tool_prefix` fails with `NESTED_TELA_PREFIX_REQUIRED`; child
+      Tela raw built-ins without `tool_prefix` fail with the same code; omitted `nested_gateway`
+      plus valid `tool_prefix` preserves prefixed child built-ins unless excluded.
+
+      - Final exposed MCP names are snake_case; no dotted-prefix examples or runtime
+      receipts are accepted.
+
       - No behavioral obligation remains `NEEDS_TEST`, `UNPROVEN`, or `UNCERTAIN_BLOCKING`
       without pending owner work.
 
       - Mock/unit-only proof is rejected for final runtime liveness.
 
 
-      Gate protects: `ngw.doc_sync_gate.final_gate`.'
+      Gate protects: `ngw.doc_sync_gate.final_gate`.
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step, evidence must cite the key passage or state `NOT
+      READ: <reason>`. Include upstream evidence-bearing step IDs reviewed: `ngw.runtime_verify.probe_harness`,
+      `ngw.runtime_verify.blackbox_nested_gateway`, and `ngw.runtime_verify.spec_conformance`.'
     verification: phase-check / runtime gate. Return OPEN only with positive runtime
-      proof for every owned nested-gateway behavior or explicit blocker ownership.
+      proof for every owned nested-gateway behavior or explicit blocker ownership,
+      with refs-read key passages included.
     evidence_template: '## Gate Review Report
 
 
@@ -87265,6 +87281,15 @@ phases:
       ### Gate Decision
 
       OPEN | BLOCKED'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - src/tela/core/errors.py
+    - tests/shell/test_nested_gateway_runtime.py
+    - tests/core/test_nested_gateway_contract.py
     depends_on:
     - ngw.runtime_verify.probe_harness
     - ngw.runtime_verify.blackbox_nested_gateway
