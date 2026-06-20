@@ -85954,7 +85954,7 @@ phases:
       \      - non_overreach_guards_defined\n</intent_closure_contract>"
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and expected-red failure fingerprints in
-      evidence. Do not cite an undefined Intent-Closure sidecar gate.
+      evidence. Do not cite any undefined external gate abstraction.
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
