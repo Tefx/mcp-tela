@@ -85826,21 +85826,25 @@ phases:
       mapped to validation/filter tests | OWNED |
 
       | NGW-R4 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: do not silently
-      auto-hide based only on detection | Likely nested Tela detection may improve
-      diagnostics only; it must not mutate the public tool surface unless config says
-      so | artifact_review | Matrix row accepted and mapped to compatibility tests
-      | OWNED |
+      auto-hide based only on detection | Detection may improve diagnostics only;
+      it must never silently hide tools unless explicit `exclude_tools` or `nested_gateway:
+      true` is configured | artifact_review | Matrix row accepted and mapped to compatibility/non-hiding
+      tests | OWNED |
 
       | NGW-R5 | docs/INTERFACES.md > `nested_gateway` contract: missing prefix fails
-      closed with `NESTED_TELA_PREFIX_REQUIRED` | Likely nested Tela without `tool_prefix`
-      reports deterministic actionable diagnostic | artifact_review | Matrix row accepted
-      and mapped to diagnostic expected-red test | OWNED |
+      closed with `NESTED_TELA_PREFIX_REQUIRED`; child Tela built-ins without `tool_prefix`
+      fail closed with the same actionable diagnostic | `nested_gateway: true` without
+      `tool_prefix` and downstream raw child Tela built-ins (`tela_list_providers`/`tela_list_profiles`)
+      without `tool_prefix` both report deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`
+      | artifact_review | Matrix row accepted and mapped to diagnostic expected-red
+      tests | OWNED |
 
       | NGW-R6 | docs/USAGE.md > Tool Filtering and Nested Tela Gateways: parent built-ins
       remain visible; no nested mode preserves prefixed child built-ins | Default
-      behavior is compatible; `tool_prefix` without nested mode still exposes prefixed
-      child built-ins | artifact_review | Matrix row accepted and mapped to compatibility
-      tests | OWNED |
+      behavior is compatible; omitted `nested_gateway` with a valid non-reserved snake_case
+      `tool_prefix` such as `host_` still exposes prefixed child built-ins unless
+      `exclude_tools` is configured | artifact_review | Matrix row accepted and mapped
+      to compatibility tests | OWNED |
 
       | NGW-R7 | docs/DESIGN.md > Module Boundaries > core owns raw-name tool filtering;
       shell owns runtime lifecycle and reload | Core owns pure filtering/model semantics;
@@ -85852,6 +85856,13 @@ phases:
       two parent built-in tools | Parent Tela built-ins are gateway-owned and remain
       exposed; child built-ins are downstream tools subject to filtering | artifact_review
       | Matrix row accepted and mapped to runtime proof | OWNED |
+
+      | NGW-R9 | docs/INTERFACES.md > `tool_prefix` contract and docs/USAGE.md > Tool
+      Prefixing: final exposed MCP tool names remain snake_case; prefixes like `host_`,
+      `prod_`, and `work_` are recommended while dotted prefixes are invalid | Nested
+      gateway examples and runtime/tool-list receipts use snake_case exposed names
+      and underscore prefixes, not dotted prefixes | artifact_review | Matrix row
+      accepted and mapped to docs/runtime proof | OWNED |
 
 
       CONSTRAINTS:
@@ -85868,6 +85879,10 @@ phases:
       runtime entrypoint boundary, external contract boundary, and client/tool-list
       observable boundary.
 
+      - The matrix must distinguish explicit nested mode, prefix-only compatibility
+      mode, and no-prefix child Tela detection; do not collapse them into "likely
+      nested Tela" shorthand.
+
 
       ACCEPTABLE RECEIPT:
 
@@ -85876,7 +85891,10 @@ phases:
 
       - Evidence names the exact downstream test files that will own each row.
 
-      - Evidence states `No implementation dispatch until expected-red tests exist`.'
+      - Evidence states `No implementation dispatch until expected-red tests exist`.
+
+      - Evidence confirms final exposed MCP names remain snake_case and examples use
+      underscore prefixes such as `host_`, `prod_`, and `work_`.'
     verification: Produce the completed contract matrix in evidence and show every
       authoritative ref was read with a key passage.
     refs:
