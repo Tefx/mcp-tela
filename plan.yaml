@@ -86017,14 +86017,25 @@ phases:
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and expected-red failure fingerprints in
       evidence. Do not cite any undefined external gate abstraction.
-    evidence_template: '## Intent-Closure Evidence
+    evidence_template: '## Required Checks Evidence
 
-      Paste the sidecar verdict, changed file list, and raw stdout/stderr for the
-      expected-red pytest command. Red must be a nested-gateway behavior gap, not
-      missing imports or broken test harness.
+
+      Paste the changed file list and raw stdout/stderr for the expected-red pytest
+      command from `required_checks.runtime_expected_red`, including the exact command,
+      exit code, and expected-red failure fingerprints. Red must be a nested-gateway
+      behavior gap, not missing imports or broken test harness.
+
+
+      ## Command-to-Claim Coverage
+
+
+      Map `runtime_expected_red` output to each covered claim: expected_red_runtime_gap_exposed,
+      provider_metadata_gap_exposed, reload_surface_gap_exposed, compatibility_guards_defined,
+      deterministic_nested_prefix_diagnostics_defined.
 
 
       ## refs Read Confirmation
+
 
       For each ref: <filename> — key passage used in the tests.'
     refs:
