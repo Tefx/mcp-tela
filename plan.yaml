@@ -86173,18 +86173,31 @@ phases:
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and command-to-claim coverage in evidence.
       Do not cite any undefined external gate abstraction.
-    evidence_template: '## Intent-Closure Evidence
+    evidence_template: '## Required Checks Evidence
 
-      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
-      checks.
+
+      Paste the changed file list and raw stdout/stderr for each required_checks command,
+      including the exact command, exit code, and command-to-claim coverage.
+
+
+      ## Command-to-Claim Coverage
+
+
+      Map `core_nested_contract_tests` output to: server_config_fields_added, nested_prefix_validation_added,
+      stable_diagnostic_constant_defined, defaults_backward_compatible.
+
+
+      Map `core_doctest_and_invar` output to: core_contracts_doctests_present.
 
 
       ## refs Read Confirmation
+
 
       For each ref: <filename> — key passage used.
 
 
       ## Core Contract Note
+
 
       List each new or changed Core helper and the @pre/@post/doctest that guards
       it.'
