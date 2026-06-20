@@ -87015,51 +87015,31 @@ phases:
     verification: phase-check protecting final documentation/full-suite gate. Produce
       a conformance report with requirement register, refs-read key passages, and
       evidence table; blockers must map to owner steps.
-    evidence_template: '## Spec Conformance Report
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this proof step:
+      For each ref in this conformance step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ## Requirements Register
+      ## Spec Conformance Report
 
-      | R# | Spec Section | Requirement | Level | Checkable? |
+      | requirement_id | source_ref + key passage | implementation/runtime evidence
+      | verdict | owner_path |
 
-      | --- | --- | --- | --- | --- |
+      |---|---|---|---|---|
 
-
-      ## Evidence Table
-
-      | R# | Spec Section | Requirement | Implementation/Evidence | Verdict | Notes
-      |
-
-      | --- | --- | --- | --- | --- | --- |
 
       Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
       | SPEC_POSSIBLY_STALE
 
 
-      ## Coverage Summary
-
-      - Total requirements: <N>
-
-      - CONFORMS: <N>
-
-      - DIVERGES/PARTIAL/NEEDS_TEST/NOT_FOUND: <N with owner path>
+      Must explicitly cover diagnostics, prefix-only compatibility, non-hiding detection,
+      snake_case exposed names, provider metadata, call routing, reload/re-enumeration,
+      and parent builtin preservation.
 
 
-      ## Top Risks
-
-      <ranked list>
-
-
-      ## Headline
-
-      PASS | PASS_WITH_DEBT | FAIL'
+      Headline: PASS | FAIL'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
