@@ -87498,6 +87498,16 @@ phases:
       - Documentation matches implemented behavior and does not claim silent auto-hide
       or v1/v2 split behavior.
 
+      - Documentation and runtime receipts use final exposed MCP names that remain
+      snake_case; examples use underscore prefixes such as `host_`, `prod_`, and `work_`,
+      not dotted prefixes.
+
+      - Exact diagnostic scenarios are proven: `nested_gateway: true` without `tool_prefix`
+      fails with `NESTED_TELA_PREFIX_REQUIRED`; child Tela raw built-ins without `tool_prefix`
+      fail with the same actionable code; omitted `nested_gateway` with valid non-reserved
+      `tool_prefix` keeps prefixed child built-ins visible unless `exclude_tools`
+      is configured.
+
       - Full suite, doctests, invar guard, and shared-surface gates are green or have
       explicit blocker-owner steps.
 
@@ -87517,9 +87527,16 @@ phases:
       - The old empty `ngw.contract_tests` shell remains empty or unowned.
 
       - Shared canonical surface wording drifts from docs/CONFIRMED-SURFACE-CONTRACT.md
-      or opifex-owned inputs.'
+      or opifex-owned inputs.
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step, evidence must cite the key passage or state `NOT
+      READ: <reason>`. Include upstream evidence-bearing step IDs reviewed: `ngw.runtime_verify.gate`,
+      `ngw.doc_sync_gate.docs_sync`, and `ngw.doc_sync_gate.full_suite`.'
     verification: full-plan-check final gate. Return OPEN only with complete evidence
-      table and no unresolved blocker-class debt.
+      table, refs-read key passages, and no unresolved blocker-class debt.
     evidence_template: '## Final Gate Review Report
 
 
@@ -87564,6 +87581,22 @@ phases:
 
 
       Open Problems: none | <list>'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - docs/AGENT_INTERFACE.md
+    - README.md
+    - tela.yaml.example
+    - src/tela/core/errors.py
+    - tests/core/test_nested_gateway_contract.py
+    - tests/shell/test_nested_gateway_runtime.py
+    - tests/shell/test_surface_contract.py
+    - tests/shell/test_repo_local_ci_gate.py
+    - scripts/ci/mcp_tela_shared_surface_gate.py
+    - AGENTS.md
     depends_on:
     - ngw.doc_sync_gate.docs_sync
     - ngw.doc_sync_gate.full_suite
