@@ -87273,39 +87273,23 @@ phases:
     verification: full-plan-check protecting final gate. Run all required commands
       and provide raw stdout/stderr plus refs-read key passages and blocker disposition
       table.
-    evidence_template: '## Full Verification Report
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this proof step:
+      For each ref in this full-plan proof step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Commands Executed
+      ## Full Suite Evidence
 
-      ```text
+      - Required commands 1-5 with exit codes and raw stdout/stderr.
 
-      <paste each exact command, exit code, stdout/stderr>
+      - Docs/runtime snake_case naming confirmation.
 
-      ```
-
-
-      ### Failure/Blocker Disposition Table
-
-      | command | failure/proof gap | provenance | disposition | owner step or non-intersection
-      evidence |
-
-      | --- | --- | --- | --- | --- |
+      - Blocker provenance and disposition table; `pre-existing` alone is not a disposition.
 
 
-      ### Headline
-
-      PASS | PASS_WITH_DEBT | FAIL
-
-
-      Open Problems: <none or exact owner step ids>'
+      Headline: PASS | FAIL'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
