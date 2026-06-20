@@ -85788,3 +85788,10 @@ phases:
     contract-matrix and test-definition steps.
   depends_on:
   - adr009_reland
+- id: ngw.core_impl
+  name: Nested Gateway Core Implementation
+  status: locked
+  gate: Open only when targeted core tests pass green, Core @pre/@post contracts and
+    doctests are present for new helpers, and default compatibility is proven.
+  depends_on:
+  - ngw.contract_tests
