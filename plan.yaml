@@ -86605,6 +86605,83 @@ phases:
     depends_on:
     - ngw.runtime_wiring.wiring_audit
     agent: integration-verifier
+  - id: ngw.runtime_wiring.gate
+    name: Gate runtime wiring
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: project
+
+      review_depth: THOROUGH
+
+
+      Independent gate for startup/reload/provider/call-routing wiring.
+
+
+      Decision basis required:
+
+      - All same-phase implementation steps are complete and have sidecar evidence.
+
+      - `ngw.runtime_wiring.wiring_audit` shows config fields and helpers are consumed
+      by real runtime paths.
+
+      - `ngw.runtime_wiring.green_retest` raw command evidence is green or any blockers
+      have pending owner steps.
+
+      - Reload/re-enumeration changes to `exclude_tools` or `nested_gateway` are proven
+      as tool-surface changes.
+
+      - Parent built-ins remain visible; child built-ins are hidden only through explicit
+      config.
+
+
+      Gate protects downstream gates: `ngw.runtime_verify.gate` and `ngw.doc_sync_gate.final_gate`.
+
+
+      Gate Preview focus:
+
+      1. Do not approve sampled evidence when the requirement matrix has unproven
+      runtime rows.
+
+      2. Do not accept source inspection as a substitute for runtime/seam proof.
+
+      3. Do not allow unresolved `NEEDS_TEST`/`UNPROVEN` items without blocker ownership.'
+    verification: phase-check protecting runtime verification. Review implementation,
+      audit, and retest evidence; return OPEN only when each runtime obligation is
+      PROVEN or has explicit blocker ownership.
+    evidence_template: '## Gate Review Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this gate step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Gate Decision Basis
+
+      | requirement_id | evidence reviewed | status | blocks downstream? | basis |
+
+      | --- | --- | --- | --- | --- |
+
+
+      ### Issues Identified
+
+      | Severity | Description | Related Step | Blocking? |
+
+      | --- | --- | --- | --- |
+
+
+      ### Gate Decision
+
+      OPEN | BLOCKED'
+    depends_on:
+    - ngw.runtime_wiring.startup_reload_surface
+    - ngw.runtime_wiring.metadata_call_routing
+    - ngw.runtime_wiring.wiring_audit
+    - ngw.runtime_wiring.green_retest
+    agent: gate-reviewer
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
