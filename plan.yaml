@@ -86004,7 +86004,9 @@ phases:
       \      - expected_red_runtime_gap_exposed\n      - provider_metadata_gap_exposed\n\
       \      - reload_surface_gap_exposed\n      - compatibility_guards_defined\n\
       \      - deterministic_nested_prefix_diagnostics_defined\n</intent_closure_contract>"
-    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
+      paste raw stdout/stderr, exit codes, and expected-red failure fingerprints in
+      evidence. Do not cite an undefined Intent-Closure sidecar gate.
     evidence_template: '## Intent-Closure Evidence
 
       Paste the sidecar verdict, changed file list, and raw stdout/stderr for the
