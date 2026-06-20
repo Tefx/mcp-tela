@@ -86850,12 +86850,12 @@ phases:
       - `nested_gateway: true` plus `tool_prefix: "host_"` hides child built-ins and
       keeps ordinary child tools.
 
-      - `nested_gateway: true` without `tool_prefix` fails closed with deterministic
-      actionable `NESTED_TELA_PREFIX_REQUIRED`.
+      - `nested_gateway: true` with omitted or empty `tool_prefix` fails closed with
+      deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`.
 
       - Downstream raw tools include child Tela built-ins (`tela_list_providers` or
-      `tela_list_profiles`) and no `tool_prefix`: the reserved namespace / likely-nested
-      failure is deterministic and actionable as `NESTED_TELA_PREFIX_REQUIRED`.
+      `tela_list_profiles`) with omitted or empty `tool_prefix`: the reserved namespace
+      / likely-nested failure is deterministic and actionable as `NESTED_TELA_PREFIX_REQUIRED`.
 
       - Omitted `nested_gateway` with valid non-reserved `tool_prefix: "host_"` preserves
       current behavior: child built-ins remain prefixed and visible unless `exclude_tools`
