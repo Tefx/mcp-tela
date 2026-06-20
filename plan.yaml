@@ -85920,20 +85920,27 @@ phases:
       \ coverage:\n- `ServerConfig` exposes `exclude_tools: list[str]` defaulting\
       \ to `[]` and preserving explicit raw names.\n- `ServerConfig` exposes `nested_gateway:\
       \ bool` defaulting to `False`.\n- `validate_config` or the designated Core diagnostic\
-      \ contract rejects `nested_gateway=True` with missing `tool_prefix` using `NESTED_TELA_PREFIX_REQUIRED`.\n\
-      - Raw `exclude_tools` entries filter before `tool_prefix` and before family/posture\
-      \ classification.\n- `nested_gateway=True` adds raw child built-ins `tela_list_providers`\
-      \ and `tela_list_profiles` to the effective exclude set.\n- `tool_prefix` without\
-      \ `nested_gateway` keeps prefixed child built-ins visible.\n- Omitted `exclude_tools`\
-      \ and omitted `nested_gateway` preserve current no-filter behavior.\n\nRequirement-to-Evidence\
-      \ Matrix rows owned: NGW-R1, NGW-R2, NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R7.\n\
-      \n<intent_closure_contract>\nintent_kind: test_define_red\nallowed_paths:\n\
-      \  - \"tests/core/test_nested_gateway_contract.py\"\nblocked_paths:\n  - \"\
-      src/tela/**\"\n  - \"docs/**\"\nrequired_claims:\n  - expected_red_gap_exposed\n\
-      \  - design_requirements_mapped\n  - non_overreach_guards_defined\nrequired_checks:\n\
-      \  - id: core_expected_red\n    command: [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
-      , \"-q\"]\n    expected_result: red\n    expected_exit_codes: [1]\n    expected_failure_patterns_any:\n\
-      \      - \"exclude_tools\"\n      - \"nested_gateway\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
+      \ contract rejects `nested_gateway=True` with missing `tool_prefix` using stable\
+      \ `NESTED_TELA_PREFIX_REQUIRED` from the Core error-code surface.\n- Raw downstream\
+      \ child Tela built-ins (`tela_list_providers` or `tela_list_profiles`) without\
+      \ `tool_prefix` yield deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`,\
+      \ not a generic reserved-namespace error.\n- Raw `exclude_tools` entries filter\
+      \ before `tool_prefix` and before family/posture classification.\n- `nested_gateway=True`\
+      \ adds raw child built-ins `tela_list_providers` and `tela_list_profiles` to\
+      \ the effective exclude set.\n- Omitted `nested_gateway` with a valid non-reserved\
+      \ snake_case `tool_prefix` such as `host_` keeps prefixed child built-ins visible\
+      \ unless `exclude_tools` is configured.\n- Omitted `exclude_tools` and omitted\
+      \ `nested_gateway` preserve current no-filter behavior.\n- Final exposed MCP\
+      \ names remain snake_case; tests should use underscore prefixes such as `host_`,\
+      \ not dotted prefixes.\n\nRequirement-to-Evidence Matrix rows owned: NGW-R1,\
+      \ NGW-R2, NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R7, NGW-R9.\n\n<intent_closure_contract>\n\
+      intent_kind: test_define_red\nallowed_paths:\n  - \"tests/core/test_nested_gateway_contract.py\"\
+      \nblocked_paths:\n  - \"src/tela/**\"\n  - \"docs/**\"\nrequired_claims:\n \
+      \ - expected_red_gap_exposed\n  - design_requirements_mapped\n  - non_overreach_guards_defined\n\
+      required_checks:\n  - id: core_expected_red\n    command: [\"uv\", \"run\",\
+      \ \"pytest\", \"tests/core/test_nested_gateway_contract.py\", \"-q\"]\n    expected_result:\
+      \ red\n    expected_exit_codes: [1]\n    expected_failure_patterns_any:\n  \
+      \    - \"exclude_tools\"\n      - \"nested_gateway\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
       \n    covers_claims:\n      - expected_red_gap_exposed\n      - design_requirements_mapped\n\
       \      - non_overreach_guards_defined\n</intent_closure_contract>"
     verification: Run Intent-Closure sidecar gate and required checks from the contract.
@@ -85942,6 +85949,7 @@ phases:
     - docs/INTERFACES.md
     - docs/USAGE.md
     - docs/DESIGN.md
+    - src/tela/core/errors.py
     - AGENTS.md
     depends_on:
     - ngw.contract_tests.contract_matrix
