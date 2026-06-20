@@ -86534,7 +86534,9 @@ phases:
       , \"tests/shell/test_builtin_tools.py\", \"tests/shell/test_upstream.py\", \"\
       -q\"]\n    covers_claims:\n      - parent_builtins_preserved\n      - raw_name_routing_preserved\n\
       </intent_closure_contract>"
-    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
+      paste raw stdout/stderr, exit codes, and command-to-claim coverage in evidence.
+      Do not cite an undefined Intent-Closure sidecar gate.
     evidence_template: '## Intent-Closure Evidence
 
       Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
