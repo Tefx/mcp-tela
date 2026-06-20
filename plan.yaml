@@ -87340,13 +87340,33 @@ phases:
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and command-to-claim coverage in evidence.
       Do not cite any undefined external gate abstraction.
-    evidence_template: '## Intent-Closure Evidence
+    evidence_template: '## Required Checks Evidence
 
-      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
-      checks.
+
+      Paste the changed file list and raw stdout/stderr for each required_checks command,
+      including the exact command, exit code, and command-to-claim coverage.
+
+
+      ## Command-to-Claim Coverage
+
+
+      Map `ngw_docs_parity_check` output to: examples_cover_explicit_nested_gateway,
+      raw_name_exclude_tools_documented, snake_case_prefix_examples_documented, deterministic_diagnostic_scenarios_documented,
+      no_silent_autohide_claims, operator_surfaces_split, headers_instructions_contracts_preserved,
+      nested_gateway_doc_parity_checker_enforced.
+
+
+      Map `docs_surface_contract_tests` output to: shared_surface_wording_preserved,
+      docs_match_runtime_behavior, nested_gateway_doc_parity_checker_enforced.
+
+
+      Map `shared_surface_gate_green` output to: shared_surface_wording_preserved,
+      no_silent_autohide_claims, examples_cover_explicit_nested_gateway, snake_case_prefix_examples_documented,
+      deterministic_diagnostic_scenarios_documented.
 
 
       ## Documentation Parity Notes
+
 
       Map every changed doc/example to the runtime evidence or source requirement
       it reflects.'
