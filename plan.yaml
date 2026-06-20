@@ -86016,7 +86016,7 @@ phases:
       \      - deterministic_nested_prefix_diagnostics_defined\n</intent_closure_contract>"
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and expected-red failure fingerprints in
-      evidence. Do not cite an undefined Intent-Closure sidecar gate.
+      evidence. Do not cite any undefined external gate abstraction.
     evidence_template: '## Intent-Closure Evidence
 
       Paste the sidecar verdict, changed file list, and raw stdout/stderr for the
