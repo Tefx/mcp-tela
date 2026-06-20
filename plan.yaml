@@ -85803,3 +85803,10 @@ phases:
     notifications.
   depends_on:
   - ngw.core_impl
+- id: ngw.runtime_verify
+  name: Nested Gateway Runtime Verification
+  status: locked
+  gate: Open only when black-box nested-gateway proof, reload proof, and spec-conformance
+    evidence show the runtime surface matches ADR-010 and the interface docs.
+  depends_on:
+  - ngw.runtime_wiring
