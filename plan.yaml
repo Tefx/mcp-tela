@@ -85947,27 +85947,35 @@ phases:
       \ child built-ins cannot be invoked through prefixed or raw names; permitted\
       \ tools still route by `ResolvedTool.raw_name`.\n- Reload/re-enumeration: changes\
       \ to `exclude_tools` or `nested_gateway` produce a tool-surface digest/list\
-      \ change.\n- Compatibility: parent built-ins remain gateway-owned and visible;\
-      \ `tool_prefix` without `nested_gateway` exposes `host_tela_list_providers`\
-      \ and `host_tela_list_profiles`.\n- Diagnostic: likely nested Tela without prefix\
-      \ yields `NESTED_TELA_PREFIX_REQUIRED`, not a generic reserved namespace error.\n\
-      \nAnti-vacuum rule: unit tests with mocks are not sufficient for final proof,\
-      \ but this expected-red step may use deterministic in-process shell harnesses\
-      \ to define the gap before implementation. Runtime black-box proof is owned\
-      \ by `ngw.runtime_verify`.\n\nRequirement-to-Evidence Matrix rows owned: NGW-R1,\
-      \ NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R8.\n\n<intent_closure_contract>\nintent_kind:\
-      \ test_define_red\nallowed_paths:\n  - \"tests/shell/test_nested_gateway_runtime.py\"\
-      \nblocked_paths:\n  - \"src/tela/**\"\n  - \"docs/**\"\nrequired_claims:\n \
-      \ - expected_red_runtime_gap_exposed\n  - provider_metadata_gap_exposed\n  -\
-      \ reload_surface_gap_exposed\n  - compatibility_guards_defined\nrequired_checks:\n\
-      \  - id: runtime_expected_red\n    command: [\"uv\", \"run\", \"pytest\", \"\
-      tests/shell/test_nested_gateway_runtime.py\", \"-q\"]\n    expected_result:\
-      \ red\n    expected_exit_codes: [1]\n    expected_failure_patterns_any:\n  \
-      \    - \"NESTED_CHILD_TOOL_NOT_FILTERED\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
+      \ change.\n- Compatibility: parent built-ins remain gateway-owned and visible.\n\
+      - Compatibility: omitted `nested_gateway` with a valid non-reserved snake_case\
+      \ `tool_prefix` (for example `host_`, `prod_`, or `work_`) preserves current\
+      \ behavior; child built-ins remain prefixed and visible unless `exclude_tools`\
+      \ is configured.\n- Diagnostic: `nested_gateway: true` without `tool_prefix`\
+      \ MUST fail closed with deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`.\n\
+      - Diagnostic: if downstream raw tools include child Tela built-ins (`tela_list_providers`\
+      \ or `tela_list_profiles`) and no `tool_prefix`, the reserved namespace / likely-nested\
+      \ failure MUST be deterministic and actionable as `NESTED_TELA_PREFIX_REQUIRED`.\n\
+      - Diagnostic: likely-nested detection must never silently hide tools; hiding\
+      \ is allowed only through explicit `exclude_tools` or `nested_gateway: true`.\n\
+      - Naming: final exposed MCP names remain snake_case; tests and examples must\
+      \ use underscore prefixes such as `host_`, not dotted prefixes.\n\nAnti-vacuum\
+      \ rule: unit tests with mocks are not sufficient for final proof, but this expected-red\
+      \ step may use deterministic in-process shell harnesses to define the gap before\
+      \ implementation. Runtime black-box proof is owned by `ngw.runtime_verify`.\n\
+      \nRequirement-to-Evidence Matrix rows owned: NGW-R1, NGW-R3, NGW-R4, NGW-R5,\
+      \ NGW-R6, NGW-R8.\n\n<intent_closure_contract>\nintent_kind: test_define_red\n\
+      allowed_paths:\n  - \"tests/shell/test_nested_gateway_runtime.py\"\nblocked_paths:\n\
+      \  - \"src/tela/**\"\n  - \"docs/**\"\nrequired_claims:\n  - expected_red_runtime_gap_exposed\n\
+      \  - provider_metadata_gap_exposed\n  - reload_surface_gap_exposed\n  - compatibility_guards_defined\n\
+      \  - deterministic_nested_prefix_diagnostics_defined\nrequired_checks:\n  -\
+      \ id: runtime_expected_red\n    command: [\"uv\", \"run\", \"pytest\", \"tests/shell/test_nested_gateway_runtime.py\"\
+      , \"-q\"]\n    expected_result: red\n    expected_exit_codes: [1]\n    expected_failure_patterns_any:\n\
+      \      - \"NESTED_CHILD_TOOL_NOT_FILTERED\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
       \n      - \"tool_count\"\n      - \"tools/list_changed\"\n    covers_claims:\n\
       \      - expected_red_runtime_gap_exposed\n      - provider_metadata_gap_exposed\n\
       \      - reload_surface_gap_exposed\n      - compatibility_guards_defined\n\
-      </intent_closure_contract>"
+      \      - deterministic_nested_prefix_diagnostics_defined\n</intent_closure_contract>"
     verification: Run Intent-Closure sidecar gate and required checks from the contract.
     evidence_template: '## Intent-Closure Evidence
 
@@ -85985,9 +85993,15 @@ phases:
     - docs/USAGE.md
     - docs/DESIGN.md
     - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - src/tela/core/errors.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/reload.py
+    - src/tela/shell/builtin_tools.py
+    - src/tela/shell/upstream.py
     - tests/shell/test_reload.py
     - tests/shell/test_downstream.py
     - tests/integration/test_hot_reload.py
+    - tests/shell/test_nested_gateway_runtime.py
     depends_on:
     - ngw.contract_tests.contract_matrix
     agent: python-executor
