@@ -86399,6 +86399,64 @@ phases:
 
       - rollback proof: <evidence ref>'
     agent: python-senior
+  - id: ngw.runtime_wiring.metadata_call_routing
+    name: Wire provider metadata and call routing consistency
+    status: pending
+    description: "step_type: implementation\ntags: [\"integration\"]\nagent_source:\
+      \ project\n\nComplete the client-visible runtime seams after registry filtering\
+      \ is wired.\n\nTARGET STATE:\n- `handle_tools_list` exposes only filtered, profile-permitted\
+      \ tools.\n- `tela_list_providers` reports `tool_names` and `tool_count` for\
+      \ the post-filter, post-profile-enforcement exposed surface.\n- Parent gateway\
+      \ built-ins `tela_list_providers` and `tela_list_profiles` remain visible and\
+      \ callable as gateway-owned built-ins.\n- Child built-ins excluded through `exclude_tools`\
+      \ or `nested_gateway=True` are absent from `tools/list`, provider metadata,\
+      \ registry lookup, and call routing.\n- `tool_prefix` without `nested_gateway`\
+      \ still exposes child built-ins as prefixed downstream tools (for example `host_tela_list_providers`)\
+      \ when profile allows them.\n- Permitted non-excluded tools still call downstream\
+      \ using `ResolvedTool.raw_name`, not a prefix-stripping heuristic.\n\nUPSTREAM\
+      \ ARTIFACTS:\n- `ngw.runtime_wiring.startup_reload_surface` — registry is already\
+      \ filtered.\n- `ngw.contract_tests.runtime_expected_red` — provider/call assertions\
+      \ are protected.\n\nSCOPE BOUNDARY:\n- Do not alter canonical built-in payload\
+      \ keys from docs/CONFIRMED-SURFACE-CONTRACT.md.\n- Do not change profile authorization\
+      \ semantics or audit identity fields.\n- Preserve exact-empty-object builtin\
+      \ argument validation.\n- Shell I/O paths continue to return `Result[T, E]`\
+      \ where applicable.\n\nRequirement-to-Evidence Matrix rows owned: NGW-R1, NGW-R6,\
+      \ NGW-R8.\n\n<intent_closure_contract>\nallowed_paths:\n  - \"src/tela/shell/builtin_tools.py\"\
+      \n  - \"src/tela/shell/upstream.py\"\n  - \"src/tela/shell/downstream.py\"\n\
+      \  - \"src/tela/shell/_downstream_recovery.py\"\n  - \"tests/shell/test_nested_gateway_runtime.py\"\
+      \n  - \"tests/shell/test_builtin_tools.py\"\n  - \"tests/shell/test_upstream.py\"\
+      \nblocked_paths:\n  - \"src/tela/core/token.py\"\n  - \"src/tela/core/enforcement.py\"\
+      \n  - \"../opifex/**\"\nside_effect_budget:\n  allowed:\n    - \"read current\
+      \ runtime config and registry snapshots\"\n    - \"route permitted test calls\
+      \ through existing fake client sessions\"\n  forbidden:\n    - \"builtin-session\
+      \ bypass\"\n    - \"new profile visibility authority\"\nrisk_probes:\n  - \"\
+      provider metadata for nested_gateway=true hides child built-ins but keeps parent\
+      \ built-ins\"\n  - \"provider metadata for prefix-only nested child shows prefixed\
+      \ child built-ins\"\n  - \"permitted prefixed non-built-in tool routes with\
+      \ raw downstream name\"\nrequired_claims:\n  - provider_metadata_filtered\n\
+      \  - parent_builtins_preserved\n  - excluded_tools_unroutable\n  - raw_name_routing_preserved\n\
+      required_checks:\n  - id: runtime_nested_metadata_tests\n    command: [\"uv\"\
+      , \"run\", \"pytest\", \"tests/shell/test_nested_gateway_runtime.py\", \"-q\"\
+      ]\n    covers_claims:\n      - provider_metadata_filtered\n      - parent_builtins_preserved\n\
+      \      - excluded_tools_unroutable\n      - raw_name_routing_preserved\n  -\
+      \ id: builtin_upstream_regression_tests\n    command: [\"uv\", \"run\", \"pytest\"\
+      , \"tests/shell/test_builtin_tools.py\", \"tests/shell/test_upstream.py\", \"\
+      -q\"]\n    covers_claims:\n      - parent_builtins_preserved\n      - raw_name_routing_preserved\n\
+      </intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    evidence_template: '## Intent-Closure Evidence
+
+      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
+      checks.
+
+
+      ## Client-Observable Receipt
+
+      Summarize actual `tools/list`, `tela_list_providers`, and call-routing evidence
+      refs; source inspection alone is insufficient.'
+    depends_on:
+    - ngw.runtime_wiring.startup_reload_surface
+    agent: python-senior
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
