@@ -86947,11 +86947,11 @@ phases:
       - Provider metadata receipt showing `tool_count` and `tool_names` after filtering/profile
       enforcement.
 
-      - Failure receipt for `nested_gateway: true` without `tool_prefix` containing
-      `NESTED_TELA_PREFIX_REQUIRED` and actionable message text.
+      - Failure receipt for `nested_gateway: true` with omitted or empty `tool_prefix`
+      containing `NESTED_TELA_PREFIX_REQUIRED` and actionable message text.
 
       - Failure receipt for downstream raw child Tela built-ins (`tela_list_providers`/`tela_list_profiles`)
-      without `tool_prefix` containing deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`.
+      with omitted or empty `tool_prefix` containing deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`.
 
       - Non-hiding receipt proving detection did not silently hide tools when `nested_gateway`
       is omitted and `exclude_tools` is not configured.
@@ -86964,7 +86964,7 @@ phases:
 
 
       Requirement-to-Evidence Matrix rows owned: NGW-R1, NGW-R3, NGW-R4, NGW-R5, NGW-R6,
-      NGW-R8.
+      NGW-R8, NGW-R9.
 
 
       Your goal is to find problems, not to confirm. A finding is a valid outcome,
