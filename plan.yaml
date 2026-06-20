@@ -86715,33 +86715,23 @@ phases:
     verification: phase-check protecting runtime verification. Review implementation,
       audit, and retest evidence; return OPEN only when each runtime obligation is
       PROVEN or has explicit blocker ownership.
-    evidence_template: '## Gate Review Report
-
-
-      ### refs Read Confirmation (MANDATORY)
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this gate step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Gate Decision Basis
+      ## Gate Decision Basis
 
-      | requirement_id | evidence reviewed | status | blocks downstream? | basis |
+      - Upstream evidence-bearing steps reviewed: ngw.runtime_wiring.startup_reload_surface,
+      ngw.runtime_wiring.metadata_call_routing, ngw.runtime_wiring.wiring_audit, ngw.runtime_wiring.green_retest.
 
-      | --- | --- | --- | --- | --- |
+      - Requirement rows reviewed and status: PROVEN | UNPROVEN | NEEDS_TEST | BLOCKED.
 
+      - Runtime/seam evidence quality assessment; source inspection alone is insufficient.
 
-      ### Issues Identified
-
-      | Severity | Description | Related Step | Blocking? |
-
-      | --- | --- | --- | --- |
-
-
-      ### Gate Decision
-
-      OPEN | BLOCKED'
+      - Final decision: OPEN | BLOCKED, with owner step for every blocker.'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
