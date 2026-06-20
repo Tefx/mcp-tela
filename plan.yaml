@@ -86831,42 +86831,27 @@ phases:
     verification: local-check protecting runtime black-box proof. Produce the probe
       artifact path and run a dry invocation or explain exact missing runtime blocker.
       Provide raw stdout/stderr and refs-read key passages.
-    evidence_template: '## Probe Harness Evidence
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this probe step:
+      For each ref in this proof step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Probe Artifact
+      ## Probe Harness Artifact
 
-      - path or command: <exact>
+      - Probe path/command.
 
-      - cleanup strategy: <exact>
+      - Runtime boundary used (true host/runtime or explicit environment blocker).
 
+      - Dry-run/raw stdout/stderr and exit code.
 
-      ### Dry Run / Discovery Output
-
-      ```text
-
-      <paste stdout/stderr and exit code>
-
-      ```
+      - Scenario coverage map for nested_gateway true, prefix-only compatibility,
+      no-prefix diagnostics, non-hiding detection, parent built-ins, reload signal,
+      and snake_case names.
 
 
-      ### Scenario Coverage Map
-
-      | scenario | probe field/output | status |
-
-      | --- | --- | --- |
-
-
-      ### Blockers
-
-      <none or exact missing runtime/environment blocker>'
+      Headline: PROBE_READY | BLOCKED'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
