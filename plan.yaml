@@ -86954,6 +86954,72 @@ phases:
     depends_on:
     - ngw.runtime_verify.blackbox_nested_gateway
     agent: spec-verifier
+  - id: ngw.runtime_verify.gate
+    name: Gate runtime verification
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: project
+
+      review_depth: THOROUGH
+
+
+      Independent gate for black-box runtime and spec-conformance proof.
+
+
+      Decision basis required:
+
+      - `ngw.runtime_verify.probe_harness` produced an executable true-runtime probe
+      or explicit environment blocker.
+
+      - `ngw.runtime_verify.blackbox_nested_gateway` contains raw runtime receipts
+      for all named scenarios.
+
+      - `ngw.runtime_verify.spec_conformance` maps every ADR-010 acceptance criterion
+      to evidence or owner path.
+
+      - No behavioral obligation remains `NEEDS_TEST`, `UNPROVEN`, or `UNCERTAIN_BLOCKING`
+      without pending owner work.
+
+      - Mock/unit-only proof is rejected for final runtime liveness.
+
+
+      Gate protects: `ngw.doc_sync_gate.final_gate`.'
+    verification: phase-check / runtime gate. Return OPEN only with positive runtime
+      proof for every owned nested-gateway behavior or explicit blocker ownership.
+    evidence_template: '## Gate Review Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this gate step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Runtime Decision Basis
+
+      | requirement_id | runtime evidence | conformance verdict | unresolved? | gate
+      basis |
+
+      | --- | --- | --- | --- | --- |
+
+
+      ### Issues Identified
+
+      | Severity | Description | Related Step | Blocking? |
+
+      | --- | --- | --- | --- |
+
+
+      ### Gate Decision
+
+      OPEN | BLOCKED'
+    depends_on:
+    - ngw.runtime_verify.probe_harness
+    - ngw.runtime_verify.blackbox_nested_gateway
+    - ngw.runtime_verify.spec_conformance
+    agent: gate-reviewer
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
   status: locked
