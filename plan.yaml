@@ -86866,6 +86866,94 @@ phases:
     depends_on:
     - ngw.runtime_verify.probe_harness
     agent: blind-tester
+  - id: ngw.runtime_verify.spec_conformance
+    name: Verify nested-gateway spec conformance
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: project
+
+
+      Spec conformance verification via adversarial divergence hunting. This is not
+      `tests pass`; it is `does implementation match ADR-010 and interface docs`.
+
+
+      Scope:
+
+      - Only nested gateway ergonomics surfaces implemented in ngw phases.
+
+      - Check config parsing/validation, raw-name filtering, nested effective excludes,
+      diagnostics, provider metadata, call routing, reload/re-enumeration, default
+      compatibility, and parent builtin preservation.
+
+
+      FOCUS AREAS:
+
+      - State strictness and business intent: explicit config changes surface; no
+      silent auto-hide.
+
+      - Boundary/defaults: omitted fields preserve prior behavior; prefix-only mode
+      preserves child built-ins.
+
+      - Omission drift: every MUST/Acceptance Criteria line in ADR-010 has runtime
+      or test evidence.
+
+      - Contract surface drift: field names and error code exactly match docs.
+
+
+      Behavioral precedence claims must be mapped to runtime proof or marked NEEDS_TEST/UNPROVEN
+      with owner path.'
+    verification: phase-check protecting final documentation/full-suite gate. Produce
+      a conformance report with requirement register and evidence table; blockers
+      must map to owner steps.
+    evidence_template: '## Spec Conformance Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ## Requirements Register
+
+      | R# | Spec Section | Requirement | Level | Checkable? |
+
+      | --- | --- | --- | --- | --- |
+
+
+      ## Evidence Table
+
+      | R# | Spec Section | Requirement | Implementation/Evidence | Verdict | Notes
+      |
+
+      | --- | --- | --- | --- | --- | --- |
+
+      Verdicts: CONFORMS | DIVERGES | PARTIAL | NEEDS_TEST | NOT_FOUND | AMBIGUOUS_SPEC
+      | SPEC_POSSIBLY_STALE
+
+
+      ## Coverage Summary
+
+      - Total requirements: <N>
+
+      - CONFORMS: <N>
+
+      - DIVERGES/PARTIAL/NEEDS_TEST/NOT_FOUND: <N with owner path>
+
+
+      ## Top Risks
+
+      <ranked list>
+
+
+      ## Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - ngw.runtime_verify.blackbox_nested_gateway
+    agent: spec-verifier
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
   status: locked
