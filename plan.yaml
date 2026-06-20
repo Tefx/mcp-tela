@@ -87343,7 +87343,7 @@ phases:
 
       - All ngw phases have opened their gates.
 
-      - Contract matrix rows NGW-R1..NGW-R8 are PROVEN by runtime/test/docs evidence.
+      - Contract matrix rows NGW-R1..NGW-R9 are PROVEN by runtime/test/docs evidence.
 
       - Documentation matches implemented behavior and does not claim silent auto-hide
       or v1/v2 split behavior.
