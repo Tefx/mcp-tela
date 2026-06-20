@@ -86268,13 +86268,26 @@ phases:
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and command-to-claim coverage in evidence.
       Do not cite any undefined external gate abstraction.
-    evidence_template: '## Intent-Closure Evidence
+    evidence_template: '## Required Checks Evidence
 
-      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
-      checks.
+
+      Paste the changed file list and raw stdout/stderr for each required_checks command,
+      including the exact command, exit code, and command-to-claim coverage.
+
+
+      ## Command-to-Claim Coverage
+
+
+      Map `core_nested_filtering_tests` output to: raw_excludes_before_resolution,
+      nested_effective_excludes_added, deterministic_nested_prefix_diagnostics_preserved,
+      no_silent_autohide_preserved, raw_name_routing_contract_preserved.
+
+
+      Map `core_family_doctests` output to: raw_excludes_before_resolution, nested_effective_excludes_added.
 
 
       ## Filtering Semantics Receipt
+
 
       State the helper/function that computes effective raw excludes and show the
       doctest proving nested child built-ins are filtered only when configured.'
