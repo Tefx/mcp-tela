@@ -86512,13 +86512,26 @@ phases:
     verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
       paste raw stdout/stderr, exit codes, and command-to-claim coverage in evidence.
       Do not cite any undefined external gate abstraction.
-    evidence_template: '## Intent-Closure Evidence
+    evidence_template: '## Required Checks Evidence
 
-      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
-      checks.
+
+      Paste the changed file list and raw stdout/stderr for each required_checks command,
+      including the exact command, exit code, and command-to-claim coverage.
+
+
+      ## Command-to-Claim Coverage
+
+
+      Map `runtime_nested_shell_tests` output to: startup_registry_filtered, reload_reenumeration_filtered,
+      surface_change_notification_preserved.
+
+
+      Map `reload_downstream_regression_tests` output to: conflict_rollback_preserved,
+      reload_reenumeration_filtered.
 
 
       ## Runtime State Semantics Receipt
+
 
       - concurrent access scenario considered: <summary>
 
