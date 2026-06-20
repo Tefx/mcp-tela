@@ -85822,8 +85822,8 @@ phases:
       | NGW-R3 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: `nested_gateway:
       true` requires `tool_prefix` and excludes child Tela built-ins | Explicit nested
       mode adds child `tela_list_providers` and `tela_list_profiles` to effective
-      raw excludes and requires a prefix | artifact_review | Matrix row accepted and
-      mapped to validation/filter tests | OWNED |
+      raw excludes and requires a non-empty prefix | artifact_review | Matrix row
+      accepted and mapped to validation/filter tests | OWNED |
 
       | NGW-R4 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: do not silently
       auto-hide based only on detection | Detection may improve diagnostics only;
@@ -85831,11 +85831,12 @@ phases:
       true` is configured | artifact_review | Matrix row accepted and mapped to compatibility/non-hiding
       tests | OWNED |
 
-      | NGW-R5 | docs/INTERFACES.md > `nested_gateway` contract: missing prefix fails
-      closed with `NESTED_TELA_PREFIX_REQUIRED`; child Tela built-ins without `tool_prefix`
-      fail closed with the same actionable diagnostic | `nested_gateway: true` without
-      `tool_prefix` and downstream raw child Tela built-ins (`tela_list_providers`/`tela_list_profiles`)
-      without `tool_prefix` both report deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`
+      | NGW-R5 | docs/INTERFACES.md > `nested_gateway` contract and docs/ADR-010-nested-gateway-ergonomics.md
+      > exact trigger: missing/empty prefix fails closed with `NESTED_TELA_PREFIX_REQUIRED`;
+      downstream exposes child Tela built-ins with omitted or empty `tool_prefix`
+      fails closed with the same actionable diagnostic | `nested_gateway: true` with
+      omitted or empty `tool_prefix` and downstream raw child Tela built-ins (`tela_list_providers`/`tela_list_profiles`)
+      with omitted or empty `tool_prefix` both report deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`
       | artifact_review | Matrix row accepted and mapped to diagnostic expected-red
       tests | OWNED |
 
@@ -85875,13 +85876,18 @@ phases:
       - Shared opifex contracts remain external authority; do not reinterpret canonical
       shared fields or aliases.
 
+      - Preserve current documentation fixes as constraints: CLI and HTTP operator
+      surfaces stay split instead of being collapsed into a `CLI/HTTP` kind; `headers`
+      and `instructions` ServerConfig contracts/cross-references remain documented
+      while adding nested gateway fields.
+
       - The matrix must preserve the four runtime-surface lenses: module boundary,
       runtime entrypoint boundary, external contract boundary, and client/tool-list
       observable boundary.
 
       - The matrix must distinguish explicit nested mode, prefix-only compatibility
-      mode, and no-prefix child Tela detection; do not collapse them into "likely
-      nested Tela" shorthand.
+      mode, and omitted/empty-prefix child Tela detection; do not collapse them into
+      "likely nested Tela" shorthand.
 
 
       ACCEPTABLE RECEIPT:
@@ -85894,7 +85900,10 @@ phases:
       - Evidence states `No implementation dispatch until expected-red tests exist`.
 
       - Evidence confirms final exposed MCP names remain snake_case and examples use
-      underscore prefixes such as `host_`, `prod_`, and `work_`.'
+      underscore prefixes such as `host_`, `prod_`, and `work_`.
+
+      - Evidence confirms the exact ADR trigger is downstream raw child built-ins
+      with omitted or empty `tool_prefix`, not any broader heuristic.'
     verification: Produce the completed contract matrix in evidence and show every
       authoritative ref was read with a key passage.
     refs:
