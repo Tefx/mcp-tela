@@ -87072,3 +87072,86 @@ phases:
       Map every changed doc/example to the runtime evidence or source requirement
       it reflects.'
     agent: doc-reviewer
+  - id: ngw.doc_sync_gate.full_suite
+    name: Run full repository and shared-surface verification
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: project
+
+
+      Full-plan check for nested-gateway closeout. This is the earliest broad verification
+      boundary after implementation, runtime proof, and doc sync.
+
+
+      PROOF ARTIFACT:
+
+      - Full pytest suite raw stdout/stderr.
+
+      - Doctest run for `src/tela/` raw stdout/stderr.
+
+      - `uv run invar guard --all` raw stdout/stderr.
+
+      - Repo-local shared-surface gates raw stdout/stderr for expected-red and green
+      modes.
+
+      - Any failure must be classified with provenance and disposition; `pre-existing`
+      is not a disposition. If a failure intersects final gate, create/require remediation
+      ownership.
+
+
+      Commands required:
+
+      1. `uv run pytest -q`
+
+      2. `uv run pytest --doctest-modules src/tela/ -q`
+
+      3. `uv run invar guard --all`
+
+      4. `env OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      expected-red`
+
+      5. `env OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      green`
+
+
+      Anti-vacuum rule: summaries are insufficient; paste raw command receipts with
+      exit codes.'
+    verification: full-plan-check protecting final gate. Run all required commands
+      and provide raw stdout/stderr plus blocker disposition table.
+    evidence_template: '## Full Verification Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Commands Executed
+
+      ```text
+
+      <paste each exact command, exit code, stdout/stderr>
+
+      ```
+
+
+      ### Failure/Blocker Disposition Table
+
+      | command | failure/proof gap | provenance | disposition | owner step or non-intersection
+      evidence |
+
+      | --- | --- | --- | --- | --- |
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL
+
+
+      Open Problems: <none or exact owner step ids>'
+    depends_on:
+    - ngw.doc_sync_gate.docs_sync
+    agent: integration-verifier
