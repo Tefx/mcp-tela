@@ -86760,19 +86760,40 @@ phases:
 
       Required scenarios:
 
-      - nested_gateway=true + tool_prefix=host_ hides child built-ins and keeps ordinary
-      child tool.
+      - `nested_gateway: true` plus `tool_prefix: "host_"` hides child built-ins and
+      keeps ordinary child tools.
 
-      - tool_prefix=host_ without nested_gateway keeps prefixed child built-ins visible.
+      - `nested_gateway: true` without `tool_prefix` fails closed with deterministic
+      actionable `NESTED_TELA_PREFIX_REQUIRED`.
 
-      - likely nested child without tool_prefix fails with `NESTED_TELA_PREFIX_REQUIRED`.
+      - Downstream raw tools include child Tela built-ins (`tela_list_providers` or
+      `tela_list_profiles`) and no `tool_prefix`: the reserved namespace / likely-nested
+      failure is deterministic and actionable as `NESTED_TELA_PREFIX_REQUIRED`.
 
-      - parent built-ins remain callable/visible in the parent surface.
+      - Omitted `nested_gateway` with valid non-reserved `tool_prefix: "host_"` preserves
+      current behavior: child built-ins remain prefixed and visible unless `exclude_tools`
+      is configured.
 
-      - changing exclude/nested config produces a tool-surface change signal.'
+      - Detection never silently hides tools; hidden child built-ins must be attributable
+      to explicit `exclude_tools` or `nested_gateway: true`.
+
+      - Parent built-ins remain callable/visible in the parent surface.
+
+      - Changing `exclude_tools` or `nested_gateway` produces a tool-surface change
+      signal.
+
+      - Final exposed MCP names remain snake_case; probe fixtures use underscore prefixes
+      such as `host_`, not dotted prefixes.
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this step, evidence must cite the key passage or state `NOT
+      READ: <reason>`. If a future generated probe artifact is not available yet,
+      cite the upstream step evidence that produced or selected it.'
     verification: local-check protecting runtime black-box proof. Produce the probe
       artifact path and run a dry invocation or explain exact missing runtime blocker.
-      Provide raw stdout/stderr.
+      Provide raw stdout/stderr and refs-read key passages.
     evidence_template: '## Probe Harness Evidence
 
 
@@ -86809,6 +86830,20 @@ phases:
       ### Blockers
 
       <none or exact missing runtime/environment blocker>'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - src/tela/core/errors.py
+    - src/tela/shell/downstream.py
+    - src/tela/shell/reload.py
+    - src/tela/shell/builtin_tools.py
+    - src/tela/shell/upstream.py
+    - tests/shell/test_nested_gateway_runtime.py
+    - tests/shell/test_reload.py
+    - tests/shell/test_downstream.py
     agent: integration-verifier
   - id: ngw.runtime_verify.blackbox_nested_gateway
     name: Black-box nested gateway runtime proof
