@@ -86774,6 +86774,98 @@ phases:
 
       <none or exact missing runtime/environment blocker>'
     agent: integration-verifier
+  - id: ngw.runtime_verify.blackbox_nested_gateway
+    name: Black-box nested gateway runtime proof
+    status: pending
+    description: 'step_type: verification
+
+      agent_source: project
+
+      independence_level: L2
+
+
+      As a semi-blind tester, run the nested-gateway probe from `ngw.runtime_verify.probe_harness`
+      against real runtime boundaries and decide whether the public surface behaves
+      correctly.
+
+
+      PROOF ARTIFACT:
+
+      - Raw command(s), exit codes, stdout/stderr.
+
+      - Parent `tools/list` receipt for nested mode showing parent built-ins plus
+      ordinary child tools, excluding child `host_tela_list_providers`/`host_tela_list_profiles`.
+
+      - Parent `tools/list` receipt for prefix-only non-nested mode showing prefixed
+      child built-ins still visible.
+
+      - Provider metadata receipt showing `tool_count` and `tool_names` after filtering/profile
+      enforcement.
+
+      - Failure receipt for likely nested Tela without prefix containing `NESTED_TELA_PREFIX_REQUIRED`
+      and actionable message text.
+
+      - Reload/re-enumeration receipt showing a tool-surface change after `exclude_tools`
+      or `nested_gateway` changes.
+
+
+      Requirement-to-Evidence Matrix rows owned: NGW-R1, NGW-R3, NGW-R4, NGW-R5, NGW-R6,
+      NGW-R8.
+
+
+      Your goal is to find problems, not to confirm. A finding is a valid outcome,
+      but any blocker must have owner work before the phase gate opens.'
+    verification: phase-check / runtime_probe. Run the exact probe command from `ngw.runtime_verify.probe_harness`;
+      provide raw logs and a PROVEN/UNPROVEN register. Unit/mock-only evidence is
+      insufficient.
+    evidence_template: '## Black-Box Runtime Verification Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Commands Executed
+
+      ```text
+
+      <paste exact commands, exit codes, stdout/stderr>
+
+      ```
+
+
+      ### Runtime Receipts
+
+      | scenario | observed tools/list | observed provider metadata | diagnostic/log
+      evidence | status |
+
+      | --- | --- | --- | --- | --- |
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+
+      ### Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - ngw.runtime_verify.probe_harness
+    agent: blind-tester
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
   status: locked
