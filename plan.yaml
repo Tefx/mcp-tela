@@ -85795,3 +85795,11 @@ phases:
     doctests are present for new helpers, and default compatibility is proven.
   depends_on:
   - ngw.contract_tests
+- id: ngw.runtime_wiring
+  name: Nested Gateway Runtime Wiring
+  status: locked
+  gate: Open only when runtime seams prove filtered tools never register or route,
+    provider metadata reports the filtered surface, and tool-surface changes emit
+    notifications.
+  depends_on:
+  - ngw.core_impl
