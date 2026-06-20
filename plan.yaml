@@ -86333,6 +86333,72 @@ phases:
     notifications.
   depends_on:
   - ngw.core_impl
+  steps:
+  - id: ngw.runtime_wiring.startup_reload_surface
+    name: Wire filtering through startup, reload, and re-enumeration
+    status: pending
+    description: "step_type: implementation\ntags: [\"integration\"]\nagent_source:\
+      \ project\n\nComplete runtime registry wiring so Core filtering semantics are\
+      \ applied consistently during downstream startup, reload, reconnect, and manual\
+      \ re-enumeration.\n\nTARGET STATE:\n- `connect_all(..., tool_lists=...)` and\
+      \ real enumeration publish only non-excluded resolved tools.\n- `re_enumerate(server_name)`,\
+      \ `on_tools_changed`, and `on_server_reconnect` apply the same raw-name filter\
+      \ before registry replacement and conflict detection.\n- Changes to `exclude_tools`\
+      \ or `nested_gateway` are treated as tool-surface changes in config reload;\
+      \ accepted changes notify upstream via `tools/list_changed` digest.\n- Conflict\
+      \ rollback still preserves the previous registry when a filtered/unfiltered\
+      \ reload would create a conflict.\n- Existing module-level registry/client state\
+      \ remains protected by `_registry_lock`; no new unsynchronized mutable singleton\
+      \ is introduced.\n\nUPSTREAM ARTIFACTS:\n- `ngw.core_impl.gate` — Core filtering\
+      \ and validation are authoritative.\n- `ngw.contract_tests.runtime_expected_red`\
+      \ — runtime tests are protected.\n\nSCOPE BOUNDARY:\n- Preserve startup all-or-nothing\
+      \ behavior and reload conflict rollback semantics from docs/INTERFACES.md §9.5\
+      \ and docs/DESIGN.md > Convergence and reload.\n- Do not change bearer auth,\
+      \ profile binding, token validation, or operator recovery semantics.\n- Shell\
+      \ I/O boundaries must continue to return `Result[T, E]`.\n\nState semantics:\n\
+      - Last-writer-wins remains limited to accepted registry replacement under `_registry_lock`.\n\
+      - Rejected conflict updates must restore the previous registry snapshot.\n-\
+      \ Cleanup/reset semantics for tests must continue to use `disconnect_all()`\
+      \ or existing fixtures.\n- Bounded growth: no new unbounded registry/cache beyond\
+      \ existing per-server tool lists.\n\nGate Preview (what the gate WILL reject):\n\
+      1. Startup path filtered but reload/reconnect path unfiltered.\n2. Digest/list_changed\
+      \ omitted for `exclude_tools` or `nested_gateway` changes.\n3. Any rollback\
+      \ path that corrupts another server's tools.\n\n<intent_closure_contract>\n\
+      allowed_paths:\n  - \"src/tela/shell/downstream.py\"\n  - \"src/tela/shell/reload.py\"\
+      \n  - \"src/tela/shell/downstream_registry.py\"\n  - \"tests/shell/test_nested_gateway_runtime.py\"\
+      \n  - \"tests/shell/test_reload.py\"\n  - \"tests/shell/test_downstream.py\"\
+      \nblocked_paths:\n  - \"src/tela/core/token.py\"\n  - \"src/tela/core/enforcement.py\"\
+      \n  - \"../opifex/**\"\nside_effect_budget:\n  allowed:\n    - \"in-memory downstream\
+      \ registry updates under existing locks\"\n    - \"test-only fake tool lists\"\
+      \n  forbidden:\n    - \"network calls outside existing test fixtures\"\n   \
+      \ - \"new global mutable caches without locking/reset semantics\"\nrisk_probes:\n\
+      \  - \"reload from nested_gateway=false to true must remove child built-ins\
+      \ and notify\"\n  - \"reload conflict after filtering change must rollback to\
+      \ previous registry\"\n  - \"manual re_enumerate must not bypass filtering\"\
+      \nrequired_claims:\n  - startup_registry_filtered\n  - reload_reenumeration_filtered\n\
+      \  - surface_change_notification_preserved\n  - conflict_rollback_preserved\n\
+      required_checks:\n  - id: runtime_nested_shell_tests\n    command: [\"uv\",\
+      \ \"run\", \"pytest\", \"tests/shell/test_nested_gateway_runtime.py\", \"-q\"\
+      ]\n    covers_claims:\n      - startup_registry_filtered\n      - reload_reenumeration_filtered\n\
+      \      - surface_change_notification_preserved\n  - id: reload_downstream_regression_tests\n\
+      \    command: [\"uv\", \"run\", \"pytest\", \"tests/shell/test_reload.py\",\
+      \ \"tests/shell/test_downstream.py\", \"-q\"]\n    covers_claims:\n      - conflict_rollback_preserved\n\
+      \      - reload_reenumeration_filtered\n</intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    evidence_template: '## Intent-Closure Evidence
+
+      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
+      checks.
+
+
+      ## Runtime State Semantics Receipt
+
+      - concurrent access scenario considered: <summary>
+
+      - cleanup/reset semantics preserved: <summary>
+
+      - rollback proof: <evidence ref>'
+    agent: python-senior
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
