@@ -86335,40 +86335,23 @@ phases:
     verification: phase-check protecting runtime wiring. Review all core evidence
       and return OPEN only if no blocker-class debt intersects downstream runtime
       gates.
-    evidence_template: '## Gate Review Report
-
-
-      ### refs Read Confirmation (MANDATORY)
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this gate step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Decision Basis
+      ## Gate Decision Basis
 
-      | requirement_id | evidence reviewed | status | gate basis |
+      - Upstream evidence-bearing steps reviewed: ngw.core_impl.config_model_validation,
+      ngw.core_impl.raw_filtering_kernel, ngw.core_impl.core_green_retest.
 
-      | --- | --- | --- | --- |
+      - Requirement rows reviewed and status: PROVEN | UNPROVEN | NEEDS_TEST | BLOCKED.
 
+      - Diagnostic code location reviewed: src/tela/core/errors.py.
 
-      ### Invar/Core Contract Review
-
-      - New Core helpers reviewed: <list>
-
-      - @pre/@post/doctest status: PASS/FAIL
-
-
-      ### Issues Identified
-
-      | Severity | Description | Related Step | Blocking? |
-
-      | --- | --- | --- | --- |
-
-
-      ### Gate Decision
-
-      OPEN | BLOCKED'
+      - Final decision: OPEN | BLOCKED, with owner step for every blocker.'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
