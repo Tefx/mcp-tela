@@ -86054,6 +86054,61 @@ phases:
     doctests are present for new helpers, and default compatibility is proven.
   depends_on:
   - ngw.contract_tests
+  steps:
+  - id: ngw.core_impl.config_model_validation
+    name: Implement ServerConfig fields and nested-prefix validation
+    status: pending
+    description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
+      \ ponytail-coder]\n\nComplete the Core configuration contract for nested gateway\
+      \ ergonomics within the authority frozen by `ngw.contract_tests.contract_matrix`\
+      \ and the expected-red tests.\n\nTARGET STATE:\n- `ServerConfig` has `exclude_tools:\
+      \ list[str]` with default `[]` and raw downstream-name semantics.\n- `ServerConfig`\
+      \ has `nested_gateway: bool` with default `False`.\n- Invalid shapes fail closed\
+      \ through Pydantic/config validation rather than accept-and-clean compatibility\
+      \ aliases.\n- `nested_gateway=True` without `tool_prefix` is rejected with deterministic\
+      \ actionable diagnostic code `NESTED_TELA_PREFIX_REQUIRED`.\n- Omitted `exclude_tools`\
+      \ and omitted `nested_gateway` preserve current behavior.\n- Any new Core helper\
+      \ added for this step has `@pre`, `@post`, and at least one doctest before implementation\
+      \ logic, per AGENTS.md.\n\nUPSTREAM ARTIFACTS:\n- `ngw.contract_tests.contract_matrix`\
+      \ — NGW-R2, NGW-R3, NGW-R5, NGW-R6 are authoritative.\n- `ngw.contract_tests.core_expected_red`\
+      \ — test names and assertions are protected; do not weaken expected-red intent.\n\
+      \nSCOPE BOUNDARY:\n- Preserve existing `tool_prefix`, `tool_overrides`, `env`,\
+      \ `headers`, `instructions`, auth, and profile contracts.\n- Do not redefine\
+      \ canonical opifex/shared token fields or shared built-in payload semantics.\n\
+      - Do not implement runtime registry, provider metadata, or call-routing changes\
+      \ here; those are owned by `ngw.runtime_wiring` unless needed only for targeted\
+      \ core tests.\n- Do not add compatibility aliases for `exclude_tools` or `nested_gateway`.\n\
+      \nKnown risks:\n- Config fixtures in this repo have previously masked documented-shape\
+      \ bugs. Preserve at least one spec-exact minimal fixture that omits convenience\
+      \ fields.\n- Validation errors must be deterministic enough for runtime diagnostics\
+      \ and operator troubleshooting.\n\n<intent_closure_contract>\nallowed_paths:\n\
+      \  - \"src/tela/core/models.py\"\n  - \"src/tela/core/config.py\"\n  - \"src/tela/core/**nested*gateway*.py\"\
+      \n  - \"tests/core/test_nested_gateway_contract.py\"\nblocked_paths:\n  - \"\
+      src/tela/shell/**\"\n  - \"docs/**\"\n  - \"../opifex/**\"\nrequired_claims:\n\
+      \  - server_config_fields_added\n  - nested_prefix_validation_added\n  - defaults_backward_compatible\n\
+      \  - core_contracts_doctests_present\nrequired_checks:\n  - id: core_nested_contract_tests\n\
+      \    command: [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
+      , \"-q\"]\n    covers_claims:\n      - server_config_fields_added\n      - nested_prefix_validation_added\n\
+      \      - defaults_backward_compatible\n  - id: core_doctest_and_invar\n    command:\
+      \ [\"uv\", \"run\", \"pytest\", \"--doctest-modules\", \"src/tela/core\", \"\
+      -q\"]\n    covers_claims:\n      - core_contracts_doctests_present\n</intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    evidence_template: '## Intent-Closure Evidence
+
+      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
+      checks.
+
+
+      ## refs Read Confirmation
+
+      For each ref: <filename> — key passage used.
+
+
+      ## Core Contract Note
+
+      List each new or changed Core helper and the @pre/@post/doctest that guards
+      it.'
+    agent: python-executor
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
