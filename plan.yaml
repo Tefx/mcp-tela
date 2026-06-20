@@ -86243,6 +86243,88 @@ phases:
     depends_on:
     - ngw.core_impl.raw_filtering_kernel
     agent: integration-verifier
+  - id: ngw.core_impl.gate
+    name: Gate core implementation
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: project
+
+      review_depth: THOROUGH
+
+
+      Independent gate for the Core implementation phase.
+
+
+      Gate protects downstream gates: `ngw.runtime_wiring.gate`, `ngw.runtime_verify.gate`,
+      and `ngw.doc_sync_gate.final_gate`.
+
+
+      Decision basis required:
+
+      - Core new/changed functions have @pre/@post and doctests as required by AGENTS.md.
+
+      - `exclude_tools` and `nested_gateway` model/validation semantics match docs
+      exactly.
+
+      - Raw-name filtering occurs before prefixing/classification/conflict/registration
+      from Core''s perspective.
+
+      - No compatibility alias or shared opifex contract reinterpretation was introduced.
+
+      - `ngw.core_impl.core_green_retest` evidence is complete and any blocker has
+      a pending owner.
+
+
+      Gate Preview focus:
+
+      1. Config acceptance must not silently clean malformed shared input.
+
+      2. Diagnostic code `NESTED_TELA_PREFIX_REQUIRED` must be stable and actionable.
+
+      3. Default behavior must remain unchanged without new fields.'
+    verification: phase-check protecting runtime wiring. Review all core evidence
+      and return OPEN only if no blocker-class debt intersects downstream runtime
+      gates.
+    evidence_template: '## Gate Review Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this gate step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Decision Basis
+
+      | requirement_id | evidence reviewed | status | gate basis |
+
+      | --- | --- | --- | --- |
+
+
+      ### Invar/Core Contract Review
+
+      - New Core helpers reviewed: <list>
+
+      - @pre/@post/doctest status: PASS/FAIL
+
+
+      ### Issues Identified
+
+      | Severity | Description | Related Step | Blocking? |
+
+      | --- | --- | --- | --- |
+
+
+      ### Gate Decision
+
+      OPEN | BLOCKED'
+    depends_on:
+    - ngw.core_impl.config_model_validation
+    - ngw.core_impl.raw_filtering_kernel
+    - ngw.core_impl.core_green_retest
+    agent: gate-reviewer
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
