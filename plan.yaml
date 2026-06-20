@@ -86559,43 +86559,25 @@ phases:
     verification: phase-check. Provide executable import/pytest evidence plus reachability
       trace; grep/import traces are discovery only and must be paired with a runtime/test
       proof.
-    evidence_template: '## Wiring Audit Report
-
-
-      ### refs Read Confirmation (MANDATORY)
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this audit step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Reachability Trace
+      ## Wiring Audit Report
 
-      | config field/helper | producer | consumer path | runtime/test evidence | status
-      |
+      - Config-to-runtime reachability trace: config parse -> Core resolution -> registry
+      -> tools/list -> provider metadata -> tools/call.
 
-      | --- | --- | --- | --- | --- |
+      - Executable import/pytest/runtime proof paired with any grep/import trace.
 
+      - Orphan helpers/dead paths: none | list with owner.
 
-      ### Runtime Proof Commands
+      - Mock-only seam risks: none | list with owner.
 
-      ```text
-
-      <paste exact commands, exit codes, stdout/stderr>
-
-      ```
-
-
-      ### Orphan/duplication Findings
-
-      | Severity | Description | Location | Owner step needed |
-
-      | --- | --- | --- | --- |
-
-
-      ### Headline
-
-      PASS | PASS_WITH_DEBT | FAIL'
+      - Headline: PASS | FAIL'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
