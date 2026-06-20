@@ -85929,10 +85929,10 @@ phases:
       \ coverage:\n- `ServerConfig` exposes `exclude_tools: list[str]` defaulting\
       \ to `[]` and preserving explicit raw names.\n- `ServerConfig` exposes `nested_gateway:\
       \ bool` defaulting to `False`.\n- `validate_config` or the designated Core diagnostic\
-      \ contract rejects `nested_gateway=True` with missing `tool_prefix` using stable\
-      \ `NESTED_TELA_PREFIX_REQUIRED` from the Core error-code surface.\n- Raw downstream\
-      \ child Tela built-ins (`tela_list_providers` or `tela_list_profiles`) without\
-      \ `tool_prefix` yield deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`,\
+      \ contract rejects `nested_gateway=True` with omitted or empty `tool_prefix`\
+      \ using stable `NESTED_TELA_PREFIX_REQUIRED` from the Core error-code surface.\n\
+      - Raw downstream child Tela built-ins (`tela_list_providers` or `tela_list_profiles`)\
+      \ with omitted or empty `tool_prefix` yield deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`,\
       \ not a generic reserved-namespace error.\n- Raw `exclude_tools` entries filter\
       \ before `tool_prefix` and before family/posture classification.\n- `nested_gateway=True`\
       \ adds raw child built-ins `tela_list_providers` and `tela_list_profiles` to\
