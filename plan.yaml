@@ -86109,6 +86109,61 @@ phases:
       List each new or changed Core helper and the @pre/@post/doctest that guards
       it.'
     agent: python-executor
+  - id: ngw.core_impl.raw_filtering_kernel
+    name: Implement raw-name filtering and nested effective excludes
+    status: pending
+    description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
+      \ ponytail-coder]\n\nComplete the pure Core filtering behavior after `ServerConfig`\
+      \ exposes the required fields.\n\nTARGET STATE:\n- Raw downstream tool names\
+      \ are filtered before prefixing, family resolution, posture classification,\
+      \ conflict detection, registry registration, provider metadata, and call routing.\n\
+      - `exclude_tools` entries match raw downstream names exactly; prefixed exposed\
+      \ names do not match.\n- `nested_gateway=True` adds raw child built-ins `tela_list_providers`\
+      \ and `tela_list_profiles` to the effective raw-name exclude set.\n- `nested_gateway=False`\
+      \ plus `tool_prefix` does not auto-hide child built-ins; they remain exposed\
+      \ with the prefix.\n- Parent Tela built-ins are not part of this downstream\
+      \ filtering function and remain gateway-owned.\n- Likely nested Tela detection\
+      \ is diagnostic-only. It must not mutate the returned resolved tool list unless\
+      \ `exclude_tools` or `nested_gateway=True` is configured.\n- Any new Core helper\
+      \ has `@pre`, `@post`, and doctests before implementation logic.\n\nUPSTREAM\
+      \ ARTIFACTS:\n- `ngw.core_impl.config_model_validation` — authoritative model\
+      \ fields.\n- `ngw.contract_tests.core_expected_red` — protected expected-red\
+      \ assertions.\n\nSCOPE BOUNDARY:\n- Preserve `ResolvedTool.name` as the exposed\
+      \ name and `ResolvedTool.raw_name` as the downstream routing name.\n- Preserve\
+      \ existing `tool_prefix` reserved namespace checks, including composition checks\
+      \ that produce `tela.`/`tela_` exposed names.\n- Do not edit Shell runtime wiring\
+      \ in this step.\n\nGate Preview (what the gate WILL reject):\n1. Filtering after\
+      \ prefix/classification/registration; this violates NGW-R1.\n2. Silent auto-hide\
+      \ when `nested_gateway` is omitted; this violates NGW-R4/NGW-R6.\n3. Lost `raw_name`\
+      \ causing call routing to strip prefixes heuristically.\n\n<intent_closure_contract>\n\
+      allowed_paths:\n  - \"src/tela/core/family.py\"\n  - \"src/tela/core/models.py\"\
+      \n  - \"src/tela/core/config.py\"\n  - \"src/tela/core/**nested*gateway*.py\"\
+      \n  - \"tests/core/test_nested_gateway_contract.py\"\nblocked_paths:\n  - \"\
+      src/tela/shell/**\"\n  - \"docs/**\"\n  - \"../opifex/**\"\nrequired_claims:\n\
+      \  - raw_excludes_before_resolution\n  - nested_effective_excludes_added\n \
+      \ - no_silent_autohide_preserved\n  - raw_name_routing_contract_preserved\n\
+      required_checks:\n  - id: core_nested_filtering_tests\n    command: [\"uv\"\
+      , \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\", \"-q\"\
+      ]\n    covers_claims:\n      - raw_excludes_before_resolution\n      - nested_effective_excludes_added\n\
+      \      - no_silent_autohide_preserved\n      - raw_name_routing_contract_preserved\n\
+      \  - id: core_family_doctests\n    command: [\"uv\", \"run\", \"pytest\", \"\
+      --doctest-modules\", \"src/tela/core\", \"-q\"]\n    covers_claims:\n      -\
+      \ raw_excludes_before_resolution\n      - nested_effective_excludes_added\n\
+      </intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    evidence_template: '## Intent-Closure Evidence
+
+      Paste sidecar verdict, changed file list, and raw stdout/stderr for contract-owned
+      checks.
+
+
+      ## Filtering Semantics Receipt
+
+      State the helper/function that computes effective raw excludes and show the
+      doctest proving nested child built-ins are filtered only when configured.'
+    depends_on:
+    - ngw.core_impl.config_model_validation
+    agent: python-executor
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
