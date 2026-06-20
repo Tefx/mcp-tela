@@ -87369,50 +87369,26 @@ phases:
       `ngw.doc_sync_gate.docs_sync`, and `ngw.doc_sync_gate.full_suite`.'
     verification: full-plan-check final gate. Return OPEN only with complete evidence
       table, refs-read key passages, and no unresolved blocker-class debt.
-    evidence_template: '## Final Gate Review Report
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
-
-      ### refs Read Confirmation (MANDATORY)
-
-      For each ref in this gate step:
+      For each ref in this final gate step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Phase Gate Review
+      ## Final Gate Decision Basis
 
-      | phase | gate step | gate status/evidence | concerns |
+      - Upstream evidence-bearing steps reviewed: all ngw phase gates, ngw.runtime_verify.spec_conformance,
+      ngw.doc_sync_gate.docs_sync, ngw.doc_sync_gate.full_suite.
 
-      | --- | --- | --- | --- |
+      - NGW-R1..NGW-R8 status with evidence refs.
 
+      - Diagnostic, compatibility, non-hiding, parent-builtin, snake_case, docs parity,
+      shared-surface, and full-suite evidence reviewed.
 
-      ### Requirement Closure Matrix
+      - Unresolved issues table with owner step for each blocker.
 
-      | requirement_id | final evidence refs | status | final gate basis |
-
-      | --- | --- | --- | --- |
-
-
-      ### Full Verification Review
-
-      | command family | evidence ref | status | notes |
-
-      | --- | --- | --- | --- |
-
-
-      ### Issues Identified
-
-      | Severity | Description | Related Step | Blocking? | Owner |
-
-      | --- | --- | --- | --- | --- |
-
-
-      ### Gate Decision
-
-      OPEN | BLOCKED
-
-
-      Open Problems: none | <list>'
+      - Final decision: OPEN | BLOCKED.'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
