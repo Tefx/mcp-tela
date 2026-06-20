@@ -87032,6 +87032,9 @@ phases:
       diagnostics, provider metadata, call routing, reload/re-enumeration, default
       compatibility, parent builtin preservation, and exposed-name snake_case.
 
+      - Check that docs preserve split CLI and HTTP operator surfaces plus existing
+      `headers` and `instructions` ServerConfig contracts/cross-references.
+
 
       FOCUS AREAS:
 
@@ -87041,9 +87044,12 @@ phases:
       - Boundary/defaults: omitted fields preserve prior behavior; prefix-only mode
       with valid non-reserved prefixes such as `host_` preserves child built-ins.
 
-      - Diagnostics: `nested_gateway: true` without `tool_prefix` and child Tela raw
-      built-ins without `tool_prefix` both fail closed with deterministic actionable
-      `NESTED_TELA_PREFIX_REQUIRED`.
+      - Diagnostics: `nested_gateway: true` with omitted or empty `tool_prefix` and
+      child Tela raw built-ins with omitted or empty `tool_prefix` both fail closed
+      with deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`.
+
+      - ADR trigger exactness: downstream exposes `tela_list_providers` or `tela_list_profiles`
+      with omitted or empty `tool_prefix`.
 
       - Naming: final exposed MCP names remain snake_case; dotted prefixes are not
       valid examples.
