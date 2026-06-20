@@ -86928,51 +86928,25 @@ phases:
     verification: phase-check / runtime_probe. Run the exact probe command from `ngw.runtime_verify.probe_harness`;
       provide raw logs, refs-read key passages, and a PROVEN/UNPROVEN register. Unit/mock-only
       evidence is insufficient.
-    evidence_template: '## Black-Box Runtime Verification Report
-
-
-      ### refs Read Confirmation (MANDATORY)
+    evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this proof step:
 
       - <filename> — key passage or "NOT READ: <reason>"
 
 
-      ### Commands Executed
+      ## Black-Box Runtime Evidence
 
-      ```text
+      - Exact probe command(s), exit codes, and raw stdout/stderr.
 
-      <paste exact commands, exit codes, stdout/stderr>
+      - Runtime receipts for every named scenario in the step description.
 
-      ```
+      - PROVEN/UNPROVEN register for NGW-R1, NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R8.
 
-
-      ### Runtime Receipts
-
-      | scenario | observed tools/list | observed provider metadata | diagnostic/log
-      evidence | status |
-
-      | --- | --- | --- | --- | --- |
+      - Blocker disposition table with owner step for each blocker.
 
 
-      ### Behavioral Proof Register
-
-      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
-      status | closure_path | gate_decision_basis |
-
-      | --- | --- | --- | --- | --- | --- | --- |
-
-
-      ### Findings
-
-      | Severity | Description | Location | Reproduction |
-
-      | --- | --- | --- | --- |
-
-
-      ### Headline
-
-      PASS | PASS_WITH_DEBT | FAIL'
+      Headline: PASS | FAIL'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
