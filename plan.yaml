@@ -85788,6 +85788,255 @@ phases:
     contract-matrix and test-definition steps.
   depends_on:
   - adr009_reland
+  steps:
+  - id: ngw.contract_tests.contract_matrix
+    name: Freeze nested-gateway requirement matrix
+    status: pending
+    description: 'step_type: contract
+
+      agent_source: project
+
+
+      PROOF ARTIFACT: Produce the authoritative nested Tela gateway requirement-to-evidence
+      matrix before any product implementation.
+
+
+      Requirement-to-Evidence Matrix seed:
+
+      | requirement_id | source_ref + key passage | target_state | evidence_class
+      | required_probe_or_artifact | status |
+
+      | NGW-R1 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: `exclude_tools`
+      matches raw downstream tool names before prefixing and registration | Raw-name
+      excludes remove matching downstream tools before prefixing, family/posture classification,
+      conflict detection, registry registration, provider metadata, and call routing
+      | artifact_review | Matrix row accepted and mapped to expected-red core/runtime
+      tests | OWNED |
+
+      | NGW-R2 | docs/INTERFACES.md > 3.1 Servers > `exclude_tools` contract: excluded
+      tools are absent from `tools/list`, call routing, conflicts, and provider metadata
+      | Per-server `exclude_tools: list[str]` is a public config field with default
+      `[]`; no malformed shared input is silently cleaned | artifact_review | Matrix
+      row accepted and mapped to config/model tests | OWNED |
+
+      | NGW-R3 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: `nested_gateway:
+      true` requires `tool_prefix` and excludes child Tela built-ins | Explicit nested
+      mode adds child `tela_list_providers` and `tela_list_profiles` to effective
+      raw excludes and requires a prefix | artifact_review | Matrix row accepted and
+      mapped to validation/filter tests | OWNED |
+
+      | NGW-R4 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: do not silently
+      auto-hide based only on detection | Likely nested Tela detection may improve
+      diagnostics only; it must not mutate the public tool surface unless config says
+      so | artifact_review | Matrix row accepted and mapped to compatibility tests
+      | OWNED |
+
+      | NGW-R5 | docs/INTERFACES.md > `nested_gateway` contract: missing prefix fails
+      closed with `NESTED_TELA_PREFIX_REQUIRED` | Likely nested Tela without `tool_prefix`
+      reports deterministic actionable diagnostic | artifact_review | Matrix row accepted
+      and mapped to diagnostic expected-red test | OWNED |
+
+      | NGW-R6 | docs/USAGE.md > Tool Filtering and Nested Tela Gateways: parent built-ins
+      remain visible; no nested mode preserves prefixed child built-ins | Default
+      behavior is compatible; `tool_prefix` without nested mode still exposes prefixed
+      child built-ins | artifact_review | Matrix row accepted and mapped to compatibility
+      tests | OWNED |
+
+      | NGW-R7 | docs/DESIGN.md > Module Boundaries > core owns raw-name tool filtering;
+      shell owns runtime lifecycle and reload | Core owns pure filtering/model semantics;
+      Shell only wires I/O paths and returns Result at I/O boundaries | artifact_review
+      | Matrix row accepted and mapped to implementation ownership checks | OWNED
+      |
+
+      | NGW-R8 | docs/CONFIRMED-SURFACE-CONTRACT.md > Built-in MCP surfaces: exactly
+      two parent built-in tools | Parent Tela built-ins are gateway-owned and remain
+      exposed; child built-ins are downstream tools subject to filtering | artifact_review
+      | Matrix row accepted and mapped to runtime proof | OWNED |
+
+
+      CONSTRAINTS:
+
+      - This step does not modify product code.
+
+      - Treat docs/ADR-010-nested-gateway-ergonomics.md and docs/INTERFACES.md as
+      authoritative for this feature.
+
+      - Shared opifex contracts remain external authority; do not reinterpret canonical
+      shared fields or aliases.
+
+      - The matrix must preserve the four runtime-surface lenses: module boundary,
+      runtime entrypoint boundary, external contract boundary, and client/tool-list
+      observable boundary.
+
+
+      ACCEPTABLE RECEIPT:
+
+      - Evidence contains a completed requirement-to-evidence matrix with all NGW-R
+      rows above.
+
+      - Evidence names the exact downstream test files that will own each row.
+
+      - Evidence states `No implementation dispatch until expected-red tests exist`.'
+    verification: Produce the completed contract matrix in evidence and show every
+      authoritative ref was read with a key passage.
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - docs/AGENT_INTERFACE.md
+    - README.md
+    - tela.yaml.example
+    - AGENTS.md
+    agent: software-architect
+  - id: ngw.contract_tests.core_expected_red
+    name: Define expected-red core contract tests
+    status: pending
+    description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
+      \ red\nagent_source: project\n\n[REQUIRES_SKILL: ponytail-coder]\n\nTARGET TEST\
+      \ ARTIFACT: Add expected-red tests that prove the missing Core behavior without\
+      \ changing product code.\n\nScope:\n- Add `tests/core/test_nested_gateway_contract.py`.\n\
+      - Product/source files are forbidden in this step.\n- Tests must cite ADR-010\
+      \ and INTERFACES.md sections in docstrings or comments.\n\nRequired expected-red\
+      \ coverage:\n- `ServerConfig` exposes `exclude_tools: list[str]` defaulting\
+      \ to `[]` and preserving explicit raw names.\n- `ServerConfig` exposes `nested_gateway:\
+      \ bool` defaulting to `False`.\n- `validate_config` or the designated Core diagnostic\
+      \ contract rejects `nested_gateway=True` with missing `tool_prefix` using `NESTED_TELA_PREFIX_REQUIRED`.\n\
+      - Raw `exclude_tools` entries filter before `tool_prefix` and before family/posture\
+      \ classification.\n- `nested_gateway=True` adds raw child built-ins `tela_list_providers`\
+      \ and `tela_list_profiles` to the effective exclude set.\n- `tool_prefix` without\
+      \ `nested_gateway` keeps prefixed child built-ins visible.\n- Omitted `exclude_tools`\
+      \ and omitted `nested_gateway` preserve current no-filter behavior.\n\nRequirement-to-Evidence\
+      \ Matrix rows owned: NGW-R1, NGW-R2, NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R7.\n\
+      \n<intent_closure_contract>\nintent_kind: test_define_red\nallowed_paths:\n\
+      \  - \"tests/core/test_nested_gateway_contract.py\"\nblocked_paths:\n  - \"\
+      src/tela/**\"\n  - \"docs/**\"\nrequired_claims:\n  - expected_red_gap_exposed\n\
+      \  - design_requirements_mapped\n  - non_overreach_guards_defined\nrequired_checks:\n\
+      \  - id: core_expected_red\n    command: [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
+      , \"-q\"]\n    expected_result: red\n    expected_exit_codes: [1]\n    expected_failure_patterns_any:\n\
+      \      - \"exclude_tools\"\n      - \"nested_gateway\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
+      \n    covers_claims:\n      - expected_red_gap_exposed\n      - design_requirements_mapped\n\
+      \      - non_overreach_guards_defined\n</intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - AGENTS.md
+    depends_on:
+    - ngw.contract_tests.contract_matrix
+    agent: python-executor
+  - id: ngw.contract_tests.runtime_expected_red
+    name: Define expected-red runtime surface tests
+    status: pending
+    description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
+      \ red\nagent_source: project\n\n[REQUIRES_SKILL: ponytail-coder]\n\nTARGET TEST\
+      \ ARTIFACT: Add expected-red runtime tests proving nested-gateway filtering\
+      \ is missing across startup, provider metadata, call routing, and reload/re-enumeration.\n\
+      \nScope:\n- Add `tests/shell/test_nested_gateway_runtime.py` for shell seams\
+      \ using existing in-repo test harnesses such as `connect_all(..., tool_lists=...)`,\
+      \ `on_tools_changed`, `on_server_reconnect`, `handle_tools_list`, `handle_list_providers`,\
+      \ and `call_tool` where appropriate.\n- Add `tests/repro/test_nested_gateway_blackbox.py`\
+      \ only if a black-box fixture is needed to express parent/child observable behavior;\
+      \ keep it minimal and deterministic.\n- Product/source files are forbidden in\
+      \ this step.\n\nRequired expected-red coverage:\n- Startup registration: excluded\
+      \ raw child built-ins are absent from registry and `tools/list`.\n- Provider\
+      \ metadata: `tela_list_providers.tool_names` and `tool_count` reflect the filtered\
+      \ exposed surface.\n- Call routing: excluded child built-ins cannot be invoked\
+      \ through prefixed or raw names; permitted tools still route by `ResolvedTool.raw_name`.\n\
+      - Reload/re-enumeration: changes to `exclude_tools` or `nested_gateway` produce\
+      \ a tool-surface digest/list change.\n- Compatibility: parent built-ins remain\
+      \ gateway-owned and visible; `tool_prefix` without `nested_gateway` exposes\
+      \ `host_tela_list_providers` and `host_tela_list_profiles`.\n- Diagnostic: likely\
+      \ nested Tela without prefix yields `NESTED_TELA_PREFIX_REQUIRED`, not a generic\
+      \ reserved namespace error.\n\nAnti-vacuum rule: unit tests with mocks are not\
+      \ sufficient for final proof, but this expected-red step may use deterministic\
+      \ in-process shell harnesses to define the gap before implementation. Runtime\
+      \ black-box proof is owned by `ngw.runtime_verify`.\n\nRequirement-to-Evidence\
+      \ Matrix rows owned: NGW-R1, NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R8.\n\n<intent_closure_contract>\n\
+      intent_kind: test_define_red\nallowed_paths:\n  - \"tests/shell/test_nested_gateway_runtime.py\"\
+      \n  - \"tests/repro/test_nested_gateway_blackbox.py\"\nblocked_paths:\n  - \"\
+      src/tela/**\"\n  - \"docs/**\"\nrequired_claims:\n  - expected_red_runtime_gap_exposed\n\
+      \  - provider_metadata_gap_exposed\n  - reload_surface_gap_exposed\n  - compatibility_guards_defined\n\
+      required_checks:\n  - id: runtime_expected_red\n    command: [\"uv\", \"run\"\
+      , \"pytest\", \"tests/shell/test_nested_gateway_runtime.py\", \"tests/repro/test_nested_gateway_blackbox.py\"\
+      , \"-q\"]\n    expected_result: red\n    expected_exit_codes: [1]\n    expected_failure_patterns_any:\n\
+      \      - \"NESTED_CHILD_TOOL_NOT_FILTERED\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
+      \n      - \"tool_count\"\n      - \"tools/list_changed\"\n    covers_claims:\n\
+      \      - expected_red_runtime_gap_exposed\n      - provider_metadata_gap_exposed\n\
+      \      - reload_surface_gap_exposed\n      - compatibility_guards_defined\n\
+      </intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - tests/shell/test_reload.py
+    - tests/shell/test_downstream.py
+    - tests/integration/test_hot_reload.py
+    depends_on:
+    - ngw.contract_tests.contract_matrix
+    agent: python-executor
+  - id: ngw.contract_tests.gate
+    name: Gate contract and expected-red tests
+    status: pending
+    description: 'step_type: gate
+
+      agent_source: project
+
+      review_depth: THOROUGH
+
+
+      As an independent reviewer, decide whether the contract/tests phase is ready
+      for implementation.
+
+
+      Gate protects downstream gates: ngw.core_impl.gate, ngw.runtime_wiring.gate,
+      ngw.runtime_verify.gate, ngw.doc_sync_gate.final_gate.
+
+
+      Decision basis required:
+
+      - Every NGW-R requirement from `ngw.contract_tests.contract_matrix` is owned
+      by at least one expected-red test.
+
+      - Expected-red failures are behavior-specific and include stable fingerprints;
+      import errors, missing test files, or infrastructure failures do not count.
+
+      - Test-definition steps did not modify `src/tela/**` or docs.
+
+      - Tests preserve compatibility requirements: no filtering by default and no
+      silent auto-hide.
+
+      - The phase is not an empty shell; it contains executable steps and evidence.
+
+
+      Gate Preview focus:
+
+      1. Static code existence is not enough; expected-red tests must define observable
+      behavior.
+
+      2. Shared opifex contract wording must remain untouched and not reinterpreted.
+
+      3. Do not approve if `NESTED_TELA_PREFIX_REQUIRED` is not explicitly covered.'
+    verification: phase-check protecting all downstream nested-gateway implementation
+      gates. Review evidence and return OPEN only when expected-red tests prove the
+      intended missing behavior with stable failure fingerprints.
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    depends_on:
+    - ngw.contract_tests.contract_matrix
+    - ngw.contract_tests.core_expected_red
+    - ngw.contract_tests.runtime_expected_red
+    agent: gate-reviewer
 - id: ngw.core_impl
   name: Nested Gateway Core Implementation
   status: locked
