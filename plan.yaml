@@ -86164,6 +86164,85 @@ phases:
     depends_on:
     - ngw.core_impl.config_model_validation
     agent: python-executor
+  - id: ngw.core_impl.core_green_retest
+    name: Retest core nested-gateway behavior green
+    status: pending
+    description: 'step_type: test
+
+      step_intent: retest_green
+
+      expected_result: green
+
+      agent_source: project
+
+
+      As an independent verifier, prove the Core implementation now satisfies the
+      expected-red contract.
+
+
+      Verification scope: phase-check protecting `ngw.core_impl.gate` and downstream
+      runtime wiring. This step may find issues; findings are successful truth-finding
+      but any blocker must get an owner before the gate opens.
+
+
+      Required proof:
+
+      - Raw stdout/stderr for targeted core tests.
+
+      - Raw stdout/stderr for Core doctests.
+
+      - Raw stdout/stderr for `uv run invar guard --all` or exact failure with blocker
+      ownership.
+
+      - Behavioral proof register mapping NGW-R2, NGW-R3, NGW-R5, NGW-R6, NGW-R7 to
+      evidence refs.
+
+
+      Anti-vacuum rule: do not treat source inspection alone as proof for behavior.
+      Use the actual test commands.'
+    verification: Run `uv run pytest tests/core/test_nested_gateway_contract.py -q`,
+      `uv run pytest --doctest-modules src/tela/core -q`, and `uv run invar guard
+      --all`; provide raw stdout/stderr and a PROVEN/UNPROVEN register.
+    evidence_template: '## Verification Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Commands Executed
+
+      ```text
+
+      <paste exact commands, exit codes, stdout/stderr>
+
+      ```
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+
+      ### Findings
+
+      | Severity | Description | Location | Reproduction |
+
+      | --- | --- | --- | --- |
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - ngw.core_impl.raw_filtering_kernel
+    agent: integration-verifier
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
