@@ -87109,11 +87109,17 @@ phases:
       \ language.\n- docs/INTERFACES.md accurately documents `ServerConfig.tool_prefix`,\
       \ `exclude_tools`, and `nested_gateway` semantics.\n- docs/USAGE.md and `tela.yaml.example`\
       \ contain operator examples for explicit nested mode and generic `exclude_tools`\
-      \ using raw child names.\n- README.md summarizes the feature without implying\
-      \ silent auto-hide.\n- docs/AGENT_INTERFACE.md and docs/CONFIRMED-SURFACE-CONTRACT.md\
-      \ continue to state that parent `tela_list_providers` and `tela_list_profiles`\
-      \ are the only gateway-owned built-in MCP tools.\n- Any implementation-specific\
-      \ nuance discovered during runtime verification is reflected or explicitly documented\
+      \ using raw child names.\n- Final exposed MCP tool names are documented as snake_case;\
+      \ examples use prefixes like `host_`, `prod_`, and `work_`, not dotted prefixes.\n\
+      - README.md summarizes the feature without implying silent auto-hide.\n- docs/AGENT_INTERFACE.md\
+      \ and docs/CONFIRMED-SURFACE-CONTRACT.md continue to state that parent `tela_list_providers`\
+      \ and `tela_list_profiles` are the only gateway-owned built-in MCP tools.\n\
+      - Diagnostic docs distinguish exact scenarios: `nested_gateway: true` without\
+      \ `tool_prefix` fails with `NESTED_TELA_PREFIX_REQUIRED`; child Tela raw built-ins\
+      \ without prefix fail with the same actionable code; omitted `nested_gateway`\
+      \ plus a valid non-reserved `tool_prefix` keeps prefixed child built-ins visible\
+      \ unless `exclude_tools` is configured.\n- Any implementation-specific nuance\
+      \ discovered during runtime verification is reflected or explicitly documented\
       \ as non-goal.\n\nSCOPE BOUNDARY:\n- Documentation only. Do not modify `src/**`\
       \ or `tests/**`.\n- Do not redefine shared opifex canonical contract meaning.\n\
       - Do not add unimplemented behavior claims.\n\n<intent_closure_contract>\nallowed_paths:\n\
@@ -87122,6 +87128,7 @@ phases:
       \n  - \"docs/CONFIRMED-SURFACE-CONTRACT.md\"\n  - \"README.md\"\n  - \"tela.yaml.example\"\
       \nblocked_paths:\n  - \"src/**\"\n  - \"tests/**\"\n  - \"../opifex/**\"\nrequired_claims:\n\
       \  - docs_match_runtime_behavior\n  - examples_cover_explicit_nested_gateway\n\
+      \  - snake_case_prefix_examples_documented\n  - deterministic_diagnostic_scenarios_documented\n\
       \  - no_silent_autohide_claims\n  - shared_surface_wording_preserved\nrequired_checks:\n\
       \  - id: docs_surface_contract_tests\n    command: [\"uv\", \"run\", \"pytest\"\
       , \"tests/shell/test_surface_contract.py\", \"tests/shell/test_repo_local_ci_gate.py\"\
@@ -87130,6 +87137,7 @@ phases:
       \ [\"env\", \"OPIFEX_ROOT=../opifex\", \"uv\", \"run\", \"python\", \"scripts/ci/mcp_tela_shared_surface_gate.py\"\
       , \"green\"]\n    covers_claims:\n      - shared_surface_wording_preserved\n\
       \      - no_silent_autohide_claims\n      - examples_cover_explicit_nested_gateway\n\
+      \      - snake_case_prefix_examples_documented\n      - deterministic_diagnostic_scenarios_documented\n\
       </intent_closure_contract>"
     verification: Run Intent-Closure sidecar gate and required checks from the contract.
     evidence_template: '## Intent-Closure Evidence
@@ -87142,6 +87150,18 @@ phases:
 
       Map every changed doc/example to the runtime evidence or source requirement
       it reflects.'
+    refs:
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - docs/DESIGN.md
+    - docs/AGENT_INTERFACE.md
+    - docs/CONFIRMED-SURFACE-CONTRACT.md
+    - README.md
+    - tela.yaml.example
+    - tests/shell/test_surface_contract.py
+    - tests/shell/test_repo_local_ci_gate.py
+    - scripts/ci/mcp_tela_shared_surface_gate.py
     agent: doc-reviewer
   - id: ngw.doc_sync_gate.full_suite
     name: Run full repository and shared-surface verification
