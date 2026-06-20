@@ -86457,6 +86457,80 @@ phases:
     depends_on:
     - ngw.runtime_wiring.startup_reload_surface
     agent: python-senior
+  - id: ngw.runtime_wiring.wiring_audit
+    name: Audit nested-gateway runtime wiring reachability
+    status: pending
+    description: 'step_type: audit
+
+      agent_source: project
+
+
+      Wiring completeness audit for nested-gateway runtime changes. This is a read-only
+      phase-check before green retest/gate.
+
+
+      CONFORMANCE ARTIFACT:
+
+      - Trace every new or changed public/runtime symbol from config parse to Core
+      resolution to registry to upstream `tools/list` to `tela_list_providers` to
+      `tools/call` routing.
+
+      - Verify no orphan helper or dead path exists.
+
+      - Verify `exclude_tools` and `nested_gateway` are consumed by at least one non-test
+      runtime path.
+
+      - Verify no direct duplicate filtering logic re-derives different truth in Shell;
+      Core remains filtering authority.
+
+      - Verify no tests rely only on mocks for runtime seams.
+
+
+      Gate protects: `ngw.runtime_wiring.gate`, `ngw.runtime_verify.gate`, `ngw.doc_sync_gate.final_gate`.'
+    verification: phase-check. Provide executable import/pytest evidence plus reachability
+      trace; grep/import traces are discovery only and must be paired with a runtime/test
+      proof.
+    evidence_template: '## Wiring Audit Report
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this audit step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      ### Reachability Trace
+
+      | config field/helper | producer | consumer path | runtime/test evidence | status
+      |
+
+      | --- | --- | --- | --- | --- |
+
+
+      ### Runtime Proof Commands
+
+      ```text
+
+      <paste exact commands, exit codes, stdout/stderr>
+
+      ```
+
+
+      ### Orphan/duplication Findings
+
+      | Severity | Description | Location | Owner step needed |
+
+      | --- | --- | --- | --- |
+
+
+      ### Headline
+
+      PASS | PASS_WITH_DEBT | FAIL'
+    depends_on:
+    - ngw.runtime_wiring.startup_reload_surface
+    - ngw.runtime_wiring.metadata_call_routing
+    agent: wiring-auditor
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
