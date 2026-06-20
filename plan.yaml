@@ -85782,6 +85782,9 @@ phases:
   name: Nested Gateway Contract and Expected-Red Tests
   status: pending
   gate: Open only when the authoritative requirement matrix is explicit and expected-red
-    tests prove the current gap without product-code changes.
+    tests prove the current nested-gateway gap without product-code changes.
+  context: Define the nested Tela gateway ergonomics acceptance contract and expected-red
+    proof before implementation. This phase fixes the previously empty shell by adding
+    contract-matrix and test-definition steps.
   depends_on:
   - adr009_reland
