@@ -85792,120 +85792,154 @@ phases:
   - id: ngw.contract_tests.contract_matrix
     name: Freeze nested-gateway requirement matrix
     status: claimed
-    description: 'step_type: contract
+    description: "step_type: contract\nagent_source: project\n\nPROOF ARTIFACT: Produce\
+      \ the authoritative nested Tela gateway requirement-to-evidence matrix before\
+      \ any product implementation.\n\nRequirement-to-Evidence Matrix seed:\n| requirement_id\
+      \ | source_ref + key passage | target_state | evidence_class | required_probe_or_artifact\
+      \ | status |\n| NGW-R1 | docs/ADR-010-nested-gateway-ergonomics.md > Decision:\
+      \ `exclude_tools` matches raw downstream tool names before prefixing and registration\
+      \ | Raw-name excludes remove matching downstream tools before prefixing, family/posture\
+      \ classification, conflict detection, registry registration, provider metadata,\
+      \ and call routing | artifact_review | Matrix row accepted and mapped to expected-red\
+      \ core/runtime tests | OWNED |\n| NGW-R2 | docs/INTERFACES.md > 3.1 Servers\
+      \ > `exclude_tools` contract: excluded tools are absent from `tools/list`, call\
+      \ routing, conflicts, and provider metadata | Per-server `exclude_tools: list[str]`\
+      \ is a public config field with default `[]`; no malformed shared input is silently\
+      \ cleaned | artifact_review | Matrix row accepted and mapped to config/model\
+      \ tests | OWNED |\n| NGW-R3 | docs/ADR-010-nested-gateway-ergonomics.md > Decision:\
+      \ `nested_gateway: true` requires `tool_prefix` and excludes child Tela built-ins\
+      \ | Explicit nested mode adds child `tela_list_providers` and `tela_list_profiles`\
+      \ to effective raw excludes and requires a non-empty prefix | artifact_review\
+      \ | Matrix row accepted and mapped to validation/filter tests | OWNED |\n| NGW-R4\
+      \ | docs/ADR-010-nested-gateway-ergonomics.md > Decision: do not silently auto-hide\
+      \ based only on detection | Detection may improve diagnostics only; it must\
+      \ never silently hide tools unless explicit `exclude_tools` or `nested_gateway:\
+      \ true` is configured | artifact_review | Matrix row accepted and mapped to\
+      \ compatibility/non-hiding tests | OWNED |\n| NGW-R5 | docs/INTERFACES.md >\
+      \ `nested_gateway` contract and docs/ADR-010-nested-gateway-ergonomics.md >\
+      \ exact trigger: missing/empty prefix fails closed with `NESTED_TELA_PREFIX_REQUIRED`;\
+      \ downstream exposes child Tela built-ins with omitted or empty `tool_prefix`\
+      \ fails closed with the same actionable diagnostic | `nested_gateway: true`\
+      \ with omitted or empty `tool_prefix` and downstream raw child Tela built-ins\
+      \ (`tela_list_providers`/`tela_list_profiles`) with omitted or empty `tool_prefix`\
+      \ both report deterministic actionable `NESTED_TELA_PREFIX_REQUIRED` | artifact_review\
+      \ | Matrix row accepted and mapped to diagnostic expected-red tests | OWNED\
+      \ |\n| NGW-R6 | docs/USAGE.md > Tool Filtering and Nested Tela Gateways: parent\
+      \ built-ins remain visible; no nested mode preserves prefixed child built-ins\
+      \ | Default behavior is compatible; omitted `nested_gateway` with a valid non-reserved\
+      \ snake_case `tool_prefix` such as `host_` still exposes prefixed child built-ins\
+      \ unless `exclude_tools` is configured | artifact_review | Matrix row accepted\
+      \ and mapped to compatibility tests | OWNED |\n| NGW-R7 | docs/DESIGN.md > Module\
+      \ Boundaries > core owns raw-name tool filtering; shell owns runtime lifecycle\
+      \ and reload | Core owns pure filtering/model semantics; Shell only wires I/O\
+      \ paths and returns Result at I/O boundaries | artifact_review | Matrix row\
+      \ accepted and mapped to implementation ownership checks | OWNED |\n| NGW-R8\
+      \ | docs/CONFIRMED-SURFACE-CONTRACT.md > Built-in MCP surfaces: exactly two\
+      \ parent built-in tools | Parent Tela built-ins are gateway-owned and remain\
+      \ exposed; child built-ins are downstream tools subject to filtering | artifact_review\
+      \ | Matrix row accepted and mapped to runtime proof | OWNED |\n| NGW-R9 | docs/INTERFACES.md\
+      \ > `tool_prefix` contract and docs/USAGE.md > Tool Prefixing: final exposed\
+      \ MCP tool names remain snake_case; prefixes like `host_`, `prod_`, and `work_`\
+      \ are recommended while dotted prefixes are invalid | Nested gateway examples\
+      \ and runtime/tool-list receipts use snake_case exposed names and underscore\
+      \ prefixes, not dotted prefixes | artifact_review | Matrix row accepted and\
+      \ mapped to docs/runtime proof | OWNED |\n\nCONSTRAINTS:\n- This step does not\
+      \ modify product code.\n- Treat docs/ADR-010-nested-gateway-ergonomics.md and\
+      \ docs/INTERFACES.md as authoritative for this feature.\n- Shared opifex contracts\
+      \ remain external authority; do not reinterpret canonical shared fields or aliases.\n\
+      - Preserve current documentation fixes as constraints: CLI and HTTP operator\
+      \ surfaces stay split instead of being collapsed into a `CLI/HTTP` kind; `headers`\
+      \ and `instructions` ServerConfig contracts/cross-references remain documented\
+      \ while adding nested gateway fields.\n- The matrix must preserve the four runtime-surface\
+      \ lenses: module boundary, runtime entrypoint boundary, external contract boundary,\
+      \ and client/tool-list observable boundary.\n- The matrix must distinguish explicit\
+      \ nested mode, prefix-only compatibility mode, and omitted/empty-prefix child\
+      \ Tela detection; do not collapse them into \"likely nested Tela\" shorthand.\n\
+      \n<intent_closure_contract>\nintent_kind: contract_artifact\nallowed_paths:\n\
+      \  - \"evidence/ngw_contract_tests_contract_matrix.md\"\nblocked_paths:\n  -\
+      \ \"src/**\"\n  - \"tests/**\"\n  - \"docs/**\"\n  - \"plan.yaml\"\n  - \".git/vectl/**\"\
+      \n  - \".vectl/**\"\nrequired_claims:\n  - ngw_r1_through_r9_matrix_rows_present\n\
+      \  - refs_confirmation_present\n  - downstream_test_file_mapping_present\n \
+      \ - no_implementation_before_expected_red_assertion_present\n  - snake_case_examples_present\n\
+      \  - exact_adr_trigger_confirmed\nrequired_checks:\n  - id: contract_matrix_artifact_claims\n\
+      \    command: [\"uv\", \"run\", \"python\", \"-c\", \"from pathlib import Path;\
+      \ p=Path('evidence/ngw_contract_tests_contract_matrix.md'); text=p.read_text(encoding='utf-8');\
+      \ lower=text.lower(); checks={'ngw_r1_through_r9_matrix_rows_present': all(f'NGW-R{i}'\
+      \ in text for i in range(1,10)), 'refs_confirmation_present': ('refs read confirmation'\
+      \ in lower or 'key passage' in lower), 'downstream_test_file_mapping_present':\
+      \ all(x in text for x in ['tests/core/test_nested_gateway_contract.py','tests/shell/test_nested_gateway_runtime.py']),\
+      \ 'no_implementation_before_expected_red_assertion_present': ('no implementation\
+      \ dispatch' in lower and 'expected-red' in lower), 'snake_case_examples_present':\
+      \ ('snake_case' in lower and all(x in text for x in ['host_','prod_','work_'])),\
+      \ 'exact_adr_trigger_confirmed': all(x in lower for x in ['downstream raw child',\
+      \ 'built-ins', 'omitted', 'empty', 'tool_prefix']) and 'NESTED_TELA_PREFIX_REQUIRED'\
+      \ in text}; missing=[k for k,v in checks.items() if not v]; raise SystemExit('missing\
+      \ claims: '+', '.join(missing)) if missing else print('contract matrix artifact\
+      \ claims present')\"]\n    covers_claims:\n      - ngw_r1_through_r9_matrix_rows_present\n\
+      \      - refs_confirmation_present\n      - downstream_test_file_mapping_present\n\
+      \      - no_implementation_before_expected_red_assertion_present\n      - snake_case_examples_present\n\
+      \      - exact_adr_trigger_confirmed\n  - id: contract_matrix_markdown_diff_check\n\
+      \    command: [\"git\", \"diff\", \"--check\", \"--\", \"evidence/ngw_contract_tests_contract_matrix.md\"\
+      ]\n    covers_claims:\n      - ngw_r1_through_r9_matrix_rows_present\n     \
+      \ - refs_confirmation_present\n      - downstream_test_file_mapping_present\n\
+      \      - no_implementation_before_expected_red_assertion_present\n      - snake_case_examples_present\n\
+      \      - exact_adr_trigger_confirmed\n</intent_closure_contract>\n\nACCEPTABLE\
+      \ RECEIPT:\n- Evidence contains a completed requirement-to-evidence matrix with\
+      \ all NGW-R rows above.\n- Evidence names the exact downstream test files that\
+      \ will own each row.\n- Evidence states `No implementation dispatch until expected-red\
+      \ tests exist`.\n- Evidence confirms final exposed MCP names remain snake_case\
+      \ and examples use underscore prefixes such as `host_`, `prod_`, and `work_`.\n\
+      - Evidence confirms the exact ADR trigger is downstream raw child built-ins\
+      \ with omitted or empty `tool_prefix`, not any broader heuristic."
+    verification: Run the required_checks commands embedded in this step's <intent_closure_contract>;
+      paste raw stdout/stderr, exit codes, and artifact claim coverage in evidence.
+      Do not modify product/runtime code or cite any undefined external gate abstraction.
+    evidence_template: '## Contract Matrix Evidence
 
-      agent_source: project
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
 
 
-      PROOF ARTIFACT: Produce the authoritative nested Tela gateway requirement-to-evidence
-      matrix before any product implementation.
+      If no refs were provided, state: "No refs for this step."
 
 
-      Requirement-to-Evidence Matrix seed:
+      ### Artifact Path
 
-      | requirement_id | source_ref + key passage | target_state | evidence_class
-      | required_probe_or_artifact | status |
-
-      | NGW-R1 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: `exclude_tools`
-      matches raw downstream tool names before prefixing and registration | Raw-name
-      excludes remove matching downstream tools before prefixing, family/posture classification,
-      conflict detection, registry registration, provider metadata, and call routing
-      | artifact_review | Matrix row accepted and mapped to expected-red core/runtime
-      tests | OWNED |
-
-      | NGW-R2 | docs/INTERFACES.md > 3.1 Servers > `exclude_tools` contract: excluded
-      tools are absent from `tools/list`, call routing, conflicts, and provider metadata
-      | Per-server `exclude_tools: list[str]` is a public config field with default
-      `[]`; no malformed shared input is silently cleaned | artifact_review | Matrix
-      row accepted and mapped to config/model tests | OWNED |
-
-      | NGW-R3 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: `nested_gateway:
-      true` requires `tool_prefix` and excludes child Tela built-ins | Explicit nested
-      mode adds child `tela_list_providers` and `tela_list_profiles` to effective
-      raw excludes and requires a non-empty prefix | artifact_review | Matrix row
-      accepted and mapped to validation/filter tests | OWNED |
-
-      | NGW-R4 | docs/ADR-010-nested-gateway-ergonomics.md > Decision: do not silently
-      auto-hide based only on detection | Detection may improve diagnostics only;
-      it must never silently hide tools unless explicit `exclude_tools` or `nested_gateway:
-      true` is configured | artifact_review | Matrix row accepted and mapped to compatibility/non-hiding
-      tests | OWNED |
-
-      | NGW-R5 | docs/INTERFACES.md > `nested_gateway` contract and docs/ADR-010-nested-gateway-ergonomics.md
-      > exact trigger: missing/empty prefix fails closed with `NESTED_TELA_PREFIX_REQUIRED`;
-      downstream exposes child Tela built-ins with omitted or empty `tool_prefix`
-      fails closed with the same actionable diagnostic | `nested_gateway: true` with
-      omitted or empty `tool_prefix` and downstream raw child Tela built-ins (`tela_list_providers`/`tela_list_profiles`)
-      with omitted or empty `tool_prefix` both report deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`
-      | artifact_review | Matrix row accepted and mapped to diagnostic expected-red
-      tests | OWNED |
-
-      | NGW-R6 | docs/USAGE.md > Tool Filtering and Nested Tela Gateways: parent built-ins
-      remain visible; no nested mode preserves prefixed child built-ins | Default
-      behavior is compatible; omitted `nested_gateway` with a valid non-reserved snake_case
-      `tool_prefix` such as `host_` still exposes prefixed child built-ins unless
-      `exclude_tools` is configured | artifact_review | Matrix row accepted and mapped
-      to compatibility tests | OWNED |
-
-      | NGW-R7 | docs/DESIGN.md > Module Boundaries > core owns raw-name tool filtering;
-      shell owns runtime lifecycle and reload | Core owns pure filtering/model semantics;
-      Shell only wires I/O paths and returns Result at I/O boundaries | artifact_review
-      | Matrix row accepted and mapped to implementation ownership checks | OWNED
-      |
-
-      | NGW-R8 | docs/CONFIRMED-SURFACE-CONTRACT.md > Built-in MCP surfaces: exactly
-      two parent built-in tools | Parent Tela built-ins are gateway-owned and remain
-      exposed; child built-ins are downstream tools subject to filtering | artifact_review
-      | Matrix row accepted and mapped to runtime proof | OWNED |
-
-      | NGW-R9 | docs/INTERFACES.md > `tool_prefix` contract and docs/USAGE.md > Tool
-      Prefixing: final exposed MCP tool names remain snake_case; prefixes like `host_`,
-      `prod_`, and `work_` are recommended while dotted prefixes are invalid | Nested
-      gateway examples and runtime/tool-list receipts use snake_case exposed names
-      and underscore prefixes, not dotted prefixes | artifact_review | Matrix row
-      accepted and mapped to docs/runtime proof | OWNED |
+      - `evidence/ngw_contract_tests_contract_matrix.md`
 
 
-      CONSTRAINTS:
+      ### Required Checks
 
-      - This step does not modify product code.
+      Paste raw stdout/stderr and exit code for:
 
-      - Treat docs/ADR-010-nested-gateway-ergonomics.md and docs/INTERFACES.md as
-      authoritative for this feature.
+      - `uv run python -c <contract_matrix_artifact_claims>`
 
-      - Shared opifex contracts remain external authority; do not reinterpret canonical
-      shared fields or aliases.
-
-      - Preserve current documentation fixes as constraints: CLI and HTTP operator
-      surfaces stay split instead of being collapsed into a `CLI/HTTP` kind; `headers`
-      and `instructions` ServerConfig contracts/cross-references remain documented
-      while adding nested gateway fields.
-
-      - The matrix must preserve the four runtime-surface lenses: module boundary,
-      runtime entrypoint boundary, external contract boundary, and client/tool-list
-      observable boundary.
-
-      - The matrix must distinguish explicit nested mode, prefix-only compatibility
-      mode, and omitted/empty-prefix child Tela detection; do not collapse them into
-      "likely nested Tela" shorthand.
+      - `git diff --check -- evidence/ngw_contract_tests_contract_matrix.md`
 
 
-      ACCEPTABLE RECEIPT:
+      ### Required Claim Coverage
 
-      - Evidence contains a completed requirement-to-evidence matrix with all NGW-R
-      rows above.
+      - NGW-R1..NGW-R9 matrix rows present
 
-      - Evidence names the exact downstream test files that will own each row.
+      - refs confirmation present
 
-      - Evidence states `No implementation dispatch until expected-red tests exist`.
+      - downstream expected-red test file mapping present
 
-      - Evidence confirms final exposed MCP names remain snake_case and examples use
-      underscore prefixes such as `host_`, `prod_`, and `work_`.
+      - `No implementation dispatch until expected-red tests exist` assertion present
 
-      - Evidence confirms the exact ADR trigger is downstream raw child built-ins
-      with omitted or empty `tool_prefix`, not any broader heuristic.'
-    verification: Produce the completed contract matrix in evidence and show every
-      authoritative ref was read with a key passage.
+      - snake_case examples with `host_`, `prod_`, and `work_` present
+
+      - exact ADR trigger confirmed as downstream raw child built-ins with omitted
+      or empty `tool_prefix`
+
+
+      ### Headline
+
+      PASS | FAIL'
     refs:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
