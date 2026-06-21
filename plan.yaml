@@ -86403,7 +86403,11 @@ phases:
       by at least one expected-red test.
 
       - Expected-red failures are behavior-specific and include stable fingerprints;
-      import errors, missing test files, or infrastructure failures do not count.
+      import errors, missing test files, placeholder `pytest.fail`, bare `pass`, or
+      catch-all exception swallowing do not count.
+
+      - The remediation step `ngw.contract_tests.remediate_expected_red_quality` closed
+      B1-B4 with a command-to-claim coverage matrix for B1-B4 and NGW-R1..NGW-R9.
 
       - Test-definition steps did not modify `src/tela/**` or docs.
 
@@ -86420,7 +86424,10 @@ phases:
 
       2. Shared opifex contract wording must remain untouched and not reinterpreted.
 
-      3. Do not approve if `NESTED_TELA_PREFIX_REQUIRED` is not explicitly covered.'
+      3. Do not approve if `NESTED_TELA_PREFIX_REQUIRED` is not explicitly covered.
+
+      4. Do not approve if runtime expected-red evidence is placeholder/stub-based
+      rather than observable shell/runtime behavior.'
     verification: phase-check protecting all downstream nested-gateway implementation
       gates. Review evidence and return OPEN only when expected-red tests prove the
       intended missing behavior with stable failure fingerprints.
@@ -86434,6 +86441,7 @@ phases:
     - ngw.contract_tests.contract_matrix
     - ngw.contract_tests.core_expected_red
     - ngw.contract_tests.runtime_expected_red
+    - ngw.contract_tests.remediate_expected_red_quality
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T01:12:22.301720+00:00'
