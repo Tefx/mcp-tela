@@ -87399,6 +87399,77 @@ phases:
     - ngw.core_impl.raw_filtering_kernel
     - ngw.core_impl.core_green_retest
     agent: gate-reviewer
+  - id: guard_blocker_fix
+    name: Fix core retest invar guard blockers
+    status: pending
+    description: "step_type: implementation\nagent_source: project\nsymbolic_testing:\
+      \ true\ncommand_family_locked: uv run invar guard --all\n\n[REQUIRES_SKILL:\
+      \ ponytail-coder]\n\nFix ALL blockers reported by the independent verifier for\
+      \ `ngw.core_impl.core_green_retest`; do not cherry-pick only the first failure.\n\
+      \nRoot Cause vs Symptom:\n- Root cause: the Core nested-gateway implementation\
+      \ introduced helper functions in `src/tela/core/models.py` without the required\
+      \ Invar `@pre`/`@post` contracts and doctest coverage, while the phase retest\
+      \ also exercises repo-wide Invar project budgets.\n- Symptom: `uv run invar\
+      \ guard --all` fails with two `missing_contract` errors plus project-level `shell_complexity_debt`,\
+      \ `escape_hatch_project_limit`, and `escape_hatch_budget` errors.\n- why_previous_fix_failed:\
+      \ n/a; this is the first fix-owner step for this verifier failure.\n- Why this\
+      \ fix is not surface-level: success requires the same full guard command that\
+      \ failed, not a narrowed local-only check.\n\nBlockers to fix (ALL of these,\
+      \ not just the first):\n- B1: `src/tela/core/models.py:204` `ServerConfig._reject_aliases_and_shorthand`\
+      \ missing Core contract; add semantic `@pre`/`@post` and doctest evidence before/with\
+      \ the implementation.\n- B2: `src/tela/core/models.py:217` `ServerConfig._validate_nested_gateway_requires_prefix`\
+      \ missing Core contract; add semantic `@pre`/`@post` and doctest evidence before/with\
+      \ the implementation.\n- B3: project-level `shell_complexity_debt` is 7 warnings\
+      \ with limit 5; reduce or otherwise legitimately resolve at least enough warnings\
+      \ for `uv run invar guard --all` to pass.\n- B4: project-level `escape_hatch_project_limit`\
+      \ reports `shell_result` 23/17; remove/refactor or legitimately resolve enough\
+      \ shell-result escape hatches for the project limit to pass.\n- B5: project-level\
+      \ `escape_hatch_budget` reports weighted budget 90/75; reduce/refactor or legitimately\
+      \ resolve enough escape-hatch weight for the budget to pass.\n\nResidualization\
+      \ decision:\n- No residualization is allowed in this phase because `ngw.core_impl.core_green_retest`\
+      \ explicitly requires `uv run invar guard --all` and `ngw.core_impl.gate` protects\
+      \ downstream runtime wiring. Project-level guard budget failures intersect the\
+      \ current retest and gate until the full command is green or a separate approved\
+      \ command-correction step exists.\n\nScope boundary:\n- Preserve all nested-gateway\
+      \ behavior already proven by `tests/core/test_nested_gateway_contract.py`.\n\
+      - Do not weaken actual behavior tests or remove the `uv run invar guard --all`\
+      \ obligation.\n- Do not add new compatibility aliases or accept-and-clean malformed\
+      \ shared input.\n- Prefer smallest safe deletions/refactors over new escape\
+      \ hatches; adding new `@invar:allow` comments does not satisfy the budget blockers\
+      \ unless the net full guard budget is green and the rationale is contractually\
+      \ legitimate.\n- Retest must verify in a fresh/cold environment using the locked\
+      \ command family.\n\nRequirement-to-Evidence Matrix:\n| requirement_id | source_ref\
+      \ + key passage | target_state | evidence_class | required_probe_or_artifact\
+      \ | status |\n| --- | --- | --- | --- | --- | --- |\n| NGW-GUARD-B1 | `.agents/instructions.md`\
+      \ + `Core **/core/** requires @pre + @post + doctest` and `INVAR.md` missing_contract\
+      \ repair table | Both introduced ServerConfig helpers have non-vacuous contracts\
+      \ and doctests | runtime_probe | `uv run pytest --doctest-modules src/tela/core\
+      \ -q` plus `uv run invar guard --all` raw stdout | OWNED |\n| NGW-GUARD-B2 |\
+      \ verifier evidence for `ngw.core_impl.core_green_retest` + `uv run invar guard\
+      \ --all` failure | All five reported guard blockers are closed, including project-level\
+      \ budgets | runtime_probe | `uv run invar guard --all` raw stdout/stderr showing\
+      \ exit 0 | OWNED |\n| NGW-GUARD-B3 | `docs/ADR-010-nested-gateway-ergonomics.md`\
+      \ + raw nested-gateway filtering/validation requirements | Nested-gateway behavior\
+      \ remains unchanged while guard blockers are fixed | runtime_probe | `uv run\
+      \ pytest tests/core/test_nested_gateway_contract.py -q` raw stdout | OWNED |\n\
+      \n<intent_closure_contract>\nallowed_paths:\n  - \"src/tela/core/models.py\"\
+      \n  - \"src/tela/commands/**\"\n  - \"src/tela/shell/**\"\n  - \"tests/**\"\n\
+      blocked_paths:\n  - \"docs/**\"\n  - \"../opifex/**\"\n  - \"plan.yaml\"\nrequired_claims:\n\
+      \  - introduced_core_contracts_fixed\n  - core_doctest_evidence_present\n  -\
+      \ full_invar_guard_all_green\n  - project_budget_blockers_closed\n  - nested_gateway_behavior_preserved\n\
+      required_checks:\n  - id: core_nested_gateway_behavior_regression\n    command:\
+      \ [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
+      , \"-q\"]\n    covers_claims:\n      - nested_gateway_behavior_preserved\n \
+      \ - id: core_doctests\n    command: [\"uv\", \"run\", \"pytest\", \"--doctest-modules\"\
+      , \"src/tela/core\", \"-q\"]\n    covers_claims:\n      - introduced_core_contracts_fixed\n\
+      \      - core_doctest_evidence_present\n  - id: full_invar_guard_all\n    command:\
+      \ [\"uv\", \"run\", \"invar\", \"guard\", \"--all\"]\n    covers_claims:\n \
+      \     - introduced_core_contracts_fixed\n      - full_invar_guard_all_green\n\
+      \      - project_budget_blockers_closed\n</intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    depends_on:
+    - ngw.core_impl.raw_filtering_kernel
+    agent: python-senior
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
