@@ -87983,7 +87983,7 @@ phases:
       - None.'
   - id: ngw.runtime_wiring.metadata_call_routing
     name: Wire provider metadata and call routing consistency
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntags: [\"integration\"]\nagent_source:\
       \ project\n\nComplete the client-visible runtime seams after registry filtering\
       \ is wired.\n\nTARGET STATE:\n- `handle_tools_list` exposes only filtered, profile-permitted\
@@ -88068,6 +88068,8 @@ phases:
     depends_on:
     - ngw.runtime_wiring.startup_reload_surface
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-21T08:05:12.653315+00:00'
   - id: ngw.runtime_wiring.wiring_audit
     name: Audit nested-gateway runtime wiring reachability
     status: pending
