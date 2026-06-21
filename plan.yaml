@@ -88185,7 +88185,7 @@ phases:
       - None.'
   - id: ngw.runtime_wiring.wiring_audit
     name: Audit nested-gateway runtime wiring reachability
-    status: pending
+    status: claimed
     description: 'step_type: audit
 
       agent_source: project
@@ -88257,6 +88257,8 @@ phases:
     - ngw.runtime_wiring.startup_reload_surface
     - ngw.runtime_wiring.metadata_call_routing
     agent: wiring-auditor
+    claimed_by: wiring-auditor
+    claimed_at: '2026-06-21T08:11:44.925505+00:00'
   - id: ngw.runtime_wiring.green_retest
     name: Retest runtime wiring green
     status: pending
