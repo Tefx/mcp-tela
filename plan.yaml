@@ -87789,7 +87789,7 @@ phases:
   steps:
   - id: ngw.runtime_wiring.startup_reload_surface
     name: Wire filtering through startup, reload, and re-enumeration
-    status: claimed
+    status: done
     description: "step_type: implementation\ntags: [\"integration\"]\nagent_source:\
       \ project\n\nComplete runtime registry wiring so Core filtering semantics are\
       \ applied consistently during downstream startup, reload, reconnect, and manual\
@@ -87881,6 +87881,106 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-21T07:55:52.360582+00:00'
+    done_at: '2026-06-21T08:04:44.934296+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: aa4babdc Wire nested gateway runtime filtering
+
+      - Main merge commit: c01284e [vectl] step-ngw.runtime_wiring.startup_reload_surface
+      completed
+
+      - Changed files: src/tela/shell/downstream.py; src/tela/shell/reload.py; tests/shell/test_downstream.py;
+      tests/shell/test_nested_gateway_runtime.py; tests/shell/test_reload.py
+
+      - Deviations: none
+
+      - Forbidden paths not touched: src/tela/core/token.py, src/tela/core/enforcement.py,
+      ../opifex/**, plan.yaml
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited raw exclude_tools
+      before prefix/registration/conflict, nested_gateway hiding child builtins, and
+      reload/re-enumeration as surface changes.
+
+      - docs/INTERFACES.md, docs/USAGE.md, docs/DESIGN.md — worker cited Core owns
+      filter semantics, Shell owns startup/reload, registry guarded by _registry_lock,
+      reload conflict rollback, and accepted surface-change notification.
+
+      - src/tela/core/errors.py — worker confirmed stable NESTED_TELA_PREFIX_REQUIRED
+      preserved.
+
+      - src/tela/shell/downstream.py, src/tela/shell/reload.py, src/tela/shell/downstream_registry.py
+      — worker reused resolve_tools, registry snapshot/restore, notify digest, and
+      existing lock model.
+
+      - tests/shell/test_nested_gateway_runtime.py, tests/shell/test_reload.py, tests/shell/test_downstream.py
+      — worker cited startup filtering, notification, reconnect, rollback, and cleanup
+      expectations.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_wiring.startup_reload_surface --worktree .vectl/worktrees/ngw.runtime_wiring.startup_reload_surface
+      --base e9b187ec --out .vectl/worktrees/ngw.runtime_wiring.startup_reload_surface/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: src/tela/shell/downstream.py, src/tela/shell/reload.py, tests/shell/test_downstream.py,
+      tests/shell/test_nested_gateway_runtime.py, tests/shell/test_reload.py
+
+      - checked_claims: startup_registry_filtered, reload_reenumeration_filtered,
+      surface_change_notification_preserved, conflict_rollback_preserved
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/shell/test_nested_gateway_runtime.py -q -> exit 0, 10
+      passed in 0.34s
+
+      - uv run pytest tests/shell/test_reload.py tests/shell/test_downstream.py -q
+      -> exit 0, 94 passed in 0.36s
+
+      - uv run invar guard -> exit 0, status passed, errors 0
+
+
+      Runtime State Semantics Receipt:
+
+      - concurrent access scenario considered: registry snapshot/register/conflict/restore
+      remains under existing _registry_lock; no new mutable singleton/cache added.
+
+      - cleanup/reset semantics preserved: disconnect_all unchanged; startup conflict
+      all-or-nothing behavior unchanged; reload conflict restores previous registry/config.
+
+      - rollback proof: test_re_enumerate_conflict_rolls_back_previous_registry and
+      test_on_config_changed_conflict_rolls_back_previous_registry passed.
+
+
+      Command-to-Claim Coverage:
+
+      - startup_registry_filtered: PROVEN by test_startup_nested_gateway_filters_child_builtins_from_registry_snapshot.
+
+      - reload_reenumeration_filtered: PROVEN by nested reload and re_enumerate tests.
+
+      - surface_change_notification_preserved: PROVEN by reload digest tests and nested_gateway
+      false-to-true notification test.
+
+      - conflict_rollback_preserved: PROVEN by manual re_enumerate rollback and config
+      reload conflict rollback tests.
+
+
+      Gaps:
+
+      - None.'
   - id: ngw.runtime_wiring.metadata_call_routing
     name: Wire provider metadata and call routing consistency
     status: pending
