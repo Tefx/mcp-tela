@@ -87343,7 +87343,8 @@ phases:
 
       Decision basis required:
 
-      - Core new/changed functions have @pre/@post and doctests as required by AGENTS.md.
+      - Core new/changed functions have @pre/@post and doctests as required by `.agents/instructions.md`
+      and `INVAR.md`.
 
       - `exclude_tools` and `nested_gateway` model/validation semantics match docs
       exactly.
@@ -87352,6 +87353,10 @@ phases:
       from Core''s perspective.
 
       - No compatibility alias or shared opifex contract reinterpretation was introduced.
+
+      - `guard_blocker_fix` evidence proves all `uv run invar guard --all` blockers
+      reported by `ngw.core_impl.core_green_retest` were closed, with no hidden residual
+      project-level budget failures.
 
       - `ngw.core_impl.core_green_retest` evidence is complete and any blocker has
       a pending owner.
@@ -87363,7 +87368,10 @@ phases:
 
       2. Diagnostic code `NESTED_TELA_PREFIX_REQUIRED` must be stable and actionable.
 
-      3. Default behavior must remain unchanged without new fields.'
+      3. Default behavior must remain unchanged without new fields.
+
+      4. The gate must block if `uv run invar guard --all` remains red without explicit,
+      pending blocker ownership.'
     verification: phase-check protecting runtime wiring. Review all core evidence
       and return OPEN only if no blocker-class debt intersects downstream runtime
       gates.
@@ -87389,15 +87397,17 @@ phases:
     - docs/INTERFACES.md
     - docs/USAGE.md
     - docs/DESIGN.md
-    - AGENTS.md
     - src/tela/core/models.py
     - src/tela/core/config.py
     - src/tela/core/errors.py
     - src/tela/core/family.py
     - tests/core/test_nested_gateway_contract.py
+    - .agents/instructions.md
+    - INVAR.md
     depends_on:
     - ngw.core_impl.config_model_validation
     - ngw.core_impl.raw_filtering_kernel
+    - guard_blocker_fix
     - ngw.core_impl.core_green_retest
     agent: gate-reviewer
   - id: guard_blocker_fix
