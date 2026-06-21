@@ -89657,7 +89657,7 @@ phases:
       - None.'
   - id: ngw.runtime_verify.gate
     name: Gate runtime verification
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: project
@@ -89752,6 +89752,8 @@ phases:
     - ngw.runtime_verify.blackbox_nested_gateway
     - ngw.runtime_verify.spec_conformance
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-21T09:04:37.009386+00:00'
   - id: ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
     name: Fix empty tool_prefix nested gateway diagnostic
     status: done
