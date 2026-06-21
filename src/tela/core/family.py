@@ -10,8 +10,12 @@ from __future__ import annotations
 import re
 
 from tela.core.contracts import pre, post
+from tela.core.errors import NESTED_TELA_PREFIX_REQUIRED
 from tela.core.models import ResolvedTool, ServerConfig
 from tela.core.classification import classify_tool
+
+
+_CHILD_TELA_BUILTINS = frozenset({"tela_list_providers", "tela_list_profiles"})
 
 
 @pre(
@@ -108,6 +112,30 @@ def rewrite_tool_description(
     return re.sub(r"`([^`]+)`", _replacer, description)
 
 
+@pre(lambda server_config: isinstance(server_config, ServerConfig))
+@post(
+    lambda result: (
+        isinstance(result, frozenset)
+        and all(isinstance(name, str) and len(name) > 0 for name in result)
+    )
+)
+def effective_exclude_tools(server_config: ServerConfig) -> frozenset[str]:
+    """Return raw downstream tool names filtered before resolution.
+
+    Examples:
+        >>> from tela.core.models import ServerConfig
+        >>> effective_exclude_tools(ServerConfig(name="child", command="cmd", exclude_tools=["raw"]))
+        frozenset({'raw'})
+        >>> sorted(effective_exclude_tools(ServerConfig(name="child", command="cmd", tool_prefix="host_", nested_gateway=True)))
+        ['tela_list_profiles', 'tela_list_providers']
+    """
+
+    excludes = set(server_config.exclude_tools)
+    if server_config.nested_gateway:
+        excludes.update(_CHILD_TELA_BUILTINS)
+    return frozenset(excludes)
+
+
 @pre(
     lambda server_name, server_config, tool_list: (
         isinstance(server_name, str)
@@ -162,15 +190,27 @@ def resolve_tools(
     # reserved-prefix input and must be rejected by the resolution path.
     """
 
+    # Core owns raw-name filtering for exclude_tools and nested_gateway before
+    # prefixing/classification; Shell only wires enumeration/lifecycle paths.
     resolved = []
+    effective_excludes = effective_exclude_tools(server_config)
     for raw_tool in tool_list:
         raw_name = raw_tool["name"]
+        if raw_name in effective_excludes:
+            continue
+
         tool_prefix = server_config.tool_prefix
         if tool_prefix is not None and (
             tool_prefix.startswith("tela.") or tool_prefix.startswith("tela_")
         ):
             raise ValueError(
                 f"ServerConfig.tool_prefix '{tool_prefix}' uses reserved namespace"
+            )
+
+        if raw_name in _CHILD_TELA_BUILTINS and not tool_prefix:
+            raise ValueError(
+                f"{NESTED_TELA_PREFIX_REQUIRED}: downstream child Tela built-in "
+                f"'{raw_name}' requires a non-empty tool_prefix unless filtered"
             )
 
         exposed_name = raw_name if tool_prefix is None else f"{tool_prefix}{raw_name}"
