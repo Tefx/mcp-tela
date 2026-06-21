@@ -87314,14 +87314,15 @@ phases:
     - docs/ADR-010-nested-gateway-ergonomics.md
     - docs/INTERFACES.md
     - docs/USAGE.md
-    - AGENTS.md
     - src/tela/core/models.py
     - src/tela/core/config.py
     - src/tela/core/errors.py
     - src/tela/core/family.py
     - tests/core/test_nested_gateway_contract.py
+    - .agents/instructions.md
     depends_on:
     - ngw.core_impl.raw_filtering_kernel
+    - guard_blocker_fix
     agent: integration-verifier
   - id: ngw.core_impl.gate
     name: Gate core implementation
