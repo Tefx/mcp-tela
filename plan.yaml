@@ -88360,7 +88360,7 @@ phases:
       pending owner and gate dependency.'
   - id: ngw.runtime_wiring.green_retest
     name: Retest runtime wiring green
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: retest_green
@@ -88431,6 +88431,102 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-21T08:21:08.762123+00:00'
+    done_at: '2026-06-21T08:27:34.757691+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent verifier evidence:
+
+      - Worktree clean; verification-only step made no changes.
+
+      - Worker reported runtime wiring suite green with 194 passed.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — verifier cited raw exclude_tools
+      before prefix and omitted nested_gateway preserving prefixed child builtins.
+
+      - docs/INTERFACES.md — verifier cited tool_prefix/exclude_tools/nested_gateway
+      contract and NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/USAGE.md — verifier cited no silent hide unless exclude_tools or nested_gateway
+      configured.
+
+      - src/tela/shell/downstream.py — verifier cited connect_all/re_enumerate resolving
+      tools and registering filtered surface.
+
+      - src/tela/shell/reload.py — verifier cited on_tools_changed/on_server_reconnect
+      convergence, rollback, and notification.
+
+      - src/tela/shell/downstream_registry.py — verifier cited final exposed registry
+      keys plus raw_name for routing.
+
+      - src/tela/shell/builtin_tools.py — verifier cited provider metadata shape,
+      profile visibility, and builtin ownership.
+
+      - src/tela/shell/upstream.py — verifier cited tools/list exposed names and tools/call
+      raw-name routing.
+
+      - tests/shell/test_nested_gateway_runtime.py, tests/shell/test_reload.py, tests/shell/test_downstream.py,
+      tests/shell/test_builtin_tools.py, tests/shell/test_upstream.py — verifier cited
+      nested filtering, prefix-only preservation, diagnostics, provider metadata,
+      raw-name routing, reload, and builtin/upstream coverage.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_wiring.green_retest --worktree .vectl/worktrees/ngw.runtime_wiring.green_retest
+      --base 9e0660a8 --out .vectl/worktrees/ngw.runtime_wiring.green_retest/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; retest-only step has no Intent-Closure contract
+      and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/shell/test_nested_gateway_runtime.py tests/shell/test_reload.py
+      tests/shell/test_downstream.py tests/shell/test_builtin_tools.py tests/shell/test_upstream.py
+      -q -> exit 0, 194 passed in 0.70s
+
+
+      Behavioral proof register:
+
+      - NGW-R1: PROVEN — exclude_tools removes child tools from registry and call
+      routing; provider metadata and reload tests passed.
+
+      - NGW-R3: PROVEN — nested_gateway startup filters child builtins.
+
+      - NGW-R4: PROVEN — valid prefix without nested_gateway/exclude_tools keeps child
+      builtins visible.
+
+      - NGW-R5: PROVEN — missing prefix and raw child builtins without prefix produce
+      actionable diagnostic.
+
+      - NGW-R6: PROVEN — prefix-only compatibility proves no silent auto-hide; omitted
+      nested_gateway with host_ exposes prefixed child builtins.
+
+      - NGW-R8: PROVEN — parent builtins remain gateway-owned while child builtins
+      follow config; provider metadata passed.
+
+
+      Blocker disposition:
+
+      - none.
+
+
+      Gaps:
+
+      - None.'
   - id: ngw.runtime_wiring.gate
     name: Gate runtime wiring
     status: pending
