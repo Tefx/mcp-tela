@@ -375,4 +375,4 @@ def package_version() -> Result[str, str]:
     try:
         return Result(value=metadata.version("mcp-tela"))
     except metadata.PackageNotFoundError:
-        return Result(value="0.1.1")
+        return Result(value="0.1.2")
