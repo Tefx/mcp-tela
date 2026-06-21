@@ -88529,7 +88529,7 @@ phases:
       - None.'
   - id: ngw.runtime_wiring.gate
     name: Gate runtime wiring
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: project
@@ -88623,6 +88623,8 @@ phases:
     - live_transport_nested_child_enumeration_proof
     - ngw.runtime_wiring.green_retest
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-21T08:31:56.457649+00:00'
   - id: live_transport_nested_child_enumeration_proof
     name: Live transport nested child enumeration proof
     status: done
