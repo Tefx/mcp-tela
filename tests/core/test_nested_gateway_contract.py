@@ -105,6 +105,22 @@ def test_raw_child_builtins_without_prefix_fail_with_nested_prefix_required() ->
     )
 
 
+def test_raw_child_builtins_with_empty_prefix_fail_with_nested_prefix_required() -> None:
+    """NGW-R5: empty prefix child built-ins follow omitted-prefix diagnostics."""
+
+    server = ServerConfig(name="child", command="cmd", tool_prefix="")
+
+    with pytest.raises(ValueError) as exc_info:
+        resolve_tools("child", server, [_tool("tela_list_profiles")])
+
+    message = str(exc_info.value)
+    assert NESTED_TELA_PREFIX_REQUIRED in message, (
+        "raw downstream child builtins with empty tool_prefix must fail with "
+        f"{NESTED_TELA_PREFIX_REQUIRED}, not generic config parsing"
+    )
+    assert "tool_prefix cannot be empty" not in message
+
+
 def test_exclude_tools_filters_raw_names_before_prefix_family_and_reserved_checks() -> None:
     """NGW-R1/R2: raw-name filtering precedes prefixing and registration."""
 

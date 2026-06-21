@@ -416,6 +416,22 @@ def test_raw_child_builtins_without_prefix_fail_with_nested_prefix_required() ->
     )
 
 
+def test_raw_child_builtins_with_empty_prefix_fail_with_nested_prefix_required() -> None:
+    """B4/NGW-R5: empty prefix follows omitted-prefix runtime diagnostic."""
+
+    observation = _connect_observation(
+        {"child": ServerConfig(name="child", command="cmd", tool_prefix="")},
+        {"child": [_tool(CHILD_PROFILE)]},
+    )
+
+    assert not observation.accepted
+    assert NESTED_TELA_PREFIX_REQUIRED in observation.message, (
+        "NESTED_TELA_PREFIX_REQUIRED raw child builtin with empty prefix must use "
+        f"actionable nested gateway diagnostic; observed={observation.message!r}"
+    )
+    assert "tool_prefix cannot be empty" not in observation.message
+
+
 def test_shell_rejects_exclude_tools_aliases_instead_of_accepting_and_cleaning() -> None:
     """B4/NGW-R2: shell-bound config construction rejects aliases."""
 

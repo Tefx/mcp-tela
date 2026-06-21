@@ -200,8 +200,6 @@ class ServerConfig(BaseModel):
         validate_config() (config.py) and the resolve-time check in
         resolve_tools() (family.py) for defense in depth.
         """
-        if v == "":
-            raise ValueError("tool_prefix cannot be empty")
         if v is not None:
             if v.startswith("tela.") or v.startswith("tela_"):
                 raise ValueError(
