@@ -90720,7 +90720,7 @@ phases:
       independent closeout rerun including doctest and pinned OPIFEX gates.'
   - id: ngw.doc_sync_gate.full_suite_retest
     name: Retest full-suite blocker remediation
-    status: pending
+    status: claimed
     description: "step_type: verification\nstep_intent: retest_green\nexpected_result:\
       \ green\nagent_source: project\n\nAs an INDEPENDENT TESTER, retest the full-suite\
       \ blocker remediation from a fresh perspective. This is a full-plan-check protecting\
@@ -90842,3 +90842,5 @@ phases:
     depends_on:
     - ngw.doc_sync_gate.full_suite_remediation
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-06-21T09:50:10.610582+00:00'
