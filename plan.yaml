@@ -85855,27 +85855,31 @@ phases:
       \ and client/tool-list observable boundary.\n- The matrix must distinguish explicit\
       \ nested mode, prefix-only compatibility mode, and omitted/empty-prefix child\
       \ Tela detection; do not collapse them into \"likely nested Tela\" shorthand.\n\
+      - The `.agent/gate/verdict.json` / `agent/gate/verdict.json` allowed-path entries\
+      \ are only for orchestrator-generated Intent-Closure sidecar verdict output,\
+      \ not worker-owned product, runtime, code, documentation, or test artifacts.\n\
       \n<intent_closure_contract>\nintent_kind: contract_artifact\nallowed_paths:\n\
-      \  - \"evidence/ngw_contract_tests_contract_matrix.md\"\nblocked_paths:\n  -\
-      \ \"src/**\"\n  - \"tests/**\"\n  - \"docs/**\"\n  - \"plan.yaml\"\n  - \".git/vectl/**\"\
-      \n  - \".vectl/**\"\nrequired_claims:\n  - ngw_r1_through_r9_matrix_rows_present\n\
-      \  - refs_confirmation_present\n  - downstream_test_file_mapping_present\n \
-      \ - no_implementation_before_expected_red_assertion_present\n  - snake_case_examples_present\n\
-      \  - exact_adr_trigger_confirmed\nrequired_checks:\n  - id: contract_matrix_artifact_claims\n\
-      \    command: [\"uv\", \"run\", \"python\", \"-c\", \"from pathlib import Path;\
-      \ p=Path('evidence/ngw_contract_tests_contract_matrix.md'); text=p.read_text(encoding='utf-8');\
-      \ lower=text.lower(); checks={'ngw_r1_through_r9_matrix_rows_present': all(f'NGW-R{i}'\
-      \ in text for i in range(1,10)), 'refs_confirmation_present': ('refs read confirmation'\
-      \ in lower or 'key passage' in lower), 'downstream_test_file_mapping_present':\
+      \  - \"evidence/ngw_contract_tests_contract_matrix.md\"\n  - \".agent/gate/verdict.json\"\
+      \n  - \"agent/gate/verdict.json\"\nblocked_paths:\n  - \"src/**\"\n  - \"tests/**\"\
+      \n  - \"docs/**\"\n  - \"plan.yaml\"\n  - \".git/vectl/**\"\n  - \".vectl/**\"\
+      \nrequired_claims:\n  - ngw_r1_through_r9_matrix_rows_present\n  - refs_confirmation_present\n\
+      \  - downstream_test_file_mapping_present\n  - no_implementation_before_expected_red_assertion_present\n\
+      \  - snake_case_examples_present\n  - exact_adr_trigger_confirmed\nrequired_checks:\n\
+      \  - id: contract_matrix_artifact_claims\n    command: [\"uv\", \"run\", \"\
+      python\", \"-c\", \"from pathlib import Path; import sys; p=Path('evidence/ngw_contract_tests_contract_matrix.md');\
+      \ text=p.read_text(encoding='utf-8'); lower=text.lower(); checks={'ngw_r1_through_r9_matrix_rows_present':\
+      \ all(f'NGW-R{i}' in text for i in range(1,10)), 'refs_confirmation_present':\
+      \ ('refs read confirmation' in lower or 'key passage' in lower), 'downstream_test_file_mapping_present':\
       \ all(x in text for x in ['tests/core/test_nested_gateway_contract.py','tests/shell/test_nested_gateway_runtime.py']),\
       \ 'no_implementation_before_expected_red_assertion_present': ('no implementation\
       \ dispatch' in lower and 'expected-red' in lower), 'snake_case_examples_present':\
       \ ('snake_case' in lower and all(x in text for x in ['host_','prod_','work_'])),\
       \ 'exact_adr_trigger_confirmed': all(x in lower for x in ['downstream raw child',\
       \ 'built-ins', 'omitted', 'empty', 'tool_prefix']) and 'NESTED_TELA_PREFIX_REQUIRED'\
-      \ in text}; missing=[k for k,v in checks.items() if not v]; raise SystemExit('missing\
-      \ claims: '+', '.join(missing)) if missing else print('contract matrix artifact\
-      \ claims present')\"]\n    covers_claims:\n      - ngw_r1_through_r9_matrix_rows_present\n\
+      \ in text}; missing=[k for k,v in checks.items() if not v]; print(('missing\
+      \ claims: '+', '.join(missing)) if missing else 'contract matrix artifact claims\
+      \ present', file=sys.stderr if missing else sys.stdout); sys.exit(1 if missing\
+      \ else 0)\"]\n    covers_claims:\n      - ngw_r1_through_r9_matrix_rows_present\n\
       \      - refs_confirmation_present\n      - downstream_test_file_mapping_present\n\
       \      - no_implementation_before_expected_red_assertion_present\n      - snake_case_examples_present\n\
       \      - exact_adr_trigger_confirmed\n  - id: contract_matrix_markdown_diff_check\n\
