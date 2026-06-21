@@ -87412,7 +87412,7 @@ phases:
     agent: gate-reviewer
   - id: guard_blocker_fix
     name: Fix core retest invar guard blockers
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: project\nsymbolic_testing:\
       \ true\ncommand_family_locked: uv run invar guard --all\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nFix ALL blockers reported by the independent verifier for\
@@ -87494,6 +87494,115 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-21T07:35:54.515588+00:00'
+    done_at: '2026-06-21T07:47:26.236890+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: 0e54bf41 Fix guard blocker contracts and budgets
+
+      - Main merge commit: 273a5be [vectl] step-guard_blocker_fix completed
+
+      - Changed files: src/tela/core/models.py; src/tela/commands/bridge_http.py;
+      src/tela/commands/connect_bridge.py; src/tela/commands/connect_cmd.py; src/tela/commands/doctor_cmd.py;
+      src/tela/commands/status_cmd.py; src/tela/shell/downstream.py; src/tela/shell/downstream_clients.py;
+      src/tela/shell/http_routes.py
+
+      - Deviations: none
+
+      - Forbidden paths not touched: docs/**, ../opifex/**, plan.yaml
+
+
+      refs Read Confirmation:
+
+      - .agents/instructions.md — worker cited Invar Core @pre/@post/doctest rule,
+      no direct plan edits, and shared-contract discipline.
+
+      - INVAR.md — worker cited Core contracts/doctests and Shell Result convention/escape-hatch
+      repair guidance.
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited exclude_tools raw-name
+      semantics, nested_gateway prefix requirement, and child Tela builtin filtering.
+
+      - docs/INTERFACES.md and docs/USAGE.md — worker cited nested_gateway/exclude_tools/tool_prefix
+      contracts and NESTED_TELA_PREFIX_REQUIRED behavior.
+
+      - src/tela/core/models.py and src/tela/core/family.py — worker confirmed ServerConfig
+      validators and resolve_tools pure nested-gateway semantics.
+
+      - src/tela/commands and src/tela/shell — worker inventoried shell_result/complexity
+      sites and changed only allowed files.
+
+      - tests/core/test_nested_gateway_contract.py — worker confirmed behavior expectations
+      and preserved tests.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step guard_blocker_fix --worktree .vectl/worktrees/guard_blocker_fix --base
+      bb951e8e --out .vectl/worktrees/guard_blocker_fix/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: src/tela/commands/bridge_http.py, src/tela/commands/connect_bridge.py,
+      src/tela/commands/connect_cmd.py, src/tela/commands/doctor_cmd.py, src/tela/commands/status_cmd.py,
+      src/tela/core/models.py, src/tela/shell/downstream.py, src/tela/shell/downstream_clients.py,
+      src/tela/shell/http_routes.py
+
+      - checked_claims: introduced_core_contracts_fixed, core_doctest_evidence_present,
+      full_invar_guard_all_green, project_budget_blockers_closed, nested_gateway_behavior_preserved
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py -q -> exit 0, 9 passed
+      in 0.10s
+
+      - uv run pytest --doctest-modules src/tela/core -q -> exit 0, 64 passed in 0.13s
+
+      - uv run invar guard --all -> exit 0, status passed; summary errors 0, warnings
+      57, infos 24; escape_hatches shell_result 16/17 and weighted budget 69/75
+
+
+      Blockers closed:
+
+      - B1/B2 missing_contract in ServerConfig validators: closed with @pre/@post
+      contracts and doctest evidence; core doctests pass.
+
+      - B3 shell_complexity_debt: closed from gate error to non-error; full guard
+      exits 0.
+
+      - B4 shell_result budget: closed from 23/17 to 16/17; full guard exits 0.
+
+      - B5 weighted escape hatch budget: closed from 90/75 to 69/75; full guard exits
+      0.
+
+
+      Command-to-Claim Coverage:
+
+      - introduced_core_contracts_fixed: PROVEN by core doctests and full invar guard.
+
+      - core_doctest_evidence_present: PROVEN by `uv run pytest --doctest-modules
+      src/tela/core -q`.
+
+      - full_invar_guard_all_green: PROVEN by `uv run invar guard --all` exit 0.
+
+      - project_budget_blockers_closed: PROVEN by shell_result 16/17 and budget 69/75
+      in guard output.
+
+      - nested_gateway_behavior_preserved: PROVEN by `tests/core/test_nested_gateway_contract.py`
+      9 passed.
+
+
+      Gaps:
+
+      - None.'
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
