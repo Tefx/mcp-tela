@@ -89219,7 +89219,7 @@ phases:
       the owner fix plus green rerun.'
   - id: ngw.runtime_verify.blackbox_nested_gateway
     name: Black-box nested gateway runtime proof
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: project
@@ -89323,6 +89323,8 @@ phases:
     - ngw.runtime_verify.probe_harness
     - ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
     agent: blind-tester
+    claimed_by: blind-tester
+    claimed_at: '2026-06-21T08:56:06.209191+00:00'
   - id: ngw.runtime_verify.spec_conformance
     name: Verify nested-gateway spec conformance
     status: pending
