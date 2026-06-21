@@ -89985,7 +89985,7 @@ phases:
       - None for this remediation. Live black-box rerun remains owned by ngw.runtime_verify.blackbox_nested_gateway.'
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
-  status: pending
+  status: in_progress
   gate: Complete only when documentation parity, full pytest/doctest/invar/shared-surface
     checks, and final gate review are green with no unresolved blockers.
   depends_on:
@@ -89993,7 +89993,7 @@ phases:
   steps:
   - id: ngw.doc_sync_gate.docs_sync
     name: Sync nested-gateway documentation and examples
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nSync documentation, examples, and the repo-local doc parity\
       \ checker with the implemented nested-gateway runtime behavior.\n\nTARGET STATE:\n\
@@ -90100,6 +90100,8 @@ phases:
     - tests/shell/test_repo_local_ci_gate.py
     - scripts/ci/mcp_tela_shared_surface_gate.py
     agent: doc-reviewer
+    claimed_by: doc-reviewer
+    claimed_at: '2026-06-21T09:08:34.810695+00:00'
   - id: ngw.doc_sync_gate.full_suite
     name: Run full repository and shared-surface verification
     status: pending
