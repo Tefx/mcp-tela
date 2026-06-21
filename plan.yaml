@@ -87255,7 +87255,7 @@ phases:
       - None for core raw filtering kernel.'
   - id: ngw.core_impl.core_green_retest
     name: Retest core nested-gateway behavior green
-    status: claimed
+    status: done
     description: 'step_type: test
 
       step_intent: retest_green
@@ -87326,6 +87326,93 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-21T07:47:54.011503+00:00'
+    done_at: '2026-06-21T07:51:00.804476+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent verifier evidence:
+
+      - Worker reported PASS with no blockers and gate_open_allowed true.
+
+      - Worktree remained clean; verification-only step made no changes.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — verifier cited raw exclude_tools
+      before prefix/registration, nested_gateway requiring tool_prefix and hiding
+      child tela_list_* builtins.
+
+      - docs/INTERFACES.md and docs/USAGE.md — verifier cited prefix/exclude/nested
+      contracts, no silent auto-hide, and NESTED_TELA_PREFIX_REQUIRED for raw child
+      builtins without prefix.
+
+      - src/tela/core/models.py, src/tela/core/config.py, src/tela/core/errors.py,
+      src/tela/core/family.py — verifier confirmed ServerConfig validation, stable
+      error code, and resolve_tools raw filtering/fail-closed behavior.
+
+      - tests/core/test_nested_gateway_contract.py — verifier cited coverage for NGW-R2/R3/R5/R6/R7.
+
+      - .agents/instructions.md — verifier cited Invar/core contract and no plan-state
+      mutation rules.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.core_impl.core_green_retest --worktree .vectl/worktrees/ngw.core_impl.core_green_retest
+      --base 1edb7d30 --out .vectl/worktrees/ngw.core_impl.core_green_retest/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; verification-only step has no Intent-Closure
+      contract and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py -q -> exit 0, 9 passed
+      in 0.15s
+
+      - uv run pytest --doctest-modules src/tela/core -q -> exit 0, 64 passed in 0.16s
+
+      - uv run invar guard --all -> exit 0, status passed; summary errors 0, warnings
+      57, infos 24; gating warning with budget 69/75 below limit.
+
+
+      Behavioral proof register:
+
+      - NGW-R2: PROVEN — core tests prove exclude_tools field/defaults and invalid
+      shapes/aliases rejection.
+
+      - NGW-R3: PROVEN — core tests prove nested_gateway default false, prefix requirement,
+      and child builtin filtering.
+
+      - NGW-R5: PROVEN — core tests prove raw child builtins without prefix raise
+      NESTED_TELA_PREFIX_REQUIRED.
+
+      - NGW-R6: PROVEN — core test proves prefix-only mode preserves prefixed child
+      builtins; no silent auto-hide.
+
+      - NGW-R7: PROVEN — core tests inspect resolve_tools ownership and guard confirms
+      core contracts green.
+
+
+      Blocker disposition:
+
+      - none; all previously reported guard blockers closed by guard_blocker_fix and
+      verified here.
+
+
+      Gaps:
+
+      - None.'
   - id: ngw.core_impl.gate
     name: Gate core implementation
     status: pending
