@@ -86846,7 +86846,7 @@ phases:
   steps:
   - id: ngw.core_impl.config_model_validation
     name: Implement ServerConfig fields and nested-prefix validation
-    status: claimed
+    status: pending
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nComplete the Core configuration-model contract for nested\
       \ gateway ergonomics within the authority frozen by `ngw.contract_tests.contract_matrix`\
@@ -86940,8 +86940,6 @@ phases:
     - src/tela/core/errors.py
     - tests/core/test_nested_gateway_contract.py
     agent: python-executor
-    claimed_by: python-executor
-    claimed_at: '2026-06-21T07:08:11.102356+00:00'
   - id: ngw.core_impl.raw_filtering_kernel
     name: Implement raw-name filtering and nested effective excludes
     status: pending
