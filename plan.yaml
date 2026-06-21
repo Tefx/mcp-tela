@@ -90213,7 +90213,7 @@ phases:
       requires pinned authority ref and was verified there with temporary checkout/restore.'
   - id: ngw.doc_sync_gate.full_suite
     name: Run full repository and shared-surface verification
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: project
@@ -90304,6 +90304,8 @@ phases:
     depends_on:
     - ngw.doc_sync_gate.docs_sync
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-06-21T09:22:19.772433+00:00'
   - id: ngw.doc_sync_gate.final_gate
     name: Final nested-gateway release gate
     status: pending
