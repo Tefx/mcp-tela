@@ -88986,7 +88986,7 @@ phases:
       - None. The audit NEEDS_TEST row is closed by live transport proof.'
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
-  status: in_progress
+  status: done
   gate: Open only when black-box nested-gateway proof, reload proof, and spec-conformance
     evidence show the runtime surface matches ADR-010 and the interface docs.
   depends_on:
@@ -89657,7 +89657,7 @@ phases:
       - None.'
   - id: ngw.runtime_verify.gate
     name: Gate runtime verification
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: project
@@ -89754,6 +89754,89 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T09:04:37.009386+00:00'
+    done_at: '2026-06-21T09:07:56.834331+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent gate evidence:
+
+      - Gate reviewer returned PASS with final decision OPEN and no blockers.
+
+      - Upstream evidence-bearing steps reviewed: ngw.runtime_verify.probe_harness,
+      ngw.runtime_verify.fix_empty_tool_prefix_diagnostic, ngw.runtime_verify.blackbox_nested_gateway,
+      ngw.runtime_verify.spec_conformance.
+
+      - Worktree clean; gate step made no changes.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md, docs/INTERFACES.md, docs/USAGE.md,
+      docs/DESIGN.md, docs/CONFIRMED-SURFACE-CONTRACT.md — reviewer read and checked
+      nested-gateway, operator/builtin, and surface contracts.
+
+      - src/tela/core/errors.py, src/tela/core/models.py, src/tela/core/family.py
+      — reviewer inspected diagnostic and implementation seams.
+
+      - tests/core/test_nested_gateway_contract.py, tests/shell/test_nested_gateway_runtime.py
+      — reviewer inspected core/runtime proof files.
+
+      - /tmp/larva-agent-artifacts/ngw_runtime_probe.py — reviewer reviewed the true-runtime
+      probe.
+
+      - evidence/ngw_contract_tests_contract_matrix.md — reviewer reviewed requirement
+      mapping.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_verify.gate --worktree .vectl/worktrees/ngw.runtime_verify.gate
+      --base b696d8ba --out .vectl/worktrees/ngw.runtime_verify.gate/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; runtime gate/review step has no Intent-Closure
+      contract and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      -q -> exit 0, 24 passed in 0.56s
+
+      - TELA_PROBE_ROOT=$PWD .venv/bin/python /tmp/larva-agent-artifacts/ngw_runtime_probe.py
+      -> exit 0, overall_pass true; report_sha256 931582dc0a037ba5d0211bb80c67495227e429f362fb8dcf88abf4487ae6c0d7;
+      missing_prefix_diagnostic true; raw_child_builtins_no_prefix_diagnostic true;
+      prefix_only_compatibility true; snake_case_names true.
+
+
+      Runtime Verification Gate Decision Basis:
+
+      - probe artifact/finder blocker ownership: PROVEN — probe exists and true-runtime
+      probe executes; previous finder blocker was owned/fixed.
+
+      - diagnostic fix: PROVEN — tests pass and probe confirms omitted/empty nested
+      and raw-child cases contain NESTED_TELA_PREFIX_REQUIRED and no generic `tool_prefix
+      cannot be empty`.
+
+      - post-fix black-box receipts: PROVEN — true-runtime report overall_pass true.
+
+      - spec conformance mapping: PROVEN — NGW-R1..R9 mapped to refs/evidence/tests.
+
+      - no mock-only remaining proof: PROVEN — final runtime claims use true-runtime
+      probe plus tests, not monkeypatch-only evidence.
+
+
+      Gaps:
+
+      - None. Runtime verification gate open for documentation sync/final gate.'
   - id: ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
     name: Fix empty tool_prefix nested gateway diagnostic
     status: done
@@ -89902,7 +89985,7 @@ phases:
       - None for this remediation. Live black-box rerun remains owned by ngw.runtime_verify.blackbox_nested_gateway.'
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
-  status: locked
+  status: pending
   gate: Complete only when documentation parity, full pytest/doctest/invar/shared-surface
     checks, and final gate review are green with no unresolved blockers.
   depends_on:
