@@ -87415,7 +87415,7 @@ phases:
       - None.'
   - id: ngw.core_impl.gate
     name: Gate core implementation
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: project
@@ -87499,6 +87499,8 @@ phases:
     - guard_blocker_fix
     - ngw.core_impl.core_green_retest
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-21T07:51:27.734171+00:00'
   - id: guard_blocker_fix
     name: Fix core retest invar guard blockers
     status: done
