@@ -43,19 +43,19 @@ from tela.core.models import Posture, ServerConfig, ToolOverride
 #     command: "mcp-filesystem"
 #     args: ["--root", "/prod"]
 #     family: "filesystem"
-#     tool_prefix: "prod."
+#     tool_prefix: "prod_"
 #   fs-staging:
 #     command: "mcp-filesystem"
 #     args: ["--root", "/staging"]
 #     family: "filesystem"
-#     tool_prefix: "staging."
+#     tool_prefix: "staging_"
 
 SPEC_SERVER_PROD = {
     "name": "fs-prod",
     "command": "mcp-filesystem",
     "args": ["--root", "/prod"],
     "family": "filesystem",
-    "tool_prefix": "prod.",
+    "tool_prefix": "prod_",
 }
 
 SPEC_SERVER_STAGING = {
@@ -63,7 +63,7 @@ SPEC_SERVER_STAGING = {
     "command": "mcp-filesystem",
     "args": ["--root", "/staging"],
     "family": "filesystem",
-    "tool_prefix": "staging.",
+    "tool_prefix": "staging_",
 }
 
 # From USAGE.md lines 132-145:
@@ -73,20 +73,20 @@ SPEC_SERVER_STAGING = {
 #     env:
 #       GITHUB_TOKEN: "${WORK_GITHUB_TOKEN}"
 #     family: "git"
-#     tool_prefix: "work."
+#     tool_prefix: "work_"
 #   git-personal:
 #     command: "mcp-github"
 #     env:
 #       GITHUB_TOKEN: "${PERSONAL_GITHUB_TOKEN}"
 #     family: "git"
-#     tool_prefix: "personal."
+#     tool_prefix: "personal_"
 
 SPEC_SERVER_WORK = {
     "name": "git-work",
     "command": "mcp-github",
     "env": {"GITHUB_TOKEN": "${WORK_GITHUB_TOKEN}"},
     "family": "git",
-    "tool_prefix": "work.",
+    "tool_prefix": "work_",
 }
 
 SPEC_SERVER_PERSONAL = {
@@ -94,7 +94,7 @@ SPEC_SERVER_PERSONAL = {
     "command": "mcp-github",
     "env": {"GITHUB_TOKEN": "${PERSONAL_GITHUB_TOKEN}"},
     "family": "git",
-    "tool_prefix": "personal.",
+    "tool_prefix": "personal_",
 }
 
 
@@ -124,8 +124,8 @@ def test_two_servers_same_raw_tool_with_distinct_prefixes_coexist():
     Expected: Both servers expose distinct prefixed names, no conflict.
 
     Evidence:
-      - git-work with tool_prefix="work." → work.search_repos
-      - git-personal with tool_prefix="personal." → personal.search_repos
+      - git-work with tool_prefix="work_" → work_search_repos
+      - git-personal with tool_prefix="personal_" → personal_search_repos
       - Same downstream tool "search_repos", different exposed names
       - detect_conflicts finds no conflict
     """
@@ -150,13 +150,13 @@ def test_two_servers_same_raw_tool_with_distinct_prefixes_coexist():
     work_names = {t.name for t in tools_work}
     personal_names = {t.name for t in tools_personal}
 
-    assert work_names == {"work.search_repos", "work.create_issue", "work.list_prs"}, (
+    assert work_names == {"work_search_repos", "work_create_issue", "work_list_prs"}, (
         f"Issue PREFIX_COEXIST: git-work exposed names should be prefixed, got {work_names}"
     )
     assert personal_names == {
-        "personal.search_repos",
-        "personal.create_issue",
-        "personal.list_prs",
+        "personal_search_repos",
+        "personal_create_issue",
+        "personal_list_prs",
     }, (
         f"Issue PREFIX_COEXIST: git-personal exposed names should be prefixed, got {personal_names}"
     )
@@ -185,23 +185,23 @@ def test_two_servers_same_prefix_produces_conflict():
     the exposed names collide. This is detected as a conflict.
 
     Evidence:
-      - Both servers use tool_prefix="fs."
+      - Both servers use tool_prefix="fs_"
       - Both advertise "read_file"
-      - Exposed names are identical: "fs.read_file"
+      - Exposed names are identical: "fs_read_file"
       - detect_conflicts reports NAME_COLLISION
     """
-    cfg_a = ServerConfig(name="fs-a", command="cmd", tool_prefix="fs.")
-    cfg_b = ServerConfig(name="fs-b", command="cmd", tool_prefix="fs.")
+    cfg_a = ServerConfig(name="fs-a", command="cmd", tool_prefix="fs_")
+    cfg_b = ServerConfig(name="fs-b", command="cmd", tool_prefix="fs_")
 
     tools_a = resolve_tools("fs-a", cfg_a, DOWNSTREAM_TOOLS_FS)
     tools_b = resolve_tools("fs-b", cfg_b, DOWNSTREAM_TOOLS_FS)
 
     # Both expose prefixed names
-    assert tools_a[0].name == "fs.read_file", (
-        f"Issue PREFIX_CONFLICT: fs-a should expose 'fs.read_file', got {tools_a[0].name}"
+    assert tools_a[0].name == "fs_read_file", (
+        f"Issue PREFIX_CONFLICT: fs-a should expose 'fs_read_file', got {tools_a[0].name}"
     )
-    assert tools_b[0].name == "fs.read_file", (
-        f"Issue PREFIX_CONFLICT: fs-b should expose 'fs.read_file', got {tools_b[0].name}"
+    assert tools_b[0].name == "fs_read_file", (
+        f"Issue PREFIX_CONFLICT: fs-b should expose 'fs_read_file', got {tools_b[0].name}"
     )
 
     # Conflict detection finds the collision
@@ -213,7 +213,7 @@ def test_two_servers_same_prefix_produces_conflict():
     )
 
     conflict_names = {c.tool_name for c in conflicts}
-    expected_conflicts = {"fs.read_file", "fs.write_file", "fs.delete_file"}
+    expected_conflicts = {"fs_read_file", "fs_write_file", "fs_delete_file"}
     assert conflict_names == expected_conflicts, (
         f"Issue PREFIX_CONFLICT: expected conflicts {expected_conflicts}, got {conflict_names}"
     )
@@ -243,17 +243,17 @@ def test_resolved_tool_carries_raw_name_for_downstream_routing():
       - Exposed name (name): prefixed, used in tools/list
       - Raw name (raw_name): downstream tool name, used for routing
     """
-    cfg = ServerConfig(name="fs-prod", command="cmd", tool_prefix="prod.")
+    cfg = ServerConfig(name="fs-prod", command="cmd", tool_prefix="prod_")
 
     tools = resolve_tools("fs-prod", cfg, DOWNSTREAM_TOOLS_FS)
 
     for t in tools:
         # Exposed name is prefixed
-        assert t.name.startswith("prod."), (
-            f"Issue PREFIX_ROUTING: exposed name should start with 'prod.', got {t.name}"
+        assert t.name.startswith("prod_"), (
+            f"Issue PREFIX_ROUTING: exposed name should start with 'prod_', got {t.name}"
         )
         # Raw name is unprefixed
-        assert not t.raw_name.startswith("prod."), (
+        assert not t.raw_name.startswith("prod_"), (
             f"Issue PREFIX_ROUTING: raw_name should not be prefixed, got {t.raw_name}"
         )
         # raw_name matches the downstream name
@@ -372,27 +372,27 @@ def test_tool_overrides_match_raw_names_not_prefixed_names():
     cfg = ServerConfig(
         name="fs",
         command="cmd",
-        tool_prefix="prod.",
+        tool_prefix="prod_",
         tool_overrides={
-            # Key is raw downstream name, NOT "prod.delete_file"
+            # Key is raw downstream name, NOT "prod_delete_file"
             "delete_file": ToolOverride(posture=Posture.DESTRUCTIVE),
         },
     )
 
     tools = resolve_tools("fs", cfg, DOWNSTREAM_TOOLS_FS)
 
-    # Find the delete_file tool (exposed as "prod.delete_file")
+    # Find the delete_file tool (exposed as "prod_delete_file")
     delete_tool = next((t for t in tools if t.raw_name == "delete_file"), None)
     assert delete_tool is not None, "delete_file tool should exist"
-    assert delete_tool.name == "prod.delete_file", (
-        f"Issue OVERRIDE_KEY: exposed name should be 'prod.delete_file', got {delete_tool.name}"
+    assert delete_tool.name == "prod_delete_file", (
+        f"Issue OVERRIDE_KEY: exposed name should be 'prod_delete_file', got {delete_tool.name}"
     )
     assert delete_tool.posture == Posture.DESTRUCTIVE, (
         f"Issue OVERRIDE_KEY: posture should be destructive from override, got {delete_tool.posture}"
     )
 
     # Verify the override was keyed by raw name
-    assert "prod.delete_file" not in cfg.tool_overrides, (
+    assert "prod_delete_file" not in cfg.tool_overrides, (
         "Issue OVERRIDE_KEY: override key should NOT be prefixed name"
     )
     assert "delete_file" in cfg.tool_overrides, (
@@ -418,12 +418,12 @@ def test_conflict_detection_keys_off_exposed_name():
       - Servers with different prefixes have distinct exposed names
       - Servers with same prefix and same raw tool = conflict
     """
-    # Server A: work.search_repos
-    cfg_a = ServerConfig(name="git-work", command="cmd", tool_prefix="work.")
+    # Server A: work_search_repos
+    cfg_a = ServerConfig(name="git-work", command="cmd", tool_prefix="work_")
     tools_a = resolve_tools("git-work", cfg_a, DOWNSTREAM_TOOLS_GITHUB)
 
-    # Server B: personal.search_repos (distinct prefix, same raw tool)
-    cfg_b = ServerConfig(name="git-personal", command="cmd", tool_prefix="personal.")
+    # Server B: personal_search_repos (distinct prefix, same raw tool)
+    cfg_b = ServerConfig(name="git-personal", command="cmd", tool_prefix="personal_")
     tools_b = resolve_tools("git-personal", cfg_b, DOWNSTREAM_TOOLS_GITHUB)
 
     # No conflict because exposed names are different
@@ -433,8 +433,8 @@ def test_conflict_detection_keys_off_exposed_name():
         f"Issue CONFLICT_KEY: distinct prefixes should not conflict, got {conflicts_distinct}"
     )
 
-    # Server C: work.search_repos (same prefix as A)
-    cfg_c = ServerConfig(name="git-another", command="cmd", tool_prefix="work.")
+    # Server C: work_search_repos (same prefix as A)
+    cfg_c = ServerConfig(name="git-another", command="cmd", tool_prefix="work_")
     tools_c = resolve_tools("git-another", cfg_c, DOWNSTREAM_TOOLS_GITHUB)
 
     # Conflict because exposed names are identical
@@ -445,8 +445,8 @@ def test_conflict_detection_keys_off_exposed_name():
     )
 
     conflict_names = {c.tool_name for c in conflicts_same}
-    assert "work.search_repos" in conflict_names, (
-        f"Issue CONFLICT_KEY: 'work.search_repos' should be in conflicts, got {conflict_names}"
+    assert "work_search_repos" in conflict_names, (
+        f"Issue CONFLICT_KEY: 'work_search_repos' should be in conflicts, got {conflict_names}"
     )
 
     print("PASS: detect_conflicts keys off exposed name (name field)")

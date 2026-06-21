@@ -45,7 +45,7 @@ def test_surface_contract_freezes_consumer_only_bridge_readiness_behavior() -> N
         "Retry is allowed only when the gateway emits the transient non-ready contract"
         in surface_text
     )
-    assert "must exit cleanly and\nboundedly" in surface_text
+    assert "must exit\ncleanly and boundedly" in surface_text
 
 
 def test_adr_records_rationale_for_status_authority_contract() -> None:
@@ -70,7 +70,7 @@ def test_agent_and_readme_surfaces_repeat_operator_contract() -> None:
         and "not fixed sleep intervals" in agent_text
     )
     assert (
-        "persistent degraded/non-ready authority from `GET /status` must cause a clean bounded exit"
+        "persistent `warming` or another non-admission state from `GET /status` must cause a clean bounded exit"
         in agent_text
     )
 
@@ -83,6 +83,6 @@ def test_agent_and_readme_surfaces_repeat_operator_contract() -> None:
         in readme_text
     )
     assert (
-        "persistent degraded/non-ready authority must end in a clean bounded exit"
+        "persistent `warming` or another non-admission state must end in a clean bounded exit"
         in readme_text
     )

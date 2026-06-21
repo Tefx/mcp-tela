@@ -201,10 +201,18 @@ def test_client_kind_precedence_and_recovery_attempt_bound(monkeypatch) -> None:
 
     monkeypatch.setenv("TELA_CLIENT_KIND", "env-kind")
 
-    assert connect_cmd._resolve_client_kind(cli_client_kind="cli-kind") == "cli-kind"
-    assert connect_cmd._resolve_client_kind(cli_client_kind=None) == "env-kind"
+    cli_kind = connect_cmd._resolve_client_kind(cli_client_kind="cli-kind")
+    assert cli_kind.is_ok
+    assert cli_kind.value == "cli-kind"
+
+    env_kind = connect_cmd._resolve_client_kind(cli_client_kind=None)
+    assert env_kind.is_ok
+    assert env_kind.value == "env-kind"
+
     monkeypatch.delenv("TELA_CLIENT_KIND")
-    assert connect_cmd._resolve_client_kind(cli_client_kind=None) == "unknown"
+    unknown_kind = connect_cmd._resolve_client_kind(cli_client_kind=None)
+    assert unknown_kind.is_ok
+    assert unknown_kind.value == "unknown"
 
     result = connect_cmd.connect_command(max_recovery_attempts=-1)
 

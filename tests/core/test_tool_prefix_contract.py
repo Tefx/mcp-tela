@@ -120,15 +120,15 @@ def test_omitted_tool_prefix_keeps_raw_name_as_exposed_name() -> None:
 def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
     """Two servers with the same raw tool name but different prefixes coexist.
 
-    server_a: tool_prefix="a." → exposed "a.read_file"
-    server_b: tool_prefix="b." → exposed "b.read_file"
+    server_a: tool_prefix="a_" → exposed "a_read_file"
+    server_b: tool_prefix="b_" → exposed "b_read_file"
     Both should be valid and distinct.
 
     Ref: ServerConfig.tool_prefix contract
     Expected: prefixed exposed names remain distinct across servers.
     """
-    cfg_a = ServerConfig(name="server_a", command="cmd", tool_prefix="a.")
-    cfg_b = ServerConfig(name="server_b", command="cmd", tool_prefix="b.")
+    cfg_a = ServerConfig(name="server_a", command="cmd", tool_prefix="a_")
+    cfg_b = ServerConfig(name="server_b", command="cmd", tool_prefix="b_")
 
     tools_a = resolve_tools(
         "server_a",
@@ -144,8 +144,8 @@ def test_distinct_prefixes_allow_same_raw_name_from_different_servers() -> None:
     assert len(tools_a) == 1
     assert len(tools_b) == 1
     # Distinct exposed names despite identical raw names
-    assert tools_a[0].name == "a.read_file"
-    assert tools_b[0].name == "b.read_file"
+    assert tools_a[0].name == "a_read_file"
+    assert tools_b[0].name == "b_read_file"
     # raw_name preserves the downstream name for routing
     assert tools_a[0].raw_name == "read_file"
     assert tools_b[0].raw_name == "read_file"
@@ -165,8 +165,8 @@ def test_same_prefix_same_raw_name_is_conflict() -> None:
     Ref: ServerConfig.tool_prefix contract
     Expected: conflict signal is observable via identical exposed names.
     """
-    cfg_a = ServerConfig(name="server_a", command="cmd", tool_prefix="fs.")
-    cfg_b = ServerConfig(name="server_b", command="cmd", tool_prefix="fs.")
+    cfg_a = ServerConfig(name="server_a", command="cmd", tool_prefix="fs_")
+    cfg_b = ServerConfig(name="server_b", command="cmd", tool_prefix="fs_")
 
     tools_a = resolve_tools(
         "server_a",
@@ -182,7 +182,7 @@ def test_same_prefix_same_raw_name_is_conflict() -> None:
     assert len(tools_a) == 1
     assert len(tools_b) == 1
     # Same exposed name is the conflict signal
-    assert tools_a[0].name == tools_b[0].name == "fs.read_file"
+    assert tools_a[0].name == tools_b[0].name == "fs_read_file"
     # The contract requires conflict detection at registration time
     # (test here documents the requirement; runtime conflict detection TBD)
 
@@ -202,7 +202,7 @@ def test_tool_overrides_match_raw_names_not_prefixed_names() -> None:
     cfg = ServerConfig(
         name="fs",
         command="cmd",
-        tool_prefix="fs.",
+        tool_prefix="fs_",
         tool_overrides={
             # Key is the RAW downstream name, not the prefixed exposed name
             "delete_file": ToolOverride(posture=Posture.DESTRUCTIVE),
@@ -217,10 +217,10 @@ def test_tool_overrides_match_raw_names_not_prefixed_names() -> None:
         ],
     )
     # Override matched via raw name
-    delete_tool = next(t for t in tools if t.name == "fs.delete_file")
+    delete_tool = next(t for t in tools if t.name == "fs_delete_file")
     assert delete_tool.posture == Posture.DESTRUCTIVE
     # Unprefixed override key still matched the raw name
-    assert "fs.delete_file" not in cfg.tool_overrides
+    assert "fs_delete_file" not in cfg.tool_overrides
     assert "delete_file" in cfg.tool_overrides
 
 
@@ -233,7 +233,7 @@ def test_prefixed_exposed_name_not_used_for_override_lookup() -> None:
     cfg = ServerConfig(
         name="fs",
         command="cmd",
-        tool_prefix="fs.",
+        tool_prefix="fs_",
         # Only raw name key exists
         tool_overrides={"delete_file": ToolOverride(posture=Posture.DESTRUCTIVE)},
     )
@@ -245,7 +245,7 @@ def test_prefixed_exposed_name_not_used_for_override_lookup() -> None:
     # Override was found via raw name lookup
     assert tools[0].posture == Posture.DESTRUCTIVE
     # Prefixed key would not exist
-    assert "fs.delete_file" not in cfg.tool_overrides
+    assert "fs_delete_file" not in cfg.tool_overrides
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +260,7 @@ def test_resolved_tool_carries_raw_name_for_downstream_routing() -> None:
     Ref: family.py resolve_tools notes (lines 109-110)
     Expected: exposed and raw names are both preserved for routing.
     """
-    cfg = ServerConfig(name="fs", command="cmd", tool_prefix="fs.")
+    cfg = ServerConfig(name="fs", command="cmd", tool_prefix="fs_")
     tools = resolve_tools(
         "fs",
         cfg,
@@ -268,7 +268,7 @@ def test_resolved_tool_carries_raw_name_for_downstream_routing() -> None:
     )
     assert len(tools) == 1
     # name is the exposed (prefixed) name for upstream discovery/call
-    assert tools[0].name == "fs.read_file"
+    assert tools[0].name == "fs_read_file"
     # raw_name is the downstream-advertised name for routing
     assert tools[0].raw_name == "read_file"
 
@@ -306,7 +306,7 @@ def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
     Expected: prefix-only changes alter exposed tool set and are detectable.
     """
     cfg_v1 = ServerConfig(name="fs", command="cmd", tool_prefix=None)
-    cfg_v2 = ServerConfig(name="fs", command="cmd", tool_prefix="fs.")
+    cfg_v2 = ServerConfig(name="fs", command="cmd", tool_prefix="fs_")
 
     tools_v1 = resolve_tools(
         "fs", cfg_v1, [{"name": "read_file", "inputSchema": {"type": "object"}}]
@@ -316,7 +316,7 @@ def test_tool_prefix_change_detected_as_tool_surface_change() -> None:
     )
 
     assert tools_v1[0].name == "read_file"
-    assert tools_v2[0].name == "fs.read_file"
+    assert tools_v2[0].name == "fs_read_file"
     # The exposed tool set changed (different names), so reload must emit
     # tools/list_changed and refresh the tool set
     assert tools_v1[0].name != tools_v2[0].name
@@ -386,12 +386,12 @@ def test_tela_config_with_prefixed_servers() -> None:
     """
     cfg = TelaConfig(
         servers={
-            "fs_a": ServerConfig(name="fs_a", command="cmd", tool_prefix="a."),
-            "fs_b": ServerConfig(name="fs_b", command="cmd", tool_prefix="b."),
+            "fs_a": ServerConfig(name="fs_a", command="cmd", tool_prefix="a_"),
+            "fs_b": ServerConfig(name="fs_b", command="cmd", tool_prefix="b_"),
         }
     )
-    assert cfg.servers["fs_a"].tool_prefix == "a."
-    assert cfg.servers["fs_b"].tool_prefix == "b."
+    assert cfg.servers["fs_a"].tool_prefix == "a_"
+    assert cfg.servers["fs_b"].tool_prefix == "b_"
 
 
 # ---------------------------------------------------------------------------

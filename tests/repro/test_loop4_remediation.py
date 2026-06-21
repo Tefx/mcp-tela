@@ -25,7 +25,7 @@ EVIDENCE_PATH = PROJECT_ROOT / "evidence" / "surface_taxonomy_verification.md"
 def _readme_operator_section() -> str:
     text = README_PATH.read_text(encoding="utf-8")
     match = re.search(
-        r"### Operator Surfaces \(CLI/HTTP\)\n\n.*?\n\n\*\*Note:\*\*",
+        r"### Operator Surfaces\n\n.*?\n\n\*\*Note:\*\*",
         text,
         re.DOTALL,
     )
