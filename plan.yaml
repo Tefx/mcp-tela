@@ -87780,7 +87780,7 @@ phases:
       - None.'
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
-  status: pending
+  status: in_progress
   gate: Open only when runtime seams prove filtered tools never register or route,
     provider metadata reports the filtered surface, and tool-surface changes emit
     notifications.
@@ -87789,7 +87789,7 @@ phases:
   steps:
   - id: ngw.runtime_wiring.startup_reload_surface
     name: Wire filtering through startup, reload, and re-enumeration
-    status: pending
+    status: claimed
     description: "step_type: implementation\ntags: [\"integration\"]\nagent_source:\
       \ project\n\nComplete runtime registry wiring so Core filtering semantics are\
       \ applied consistently during downstream startup, reload, reconnect, and manual\
@@ -87879,6 +87879,8 @@ phases:
     - tests/shell/test_reload.py
     - tests/shell/test_downstream.py
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-21T07:55:52.360582+00:00'
   - id: ngw.runtime_wiring.metadata_call_routing
     name: Wire provider metadata and call routing consistency
     status: pending
