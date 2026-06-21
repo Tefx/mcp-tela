@@ -89985,7 +89985,7 @@ phases:
       - None for this remediation. Live black-box rerun remains owned by ngw.runtime_verify.blackbox_nested_gateway.'
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
-  status: in_progress
+  status: done
   gate: Complete only when documentation parity, full pytest/doctest/invar/shared-surface
     checks, and final gate review are green with no unresolved blockers.
   depends_on:
@@ -90373,7 +90373,7 @@ phases:
       \ and owned by ngw.doc_sync_gate.full_suite_remediation and ngw.doc_sync_gate.full_suite_retest."
   - id: ngw.doc_sync_gate.final_gate
     name: Final nested-gateway release gate
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: project
@@ -90544,6 +90544,180 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T09:56:52.235743+00:00'
+    done_at: '2026-06-21T10:04:58.441168+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Final independent gate evidence:
+
+      - Gate reviewer returned PASS with no blockers and gate_open_allowed true.
+
+      - All NGW-R1..NGW-R9 rows were present and PROVEN.
+
+      - Full-suite retest evidence was verified green for targeted blockers, full
+      pytest, doctest, invar guard, pinned OPIFEX shared-surface gates, nested-gateway
+      regressions, runtime probe, and purity.
+
+      - Worktree HEAD matched main HEAD d24e5c12; no changes were made.
+
+
+      refs Read Confirmation:
+
+      - AGENTS.md — NOT READ in isolated worktree because absent; reviewer read `.agents/instructions.md`
+      instead.
+
+      - CONSTITUTION.md — NOT FOUND.
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — reviewer cited lines 47-73 for
+      raw exclude, nested_gateway prefix requirement, built-in filtering, reload/re-enumeration,
+      diagnostics, and explicitness.
+
+      - docs/INTERFACES.md — reviewer cited lines 72-119 for snake_case exposed names,
+      ServerConfig tool_prefix/exclude_tools/nested_gateway semantics, diagnostics,
+      headers, and instructions.
+
+      - docs/USAGE.md — reviewer cited lines 176-203, 691-705, and 786 for host_ examples,
+      nested diagnostics, and operator usage.
+
+      - docs/DESIGN.md — reviewer cited lines 328-345 and 368-370 for raw-name filtering,
+      runtime reload/surface behavior, and metadata semantics.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — reviewer cited lines 26-50 and 100-149
+      for built-in MCP vs operator surface split and canonical surfaces.
+
+      - docs/AGENT_INTERFACE.md — reviewer cited lines 11-20, 66, and 173-177 for
+      only two gateway-owned built-in MCP tools and operator surfaces not being MCP
+      tools.
+
+      - README.md — reviewer cited lines 113 and 177-203 for separated operator surfaces
+      and nested gateway summary.
+
+      - tela.yaml.example — reviewer cited lines 77-81, 148, and 243-244 for host_
+      nested gateway examples.
+
+      - src/tela/core/errors.py — reviewer cited lines 69-70 for NESTED_TELA_PREFIX_REQUIRED.
+
+      - tests/core/test_nested_gateway_contract.py, tests/shell/test_nested_gateway_runtime.py,
+      tests/shell/test_surface_contract.py, tests/shell/test_repo_local_ci_gate.py,
+      scripts/ci/mcp_tela_shared_surface_gate.py — reviewer read and cited as proof
+      artifacts/check surfaces.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.doc_sync_gate.final_gate --worktree .vectl/worktrees/ngw.doc_sync_gate.final_gate
+      --base d24e5c12 --out /tmp/ngw_final_gate_verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; final review/gate step has no Intent-Closure
+      contract and changed_paths empty.
+
+
+      Requirement Evidence Table:
+
+      | requirement_id | evidence_ref | evidence_class | status | blocker_owner_if_unproven
+      |
+
+      | NGW-R1 | ADR-010:47-48; INTERFACES:83-88; core tests 124-145; runtime tests
+      144-198,201-234 | runtime_probe/test/docs | PROVEN | none |
+
+      | NGW-R2 | INTERFACES:83-88; core tests 36-53; models validation lines 164-166,224-234
+      | test/source/docs | PROVEN | none |
+
+      | NGW-R3 | ADR-010:49-54,68-70; INTERFACES:90-94; core tests 69-90,148-167;
+      runtime tests 115-141 | runtime_probe/test/docs | PROVEN | none |
+
+      | NGW-R4 | ADR-010:54,62,71; DESIGN:328-345; core tests 170-187; runtime tests
+      268-350 | runtime_probe/test/docs | PROVEN | none |
+
+      | NGW-R5 | ADR-010:64,72; INTERFACES:93,96; USAGE:203,786; core tests 69-119;
+      runtime tests 392-430; errors.py:69-70 | runtime_probe/test/docs | PROVEN |
+      none |
+
+      | NGW-R6 | ADR-010:62,71; INTERFACES:97-98; runtime tests 268-350; runtime_probe
+      overall_pass=true | runtime_probe/test/docs | PROVEN | none |
+
+      | NGW-R7 | DESIGN:368-370; src/tela/core/family.py lines 193-233; core tests
+      206-207; runtime tests 442-464 | source/test/docs | PROVEN | none |
+
+      | NGW-R8 | ADR-010:60-63,70; CONFIRMED:100-101; runtime tests 239-267,288-321
+      | runtime_probe/test/docs | PROVEN | none |
+
+      | NGW-R9 | INTERFACES:77-79; core tests 190-205; repo-local CI gate 52-66; grep
+      found no dotted nested examples except negative test assertions | test/docs/search
+      | PROVEN | none |
+
+
+      Command Receipts:
+
+      - PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider --tb=short
+      tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      tests/shell/test_surface_contract.py tests/shell/test_repo_local_ci_gate.py
+      -> exit 0, 62 passed in 1.51s
+
+      - PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider --tb=short
+      -> exit 0, 1488 passed in 132.69s
+
+      - uv run --frozen pytest --doctest-modules src/tela/ -q -> exit 0, 143 passed
+      in 0.67s
+
+      - uv run invar guard --all -> exit 0, errors 0, warnings 57, infos 25, doctest
+      passed true
+
+      - env OPIFEX_ROOT=../../../../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      expected-red -> exit 0; seeded README drift failed as expected with retired
+      alias field
+
+      - env OPIFEX_ROOT=../../../../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      green -> exit 0; 9 passed, 59 passed, 210 passed
+
+      - TELA_PROBE_ROOT=$PWD .venv/bin/python /tmp/larva-agent-artifacts/ngw_runtime_probe.py
+      -> exit 0; overall_pass true; report_sha256 2f513f328bf31fb3f415ca74a9537303674c3467e082eddb3b04d71d447a2040
+
+      - git status --short --untracked-files=all -> exit 0, clean
+
+
+      Behavioral Proof Register:
+
+      | obligation | status | evidence |
+
+      | docs avoid silent auto-hide/v1-v2/dotted nested examples | PROVEN | test_repo_local_ci_gate.py:52-66
+      plus targeted grep |
+
+      | exposed MCP names snake_case with host_/prod_/work_ examples | PROVEN | tests/core/test_nested_gateway_contract.py:190-205
+      |
+
+      | CLI and HTTP operator surfaces split | PROVEN | CONFIRMED:29-50; AGENT_INTERFACE:18-20,175-176;
+      test_surface_contract.py:206-218 |
+
+      | headers/instructions preserved | PROVEN | INTERFACES:108-119; USAGE/example
+      refs; docs parity test lines 58-59 |
+
+      | OPIFEX pinned gates restored | PROVEN | original b57481c main clean; checked
+      out 450281e; restored b57481c main clean |
+
+      | no unresolved blocker-class debt | PROVEN | final gate blockers [] and full_suite_retest
+      blockers closed |
+
+
+      Purity:
+
+      - Generated .hypothesis cache removed by reviewer.
+
+      - Worktree git status clean.
+
+
+      Gaps:
+
+      - None. Final nested-gateway release gate is OPEN/PASS.'
   - id: ngw.doc_sync_gate.full_suite_remediation
     name: Batched full-suite blocker remediation
     status: done
