@@ -90720,7 +90720,7 @@ phases:
       independent closeout rerun including doctest and pinned OPIFEX gates.'
   - id: ngw.doc_sync_gate.full_suite_retest
     name: Retest full-suite blocker remediation
-    status: claimed
+    status: done
     description: "step_type: verification\nstep_intent: retest_green\nexpected_result:\
       \ green\nagent_source: project\n\nAs an INDEPENDENT TESTER, retest the full-suite\
       \ blocker remediation from a fresh perspective. This is a full-plan-check protecting\
@@ -90844,3 +90844,64 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-21T09:50:10.610582+00:00'
+    done_at: '2026-06-21T09:56:33.031583+00:00'
+    evidence: "status: SUCCESS\nverdict: PASS\nblockers: []\ngate_open_allowed: true\n\
+      orchestrator_action_hint: COMPLETE\n\nIndependent retest evidence:\n- Tester:\
+      \ integration-verifier\n- Scope: Full-suite blocker remediation after ngw.doc_sync_gate.full_suite\n\
+      - Independence Level: L1\n- No refs for this step.\n- Worktree HEAD matched\
+      \ main HEAD 5073e001 and worktree status was clean; no product/docs changes\
+      \ in retest.\n\nSidecar gate:\n- Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py\
+      \ --plan plan.yaml --step ngw.doc_sync_gate.full_suite_retest --worktree .vectl/worktrees/ngw.doc_sync_gate.full_suite_retest\
+      \ --base 5073e001 --out /tmp/ngw_full_suite_retest_verdict.json\n- Result: NOT_APPLICABLE,\
+      \ exit 0; verification/retest step has no Intent-Closure contract and changed_paths\
+      \ empty.\n\nCommand Receipts:\n1. Targeted failed blockers:\n   Command: PYTHONDONTWRITEBYTECODE=1\
+      \ uv run --frozen pytest -q -p no:cacheprovider --tb=short tests/core/test_tool_prefix_contract.py\
+      \ tests/repro/test_tool_prefix_blackbox.py tests/repro/test_loop4_remediation.py::TestLoop4OperatorSurfaceRemediation::test_readme_operator_surface_summary_uses_cli_http_names\
+      \ tests/shell/test_adr008_connect_survival.py::test_client_kind_precedence_and_recovery_attempt_bound\
+      \ tests/shell/test_connect_bridge_readiness_contract_freeze.py\n   Exit: 0\n\
+      \   Output: 30 passed in 1.36s\n2. Full pytest:\n   Command: PYTHONDONTWRITEBYTECODE=1\
+      \ uv run --frozen pytest -q -p no:cacheprovider --tb=short\n   Exit: 0\n   Output:\
+      \ 1488 passed in 133.67s (0:02:13)\n3. Doctest:\n   Command: uv run --frozen\
+      \ pytest --doctest-modules src/tela/ -q\n   Exit: 0\n   Output: 143 passed in\
+      \ 0.65s\n4. Invar guard:\n   Command: uv run invar guard --all\n   Exit: 0\n\
+      \   Output: summary files_checked=67 errors=0 warnings=57 infos=25; gating.status=warning;\
+      \ non_suppressible=[]\n5. OPIFEX pin proof:\n   Command: git -C /Users/tefx/Projects/opifex\
+      \ rev-parse HEAD && git -C /Users/tefx/Projects/opifex rev-parse --short HEAD\n\
+      \   Exit: 0\n   Output: original_head b57481cdf7cbbe35638e029cf1250d51e3c1b5f2;\
+      \ original_status clean; pinned_head_checked_out 450281eae8a481f2f63cf4540112c529cc976548;\
+      \ restored_ref main; restored_head b57481cdf7cbbe35638e029cf1250d51e3c1b5f2;\
+      \ restored_status clean.\n6. Shared-surface expected-red:\n   Command: env OPIFEX_ROOT=/Users/tefx/Projects/opifex\
+      \ uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red\n  \
+      \ Exit: 0\n   Output: Frozen authority ref 450281eae8a481f2f63cf4540112c529cc976548;\
+      \ expected-red internal pytest showed expected failure: README.md still teaches\
+      \ a retired alias field; exit 0.\n7. Shared-surface green:\n   Command: env\
+      \ OPIFEX_ROOT=/Users/tefx/Projects/opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py\
+      \ green\n   Exit: 0\n   Output: schema-parity 9 passed; shared-surface-runtime\
+      \ 59 passed; shared-surface-contract 210 passed; exit 0.\n8. Nested-gateway\
+      \ contract/runtime regression:\n   Command: PYTHONDONTWRITEBYTECODE=1 uv run\
+      \ --frozen pytest -q -p no:cacheprovider --tb=short tests/core/test_nested_gateway_contract.py\
+      \ tests/shell/test_nested_gateway_runtime.py tests/shell/test_surface_contract.py\
+      \ tests/shell/test_repo_local_ci_gate.py\n   Exit: 0\n   Output: 62 passed in\
+      \ 0.32s\n9. Purity:\n   Command: git status --short --untracked-files=all\n\
+      \   Exit: 0\n   Output: <empty>\n\nBehavioral Proof Register:\n| requirement_ref\
+      \ | behavior_claim | evidence_ref | status | closure_disposition |\n| targeted_blockers\
+      \ | Previously failed blocker tests are green | receipt 1 | PROVEN | closed\
+      \ |\n| full_pytest | Full pytest suite is green | receipt 2 | PROVEN | closed\
+      \ |\n| doctest | src/tela doctests are green | receipt 3 | PROVEN | closed |\n\
+      | invar | Invar guard has no errors | receipt 4 | PROVEN | warnings owned by\
+      \ guard budget |\n| opifex_pin | Shared-surface gates ran against pinned opifex\
+      \ ref | receipts 5-7 | PROVEN | closed |\n| nested_gateway | Nested gateway\
+      \ contract/runtime regressions are green | receipt 8 | PROVEN | closed |\n|\
+      \ purity | Worktree is clean after cache cleanup | receipt 9 | PROVEN | closed\
+      \ |\n\nBlocker Disposition Table:\n| issue | provenance | disposition | owner\
+      \ |\n| tool prefix contract/blackbox | targeted failed blockers | PROVEN closed\
+      \ by receipt 1 and full suite | none |\n| operator surface README CLI/HTTP naming\
+      \ | targeted failed blockers | PROVEN closed by receipt 1 | none |\n| ADR008\
+      \ client kind precedence/recovery bound | targeted failed blockers | PROVEN\
+      \ closed by receipt 1 | none |\n| connect bridge readiness contract freeze |\
+      \ targeted failed blockers | PROVEN closed by receipt 1 | none |\n| shared-surface\
+      \ expected-red/green parity | required gate | PROVEN closed by receipts 6-7\
+      \ | none |\n| nested gateway contract/runtime regression | required gate | PROVEN\
+      \ closed by receipt 8 | none |\n| repository-wide regression | full pytest/doctest/invar\
+      \ | PROVEN closed by receipts 2-4 | none |\n\nGaps:\n- None. Full-suite blocker\
+      \ remediation is independently retested green."
