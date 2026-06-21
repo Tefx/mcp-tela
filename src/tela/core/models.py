@@ -27,6 +27,9 @@ from tela.core.reaper_config import ReaperPolicyConfig
 _CAPABILITY_TOKEN_DATETIME_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
 )
+_NESTED_GATEWAY_PREFIX_REQUIRED_MESSAGE = (
+    f"{NESTED_TELA_PREFIX_REQUIRED}: nested_gateway true requires a non-empty tool_prefix"
+)
 
 
 @pre(lambda value: isinstance(value, str) and len(value) > 0)
@@ -207,17 +210,13 @@ class ServerConfig(BaseModel):
             # A 'None' or empty 'tool_prefix' string both trigger this requirement.
             prefix = data.get("tool_prefix", None)
             if nested and not prefix:
-                raise ValueError(
-                    f"{NESTED_TELA_PREFIX_REQUIRED}: nested_gateway true requires a non-empty tool_prefix"
-                )
+                raise ValueError(_NESTED_GATEWAY_PREFIX_REQUIRED_MESSAGE)
         return data
 
     @model_validator(mode="after")
     def _validate_nested_gateway_requires_prefix(self) -> ServerConfig:
         if self.nested_gateway and not self.tool_prefix:
-            raise ValueError(
-                f"{NESTED_TELA_PREFIX_REQUIRED}: nested_gateway true requires a non-empty tool_prefix"
-            )
+            raise ValueError(_NESTED_GATEWAY_PREFIX_REQUIRED_MESSAGE)
         return self
 
 
