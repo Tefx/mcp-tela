@@ -88529,7 +88529,7 @@ phases:
     agent: gate-reviewer
   - id: live_transport_nested_child_enumeration_proof
     name: Live transport nested child enumeration proof
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       verification_scope: phase-check
@@ -88699,6 +88699,102 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-21T08:21:01.021040+00:00'
+    done_at: '2026-06-21T08:27:14.867285+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Worker evidence:
+
+      - Live/non-mock proof executed via real parent `tela serve` Streamable HTTP
+      MCP process and real child FastMCP stdio subprocess.
+
+      - Worktree clean; proof step made no product/test/doc changes.
+
+      - Probe script: /tmp/larva-agent-artifacts/ngw_live_probe/ngw_live_stdio_probe.py
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited nested_gateway requiring
+      tool_prefix, hiding child tela_list_providers/tela_list_profiles, and omitted
+      nested_gateway preserving prefixed child builtins.
+
+      - docs/INTERFACES.md — worker cited exclude_tools raw-name matching before prefixing,
+      parent builtins exposed, and provider metadata filtered tool_names/tool_count.
+
+      - docs/USAGE.md — worker cited nested mode hiding child builtins while parent
+      builtins remain visible, and no silent hide without config.
+
+      - src/tela/shell/downstream.py — worker cited live downstream open/enumeration
+      when tool_lists are not supplied.
+
+      - src/tela/shell/upstream.py — worker cited tools/list registry use and TOOL_NOT_FOUND
+      for absent filtered tools.
+
+      - src/tela/shell/builtin_tools.py — worker cited tela_list_providers filtered
+      provider metadata.
+
+      - tests/shell/test_nested_gateway_runtime.py — worker identified existing fixture-based
+      tests and closed the live transport gap with the runtime probe.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step live_transport_nested_child_enumeration_proof --worktree .vectl/worktrees/live_transport_nested_child_enumeration_proof
+      --base 9e0660a8 --out .vectl/worktrees/live_transport_nested_child_enumeration_proof/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; proof-only step has no Intent-Closure contract
+      and changed_paths empty.
+
+
+      Runtime Probe Receipt:
+
+      - Command: .venv/bin/python /tmp/larva-agent-artifacts/ngw_live_probe/ngw_live_stdio_probe.py
+
+      - Worker exit code: 0; orchestrator rerun exit code: 0
+
+      - Transport: real parent tela Streamable HTTP MCP process -> real child FastMCP
+      stdio subprocess.
+
+      - hide_nested_gateway config: tool_prefix=host_, nested_gateway=true. Observed
+      tools_list_names [host_safe_tool, tela_list_profiles, tela_list_providers];
+      provider child tool_count 1 and tool_names [host_safe_tool]; absent call to
+      host_tela_list_providers returned TOOL_NOT_FOUND.
+
+      - prefix_only_control config: tool_prefix=host_, no nested_gateway, no exclude_tools.
+      Observed tools_list_names [host_safe_tool, host_tela_list_profiles, host_tela_list_providers,
+      tela_list_profiles, tela_list_providers]; provider child tool_count 3 with host_tela_list_providers,
+      host_tela_list_profiles, host_safe_tool; child builtin call succeeded.
+
+      - Parent logs showed live HTTP `/mcp` traffic and CallToolRequest/ListToolsRequest
+      processing.
+
+
+      Behavioral Proof Register:
+
+      - NGW-LIVE-ENUM-1: PROVEN — real parent process plus child stdio subprocess;
+      nested mode omits child builtins from exposed child surface and provider metadata
+      while keeping safe child tool.
+
+      - NGW-LIVE-ENUM-2: PROVEN — parent unprefixed tela_list_providers/tela_list_profiles
+      remained visible/callable while configured child prefixed builtin was absent/TOOL_NOT_FOUND.
+
+      - NGW-LIVE-ENUM-3: PROVEN — prefix-only control kept prefixed child builtins
+      visible and callable, proving no silent auto-hide.
+
+
+      Gaps:
+
+      - None. The audit NEEDS_TEST row is closed by live transport proof.'
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
