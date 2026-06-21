@@ -90472,3 +90472,80 @@ phases:
     - ngw.doc_sync_gate.docs_sync
     - ngw.doc_sync_gate.full_suite
     agent: gate-reviewer
+  - id: ngw.doc_sync_gate.full_suite_remediation
+    name: Batched full-suite blocker remediation
+    status: pending
+    description: "step_type: implementation\nagent_source: project\n\nBatched remediation\
+      \ for the full-suite blockers reported by `ngw.doc_sync_gate.full_suite`. Fix\
+      \ ALL blockers in one bounded pass, not just the first failing assertion.\n\n\
+      TARGET STATE:\n- Stale tool-prefix tests/repro fixtures use final snake_case\
+      \ underscore prefixes (`a_`, `work_`, `fs_`, `prod_`, `host_`) and expected\
+      \ exposed names, while raw-name matching, override lookup, conflict detection,\
+      \ and downstream routing semantics remain unchanged.\n- README/docs/tests align\
+      \ on split CLI and HTTP operator surface wording; do not reintroduce combined\
+      \ `CLI/HTTP` kind.\n- `_resolve_client_kind(...)` expectations align with the\
+      \ current `Result[str, str]` contract unless implementation evidence proves\
+      \ code adjustment is genuinely required.\n- Bridge-readiness docs/tests preserve\
+      \ the required clean bounded exit semantics without undoing the operator surface\
+      \ split.\n- Final nested-gateway semantics are preserved: dotted exposed MCP\
+      \ names invalid; examples use `host_`/`prod_`/`work_`; no silent auto-hide;\
+      \ exact `NESTED_TELA_PREFIX_REQUIRED` scenarios remain covered.\n\nSCOPE BOUNDARY:\n\
+      - Prefer tests/docs-only changes.\n- Product code may be touched only for `src/tela/commands/connect_cmd.py`\
+      \ if the client-kind `Result` mismatch is truly a code-contract defect; otherwise\
+      \ remediate the stale test expectation.\n- Do not weaken product validation,\
+      \ accept dotted prefixes, add compatibility aliases, accept-and-clean malformed\
+      \ shared input, or change shared canonical contract meaning.\n\nRequirement-to-Evidence\
+      \ Matrix:\n| requirement_id | source_ref + key passage | target_state | evidence_class\
+      \ | required_probe_or_artifact | status |\n| --- | --- | --- | --- | --- | ---\
+      \ |\n| FS-B1 | `ngw.doc_sync_gate.full_suite` evidence: tool-prefix tests instantiate\
+      \ dotted prefixes; final runtime contract rejects dotted syntax | tests/repro\
+      \ fixtures use underscore prefixes while preserving raw-name conflict/override/routing\
+      \ semantics | runtime_probe | targeted failed tool-prefix tests plus nested-gateway\
+      \ runtime/contract tests pass | OWNED |\n| FS-B2 | `README.md` + `tests/repro/test_loop4_remediation.py`:\
+      \ operator surface summary split CLI and HTTP wording | test/docs alignment\
+      \ preserves split operator surfaces without combined `CLI/HTTP` kind | runtime_probe\
+      \ | targeted README operator surface repro test passes | OWNED |\n| FS-B3 |\
+      \ `tests/shell/test_adr008_connect_survival.py`: `_resolve_client_kind` currently\
+      \ returns `Result(value='cli-kind', error=None)` | test or code matches current\
+      \ contract with minimal scope | runtime_probe | targeted client-kind precedence\
+      \ test passes | OWNED |\n| FS-B4 | `docs/CONFIRMED-SURFACE-CONTRACT.md`, `docs/INTERFACES.md`,\
+      \ `docs/DESIGN.md`: bridge readiness must exit cleanly/boundedly on persistent\
+      \ non-admission state | docs/tests preserve bounded exit semantics with current\
+      \ wording | runtime_probe | readiness freeze tests pass | OWNED |\n| FS-B5 |\
+      \ `docs/ADR-010-nested-gateway-ergonomics.md`, `docs/INTERFACES.md`, `docs/USAGE.md`:\
+      \ nested-gateway prefix diagnostics and snake_case exposed names | no regression\
+      \ in final nested-gateway contract/runtime semantics | runtime_probe | nested-gateway\
+      \ contract/runtime command passes | OWNED |\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\
+      \ Changes must be substantive test/docs/code alignment that processes the reported\
+      \ failure fingerprints and preserves the cited runtime contracts.\n\n<intent_closure_contract>\n\
+      allowed_paths:\n  - \"tests/core/test_tool_prefix_contract.py\"\n  - \"tests/repro/test_tool_prefix_blackbox.py\"\
+      \n  - \"tests/repro/test_loop4_remediation.py\"\n  - \"tests/shell/test_adr008_connect_survival.py\"\
+      \n  - \"tests/shell/test_connect_bridge_readiness_contract_freeze.py\"\n  -\
+      \ \"README.md\"\n  - \"docs/ADR-005-readiness-authority-boundary.md\"\n  - \"\
+      docs/ADR-008-operator-recovery-exposure.md\"\n  - \"docs/ADR-010-nested-gateway-ergonomics.md\"\
+      \n  - \"docs/CONFIRMED-SURFACE-CONTRACT.md\"\n  - \"docs/INTERFACES.md\"\n \
+      \ - \"docs/USAGE.md\"\n  - \"docs/DESIGN.md\"\n  - \"src/tela/commands/connect_cmd.py\"\
+      \nblocked_paths:\n  - \"src/tela/core/errors.py\"\n  - \"src/tela/core/tool_prefix.py\"\
+      \n  - \"src/tela/shell/mcp_server.py\"\n  - \"scripts/ci/mcp_tela_shared_surface_gate.py\"\
+      \nrequired_claims:\n  - stale_tool_prefix_fixtures_updated\n  - raw_name_override_and_conflict_semantics_preserved\n\
+      \  - operator_surface_docs_tests_aligned\n  - client_kind_result_contract_aligned\n\
+      \  - bridge_readiness_semantics_preserved\n  - nested_gateway_contract_runtime_preserved\n\
+      \  - no_product_validation_weakening\nrequired_checks:\n  - id: targeted_failed_full_suite_blockers\n\
+      \    command: [\"env\", \"PYTHONDONTWRITEBYTECODE=1\", \"uv\", \"run\", \"--frozen\"\
+      , \"pytest\", \"-q\", \"-p\", \"no:cacheprovider\", \"--tb=short\", \"tests/core/test_tool_prefix_contract.py\"\
+      , \"tests/repro/test_tool_prefix_blackbox.py\", \"tests/repro/test_loop4_remediation.py::TestLoop4OperatorSurfaceRemediation::test_readme_operator_surface_summary_uses_cli_http_names\"\
+      , \"tests/shell/test_adr008_connect_survival.py::test_client_kind_precedence_and_recovery_attempt_bound\"\
+      , \"tests/shell/test_connect_bridge_readiness_contract_freeze.py\"]\n    covers_claims:\n\
+      \      - stale_tool_prefix_fixtures_updated\n      - raw_name_override_and_conflict_semantics_preserved\n\
+      \      - operator_surface_docs_tests_aligned\n      - client_kind_result_contract_aligned\n\
+      \      - bridge_readiness_semantics_preserved\n  - id: nested_gateway_contract_runtime_regression\n\
+      \    command: [\"env\", \"PYTHONDONTWRITEBYTECODE=1\", \"uv\", \"run\", \"--frozen\"\
+      , \"pytest\", \"-q\", \"-p\", \"no:cacheprovider\", \"--tb=short\", \"tests/core/test_nested_gateway_contract.py\"\
+      , \"tests/shell/test_nested_gateway_runtime.py\", \"tests/shell/test_surface_contract.py\"\
+      , \"tests/shell/test_repo_local_ci_gate.py\"]\n    covers_claims:\n      - nested_gateway_contract_runtime_preserved\n\
+      \      - no_product_validation_weakening\n</intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    depends_on:
+    - ngw.doc_sync_gate.full_suite
+    agent: python-senior
