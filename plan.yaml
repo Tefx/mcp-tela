@@ -88986,7 +88986,7 @@ phases:
       - None. The audit NEEDS_TEST row is closed by live transport proof.'
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
-  status: pending
+  status: in_progress
   gate: Open only when black-box nested-gateway proof, reload proof, and spec-conformance
     evidence show the runtime surface matches ADR-010 and the interface docs.
   depends_on:
@@ -88994,7 +88994,7 @@ phases:
   steps:
   - id: ngw.runtime_verify.probe_harness
     name: Prepare nested-gateway black-box probe harness
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: project
@@ -89096,6 +89096,8 @@ phases:
     - tests/shell/test_reload.py
     - tests/shell/test_downstream.py
     agent: integration-verifier
+    claimed_by: integration-verifier
+    claimed_at: '2026-06-21T08:39:33.948798+00:00'
   - id: ngw.runtime_verify.blackbox_nested_gateway
     name: Black-box nested gateway runtime proof
     status: pending
