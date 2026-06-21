@@ -90468,7 +90468,6 @@ phases:
     - tests/shell/test_repo_local_ci_gate.py
     - scripts/ci/mcp_tela_shared_surface_gate.py
     - AGENTS.md
-    - ngw.doc_sync_gate.full_suite_retest
     depends_on:
     - ngw.doc_sync_gate.docs_sync
     - ngw.doc_sync_gate.full_suite_retest
