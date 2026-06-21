@@ -86381,7 +86381,7 @@ phases:
       owns turning these tests green.'
   - id: ngw.contract_tests.gate
     name: Gate contract and expected-red tests
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: project
@@ -86435,6 +86435,8 @@ phases:
     - ngw.contract_tests.core_expected_red
     - ngw.contract_tests.runtime_expected_red
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-21T01:12:22.301720+00:00'
 - id: ngw.core_impl
   name: Nested Gateway Core Implementation
   status: locked
