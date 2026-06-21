@@ -89431,7 +89431,7 @@ phases:
       - None.'
   - id: ngw.runtime_verify.spec_conformance
     name: Verify nested-gateway spec conformance
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: project
@@ -89537,6 +89537,124 @@ phases:
     agent: spec-verifier
     claimed_by: spec-verifier
     claimed_at: '2026-06-21T08:59:52.975204+00:00'
+    done_at: '2026-06-21T09:04:12.235802+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent spec-verifier evidence:
+
+      - Headline PASS; intent_status INTENT_MET; blocking_gaps [].
+
+      - Worktree clean; verification-only step made no changes.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — verifier cited Option A+C, raw
+      exclude_tools pre-prefix, nested_gateway requiring tool_prefix/excluding child
+      builtins/no silent auto-hide, and reload/re-enumeration acceptance criteria.
+
+      - docs/INTERFACES.md — verifier cited ServerConfig tool_prefix/exclude_tools/nested_gateway/headers/instructions,
+      operator/builtin split, and NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/USAGE.md — verifier cited raw filtering, explicit nested mode, no silent
+      auto-hide, snake_case prefixes, headers, instructions, and operator-only CLI/HTTP
+      surfaces.
+
+      - docs/DESIGN.md — verifier cited Core raw-name filtering and Shell lifecycle/reload
+      ownership.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md and docs/AGENT_INTERFACE.md — verifier
+      cited exactly two built-in MCP tools and operator routes are not MCP tools.
+
+      - README.md and tela.yaml.example — verifier cited tool_prefix/exclude_tools/nested_gateway
+      and headers/instructions examples.
+
+      - src/tela/core/models.py, config.py, errors.py, family.py — verifier cited
+      fields, validation, stable error code, effective_exclude_tools, resolve_tools
+      raw filtering/raw_name preservation.
+
+      - src/tela/shell/downstream.py, reload.py, builtin_tools.py, upstream.py — verifier
+      cited startup/re-enumeration, reload/reconnect, provider metadata, tools/list,
+      tools/call routing.
+
+      - tests/core/test_nested_gateway_contract.py and tests/shell/test_nested_gateway_runtime.py
+      — verifier cited contract/runtime evidence.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_verify.spec_conformance --worktree .vectl/worktrees/ngw.runtime_verify.spec_conformance
+      --base 76546dcf --out .vectl/worktrees/ngw.runtime_verify.spec_conformance/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; conformance verification step has no Intent-Closure
+      contract and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      -q -> exit 0, 24 passed in 0.33s
+
+
+      Spec Conformance Report summary:
+
+      - NGW-R1 raw-name exclude before prefix/registry/routing/metadata: CONFORMS.
+
+      - NGW-R2 nested_gateway requires tool_prefix: CONFORMS.
+
+      - NGW-R3 nested true hides child builtins and preserves parent builtins: CONFORMS.
+
+      - NGW-R4 omitted nested preserves prior behavior/prefix-only child builtins:
+      CONFORMS.
+
+      - NGW-R5 omitted/empty prefix and raw child builtins diagnostic NESTED_TELA_PREFIX_REQUIRED:
+      CONFORMS.
+
+      - NGW-R6 reload/re-enumeration treats exclude/nested/prefix as surface changes:
+      CONFORMS.
+
+      - NGW-R7 provider metadata filtered exposed surface: CONFORMS.
+
+      - NGW-R8 exposed-name call routing uses raw_name downstream: CONFORMS.
+
+      - NGW-R9 snake_case names and no dotted valid examples: CONFORMS.
+
+      - NGW-R10 CLI/HTTP operator surfaces split from MCP builtins: CONFORMS.
+
+      - NGW-R11 headers/instructions ServerConfig contracts preserved: CONFORMS.
+
+      - NGW-R12 explicit config/no silent auto-hide: CONFORMS.
+
+      - NGW-R13 omitted fields preserve default compatibility: CONFORMS.
+
+
+      Behavioral proof register:
+
+      - raw-name filtering before prefix/registry/provider metadata: PROVEN.
+
+      - nested_gateway child builtin suppression and parent builtin preservation:
+      PROVEN.
+
+      - omitted/empty prefix diagnostics: PROVEN.
+
+      - reload notification after filtered surface change: PROVEN.
+
+      - docs/operator split and no dotted valid examples: PROVEN.
+
+
+      Gaps:
+
+      - None.'
   - id: ngw.runtime_verify.gate
     name: Gate runtime verification
     status: pending
