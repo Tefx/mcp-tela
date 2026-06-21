@@ -90348,7 +90348,8 @@ phases:
       `tela_list_profiles` with omitted or empty `tool_prefix`.
 
       - Full suite, doctests, invar guard, repo-local nested-gateway doc parity check,
-      and shared-surface gates are green or have explicit blocker-owner steps.
+      shared-surface gates, and `ngw.doc_sync_gate.full_suite_retest` are green or
+      have explicit blocker-owner steps.
 
       - Parent built-ins remain gateway-owned; child built-ins are filtered only by
       explicit `exclude_tools` or `nested_gateway=True`.
@@ -90373,12 +90374,16 @@ phases:
 
       - The final evidence table omits NGW-R9.
 
+      - `ngw.doc_sync_gate.full_suite_retest` does not provide green raw receipts
+      for targeted blockers, full pytest, doctest, invar guard, pinned-OPIFEX shared-surface
+      gates, and nested-gateway contract/runtime tests.
+
 
       ### refs Read Confirmation (MANDATORY)
 
       For each ref in this step, evidence must cite the key passage or state `NOT
       READ: <reason>`. Include upstream evidence-bearing step IDs reviewed: `ngw.runtime_verify.gate`,
-      `ngw.doc_sync_gate.docs_sync`, and `ngw.doc_sync_gate.full_suite`.'
+      `ngw.doc_sync_gate.docs_sync`, `ngw.doc_sync_gate.full_suite`, and `ngw.doc_sync_gate.full_suite_retest`.'
     verification: full-plan-check final gate. Return OPEN only with complete NGW-R1..NGW-R9
       evidence table, refs-read key passages, raw command receipts, and no unresolved
       blocker-class debt.
