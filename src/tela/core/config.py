@@ -16,7 +16,7 @@ from tela.core.catalog import merge_with_builtins
 
 
 # Re-export for backward compatibility
-from tela.core.errors import ConfigContractError  # noqa: F401
+from tela.core.errors import ConfigContractError, NESTED_TELA_PREFIX_REQUIRED  # noqa: F401
 
 
 @pre(
@@ -237,13 +237,22 @@ def validate_config(
                 f"SERVER_HEADERS_WITH_STDIO: server '{name}' uses 'command' transport, but 'headers' are configured. Headers are only supported for 'url' HTTP/SSE transports."
             )
 
-        if server.tool_prefix is not None and (
-            server.tool_prefix.startswith("tela_")
-            or server.tool_prefix.startswith("tela.")
-        ):
+        if server.tool_prefix is not None:
+            if server.tool_prefix.startswith("tela_") or server.tool_prefix.startswith("tela."):
+                errors.append(
+                    f"SERVER_RESERVED_PREFIX: server '{name}' tool_prefix '{server.tool_prefix}' "
+                    "uses reserved 'tela_' or 'tela.' namespace."
+                )
+            if "." in server.tool_prefix:
+                errors.append(
+                    f"SERVER_INVALID_PREFIX: server '{name}' tool_prefix '{server.tool_prefix}' "
+                    "contains invalid dotted syntax; use snake_case."
+                )
+
+        if server.nested_gateway and not server.tool_prefix:
             errors.append(
-                f"SERVER_RESERVED_PREFIX: server '{name}' tool_prefix '{server.tool_prefix}' "
-                "uses reserved 'tela_' or 'tela.' namespace."
+                f"{NESTED_TELA_PREFIX_REQUIRED}: server '{name}' explicitly set "
+                "nested_gateway but omitted tool_prefix."
             )
 
     return errors

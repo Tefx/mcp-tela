@@ -13,13 +13,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 import re
-from typing import TypedDict
+from typing import TypedDict, Any
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from tela.core.contracts import post, pre
+from tela.core.errors import NESTED_TELA_PREFIX_REQUIRED
 from tela.core.reaper_config import ReaperPolicyConfig
 
 
@@ -144,6 +145,8 @@ class ServerConfig(BaseModel):
     headers: dict[str, str] = Field(default_factory=dict)
     family: str | None = None
     tool_prefix: str | None = None
+    exclude_tools: list[str] = Field(default_factory=list, strict=True)
+    nested_gateway: bool = Field(default=False, strict=True)
     # NOTE: Acceptance contract only. Prefix is part of exposed-name resolution
     # and must not be applied lazily at tools/call routing time.
     tool_overrides: dict[str, ToolOverride] = Field(default_factory=dict)
@@ -159,28 +162,63 @@ class ServerConfig(BaseModel):
 
     @field_validator("tool_prefix")
     @classmethod
-    @pre(lambda cls, v: v is None or len(v) > 0)
     @post(
         lambda result: (
             result is None
-            or not (result.startswith("tela.") or result.startswith("tela_"))
+            or not (
+                result.startswith("tela.")
+                or result.startswith("tela_")
+                or "." in result
+            )
         )
     )
     def _reject_reserved_prefix(cls, v: str | None) -> str | None:
-        """Reject tool_prefix values that use the reserved tela namespace.
+        """Reject tool_prefix values that use the reserved tela namespace or dotted syntax.
 
         Per USAGE.md §Tool Prefix Configuration and ServerConfig contract:
         tool_prefix starting with "tela." or "tela_" is reserved for
         built-in surfaces and must be rejected at construction time.
+        Dotted syntax is also invalid.
         This model-level validation mirrors the config-level check in
         validate_config() (config.py) and the resolve-time check in
         resolve_tools() (family.py) for defense in depth.
         """
-        if v is not None and (v.startswith("tela.") or v.startswith("tela_")):
-            raise ValueError(
-                f"ServerConfig.tool_prefix '{v}' uses reserved 'tela.'/'tela_' namespace"
-            )
+        if v == "":
+            raise ValueError("tool_prefix cannot be empty")
+        if v is not None:
+            if v.startswith("tela.") or v.startswith("tela_"):
+                raise ValueError(
+                    f"ServerConfig.tool_prefix '{v}' uses reserved 'tela.'/'tela_' namespace"
+                )
+            if "." in v:
+                raise ValueError(
+                    f"ServerConfig.tool_prefix '{v}' contains invalid dotted syntax; use snake_case"
+                )
         return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_aliases_and_shorthand(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            for alias in ("exclude_tool", "excluded_tools", "hide_tools"):
+                if alias in data:
+                    raise ValueError(f"Alias '{alias}' is not allowed, use 'exclude_tools'")
+            nested = data.get("nested_gateway", False)
+            # A 'None' or empty 'tool_prefix' string both trigger this requirement.
+            prefix = data.get("tool_prefix", None)
+            if nested and not prefix:
+                raise ValueError(
+                    f"{NESTED_TELA_PREFIX_REQUIRED}: nested_gateway true requires a non-empty tool_prefix"
+                )
+        return data
+
+    @model_validator(mode="after")
+    def _validate_nested_gateway_requires_prefix(self) -> ServerConfig:
+        if self.nested_gateway and not self.tool_prefix:
+            raise ValueError(
+                f"{NESTED_TELA_PREFIX_REQUIRED}: nested_gateway true requires a non-empty tool_prefix"
+            )
+        return self
 
 
 # --- Profile Configuration ---
