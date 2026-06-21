@@ -88415,6 +88415,176 @@ phases:
     - ngw.runtime_wiring.wiring_audit
     - ngw.runtime_wiring.green_retest
     agent: gate-reviewer
+  - id: live_transport_nested_child_enumeration_proof
+    name: Live transport nested child enumeration proof
+    status: pending
+    description: 'step_type: verification
+
+      verification_scope: phase-check
+
+      agent_source: project
+
+      independence_level: L2
+
+
+      PROOF ARTIFACT:
+
+      Close the unresolved `live_transport_nested_child_enumeration: NEEDS_TEST` row
+      from `ngw.runtime_wiring.wiring_audit` before the runtime wiring gate opens.
+      This is a read-only runtime proof step; do not modify product code, test fixtures,
+      or the existing audit finding.
+
+
+      Requirement-to-Evidence Matrix:
+
+      | requirement_id | source_ref + key passage | target_state | evidence_class
+      | required_probe_or_artifact | status |
+
+      | --- | --- | --- | --- | --- | --- |
+
+      | NGW-LIVE-ENUM-1 | `docs/ADR-010-nested-gateway-ergonomics.md` §Decision Outcome:
+      `exclude_tools` matches raw downstream names before prefixing/registration;
+      `nested_gateway: true` adds child `tela_list_providers` and `tela_list_profiles`
+      to the effective raw-name exclude set. | A parent gateway enumerates a real
+      nested downstream over live stdio or equivalent non-mock transport and excludes
+      child built-ins according to `nested_gateway`/`exclude_tools` before registration
+      and parent `tools/list`. | runtime_probe | Raw stdout/stderr from an actual
+      downstream nested child enumeration path; pre-supplied `tool_lists`, source
+      inspection, or monkeypatched enumeration alone is insufficient. | OWNED |
+
+      | NGW-LIVE-ENUM-2 | `docs/ADR-010-nested-gateway-ergonomics.md` §Consequences/Acceptance
+      Criteria: parent Tela built-ins remain visible and gateway-owned; child built-ins
+      are hidden only when configured through `exclude_tools` or `nested_gateway:
+      true`. | Runtime proof distinguishes parent built-ins from child built-ins:
+      parent `tela_list_providers`/`tela_list_profiles` remain callable/visible where
+      applicable, while child built-ins are absent from the parent-exposed child surface
+      when explicitly configured. | runtime_probe | Probe output showing parent tools/list
+      or builtin call evidence plus nested child enumeration result with child builtin
+      names absent/present according to config mode. | OWNED |
+
+      | NGW-LIVE-ENUM-3 | `docs/INTERFACES.md` §ServerConfig fields / `exclude_tools`
+      and `nested_gateway` contracts: excluded tools are absent from `tools/list`,
+      downstream call routing, conflict detection, and `tela_list_providers.tool_names/tool_count`;
+      nested trigger detection must not silently hide tools unless configured. | Live
+      transport evidence covers both configured hide mode and at least one control
+      mode: prefix-only without `nested_gateway`/`exclude_tools` keeps prefixed child
+      built-ins visible, or explicit `exclude_tools` hides only named raw child tools.
+      | runtime_probe | One live transport probe transcript with config, observed
+      `tools/list`, provider metadata `tool_names/tool_count`, and any call-routing
+      denial/absence evidence needed to prove the runtime seam. | OWNED |
+
+
+      Side-effect budget:
+
+      - Allowed: run local live/stdio or equivalent non-mock MCP downstream/parent
+      processes; create temporary probe scripts/configs outside the repo or under
+      ignored temp output if needed; collect stdout/stderr/log artifacts.
+
+      - Forbidden: modifying product code, weakening existing tests, changing current
+      audit evidence, replacing the auditor finding with prose, or accepting pre-enumerated
+      `tool_lists` as the only proof.
+
+
+      Risk probes:
+
+      - Run configured nested mode (`nested_gateway: true` with `tool_prefix`) against
+      a live child transport and prove child `tela_list_providers`/`tela_list_profiles`
+      are not exposed through the parent child-provider surface.
+
+      - Run a control mode proving configured semantics rather than heuristic hiding:
+      prefix-only child built-ins stay visible, or explicit `exclude_tools` hides
+      only configured raw names.
+
+      - Prove parent built-ins remain gateway-owned where applicable by observing
+      the parent gateway surface or builtin call result separately from the nested
+      child provider surface.
+
+
+      Gate intersection:
+
+      This step blocks `ngw.runtime_wiring.gate`, `ngw.runtime_verify.gate`, and `ngw.doc_sync_gate.final_gate`
+      until the NEEDS_TEST row is either PROVEN by runtime evidence or reported BLOCKED
+      with a concrete follow-up owner.'
+    verification: phase-check. Provide raw stdout/stderr, exact command(s), exit code(s),
+      config/probe inputs, and a behavioral proof register showing `live_transport_nested_child_enumeration`
+      is PROVEN through a live/stdio or equivalent non-mock downstream nested child
+      enumeration path.
+    evidence_template: '## Live Transport Nested Child Enumeration Proof
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof step:
+
+      - <filename> — key passage or "NOT READ: <reason>"
+
+
+      If no refs were provided, state: "No refs for this step."
+
+
+      ### Runtime Probe Receipt
+
+      **Exact command(s) executed**:
+
+      ```
+
+      <paste commands>
+
+      ```
+
+
+      **Exit code(s)**: <codes>
+
+
+      **Probe configuration / child process description**:
+
+      ```
+
+      <parent config, child launch command, transport used>
+
+      ```
+
+
+      **Raw stdout/stderr/logs**:
+
+      ```
+
+      <paste raw output>
+
+      ```
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+      | live_transport_nested_child_enumeration | Live/stdio or equivalent nested
+      child enumeration path exercised without pre-supplied tool_lists as sole proof.
+      | Raw transport transcript from child enumeration through parent runtime seam.
+      | <artifact/line> | PROVEN/BLOCKED | <owner if blocked> | Blocks ngw.runtime_wiring.gate
+      unless PROVEN or explicit owner exists. |
+
+      | child_builtin_filtering | Child built-ins obey `nested_gateway`/`exclude_tools`
+      semantics at runtime. | Observed tools/list/provider metadata/call routing evidence.
+      | <artifact/line> | PROVEN/BLOCKED | <owner if blocked> | Blocks runtime wiring
+      and downstream runtime gates. |
+
+      | parent_builtins_gateway_owned | Parent built-ins remain gateway-owned where
+      applicable. | Parent surface or builtin call evidence distinct from child provider
+      surface. | <artifact/line> | PROVEN/BLOCKED | <owner if blocked> | Blocks gate
+      if unproven. |
+
+
+      ### Headline
+
+      PASS only if the live transport proof is positive and no row remains NEEDS_TEST/UNPROVEN
+      without owner.'
+    depends_on:
+    - ngw.runtime_wiring.wiring_audit
+    agent: integration-verifier
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
   status: locked
