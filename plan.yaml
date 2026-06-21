@@ -87478,6 +87478,17 @@ phases:
       \     - introduced_core_contracts_fixed\n      - full_invar_guard_all_green\n\
       \      - project_budget_blockers_closed\n</intent_closure_contract>"
     verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    refs:
+    - .agents/instructions.md
+    - INVAR.md
+    - docs/ADR-010-nested-gateway-ergonomics.md
+    - docs/INTERFACES.md
+    - docs/USAGE.md
+    - src/tela/core/models.py
+    - src/tela/core/family.py
+    - src/tela/commands
+    - src/tela/shell
+    - tests/core/test_nested_gateway_contract.py
     depends_on:
     - ngw.core_impl.raw_filtering_kernel
     agent: python-senior
