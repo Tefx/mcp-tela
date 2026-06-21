@@ -86445,7 +86445,7 @@ phases:
     agent: gate-reviewer
   - id: ngw.contract_tests.remediate_expected_red_quality
     name: Remediate expected-red runtime test quality
-    status: claimed
+    status: done
     description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
       \ red\nagent_source: project\n\nRemediate the failed `ngw.contract_tests.gate`\
       \ findings by replacing placeholder/stub expected-red tests with executable,\
@@ -86625,6 +86625,111 @@ phases:
     agent: python-executor
     claimed_by: python-senior
     claimed_at: '2026-06-21T01:22:19.489939+00:00'
+    done_at: '2026-06-21T01:29:06.800975+00:00'
+    evidence: 'status: SUCCESS
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      observed_result: red (17 failures, 2 passed)
+
+      verdict: EXPECTED_RED_ACCEPTED
+
+
+      Worker evidence:
+
+      - Modified only tests/core/test_nested_gateway_contract.py and tests/shell/test_nested_gateway_runtime.py.
+
+      - Worker commit: a560490b Remediate nested gateway expected-red tests
+
+      - Main merge commit: cfed2cf7 [vectl] step-ngw.contract_tests.remediate_expected_red_quality
+      completed
+
+      - Product files modified: false.
+
+      - Docs modified: false.
+
+
+      refs Read Confirmation:
+
+      - evidence/ngw_contract_tests_contract_matrix.md — worker cited NGW-R1..R9 expected-red
+      ownership requirements for raw-name exclude_tools, nested_gateway, no silent
+      auto-hide, parent/child builtins, shell/core ownership, and snake_case prefixes.
+
+      - tests/core/test_nested_gateway_contract.py — worker inspected and strengthened
+      core tests for alias/no-cleanup ownership and behavior-shaped expected red.
+
+      - tests/shell/test_nested_gateway_runtime.py — worker identified placeholders/bare
+      pass/catch-all swallowing and replaced them with direct runtime probes.
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited raw-name exclude_tools
+      before registration, nested_gateway requires prefix and auto-excludes child
+      builtins, detection must not silently hide.
+
+      - docs/INTERFACES.md — worker cited config contract for tool_prefix, exclude_tools,
+      nested_gateway, absence from list/call/provider metadata, and NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/USAGE.md — worker cited host_/prod_/work_ examples, tools/list_changed,
+      and parent builtins visibility.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — worker cited exactly two parent MCP builtins
+      and provider payload tool_count/tool_names.
+
+      - Harness refs — worker cited connect_all, registry snapshots/lookups, on_tools_changed,
+      register_builtin_tools, and handle_list_providers as executable probes.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.contract_tests.remediate_expected_red_quality --worktree .vectl/worktrees/ngw.contract_tests.remediate_expected_red_quality
+      --base 574f4b87 --out .vectl/worktrees/ngw.contract_tests.remediate_expected_red_quality/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: tests/core/test_nested_gateway_contract.py, tests/shell/test_nested_gateway_runtime.py
+
+      - required check nested_gateway_expected_red_quality: uv run pytest tests/core/test_nested_gateway_contract.py
+      tests/shell/test_nested_gateway_runtime.py -q -> exit 1, expected-red accepted
+
+      - matched failure patterns: exclude_tools, nested_gateway, NESTED_TELA_PREFIX_REQUIRED,
+      tool_count, tools/list_changed, NESTED_CHILD_TOOL_NOT_FILTERED, parent builtins,
+      tela_list_providers, tela_list_profiles
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      -q -> exit 1 (expected red)
+
+      - Fingerprints verified: exclude_tools, nested_gateway, NESTED_TELA_PREFIX_REQUIRED,
+      tool_count, tools/list_changed, plus NESTED_CHILD_TOOL_NOT_FILTERED/parent builtins/tela_list_providers/tela_list_profiles.
+
+
+      Command-to-Claim Coverage:
+
+      - B1 PROVEN — runtime tests now probe connect_all, registry snapshot, get_tool_server
+      lookup, handle_list_providers, and on_tools_changed.
+
+      - B2 PROVEN — parent builtins visibility/distinction covered by test_parent_builtins_remain_gateway_owned_while_child_builtins_follow_config.
+
+      - B3 PROVEN — no-silent-auto-hide compatibility covered by prefixed child builtin
+      visibility assertions.
+
+      - B4 PROVEN — invalid exclude_tools shapes/aliases, core/shell ownership, host_/prod_/work_,
+      dotted/reserved prefix, and diagnostics covered.
+
+      - NGW-R1..NGW-R9 mapped across strengthened core model/resolve tests and shell
+      startup/reload/provider/builtin visibility tests.
+
+
+      Gaps:
+
+      - None for this remediation test-definition step. Downstream implementation
+      owns turning expected-red tests green.'
 - id: ngw.core_impl
   name: Nested Gateway Core Implementation
   status: locked
