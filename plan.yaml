@@ -89020,6 +89020,20 @@ phases:
       proof.
 
 
+      Truth-finding closure rule:
+
+      - This probe step is completeable when it produces the executable probe artifact
+      and a truthful report, even if the report is `AUDIT_COMPLETE_WITH_FINDINGS`
+      / blocker found.
+
+      - The observed empty-prefix diagnostic blocker is now owned by `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic`;
+      do not treat the finder evidence as phase/gate closure.
+
+      - Include the observed report path `/tmp/larva-agent-artifacts/ngw_runtime_probe_1782031514_59428_report.json`,
+      probe script sha256 `c4b85a81ae2f1af37b29340c7299511788bac31961e93dfc8e1602e5470757b2`,
+      and raw command/logs when completing this probe.
+
+
       Anti-vacuum rule: mocked unit tests are insufficient. The probe must run against
       the true host/runtime boundary or clearly name the missing environment blocker.
 
@@ -89058,8 +89072,10 @@ phases:
       READ: <reason>`. If a future generated probe artifact is not available yet,
       cite the upstream step evidence that produced or selected it.'
     verification: local-check protecting runtime black-box proof. Produce the probe
-      artifact path and run a dry invocation or explain exact missing runtime blocker.
-      Provide raw stdout/stderr and refs-read key passages.
+      artifact path and run output. A truthful blocker finding is sufficient for this
+      finder step only when the blocker owner is identified as `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic`;
+      downstream gate closure still requires the fix plus green rerun. Provide raw
+      stdout/stderr and refs-read key passages.
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this proof step:
