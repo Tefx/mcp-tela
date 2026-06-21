@@ -377,6 +377,95 @@ def test_re_enumerate_returns_downstream_unavailable_when_not_connected() -> Non
     assert r.error.startswith("DOWNSTREAM_UNAVAILABLE")
 
 
+def test_re_enumerate_applies_core_raw_name_filter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Manual re-enumeration must not bypass exclude_tools filtering."""
+
+    from tela.shell import downstream
+    from tela.shell.result import Result
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    old_runtime = get_runtime_config().value
+    server = ServerConfig(
+        name="srv", command="cmd", tool_prefix="srv_", exclude_tools=["blocked"]
+    )
+    set_runtime_config(TelaConfig(servers={"srv": server}))
+    downstream._clients["srv"] = downstream._ClientHandle(  # type: ignore[arg-type]
+        session=object(), stack=FakeStack()
+    )
+
+    async def fake_enumerate_tools(session: object) -> Result[list[dict], str]:
+        return Result(
+            value=[
+                {"name": "blocked", "inputSchema": {}},
+                {"name": "allowed", "inputSchema": {}},
+            ]
+        )
+
+    monkeypatch.setattr(downstream, "_enumerate_tools", fake_enumerate_tools)
+
+    try:
+        result = asyncio.run(re_enumerate("srv"))
+        assert result.is_ok, result.error
+        names = {tool.name for tool in result.value or []}
+        assert names == {"srv_allowed"}
+        assert get_tool_server("srv_blocked").value is None
+    finally:
+        set_runtime_config(old_runtime)
+        downstream._clients.clear()
+        asyncio.run(disconnect_all())
+
+
+def test_re_enumerate_conflict_rolls_back_previous_registry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Manual re-enumeration conflict preserves previous registry state."""
+
+    from tela.shell import downstream
+    from tela.shell.result import Result
+
+    class FakeStack:
+        async def aclose(self) -> None:
+            return None
+
+    old_runtime = get_runtime_config().value
+    servers = {
+        "left": ServerConfig(name="left", command="cmd"),
+        "right": ServerConfig(name="right", command="cmd"),
+    }
+    set_runtime_config(TelaConfig(servers=servers))
+    asyncio.run(
+        connect_all(
+            servers,
+            tool_lists={
+                "left": [{"name": "shared", "inputSchema": {}}],
+                "right": [{"name": "right_old", "inputSchema": {}}],
+            },
+        )
+    )
+    downstream._clients["right"] = downstream._ClientHandle(  # type: ignore[arg-type]
+        session=object(), stack=FakeStack()
+    )
+
+    async def fake_enumerate_tools(session: object) -> Result[list[dict], str]:
+        return Result(value=[{"name": "shared", "inputSchema": {}}])
+
+    monkeypatch.setattr(downstream, "_enumerate_tools", fake_enumerate_tools)
+
+    try:
+        result = asyncio.run(re_enumerate("right"))
+        assert result.is_err
+        assert "TOOL_CONFLICT" in (result.error or "")
+        assert get_tool_server("shared").value == "left"
+        assert get_tool_server("right_old").value == "right"
+    finally:
+        set_runtime_config(old_runtime)
+        downstream._clients.clear()
+        asyncio.run(disconnect_all())
+
+
 # --- Client lifecycle: stdio connection setup ---
 
 

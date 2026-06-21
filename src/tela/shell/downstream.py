@@ -678,6 +678,14 @@ async def re_enumerate(
             )
 
         assert tools_result.value is not None
+        snap = _registry.snapshot()
         resolved = resolve_tools(server_name, server_config, tools_result.value)
         _registry.register(server_name, resolved)
+        conflicts = detect_conflicts(_registry.get_all_tools())
+        if conflicts:
+            _registry.restore(snap)
+            conflict_desc = "; ".join(
+                f"{c.tool_name} in [{', '.join(c.servers)}]" for c in conflicts
+            )
+            return Result(error=f"TOOL_CONFLICT: {conflict_desc}")
         return Result(value=resolved)

@@ -382,12 +382,23 @@ async def on_config_changed(new_config: TelaConfig) -> Result[None, str]:
         servers_to_reconnect = added | changed
 
         if removed or servers_to_reconnect:
+            async with _registry_lock:
+                registry_snapshot = get_registry().snapshot()
+
             # Disconnect all and reconnect with new config.
             # Per-server disconnect is not yet supported; full reconnect
             # is the safe path that preserves conflict-detection invariants.
             await disconnect_all()
             connect_result = await connect_all(new_config.servers)
             if connect_result.is_err:
+                if old_config is not None and str(connect_result.error).startswith(
+                    "TOOL_CONFLICT"
+                ):
+                    async with _registry_lock:
+                        get_registry().restore(registry_snapshot)
+                    set_runtime_config(old_config)
                 return Result(error=connect_result.error)
+
+            await _notify_registry_tool_digest()
 
     return Result(value=None)

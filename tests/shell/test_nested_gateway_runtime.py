@@ -285,20 +285,14 @@ def test_valid_prefix_without_nested_gateway_or_exclude_tools_keeps_child_builti
 
 
 def test_nested_gateway_missing_prefix_diagnostic_is_actionable_runtime_contract() -> None:
-    """B4/NGW-R5: explicit nested mode without prefix fails with stable code."""
+    """B4/NGW-R5: explicit nested mode without prefix fails at Core gate."""
 
-    observation = _connect_observation(
-        {"child": ServerConfig(name="child", command="cmd", nested_gateway=True)},
-        {"child": [_tool("safe_tool")]},
-    )
+    with pytest.raises(ValueError) as exc_info:
+        ServerConfig(name="child", command="cmd", nested_gateway=True)
 
-    assert not observation.accepted, (
-        "nested_gateway missing tool_prefix must fail closed at runtime; "
-        "startup accepted the config"
-    )
-    assert NESTED_TELA_PREFIX_REQUIRED in observation.message, (
+    assert NESTED_TELA_PREFIX_REQUIRED in str(exc_info.value), (
         "NESTED_TELA_PREFIX_REQUIRED nested_gateway missing prefix diagnostic "
-        f"not emitted; observed={observation.message!r}"
+        f"not emitted; observed={exc_info.value!r}"
     )
 
 

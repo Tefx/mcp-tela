@@ -17,6 +17,7 @@ from tela.core.models import ServerConfig, TelaConfig
 from tela.shell.downstream import (
     connect_all,
     disconnect_all,
+    get_all_tools,
     get_downstream_startup_snapshot,
     get_tool_server,
 )
@@ -273,6 +274,115 @@ def test_on_config_changed_server_change_records_reconnect_failure() -> None:
         # Runtime config should still be updated even when the provider failed.
         assert _get_config() == new_config
     finally:
+        _set_config(old_config_ref)
+        _teardown()
+
+
+def test_on_config_changed_nested_gateway_surface_change_notifies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """nested_gateway false->true reload filters child builtins and notifies."""
+
+    from tela.shell import downstream
+
+    old_config_ref = _get_config()
+    notifications: list[str] = []
+
+    async def capture_notify(digest: str) -> None:
+        notifications.append(digest)
+
+    initial_server = ServerConfig(name="child", command="cmd", tool_prefix="host_")
+    old_config = TelaConfig(servers={"child": initial_server})
+    raw_tools = [
+        {"name": "tela_list_providers", "inputSchema": {}},
+        {"name": "safe_tool", "inputSchema": {}},
+    ]
+    asyncio.run(connect_all(old_config.servers, tool_lists={"child": raw_tools}))
+    _set_config(old_config)
+    set_notify_callback(capture_notify)
+
+    async def fake_connect_all(servers: dict[str, ServerConfig]):
+        return await downstream.connect_all(servers, tool_lists={"child": raw_tools})
+
+    monkeypatch.setattr("tela.shell.reload.connect_all", fake_connect_all)
+
+    try:
+        new_server = ServerConfig(
+            name="child", command="cmd", tool_prefix="host_", nested_gateway=True
+        )
+        result = asyncio.run(
+            on_config_changed(TelaConfig(servers={"child": new_server}))
+        )
+        assert result.is_ok, result.error
+
+        tools = get_all_tools().value or {}
+        child_names = {tool.name for tool in tools.get("child", [])}
+        assert child_names == {"host_safe_tool"}
+        assert len(notifications) == 1
+        assert notifications[0].startswith("sha256:")
+    finally:
+        set_notify_callback(None)
+        _set_config(old_config_ref)
+        _teardown()
+
+
+def test_on_config_changed_conflict_rolls_back_previous_registry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Config reload conflict restores prior filtered registry and config."""
+
+    from tela.shell import downstream
+
+    old_config_ref = _get_config()
+    notifications: list[str] = []
+
+    async def capture_notify(digest: str) -> None:
+        notifications.append(digest)
+
+    old_servers = {
+        "left": ServerConfig(name="left", command="cmd"),
+        "right": ServerConfig(
+            name="right", command="cmd", exclude_tools=["shared"]
+        ),
+    }
+    old_config = TelaConfig(servers=old_servers)
+    old_tool_lists = {
+        "left": [{"name": "shared", "inputSchema": {}}],
+        "right": [
+            {"name": "shared", "inputSchema": {}},
+            {"name": "right_only", "inputSchema": {}},
+        ],
+    }
+    asyncio.run(connect_all(old_config.servers, tool_lists=old_tool_lists))
+    _set_config(old_config)
+    set_notify_callback(capture_notify)
+
+    async def fake_connect_all(servers: dict[str, ServerConfig]):
+        return await downstream.connect_all(
+            servers,
+            tool_lists={
+                "left": [{"name": "shared", "inputSchema": {}}],
+                "right": [{"name": "shared", "inputSchema": {}}],
+            },
+        )
+
+    monkeypatch.setattr("tela.shell.reload.connect_all", fake_connect_all)
+
+    try:
+        new_servers = {
+            "left": old_servers["left"],
+            "right": ServerConfig(name="right", command="cmd"),
+        }
+        result = asyncio.run(on_config_changed(TelaConfig(servers=new_servers)))
+        assert result.is_err
+        assert "TOOL_CONFLICT" in (result.error or "")
+
+        assert get_tool_server("shared").value == "left"
+        assert get_tool_server("right_only").value == "right"
+        assert _get_config() == old_config
+        assert notifications == []
+    finally:
+        set_notify_callback(None)
         _set_config(old_config_ref)
         _teardown()
 
@@ -903,7 +1013,7 @@ def test_on_tools_changed_prefix_change_updates_registry_and_notifies() -> None:
     try:
         # Update: same raw tools but now with prefix
         updated_server_config = ServerConfig(
-            name="fs", command="cmd", tool_prefix="fs."
+            name="fs", command="cmd", tool_prefix="fs_"
         )
         result = asyncio.run(
             on_tools_changed(
@@ -915,7 +1025,7 @@ def test_on_tools_changed_prefix_change_updates_registry_and_notifies() -> None:
         assert result.is_ok
 
         # Registry updated with prefixed exposed name
-        assert get_tool_server("fs.read_file").value == "fs"
+        assert get_tool_server("fs_read_file").value == "fs"
 
         # Notification fired
         assert len(notified) == 1
@@ -956,7 +1066,7 @@ def test_prefix_change_produces_different_digest() -> None:
     try:
         # Update: same raw tools but now with prefix
         updated_server_config = ServerConfig(
-            name="fs", command="cmd", tool_prefix="fs."
+            name="fs", command="cmd", tool_prefix="fs_"
         )
         result = asyncio.run(
             on_tools_changed(
@@ -968,10 +1078,10 @@ def test_prefix_change_produces_different_digest() -> None:
         assert result.is_ok
         assert len(notified) == 1
 
-        # The digest is based on exposed names (fs.read_file), not raw names
+        # The digest is based on exposed names (fs_read_file), not raw names
         import hashlib
 
-        tool_names = sorted(["fs.read_file"])
+        tool_names = sorted(["fs_read_file"])
         raw = ":".join(tool_names).encode()
         expected = f"sha256:{hashlib.sha256(raw).hexdigest()}"
         assert notified[0] == expected
