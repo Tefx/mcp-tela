@@ -86945,49 +86945,58 @@ phases:
     status: pending
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nComplete the pure Core filtering behavior after `ServerConfig`\
-      \ exposes the required fields.\n\nTARGET STATE:\n- Raw downstream tool names\
-      \ are filtered before prefixing, family resolution, posture classification,\
-      \ conflict detection, registry registration, provider metadata, and call routing.\n\
-      - `exclude_tools` entries match raw downstream names exactly; prefixed exposed\
-      \ names do not match.\n- `nested_gateway=True` adds raw child built-ins `tela_list_providers`\
-      \ and `tela_list_profiles` to the effective raw-name exclude set.\n- `nested_gateway=True`\
-      \ with omitted or empty `tool_prefix` fails closed with `NESTED_TELA_PREFIX_REQUIRED`\
-      \ from `src/tela/core/errors.py`.\n- If downstream raw tools include child Tela\
-      \ built-ins (`tela_list_providers` or `tela_list_profiles`) with omitted or\
-      \ empty `tool_prefix`, the reserved namespace / likely-nested failure is deterministic\
-      \ and actionable as `NESTED_TELA_PREFIX_REQUIRED`.\n- `nested_gateway=False`\
-      \ plus a valid non-reserved snake_case `tool_prefix` (for example `host_`) does\
-      \ not auto-hide child built-ins; they remain exposed with the prefix unless\
-      \ `exclude_tools` is configured.\n- Parent Tela built-ins are not part of this\
-      \ downstream filtering function and remain gateway-owned.\n- Likely nested Tela\
-      \ detection is diagnostic-only. It must not silently mutate or hide the returned\
-      \ resolved tool list unless `exclude_tools` or `nested_gateway=True` is configured.\n\
-      - Final exposed MCP names remain snake_case; dotted prefixes are invalid examples\
-      \ and must not be introduced.\n- Any new Core helper has `@pre`, `@post`, and\
-      \ doctests before implementation logic.\n\nUPSTREAM ARTIFACTS:\n- `ngw.core_impl.config_model_validation`\
+      \ exposes the required fields. This step owns `src/tela/core/family.py` and\
+      \ the `resolve_tools` raw filtering/source assertions; it must not dispatch\
+      \ until `ngw.core_impl.config_model_validation` is complete.\n\nTARGET STATE:\n\
+      - Raw downstream tool names are filtered before prefixing, family resolution,\
+      \ posture classification, conflict detection, registry registration, provider\
+      \ metadata, and call routing.\n- `exclude_tools` entries match raw downstream\
+      \ names exactly; prefixed exposed names do not match.\n- `nested_gateway=True`\
+      \ adds raw child built-ins `tela_list_providers` and `tela_list_profiles` to\
+      \ the effective raw-name exclude set.\n- `nested_gateway=True` with omitted\
+      \ or empty `tool_prefix` fails closed with `NESTED_TELA_PREFIX_REQUIRED` from\
+      \ `src/tela/core/errors.py`.\n- If downstream raw tools include child Tela built-ins\
+      \ (`tela_list_providers` or `tela_list_profiles`) with omitted or empty `tool_prefix`,\
+      \ the reserved namespace / likely-nested failure is deterministic and actionable\
+      \ as `NESTED_TELA_PREFIX_REQUIRED`.\n- `nested_gateway=False` plus a valid non-reserved\
+      \ snake_case `tool_prefix` (for example `host_`) does not auto-hide child built-ins;\
+      \ they remain exposed with the prefix unless `exclude_tools` is configured.\n\
+      - Parent Tela built-ins are not part of this downstream filtering function and\
+      \ remain gateway-owned.\n- Likely nested Tela detection is diagnostic-only.\
+      \ It must not silently mutate or hide the returned resolved tool list unless\
+      \ `exclude_tools` or `nested_gateway=True` is configured.\n- Final exposed MCP\
+      \ names remain snake_case; dotted prefixes are invalid examples and must not\
+      \ be introduced.\n- Any new Core helper has `@pre`, `@post`, and doctests before\
+      \ implementation logic.\n\nUPSTREAM ARTIFACTS:\n- `ngw.core_impl.config_model_validation`\
       \ — authoritative model fields and stable diagnostic constant location.\n- `ngw.contract_tests.core_expected_red`\
-      \ — protected expected-red assertions.\n- `ngw.contract_tests.runtime_expected_red`\
-      \ — protected runtime diagnostics and compatibility scenarios.\n\nSCOPE BOUNDARY:\n\
-      - Preserve `ResolvedTool.name` as the exposed name and `ResolvedTool.raw_name`\
-      \ as the downstream routing name.\n- Preserve existing `tool_prefix` reserved\
-      \ namespace checks, including `tela.`/`tela_` reserved inputs, while enforcing\
-      \ final exposed-name snake_case where the current contract requires it.\n- Do\
-      \ not edit Shell runtime wiring in this step.\n\nGate Preview (what the gate\
-      \ WILL reject):\n1. Filtering after prefix/classification/registration; this\
-      \ violates NGW-R1.\n2. Silent auto-hide when `nested_gateway` is omitted; this\
-      \ violates NGW-R4/NGW-R6.\n3. Lost `raw_name` causing call routing to strip\
-      \ prefixes heuristically.\n4. Ad hoc diagnostic strings instead of the stable\
-      \ Core error-code surface.\n\n<intent_closure_contract>\nallowed_paths:\n  -\
-      \ \"src/tela/core/family.py\"\n  - \"src/tela/core/models.py\"\n  - \"src/tela/core/config.py\"\
-      \n  - \"src/tela/core/errors.py\"\n  - \"src/tela/core/**nested*gateway*.py\"\
+      \ — protected expected-red assertions for raw filtering and `resolve_tools`\
+      \ ownership.\n- `ngw.contract_tests.runtime_expected_red` — protected runtime\
+      \ diagnostics and compatibility scenarios.\n\nSCOPE BOUNDARY:\n- Preserve `ResolvedTool.name`\
+      \ as the exposed name and `ResolvedTool.raw_name` as the downstream routing\
+      \ name.\n- Preserve existing `tool_prefix` reserved namespace checks, including\
+      \ `tela.`/`tela_` reserved inputs, while enforcing final exposed-name snake_case\
+      \ where the current contract requires it.\n- Do not edit Shell runtime wiring\
+      \ in this step.\n\nGate Preview (what the gate WILL reject):\n1. Filtering after\
+      \ prefix/classification/registration; this violates NGW-R1.\n2. Silent auto-hide\
+      \ when `nested_gateway` is omitted; this violates NGW-R4/NGW-R6.\n3. Lost `raw_name`\
+      \ causing call routing to strip prefixes heuristically.\n4. Ad hoc diagnostic\
+      \ strings instead of the stable Core error-code surface.\n\n<intent_closure_contract>\n\
+      allowed_paths:\n  - \"src/tela/core/family.py\"\n  - \"src/tela/core/models.py\"\
+      \n  - \"src/tela/core/config.py\"\n  - \"src/tela/core/errors.py\"\n  - \"src/tela/core/**nested*gateway*.py\"\
       \n  - \"tests/core/test_nested_gateway_contract.py\"\nblocked_paths:\n  - \"\
       src/tela/shell/**\"\n  - \"docs/**\"\n  - \"../opifex/**\"\nrequired_claims:\n\
       \  - raw_excludes_before_resolution\n  - nested_effective_excludes_added\n \
       \ - deterministic_nested_prefix_diagnostics_preserved\n  - no_silent_autohide_preserved\n\
       \  - raw_name_routing_contract_preserved\nrequired_checks:\n  - id: core_nested_filtering_tests\n\
-      \    command: [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
-      , \"-q\"]\n    covers_claims:\n      - raw_excludes_before_resolution\n    \
-      \  - nested_effective_excludes_added\n      - deterministic_nested_prefix_diagnostics_preserved\n\
+      \    command:\n      - \"uv\"\n      - \"run\"\n      - \"pytest\"\n      -\
+      \ \"tests/core/test_nested_gateway_contract.py::test_raw_child_builtins_without_prefix_fail_with_nested_prefix_required\"\
+      \n      - \"tests/core/test_nested_gateway_contract.py::test_exclude_tools_filters_raw_names_before_prefix_family_and_reserved_checks\"\
+      \n      - \"tests/core/test_nested_gateway_contract.py::test_nested_gateway_true_adds_child_builtins_to_effective_exclude_set\"\
+      \n      - \"tests/core/test_nested_gateway_contract.py::test_prefix_only_mode_keeps_prefixed_child_builtins_visible\"\
+      \n      - \"tests/core/test_nested_gateway_contract.py::test_tool_prefix_validation_covers_snake_case_reserved_and_dotted_prefixes\"\
+      \n      - \"tests/core/test_nested_gateway_contract.py::test_core_shell_ownership_boundary_remains_pure_for_filter_semantics\"\
+      \n      - \"-q\"\n    covers_claims:\n      - raw_excludes_before_resolution\n\
+      \      - nested_effective_excludes_added\n      - deterministic_nested_prefix_diagnostics_preserved\n\
       \      - no_silent_autohide_preserved\n      - raw_name_routing_contract_preserved\n\
       \  - id: core_family_doctests\n    command: [\"uv\", \"run\", \"pytest\", \"\
       --doctest-modules\", \"src/tela/core\", \"-q\"]\n    covers_claims:\n      -\
