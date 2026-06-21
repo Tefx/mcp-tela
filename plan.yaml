@@ -86838,7 +86838,7 @@ phases:
       owns turning expected-red tests green.'
 - id: ngw.core_impl
   name: Nested Gateway Core Implementation
-  status: in_progress
+  status: done
   gate: Open only when targeted core tests pass green, Core @pre/@post contracts and
     doctests are present for new helpers, and default compatibility is proven.
   depends_on:
@@ -87415,7 +87415,7 @@ phases:
       - None.'
   - id: ngw.core_impl.gate
     name: Gate core implementation
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: project
@@ -87501,6 +87501,90 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T07:51:27.734171+00:00'
+    done_at: '2026-06-21T07:55:07.643985+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent gate evidence:
+
+      - Gate reviewer returned PASS with no blockers and final decision OPEN.
+
+      - Upstream evidence-bearing steps reviewed: ngw.core_impl.config_model_validation,
+      ngw.core_impl.raw_filtering_kernel, guard_blocker_fix, ngw.core_impl.core_green_retest.
+
+      - Worktree clean; gate/review step made no changes.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — reviewer cited raw exclude_tools
+      before prefix/registration, nested_gateway prefix requirement, no silent auto-hide,
+      and NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/INTERFACES.md, docs/USAGE.md, docs/DESIGN.md — reviewer cited raw-name
+      filtering, fail-closed nested diagnostics, parent builtins preserved, and Core
+      owns pure filtering.
+
+      - src/tela/core/models.py, src/tela/core/config.py, src/tela/core/errors.py,
+      src/tela/core/family.py — reviewer inspected core implementation and located
+      diagnostic code at src/tela/core/errors.py.
+
+      - tests/core/test_nested_gateway_contract.py — reviewer inspected core behavior
+      tests.
+
+      - .agents/instructions.md and INVAR.md — reviewer confirmed Core contract/doctest
+      requirements.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.core_impl.gate --worktree .vectl/worktrees/ngw.core_impl.gate --base
+      09ba0a29 --out .vectl/worktrees/ngw.core_impl.gate/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; review-only gate has no Intent-Closure contract
+      and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py -q -> exit 0, 9 passed
+      in 0.14s
+
+      - uv run pytest --doctest-modules src/tela/core -q -> exit 0, 64 passed in 0.14s
+
+      - uv run invar guard --all -> exit 0, status passed; errors 0, warnings 57,
+      infos 24; shell_result 16/17 and weighted budget 69/75.
+
+
+      Gate Decision Basis:
+
+      - Core contracts/doctests: PROVEN — doctests pass and guard exit 0.
+
+      - Model validation semantics: PROVEN — ServerConfig exclude_tools strict list
+      default [], nested_gateway strict bool false, aliases rejected, prefix required.
+
+      - Raw filtering order: PROVEN — resolve_tools computes effective_exclude_tools
+      and filters raw names before prefix/family/classification.
+
+      - No aliases/opifex reinterpretation: PROVEN — aliases rejected; no shared-field
+      reinterpretation found.
+
+      - Guard blockers closed: PROVEN — uv run invar guard --all exit 0 and budget
+      blockers warning-only below limits.
+
+
+      Gaps:
+
+      - None. Core implementation phase gate is open for downstream runtime wiring.'
   - id: guard_blocker_fix
     name: Fix core retest invar guard blockers
     status: done
@@ -87696,7 +87780,7 @@ phases:
       - None.'
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
-  status: locked
+  status: pending
   gate: Open only when runtime seams prove filtered tools never register or route,
     provider metadata reports the filtered surface, and tool-surface changes emit
     notifications.
