@@ -90549,3 +90549,127 @@ phases:
     depends_on:
     - ngw.doc_sync_gate.full_suite
     agent: python-senior
+  - id: ngw.doc_sync_gate.full_suite_retest
+    name: Retest full-suite blocker remediation
+    status: pending
+    description: "step_type: verification\nstep_intent: retest_green\nexpected_result:\
+      \ green\nagent_source: project\n\nAs an INDEPENDENT TESTER, retest the full-suite\
+      \ blocker remediation from a fresh perspective. This is a full-plan-check protecting\
+      \ `ngw.doc_sync_gate.final_gate`.\n\nPROOF ARTIFACT:\n- Targeted failed-test\
+      \ retest raw stdout/stderr and exit code.\n- Full pytest raw stdout/stderr and\
+      \ exit code.\n- Doctest raw stdout/stderr and exit code.\n- `uv run invar guard\
+      \ --all` raw stdout/stderr and exit code.\n- Shared-surface expected-red and\
+      \ green gate raw stdout/stderr and exit code, with `OPIFEX_ROOT` pinned-handling\
+      \ evidence.\n- Nested-gateway contract/runtime raw stdout/stderr and exit code.\n\
+      - Blocker disposition table proving each `ngw.doc_sync_gate.full_suite` blocker\
+      \ is PROVEN closed or has explicit owner work; no blocker may remain only in\
+      \ notes.\n\nCommands required at minimum:\n1. Targeted failed blockers:\n  \
+      \ `PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider --tb=short\
+      \ tests/core/test_tool_prefix_contract.py tests/repro/test_tool_prefix_blackbox.py\
+      \ tests/repro/test_loop4_remediation.py::TestLoop4OperatorSurfaceRemediation::test_readme_operator_surface_summary_uses_cli_http_names\
+      \ tests/shell/test_adr008_connect_survival.py::test_client_kind_precedence_and_recovery_attempt_bound\
+      \ tests/shell/test_connect_bridge_readiness_contract_freeze.py`\n2. Full pytest:\n\
+      \   `PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider\
+      \ --tb=short`\n3. Doctest:\n   `uv run --frozen pytest --doctest-modules src/tela/\
+      \ -q`\n4. Invar guard:\n   `uv run invar guard --all`\n5. Pinned OPIFEX_ROOT\
+      \ check before shared-surface gates:\n   `git -C ../opifex rev-parse --short\
+      \ HEAD` must show pinned ref `450281e` or the evidence must point `OPIFEX_ROOT`\
+      \ at a checkout that does. A mismatch is an environment note, not an mcp-tela\
+      \ remediation blocker.\n6. Shared-surface expected-red:\n   `env OPIFEX_ROOT=../opifex\
+      \ uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red`\n7.\
+      \ Shared-surface green:\n   `env OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py\
+      \ green`\n8. Nested-gateway contract/runtime regression:\n   `PYTHONDONTWRITEBYTECODE=1\
+      \ uv run --frozen pytest -q -p no:cacheprovider --tb=short tests/core/test_nested_gateway_contract.py\
+      \ tests/shell/test_nested_gateway_runtime.py tests/shell/test_surface_contract.py\
+      \ tests/shell/test_repo_local_ci_gate.py`\n\nAnti-vacuum rule: summaries are\
+      \ insufficient; paste raw command receipts with exit codes. Unit tests with\
+      \ mocks alone are insufficient for the nested-gateway runtime boundary and shared-surface\
+      \ gates."
+    verification: full-plan-check protecting final gate. PASS requires all required
+      commands green with raw receipts, OPIFEX_ROOT pinned-handling evidence, nested-gateway
+      runtime/contract preservation, and no unresolved blocker-class debt.
+    evidence_template: '## Retest Report
+
+
+      **Tester**: integration-verifier (independent of remediation)
+
+      **Scope**: Full-suite blocker remediation after `ngw.doc_sync_gate.full_suite`
+
+      **Independence Level**: L1
+
+
+      ### refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof/retest step:
+
+      - <filename> — key passage or `NOT READ: <reason>`
+
+
+      If no refs were provided, state: `No refs for this step.`
+
+
+      ### Command Receipts
+
+      Paste raw stdout/stderr and exit code for each required command:
+
+      1. Targeted failed blockers
+
+      2. Full pytest
+
+      3. Doctest
+
+      4. `uv run invar guard --all`
+
+      5. `git -C <OPIFEX_ROOT> rev-parse --short HEAD` proving pinned ref `450281e`
+      or explicit environment mismatch note
+
+      6. Shared-surface expected-red gate
+
+      7. Shared-surface green gate
+
+      8. Nested-gateway contract/runtime regression
+
+
+      ### Behavioral Proof Register
+
+      | requirement_ref | behavior_claim | runtime_proof_expected | evidence_ref |
+      status | closure_path | gate_decision_basis |
+
+      | --- | --- | --- | --- | --- | --- | --- |
+
+      | FS-B1 | tool-prefix fixtures now use underscore prefixes and preserve raw-name
+      semantics | targeted tool-prefix tests green | <receipt ref> | PROVEN/UNPROVEN
+      | <owner if not PROVEN> | final gate blocks if not PROVEN |
+
+      | FS-B2 | README/operator surface wording stays split CLI and HTTP | loop4 operator
+      surface repro green | <receipt ref> | PROVEN/UNPROVEN | <owner if not PROVEN>
+      | final gate blocks if not PROVEN |
+
+      | FS-B3 | client-kind contract is aligned with `Result` semantics | adr008 client-kind
+      test green | <receipt ref> | PROVEN/UNPROVEN | <owner if not PROVEN> | final
+      gate blocks if not PROVEN |
+
+      | FS-B4 | bridge readiness clean bounded exit semantics preserved | readiness
+      freeze tests green | <receipt ref> | PROVEN/UNPROVEN | <owner if not PROVEN>
+      | final gate blocks if not PROVEN |
+
+      | FS-B5 | final nested-gateway contract/runtime semantics preserved | nested-gateway
+      contract/runtime tests green | <receipt ref> | PROVEN/UNPROVEN | <owner if not
+      PROVEN> | final gate blocks if not PROVEN |
+
+      | FS-B6 | shared-surface gates are green at pinned opifex | expected-red and
+      green gates green with pinned OPIFEX_ROOT | <receipt ref> | PROVEN/ENV_BLOCKED/UNPROVEN
+      | <owner if not PROVEN> | environment mismatch does not become mcp-tela product
+      blocker |
+
+
+      ### Headline
+
+      - **PASS**: all required commands green, every blocker PROVEN or environment-only
+      with non-intersection evidence.
+
+      - **FAIL**: any command fails, any blocker remains UNPROVEN/NEEDS_TEST/BLOCKED
+      without owner work, or receipts are missing.'
+    depends_on:
+    - ngw.doc_sync_gate.full_suite_remediation
+    agent: integration-verifier
