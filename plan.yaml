@@ -90544,7 +90544,7 @@ phases:
     agent: gate-reviewer
   - id: ngw.doc_sync_gate.full_suite_remediation
     name: Batched full-suite blocker remediation
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: project\n\nBatched remediation\
       \ for the full-suite blockers reported by `ngw.doc_sync_gate.full_suite`. Fix\
       \ ALL blockers in one bounded pass, not just the first failing assertion.\n\n\
@@ -90621,6 +90621,103 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-21T09:38:17.781216+00:00'
+    done_at: '2026-06-21T09:49:49.738639+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Worker evidence:
+
+      - Worker commit: da063c506fa33a142ae636e0bbcc9a70c227863b
+
+      - Main merge commit: 02f8ccd [vectl] step-ngw.doc_sync_gate.full_suite_remediation
+      completed
+
+      - Changed files: tests/core/test_tool_prefix_contract.py; tests/repro/test_tool_prefix_blackbox.py;
+      tests/repro/test_loop4_remediation.py; tests/shell/test_adr008_connect_survival.py;
+      tests/shell/test_connect_bridge_readiness_contract_freeze.py
+
+      - Product validation weakened: no
+
+      - Contract deviations: none
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.doc_sync_gate.full_suite_remediation --worktree .vectl/worktrees/ngw.doc_sync_gate.full_suite_remediation
+      --base 37c8ef51 --out /tmp/ngw_full_suite_remediation_verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - Changed paths all within contract allowed_paths.
+
+      - Required checks passed in sidecar: targeted_failed_full_suite_blockers, nested_gateway_contract_runtime_regression.
+
+      - checked_claims: stale_tool_prefix_fixtures_updated, raw_name_override_and_conflict_semantics_preserved,
+      operator_surface_docs_tests_aligned, client_kind_result_contract_aligned, bridge_readiness_semantics_preserved,
+      nested_gateway_contract_runtime_preserved, no_product_validation_weakening.
+
+
+      Requirement Coverage:
+
+      - stale_tool_prefix_fixtures_updated: PROVEN — stale dotted-prefix tests/repro
+      fixtures updated to final underscore-prefix contract.
+
+      - raw_name_override_and_conflict_semantics_preserved: PROVEN — targeted tool-prefix
+      tests pass.
+
+      - operator_surface_docs_tests_aligned: PROVEN — README operator surface repro
+      test passes without reintroducing combined CLI/HTTP kind.
+
+      - client_kind_result_contract_aligned: PROVEN — targeted ADR-008 client-kind
+      test passes with Result contract.
+
+      - bridge_readiness_semantics_preserved: PROVEN — connect bridge readiness freeze
+      tests pass.
+
+      - nested_gateway_contract_runtime_preserved: PROVEN — nested gateway contract/runtime
+      and surface/parity tests pass.
+
+      - no_product_validation_weakening: PROVEN — no src/tela/core validation files
+      touched; sidecar blocked paths not changed; regression tests pass.
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - env PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider
+      --tb=short tests/core/test_tool_prefix_contract.py tests/repro/test_tool_prefix_blackbox.py
+      tests/repro/test_loop4_remediation.py::TestLoop4OperatorSurfaceRemediation::test_readme_operator_surface_summary_uses_cli_http_names
+      tests/shell/test_adr008_connect_survival.py::test_client_kind_precedence_and_recovery_attempt_bound
+      tests/shell/test_connect_bridge_readiness_contract_freeze.py -> exit 0, 30 passed
+      in 0.34s
+
+      - env PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider
+      --tb=short tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      tests/shell/test_surface_contract.py tests/shell/test_repo_local_ci_gate.py
+      -> exit 0, 62 passed in 0.29s
+
+      - env PYTHONDONTWRITEBYTECODE=1 uv run --frozen pytest -q -p no:cacheprovider
+      --tb=short -> exit 0, 1488 passed in 126.16s
+
+      - env PYTHONDONTWRITEBYTECODE=1 uv run --frozen invar guard --all -> exit 0,
+      files_checked=67 errors=0 warnings=57 infos=25; existing warning budget shell_result
+      16/17 and weighted budget 69/75, no errors.
+
+
+      Gaps:
+
+      - None for remediation. Downstream full_suite_retest remains responsible for
+      independent closeout rerun including doctest and pinned OPIFEX gates.'
   - id: ngw.doc_sync_gate.full_suite_retest
     name: Retest full-suite blocker remediation
     status: pending
