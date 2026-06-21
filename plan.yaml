@@ -87043,7 +87043,7 @@ phases:
       remains owned by ngw.core_impl.raw_filtering_kernel.'
   - id: ngw.core_impl.raw_filtering_kernel
     name: Implement raw-name filtering and nested effective excludes
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nComplete the pure Core filtering behavior after `ServerConfig`\
       \ exposes the required fields. This step owns `src/tela/core/family.py` and\
@@ -87142,6 +87142,8 @@ phases:
     depends_on:
     - ngw.core_impl.config_model_validation
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-06-21T07:18:43.454226+00:00'
   - id: ngw.core_impl.core_green_retest
     name: Retest core nested-gateway behavior green
     status: pending
