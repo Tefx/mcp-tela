@@ -89124,14 +89124,19 @@ phases:
       independence_level: L2
 
 
-      As a semi-blind tester, run the nested-gateway probe from `ngw.runtime_verify.probe_harness`
-      against real runtime boundaries and decide whether the public surface behaves
-      correctly.
+      As a semi-blind tester, rerun the nested-gateway probe from `ngw.runtime_verify.probe_harness`
+      after `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic` and decide whether
+      the public surface behaves correctly.
 
 
       PROOF ARTIFACT:
 
       - Raw command(s), exit codes, stdout/stderr.
+
+      - Preferred command source: a repo/test-owned live probe command if one exists
+      after the fix. If the temporary artifact persists, rerun it from the current
+      workspace as `TELA_PROBE_ROOT=$PWD .venv/bin/python /tmp/larva-agent-artifacts/ngw_runtime_probe.py`;
+      do not require the old `.vectl/worktrees/ngw.runtime_verify.probe_harness` path.
 
       - Parent `tools/list` receipt for `nested_gateway: true` plus `tool_prefix:
       "host_"` showing parent built-ins plus ordinary child tools, excluding child
@@ -89148,7 +89153,9 @@ phases:
       containing `NESTED_TELA_PREFIX_REQUIRED` and actionable message text.
 
       - Failure receipt for downstream raw child Tela built-ins (`tela_list_providers`/`tela_list_profiles`)
-      with omitted or empty `tool_prefix` containing deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`.
+      with omitted or empty `tool_prefix` containing deterministic actionable `NESTED_TELA_PREFIX_REQUIRED`;
+      specifically prove the previously failing empty-prefix scenario no longer returns
+      generic `CONFIG_PARSE_ERROR ... tool_prefix cannot be empty`.
 
       - Non-hiding receipt proving detection did not silently hide tools when `nested_gateway`
       is omitted and `exclude_tools` is not configured.
@@ -89161,7 +89168,7 @@ phases:
 
 
       Requirement-to-Evidence Matrix rows owned: NGW-R1, NGW-R3, NGW-R4, NGW-R5, NGW-R6,
-      NGW-R8, NGW-R9.
+      NGW-R8, NGW-R9, NGW-DIAG-EMPTY.
 
 
       Your goal is to find problems, not to confirm. A finding is a valid outcome,
@@ -89171,10 +89178,13 @@ phases:
       ### refs Read Confirmation (MANDATORY)
 
       For each ref in this step, evidence must cite the key passage or state `NOT
-      READ: <reason>`. Include the upstream probe artifact path from `ngw.runtime_verify.probe_harness`.'
-    verification: phase-check / runtime_probe. Run the exact probe command from `ngw.runtime_verify.probe_harness`;
+      READ: <reason>`. Include the upstream probe artifact path from `ngw.runtime_verify.probe_harness`
+      and the fix evidence from `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic`.'
+    verification: phase-check / runtime_probe. After the diagnostic fix, run the exact
+      live probe command or repo-owned equivalent from `ngw.runtime_verify.probe_harness`;
       provide raw logs, refs-read key passages, and a PROVEN/UNPROVEN register. Unit/mock-only
-      evidence is insufficient.
+      evidence is insufficient, and the empty-prefix child-builtin scenario must be
+      green with `NESTED_TELA_PREFIX_REQUIRED`.
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this proof step:
@@ -89208,6 +89218,7 @@ phases:
     - tests/shell/test_nested_gateway_runtime.py
     depends_on:
     - ngw.runtime_verify.probe_harness
+    - ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
     agent: blind-tester
   - id: ngw.runtime_verify.spec_conformance
     name: Verify nested-gateway spec conformance
