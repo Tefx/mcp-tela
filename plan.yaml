@@ -88349,7 +88349,12 @@ phases:
       command receipts with exit codes and command-to-claim coverage.
 
       - `ngw.runtime_wiring.wiring_audit` shows config fields and helpers are consumed
-      by real runtime paths.
+      by real runtime paths and any unresolved NEEDS_TEST/UNPROVEN rows have explicit
+      owners.
+
+      - `live_transport_nested_child_enumeration_proof` proves `live_transport_nested_child_enumeration`
+      through a live/stdio or equivalent non-mock nested child enumeration path; pre-supplied
+      `tool_lists`, source inspection, or monkeypatched enumeration alone is insufficient.
 
       - `ngw.runtime_wiring.green_retest` raw command evidence is green or any blockers
       have pending owner steps.
@@ -88357,8 +88362,9 @@ phases:
       - Reload/re-enumeration changes to `exclude_tools` or `nested_gateway` are proven
       as tool-surface changes.
 
-      - Parent built-ins remain visible; child built-ins are hidden only through explicit
-      config.
+      - Parent built-ins remain visible and gateway-owned where applicable; child
+      built-ins are hidden only through explicit `exclude_tools` or `nested_gateway:
+      true` semantics at the runtime seam.
 
 
       Gate protects downstream gates: `ngw.runtime_verify.gate` and `ngw.doc_sync_gate.final_gate`.
@@ -88371,10 +88377,14 @@ phases:
 
       2. Do not accept source inspection as a substitute for runtime/seam proof.
 
-      3. Do not allow unresolved `NEEDS_TEST`/`UNPROVEN` items without blocker ownership.'
+      3. Do not allow unresolved `NEEDS_TEST`/`UNPROVEN` items without blocker ownership.
+
+      4. Do not open this gate unless `live_transport_nested_child_enumeration` is
+      PROVEN by live transport evidence or has a pending blocker-owner step recorded
+      before downstream gates.'
     verification: phase-check protecting runtime verification. Review implementation,
-      audit, and retest evidence; return OPEN only when each runtime obligation is
-      PROVEN or has explicit blocker ownership.
+      audit, live transport nested child enumeration proof, and retest evidence; return
+      OPEN only when each runtime obligation is PROVEN or has explicit blocker ownership.
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this gate step:
@@ -88413,6 +88423,7 @@ phases:
     - ngw.runtime_wiring.startup_reload_surface
     - ngw.runtime_wiring.metadata_call_routing
     - ngw.runtime_wiring.wiring_audit
+    - live_transport_nested_child_enumeration_proof
     - ngw.runtime_wiring.green_retest
     agent: gate-reviewer
   - id: live_transport_nested_child_enumeration_proof
