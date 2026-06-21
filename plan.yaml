@@ -87043,7 +87043,7 @@ phases:
       remains owned by ngw.core_impl.raw_filtering_kernel.'
   - id: ngw.core_impl.raw_filtering_kernel
     name: Implement raw-name filtering and nested effective excludes
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nComplete the pure Core filtering behavior after `ServerConfig`\
       \ exposes the required fields. This step owns `src/tela/core/family.py` and\
@@ -87144,6 +87144,115 @@ phases:
     agent: python-executor
     claimed_by: python-senior
     claimed_at: '2026-06-21T07:20:52.461051+00:00'
+    done_at: '2026-06-21T07:25:34.714011+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: b63af830 Implement nested gateway raw filtering
+
+      - Main merge commit: 1227326 [vectl] step-ngw.core_impl.raw_filtering_kernel
+      completed
+
+      - Changed files: src/tela/core/family.py
+
+      - Deviations: none
+
+      - Forbidden paths not touched: src/tela/shell/**, tests/shell/**, docs/**, ../opifex/**
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited exclude_tools raw-name
+      filtering before prefix/registration, nested_gateway requiring prefix and excluding
+      child builtins, and no silent auto-hide.
+
+      - docs/INTERFACES.md — worker cited Core-owned config fields, NESTED_TELA_PREFIX_REQUIRED
+      for unprefixed child builtins, and ResolvedTool name/raw_name preservation.
+
+      - docs/USAGE.md — worker cited prefix-only compatibility and no silent child
+      builtin hiding.
+
+      - docs/DESIGN.md — worker cited Core owns pure model/filter contracts and Shell
+      owns I/O.
+
+      - src/tela/core/family.py — worker inspected and implemented resolve_tools raw
+      filtering behavior.
+
+      - src/tela/core/models.py — worker confirmed ServerConfig fields from prior
+      step.
+
+      - src/tela/core/config.py — worker inspected config context.
+
+      - src/tela/core/errors.py — worker reused NESTED_TELA_PREFIX_REQUIRED.
+
+      - tests/core/test_nested_gateway_contract.py — worker used protected raw filtering
+      assertions.
+
+      - evidence/ngw_contract_tests_contract_matrix.md — worker mapped raw filtering
+      ownership to NGW requirements.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.core_impl.raw_filtering_kernel --worktree .vectl/worktrees/ngw.core_impl.raw_filtering_kernel
+      --base e02fd769 --out .vectl/worktrees/ngw.core_impl.raw_filtering_kernel/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: [src/tela/core/family.py]
+
+      - checked_claims: raw_excludes_before_resolution, nested_effective_excludes_added,
+      deterministic_nested_prefix_diagnostics_preserved, no_silent_autohide_preserved,
+      raw_name_routing_contract_preserved
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py::test_raw_child_builtins_without_prefix_fail_with_nested_prefix_required
+      tests/core/test_nested_gateway_contract.py::test_exclude_tools_filters_raw_names_before_prefix_family_and_reserved_checks
+      tests/core/test_nested_gateway_contract.py::test_nested_gateway_true_adds_child_builtins_to_effective_exclude_set
+      tests/core/test_nested_gateway_contract.py::test_prefix_only_mode_keeps_prefixed_child_builtins_visible
+      tests/core/test_nested_gateway_contract.py::test_tool_prefix_validation_covers_snake_case_reserved_and_dotted_prefixes
+      tests/core/test_nested_gateway_contract.py::test_core_shell_ownership_boundary_remains_pure_for_filter_semantics
+      -q -> exit 0, 6 passed in 0.15s
+
+      - uv run pytest --doctest-modules src/tela/core -q -> exit 0, 63 passed in 0.14s
+
+      - uv run invar guard -> exit 0, status passed, errors 0, warnings 0
+
+
+      Filtering Semantics Receipt:
+
+      - helper/function: tela.core.family.effective_exclude_tools and resolve_tools
+
+      - proof: nested_gateway=True adds child builtins to raw exclude set; prefix-only
+      mode keeps host_tela_list_* visible; raw_name remains downstream routing name.
+
+
+      Command-to-Claim Coverage:
+
+      - raw_excludes_before_resolution: PROVEN by targeted tests and sidecar.
+
+      - nested_effective_excludes_added: PROVEN by targeted tests/doctests and sidecar.
+
+      - deterministic_nested_prefix_diagnostics_preserved: PROVEN by targeted tests
+      and use of core error constant.
+
+      - no_silent_autohide_preserved: PROVEN by prefix-only mode test.
+
+      - raw_name_routing_contract_preserved: PROVEN by targeted tests.
+
+
+      Gaps:
+
+      - None for core raw filtering kernel.'
   - id: ngw.core_impl.core_green_retest
     name: Retest core nested-gateway behavior green
     status: pending
