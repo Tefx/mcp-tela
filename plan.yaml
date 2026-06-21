@@ -86846,7 +86846,7 @@ phases:
   steps:
   - id: ngw.core_impl.config_model_validation
     name: Implement ServerConfig fields and nested-prefix validation
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nComplete the Core configuration-model contract for nested\
       \ gateway ergonomics within the authority frozen by `ngw.contract_tests.contract_matrix`\
@@ -86942,6 +86942,105 @@ phases:
     agent: python-executor
     claimed_by: python-senior
     claimed_at: '2026-06-21T07:13:35.970926+00:00'
+    done_at: '2026-06-21T07:18:20.071568+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: 3fcfe38e Validate nested gateway ServerConfig prefix
+
+      - Main merge commit: 0383561 [vectl] step-ngw.core_impl.config_model_validation
+      completed
+
+      - Changed files: src/tela/core/models.py
+
+      - Deviations: none
+
+      - Forbidden paths not touched: src/tela/core/family.py, src/tela/shell/**, tests/shell/**,
+      docs/**, ../opifex/**
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited raw exclude_tools
+      semantics, nested_gateway requiring prefix, and stable NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/INTERFACES.md — worker cited ServerConfig exclude_tools/nested_gateway
+      fields and valid host_/prod_/work_ versus invalid dotted/tela_ prefixes.
+
+      - docs/USAGE.md — worker cited nested Tela requiring non-empty prefix and no
+      silent child builtin hiding.
+
+      - docs/DESIGN.md — worker cited Core owns pure model/filter contracts; Shell
+      owns I/O.
+
+      - AGENTS.md — worker noted Core contract discipline / no plan or orchestrator
+      edits.
+
+      - src/tela/core/models.py — worker inspected/edited ServerConfig validation
+      surface.
+
+      - src/tela/core/config.py — worker inspected config validation context.
+
+      - src/tela/core/errors.py — worker confirmed NESTED_TELA_PREFIX_REQUIRED is
+      defined/reused.
+
+      - tests/core/test_nested_gateway_contract.py — worker inspected targeted model
+      validation tests.
+
+      - evidence/ngw_contract_tests_contract_matrix.md — worker cited raw filtering
+      remains later-step scope.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.core_impl.config_model_validation --worktree .vectl/worktrees/ngw.core_impl.config_model_validation
+      --base 0ffede7b --out .vectl/worktrees/ngw.core_impl.config_model_validation/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: [src/tela/core/models.py]
+
+      - checked_claims: server_config_fields_added, nested_prefix_validation_added,
+      stable_diagnostic_constant_defined, defaults_backward_compatible, core_contracts_doctests_present
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py::test_server_config_declares_exclude_tools_and_nested_gateway_defaults
+      tests/core/test_nested_gateway_contract.py::test_exclude_tools_rejects_invalid_shapes_and_aliases_without_cleanup
+      tests/core/test_nested_gateway_contract.py::test_nested_gateway_true_requires_non_empty_tool_prefix_with_stable_code
+      -q -> exit 0, 3 passed in 0.15s
+
+      - uv run pytest --doctest-modules src/tela/core -q -> exit 0, 62 passed in 0.14s
+
+
+      Command-to-Claim Coverage:
+
+      - server_config_fields_added: PROVEN by targeted pytest and src/tela/core/models.py
+      change.
+
+      - nested_prefix_validation_added: PROVEN by targeted pytest for nested_gateway
+      prefix validation.
+
+      - stable_diagnostic_constant_defined: PROVEN by tests and reuse of src/tela/core/errors.py
+      export.
+
+      - defaults_backward_compatible: PROVEN by targeted pytest default assertions.
+
+      - core_contracts_doctests_present: PROVEN by doctest command.
+
+
+      Gaps:
+
+      - None for this model/config validation step. Raw filtering/family behavior
+      remains owned by ngw.core_impl.raw_filtering_kernel.'
   - id: ngw.core_impl.raw_filtering_kernel
     name: Implement raw-name filtering and nested effective excludes
     status: pending
