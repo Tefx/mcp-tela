@@ -89528,7 +89528,7 @@ phases:
     agent: gate-reviewer
   - id: ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
     name: Fix empty tool_prefix nested gateway diagnostic
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: project\n\nTARGET STATE:\n\
       Empty `tool_prefix` in the nested-Tela diagnostic path is classified with the\
       \ same deterministic actionable diagnostic as an omitted prefix when downstream\
@@ -89592,6 +89592,86 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-21T08:52:09.458730+00:00'
+    done_at: '2026-06-21T08:55:40.282683+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: a2aaeec4
+
+      - Main merge commit: a5ca9a7 [vectl] step-ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
+      completed
+
+      - Changed files: src/tela/core/models.py; tests/core/test_nested_gateway_contract.py;
+      tests/shell/test_nested_gateway_runtime.py
+
+      - Deviations: none
+
+      - Forbidden paths not touched: ../opifex/**, docs/**, src/tela/shell/upstream.py,
+      src/tela/shell/builtin_tools.py
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited missing/empty prefix
+      with child Tela builtins requiring NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/INTERFACES.md and docs/USAGE.md — worker cited tool_prefix/nested_gateway/exclude_tools
+      contracts preserved.
+
+      - src/tela/core/errors.py, src/tela/core/models.py, src/tela/core/config.py,
+      src/tela/core/family.py, src/tela/shell/downstream.py — worker inspected diagnostic
+      and runtime paths.
+
+      - tests/core/test_nested_gateway_contract.py and tests/shell/test_nested_gateway_runtime.py
+      — worker added/verified regressions for empty-prefix child builtin diagnostics.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_verify.fix_empty_tool_prefix_diagnostic --worktree .vectl/worktrees/ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
+      --base 2914cba6 --out .vectl/worktrees/ngw.runtime_verify.fix_empty_tool_prefix_diagnostic/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: src/tela/core/models.py, tests/core/test_nested_gateway_contract.py,
+      tests/shell/test_nested_gateway_runtime.py
+
+      - checked_claims: empty_prefix_child_builtin_uses_nested_diagnostic, no_shared_contract_alias_or_cleanup_added,
+      regression_covered, invar_contracts_preserved
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      -q -> exit 0, 24 passed in 0.35s
+
+      - uv run invar guard --changed -> exit 0, status passed, errors 0
+
+
+      Command-to-Claim Coverage:
+
+      - empty_prefix_child_builtin_uses_nested_diagnostic: PROVEN by core/runtime
+      regressions for tool_prefix="" with child builtins; generic `tool_prefix cannot
+      be empty` excluded.
+
+      - no_shared_contract_alias_or_cleanup_added: PROVEN by tests and diff; no aliases
+      added and empty string is not normalized for the blocked path.
+
+      - regression_covered: PROVEN by 24 targeted nested gateway tests passing.
+
+      - invar_contracts_preserved: PROVEN by invar guard --changed.
+
+
+      Gaps:
+
+      - None for this remediation. Live black-box rerun remains owned by ngw.runtime_verify.blackbox_nested_gateway.'
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
   status: locked
