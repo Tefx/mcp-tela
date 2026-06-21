@@ -86093,7 +86093,7 @@ phases:
     claimed_at: '2026-06-21T00:53:51.240628+00:00'
   - id: ngw.contract_tests.runtime_expected_red
     name: Define expected-red runtime surface tests
-    status: pending
+    status: claimed
     description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
       \ red\nagent_source: project\n\n[REQUIRES_SKILL: ponytail-coder]\n\nTARGET TEST\
       \ ARTIFACT: Add expected-red runtime tests proving nested-gateway filtering\
@@ -86182,6 +86182,8 @@ phases:
     depends_on:
     - ngw.contract_tests.contract_matrix
     agent: python-executor
+    claimed_by: python-executor
+    claimed_at: '2026-06-21T00:53:58.310849+00:00'
   - id: ngw.contract_tests.gate
     name: Gate contract and expected-red tests
     status: pending
