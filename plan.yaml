@@ -89384,6 +89384,59 @@ phases:
     - ngw.runtime_verify.blackbox_nested_gateway
     - ngw.runtime_verify.spec_conformance
     agent: gate-reviewer
+  - id: ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
+    name: Fix empty tool_prefix nested gateway diagnostic
+    status: pending
+    description: "step_type: implementation\nagent_source: project\n\nTARGET STATE:\n\
+      Empty `tool_prefix` in the nested-Tela diagnostic path is classified with the\
+      \ same deterministic actionable diagnostic as an omitted prefix when downstream\
+      \ raw tools include child Tela builtins. The public/runtime error for `tela_list_providers`\
+      \ or `tela_list_profiles` with omitted or empty `tool_prefix` is `NESTED_TELA_PREFIX_REQUIRED`,\
+      \ not generic `CONFIG_PARSE_ERROR ... tool_prefix cannot be empty`.\n\nRequirement-to-Evidence\
+      \ Matrix:\n| requirement_id | source_ref + key passage | target_state | evidence_class\
+      \ | required_probe_or_artifact | status |\n| NGW-DIAG-EMPTY | docs/ADR-010-nested-gateway-ergonomics.md\
+      \ §Acceptance Criteria: downstream exposing `tela_list_providers`/`tela_list_profiles`\
+      \ with omitted or empty `tool_prefix` fails closed with deterministic actionable\
+      \ `NESTED_TELA_PREFIX_REQUIRED` | Empty-prefix child-builtin path emits ADR\
+      \ diagnostic | runtime_probe | `tests/core/test_nested_gateway_contract.py`\
+      \ + `tests/shell/test_nested_gateway_runtime.py`; live rerun remains owned by\
+      \ `ngw.runtime_verify.blackbox_nested_gateway` | OWNED |\n| NGW-NO-ALIASES |\
+      \ docs/INTERFACES.md §tool_prefix/§nested_gateway: explicit config only; aliases/cleanup\
+      \ are not accepted | Fix does not add compatibility aliases or accept-and-clean\
+      \ malformed shared input | source_static | invar guard and nested gateway contract\
+      \ tests | OWNED |\n\nNON-GOALS:\n- Do not add compatibility aliases, implicit\
+      \ config cleanup, or local reinterpretations of Opifex/shared contracts.\n-\
+      \ Do not change parent builtin names, documented snake_case naming, or omitted-prefix\
+      \ backward compatibility outside the nested child-builtin diagnostic path.\n\
+      - Do not change docs in this remediation step.\n\n## Completion Criteria (stub\
+      \ exclusion)\nThis is an IMPLEMENTATION step. Stub-only completion is NOT acceptable.\
+      \ Each deliverable MUST contain substantive logic that processes its inputs\
+      \ and produces outputs that vary based on those inputs. Private stub classes\
+      \ (`_Runtime*`, `_Stub*`, `_Placeholder*`) do not satisfy this requirement.\n\
+      \n## Gate Preview (what the gate WILL reject)\n1. Diagnostic ordering drift\
+      \ — generic `tool_prefix cannot be empty` for the empty-prefix child-builtin\
+      \ scenario will fail the runtime gate.\n2. Shared-contract weakening — compatibility\
+      \ aliases, accept-and-clean behavior, or Opifex reinterpretation will fail review.\n\
+      3. Mock-only closure — code/unit evidence without the follow-up live probe receipt\
+      \ is insufficient for opening `ngw.runtime_verify.gate`.\n\n<intent_closure_contract>\n\
+      allowed_paths:\n  - \"src/tela/core/models.py\"\n  - \"src/tela/core/config.py\"\
+      \n  - \"src/tela/core/family.py\"\n  - \"src/tela/shell/downstream.py\"\n  -\
+      \ \"tests/core/test_nested_gateway_contract.py\"\n  - \"tests/shell/test_nested_gateway_runtime.py\"\
+      \nblocked_paths:\n  - \"../opifex/**\"\n  - \"docs/**\"\n  - \"src/tela/shell/upstream.py\"\
+      \n  - \"src/tela/shell/builtin_tools.py\"\nrequired_claims:\n  - empty_prefix_child_builtin_uses_nested_diagnostic\n\
+      \  - no_shared_contract_alias_or_cleanup_added\n  - regression_covered\n  -\
+      \ invar_contracts_preserved\nrequired_checks:\n  - id: nested_gateway_contract_and_runtime_tests\n\
+      \    command: [\"uv\", \"run\", \"pytest\", \"tests/core/test_nested_gateway_contract.py\"\
+      , \"tests/shell/test_nested_gateway_runtime.py\", \"-q\"]\n    covers_claims:\n\
+      \      - empty_prefix_child_builtin_uses_nested_diagnostic\n      - no_shared_contract_alias_or_cleanup_added\n\
+      \      - regression_covered\n  - id: invar_changed_guard\n    command: [\"uv\"\
+      , \"run\", \"invar\", \"guard\", \"--changed\"]\n    covers_claims:\n      -\
+      \ invar_contracts_preserved\n      - no_shared_contract_alias_or_cleanup_added\n\
+      </intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+    depends_on:
+    - ngw.runtime_verify.probe_harness
+    agent: python-senior
 - id: ngw.doc_sync_gate
   name: Nested Gateway Documentation Sync and Final Gate
   status: locked
