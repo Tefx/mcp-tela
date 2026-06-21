@@ -63,17 +63,39 @@ Optional gateway controls:
 - `default_posture`
 - `tool_overrides`
 - `tool_prefix`
+- `exclude_tools`
+- `nested_gateway`
 - `env`
+- `headers`
+- `instructions`
 
 #### `tool_prefix` contract:
 - type is `str | None` (default: `None`)
-- when set, all tools from this server are exposed upstream with the prefix prepended
+- when set, all non-excluded tools from this server are exposed upstream with the prefix prepended
 - `tool_overrides` remain keyed by raw downstream tool names, not prefixed names
-- conflict detection uses final exposed names (after prefix is applied)
+- conflict detection uses final exposed names (after filtering and prefixing)
+- final exposed MCP tool names must remain snake_case (`^[a-z][a-z0-9_]*$`); prefixes like `host_` are recommended, while dotted exposed names are not valid shared MCP tool names
 - `tool_prefix="tela."` and `tool_prefix="tela_"` are reserved and rejected at validation
-- plain `tool_prefix="tela"` (without `.` or `_`) is accepted because it does not enter the reserved namespaces
+- plain `tool_prefix="tela"` (without `.` or `_`) is accepted because it does not enter the reserved namespaces and can still produce snake_case names such as `telaread_file`
 - omitted `tool_prefix` preserves backward-compatible behavior (raw names unchanged)
 - prefix-only changes count as tool-surface changes (trigger reload/re-enumeration)
+
+#### `exclude_tools` contract:
+- type is `list[str]` (default: `[]`)
+- entries match raw downstream tool names, not prefixed exposed names
+- filtering happens before `tool_prefix`, family classification, posture classification, conflict detection, and registry registration
+- excluded tools are absent from `tools/list`, downstream call routing, conflict detection, and `tela_list_providers.tool_names/tool_count`
+- changing `exclude_tools` counts as a tool-surface change (trigger reload/re-enumeration)
+
+#### `nested_gateway` contract:
+- type is `bool` (default: `false`)
+- `true` explicitly declares this downstream server is another Tela gateway
+- `true` requires `tool_prefix`; missing prefix fails closed with `NESTED_TELA_PREFIX_REQUIRED`
+- `true` adds the child Tela built-ins `tela_list_providers` and `tela_list_profiles` to the effective raw-name exclude set
+- the parent gateway's own `tela_list_providers` and `tela_list_profiles` remain exposed as gateway-owned built-ins
+- if a downstream exposes child Tela built-ins such as `tela_list_providers` or `tela_list_profiles` with omitted or empty `tool_prefix`, startup fails closed with actionable `NESTED_TELA_PREFIX_REQUIRED`
+- nested-Tela trigger detection must not silently hide tools unless `nested_gateway` or `exclude_tools` is configured
+- changing `nested_gateway` counts as a tool-surface change (trigger reload/re-enumeration)
 
 `env` contract:
 - type is `dict[str, str]` (`VAR_NAME -> value`)
@@ -81,6 +103,20 @@ Optional gateway controls:
 - explicit `env: {}` is equivalent to omitting `env`
 - parser accepts `${VAR}` placeholders in env values and resolves them from parse-time environment input
 - unresolved `${VAR}` placeholders are rejected during parse as configuration errors
+
+`headers` contract:
+- type is `dict[str, str]` (`Header-Name -> value`)
+- valid only for URL transports (Streamable HTTP and legacy SSE)
+- invalid for stdio `command` transports and rejected during config validation
+- parser accepts the same `${VAR}` / `$VAR` parse-time expansion rules as `env`
+- downstream `headers` are transit configuration and do not change upstream `auth` semantics
+
+`instructions` contract:
+- type is `bool | str | None` (default: `None`)
+- `None` / omitted means passthrough downstream instructions when available
+- `false` suppresses that server's downstream instruction section
+- string values override the downstream instructions for that server
+- full merge semantics are defined in §7.4 Instructions Configuration
 
 ### 3.2 Profiles
 
@@ -210,15 +246,23 @@ The upstream MCP surface exposes:
 
 There are currently no built-in MCP resources.
 
-The `tela.` prefix is reserved. Downstream tools with this prefix are rejected
-as conflicts.
+Current tela-owned MCP built-ins use snake_case names (`tela_list_profiles` and
+`tela_list_providers`). Downstream `tool_prefix="tela."` and
+`tool_prefix="tela_"` are reserved and rejected at validation.
 
-### 7.1a Built-in surfaces summary
+### 7.1a Built-in and operator surfaces summary
+
+Built-in MCP tools:
 
 | Surface | Kind | Access method | Status |
 |---------|------|---------------|--------|
 | `tela_list_profiles` | MCP tool | `tools/call` with `{}` | Built-in; requires admitted session |
 | `tela_list_providers` | MCP tool | `tools/call` with `{}` | Built-in; requires admitted session |
+
+Operator CLI surfaces:
+
+| Surface | Kind | Access method | Status |
+|---------|------|---------------|--------|
 | `tela profiles` | CLI | `tela profiles` | Operator-only (not MCP built-in) |
 | `tela status` | CLI | `tela status` | Operator-only, observation-only diagnostic |
 | `tela status --probe` | CLI | `tela status --probe` | Operator-only, observation-only (no cold-start/recovery) |
@@ -226,12 +270,22 @@ as conflicts.
 | `tela connections` | CLI | `tela connections` | Operator-only (not MCP built-in) |
 | `tela audit` | CLI | `tela audit` | Operator-only, reads recent entries from `/status` |
 | `tela doctor` | CLI | `tela doctor` | Operator-only, observation-only diagnostic |
-| `tela doctor --recover` | CLI | `tela doctor --recover` | Operator-only, **only mutation surface** (explicit recovery) |
+| `tela doctor --recover` | CLI | `tela doctor --recover` | Operator-only recovery mutation |
+| `tela stop` | CLI | `tela stop` | Operator-only local process control (SIGTERM via lockfile) |
+
+HTTP companion and transport surfaces:
+
+| Surface | Kind | Access method | Status |
+|---------|------|---------------|--------|
+| `GET /health` | HTTP | none | Liveness endpoint |
 | `GET /status` | HTTP | Bearer token | Full runtime status (includes `audit_entries` recent-only, limit 100) |
 | `GET /operator/probe` | HTTP | Bearer token | Observation-only current-endpoint snapshot; no cold-start/recovery |
 | `GET /operator/clients` | HTTP | Bearer token | Read-only attachment registry; no admission-state mutation |
 | `GET /operator/audit` | HTTP | Bearer token | Read-only paginated audit projection; no admission-state mutation |
 | `GET /operator/authorization/explain` | HTTP | Bearer token | Diagnostic-only; no RBAC mutation, no second authority |
+| `POST /connect` | HTTP | Bearer token | Bridge registration; non-readiness lifecycle plumbing only |
+| `POST /disconnect` | HTTP | Bearer token | Bridge deregistration |
+| `POST /mcp` | HTTP | Bearer token | Streamable HTTP MCP transport endpoint; readiness-gated admission surface |
 
 **Canonical builtin semantics:**
 - Built-in MCP tools (`tela_list_profiles`, `tela_list_providers`) require an **admitted session/connection** at call time
@@ -245,7 +299,7 @@ as conflicts.
 - `GET /operator/probe` and `tela status --probe` are **observation-only**: they read the current runtime snapshot and never invoke startup, recovery, registration, or admission paths
 - `GET /operator/clients` and `tela status --clients` are **read-only**: they read the attachment registry without mutating admission state, registering clients, or deleting stale candidates
 - `GET /operator/authorization/explain` is **diagnostic-only**: it snapshots the current enforcement configuration and explains per-tool verdicts without mutating authorization state, admitting sessions, or introducing a second RBAC authority
-- `tela doctor --recover` is the **only operator surface that performs mutations** (recovery, stale-candidate cleanup); all other operator surfaces are non-mutating
+- `tela doctor --recover` is the only operator **recovery** surface that performs recovery/stale-candidate cleanup mutations; `tela stop` is separate local process control, and all diagnostic/listing operator surfaces are non-mutating
 
 ### 7.2 HTTP Endpoints
 
@@ -285,8 +339,9 @@ Current-slice admission boundary:
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for bridge and operator consumers
 - `tela connect` may query or relay runtime readiness facts but must not create local readiness state, cached readiness truth, or competing lifecycle labels
 - `tela connect` readiness waiting must be driven by `GET /status` observations (status-driven polling) rather than fixed sleep intervals or bridge-local lifecycle guesses
-- retry is authorized only when the gateway emits the transient non-ready contract defined for `POST /mcp`; bridge consumers must not invent retry permission from other non-ready signals
-- if `GET /status` continues to report degraded or otherwise non-ready state past the bounded wait policy, `tela connect` must exit cleanly and boundedly instead of looping indefinitely
+- retry is authorized only when the gateway emits the transient non-ready contract defined for `POST /mcp`; bridge consumers must not invent retry permission from other signals
+- `ready` and `degraded` are admission-eligible terminal startup states for the bridge; `degraded` means MCP traffic may proceed against the partial registry while operators can see `degraded_reason`
+- if `GET /status` continues to report `warming` or another non-admission state past the bounded wait policy, `tela connect` must exit cleanly and boundedly instead of looping indefinitely
 
 **Explicit non-goal**: This slice does not expand `shutting_down` lifecycle handling. The `shutting_down` state from ADR-004 remains deferred and is not part of current runtime behavior. Bridge retry/admission must not assume or key off a `shutting_down` state label.
 
@@ -418,6 +473,14 @@ Normative consumer rules:
 - `POST /connect` remains registration plumbing only and must not become
   bridge-owned readiness truth for MCP admission decisions
 
+Degraded-state admission behavior:
+
+- `degraded` is not a transient retry signal and does not use the warming 503 contract.
+- When `GET /status.state == "degraded"` after startup convergence, `POST /mcp` is admitted through the normal MCP transport path.
+- `tools/list` and `tools/call` operate on the currently registered partial tool registry; tools from failed providers are absent or unavailable rather than hidden behind a second readiness gate.
+- Bridge consumers may proceed on `ready` or `degraded`; they must surface/retain `degraded_reason` for operator diagnostics and must not treat degraded as authorization for indefinite retry.
+- Direct HTTP MCP clients should expect the same behavior: warming gets the machine-readable 503 above; degraded does not get a special HTTP admission response.
+
 ### 7.2.2 Tool Metadata Passthrough
 
 The `tools/list` response includes metadata fields preserved from downstream servers:
@@ -469,9 +532,9 @@ The status endpoint returns a `StatusResponse` containing gateway runtime state.
 
 **Audit entries are recent-only**:
 - `audit_entries` in `GET /status` is a **bounded recent summary** with a hard maximum of 100 entries; it is not a paginated query surface
-- For paginated audit access, the in-process `audit_query_paginated` shell surface provides cursor/limit semantics (cursor format: `offset:<N>`; default limit: 100; maximum limit: 100)
+- `GET /operator/audit` is the HTTP route for paginated audit access; the in-process `audit_query_paginated` shell surface provides its cursor/limit semantics (cursor format: `offset:<N>`; default limit: 100; maximum limit: 100)
 - The CLI `tela audit` command reads the full `audit_entries` from the remote status payload and applies local `--since`/`--limit` filtering client-side; it does not use cursor pagination
-- No HTTP route exposes cursor-based paginated audit queries in the current slice
+- `GET /status.audit_entries` remains recent-only and does not expose cursor pagination; use `GET /operator/audit` for paginated HTTP access
 
 **Count-vs-Collection Semantics**:
 - `active_connections` is an **int count** for numeric comparisons (e.g., `active_connections >= 1`)
@@ -616,8 +679,10 @@ Runtime-truthful payload shape:
 ```
 
 `provider_name`, `profile_id`, `status`, `tool_prefix`, `tool_count`, and
-`tool_names` are the current builtin surface keys. The builtin result carries the
-exact JSON array as `application/json` content.
+`tool_names` are the current builtin surface keys. `tool_count` and `tool_names`
+reflect the tools that remain after server-level filtering, prefix resolution,
+and profile enforcement. The builtin result carries the exact JSON array as
+`application/json` content.
 
 Canonical builtin rule set for both `tela_list_profiles` and
 `tela_list_providers`:
@@ -752,10 +817,15 @@ _clients: dict[str, ClientSession]
 
 ### 9.3 Session lifecycle contract
 
-- startup (`connect_all`): establish sessions for all servers, then enumerate and
-  register tools.
-- failure during startup: close any sessions opened in the same call and leave
-  `_clients` empty (no partial connected state).
+- startup (`connect_all`): attempt sessions for all configured servers, enumerate
+  each successful provider, and publish the successful subset when the exposed
+  tool namespace has no conflicts.
+- provider connect/enumeration failure during startup: close that provider's
+  failed handle best-effort; keep successfully connected providers in `_clients`,
+  publish their resolved tools, and report degraded startup diagnostics.
+- fail-closed startup errors: tool-name conflicts or configuration/validation
+  errors close opened handles, clear `_clients`, and leave the resolved registry
+  empty.
 - shutdown (`disconnect_all`): close all sessions best-effort, clear `_clients`,
   and clear resolved tool registry.
 - reload/re-enumeration: session identity in `_clients` is reused when transport
@@ -778,15 +848,19 @@ _clients: dict[str, ClientSession]
 #### Startup: downstream connect failure
 
 `connect_all` uses `asyncio.gather` to connect all configured servers
-concurrently. If **any** server fails to connect or enumerate tools:
+concurrently. Provider startup convergence is partial for connect/enumeration
+failures:
 
-- All already-opened client handles are closed (best-effort).
-- The downstream registry is cleared.
-- `connect_all` returns an error immediately.
-- **No retry or backoff is attempted.** Startup is fail-fast.
+- A failed or timed-out provider's client handle is closed best-effort.
+- Successfully connected and enumerated providers remain eligible for registry publication.
+- Provider failures are recorded in startup diagnostics and reflected through `GET /status.degraded_reason`.
+- `connect_all` returns success after publishing successful providers when the exposed tool namespace has no conflicts.
+- No retry or backoff is attempted during startup convergence.
 
-There is no partial-success mode at startup: either all servers connect and
-enumerate successfully, or the entire downstream layer remains unconnected.
+If no provider connects successfully, startup convergence still completes and
+`GET /status` reports `state: "degraded"` with a startup diagnostic reason.
+Tool-name conflicts among successful providers remain fail-closed: opened handles
+are closed, the registry is cleared, and `connect_all` returns `TOOL_CONFLICT`.
 
 #### Steady state: auto-reconnect on disconnect
 
@@ -999,16 +1073,18 @@ Any number of upstream bridge connections may register concurrently.
 #### Startup enumeration failure
 
 During `connect_all`, tool enumeration is attempted for every configured server
-after transport connection succeeds. If enumeration fails for any server:
+after transport connection succeeds. If enumeration fails for one server:
 
-- The client handle for that server is closed (best-effort via `aclose()`).
-- All other already-opened handles are also closed.
-- The downstream registry is cleared.
-- `connect_all` returns `DOWNSTREAM_CONNECT_FAILED` error.
+- The client handle for that failed server is closed (best-effort via `aclose()`).
+- Other servers that connected and enumerated successfully remain eligible for registry publication.
+- The failed server is recorded in downstream startup diagnostics with a `DOWNSTREAM_CONNECT_FAILED` reason.
+- `connect_all` may still return success when at least the non-failed server results can be registered without conflicts.
 
-**No partial registry.** Startup is all-or-nothing. Either all servers connect
-and enumerate successfully, or the gateway starts with an empty tool registry
-and reports `warming` lifecycle state.
+**Partial registry is allowed for provider startup failures.** Successfully connected
+servers are registered, failed servers are reported through provider diagnostics,
+and the gateway reports a degraded runtime state rather than `warming` once startup
+convergence completes. Conflict rollback remains all-or-nothing for conflicting
+exposed tool names.
 
 #### Runtime `tools/list_changed` handling
 
@@ -1096,6 +1172,7 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected, call failed, or recovery exhausted (see ADR-006) |
 | `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
 | `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
+| `NESTED_TELA_PREFIX_REQUIRED` | Startup | Downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted or empty; configure a non-empty prefix and use `nested_gateway: true` or explicit `exclude_tools` |
 | `INITIALIZE_REJECTED` | MCP | Token validation failed, token profile is unknown, or no default profile |
 | `AUTH_INVALID_TOKEN` | HTTP | Bearer token validation failed |
 | `CONNECTION_NOT_FOUND` | HTTP | Disconnect for unknown connection_id |
@@ -1196,11 +1273,13 @@ versions should ignore.
 
 Config reload (`on_config_changed`) is triggered by:
 
-1. `gateway_reload_config_from_disk` — the production runtime callback for
-   file-watcher integrations.
-2. Programmatic calls to `on_config_changed(new_config)` with a new
+1. `tela serve` wiring `watch_config_changes`, which polls the running
+   `config_path` mtime and calls `gateway_reload_config_from_disk` when it changes.
+2. `gateway_reload_config_from_disk` when invoked by another runtime adapter.
+3. Programmatic calls to `on_config_changed(new_config)` with a new
    `TelaConfig` object.
 
-Config reload **does not** watch the filesystem automatically. A file-watcher
-must be configured externally to call the reload callback. There is no polling
-mechanism built into `tela serve`.
+The CLI server therefore has built-in polling-based hot reload for the loaded
+config file. Embedded/non-CLI integrations that do not run `tela serve` must
+call the reload callback themselves; there is no separate OS-native file watcher
+contract beyond the mtime polling loop.

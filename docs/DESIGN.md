@@ -117,9 +117,9 @@ Implications:
 - After `POST /connect` registration, the bridge polls `GET /status` for readiness
 - Polling is bounded (`BRIDGE_READINESS_MAX_POLLS = 8`) so recovery keeps waiting through the discovered-gateway readiness window instead of treating lockfile publication as readiness
 - If `GET /status` returns `state: "ready"`, the bridge proceeds to MCP forwarding
-- If `GET /status` returns `state: "degraded"`, the bridge exits cleanly with error
-- If bounded polls exhaust without reaching `ready`, the bridge exits cleanly
-- The bridge must not retry indefinitely; bounded exit is required for non-ready authority
+- If `GET /status` returns `state: "degraded"`, the bridge also proceeds to MCP forwarding against the partial registry while preserving the operator-visible `degraded_reason`
+- If bounded polls exhaust without reaching `ready` or `degraded`, the bridge exits cleanly
+- The bridge must not retry indefinitely; bounded exit is required for non-admission states such as prolonged `warming`
 
 **`tela connect` runtime recovery**:
 
@@ -130,7 +130,7 @@ recovery:
 **Recovery classification** (`_is_recoverable_error`):
 - Recoverable: HTTP connection errors, connection refused/reset/aborted, broken pipe,
   timeouts, HTTP 503, readiness query failures
-- Non-recoverable: degraded state, unknown error types
+- Non-recoverable: unknown error types; degraded status by itself is not a recovery trigger because degraded MCP admission uses the partial registry
 
 **Recovery sequence**:
 1. Detect recoverable error during readiness poll or forwarding
@@ -323,11 +323,32 @@ Built-in MCP tools:
 - Audit entries for builtin calls attribute to the calling connection's admitted `profile_id`
 - Regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`, `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`
 
-Operator surfaces (CLI/HTTP, not MCP):
-- `tela profiles`, `tela status`, `tela connections`, `tela audit` — accessible via CLI commands or `GET /status`; paginated audit history is also exposed at `GET /operator/audit`
+### Nested Gateway Ergonomics
 
-These are operator-facing surfaces (CLI/HTTP) and are **not** built-in MCP tool
-surfaces. The `tela.` prefix is reserved for built-in surfaces.
+A downstream server may itself be a Tela gateway. This is supported explicitly by
+server configuration, not by silent runtime rewriting of the public tool surface.
+
+Per-server `exclude_tools` is the generic filter. It matches raw downstream tool
+names before prefixing, resolution, conflict detection, registry registration,
+profile enforcement, and provider metadata reporting.
+
+`nested_gateway: true` is the explicit nested-Tela convenience mode. It requires
+`tool_prefix` and adds the child Tela built-ins `tela_list_providers` and
+`tela_list_profiles` to the effective raw-name exclude set. Parent gateway
+built-ins remain gateway-owned and visible. If downstream `tools/list` returns
+raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted
+or empty, startup fails closed with actionable `NESTED_TELA_PREFIX_REQUIRED`.
+Nested-Tela trigger detection must not silently
+hide tools unless `exclude_tools` or `nested_gateway: true` is configured.
+
+Operator surfaces (not MCP):
+- CLI: `tela profiles`, `tela status`, `tela status --probe`, `tela status --clients`, `tela connections`, `tela audit`, `tela doctor`, `tela doctor --recover`, `tela stop`
+- HTTP: `GET /status`, `GET /operator/probe`, `GET /operator/clients`, `GET /operator/audit`, `GET /operator/authorization/explain`
+
+These are operator-facing CLI or HTTP surfaces and are **not** built-in MCP tool
+surfaces. Current built-in MCP tools are snake_case (`tela_list_profiles` and
+`tela_list_providers`); downstream `tool_prefix="tela."` and
+`tool_prefix="tela_"` are reserved and rejected.
 
 ## Module Boundaries
 
@@ -341,6 +362,7 @@ Pure gateway logic:
 - enforcement
 - conflict detection
 - family mapping
+- raw-name tool filtering for `exclude_tools` and `nested_gateway`
 
 ### `shell/`
 
@@ -659,7 +681,7 @@ FastMCP appears under multiple authorities. This section reconciles those author
 **Ownership:**
 - Mutates: `_runtime` (via `gateway_runtime` accessors) during start/shutdown.
 - Reads: `_runtime` for status queries; downstream registry for tool/connection state.
-- Wires: upstream MCP handlers (`_wire_upstream_handlers`), HTTP routes (`_register_http_routes`), profiles resource (`_register_profiles_resource`), reload notifications (`_wire_reload_notifications`).
+- Wires: upstream MCP handlers (`_wire_upstream_handlers`), HTTP routes (`_register_http_routes`), built-in MCP tool handlers, reload notifications (`_wire_reload_notifications`).
 
 **Dependencies:**
 - Upstream: `tela.core.models`, `mcp.server.fastmcp`, `starlette`.

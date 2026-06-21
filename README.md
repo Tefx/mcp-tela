@@ -73,7 +73,8 @@ Readiness boundary:
 - `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels
 - readiness waiting must consult `GET /status` with bounded polling (not fixed sleep delays)
 - retry is allowed only when the gateway emits a transient non-ready contract signal
-- persistent degraded/non-ready authority must end in a clean bounded exit
+- `ready` and `degraded` are admission-eligible bridge states; degraded mode uses the partial registry and surfaces `degraded_reason`
+- persistent `warming` or another non-admission state must end in a clean bounded exit
 - discovery-before-readiness: lockfile may exist before downstream convergence completes
 
 ### `tela serve` (explicit server)
@@ -108,6 +109,8 @@ tela reads a single YAML config file. The top-level sections are:
 - `profiles`: access control rules for clients
 - `auth`: `open` or `token` mode
 - `audit`: log verbosity and output path
+
+Downstream server entries may also use `tool_prefix` for namespacing, `exclude_tools` for raw-name filtering, and `nested_gateway: true` when the downstream server is another Tela gateway.
 
 Minimal example:
 
@@ -169,32 +172,52 @@ See `tela.yaml.example` for the full commented reference.
 - `tela_list_providers` — returns configured servers and their runtime status
 - `tela_list_profiles` — returns configured profiles with `profile_id`, `capabilities`, and `default` flags
 
-### Operator Surfaces (CLI/HTTP)
+### Operator Surfaces
 
-The following are operator-only surfaces, accessible via CLI commands or HTTP endpoints:
+The following are operator-only CLI surfaces:
 
-- `tela status` — uptime, server count, connection count (CLI/HTTP)
-- `tela profiles` — configured profile listing (CLI/HTTP)
-- `tela connections` — active upstream connections (CLI/HTTP)
-- `tela audit` — query audit log (CLI/HTTP)
+- `tela status` — uptime, server count, connection count
+- `tela status --probe` — observation-only endpoint probe
+- `tela status --clients` — read-only attachment registry view
+- `tela profiles` — configured profile listing
+- `tela connections` — active upstream connections
+- `tela audit` — query audit log
+- `tela doctor` — observation-only diagnostic
+- `tela doctor --recover` — explicit operator recovery
+- `tela stop` — local process control via lockfile discovery and SIGTERM
+
+The following are operator-only HTTP surfaces:
+
+- `GET /status` — runtime status endpoint
+- `GET /operator/probe` — observation-only current-endpoint snapshot
+- `GET /operator/clients` — read-only attachment registry view
+- `GET /operator/audit` — paginated audit endpoint
+- `GET /operator/authorization/explain` — diagnostic authorization explanation
 
 **Note:** These are not MCP built-in tools. Do not call via `tools/call`.
 
 ## Features
 
 - **Tool metadata passthrough**: Preserves `annotations`, `title`, and `outputSchema` from downstream servers
+- **Tool namespacing and filtering**: `tool_prefix` namespaces downstream tools; `exclude_tools` removes raw downstream tool names before exposure
+- **Nested Tela gateways**: `nested_gateway: true` marks a downstream Tela gateway, requires a prefix, and hides child Tela built-ins while preserving the parent built-ins
 - **Instructions merging**: Configurable per-server instructions (`passthrough`, `suppress`, or `override`)
 - **Notification forwarding**: Forwards `notifications/tools/list_changed` from downstream to upstream clients
 
 ## CLI
 
+Common CLI shape (abbreviated). See `docs/INTERFACES.md` for authoritative
+surface semantics and option contracts.
+
 ```text
 tela connect [--config path] [--default-profile name] [--server host:port] [--token tok]
 tela serve   [--config path] [--port N] [--host addr] [--default-profile name] [--idle-timeout sec] [--token tok]
-tela status  [--json]
+tela status  [--json] [--probe] [--clients]
 tela profiles [--config path] [--json]
 tela connections [--json]
 tela audit   [--json] [--since ISO-8601] [--limit N]
+tela doctor  [--json] [--recover]
+tela stop
 ```
 
 ## Core FAQ

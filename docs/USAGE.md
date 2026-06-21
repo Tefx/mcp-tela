@@ -85,7 +85,7 @@ servers:
     family: "git"
 ```
 
-Minimal Streamable HTTP example with `remote_headers`:
+Minimal Streamable HTTP example with `headers`:
 
 ```yaml
 servers:
@@ -119,27 +119,29 @@ servers:
     command: "mcp-filesystem"
     args: ["--root", "/prod"]
     family: "filesystem"
-    tool_prefix: "prod."
+    tool_prefix: "prod_"
   fs-staging:
     command: "mcp-filesystem"
     args: ["--root", "/staging"]
     family: "filesystem"
-    tool_prefix: "staging."
+    tool_prefix: "staging_"
 ```
 
 With this configuration:
 - Both servers export `read_file`, `write_file`, etc.
-- Upstream sees `prod.read_file` and `staging.read_file` (no conflict)
-- `tool_overrides` in profiles still reference raw downstream names (`read_file`, not `prod.read_file`)
+- Upstream sees `prod_read_file` and `staging_read_file` (no conflict)
+- `tool_overrides` in profiles still reference raw downstream names (`read_file`, not `prod_read_file`)
 
 **Important semantics:**
 
 - `tool_overrides` keys remain raw downstream tool names, not prefixed names
-- Final exposed names (after prefix) are used for conflict detection
+- `exclude_tools` keys also match raw downstream tool names, before any prefix is applied
+- Final exposed names (after filtering and prefixing) are used for conflict detection
 - `tool_prefix: null` (or omitted) preserves backward-compatible behavior (raw names exposed unchanged)
+- final exposed MCP tool names must remain snake_case; prefixes like `prod_` are recommended, while dotted exposed names are not valid shared MCP tool names
 - `tool_prefix: "tela."` and `tool_prefix: "tela_"` are reserved and rejected at validation/construction
-- plain `tool_prefix: "tela"` (no `.` or `_`) remains allowed because it does not enter the reserved `tela.`/`tela_` namespaces
-- Changing `tool_prefix` counts as a tool-surface change and triggers `tools/list_changed`
+- plain `tool_prefix: "tela"` (no `.` or `_`) remains allowed because it does not enter the reserved `tela.`/`tela_` namespaces and can still produce snake_case names such as `telaread_file`
+- Changing `tool_prefix`, `exclude_tools`, or `nested_gateway` counts as a tool-surface change and triggers `tools/list_changed`
 
 Example with two same-raw-name tools exposed with different prefixes:
 
@@ -150,16 +152,55 @@ servers:
     env:
       GITHUB_TOKEN: "${WORK_GITHUB_TOKEN}"
     family: "git"
-    tool_prefix: "work."
+    tool_prefix: "work_"
   git-personal:
     command: "mcp-github"
     env:
       GITHUB_TOKEN: "${PERSONAL_GITHUB_TOKEN}"
     family: "git"
-    tool_prefix: "personal."
+    tool_prefix: "personal_"
 ```
 
-Upstream clients see `work.search_repos` and `personal.search_repos` — both from the same downstream tool, but exposed with distinct prefixes.
+Upstream clients see `work_search_repos` and `personal_search_repos` — both from the same downstream tool, but exposed with distinct prefixes.
+
+#### Tool Filtering and Nested Tela Gateways
+
+Use `exclude_tools` to hide selected tools from one downstream server:
+
+```yaml
+servers:
+  host_gui:
+    url: "http://127.0.0.1:18081/mcp"
+    headers:
+      Authorization: "Bearer ${HOST_TELA_TOKEN}"
+    tool_prefix: "host_"
+    exclude_tools:
+      - "tela_list_providers"
+      - "tela_list_profiles"
+    default_posture: "read_write"
+```
+
+`exclude_tools` matches raw downstream tool names, not prefixed exposed names. With the configuration above, raw child tools named `tela_list_providers` and `tela_list_profiles` are removed before `host_` is applied, so upstream clients do not see `host_tela_list_providers` or `host_tela_list_profiles`.
+
+For a downstream server that is itself a Tela gateway, prefer the explicit nested mode:
+
+```yaml
+servers:
+  host_gui:
+    url: "http://127.0.0.1:18081/mcp"
+    headers:
+      Authorization: "Bearer ${HOST_TELA_TOKEN}"
+    tool_prefix: "host_"
+    nested_gateway: true
+    default_posture: "read_write"
+```
+
+`nested_gateway: true` declares that the downstream is another Tela gateway. It requires `tool_prefix` and automatically hides the child gateway's Tela built-in introspection tools:
+
+- `tela_list_providers`
+- `tela_list_profiles`
+
+The parent gateway's own `tela_list_providers` and `tela_list_profiles` remain visible. If a downstream server exposes child Tela built-ins without a `tool_prefix`, Tela fails closed with `NESTED_TELA_PREFIX_REQUIRED` and tells the operator to add a non-empty `tool_prefix`, use `nested_gateway: true` for Tela children, or use explicit `exclude_tools` for generic filtering. Detection never silently hides tools unless `exclude_tools` or `nested_gateway: true` is configured.
 
 Important notes:
 
@@ -168,6 +209,8 @@ Important notes:
 - `default_posture` sets the baseline posture for tools from that server
 - `tool_overrides` can adjust family or posture for specific tools
 - `tool_prefix` prefixes exposed tool names (see below)
+- `exclude_tools` hides raw downstream tool names before prefixing
+- `nested_gateway: true` marks a downstream Tela gateway and hides child Tela built-ins
 - `instructions` controls how server instructions are merged (see below)
 
 #### Instructions configuration
@@ -253,8 +296,9 @@ Builtin calls fail closed without an admitted session/connection. Builtin audit
 entries and provider visibility both bind to the calling connection's admitted
 `profile_id`.
 
-Operator-only surfaces (CLI/HTTP, not MCP):
-- `tela profiles`, `tela status`, `tela connections`, and `tela audit`
+Operator-only surfaces, not MCP:
+- CLI: `tela profiles`, `tela status`, `tela status --probe`, `tela status --clients`, `tela connections`, `tela audit`, `tela doctor`, `tela doctor --recover`, `tela stop`
+- HTTP: `GET /status`, `GET /operator/probe`, `GET /operator/clients`, `GET /operator/audit`, `GET /operator/authorization/explain`
 
 Important notes:
 
@@ -360,21 +404,24 @@ or registry convergence. Use `tela status` to check authoritative runtime state.
 gateway runtime lifecycle plus `GET /status` remains the sole readiness authority.
 When `tela connect` needs to wait on readiness, it must do so by consulting
 `GET /status` with status-driven polling (not fixed sleep delays). Retry is allowed only when
-the gateway emits the transient non-ready contract for `POST /mcp`; persistent
-degraded/non-ready status must end in a clean bounded exit.
+the gateway emits the transient non-ready contract for `POST /mcp`. `ready` and
+`degraded` are admission-eligible bridge states; degraded mode proceeds against
+the partial registry while preserving `degraded_reason` for operator diagnostics.
+Persistent `warming` or another non-admission state must end in a clean bounded exit.
 
 **Discovery-before-readiness cold-start**: After `tela connect` discovers the
 endpoint via lockfile, the bridge registers via `POST /connect` using canonical
 request key `server_name` and then polls `GET /status` for readiness. The
 polling is bounded (default 8 polls); if the
-gateway remains non-ready, the bridge exits cleanly rather than retrying
-indefinitely.
+gateway does not reach `ready` or `degraded`, the bridge exits cleanly rather
+than retrying indefinitely.
 
 **Bridge recovery**: During MCP forwarding, transient connection errors (e.g.,
 `Connection refused`, `Connection reset`, `HTTP 503`, readiness timeouts) may
 occur. The bridge attempts bounded recovery:
 - Classification via `_is_recoverable_error`: transient network errors are
-  recoverable; persistent degradation or unknown errors are not.
+  recoverable; unknown errors are not. Degraded status by itself is not a
+  recovery trigger because MCP traffic can continue against the partial registry.
 - Up to `--max-recovery-attempts` recovery cycles (default: 3).
 - Recovery budgets are per event/request and reset after a request-scoped
   recovery error or a successful forwarded response; unrelated client events do
@@ -610,7 +657,6 @@ When auto-started by `tela connect`, the token is only stored in the lockfile.
 ### Query commands
 
 ```bash
-tela stop
 tela status [--json]
 tela profiles [--config path] [--json]
 tela connections [--json]
@@ -618,6 +664,13 @@ tela audit [--json] [--since ISO-8601] [--limit N]
 ```
 
 Query commands discover the running server via `~/.tela/gateway.lock`.
+
+### Local control commands
+
+```bash
+tela stop
+```
+
 `tela stop` uses the same lockfile to discover the local gateway process, sends `SIGTERM`, waits boundedly for exit, and then cleans the lockfile.
 `tela stop` exits `0` on confirmed stop and exits `1` for no-running-server or signal/permission failures (with an error message on stderr).
 
@@ -631,18 +684,33 @@ Query commands discover the running server via `~/.tela/gateway.lock`.
 Builtin audit attribution also binds to the calling connection's admitted
 `profile_id`.
 
-### Operator Surfaces (CLI/HTTP)
+### Operator Surfaces
 
-The following are operator-only surfaces, not MCP built-in tools:
+The following are operator-only surfaces, not MCP built-in tools.
+
+CLI surfaces:
 
 | Surface | Access | Description |
 |---------|--------|-------------|
-| `tela profiles` | CLI / via `/status` | List configured profiles and capability ceilings |
-| `tela status` | CLI / `GET /status` | Uptime, server count, connection count |
-| `tela connections` | CLI / via `/status` | Active upstream connections |
-| `tela audit` | CLI / via `/status` | Query recent audit log entries |
+| `tela profiles` | CLI | List configured profiles and capability ceilings |
+| `tela status` | CLI | Uptime, server count, connection count |
+| `tela status --probe` | CLI | Observation-only endpoint probe |
+| `tela status --clients` | CLI | Read-only attachment registry view |
+| `tela connections` | CLI | Active upstream connections |
+| `tela audit` | CLI | Query recent audit log entries |
+| `tela doctor` | CLI | Observation-only diagnostic |
+| `tela doctor --recover` | CLI | Explicit operator recovery |
+| `tela stop` | CLI | Send local SIGTERM to the lockfile-discovered gateway process |
+
+HTTP surfaces:
+
+| Surface | Access | Description |
+|---------|--------|-------------|
+| `GET /status` | HTTP | Runtime status endpoint with recent audit summary |
+| `GET /operator/probe` | HTTP | Observation-only current-endpoint snapshot |
+| `GET /operator/clients` | HTTP | Read-only attachment registry view |
 | `GET /operator/audit` | HTTP | Query paginated audit log entries |
-| `tela stop` | CLI only | Send local SIGTERM to the lockfile-discovered gateway process |
+| `GET /operator/authorization/explain` | HTTP | Diagnostic authorization explanation |
 
 **Note:** These surfaces are accessible via CLI or HTTP, not via MCP `tools/call`.
 
@@ -708,9 +776,14 @@ Not both `command` and `url`, and not neither.
 
 Check, in order:
 
-1. family admission
-2. tool override check
-3. posture ceiling comparison
+1. server-level filtering via `exclude_tools` or `nested_gateway: true`
+2. family admission
+3. tool override check
+4. posture ceiling comparison
+
+### Nested Tela server requires a prefix
+
+`NESTED_TELA_PREFIX_REQUIRED` means downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted or empty. Add a non-empty `tool_prefix` such as `host_`. If the downstream is intentionally another Tela gateway, set `nested_gateway: true`; for generic servers, use explicit `exclude_tools` to hide unwanted raw downstream tools.
 
 ### `tela status` shows empty state
 

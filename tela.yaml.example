@@ -57,15 +57,28 @@ servers:
     default_posture: "read_only"
     
     # OPTIONAL: Tool prefix for namespacing
-    # All tools from this server are exposed upstream with this prefix.
-    # Example: tool_prefix: "prod." exposes "read_file" as "prod.read_file"
+    # All non-excluded tools from this server are exposed upstream with this prefix.
+    # Example: tool_prefix: "prod_" exposes "read_file" as "prod_read_file"
     # Default: null (no prefix, backward-compatible behavior)
-    # Constraint: "tela." is reserved and will be rejected
-    # tool_prefix: "prod."
+    # Constraint: final exposed MCP tool names must remain snake_case;
+    #             "tela." and "tela_" are reserved and will be rejected
+    # tool_prefix: "prod_"
+
+    # OPTIONAL: Exclude raw downstream tool names before prefixing/registration
+    # NOTE: Keys are RAW downstream tool names, NOT prefixed names.
+    # Example: with tool_prefix="prod_", exclude "read_file" (not "prod_read_file")
+    # exclude_tools:
+    #   - "noisy_debug_tool"
+
+    # OPTIONAL: Mark this downstream as another Tela gateway
+    # Requires tool_prefix and automatically hides child Tela built-ins:
+    #   - tela_list_providers
+    #   - tela_list_profiles
+    # nested_gateway: true
 
     # OPTIONAL: Per-tool overrides (fine-grained control)
     # NOTE: Keys are RAW downstream tool names, NOT prefixed names.
-    # Even with tool_prefix="prod.", override "read_file" (not "prod.read_file")
+    # Even with tool_prefix="prod_", override "read_file" (not "prod_read_file")
     tool_overrides:
       write_file:
         # Reassign this tool to a different family
@@ -201,8 +214,8 @@ servers:
       GITHUB_TOKEN: "${WORK_GITHUB_TOKEN}"
     family: "git"
     default_posture: "read_only"
-    tool_prefix: "work."
-    # Upstream sees: work.search_repos, work.create_issue, etc.
+    tool_prefix: "work_"
+    # Upstream sees: work_search_repos, work_create_issue, etc.
 
   github-personal:
     command: "mcp-github"
@@ -210,8 +223,8 @@ servers:
       GITHUB_TOKEN: "${PERSONAL_GITHUB_TOKEN}"
     family: "git"
     default_posture: "read_only"
-    tool_prefix: "personal."
-    # Upstream sees: personal.search_repos, personal.create_issue, etc.
+    tool_prefix: "personal_"
+    # Upstream sees: personal_search_repos, personal_create_issue, etc.
     # Both servers export raw "search_repos" tool - prefix prevents conflict.
 
 # -----------------------------------------------------------------------------

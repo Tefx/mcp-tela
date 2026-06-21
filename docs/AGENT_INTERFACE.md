@@ -17,17 +17,42 @@ This document defines the canonical agent-facing interface for the tela MCP gate
 
 ### 2.2 Operator Surfaces (Not MCP Built-ins)
 
-The following surfaces are **operator-only** and accessible via CLI/HTTP. They are **not** exposed as MCP built-in tools or resources:
+The following surfaces are **operator-only**. They are **not** exposed as MCP built-in tools or resources.
+
+CLI surfaces:
 
 | Surface | Kind | Access Method |
 |---------|------|---------------|
-| `tela profiles` | CLI/HTTP | `tela profiles` command or via `GET /status`; not an MCP resource |
-| `tela status` | CLI/HTTP | `tela status` command or `GET /status` endpoint |
-| `tela connections` | CLI/HTTP | `tela connections` command or via `GET /status` |
-| `tela audit` | CLI/HTTP | `tela audit` command or via `GET /status`; paginated audit via `GET /operator/audit` |
-| `GET /operator/audit` | HTTP | Paginated operator audit endpoint; not an MCP resource |
+| `tela profiles` | CLI | `tela profiles`; not an MCP resource |
+| `tela status` | CLI | `tela status`; not an MCP resource |
+| `tela status --probe` | CLI | Observation-only endpoint probe; not an MCP resource |
+| `tela status --clients` | CLI | Read-only attachment registry view; not an MCP resource |
+| `tela connections` | CLI | `tela connections`; not an MCP resource |
+| `tela audit` | CLI | `tela audit`; not an MCP resource |
+| `tela doctor` | CLI | Observation-only diagnostic; not an MCP resource |
+| `tela doctor --recover` | CLI | Explicit operator recovery; not an MCP resource |
+| `tela stop` | CLI | Local process control via lockfile discovery and SIGTERM; not an MCP resource |
 
-**Important:** Do not attempt to call `tela profiles`, `tela status`, `tela connections`, or `tela audit` via MCP `tools/call`. These are not MCP tools.
+Operator HTTP surfaces:
+
+| Surface | Kind | Access Method |
+|---------|------|---------------|
+| `GET /status` | HTTP | Runtime status endpoint; not an MCP resource |
+| `GET /operator/probe` | HTTP | Observation-only current-endpoint snapshot; not an MCP resource |
+| `GET /operator/clients` | HTTP | Read-only attachment registry view; not an MCP resource |
+| `GET /operator/audit` | HTTP | Paginated operator audit endpoint; not an MCP resource |
+| `GET /operator/authorization/explain` | HTTP | Diagnostic authorization explanation; not an MCP resource |
+
+HTTP transport and bridge endpoints:
+
+| Surface | Kind | Access Method |
+|---------|------|---------------|
+| `GET /health` | HTTP | Liveness endpoint; not an MCP resource |
+| `POST /connect` | HTTP | Bridge registration endpoint; not an MCP resource |
+| `POST /disconnect` | HTTP | Bridge deregistration endpoint; not an MCP resource |
+| `POST /mcp` | HTTP | Streamable HTTP MCP transport endpoint, not a named MCP built-in tool or resource |
+
+**Important:** Do not attempt to call operator CLI commands or HTTP endpoints via MCP `tools/call`. These are not named MCP tools.
 
 ## 3. Resource vs Tool Distinction
 
@@ -47,8 +72,8 @@ tela exposes exactly two built-in MCP tools:
     - `profile_id` (string): the admitted caller profile that filtered visibility
     - `status` (string): one of `"connected"`, `"disconnected"`, `"failed"`
     - `tool_prefix` (string | null): configured prefix applied to exposed tool names
-    - `tool_count` (int): number of tools exposed by this server after posture filtering
-    - `tool_names` (list[str]): post-enforcement-filter exposed tool names
+    - `tool_count` (int): number of tools exposed by this server after server-level filtering and posture filtering
+    - `tool_names` (list[str]): post-filter/post-enforcement exposed tool names
 
 - `tela_list_profiles` — returns a list of configured profiles with their capabilities
   - **Input:** empty object `{}`
@@ -104,18 +129,28 @@ Instruction composition is ordered and non-commutative:
   - Provide an explicit per-server replacement string (`instructions: <string>`)
   - Revise contract/docs in an explicit follow-up spec change
 
-## 6. HTTP Endpoints (Operator)
+## 6. HTTP Endpoints
+
+### 6.1 Operator HTTP endpoints
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `GET /status` | Bearer token | Full runtime status (operator) |
+| `GET /operator/probe` | Bearer token | Observation-only current-endpoint snapshot |
+| `GET /operator/clients` | Bearer token | Read-only attachment registry view |
+| `GET /operator/audit` | Bearer token | Read-only paginated audit projection |
+| `GET /operator/authorization/explain` | Bearer token | Diagnostic authorization explanation |
+
+### 6.2 Liveness, bridge, and transport endpoints
 
 | Endpoint | Auth | Purpose |
 |----------|------|---------|
 | `GET /health` | None | Liveness check |
-| `GET /status` | Bearer token | Full runtime status (operator) |
-| `GET /operator/audit` | Bearer token | Read-only paginated audit projection |
 | `POST /connect` | Bearer token | Register bridge connection; non-readiness lifecycle plumbing only |
 | `POST /disconnect` | Bearer token | Unregister bridge connection |
 | `POST /mcp` | Bearer token | MCP Streamable HTTP endpoint; readiness-gated admission surface |
 
-### 6.1 `POST /mcp` transient 503 contract
+### 6.3 `POST /mcp` transient 503 contract
 
 When the gateway is still `warming`, `POST /mcp` rejects ordinary MCP
 admission with HTTP `503` and the machine-readable contract frozen in
@@ -137,7 +172,8 @@ bare `503` status alone.
 
 - `tela_list_profiles` is the **canonical built-in MCP tool** for listing profiles (not a resource)
 - `tela_list_providers` and `tela_list_profiles` are the only built-in MCP tools provided by tela itself
-- `tela profiles`, `tela status`, `tela connections`, `tela audit` are operator-only (CLI/HTTP)
+- `tela profiles`, `tela status`, `tela status --probe`, `tela status --clients`, `tela connections`, `tela audit`, `tela doctor`, `tela doctor --recover`, and `tela stop` are operator-only CLI surfaces
+- `GET /status`, `GET /operator/probe`, `GET /operator/clients`, `GET /operator/audit`, and `GET /operator/authorization/explain` are operator-only HTTP surfaces
 - `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice
 - `POST /mcp` warming rejection uses `ADMISSION_REJECTED_WARMING` plus explicit machine-readable transient retry authorization
 - `POST /connect` is registration/lifecycle plumbing only and must not become readiness truth, readiness cache, or MCP admission proof
@@ -145,7 +181,8 @@ bare `503` status alone.
 - `tela connect` must not create or own readiness state, cached readiness truth, or local lifecycle labels
 - `tela connect` readiness waiting must consult `GET /status` with status-driven polling (not fixed sleep intervals)
 - retry is authorized only when the gateway emits the transient non-ready contract for `POST /mcp`
-- persistent degraded/non-ready authority from `GET /status` must cause a clean bounded exit rather than an unbounded retry loop
+- `ready` and `degraded` are admission-eligible bridge states; degraded mode uses the partial registry and keeps `degraded_reason` visible for diagnostics
+- persistent `warming` or another non-admission state from `GET /status` must cause a clean bounded exit rather than an unbounded retry loop
 - explicit non-goal: no `shutting_down` expansion in this slice
 - lockfile discovery is not readiness truth
 - Gateway instructions are emitted first; downstream sections are append-only

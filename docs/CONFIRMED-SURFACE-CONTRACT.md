@@ -32,11 +32,19 @@ SurfaceContract := {
 |---|---|---|
 | `tela profiles` | `CLI` | Local operator listing of configured profiles. |
 | `tela status` | `CLI` | Local/operator runtime status query. |
+| `tela status --probe` | `CLI` | Observation-only endpoint probe; no cold-start/recovery. |
+| `tela status --clients` | `CLI` | Read-only attachment registry view. |
 | `tela connections` | `CLI` | Local/operator active-connection query. |
 | `tela audit` | `CLI` | Local/operator audit query. |
+| `tela doctor` | `CLI` | Observation-only diagnostic. |
+| `tela doctor --recover` | `CLI` | Explicit operator recovery surface. |
+| `tela stop` | `CLI` | Local process control via lockfile discovery and SIGTERM. |
 | `GET /status` | `HTTP` | Runtime status endpoint consumed by operator/CLI flows. |
 | `GET /health` | `HTTP` | Liveness endpoint. |
+| `GET /operator/probe` | `HTTP` | Observation-only current-endpoint snapshot; no cold-start/recovery. |
+| `GET /operator/clients` | `HTTP` | Read-only attachment registry view. |
 | `GET /operator/audit` | `HTTP` | Read-only paginated audit projection. |
+| `GET /operator/authorization/explain` | `HTTP` | Diagnostic-only authorization explanation. |
 | `POST /connect` | `HTTP` | Bridge registration endpoint; non-readiness lifecycle plumbing only. |
 | `POST /disconnect` | `HTTP` | Bridge deregistration endpoint. |
 | `POST /mcp` | `HTTP` | Streamable HTTP MCP transport endpoint and readiness-gated admission surface. |
@@ -73,11 +81,13 @@ polling; fixed sleep delays are not an acceptable readiness authority.
 - The bridge remains a consumer of readiness truth only and must not create,
 cache, or relabel readiness state locally.
 - Retry is allowed only when the gateway emits the transient non-ready contract
-for `POST /mcp`; other degraded/non-ready observations do not self-authorize
-retry.
-- If authoritative `GET /status` facts remain degraded or otherwise non-ready
-through the bounded wait policy, `tela connect` must exit cleanly and
-boundedly (bounded retry/exit behavior).
+for `POST /mcp`; degraded status does not self-authorize retry.
+- `ready` and `degraded` are admission-eligible bridge states. In degraded mode,
+MCP traffic proceeds against the partial registry and operators rely on
+`degraded_reason` for diagnostics.
+- If authoritative `GET /status` facts remain `warming` or otherwise
+non-admission-eligible through the bounded wait policy, `tela connect` must exit
+cleanly and boundedly (bounded retry/exit behavior).
 - Discovery-before-readiness: lockfile may be written before downstream convergence
 completes; endpoint discoverability does not imply readiness.
 
@@ -98,7 +108,7 @@ completes; endpoint discoverability does not imply readiness.
   `provider_name` (server name), `profile_id` (caller-bound profile truth),
   `status` (`"connected"` | `"disconnected"` | `"failed"`), `tool_prefix`
   (configured prefix or `null`), `tool_count` (int), and `tool_names` (list of
-  post-enforcement-filter exposed tool names).
+  exposed tool names after server-level filtering and profile enforcement).
 - `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
   `profile_id` (str), `capabilities` (dict of family→posture string), and
   `default` (bool).
@@ -127,10 +137,16 @@ completes; endpoint discoverability does not imply readiness.
 - CLI and HTTP operator surfaces are real product surfaces, but they are not to
   be described as MCP built-ins unless separately confirmed as `tool` or
   `resource`.
-- `tela profiles` (CLI companion), `tela status`, `tela connections`, and
-  `tela audit` are confirmed operator surfaces.
-- `GET /status` and `GET /operator/audit` are operator/runtime HTTP endpoints
-  and must not be relabeled as dotted MCP surfaces.
+- The authoritative current surface table is §1 above.
+- Confirmed operator CLI surfaces: `tela profiles`, `tela status`,
+  `tela status --probe`, `tela status --clients`, `tela connections`,
+  `tela audit`, `tela doctor`, `tela doctor --recover`, and `tela stop`.
+- Confirmed operator HTTP surfaces: `GET /status`, `GET /operator/probe`,
+  `GET /operator/clients`, `GET /operator/audit`, and
+  `GET /operator/authorization/explain`.
+- Runtime liveness/bridge/transport HTTP endpoints (`GET /health`,
+  `POST /connect`, `POST /disconnect`, `POST /mcp`) are confirmed in §1 but
+  must not be relabeled as dotted MCP surfaces.
 
 ## 3. Capability wording
 
