@@ -90373,7 +90373,7 @@ phases:
       \ and owned by ngw.doc_sync_gate.full_suite_remediation and ngw.doc_sync_gate.full_suite_retest."
   - id: ngw.doc_sync_gate.final_gate
     name: Final nested-gateway release gate
-    status: pending
+    status: claimed
     description: 'step_type: gate
 
       agent_source: project
@@ -90542,6 +90542,8 @@ phases:
     - ngw.doc_sync_gate.docs_sync
     - ngw.doc_sync_gate.full_suite_retest
     agent: gate-reviewer
+    claimed_by: gate-reviewer
+    claimed_at: '2026-06-21T09:56:52.235743+00:00'
   - id: ngw.doc_sync_gate.full_suite_remediation
     name: Batched full-suite blocker remediation
     status: done
