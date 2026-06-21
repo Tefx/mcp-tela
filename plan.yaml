@@ -87983,7 +87983,7 @@ phases:
       - None.'
   - id: ngw.runtime_wiring.metadata_call_routing
     name: Wire provider metadata and call routing consistency
-    status: claimed
+    status: done
     description: "step_type: implementation\ntags: [\"integration\"]\nagent_source:\
       \ project\n\nComplete the client-visible runtime seams after registry filtering\
       \ is wired.\n\nTARGET STATE:\n- `handle_tools_list` exposes only filtered, profile-permitted\
@@ -88070,6 +88070,119 @@ phases:
     agent: python-senior
     claimed_by: python-senior
     claimed_at: '2026-06-21T08:05:12.653315+00:00'
+    done_at: '2026-06-21T08:11:19.598987+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: 333d586f test: lock nested gateway metadata routing seams
+
+      - Main merge commit: d08c45c [vectl] step-ngw.runtime_wiring.metadata_call_routing
+      completed
+
+      - Changed files: tests/shell/test_nested_gateway_runtime.py
+
+      - Deviations: none
+
+      - Forbidden paths not touched: src/tela/core/token.py, src/tela/core/enforcement.py,
+      ../opifex/**, plan.yaml
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited exclude_tools filtering
+      raw names before prefix/registry/routing, nested_gateway hiding child builtins,
+      and parent builtins remaining.
+
+      - docs/INTERFACES.md — worker cited tools/list filtered visibility and tela_list_providers
+      tool_count/tool_names reflecting filtered/profile-enforced surface.
+
+      - docs/USAGE.md — worker cited prefix-only mode preserving prefixed child builtins
+      and nested_gateway requiring prefix.
+
+      - docs/DESIGN.md — worker cited Shell lifecycle wiring, Core raw-name filtering,
+      and routing through ResolvedTool.raw_name.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — worker confirmed canonical builtin payload
+      keys and exact `{}` input preserved.
+
+      - src/tela/core/errors.py — worker confirmed NESTED_TELA_PREFIX_REQUIRED and
+      shared constants preserved.
+
+      - src/tela/shell/builtin_tools.py — worker inspected provider metadata/profile
+      filtering.
+
+      - src/tela/shell/upstream.py — worker inspected tools/list profile filtering
+      and tools/call routing with `tool.raw_name or tool.name`.
+
+      - src/tela/shell/downstream.py and src/tela/shell/_downstream_recovery.py —
+      worker inspected resolved tool registration and downstream call path.
+
+      - tests/shell/test_nested_gateway_runtime.py, tests/shell/test_builtin_tools.py,
+      tests/shell/test_upstream.py — worker extended/confirmed runtime, built-in,
+      and upstream coverage.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_wiring.metadata_call_routing --worktree .vectl/worktrees/ngw.runtime_wiring.metadata_call_routing
+      --base dd205044 --out .vectl/worktrees/ngw.runtime_wiring.metadata_call_routing/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: tests/shell/test_nested_gateway_runtime.py
+
+      - checked_claims: provider_metadata_filtered, parent_builtins_preserved, excluded_tools_unroutable,
+      raw_name_routing_preserved
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/shell/test_nested_gateway_runtime.py -q -> exit 0, 13
+      passed in 0.31s
+
+      - uv run pytest tests/shell/test_builtin_tools.py tests/shell/test_upstream.py
+      -q -> exit 0, 87 passed in 0.53s
+
+      - uv run invar guard -> exit 0, status passed, errors 0
+
+
+      Client-Observable Receipt:
+
+      - tools/list evidence: test_handle_tools_list_hides_nested_child_builtins_but_parent_builtins_register
+      and test_provider_metadata_prefix_only_child_builtins_remain_visible.
+
+      - tela_list_providers evidence: test_provider_metadata_reports_filtered_tool_count_and_names
+      and test_provider_metadata_prefix_only_child_builtins_remain_visible.
+
+      - call-routing evidence: test_prefixed_non_builtin_call_routes_with_resolved_raw_name
+      and test_handle_tools_call_routes_exposed_names_to_raw_downstream_names.
+
+
+      Command-to-Claim Coverage:
+
+      - provider_metadata_filtered: PROVEN by nested runtime provider metadata tests
+      plus builtin profile enforcement tests.
+
+      - parent_builtins_preserved: PROVEN by register_builtin_tools assertion in nested
+      tools/list probe.
+
+      - excluded_tools_unroutable: PROVEN by registry lookup and tools/list nested/exclude
+      probes.
+
+      - raw_name_routing_preserved: PROVEN by prefixed non-builtin call captured downstream
+      raw name `safe_tool`.
+
+
+      Gaps:
+
+      - None.'
   - id: ngw.runtime_wiring.wiring_audit
     name: Audit nested-gateway runtime wiring reachability
     status: pending
