@@ -89219,7 +89219,7 @@ phases:
       the owner fix plus green rerun.'
   - id: ngw.runtime_verify.blackbox_nested_gateway
     name: Black-box nested gateway runtime proof
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: project
@@ -89325,6 +89325,110 @@ phases:
     agent: blind-tester
     claimed_by: blind-tester
     claimed_at: '2026-06-21T08:56:06.209191+00:00'
+    done_at: '2026-06-21T08:59:28.195246+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Worker evidence:
+
+      - Command: TELA_PROBE_ROOT=$PWD .venv/bin/python /tmp/larva-agent-artifacts/ngw_runtime_probe.py
+
+      - Worker cwd: .vectl/worktrees/ngw.runtime_verify.blackbox_nested_gateway
+
+      - Worker exit_code: 0; overall_pass true.
+
+      - Worker report artifact: /tmp/larva-agent-artifacts/ngw_runtime_probe_1782032273_67821_report.json
+
+      - Worker report sha256: ccefc975d512d3dafe4a1d0f65f5fbacb4e21c2da2445d89c41b047aa2636f5e
+
+      - Orchestrator mainline rerun exit_code: 0; overall_pass true; report_sha256
+      658c6e2d104ee7282cbf8f6b366c44acdb345db1dd90ce734a8c34a69192a0c6
+
+      - Worktree clean; verification-only step made no changes.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md, docs/INTERFACES.md, docs/USAGE.md,
+      docs/DESIGN.md, docs/CONFIRMED-SURFACE-CONTRACT.md — worker read/cited nested
+      gateway, tool_prefix, parent builtins, and exposed name contracts.
+
+      - tests/shell/test_nested_gateway_runtime.py — worker read/cited runtime scenarios.
+
+      - src/tela/core/errors.py, src/tela/shell/downstream.py, src/tela/shell/reload.py,
+      src/tela/shell/builtin_tools.py, src/tela/shell/upstream.py — worker inspected
+      signatures/paths for diagnostics, enumeration, reload, metadata, and routing.
+
+      - Upstream probe script cited: /tmp/larva-agent-artifacts/ngw_runtime_probe.py
+
+      - Previous failing report cited: /tmp/larva-agent-artifacts/ngw_runtime_probe_1782031514_59428_report.json
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_verify.blackbox_nested_gateway --worktree .vectl/worktrees/ngw.runtime_verify.blackbox_nested_gateway
+      --base 6506b9a3 --out .vectl/worktrees/ngw.runtime_verify.blackbox_nested_gateway/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; runtime proof step has no Intent-Closure contract
+      and changed_paths empty.
+
+
+      Runtime receipts:
+
+      - nested_gateway_true_host: PROVEN — tools [host_safe_tool, tela_list_profiles,
+      tela_list_providers]; provider child tool_count=1/tool_names=[host_safe_tool];
+      host_tela_list_providers and host_tela_list_profiles excluded.
+
+      - prefix_only_control: PROVEN — omitted nested_gateway with host_ exposes host_tela_list_providers,
+      host_tela_list_profiles, host_safe_tool plus parent builtins.
+
+      - provider_metadata: PROVEN — filtered/profile-enforced provider payload reports
+      tool_count/tool_names matching exposed child surface.
+
+      - missing_empty_prefix_diagnostics: PROVEN — nested_gateway true omitted/empty
+      prefix emits NESTED_TELA_PREFIX_REQUIRED.
+
+      - raw_child_empty_prefix_diagnostic: PROVEN — raw child builtins with omitted/empty
+      prefix emit NESTED_TELA_PREFIX_REQUIRED; empty-prefix no longer emits generic
+      `tool_prefix cannot be empty`.
+
+      - reload_signal: PROVEN — reload removed host child builtins and emitted notifications/tools/list_changed.
+
+      - snake_case_names: PROVEN — final names use host_ and no dotted prefixes.
+
+
+      Behavioral proof register:
+
+      - NGW-R1: PROVEN — exclude/filter reflected in tools/list and provider metadata.
+
+      - NGW-R3: PROVEN — nested_gateway true hides child builtins.
+
+      - NGW-R4: PROVEN — prefix-only compatibility preserves prefixed child builtins.
+
+      - NGW-R5: PROVEN — omitted/empty prefix fails closed with NESTED_TELA_PREFIX_REQUIRED.
+
+      - NGW-R6: PROVEN — no silent hide without nested_gateway/exclude_tools.
+
+      - NGW-R8: PROVEN — parent builtins remain visible and child builtins configurable.
+
+      - NGW-R9: PROVEN — reload/re-enumeration changes exposed surface and notifies.
+
+      - NGW-DIAG-EMPTY: PROVEN — empty-prefix raw child diagnostic fixed from previous
+      report failure.
+
+
+      Gaps:
+
+      - None.'
   - id: ngw.runtime_verify.spec_conformance
     name: Verify nested-gateway spec conformance
     status: pending
