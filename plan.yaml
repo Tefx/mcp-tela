@@ -90031,12 +90031,12 @@ phases:
       allowed_paths:\n  - \"docs/ADR-010-nested-gateway-ergonomics.md\"\n  - \"docs/INTERFACES.md\"\
       \n  - \"docs/USAGE.md\"\n  - \"docs/DESIGN.md\"\n  - \"docs/AGENT_INTERFACE.md\"\
       \n  - \"docs/CONFIRMED-SURFACE-CONTRACT.md\"\n  - \"README.md\"\n  - \"tela.yaml.example\"\
-      \n  - \"tests/shell/test_repo_local_ci_gate.py\"\n  - \"scripts/ci/mcp_tela_shared_surface_gate.py\"\
-      \nblocked_paths:\n  - \"src/**\"\n  - \"../opifex/**\"\nrequired_claims:\n \
-      \ - docs_match_runtime_behavior\n  - examples_cover_explicit_nested_gateway\n\
-      \  - raw_name_exclude_tools_documented\n  - snake_case_prefix_examples_documented\n\
-      \  - deterministic_diagnostic_scenarios_documented\n  - no_silent_autohide_claims\n\
-      \  - operator_surfaces_split\n  - headers_instructions_contracts_preserved\n\
+      \n  - \"tests/shell/test_repo_local_ci_gate.py\"\n  - \"tests/shell/test_surface_contract.py\"\
+      \n  - \"scripts/ci/mcp_tela_shared_surface_gate.py\"\nblocked_paths:\n  - \"\
+      src/**\"\n  - \"../opifex/**\"\nrequired_claims:\n  - docs_match_runtime_behavior\n\
+      \  - examples_cover_explicit_nested_gateway\n  - raw_name_exclude_tools_documented\n\
+      \  - snake_case_prefix_examples_documented\n  - deterministic_diagnostic_scenarios_documented\n\
+      \  - no_silent_autohide_claims\n  - operator_surfaces_split\n  - headers_instructions_contracts_preserved\n\
       \  - nested_gateway_doc_parity_checker_enforced\n  - shared_surface_wording_preserved\n\
       required_checks:\n  - id: ngw_docs_parity_check\n    command: [\"uv\", \"run\"\
       , \"pytest\", \"tests/shell/test_repo_local_ci_gate.py::test_nested_gateway_docs_parity\"\
