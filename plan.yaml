@@ -90544,7 +90544,7 @@ phases:
     agent: gate-reviewer
   - id: ngw.doc_sync_gate.full_suite_remediation
     name: Batched full-suite blocker remediation
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: project\n\nBatched remediation\
       \ for the full-suite blockers reported by `ngw.doc_sync_gate.full_suite`. Fix\
       \ ALL blockers in one bounded pass, not just the first failing assertion.\n\n\
@@ -90619,6 +90619,8 @@ phases:
     depends_on:
     - ngw.doc_sync_gate.full_suite
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-21T09:38:17.781216+00:00'
   - id: ngw.doc_sync_gate.full_suite_retest
     name: Retest full-suite blocker remediation
     status: pending
