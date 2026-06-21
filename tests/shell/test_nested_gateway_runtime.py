@@ -34,6 +34,7 @@ from tela.shell.downstream import (
 )
 from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 from tela.shell.reload import on_tools_changed, set_notify_callback
+from tela.shell.upstream import handle_tools_call, handle_tools_list
 
 NESTED_TELA_PREFIX_REQUIRED = "NESTED_TELA_PREFIX_REQUIRED"
 CHILD_PROVIDER = "tela_list_providers"
@@ -282,6 +283,110 @@ def test_valid_prefix_without_nested_gateway_or_exclude_tools_keeps_child_builti
         "parent builtins should remain gateway-owned while prefixed child builtins "
         "stay visible when nested_gateway/exclude_tools are omitted"
     )
+
+
+def test_handle_tools_list_hides_nested_child_builtins_but_parent_builtins_register() -> None:
+    """Risk probe: tools/list hides nested child built-ins; parent built-ins remain."""
+
+    server = ServerConfig(
+        name="child",
+        command="cmd",
+        tool_prefix="host_",
+        nested_gateway=True,
+        default_posture=Posture.READ_ONLY,
+    )
+    set_runtime_config(_gateway_config(server))
+    result = _run(
+        connect_all(
+            {"child": server},
+            tool_lists={
+                "child": [
+                    _tool(CHILD_PROVIDER),
+                    _tool(CHILD_PROFILE),
+                    _tool("safe_tool"),
+                ]
+            },
+        )
+    )
+    assert result.is_ok, result.error
+
+    tools_list = _run(handle_tools_list(_connection()))
+    assert tools_list.is_ok, tools_list.error
+    assert {tool["name"] for tool in tools_list.value or []} == {"host_safe_tool"}
+
+    builtin_result = register_builtin_tools()
+    assert builtin_result.is_ok, builtin_result.error
+    assert {tool["name"] for tool in builtin_result.value or []} == BUILTIN_TOOL_NAMES
+
+
+def test_provider_metadata_prefix_only_child_builtins_remain_visible() -> None:
+    """Risk probe: prefix-only nested child exposes prefixed child built-ins."""
+
+    server = ServerConfig(
+        name="child",
+        command="cmd",
+        tool_prefix="host_",
+        default_posture=Posture.READ_ONLY,
+    )
+    set_runtime_config(_gateway_config(server))
+    result = _run(
+        connect_all(
+            {"child": server},
+            tool_lists={"child": [_tool(CHILD_PROVIDER), _tool(CHILD_PROFILE)]},
+        )
+    )
+    assert result.is_ok, result.error
+
+    tools_list = _run(handle_tools_list(_connection()))
+    assert tools_list.is_ok, tools_list.error
+    expected = {"host_tela_list_providers", "host_tela_list_profiles"}
+    assert {tool["name"] for tool in tools_list.value or []} == expected
+
+    providers = _run(handle_list_providers(_connection()))
+    child = next(
+        provider for provider in providers if provider["provider_name"] == "child"
+    )
+    assert child["tool_count"] == 2
+    assert set(child["tool_names"]) == expected
+
+
+def test_prefixed_non_builtin_call_routes_with_resolved_raw_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Risk probe: prefixed exposed name calls downstream with ResolvedTool.raw_name."""
+
+    server = ServerConfig(
+        name="child",
+        command="cmd",
+        tool_prefix="host_",
+        default_posture=Posture.READ_ONLY,
+    )
+    set_runtime_config(_gateway_config(server))
+    result = _run(
+        connect_all(
+            {"child": server},
+            tool_lists={"child": [_tool("safe_tool")]},
+        )
+    )
+    assert result.is_ok, result.error
+
+    routed: list[tuple[str, str, dict[str, Any]]] = []
+
+    async def _fake_call_tool(
+        server_name: str,
+        tool_name: str,
+        arguments: dict,
+    ) -> Any:
+        routed.append((server_name, tool_name, arguments))
+        from tela.shell.result import Result
+
+        return Result(value={"content": [{"type": "text", "text": "ok"}]})
+
+    monkeypatch.setattr("tela.shell.upstream.call_tool", _fake_call_tool)
+
+    call = _run(handle_tools_call(_connection(), "host_safe_tool", {"x": 1}))
+    assert call.is_ok, call.error
+    assert routed == [("child", "safe_tool", {"x": 1})]
 
 
 def test_nested_gateway_missing_prefix_diagnostic_is_actionable_runtime_contract() -> None:
