@@ -86437,6 +86437,186 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T01:12:22.301720+00:00'
+  - id: ngw.contract_tests.remediate_expected_red_quality
+    name: Remediate expected-red runtime test quality
+    status: pending
+    description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
+      \ red\nagent_source: project\n\nRemediate the failed `ngw.contract_tests.gate`\
+      \ findings by replacing placeholder/stub expected-red tests with executable,\
+      \ behavior-specific expected-red runtime and contract tests. This is a TEST-DEFINITION\
+      \ REMEDIATION step only.\n\nScope boundary:\n- Allowed product changes: NONE.\n\
+      - Allowed documentation changes: NONE.\n- Modify only `tests/core/test_nested_gateway_contract.py`\
+      \ and `tests/shell/test_nested_gateway_runtime.py`.\n- Preserve the completed\
+      \ contract matrix in `evidence/ngw_contract_tests_contract_matrix.md` as authority;\
+      \ do not edit it here.\n- Red must be caused by missing nested-gateway behavior,\
+      \ not import errors, missing fixtures, placeholder `pytest.fail`, bare `pass`,\
+      \ or catch-all exception swallowing.\n\nBlockers to remediate (ALL of these,\
+      \ not just the first):\n- B1: Runtime expected-red tests are placeholders/stubs.\
+      \ Replace startup/call/provider/reload/no-silent-hide placeholders with behavior-specific\
+      \ probes using existing shell harnesses such as `connect_all`, registry snapshots,\
+      \ built-in provider listing helpers, and `on_tools_changed`/reload where appropriate.\n\
+      - B2: `test_parent_builtins_remain_visible` is a bare `pass`. Add expected-red\
+      \ runtime proof that parent `tela_list_providers` / `tela_list_profiles` remain\
+      \ gateway-owned/visible while child builtins are filtered/prefixed according\
+      \ to config.\n- B3: No-silent-auto-hide compatibility is not asserted. Add runtime\
+      \ assertion that prefixed child tools remain visible in registry/tools list\
+      \ when `nested_gateway` and `exclude_tools` are omitted.\n- B4: NGW-R2/NGW-R7/NGW-R9\
+      \ lack executable ownership. Add explicit expected-red tests for invalid `exclude_tools`\
+      \ shapes/no accept-and-clean/no aliases, core/shell ownership boundary expectations,\
+      \ and snake_case/reserved prefix coverage including `prod_`/`work_` examples\
+      \ plus dotted/reserved prefix rejection.\n\nRequirement-to-Evidence Matrix:\n\
+      | requirement_id | source_ref + key passage | target_state | evidence_class\
+      \ | required_probe_or_artifact | status |\n| --- | --- | --- | --- | --- | ---\
+      \ |\n| B1 | Gate finding B1: runtime tests must observe behavior, not placeholders\
+      \ | Runtime expected-red tests execute shell harness paths and fail on missing\
+      \ behavior-specific nested gateway semantics | runtime_probe | `uv run pytest\
+      \ tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py\
+      \ -q` with stable runtime failure fingerprints | OWNED |\n| B2 | Gate finding\
+      \ B2: parent builtins remain visible while child builtins are filtered/prefixed\
+      \ | Parent gateway-owned `tela_list_providers` / `tela_list_profiles` are visible;\
+      \ child builtin exposure follows config | runtime_probe | Expected-red runtime\
+      \ test using registry/tools-list evidence | OWNED |\n| B3 | Gate finding B3:\
+      \ no silent auto-hide when nested_gateway/exclude_tools omitted | Prefixed child\
+      \ tools remain visible by default; hidden behavior requires explicit config\
+      \ | runtime_probe | Expected-red runtime assertion over registry snapshot/tools\
+      \ list | OWNED |\n| B4 | Gate finding B4: NGW-R2/R7/R9 need executable ownership\
+      \ | Contract/runtime tests cover invalid exclude shapes, core/shell ownership,\
+      \ snake_case/reserved-prefix behavior | runtime_probe | Expected-red core +\
+      \ shell tests with named stable fingerprints | OWNED |\n| NGW-R1..NGW-R9 | `evidence/ngw_contract_tests_contract_matrix.md`:\
+      \ every NGW requirement requires executable ownership | Each matrix row maps\
+      \ to at least one expected-red test or explicit existing test reference | artifact_review\
+      \ + runtime_probe | Command-to-claim coverage matrix in evidence | OWNED |\n\
+      \n<intent_closure_contract>\nintent_kind: test_define_red\nallowed_paths:\n\
+      \  - \"tests/core/test_nested_gateway_contract.py\"\n  - \"tests/shell/test_nested_gateway_runtime.py\"\
+      \nblocked_paths:\n  - \"src/tela/**\"\n  - \"docs/**\"\n  - \"plan.yaml\"\n\
+      \  - \".git/vectl/**\"\n  - \".vectl/**\"\nrequired_claims:\n  - b1_runtime_placeholders_replaced_with_behavior_probes\n\
+      \  - b2_parent_builtins_visibility_expected_red_defined\n  - b3_no_silent_auto_hide_compatibility_guard_defined\n\
+      \  - b4_ngw_r2_r7_r9_executable_ownership_defined\n  - ngw_r1_to_r9_command_claim_coverage_matrix_provided\n\
+      \  - expected_red_gap_exposed_without_product_or_doc_changes\nrequired_checks:\n\
+      \  - id: nested_gateway_expected_red_quality\n    command: [\"uv\", \"run\"\
+      , \"pytest\", \"tests/core/test_nested_gateway_contract.py\", \"tests/shell/test_nested_gateway_runtime.py\"\
+      , \"-q\"]\n    expected_result: red\n    expected_exit_codes: [1]\n    expected_failure_patterns_all:\n\
+      \      - \"exclude_tools\"\n      - \"nested_gateway\"\n      - \"NESTED_TELA_PREFIX_REQUIRED\"\
+      \n      - \"tool_count\"\n      - \"tools/list_changed\"\n    expected_failure_patterns_any:\n\
+      \      - \"NESTED_CHILD_TOOL_NOT_FILTERED\"\n      - \"parent builtins\"\n \
+      \     - \"tela_list_providers\"\n      - \"tela_list_profiles\"\n    covers_claims:\n\
+      \      - b1_runtime_placeholders_replaced_with_behavior_probes\n      - b2_parent_builtins_visibility_expected_red_defined\n\
+      \      - b3_no_silent_auto_hide_compatibility_guard_defined\n      - b4_ngw_r2_r7_r9_executable_ownership_defined\n\
+      \      - ngw_r1_to_r9_command_claim_coverage_matrix_provided\n      - expected_red_gap_exposed_without_product_or_doc_changes\n\
+      </intent_closure_contract>"
+    verification: Run Intent-Closure sidecar gate and required checks from the contract.
+      This expected-red step succeeds only when the specified command exits 1 for
+      behavior-specific nested-gateway failure fingerprints rather than placeholders,
+      infrastructure failures, or source/doc edits.
+    evidence_template: '## refs Read Confirmation (MANDATORY)
+
+      For each ref in this proof/remediation step:
+
+      - `evidence/ngw_contract_tests_contract_matrix.md` — key passage or `NOT READ:
+      <reason>`
+
+      - `tests/core/test_nested_gateway_contract.py` — key passage or `NOT READ: <reason>`
+
+      - `tests/shell/test_nested_gateway_runtime.py` — key passage or `NOT READ: <reason>`
+
+      - `docs/ADR-010-nested-gateway-ergonomics.md` — key passage or `NOT READ: <reason>`
+
+      - `docs/INTERFACES.md` — key passage or `NOT READ: <reason>`
+
+      - `docs/USAGE.md` — key passage or `NOT READ: <reason>`
+
+      - `docs/CONFIRMED-SURFACE-CONTRACT.md` — key passage or `NOT READ: <reason>`
+
+
+      ## Command Execution
+
+      Command:
+
+      ```bash
+
+      uv run pytest tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      -q
+
+      ```
+
+      Exit code: expected `1`.
+
+      Raw stdout/stderr:
+
+      ```text
+
+      <paste full relevant output>
+
+      ```
+
+
+      ## Expected-Red Quality Guard
+
+      - Confirm red is behavior-specific, not import error, missing fixture, placeholder
+      `pytest.fail`, bare `pass`, or catch-all exception swallowing.
+
+      - Confirm no files outside `tests/core/test_nested_gateway_contract.py` and
+      `tests/shell/test_nested_gateway_runtime.py` were changed.
+
+
+      ## Command-to-Claim Coverage Matrix
+
+      | claim / blocker | NGW rows covered | test name(s) | command/failure fingerprint
+      | status |
+
+      | --- | --- | --- | --- | --- |
+
+      | B1 runtime placeholders replaced with observable behavior probes | NGW-R1,
+      NGW-R3, NGW-R4, NGW-R5, NGW-R6, NGW-R8 | <test ids> | `nested_gateway`, `tool_count`,
+      `tools/list_changed`, behavior-specific fingerprint | PROVEN/UNPROVEN |
+
+      | B2 parent builtins remain visible while child builtins are filtered/prefixed
+      | NGW-R4, NGW-R5, NGW-R6 | <test ids> | `tela_list_providers`, `tela_list_profiles`,
+      `NESTED_CHILD_TOOL_NOT_FILTERED` or equivalent | PROVEN/UNPROVEN |
+
+      | B3 no-silent-auto-hide compatibility guard | NGW-R3, NGW-R4, NGW-R8 | <test
+      ids> | prefixed child tool remains visible by default | PROVEN/UNPROVEN |
+
+      | B4 invalid exclude/core-shell/prefix ownership | NGW-R2, NGW-R7, NGW-R9 |
+      <test ids> | `exclude_tools`, `NESTED_TELA_PREFIX_REQUIRED`, `prod_`, `work_`,
+      dotted/reserved prefix rejection | PROVEN/UNPROVEN |
+
+      | NGW-R1 | NGW-R1 | <test ids> | <fingerprint> | PROVEN/UNPROVEN |
+
+      | NGW-R2 | NGW-R2 | <test ids> | `exclude_tools` | PROVEN/UNPROVEN |
+
+      | NGW-R3 | NGW-R3 | <test ids> | `nested_gateway` default/no-silent-hide fingerprint
+      | PROVEN/UNPROVEN |
+
+      | NGW-R4 | NGW-R4 | <test ids> | provider/tool list visibility fingerprint |
+      PROVEN/UNPROVEN |
+
+      | NGW-R5 | NGW-R5 | <test ids> | parent builtin visibility / child filtering
+      fingerprint | PROVEN/UNPROVEN |
+
+      | NGW-R6 | NGW-R6 | <test ids> | reload / `tools/list_changed` fingerprint |
+      PROVEN/UNPROVEN |
+
+      | NGW-R7 | NGW-R7 | <test ids> | core/shell ownership boundary fingerprint |
+      PROVEN/UNPROVEN |
+
+      | NGW-R8 | NGW-R8 | <test ids> | registry snapshot / tool_count fingerprint
+      | PROVEN/UNPROVEN |
+
+      | NGW-R9 | NGW-R9 | <test ids> | `NESTED_TELA_PREFIX_REQUIRED`, `prod_`, `work_`,
+      dotted/reserved prefix rejection | PROVEN/UNPROVEN |
+
+
+      ## Headline
+
+      Expected-red remediation complete only if all B1-B4 and NGW-R1..NGW-R9 rows
+      have executable ownership or an explicit cited reason why an existing test already
+      owns the row.'
+    depends_on:
+    - ngw.contract_tests.contract_matrix
+    - ngw.contract_tests.core_expected_red
+    - ngw.contract_tests.runtime_expected_red
+    agent: python-executor
 - id: ngw.core_impl
   name: Nested Gateway Core Implementation
   status: locked
