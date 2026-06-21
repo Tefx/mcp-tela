@@ -86179,7 +86179,7 @@ phases:
       owns turning these tests green.'
   - id: ngw.contract_tests.runtime_expected_red
     name: Define expected-red runtime surface tests
-    status: claimed
+    status: done
     description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
       \ red\nagent_source: project\n\n[REQUIRES_SKILL: ponytail-coder]\n\nTARGET TEST\
       \ ARTIFACT: Add expected-red runtime tests proving nested-gateway filtering\
@@ -86270,6 +86270,115 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-06-21T00:53:58.310849+00:00'
+    done_at: '2026-06-21T01:11:53.495999+00:00'
+    evidence: 'status: SUCCESS
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      observed_result: red (6 failures, 2 passed)
+
+      verdict: EXPECTED_RED_ACCEPTED
+
+
+      Worker evidence:
+
+      - Added tests/shell/test_nested_gateway_runtime.py only.
+
+      - Worker commits: 3f9ee270 initial expected-red runtime tests; bda36061 whitespace/read-confirmation
+      cleanup in isolated branch.
+
+      - Main merge commit: 35c1b081 [vectl] step-ngw.contract_tests.runtime_expected_red
+      completed
+
+      - Product files modified: false.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited nested_gateway true
+      and missing-prefix validation via NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/INTERFACES.md — worker reviewed nested_gateway config rules.
+
+      - docs/USAGE.md — worker reviewed exclude_tools and nested gateway guidance.
+
+      - docs/DESIGN.md — worker cited detection behavior and no silent auto-hide.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — worker confirmed parent built-in MCP
+      tool baseline.
+
+      - src/tela/core/errors.py / src/tela/core/models.py — worker inspected error/model
+      surfaces and noted missing exclude_tools/nested_gateway support.
+
+      - src/tela/shell/downstream.py — worker traced connect_all/runtime tool resolution
+      flow.
+
+      - src/tela/shell/reload.py — worker reviewed on_tools_changed/reload surface
+      updates.
+
+      - src/tela/shell/builtin_tools.py — worker reviewed tela_list_providers/tela_list_profiles
+      names and constraints.
+
+      - src/tela/shell/upstream.py — worker reviewed handle_tools_list/handle_tools_call
+      registry-dependent flows.
+
+      - tests/shell/test_reload.py — worker reviewed existing on_tools_changed notification/registry
+      tests.
+
+      - tests/shell/test_downstream.py — worker reviewed mock tool-list/connect_all
+      harness patterns.
+
+      - tests/integration/test_hot_reload.py — worker reviewed hot reload/conflict
+      test style.
+
+      - tests/shell/test_nested_gateway_runtime.py — absent before step; created and
+      read after creation.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.contract_tests.runtime_expected_red --worktree .vectl/worktrees/ngw.contract_tests.runtime_expected_red
+      --base 3ba0ae5f --out .vectl/worktrees/ngw.contract_tests.runtime_expected_red/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: tests/shell/test_nested_gateway_runtime.py
+
+      - required check runtime_expected_red: uv run pytest tests/shell/test_nested_gateway_runtime.py
+      -q -> exit 1, expected-red accepted
+
+      - matched failure patterns: NESTED_CHILD_TOOL_NOT_FILTERED, NESTED_TELA_PREFIX_REQUIRED,
+      tool_count, tools/list_changed
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/shell/test_nested_gateway_runtime.py -q -> exit 1 (expected
+      red)
+
+      - Fingerprint grep for NESTED_CHILD_TOOL_NOT_FILTERED|NESTED_TELA_PREFIX_REQUIRED|tool_count|tools/list_changed
+      -> matched
+
+
+      Expected-red alignment:
+
+      - Failures expose startup filtering, call routing, provider metadata/tool_count,
+      reload tools/list_changed, missing-prefix diagnostics, and raw child built-in
+      diagnostic gaps.
+
+      - Red is due to intended nested-gateway runtime gaps, not import failure or
+      broken harness.
+
+
+      Gaps:
+
+      - None for this expected-red test-definition step. Downstream implementation
+      owns turning these tests green.'
   - id: ngw.contract_tests.gate
     name: Gate contract and expected-red tests
     status: pending
