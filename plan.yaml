@@ -88994,7 +88994,7 @@ phases:
   steps:
   - id: ngw.runtime_verify.probe_harness
     name: Prepare nested-gateway black-box probe harness
-    status: claimed
+    status: done
     description: 'step_type: verification
 
       agent_source: project
@@ -89114,6 +89114,109 @@ phases:
     agent: integration-verifier
     claimed_by: integration-verifier
     claimed_at: '2026-06-21T08:39:33.948798+00:00'
+    done_at: '2026-06-21T08:51:41.419899+00:00'
+    evidence: 'status: SUCCESS
+
+      audit_status: AUDIT_COMPLETE_WITH_FINDINGS
+
+      truth_finding_complete: true
+
+      blocker_owner: ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
+
+
+      Probe artifact:
+
+      - Probe script: /tmp/larva-agent-artifacts/ngw_runtime_probe.py
+
+      - Probe script sha256: c4b85a81ae2f1af37b29340c7299511788bac31961e93dfc8e1602e5470757b2
+
+      - Report artifact: /tmp/larva-agent-artifacts/ngw_runtime_probe_1782031514_59428_report.json
+
+      - Report sha256: 97a1707f80b5fc6e3c40c45ed4cd1fbe5ee400fd5b497ec97b4acadc51d7cfc4
+
+      - Report bytes: 42700
+
+      - Repo files changed: none; commit: none
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited nested_gateway true
+      requiring non-empty tool_prefix, child builtin hiding, no silent hide, and reload
+      as surface change.
+
+      - docs/INTERFACES.md, docs/USAGE.md, docs/DESIGN.md, docs/CONFIRMED-SURFACE-CONTRACT.md
+      — worker cited host_ snake_case prefix, raw exclude_tools, parent builtins tela_list_providers/tela_list_profiles,
+      and admitted MCP HTTP session behavior.
+
+      - src/tela/core/errors.py — worker cited NESTED_TELA_PREFIX_REQUIRED.
+
+      - src/tela/shell/downstream.py, src/tela/shell/reload.py, src/tela/shell/builtin_tools.py,
+      src/tela/shell/upstream.py — worker cited connect_all live registry path, reload
+      notification digest, provider metadata, and raw-name routing.
+
+      - tests/shell/test_nested_gateway_runtime.py, tests/shell/test_reload.py, tests/shell/test_downstream.py
+      — worker confirmed existing tests cover registry/unit seams but not this live
+      tela serve + MCP HTTP probe.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_verify.probe_harness --worktree .vectl/worktrees/ngw.runtime_verify.probe_harness
+      --base e62e6d7f --out .vectl/worktrees/ngw.runtime_verify.probe_harness/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; finder/probe step has no Intent-Closure contract
+      and changed_paths empty.
+
+
+      Probe command:
+
+      - `cd .vectl/worktrees/ngw.runtime_verify.probe_harness && TELA_PROBE_ROOT=$PWD
+      .venv/bin/python /tmp/larva-agent-artifacts/ngw_runtime_probe.py`
+
+      - Initial direct exec: exit 126 Permission denied.
+
+      - Final python run: exit 1 because one scenario failed as expected for blocker
+      finding; stdout assessment overall_pass=false, stderr empty.
+
+
+      Scenario coverage map:
+
+      - nested_gateway true hides child builtins: PROVEN — tools/list had host_safe_tool
+      + parent builtins only.
+
+      - nested_gateway true missing prefix diagnostic: PROVEN — NESTED_TELA_PREFIX_REQUIRED
+      observed.
+
+      - raw child builtins no prefix diagnostic: PARTIAL/BLOCKER FOUND — omitted prefix
+      produced NESTED_TELA_PREFIX_REQUIRED, but empty prefix produced generic `CONFIG_PARSE_ERROR
+      ... tool_prefix cannot be empty`.
+
+      - prefix-only compatibility: PROVEN — host_tela_list_providers and host_tela_list_profiles
+      remained visible.
+
+      - no silent hide: PROVEN by prefix-only runtime surface.
+
+      - parent builtins: PROVEN visible/callable with provider/profile payload captured.
+
+      - reload signal: PROVEN — config change produced tools/list_changed surface
+      change.
+
+      - snake_case names: PROVEN — final names use host_, no dotted prefixes.
+
+
+      Blocker disposition:
+
+      - Empty tool_prefix raw-child-builtin diagnostic mismatch is owned by pending
+      step `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic` created by planner;
+      downstream runtime gate depends on fix and green rerun.
+
+
+      Gaps:
+
+      - None for this truth-finding probe harness step; downstream closure requires
+      the owner fix plus green rerun.'
   - id: ngw.runtime_verify.blackbox_nested_gateway
     name: Black-box nested gateway runtime proof
     status: pending
