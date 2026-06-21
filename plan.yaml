@@ -86043,7 +86043,7 @@ phases:
       not performed.'
   - id: ngw.contract_tests.core_expected_red
     name: Define expected-red core contract tests
-    status: claimed
+    status: done
     description: "step_type: test\nstep_intent: test_define_red\nexpected_result:\
       \ red\nagent_source: project\n\n[REQUIRES_SKILL: ponytail-coder]\n\nTARGET TEST\
       \ ARTIFACT: Add expected-red tests that prove the missing Core behavior without\
@@ -86091,6 +86091,92 @@ phases:
     agent: python-executor
     claimed_by: python-executor
     claimed_at: '2026-06-21T00:53:51.240628+00:00'
+    done_at: '2026-06-21T01:08:07.555699+00:00'
+    evidence: 'status: SUCCESS
+
+      step_intent: test_define_red
+
+      expected_result: red
+
+      observed_result: red (5 failures, 3 passed)
+
+      verdict: EXPECTED_RED_ACCEPTED
+
+
+      Worker evidence:
+
+      - Added tests/core/test_nested_gateway_contract.py only.
+
+      - Worker commits: 757ffeaa initial expected-red tests; 5202f970 whitespace-only
+      fix in isolated branch.
+
+      - Main commits: a52ffc3f initial squash merge; f2bc3ae3 conflict resolution/whitespace
+      clean finalization.
+
+      - Product files modified: false.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited nested_gateway requires
+      tool_prefix, hides child built-ins, exclude_tools works on raw downstream names
+      before prefixing, and NESTED_TELA_PREFIX_REQUIRED is required.
+
+      - docs/INTERFACES.md — worker cited NESTED_TELA_PREFIX_REQUIRED and snake_case
+      final names such as host_.
+
+      - docs/USAGE.md — worker cited exclude_tools applies before filtering/name resolution
+      and nested_gateway hides child builtins while parent builtins remain visible.
+
+      - docs/DESIGN.md — worker cited detection does not silently hide child builtins.
+
+      - src/tela/core/errors.py — worker inspected error prefix structures and missing
+      nested-gateway error location.
+
+      - AGENTS.md — worker read and followed project/test-step reporting constraints.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.contract_tests.core_expected_red --worktree .vectl/worktrees/ngw.contract_tests.core_expected_red
+      --base 3ba0ae5f --out .vectl/worktrees/ngw.contract_tests.core_expected_red/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - changed_paths: tests/core/test_nested_gateway_contract.py
+
+      - required check core_expected_red: uv run pytest tests/core/test_nested_gateway_contract.py
+      -q -> exit 1, expected-red accepted
+
+      - matched failure patterns: exclude_tools, nested_gateway, NESTED_TELA_PREFIX_REQUIRED
+
+
+      Mainline final-state verification after resolver commit:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py -q -> exit 1 (expected
+      red)
+
+      - Fingerprint grep for exclude_tools|nested_gateway|NESTED_TELA_PREFIX_REQUIRED
+      -> matched
+
+
+      Expected-red alignment:
+
+      - Failures expose missing ServerConfig.exclude_tools preservation, missing nested_gateway
+      validation/error semantics, missing raw child built-in diagnostic path, missing
+      pre-prefix filtering, and missing nested_gateway effective child built-in excludes.
+
+      - Red is due to intended nested-gateway product gaps, not import failure or
+      broken harness.
+
+
+      Gaps:
+
+      - None for this expected-red test-definition step. Downstream implementation
+      owns turning these tests green.'
   - id: ngw.contract_tests.runtime_expected_red
     name: Define expected-red runtime surface tests
     status: claimed
