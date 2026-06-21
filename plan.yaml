@@ -88185,7 +88185,7 @@ phases:
       - None.'
   - id: ngw.runtime_wiring.wiring_audit
     name: Audit nested-gateway runtime wiring reachability
-    status: claimed
+    status: done
     description: 'step_type: audit
 
       agent_source: project
@@ -88259,6 +88259,105 @@ phases:
     agent: wiring-auditor
     claimed_by: wiring-auditor
     claimed_at: '2026-06-21T08:11:44.925505+00:00'
+    done_at: '2026-06-21T08:20:26.241151+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent wiring-auditor evidence:
+
+      - Headline PASS with no blockers.
+
+      - Worktree clean; audit step made no changes.
+
+      - Audit identified `live_transport_nested_child_enumeration: NEEDS_TEST`; planner
+      repaired plan by adding owner step `live_transport_nested_child_enumeration_proof`
+      and making ngw.runtime_wiring.gate depend on it before gate open.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — auditor cited raw exclude_tools
+      before prefix/registration and nested_gateway requiring tool_prefix while excluding
+      child builtins.
+
+      - docs/INTERFACES.md and docs/DESIGN.md — auditor cited Core owns raw-name filtering
+      and Shell owns startup/reload/registry/upstream wiring.
+
+      - src/tela/core/models.py, src/tela/core/config.py, src/tela/core/family.py,
+      src/tela/core/errors.py — auditor traced fields/validation, stable error code,
+      effective_exclude_tools, and resolve_tools.
+
+      - src/tela/shell/downstream.py, src/tela/shell/reload.py, src/tela/shell/downstream_registry.py,
+      src/tela/shell/builtin_tools.py, src/tela/shell/upstream.py — auditor traced
+      startup, reload, registry, provider metadata, tools/list, and tools/call routing.
+
+      - tests/shell/test_nested_gateway_runtime.py, tests/shell/test_reload.py, tests/shell/test_downstream.py,
+      tests/shell/test_builtin_tools.py, tests/shell/test_upstream.py — auditor paired
+      runtime/test proof with source reachability.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_wiring.wiring_audit --worktree .vectl/worktrees/ngw.runtime_wiring.wiring_audit
+      --base 5ec71e44 --out .vectl/worktrees/ngw.runtime_wiring.wiring_audit/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; read-only audit has no Intent-Closure contract
+      and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/shell/test_nested_gateway_runtime.py tests/shell/test_reload.py
+      tests/shell/test_downstream.py tests/shell/test_builtin_tools.py tests/shell/test_upstream.py
+      -q -> exit 0, 194 passed in 0.70s
+
+      - uv run invar guard -> exit 0, status passed, errors 0
+
+
+      Wiring Audit Report:
+
+      - Config-to-runtime reachability trace: config_loader.load_config -> core.config.parse_config
+      -> ServerConfig fields; core.family.effective_exclude_tools/resolve_tools; downstream.connect_all
+      and reload._converge_single_server_update; registry; upstream tools/list; builtin
+      handle_list_providers; upstream tools/call routing with raw_name.
+
+      - Orphan helpers/dead paths: none found for new public/runtime symbols.
+
+      - Shell duplicate filtering: PASS — Shell consumes Core-resolved registry and
+      does not re-derive child-builtin filtering truth.
+
+      - Mock-only seam risks: no blocker after owner step addition; live_transport_nested_child_enumeration_proof
+      now owns the remaining live/stdio proof before runtime gate.
+
+
+      Behavioral proof register:
+
+      - exclude_tools_raw_filter_to_registry: PROVEN
+
+      - nested_gateway_child_builtin_filter: PROVEN
+
+      - parent_builtin_visibility: PROVEN
+
+      - provider_metadata_filtered_surface: PROVEN
+
+      - exposed_name_to_raw_call_routing: PROVEN
+
+      - live_transport_nested_child_enumeration: OWNED by live_transport_nested_child_enumeration_proof
+
+
+      Gaps:
+
+      - None blocking this audit completion; the only NEEDS_TEST row has explicit
+      pending owner and gate dependency.'
   - id: ngw.runtime_wiring.green_retest
     name: Retest runtime wiring green
     status: pending
