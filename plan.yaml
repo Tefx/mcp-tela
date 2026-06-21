@@ -89993,7 +89993,7 @@ phases:
   steps:
   - id: ngw.doc_sync_gate.docs_sync
     name: Sync nested-gateway documentation and examples
-    status: claimed
+    status: done
     description: "step_type: implementation\nagent_source: project\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nSync documentation, examples, and the repo-local doc parity\
       \ checker with the implemented nested-gateway runtime behavior.\n\nTARGET STATE:\n\
@@ -90102,6 +90102,115 @@ phases:
     agent: doc-reviewer
     claimed_by: doc-reviewer
     claimed_at: '2026-06-21T09:08:34.810695+00:00'
+    done_at: '2026-06-21T09:21:48.629042+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+
+      Worker evidence:
+
+      - Worker commit: 94bd73d docs: sync nested gateway surface parity
+
+      - Main merge commit: c8edc22 [vectl] step-ngw.doc_sync_gate.docs_sync completed
+
+      - Changed files: README.md; docs/ADR-010-nested-gateway-ergonomics.md; docs/AGENT_INTERFACE.md;
+      docs/CONFIRMED-SURFACE-CONTRACT.md; docs/DESIGN.md; docs/INTERFACES.md; docs/USAGE.md;
+      tela.yaml.example; tests/shell/test_repo_local_ci_gate.py; tests/shell/test_surface_contract.py
+
+      - Deviations: none
+
+      - Product src/** not modified.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md, docs/INTERFACES.md, docs/USAGE.md,
+      docs/DESIGN.md — worker read and synced nested gateway docs with final runtime
+      behavior.
+
+      - docs/AGENT_INTERFACE.md and docs/CONFIRMED-SURFACE-CONTRACT.md — worker preserved
+      built-in MCP surface wording and operator split.
+
+      - README.md and tela.yaml.example — worker updated feature/examples without
+      silent auto-hide implication.
+
+      - tests/shell/test_surface_contract.py and tests/shell/test_repo_local_ci_gate.py
+      — worker updated/added parity assertions for docs and surface contracts.
+
+      - scripts/ci/mcp_tela_shared_surface_gate.py — worker ran shared surface gate;
+      initial run failed because ../opifex was not at pinned authority ref, not due
+      mcp-tela docs.
+
+
+      Intent-Closure sidecar:
+
+      - Planner repaired allowed_paths to include tests/shell/test_surface_contract.py
+      because the step required docs_surface_contract_tests and operator-surface wording
+      assertions.
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.doc_sync_gate.docs_sync --worktree .vectl/worktrees/ngw.doc_sync_gate.docs_sync
+      --base e0be209d --out /tmp/ngw_docs_sync_verdict.json
+
+      - OPIFEX_ROOT was temporarily switched to pinned authority ref 450281eae8a481f2f63cf4540112c529cc976548
+      for the sidecar-required shared surface gate, then restored.
+
+      - Result: CONFORMANT, exit 0
+
+      - checked_claims: docs_match_runtime_behavior, examples_cover_explicit_nested_gateway,
+      raw_name_exclude_tools_documented, snake_case_prefix_examples_documented, deterministic_diagnostic_scenarios_documented,
+      no_silent_autohide_claims, operator_surfaces_split, headers_instructions_contracts_preserved,
+      nested_gateway_doc_parity_checker_enforced, shared_surface_wording_preserved
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - uv run pytest tests/shell/test_repo_local_ci_gate.py::test_nested_gateway_docs_parity
+      -q -> exit 0, 1 passed in 0.10s
+
+      - uv run pytest tests/shell/test_surface_contract.py tests/shell/test_repo_local_ci_gate.py
+      -q -> exit 0, 38 passed in 0.36s
+
+      - env OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py
+      green at pinned opifex ref 450281eae8a481f2f63cf4540112c529cc976548 -> exit
+      0; schema-parity 9 passed; shared-surface-runtime 59 passed; shared-surface-contract
+      210 passed.
+
+
+      Command-to-Claim Coverage:
+
+      - docs_match_runtime_behavior: PROVEN by parity/surface tests.
+
+      - examples_cover_explicit_nested_gateway: PROVEN by docs parity check.
+
+      - raw_name_exclude_tools_documented: PROVEN by docs parity check.
+
+      - snake_case_prefix_examples_documented: PROVEN by docs parity and shared surface
+      gate.
+
+      - deterministic_diagnostic_scenarios_documented: PROVEN by docs parity and shared
+      surface gate.
+
+      - no_silent_autohide_claims: PROVEN by docs parity and shared surface gate.
+
+      - operator_surfaces_split: PROVEN by updated surface contract tests and docs
+      parity.
+
+      - headers_instructions_contracts_preserved: PROVEN by docs parity check.
+
+      - nested_gateway_doc_parity_checker_enforced: PROVEN by test_nested_gateway_docs_parity.
+
+      - shared_surface_wording_preserved: PROVEN by docs_surface_contract_tests and
+      shared_surface_gate_green.
+
+
+      Gaps:
+
+      - None. Note: ../opifex local checkout is normally at b57481c, but green gate
+      requires pinned authority ref and was verified there with temporary checkout/restore.'
   - id: ngw.doc_sync_gate.full_suite
     name: Run full repository and shared-surface verification
     status: pending
