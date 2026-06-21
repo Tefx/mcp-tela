@@ -145,7 +145,7 @@ def _agent_interface_operator_surfaces() -> set[str]:
 def _interfaces_builtin_summary_surfaces() -> set[str]:
     """Parse surface names from INTERFACES built-in surfaces summary table."""
     section_match = re.search(
-        r"### 7\.1a Built-in surfaces summary\n\n(.*?)\n\n### 7\.2 HTTP Endpoints",
+        r"### 7\.1a Built-in and operator surfaces summary\n\n(.*?)\n\n### 7\.2 HTTP Endpoints",
         _read_interfaces_doc(),
         re.DOTALL,
     )
@@ -241,7 +241,7 @@ class TestCanonicalSurfaceMatrix:
     def test_design_wording_does_not_imply_extra_builtin_tool_surfaces(self) -> None:
         """Design doc must avoid wording that implies extra builtin MCP tools."""
         design_text = _read_design_doc()
-        assert "operator-facing surfaces (CLI/HTTP)" in design_text
+        assert "operator-facing CLI and HTTP surfaces" in design_text
         assert "tela_list_profiles" in design_text
         assert "tela_list_providers" in design_text
         assert "built-in MCP tools owned by tela" in design_text
@@ -731,7 +731,8 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
 
         assert _contract_kind("tela status") == "CLI"
         assert _contract_kind("tela.status") is None
-        assert "| `tela status` | CLI / `GET /status` |" in usage_doc
+        assert "CLI surfaces:" in usage_doc
+        assert "HTTP surfaces:" in usage_doc
         assert "tela status" in runtime_operator_surfaces
         assert "tela status" in agent_interface_operator_surfaces
         assert "tela status" in interfaces_surfaces
@@ -748,7 +749,8 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
 
         assert _contract_kind("tela connections") == "CLI"
         assert _contract_kind("tela.connections") is None
-        assert "| `tela connections` | CLI / via `/status` |" in usage_doc
+        assert "CLI surfaces:" in usage_doc
+        assert "HTTP surfaces:" in usage_doc
         assert "tela connections" in runtime_operator_surfaces
         assert "tela connections" in agent_interface_operator_surfaces
         assert "tela connections" in interfaces_surfaces
@@ -765,7 +767,8 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
 
         assert _contract_kind("tela audit") == "CLI"
         assert _contract_kind("tela.audit") is None
-        assert "| `tela audit` | CLI / via `/status` |" in usage_doc
+        assert "CLI surfaces:" in usage_doc
+        assert "HTTP surfaces:" in usage_doc
         assert "tela audit" in runtime_operator_surfaces
         assert "tela audit" in agent_interface_operator_surfaces
         assert "tela audit" in interfaces_surfaces
@@ -779,8 +782,9 @@ class TestCLIHTTPSurfacesNotMCPBuiltins:
         agent_interface_doc = _read_agent_interface_doc()
         assert _contract_kind("GET /status") == "HTTP"
         assert _contract_kind("tela.status") is None
-        assert "CLI / `GET /status`" in usage_doc
-        assert "`GET /status` endpoint" in agent_interface_doc
+        assert "CLI surfaces:" in usage_doc
+        assert "HTTP surfaces:" in usage_doc
+        assert "`GET /status`" in agent_interface_doc
 
 
 # =============================================================================
@@ -805,7 +809,7 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         assert _contract_kind("tela.status") is None
         assert "not approved as current-runtime contract wording" in contract_text
         assert "dotted MCP surface names" in contract_text
-        assert "operator-facing surfaces (CLI/HTTP)" in design_text
+        assert "operator-facing CLI and HTTP surfaces" in design_text
         assert "**not** built-in MCP tool" in design_text
         assert gateway_summary.is_ok
         assert gateway_summary.value is not None
@@ -835,7 +839,7 @@ class TestCapabilityWordingNotApprovedForAbsentSurfaces:
         design_text = _read_design_doc()
         assert _contract_kind("tela.audit") is None
         assert "dotted MCP surface names" in contract_text
-        assert "operator-facing surfaces (CLI/HTTP)" in design_text
+        assert "operator-facing CLI and HTTP surfaces" in design_text
 
 
 # =============================================================================

@@ -63,7 +63,7 @@ via the `tela_list_profiles` built-in tool.
 
 ### 3.2 MCP Tools
 
-tela exposes exactly two built-in MCP tools:
+The parent tela gateway exposes exactly two gateway-owned built-in MCP tools:
 
 - `tela_list_providers` — returns a list of configured servers and their runtime status
   - **Input:** empty object `{}`
@@ -171,7 +171,7 @@ bare `503` status alone.
 ## 7. Invariants
 
 - `tela_list_profiles` is the **canonical built-in MCP tool** for listing profiles (not a resource)
-- `tela_list_providers` and `tela_list_profiles` are the only built-in MCP tools provided by tela itself
+- parent `tela_list_providers` and `tela_list_profiles` are the only gateway-owned built-in MCP tools provided by tela itself
 - `tela profiles`, `tela status`, `tela status --probe`, `tela status --clients`, `tela connections`, `tela audit`, `tela doctor`, `tela doctor --recover`, and `tela stop` are operator-only CLI surfaces
 - `GET /status`, `GET /operator/probe`, `GET /operator/clients`, `GET /operator/audit`, and `GET /operator/authorization/explain` are operator-only HTTP surfaces
 - `POST /mcp` is the only readiness-gated HTTP admission surface in the current slice

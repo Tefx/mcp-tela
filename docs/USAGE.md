@@ -195,12 +195,12 @@ servers:
     default_posture: "read_write"
 ```
 
-`nested_gateway: true` declares that the downstream is another Tela gateway. It requires `tool_prefix` and automatically hides the child gateway's Tela built-in introspection tools:
+`nested_gateway: true` declares that the downstream is another Tela gateway. It requires a non-empty `tool_prefix` and automatically hides the child gateway's Tela built-in introspection tools:
 
 - `tela_list_providers`
 - `tela_list_profiles`
 
-The parent gateway's own `tela_list_providers` and `tela_list_profiles` remain visible. If a downstream server exposes child Tela built-ins without a `tool_prefix`, Tela fails closed with `NESTED_TELA_PREFIX_REQUIRED` and tells the operator to add a non-empty `tool_prefix`, use `nested_gateway: true` for Tela children, or use explicit `exclude_tools` for generic filtering. Detection never silently hides tools unless `exclude_tools` or `nested_gateway: true` is configured.
+The parent gateway's own `tela_list_providers` and `tela_list_profiles` remain visible as the only gateway-owned built-in MCP tools. If `nested_gateway: true` is set with omitted or empty `tool_prefix`, Tela fails closed with `NESTED_TELA_PREFIX_REQUIRED`. If a downstream server exposes raw child Tela built-ins with omitted/empty `tool_prefix`, Tela fails closed with the same diagnostic and tells the operator to add a non-empty prefix such as `host_`, use `nested_gateway: true` for Tela children, or use explicit raw-name `exclude_tools` for generic filtering. If `nested_gateway` is omitted and a valid prefix is configured, prefixed child built-ins such as `host_tela_list_providers` remain visible unless `exclude_tools` removes the raw child names. Detection never silently hides tools unless `exclude_tools` or `nested_gateway: true` is configured.
 
 Important notes:
 
@@ -783,7 +783,7 @@ Check, in order:
 
 ### Nested Tela server requires a prefix
 
-`NESTED_TELA_PREFIX_REQUIRED` means downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted or empty. Add a non-empty `tool_prefix` such as `host_`. If the downstream is intentionally another Tela gateway, set `nested_gateway: true`; for generic servers, use explicit `exclude_tools` to hide unwanted raw downstream tools.
+`NESTED_TELA_PREFIX_REQUIRED` means either `nested_gateway: true` was configured without a non-empty `tool_prefix`, or downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted/empty. Add a non-empty `tool_prefix` such as `host_`. If the downstream is intentionally another Tela gateway, set `nested_gateway: true`; for generic servers, use explicit raw-name `exclude_tools` to hide unwanted downstream tools. Omitted `nested_gateway` plus a valid prefix preserves prefixed child built-ins unless those raw names are excluded.
 
 ### `tela status` shows empty state
 

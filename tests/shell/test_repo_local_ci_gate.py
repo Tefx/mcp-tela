@@ -10,6 +10,13 @@ from pathlib import Path
 import pytest
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _read_repo_text(relative_path: str) -> str:
+    return (PROJECT_ROOT / relative_path).read_text(encoding="utf-8")
+
+
 def _load_gate_module():
     repo_root = Path(__file__).resolve().parents[2]
     module_path = repo_root / "scripts/ci/mcp_tela_shared_surface_gate.py"
@@ -25,6 +32,59 @@ def _load_gate_module():
 def _write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+
+
+def test_nested_gateway_docs_parity() -> None:
+    """Repo-local parity check for nested-gateway docs and examples."""
+
+    docs = {
+        "adr": _read_repo_text("docs/ADR-010-nested-gateway-ergonomics.md"),
+        "interfaces": _read_repo_text("docs/INTERFACES.md"),
+        "usage": _read_repo_text("docs/USAGE.md"),
+        "design": _read_repo_text("docs/DESIGN.md"),
+        "agent": _read_repo_text("docs/AGENT_INTERFACE.md"),
+        "confirmed": _read_repo_text("docs/CONFIRMED-SURFACE-CONTRACT.md"),
+        "readme": _read_repo_text("README.md"),
+        "example": _read_repo_text("tela.yaml.example"),
+    }
+    combined = "\n".join(docs.values())
+
+    assert "v1/v2" not in combined
+    assert "CLI/HTTP" not in combined
+    assert "CLI /" not in combined
+    assert "tool_prefix" in combined
+    assert "exclude_tools" in combined
+    assert "nested_gateway: true" in combined
+    assert "headers:" in docs["usage"] and "headers:" in docs["example"]
+    assert "instructions" in docs["usage"] and "instructions" in docs["interfaces"]
+
+    assert "tool_prefix: \"host_\"" in docs["usage"]
+    assert "tool_prefix: \"prod_\"" in docs["usage"]
+    assert "tool_prefix: \"work_\"" in docs["usage"] or "tool_prefix: \"work_\"" in docs["example"]
+    assert "host_tela_list_providers" in combined
+    assert "tela.list" not in combined
+    assert "host.tela" not in combined
+
+    for text in (docs["usage"], docs["example"]):
+        assert "exclude_tools:" in text
+        assert '- "tela_list_providers"' in text
+        assert '- "tela_list_profiles"' in text
+
+    assert (
+        "downstream exposes `tela_list_providers` or `tela_list_profiles` "
+        "with omitted/empty `tool_prefix`"
+    ) in docs["adr"]
+    assert "nested_gateway: true` requires non-empty `tool_prefix`" in docs["interfaces"]
+    assert "raw child Tela built-ins with omitted/empty `tool_prefix`" in docs["usage"]
+    assert "same diagnostic" in docs["usage"]
+    assert "valid prefix preserves prefixed child built-ins" in docs["usage"]
+    assert "Detection never silently hides tools" in docs["usage"]
+    assert "does not silently hide tools" not in docs["readme"]
+
+    assert "CLI surfaces:" in docs["usage"]
+    assert "HTTP surfaces:" in docs["usage"]
+    assert "only gateway-owned built-in MCP tools" in docs["agent"]
+    assert "gateway-owned built-in MCP tools" in docs["confirmed"]
 
 
 def _seed_layout(tmp_path: Path) -> tuple[Path, Path, str]:

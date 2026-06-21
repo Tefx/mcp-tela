@@ -7,7 +7,7 @@ Accepted
 
 Tela can be used as a downstream MCP server of another Tela gateway. This is useful for split-runtime deployments, such as a primary gateway in a VM delegating host-only tools to a host-side gateway.
 
-The existing `tool_prefix` mechanism makes nested calls work, but child Tela built-ins such as `tela_list_providers` and `tela_list_profiles` can appear on the parent surface as `host_tela_list_providers` and `host_tela_list_profiles`. When a nested child is configured without `tool_prefix`, startup fails closed through a generic reserved-namespace error.
+The existing `tool_prefix` mechanism makes nested calls work, but child Tela built-ins such as `tela_list_providers` and `tela_list_profiles` can appear on the parent surface as `host_tela_list_providers` and `host_tela_list_profiles`. When a downstream exposes `tela_list_providers` or `tela_list_profiles` with omitted/empty `tool_prefix`, startup must fail closed with the deterministic nested-gateway diagnostic instead of a generic reserved-namespace error.
 
 ## Decision Drivers
 
@@ -59,14 +59,15 @@ Do **not** silently auto-hide child Tela built-ins based only on detection. Dete
 - Nested Tela deployments get a concise explicit config.
 - Parent Tela built-ins remain visible and gateway-owned.
 - Child Tela built-ins are hidden only when configured through `exclude_tools` or `nested_gateway: true`.
+- Omitted `nested_gateway` with a valid `tool_prefix` preserves prefixed child built-ins unless `exclude_tools` is configured.
 - `tela_list_providers.tool_count` and `tool_names` report the filtered exposed tool surface.
 - Missing-prefix errors for deterministic nested-Tela triggers should use an actionable `NESTED_TELA_PREFIX_REQUIRED` diagnostic.
 
 ## Acceptance Criteria
 
 - `exclude_tools` matches raw downstream names, not prefixed exposed names.
-- `nested_gateway: true` requires `tool_prefix`.
+- `nested_gateway: true` requires non-empty `tool_prefix`.
 - `nested_gateway: true` hides child `tela_list_providers` and `tela_list_profiles` while preserving parent built-ins.
 - Omitted `nested_gateway` preserves current behavior, including prefixed child built-ins when a prefix is configured.
-- A downstream that exposes `tela_list_providers` or `tela_list_profiles` with omitted or empty `tool_prefix` fails closed with deterministic, actionable `NESTED_TELA_PREFIX_REQUIRED`.
+- A downstream that exposes `tela_list_providers` or `tela_list_profiles` with omitted/empty `tool_prefix` fails closed with deterministic, actionable `NESTED_TELA_PREFIX_REQUIRED`.
 - Reload/re-enumeration treats changes to `exclude_tools` or `nested_gateway` as tool-surface changes.

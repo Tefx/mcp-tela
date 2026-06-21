@@ -90,10 +90,11 @@ Optional gateway controls:
 #### `nested_gateway` contract:
 - type is `bool` (default: `false`)
 - `true` explicitly declares this downstream server is another Tela gateway
-- `true` requires `tool_prefix`; missing prefix fails closed with `NESTED_TELA_PREFIX_REQUIRED`
+- `nested_gateway: true` requires non-empty `tool_prefix`; omitted or empty prefix fails closed with `NESTED_TELA_PREFIX_REQUIRED`
 - `true` adds the child Tela built-ins `tela_list_providers` and `tela_list_profiles` to the effective raw-name exclude set
-- the parent gateway's own `tela_list_providers` and `tela_list_profiles` remain exposed as gateway-owned built-ins
-- if a downstream exposes child Tela built-ins such as `tela_list_providers` or `tela_list_profiles` with omitted or empty `tool_prefix`, startup fails closed with actionable `NESTED_TELA_PREFIX_REQUIRED`
+- the parent gateway's own `tela_list_providers` and `tela_list_profiles` remain exposed as the only gateway-owned built-in MCP tools
+- if a downstream exposes child Tela built-ins such as `tela_list_providers` or `tela_list_profiles` with omitted/empty `tool_prefix`, startup fails closed with actionable `NESTED_TELA_PREFIX_REQUIRED`
+- omitted `nested_gateway` with a valid `tool_prefix` preserves prefixed child built-ins such as `host_tela_list_providers` unless `exclude_tools` is configured
 - nested-Tela trigger detection must not silently hide tools unless `nested_gateway` or `exclude_tools` is configured
 - changing `nested_gateway` counts as a tool-surface change (trigger reload/re-enumeration)
 
@@ -1172,7 +1173,7 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected, call failed, or recovery exhausted (see ADR-006) |
 | `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
 | `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
-| `NESTED_TELA_PREFIX_REQUIRED` | Startup | Downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted or empty; configure a non-empty prefix and use `nested_gateway: true` or explicit `exclude_tools` |
+| `NESTED_TELA_PREFIX_REQUIRED` | Startup | Downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted/empty, or `nested_gateway: true` was configured without a non-empty prefix; configure a non-empty prefix and use `nested_gateway: true` or explicit raw-name `exclude_tools` |
 | `INITIALIZE_REJECTED` | MCP | Token validation failed, token profile is unknown, or no default profile |
 | `AUTH_INVALID_TOKEN` | HTTP | Bearer token validation failed |
 | `CONNECTION_NOT_FOUND` | HTTP | Disconnect for unknown connection_id |

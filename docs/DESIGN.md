@@ -333,19 +333,22 @@ names before prefixing, resolution, conflict detection, registry registration,
 profile enforcement, and provider metadata reporting.
 
 `nested_gateway: true` is the explicit nested-Tela convenience mode. It requires
-`tool_prefix` and adds the child Tela built-ins `tela_list_providers` and
-`tela_list_profiles` to the effective raw-name exclude set. Parent gateway
-built-ins remain gateway-owned and visible. If downstream `tools/list` returns
-raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted
-or empty, startup fails closed with actionable `NESTED_TELA_PREFIX_REQUIRED`.
-Nested-Tela trigger detection must not silently
-hide tools unless `exclude_tools` or `nested_gateway: true` is configured.
+a non-empty `tool_prefix` and adds the child Tela built-ins
+`tela_list_providers` and `tela_list_profiles` to the effective raw-name exclude
+set. Parent gateway built-ins remain gateway-owned and visible as the only
+built-in MCP tools owned by tela. If downstream `tools/list` returns raw
+`tela_list_providers` or `tela_list_profiles` while `tool_prefix` is
+omitted/empty, startup fails closed with actionable
+`NESTED_TELA_PREFIX_REQUIRED`. Omitted `nested_gateway` with a valid prefix keeps
+prefixed child built-ins visible unless `exclude_tools` is configured.
+Nested-Tela trigger detection must not silently hide tools unless
+`exclude_tools` or `nested_gateway: true` is configured.
 
 Operator surfaces (not MCP):
 - CLI: `tela profiles`, `tela status`, `tela status --probe`, `tela status --clients`, `tela connections`, `tela audit`, `tela doctor`, `tela doctor --recover`, `tela stop`
 - HTTP: `GET /status`, `GET /operator/probe`, `GET /operator/clients`, `GET /operator/audit`, `GET /operator/authorization/explain`
 
-These are operator-facing CLI or HTTP surfaces and are **not** built-in MCP tool
+These are operator-facing CLI and HTTP surfaces and are **not** built-in MCP tool
 surfaces. Current built-in MCP tools are snake_case (`tela_list_profiles` and
 `tela_list_providers`); downstream `tool_prefix="tela."` and
 `tool_prefix="tela_"` are reserved and rejected.
@@ -549,7 +552,7 @@ Available tools:
 - classification is concrete-provider aware
 - unclassified access is handled conservatively
 - approval semantics do not appear in gateway profiles
-- built-in MCP tools owned by tela are `tela_list_profiles` and
+- built-in MCP tools owned by tela are only `tela_list_profiles` and
   `tela_list_providers`
 - each server instance stamps audit entries with a unique `instance_id`
 - tool metadata (`annotations`, `title`, `output_schema`) is preserved from downstream through upstream

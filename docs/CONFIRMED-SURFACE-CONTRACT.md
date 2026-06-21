@@ -97,8 +97,8 @@ completes; endpoint discoverability does not imply readiness.
 
 - A surface is a `tool` only if it is callable through MCP `tools/call` as an
   explicitly supported built-in tela surface.
-- This contract confirms exactly two current built-in MCP tools:
-  `tela_list_providers` and `tela_list_profiles`.
+- This contract confirms exactly two current gateway-owned built-in MCP tools:
+  parent `tela_list_providers` and parent `tela_list_profiles`.
 - **Input contract:** Both tools accept strictly `{}` (empty object); additional
   properties are rejected (`extra_key`) and non-object payloads are rejected (`wrong_type`)
 - **Session contract:** Both tools require an **admitted session/connection** at

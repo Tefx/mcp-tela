@@ -110,7 +110,7 @@ tela reads a single YAML config file. The top-level sections are:
 - `auth`: `open` or `token` mode
 - `audit`: log verbosity and output path
 
-Downstream server entries may also use `tool_prefix` for namespacing, `exclude_tools` for raw-name filtering, and `nested_gateway: true` when the downstream server is another Tela gateway.
+Downstream server entries may also use `tool_prefix` for namespacing (for example `prod_`, `work_`, or `host_`), `exclude_tools` for raw-name filtering, and explicit `nested_gateway: true` when the downstream server is another Tela gateway.
 
 Minimal example:
 
@@ -200,7 +200,7 @@ The following are operator-only HTTP surfaces:
 
 - **Tool metadata passthrough**: Preserves `annotations`, `title`, and `outputSchema` from downstream servers
 - **Tool namespacing and filtering**: `tool_prefix` namespaces downstream tools; `exclude_tools` removes raw downstream tool names before exposure
-- **Nested Tela gateways**: `nested_gateway: true` marks a downstream Tela gateway, requires a prefix, and hides child Tela built-ins while preserving the parent built-ins
+- **Nested Tela gateways**: explicit `nested_gateway: true` marks a downstream Tela gateway, requires a non-empty prefix such as `host_`, and hides child Tela built-ins while preserving the parent built-ins; omitted `nested_gateway` with a valid prefix preserves prefixed child built-ins unless raw-name `exclude_tools` is configured
 - **Instructions merging**: Configurable per-server instructions (`passthrough`, `suppress`, or `override`)
 - **Notification forwarding**: Forwards `notifications/tools/list_changed` from downstream to upstream clients
 

@@ -71,9 +71,13 @@ servers:
     #   - "noisy_debug_tool"
 
     # OPTIONAL: Mark this downstream as another Tela gateway
-    # Requires tool_prefix and automatically hides child Tela built-ins:
+    # Requires non-empty tool_prefix and automatically hides child Tela built-ins:
     #   - tela_list_providers
     #   - tela_list_profiles
+    # If nested_gateway is omitted and a valid prefix is configured, prefixed
+    # child built-ins remain visible unless raw-name exclude_tools removes them.
+    # Omitted/empty prefix with nested_gateway, or raw child built-ins with
+    # omitted/empty prefix, fails closed as NESTED_TELA_PREFIX_REQUIRED.
     # nested_gateway: true
 
     # OPTIONAL: Per-tool overrides (fine-grained control)
@@ -227,6 +231,25 @@ servers:
     # Upstream sees: personal_search_repos, personal_create_issue, etc.
     # Both servers export raw "search_repos" tool - prefix prevents conflict.
 
+  # ===========================================================================
+  # Example: Downstream Tela gateway on the host
+  # ===========================================================================
+  host-tela:
+    url: "http://127.0.0.1:18081/mcp"
+    headers:
+      Authorization: "Bearer ${HOST_TELA_TOKEN}"
+    family: "host"
+    default_posture: "read_write"
+    tool_prefix: "host_"
+    nested_gateway: true
+    # nested_gateway hides the child gateway's raw built-ins automatically:
+    #   - tela_list_providers
+    #   - tela_list_profiles
+    # For generic filtering without nested_gateway, exclude raw downstream names:
+    # exclude_tools:
+    #   - "tela_list_providers"
+    #   - "tela_list_profiles"
+
 # -----------------------------------------------------------------------------
 # Section: profiles
 # -----------------------------------------------------------------------------
@@ -361,7 +384,7 @@ profiles:
       filesystem: "read_write"
       network: "read_only"
       git: "read_write"
-      # NOTE: status, connections, and audit are operator-only CLI/HTTP views.
+      # NOTE: status, connections, and audit are operator-only CLI and HTTP views.
       # Shared MCP introspection is exposed only through tela_list_providers and
       # tela_list_profiles; capability maps do not reference surface names.
 
