@@ -89342,10 +89342,15 @@ phases:
       Decision basis required:
 
       - `ngw.runtime_verify.probe_harness` produced an executable true-runtime probe
-      or explicit environment blocker.
+      or explicit environment blocker; a blocker finding here is acceptable only as
+      finder evidence.
 
-      - `ngw.runtime_verify.blackbox_nested_gateway` contains raw runtime receipts
-      for all named scenarios.
+      - `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic` closed the observed
+      empty-prefix diagnostic blocker without compatibility aliases, accept-and-clean
+      behavior, or Opifex/shared-contract reinterpretation.
+
+      - `ngw.runtime_verify.blackbox_nested_gateway` contains post-fix raw runtime
+      receipts for all named scenarios.
 
       - `ngw.runtime_verify.spec_conformance` maps every ADR-010 acceptance criterion
       to evidence or owner path.
@@ -89355,6 +89360,10 @@ phases:
       child Tela raw built-ins with omitted or empty `tool_prefix` fail with the same
       code; omitted `nested_gateway` plus valid `tool_prefix` preserves prefixed child
       built-ins unless excluded.
+
+      - The previously failing empty-prefix child-builtin scenario must be proven
+      green and must not return generic `CONFIG_PARSE_ERROR ... tool_prefix cannot
+      be empty`.
 
       - ADR trigger wording is exact: downstream exposes `tela_list_providers` or
       `tela_list_profiles` with omitted or empty `tool_prefix`.
@@ -89375,10 +89384,12 @@ phases:
 
       For each ref in this step, evidence must cite the key passage or state `NOT
       READ: <reason>`. Include upstream evidence-bearing step IDs reviewed: `ngw.runtime_verify.probe_harness`,
-      `ngw.runtime_verify.blackbox_nested_gateway`, and `ngw.runtime_verify.spec_conformance`.'
-    verification: phase-check / runtime gate. Return OPEN only with positive runtime
-      proof for every owned nested-gateway behavior or explicit blocker ownership,
-      with refs-read key passages included.
+      `ngw.runtime_verify.fix_empty_tool_prefix_diagnostic`, `ngw.runtime_verify.blackbox_nested_gateway`,
+      and `ngw.runtime_verify.spec_conformance`.'
+    verification: phase-check / runtime gate. Return OPEN only with positive post-fix
+      runtime proof for every owned nested-gateway behavior, including the empty-prefix
+      child-builtin diagnostic, or explicit blocker ownership, with refs-read key
+      passages included.
     evidence_template: '## refs Read Confirmation (MANDATORY)
 
       For each ref in this gate step:
@@ -89408,6 +89419,7 @@ phases:
     - tests/core/test_nested_gateway_contract.py
     depends_on:
     - ngw.runtime_verify.probe_harness
+    - ngw.runtime_verify.fix_empty_tool_prefix_diagnostic
     - ngw.runtime_verify.blackbox_nested_gateway
     - ngw.runtime_verify.spec_conformance
     agent: gate-reviewer
