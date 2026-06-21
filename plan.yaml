@@ -85780,7 +85780,7 @@ phases:
       were not rerun in-session.'
 - id: ngw.contract_tests
   name: Nested Gateway Contract and Expected-Red Tests
-  status: in_progress
+  status: done
   gate: Open only when the authoritative requirement matrix is explicit and expected-red
     tests prove the current nested-gateway gap without product-code changes.
   context: Define the nested Tela gateway ergonomics acceptance contract and expected-red
@@ -86381,7 +86381,7 @@ phases:
       owns turning these tests green.'
   - id: ngw.contract_tests.gate
     name: Gate contract and expected-red tests
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: project
@@ -86445,6 +86445,110 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T01:29:35.632061+00:00'
+    done_at: '2026-06-21T01:33:52.122559+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent gate evidence:
+
+      - Gate reviewer returned Headline PASS, blocking status no blockers, proof-gap
+      status closed for this contract/tests gate.
+
+      - Requirement coverage NGW-R1..NGW-R9 and remediation blockers B1..B4 all marked
+      PROVEN by reviewer.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — reviewer cited Option A+C, raw
+      exclude_tools before prefix/registration, nested_gateway requires tool_prefix,
+      hides child builtins, and no silent auto-hide.
+
+      - docs/INTERFACES.md — reviewer cited exclude_tools default [], absence from
+      tools/list/routing/conflicts/provider metadata, and NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/USAGE.md — reviewer cited prefix-only compatibility and no silent hide
+      without explicit exclude_tools/nested_gateway.
+
+      - docs/DESIGN.md — reviewer cited Core owns raw-name filtering and Shell owns
+      lifecycle/reload/runtime wiring.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — reviewer cited exactly two parent MCP
+      builtins.
+
+      - evidence/ngw_contract_tests_contract_matrix.md — reviewer cited NGW-R1..NGW-R9
+      matrix mapped to expected-red artifacts.
+
+      - tests/core/test_nested_gateway_contract.py — reviewer cited core expected-red
+      probes for config fields, raw filtering, diagnostics, no silent hide, snake_case
+      prefixes, and ownership.
+
+      - tests/shell/test_nested_gateway_runtime.py — reviewer cited runtime probes
+      over connect_all, registry snapshot, routing lookup, provider metadata, reload
+      tools/list_changed, and parent builtins.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.contract_tests.gate --worktree .vectl/worktrees/ngw.contract_tests.gate
+      --base fe679030 --out .vectl/worktrees/ngw.contract_tests.gate/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; no Intent-Closure contract and no changed
+      paths for this review-only gate.
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~4..HEAD -> exit 0
+
+      - uv run pytest tests/core/test_nested_gateway_contract.py tests/shell/test_nested_gateway_runtime.py
+      -q -> exit 1 (expected red)
+
+      - Required fingerprints verified: exclude_tools, nested_gateway, NESTED_TELA_PREFIX_REQUIRED,
+      tool_count, tools/list_changed, and parent/tela built-in fingerprints.
+
+      - Scope audit: objective changes since gate include plan.yaml plus tests/core/test_nested_gateway_contract.py
+      and tests/shell/test_nested_gateway_runtime.py; no src/tela/** or docs/** modifications
+      by expected-red steps.
+
+
+      Requirement coverage summary:
+
+      - NGW-R1 PROVEN — core raw-name filtering plus shell registry/routing/metadata/reload
+      tests.
+
+      - NGW-R2 PROVEN — config defaults/invalid shapes/no aliases/no cleanup.
+
+      - NGW-R3 PROVEN — nested_gateway true, child builtin exclusion, prefix requirement.
+
+      - NGW-R4 PROVEN — no silent auto-hide compatibility guard.
+
+      - NGW-R5 PROVEN — NESTED_TELA_PREFIX_REQUIRED explicitly covered.
+
+      - NGW-R6 PROVEN — prefix-only child builtin visibility.
+
+      - NGW-R7 PROVEN — core/shell ownership boundary asserted.
+
+      - NGW-R8 PROVEN — parent builtin visibility plus child downstream distinction.
+
+      - NGW-R9 PROVEN — host_/prod_/work_ valid and dotted/reserved prefix coverage.
+
+      - B1-B4 PROVEN — remediation replaced placeholders with behavior-specific probes
+      and executable ownership.
+
+
+      Gaps:
+
+      - None. Gate open for implementation phase.'
   - id: ngw.contract_tests.remediate_expected_red_quality
     name: Remediate expected-red runtime test quality
     status: done
@@ -86734,7 +86838,7 @@ phases:
       owns turning expected-red tests green.'
 - id: ngw.core_impl
   name: Nested Gateway Core Implementation
-  status: locked
+  status: pending
   gate: Open only when targeted core tests pass green, Core @pre/@post contracts and
     doctests are present for new helpers, and default compatibility is proven.
   depends_on:
