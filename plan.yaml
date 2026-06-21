@@ -85780,7 +85780,7 @@ phases:
       were not rerun in-session.'
 - id: ngw.contract_tests
   name: Nested Gateway Contract and Expected-Red Tests
-  status: pending
+  status: in_progress
   gate: Open only when the authoritative requirement matrix is explicit and expected-red
     tests prove the current nested-gateway gap without product-code changes.
   context: Define the nested Tela gateway ergonomics acceptance contract and expected-red
@@ -85791,7 +85791,7 @@ phases:
   steps:
   - id: ngw.contract_tests.contract_matrix
     name: Freeze nested-gateway requirement matrix
-    status: pending
+    status: claimed
     description: 'step_type: contract
 
       agent_source: project
@@ -85917,6 +85917,8 @@ phases:
     - tela.yaml.example
     - AGENTS.md
     agent: software-architect
+    claimed_by: software-architect
+    claimed_at: '2026-06-21T00:39:55.231488+00:00'
   - id: ngw.contract_tests.core_expected_red
     name: Define expected-red core contract tests
     status: pending
