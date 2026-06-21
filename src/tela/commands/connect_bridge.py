@@ -489,28 +489,29 @@ def _recover_bridge_transport_state(
 # ---------------------------------------------------------------------------
 
 
-# @invar:allow shell_result: predicate callback shape required by bridge_http.post_mcp_http
 # @shell_orchestration: parses gateway-owned warming admission body at HTTP boundary.
-def _is_mcp_transient_warming_body(body: bytes) -> bool:
+def _is_mcp_transient_warming_body(body: bytes) -> Result[bool, str]:
     """Return True when a 503 body matches the MCP warming admission contract."""
 
     try:
         payload = json.loads(body.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError):
-        return False
+        return Result(value=False)
 
     if not isinstance(payload, dict):
-        return False
+        return Result(value=False)
     retry = payload.get("retry")
     if not isinstance(retry, dict):
-        return False
-    return (
-        payload.get("code") == "ADMISSION_REJECTED_WARMING"
-        and payload.get("transient") is True
-        and retry.get("authorized") is True
-        and retry.get("basis") == "gateway_signal"
-        and retry.get("expectation") == "bounded"
-        and payload.get("gateway_state") == "warming"
+        return Result(value=False)
+    return Result(
+        value=(
+            payload.get("code") == "ADMISSION_REJECTED_WARMING"
+            and payload.get("transient") is True
+            and retry.get("authorized") is True
+            and retry.get("basis") == "gateway_signal"
+            and retry.get("expectation") == "bounded"
+            and payload.get("gateway_state") == "warming"
+        )
     )
 
 
@@ -540,7 +541,7 @@ def post_mcp_message(
         connect_timeout_seconds=HTTP_TIMEOUT_SECONDS,
         write_timeout_seconds=HTTP_TIMEOUT_SECONDS,
         response_timeout_seconds=None,
-        is_503_retryable=_is_mcp_transient_warming_body,
+        is_503_retryable=lambda body: _is_mcp_transient_warming_body(body).value is True,
     )
     if result.is_err:
         error_detail = result.error
@@ -846,7 +847,7 @@ def _post_mcp_for_forwarding(
         connect_timeout_seconds=HTTP_TIMEOUT_SECONDS,
         write_timeout_seconds=HTTP_TIMEOUT_SECONDS,
         response_timeout_seconds=None,
-        is_503_retryable=_is_mcp_transient_warming_body,
+        is_503_retryable=lambda body: _is_mcp_transient_warming_body(body).value is True,
     )
 
 

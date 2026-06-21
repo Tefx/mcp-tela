@@ -285,6 +285,7 @@ async def _enumerate_client_tools(
     return Result(value=tools_result.value)
 
 
+# @shell_complexity: provider startup must preserve initialize/enumerate timeout, failure, success, and cleanup events.
 async def _connect_server(
     server_name: str,
     server_config: ServerConfig,

@@ -146,7 +146,10 @@ def connect_command(
     if max_recovery_attempts < 0:
         return Result(error="INVALID_MAX_RECOVERY_ATTEMPTS: must be >= 0")
 
-    resolved_client_kind = _resolve_client_kind(cli_client_kind=client_kind)
+    client_kind_result = _resolve_client_kind(cli_client_kind=client_kind)
+    if client_kind_result.is_err or client_kind_result.value is None:
+        return Result(error=client_kind_result.error or "INVALID_CLIENT_KIND")
+    resolved_client_kind = client_kind_result.value
     client_id = f"client_{uuid.uuid4().hex}"
 
     endpoint_result = _resolve_endpoint(
@@ -265,8 +268,7 @@ def _resolve_connect_token(
     )
 
 
-# @invar:allow shell_result: deterministic CLI/env precedence helper returns plain string for argparse wiring.
-def _resolve_client_kind(*, cli_client_kind: str | None) -> str:
+def _resolve_client_kind(*, cli_client_kind: str | None) -> Result[str, str]:
     """Resolve ADR-008 client kind using CLI, environment, then unknown.
 
     Args:
@@ -277,11 +279,11 @@ def _resolve_client_kind(*, cli_client_kind: str | None) -> str:
     """
 
     if cli_client_kind is not None and cli_client_kind.strip() != "":
-        return cli_client_kind
+        return Result(value=cli_client_kind)
     env_client_kind = os.environ.get("TELA_CLIENT_KIND")
     if env_client_kind is not None and env_client_kind.strip() != "":
-        return env_client_kind
-    return "unknown"
+        return Result(value=env_client_kind)
+    return Result(value="unknown")
 
 
 # ---------------------------------------------------------------------------

@@ -270,6 +270,7 @@ def handle_status(
     )
 
 
+# @shell_complexity: operator probe distinguishes absent runtime, status errors, lifecycle facts, and degraded fallback.
 @pre(lambda timeout_seconds=5.0: isinstance(timeout_seconds, int | float) and timeout_seconds > 0)
 @post(
     lambda result: (
@@ -340,6 +341,7 @@ def handle_operator_probe(
     )
 
 
+# @shell_complexity: operator clients must preserve read-only absent-runtime, snapshot-error, registry-error, and success branches.
 @post(
     lambda result: (
         (result.is_ok and result.value is not None and isinstance(result.value, list))

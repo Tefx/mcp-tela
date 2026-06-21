@@ -137,6 +137,20 @@ class ServerConfig(BaseModel):
     - Prefix-only changes count as tool-surface changes because upstream
       discovery, conflict detection, reload diffs, and observability are keyed
       to the exposed tool set.
+
+    Examples:
+        >>> try:
+        ...     ServerConfig(name="child", command="cmd", exclude_tool=["x"])
+        ... except Exception as exc:
+        ...     print("exclude_tools" in str(exc))
+        True
+        >>> try:
+        ...     ServerConfig(name="child", command="cmd", nested_gateway=True)
+        ... except Exception as exc:
+        ...     print("NESTED_TELA_PREFIX_REQUIRED" in str(exc))
+        True
+        >>> ServerConfig(name="child", command="cmd", tool_prefix="host_", nested_gateway=True).tool_prefix
+        'host_'
     """
 
     name: str
@@ -201,7 +215,16 @@ class ServerConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pre(lambda cls, data: data is not None)
+    @post(
+        lambda result: (
+            not isinstance(result, dict)
+            or not result.get("nested_gateway", False)
+            or bool(result.get("tool_prefix", None))
+        )
+    )
     def _reject_aliases_and_shorthand(cls, data: Any) -> Any:
+        """Reject alias fields and nested-gateway shorthand before coercion."""
         if isinstance(data, dict):
             for alias in ("exclude_tool", "excluded_tools", "hide_tools"):
                 if alias in data:
@@ -214,7 +237,10 @@ class ServerConfig(BaseModel):
         return data
 
     @model_validator(mode="after")
+    @pre(lambda self: isinstance(self.name, str) and len(self.name) > 0)
+    @post(lambda result: not result.nested_gateway or bool(result.tool_prefix))
     def _validate_nested_gateway_requires_prefix(self) -> ServerConfig:
+        """Guarantee explicit nested gateways keep a non-empty prefix."""
         if self.nested_gateway and not self.tool_prefix:
             raise ValueError(_NESTED_GATEWAY_PREFIX_REQUIRED_MESSAGE)
         return self

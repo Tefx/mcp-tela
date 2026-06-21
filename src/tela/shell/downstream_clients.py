@@ -32,16 +32,15 @@ class _ClientHandle:
     instructions: str | None = None
 
 
-# @invar:allow shell_result: pure local redaction helper; callers return Result
 # @shell_orchestration: transport-error redaction stays at the SDK exception boundary
-def _redact_header_values(message: str, headers: dict[str, str]) -> str:
+def _redact_header_values(message: str, headers: dict[str, str]) -> Result[str, str]:
     """Remove configured header values from downstream error text."""
 
     redacted = message
     for value in headers.values():
         if value:
             redacted = redacted.replace(value, "[redacted]")
-    return redacted
+    return Result(value=redacted)
 
 
 def _validate_transport_mode(
@@ -61,6 +60,7 @@ def _validate_transport_mode(
     return Result(value=None)
 
 
+# @shell_complexity: stdio connect must close async transport stacks across success, cancel, and failure phases.
 async def _open_stdio_client(
     server_name: str,
     server_config: ServerConfig,
@@ -115,6 +115,7 @@ async def _open_stdio_client(
         )
 
 
+# @shell_complexity: SSE connect branches for optional headers plus async stack cleanup/error redaction.
 async def _open_sse_client(
     server_name: str,
     server_config: ServerConfig,
@@ -161,7 +162,8 @@ async def _open_sse_client(
         raise
     except Exception as exc:
         await stack.aclose()
-        detail = _redact_header_values(str(exc), server_config.headers)
+        detail_result = _redact_header_values(str(exc), server_config.headers)
+        detail = detail_result.value if detail_result.is_ok else str(exc)
         return Result(
             error=(
                 f"{DOWNSTREAM_CONNECT_FAILED}: "
@@ -170,6 +172,7 @@ async def _open_sse_client(
         )
 
 
+# @shell_complexity: Streamable HTTP connect branches for optional headers/client ownership and cleanup.
 async def _open_streamable_http_client(
     server_name: str,
     server_config: ServerConfig,
@@ -221,7 +224,8 @@ async def _open_streamable_http_client(
         raise
     except Exception as exc:
         await stack.aclose()
-        detail = _redact_header_values(str(exc), server_config.headers)
+        detail_result = _redact_header_values(str(exc), server_config.headers)
+        detail = detail_result.value if detail_result.is_ok else str(exc)
         return Result(
             error=(
                 f"{DOWNSTREAM_CONNECT_FAILED}: "

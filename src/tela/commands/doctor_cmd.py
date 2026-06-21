@@ -202,7 +202,18 @@ def _run_doctor_command(
         )
         probe_performed = False
 
-    runtime_state = _runtime_state_from_discovery(discovery)
+    runtime_state_result = _runtime_state_from_discovery(discovery)
+    if runtime_state_result.is_err or runtime_state_result.value is None:
+        return Result(error=runtime_state_result.error or "DOCTOR_STATE_ERROR")
+    runtime_state = runtime_state_result.value
+    recommendation_result = _doctor_recommendation(
+        runtime_state=runtime_state,
+        recover=recover,
+        recovery=recovery,
+        attachments=attachments,
+    )
+    if recommendation_result.is_err or recommendation_result.value is None:
+        return Result(error=recommendation_result.error or "DOCTOR_RECOMMENDATION_ERROR")
     result = DoctorResult(
         schema_version=1,
         recover_performed=recover,
@@ -214,12 +225,7 @@ def _run_doctor_command(
             "lockfile": discovery.lockfile_status,
             "degraded_reason": recovery.error,
         },
-        recommendation=_doctor_recommendation(
-            runtime_state=runtime_state,
-            recover=recover,
-            recovery=recovery,
-            attachments=attachments,
-        ),
+        recommendation=recommendation_result.value,
         runtime_events={
             "last_provider_exit": runtime_events.last_provider_exit,
             "last_provider_startup_event": runtime_events.last_provider_startup_event,
@@ -358,7 +364,7 @@ def _read_doctor_attachment_summary(
         for attachment in registry.attachments
         if attachment.runtime_state
         in {RuntimeState.ACTIVE, RuntimeState.INITIALIZING, RuntimeState.RECOVERING}
-        and _attachment_heartbeat_is_fresh(attachment.last_heartbeat, now)
+        and _attachment_heartbeat_is_fresh(attachment.last_heartbeat, now).value is True
     ]
     if alive_ids:
         reason = "client_attachments_alive"
@@ -374,20 +380,22 @@ def _read_doctor_attachment_summary(
     ))
 
 
-# @invar:allow shell_result: pure heartbeat freshness predicate used inside doctor summary
 # @shell_orchestration: parses persisted shell diagnostic timestamps for liveness reporting
-def _attachment_heartbeat_is_fresh(last_heartbeat: str, now: datetime) -> bool:
+def _attachment_heartbeat_is_fresh(
+    last_heartbeat: str,
+    now: datetime,
+) -> Result[bool, str]:
     """Return True only when an attachment heartbeat is inside its lease."""
 
     try:
         normalized = last_heartbeat.replace("Z", "+00:00")
         heartbeat = datetime.fromisoformat(normalized)
     except ValueError:
-        return False
+        return Result(value=False)
     if heartbeat.tzinfo is None:
         heartbeat = heartbeat.replace(tzinfo=UTC)
     age_seconds = (now - heartbeat.astimezone(UTC)).total_seconds()
-    return 0 <= age_seconds <= ATTACHMENT_HEARTBEAT_STALE_SECONDS
+    return Result(value=0 <= age_seconds <= ATTACHMENT_HEARTBEAT_STALE_SECONDS)
 
 
 # @shell_orchestration: explicit recovery returns a complete action/event summary even for failed branches.
@@ -552,19 +560,17 @@ def _append_doctor_event(
         events_appended.append(kind.value)
 
 
-# @invar:allow shell_result: pure display mapping stays local to shell-only DoctorDiscovery dataclass.
 # @shell_orchestration: display mapping depends on shell-only discovery fields and does not warrant a core artifact.
-def _runtime_state_from_discovery(discovery: DoctorDiscovery) -> str:
+def _runtime_state_from_discovery(discovery: DoctorDiscovery) -> Result[str, str]:
     """Return the cached runtime state visible to passive doctor."""
 
     if discovery.lockfile_stale:
-        return "stale"
+        return Result(value="stale")
     if not discovery.lockfile_present:
-        return "absent"
-    return "unknown"
+        return Result(value="absent")
+    return Result(value="unknown")
 
 
-# @invar:allow shell_result: human recommendation is a display template for shell diagnostic output.
 # @shell_orchestration: recommendation templates are CLI presentation, not domain classification.
 # @shell_complexity: ADR-008 recommendation templates intentionally branch by recovery and liveness state.
 def _doctor_recommendation(
@@ -573,22 +579,34 @@ def _doctor_recommendation(
     recover: bool,
     recovery: DoctorRecoverySummary,
     attachments: DoctorAttachmentSummary,
-) -> str:
+) -> Result[str, str]:
     """Build ADR-008 recommendation template output."""
 
     if not recover:
-        return "Doctor is passive; run tela doctor --recover to probe and attempt recovery."
+        return Result(
+            value="Doctor is passive; run tela doctor --recover to probe and attempt recovery."
+        )
     if recovery.already_ready:
-        return "Runtime is already ready; no recovery mutation was needed."
+        return Result(value="Runtime is already ready; no recovery mutation was needed.")
     if recovery.recovery_succeeded:
-        return "Recovery succeeded; reconnect clients if their transports were closed."
+        return Result(
+            value="Recovery succeeded; reconnect clients if their transports were closed."
+        )
     if attachments.client_attachments_alive:
-        return "Client attachments are still alive; do not revive closed client transports."
+        return Result(
+            value="Client attachments are still alive; do not revive closed client transports."
+        )
     if runtime_state == "stale":
-        return "Stale cleanup did not restore readiness; inspect runtime-events."
+        return Result(
+            value="Stale cleanup did not restore readiness; inspect runtime-events."
+        )
     if runtime_state == "absent":
-        return "Cold-start recovery did not produce a ready runtime; inspect serve logs."
-    return "Recovery did not establish readiness; inspect runtime-events and status output."
+        return Result(
+            value="Cold-start recovery did not produce a ready runtime; inspect serve logs."
+        )
+    return Result(
+        value="Recovery did not establish readiness; inspect runtime-events and status output."
+    )
 
 
 def _print_doctor_json(result: DoctorResult) -> None:

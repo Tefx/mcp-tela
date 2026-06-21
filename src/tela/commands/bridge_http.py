@@ -22,29 +22,29 @@ INVALID_TIMEOUT_MESSAGE = (
 )
 
 
-# @invar:allow shell_result: local type guard prevents Core precondition assertions
+# @shell_orchestration: validation straddles Shell bad-input handling and Core helper contracts
 # before returning the public shell Result error shape.
-# @shell_orchestration: validation straddles Shell bad-input handling and Core helper contracts.
 def _timeout_args_have_valid_types(
     *,
     connect_timeout_seconds: object,
     write_timeout_seconds: object,
     response_timeout_seconds: object,
-) -> bool:
+) -> Result[bool, str]:
     """Return True only when timeout values are safe for Core validation."""
 
     if not isinstance(connect_timeout_seconds, (int, float)) or isinstance(
         connect_timeout_seconds, bool
     ):
-        return False
+        return Result(value=False)
     if not isinstance(write_timeout_seconds, (int, float)) or isinstance(
         write_timeout_seconds, bool
     ):
-        return False
+        return Result(value=False)
     if response_timeout_seconds is None:
-        return True
-    return isinstance(response_timeout_seconds, (int, float)) and not isinstance(
-        response_timeout_seconds, bool
+        return Result(value=True)
+    return Result(
+        value=isinstance(response_timeout_seconds, (int, float))
+        and not isinstance(response_timeout_seconds, bool)
     )
 
 
@@ -94,14 +94,19 @@ def post_mcp_http(
     safe without string-matching transport errors.
     """
 
-    if not _timeout_args_have_valid_types(
+    timeout_types_result = _timeout_args_have_valid_types(
         connect_timeout_seconds=connect_timeout_seconds,
         write_timeout_seconds=write_timeout_seconds,
         response_timeout_seconds=response_timeout_seconds,
-    ) or not bridge_http_timeouts_valid(
-        connect_timeout_seconds=connect_timeout_seconds,
-        write_timeout_seconds=write_timeout_seconds,
-        response_timeout_seconds=response_timeout_seconds,
+    )
+    if (
+        timeout_types_result.is_err
+        or timeout_types_result.value is not True
+        or not bridge_http_timeouts_valid(
+            connect_timeout_seconds=connect_timeout_seconds,
+            write_timeout_seconds=write_timeout_seconds,
+            response_timeout_seconds=response_timeout_seconds,
+        )
     ):
         return Result(
             error=BridgeHttpError(

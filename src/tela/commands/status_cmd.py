@@ -394,6 +394,7 @@ def _print_status_json(
     print(json.dumps(output_data, indent=2))
 
 
+# @shell_complexity: human status output has mutually exclusive passive, client table, error, and remote-summary sections.
 def _print_status_human(
     status_result: ADR008StatusResult,
     probe: bool,
