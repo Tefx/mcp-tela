@@ -87412,7 +87412,7 @@ phases:
     agent: gate-reviewer
   - id: guard_blocker_fix
     name: Fix core retest invar guard blockers
-    status: pending
+    status: claimed
     description: "step_type: implementation\nagent_source: project\nsymbolic_testing:\
       \ true\ncommand_family_locked: uv run invar guard --all\n\n[REQUIRES_SKILL:\
       \ ponytail-coder]\n\nFix ALL blockers reported by the independent verifier for\
@@ -87492,6 +87492,8 @@ phases:
     depends_on:
     - ngw.core_impl.raw_filtering_kernel
     agent: python-senior
+    claimed_by: python-senior
+    claimed_at: '2026-06-21T07:35:54.515588+00:00'
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
   status: locked
