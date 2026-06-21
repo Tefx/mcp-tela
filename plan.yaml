@@ -89431,7 +89431,7 @@ phases:
       - None.'
   - id: ngw.runtime_verify.spec_conformance
     name: Verify nested-gateway spec conformance
-    status: pending
+    status: claimed
     description: 'step_type: verification
 
       agent_source: project
@@ -89535,6 +89535,8 @@ phases:
     depends_on:
     - ngw.runtime_verify.blackbox_nested_gateway
     agent: spec-verifier
+    claimed_by: spec-verifier
+    claimed_at: '2026-06-21T08:59:52.975204+00:00'
   - id: ngw.runtime_verify.gate
     name: Gate runtime verification
     status: pending
