@@ -85791,7 +85791,7 @@ phases:
   steps:
   - id: ngw.contract_tests.contract_matrix
     name: Freeze nested-gateway requirement matrix
-    status: claimed
+    status: done
     description: "step_type: contract\nagent_source: project\n\nPROOF ARTIFACT: Produce\
       \ the authoritative nested Tela gateway requirement-to-evidence matrix before\
       \ any product implementation.\n\nRequirement-to-Evidence Matrix seed:\n| requirement_id\
@@ -85957,6 +85957,90 @@ phases:
     agent: software-architect
     claimed_by: software-architect
     claimed_at: '2026-06-21T00:39:55.231488+00:00'
+    done_at: '2026-06-21T00:53:08.096582+00:00'
+    evidence: 'status: SUCCESS
+
+
+      Worker evidence:
+
+      - Artifact created: evidence/ngw_contract_tests_contract_matrix.md
+
+      - Worker commit: 5c1c2d57 Add nested gateway contract matrix proof artifact
+
+      - Main merge commit: c9b43fa6 [vectl] step-ngw.contract_tests.contract_matrix
+      completed
+
+
+      Refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — worker cited exclude_tools raw-name
+      semantics and nested_gateway prefix/child built-in exclusion requirements.
+
+      - docs/INTERFACES.md — worker cited exclude_tools default/absence semantics
+      and NESTED_TELA_PREFIX_REQUIRED diagnostics.
+
+      - docs/USAGE.md — worker cited parent built-ins, explicit filtering only, and
+      snake_case prefixes host_/prod_/work_.
+
+      - docs/DESIGN.md — worker cited core owns raw-name filtering and shell owns
+      lifecycle/reload/I/O.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — worker cited exactly two parent built-in
+      MCP tools and CLI/HTTP split.
+
+      - docs/AGENT_INTERFACE.md — worker cited operator surfaces not MCP built-ins
+      and POST /mcp as readiness-gated transport.
+
+      - README.md — worker cited top-level tool_prefix/exclude_tools/nested_gateway
+      contract.
+
+      - tela.yaml.example — worker cited raw exclude_tools, nested_gateway true, and
+      underscore prefixes.
+
+      - AGENTS.md — worktree-local AGENTS.md absent; worker read worktree-local CLAUDE.md
+      equivalent instructions.
+
+
+      Intent-Closure sidecar:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.contract_tests.contract_matrix --worktree .vectl/worktrees/ngw.contract_tests.contract_matrix
+      --base d664aecd --out .vectl/worktrees/ngw.contract_tests.contract_matrix/.agent/gate/verdict.json
+
+      - Result: CONFORMANT, exit 0
+
+      - checked_claims: downstream_test_file_mapping_present, exact_adr_trigger_confirmed,
+      ngw_r1_through_r9_matrix_rows_present, no_implementation_before_expected_red_assertion_present,
+      refs_confirmation_present, snake_case_examples_present
+
+      - changed_paths: evidence/ngw_contract_tests_contract_matrix.md
+
+
+      Mainline final-state verification:
+
+      - git diff --check HEAD~1..HEAD -> exit 0
+
+      - test -f evidence/ngw_contract_tests_contract_matrix.md -> exit 0
+
+      - uv run python artifact claim check -> exit 0; stdout included `contract matrix
+      artifact claims present`
+
+
+      Required assertions:
+
+      - No implementation dispatch until expected-red tests exist: CONFIRMED in artifact.
+
+      - Final exposed MCP names remain snake_case: CONFIRMED, examples use host_,
+      prod_, work_.
+
+      - Exact ADR trigger is downstream raw child built-ins with omitted or empty
+      tool_prefix: CONFIRMED.
+
+
+      Gaps:
+
+      - None for this contract-artifact step. Product implementation intentionally
+      not performed.'
   - id: ngw.contract_tests.core_expected_red
     name: Define expected-red core contract tests
     status: pending
