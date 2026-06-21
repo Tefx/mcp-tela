@@ -87780,7 +87780,7 @@ phases:
       - None.'
 - id: ngw.runtime_wiring
   name: Nested Gateway Runtime Wiring
-  status: in_progress
+  status: done
   gate: Open only when runtime seams prove filtered tools never register or route,
     provider metadata reports the filtered surface, and tool-surface changes emit
     notifications.
@@ -88529,7 +88529,7 @@ phases:
       - None.'
   - id: ngw.runtime_wiring.gate
     name: Gate runtime wiring
-    status: claimed
+    status: done
     description: 'step_type: gate
 
       agent_source: project
@@ -88625,6 +88625,97 @@ phases:
     agent: gate-reviewer
     claimed_by: gate-reviewer
     claimed_at: '2026-06-21T08:31:56.457649+00:00'
+    done_at: '2026-06-21T08:38:48.094838+00:00'
+    evidence: 'status: SUCCESS
+
+      verdict: PASS
+
+      blockers: []
+
+      gate_open_allowed: true
+
+      orchestrator_action_hint: COMPLETE
+
+
+      Independent gate evidence:
+
+      - Gate reviewer returned PASS with no blockers and final decision OPEN.
+
+      - Upstream evidence-bearing steps reviewed: startup_reload_surface, metadata_call_routing,
+      wiring_audit, live_transport_nested_child_enumeration_proof, green_retest.
+
+      - Worktree clean; gate step made no changes.
+
+
+      refs Read Confirmation:
+
+      - docs/ADR-010-nested-gateway-ergonomics.md — reviewer cited explicit config
+      semantics, raw exclude before prefix/registration, nested_gateway hiding only
+      child builtins, and no silent hide.
+
+      - docs/INTERFACES.md — reviewer cited tool_prefix/exclude_tools/nested_gateway,
+      provider tool_count/tool_names, reload surface changes, and NESTED_TELA_PREFIX_REQUIRED.
+
+      - docs/USAGE.md — reviewer cited nested mode hiding child builtins while parent
+      builtins remain, and prefix-only preserving child builtins.
+
+      - docs/DESIGN.md — reviewer cited Core owns raw filtering and Shell owns startup/reload/registry/upstream/tools/list_changed
+      flow.
+
+      - docs/CONFIRMED-SURFACE-CONTRACT.md — reviewer cited canonical parent builtins
+      tela_list_providers/tela_list_profiles and exact {} input.
+
+      - src/tela/core/errors.py — reviewer confirmed stable NESTED_TELA_PREFIX_REQUIRED.
+
+      - src/tela/shell/downstream.py, reload.py, downstream_registry.py, builtin_tools.py,
+      upstream.py — reviewer traced startup/re-enumerate, reload/reconnect, registry
+      raw_name, provider metadata, tools/list, and call routing.
+
+      - tests/shell/test_nested_gateway_runtime.py, test_reload.py, test_downstream.py,
+      test_builtin_tools.py, test_upstream.py — reviewer cited coverage for startup
+      filtering, reload notification, re_enumerate filtering, provider metadata, and
+      raw-name routing.
+
+
+      Sidecar gate:
+
+      - Command: python ~/dotfiles/agent/scripts/intent_closure_gate.py --plan plan.yaml
+      --step ngw.runtime_wiring.gate --worktree .vectl/worktrees/ngw.runtime_wiring.gate
+      --base 27f08034 --out .vectl/worktrees/ngw.runtime_wiring.gate/.agent/gate/verdict.json
+
+      - Result: NOT_APPLICABLE, exit 0; gate/review-only step has no Intent-Closure
+      contract and changed_paths empty.
+
+
+      Mainline final-state verification:
+
+      - uv run pytest tests/shell/test_nested_gateway_runtime.py tests/shell/test_reload.py
+      tests/shell/test_downstream.py tests/shell/test_builtin_tools.py tests/shell/test_upstream.py
+      -q -> exit 0, 194 passed in 0.70s
+
+      - uv run invar guard -> exit 0, status passed, errors 0
+
+
+      Gate Decision Basis:
+
+      - startup/reload filtering: PROVEN — startup_reload_surface evidence and current
+      green tests cover connect_all, on_tools_changed, re_enumerate.
+
+      - metadata/call routing: PROVEN — metadata_call_routing evidence and tests show
+      filtered provider metadata and raw_name routing.
+
+      - wiring audit reachability: PROVEN — wiring_audit reported no orphan/dead runtime
+      symbols; only live proof gap was owned and closed.
+
+      - live transport nested child enumeration: PROVEN — live proof step used real
+      parent HTTP MCP + child stdio with nested hide and prefix-only control.
+
+      - green retest: PROVEN — runtime wiring pytest suite and invar guard passed.
+
+
+      Gaps:
+
+      - None. Runtime wiring gate open for runtime verification phase.'
   - id: live_transport_nested_child_enumeration_proof
     name: Live transport nested child enumeration proof
     status: done
@@ -88895,7 +88986,7 @@ phases:
       - None. The audit NEEDS_TEST row is closed by live transport proof.'
 - id: ngw.runtime_verify
   name: Nested Gateway Runtime Verification
-  status: locked
+  status: pending
   gate: Open only when black-box nested-gateway proof, reload proof, and spec-conformance
     evidence show the runtime surface matches ADR-010 and the interface docs.
   depends_on:
