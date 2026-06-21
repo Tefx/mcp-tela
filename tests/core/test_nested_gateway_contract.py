@@ -22,6 +22,8 @@ NESTED_TELA_PREFIX_REQUIRED = "NESTED_TELA_PREFIX_REQUIRED"
 
 def test_server_config_exposes_exclude_tools_with_raw_name_defaults() -> None:
     """NGW-R1, NGW-R4: exclude_tools exposes list[str] defaulting to empty."""
+    assert "exclude_tools" in ServerConfig.model_fields, "exclude_tools not defined on ServerConfig"
+
     config = ServerConfig(name="mock", url="http://mock")
     assert getattr(config, "exclude_tools", []) == []
 
@@ -34,8 +36,23 @@ def test_server_config_exposes_exclude_tools_with_raw_name_defaults() -> None:
     assert getattr(config, "exclude_tools", []) == ["tela_list_providers", "some_other_raw_tool"]
 
 
+def test_invalid_exclude_tools_shapes_fail_validation() -> None:
+    """NGW-R2: String aliases or invalid exclude_tools shapes are rejected without accept-and-clean."""
+    assert "exclude_tools" in ServerConfig.model_fields, "exclude_tools not defined on ServerConfig"
+    with pytest.raises(Exception):
+        ServerConfig(name="mock", url="http://mock", exclude_tools="tela_list_profiles")
+
+
+def test_exclude_tools_snake_case_reserved_prefix() -> None:
+    """NGW-R9: snake_case/reserved prefix coverage: explicitly filtering 'prod_tool' or 'work_tool' works."""
+    assert "exclude_tools" in ServerConfig.model_fields, "exclude_tools not defined on ServerConfig"
+    with pytest.raises(Exception):
+        ServerConfig(name="mock", url="http://mock", exclude_tools=["prod_tool", "work_tool", "tela.something"])
+
+
 def test_server_config_exposes_nested_gateway_default_false() -> None:
     """NGW-R2: ServerConfig exposes nested_gateway defaulting to False."""
+    assert "nested_gateway" in ServerConfig.model_fields, "nested_gateway not defined on ServerConfig"
     config = ServerConfig(name="mock", url="http://mock")
     assert getattr(config, "nested_gateway", False) is False
 
