@@ -866,6 +866,117 @@ def test_filter_tools_multiple_servers() -> None:
     assert names == {"read_file", "git_status"}
 
 
+def test_handle_tools_list_returns_tools_sorted_by_exposed_name() -> None:
+    """Filtered tools/list output is canonical and independent of registry order."""
+    import asyncio
+
+    from tela.core.models import (
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.downstream_registry import DownstreamRegistry
+    from tela.shell.gateway_runtime import clear_runtime_connections, set_runtime_config
+    from tela.shell.result import Result
+    from tela.shell.upstream import handle_tools_list
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "z_server",
+        [
+            ResolvedTool(
+                name="z_tool",
+                server_name="z_server",
+                family="z_family",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="last tool",
+                title="Last Tool",
+            ),
+            ResolvedTool(
+                name="a_tool",
+                server_name="z_server",
+                family="z_family",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="first tool",
+                output_schema={"type": "string"},
+            ),
+        ],
+    )
+    registry.register(
+        "a_server",
+        [
+            ResolvedTool(
+                name="middle_tool",
+                server_name="a_server",
+                family="a_family",
+                posture=Posture.READ_ONLY,
+                schema_={"type": "object"},
+                description="middle tool",
+                annotations={"readOnlyHint": True},
+            )
+        ],
+    )
+
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+            servers={
+                "z_server": ServerConfig(name="z_server", command="cmd"),
+                "a_server": ServerConfig(name="a_server", command="cmd"),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={
+                        "z_family": Posture.READ_ONLY,
+                        "a_family": Posture.READ_ONLY,
+                    },
+                )
+            },
+        )
+    )
+    clear_runtime_connections()
+
+    import tela.shell.upstream
+
+    original_get_all_tools = tela.shell.upstream.get_all_tools
+    tela.shell.upstream.get_all_tools = lambda: Result(value=registry.get_all_tools())
+
+    try:
+        result = asyncio.run(
+            handle_tools_list(
+                ConnectionContext(
+                    connection_id="conn_dev",
+                    profile_id="dev",
+                    connected_at="2026-01-01T00:00:00Z",
+                    init_mode=AuthMode.OPEN,
+                )
+            )
+        )
+        assert result.is_ok
+        assert result.value is not None
+        assert [tool["name"] for tool in result.value] == [
+            "a_tool",
+            "middle_tool",
+            "z_tool",
+        ]
+        by_name = {tool["name"]: tool for tool in result.value}
+        assert by_name["z_tool"]["title"] == "Last Tool"
+        assert by_name["a_tool"]["outputSchema"] == {"type": "string"}
+        assert by_name["middle_tool"]["annotations"] == {"readOnlyHint": True}
+    finally:
+        tela.shell.upstream.get_all_tools = original_get_all_tools
+
+
 # --- strip_meta tests ---
 
 

@@ -814,6 +814,62 @@ def test_gateway_connections_empty_initially() -> None:
     asyncio.run(gateway_shutdown())
 
 
+def test_fastmcp_tools_list_returns_combined_tools_sorted_by_name() -> None:
+    """Final MCP tools/list returns downstream and builtin tools in canonical order."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "fs": ServerConfig(
+                    name="fs",
+                    command="cmd",
+                    default_posture=Posture.READ_ONLY,
+                ),
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"fs": Posture.READ_ONLY},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        tool_lists = {
+            "fs": [
+                {"name": "z_tool", "inputSchema": {}},
+                {"name": "a_tool", "inputSchema": {}},
+            ]
+        }
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+
+        await gateway_start(config, tela_config=tela, tool_lists=tool_lists)
+        _setup_test_connection_with_session()
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.ListToolsRequest]
+            )
+            assert handler_result.is_ok
+            response = await handler_result.value(types.ListToolsRequest())
+
+            assert [tool.name for tool in response.root.tools] == [  # type: ignore[union-attr]  # response is ListToolsResult at runtime
+                "a_tool",
+                "tela_list_profiles",
+                "tela_list_providers",
+                "z_tool",
+            ]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
 def test_fastmcp_tools_list_returns_filtered_tools() -> None:
     """Low-level tools/list handler returns profile-filtered tools."""
 

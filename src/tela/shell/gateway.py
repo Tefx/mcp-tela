@@ -792,7 +792,7 @@ def _wire_upstream_handlers(upstream_server: FastMCP) -> None:
             )
             for bt in builtin_tools_result.value
         ]
-        return downstream_tools + builtin_tools
+        return sorted(downstream_tools + builtin_tools, key=lambda tool: tool.name)
 
     # @shell_complexity: builtin tool calls follow a different execution path than downstream tools.
     @upstream_server._mcp_server.call_tool(validate_input=False)

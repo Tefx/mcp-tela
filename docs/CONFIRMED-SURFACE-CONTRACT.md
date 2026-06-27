@@ -109,9 +109,13 @@ completes; endpoint discoverability does not imply readiness.
   `status` (`"connected"` | `"disconnected"` | `"failed"`), `tool_prefix`
   (configured prefix or `null`), `tool_count` (int), and `tool_names` (list of
   exposed tool names after server-level filtering and profile enforcement).
+  Provider entries are emitted in ascending `provider_name` order; each
+  `tool_names` list is emitted in ascending exposed tool-name order.
 - `tela_list_profiles` output: list of `ProfileInfo` objects, each containing
   `profile_id` (str), `capabilities` (dict of family→posture string), and
-  `default` (bool).
+  `default` (bool). Profile entries are emitted in ascending `profile_id`
+  order, with capability families emitted in ascending family-name order for
+  stable JSON output.
 - `tela_list_profiles` must return the canonical JSON payload itself, not a
   Python `repr(...)`/stringified approximation.
 - more than one `default: true` entry is invalid and must fail closed with

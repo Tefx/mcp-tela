@@ -19,6 +19,7 @@ from tela.shell.builtin_tools import (
     BUILTIN_TOOL_NAMES,
     _validate_profile_list_payload,
     handle_list_providers,
+    handle_profiles_list,
 )
 from tela.shell.gateway import (
     GatewayStartupConfig,
@@ -192,6 +193,95 @@ def test_handle_list_providers_includes_failed_server() -> None:
         assert bad_entry is not None
         assert bad_entry["status"] == "failed"
         assert bad_entry["tool_count"] == 0
+    finally:
+        asyncio.run(gateway_shutdown())
+
+
+def test_handle_list_providers_returns_sorted_providers_and_tool_names() -> None:
+    """Provider listing order is canonical and independent of config/tool order."""
+
+    tela = TelaConfig(
+        servers={
+            "zeta": ServerConfig(
+                name="zeta",
+                command="cmd",
+                default_posture=Posture.READ_ONLY,
+            ),
+            "alpha": ServerConfig(
+                name="alpha",
+                command="cmd",
+                default_posture=Posture.READ_ONLY,
+            ),
+        },
+        profiles={
+            "dev": ProfileConfig(
+                name="dev",
+                default=True,
+                capabilities={"zeta": Posture.READ_ONLY, "alpha": Posture.READ_ONLY},
+            )
+        },
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="dev",
+    )
+    tool_lists = {
+        "zeta": [
+            {"name": "z_last", "inputSchema": {}},
+            {"name": "a_first", "inputSchema": {}},
+        ],
+        "alpha": [{"name": "middle", "inputSchema": {}}],
+    }
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="dev",
+    )
+
+    asyncio.run(gateway_start(config, tela_config=tela, tool_lists=tool_lists))
+    try:
+        result = asyncio.run(handle_list_providers(_bound_connection()))
+
+        assert [entry["provider_name"] for entry in result] == ["alpha", "zeta"]
+        zeta = next(entry for entry in result if entry["provider_name"] == "zeta")
+        assert zeta["tool_names"] == ["a_first", "z_last"]
+    finally:
+        asyncio.run(gateway_shutdown())
+
+
+def test_handle_profiles_list_returns_sorted_profiles_and_capabilities() -> None:
+    """Profile listing order is canonical and independent of config order."""
+
+    tela = TelaConfig(
+        servers={},
+        profiles={
+            "zeta": ProfileConfig(
+                name="zeta",
+                default=False,
+                capabilities={"z_family": Posture.READ_ONLY, "a_family": Posture.NONE},
+            ),
+            "alpha": ProfileConfig(
+                name="alpha",
+                default=True,
+                capabilities={"shell": Posture.READ_WRITE},
+            ),
+        },
+        auth=AuthConfig(mode=AuthMode.OPEN),
+        resolved_default_profile="alpha",
+    )
+    config = GatewayStartupConfig(
+        transport=GatewayTransport.STDIO,
+        port=None,
+        auth_mode=AuthMode.OPEN,
+        default_profile="alpha",
+    )
+
+    asyncio.run(gateway_start(config, tela_config=tela, tool_lists={}))
+    try:
+        result = handle_profiles_list()
+
+        assert [entry["profile_id"] for entry in result] == ["alpha", "zeta"]
+        zeta = next(entry for entry in result if entry["profile_id"] == "zeta")
+        assert list(zeta["capabilities"].keys()) == ["a_family", "z_family"]
     finally:
         asyncio.run(gateway_shutdown())
 

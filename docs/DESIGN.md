@@ -320,6 +320,7 @@ Built-in MCP tools:
 - Built-in tools require an admitted session/connection at call time; there is no builtin-session bypass
 - Built-in tools accept strictly `{}` (empty object) input; `null`, omitted payloads, and additional properties are rejected
 - Provider listing returns tools filtered by the calling connection's admitted `profile_id`
+- `tools/list`, provider-list entries, provider `tool_names`, profile-list entries, and profile capability maps are emitted in canonical name-sorted order for stable client cache/diff behavior
 - Audit entries for builtin calls attribute to the calling connection's admitted `profile_id`
 - Regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`, `tests/integration/test_token_mode_initialize.py::test_handle_initialize_token_mode_rejects_missing_token_version_before_admission`
 

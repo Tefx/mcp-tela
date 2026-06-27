@@ -650,7 +650,7 @@ async def handle_tools_list(
     if permitted_result.is_err:
         return Result(error=permitted_result.error)
     assert permitted_result.value is not None
-    permitted = permitted_result.value
+    permitted = sorted(permitted_result.value, key=lambda tool: tool.name)
     for tool in permitted:
         invalid_name = _invalid_shared_tool_name(tool.name)
         if invalid_name is not None:

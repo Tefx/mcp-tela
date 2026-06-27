@@ -204,7 +204,7 @@ async def handle_list_providers(
 
     providers: list[ProviderInfo] = []
 
-    for server_name, server_config in config.servers.items():
+    for server_name, server_config in sorted(config.servers.items()):
         is_successful = server_name in successful
         is_attempted = server_name in attempted
         is_registered = server_name in all_tools
@@ -231,7 +231,7 @@ async def handle_list_providers(
             if filtered_result.is_ok and filtered_result.value:
                 # filter_tools_for_profile returns flat list
                 filtered_tools = filtered_result.value
-                tool_names = [t.name for t in filtered_tools]
+                tool_names = sorted(t.name for t in filtered_tools)
                 for tool_name in tool_names:
                     _raise_if_invalid_shared_tool_name(tool_name)
                 tool_count = len(tool_names)
@@ -282,11 +282,11 @@ def handle_profiles_list() -> list["ProfileInfo"]:
     config = config_result.value
 
     profiles: list[ProfileInfo] = []
-    for name, p in config.profiles.items():
+    for name, p in sorted(config.profiles.items()):
         profiles.append(
             ProfileInfo(
                 profile_id=name,
-                capabilities={k: v.value for k, v in p.capabilities.items()},
+                capabilities={k: v.value for k, v in sorted(p.capabilities.items())},
                 default=p.default,
             )
         )

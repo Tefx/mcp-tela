@@ -716,6 +716,11 @@ HTTP surfaces:
 
 ## Tool metadata passthrough
 
+The `tools/list` response is emitted in ascending exposed-tool-name order after
+profile filtering and after gateway-owned built-ins are added. This stable order
+is intended for cache- and diff-friendly clients; downstream enumeration order
+and server configuration order are not public ordering semantics.
+
 The `tools/list` response includes metadata fields from downstream servers:
 
 | Field | Description |

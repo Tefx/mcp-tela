@@ -243,6 +243,11 @@ The upstream MCP surface exposes:
 - built-in tool: `tela_list_profiles`
 - built-in tool: `tela_list_providers`
 
+`tools/list` is emitted in canonical ascending exposed-tool-name order after
+profile filtering and after adding gateway-owned built-ins. It does not preserve
+raw downstream enumeration order, server configuration order, or registry
+insertion order as public semantics.
+
 ### 7.1 MCP Resources
 
 There are currently no built-in MCP resources.
@@ -682,8 +687,10 @@ Runtime-truthful payload shape:
 `provider_name`, `profile_id`, `status`, `tool_prefix`, `tool_count`, and
 `tool_names` are the current builtin surface keys. `tool_count` and `tool_names`
 reflect the tools that remain after server-level filtering, prefix resolution,
-and profile enforcement. The builtin result carries the exact JSON array as
-`application/json` content.
+and profile enforcement. Provider entries are emitted in ascending
+`provider_name` order, and `tool_names` is emitted in ascending exposed-tool-name
+order. The builtin result carries the exact JSON array as `application/json`
+content.
 
 Canonical builtin rule set for both `tela_list_profiles` and
 `tela_list_providers`:
@@ -692,6 +699,7 @@ Canonical builtin rule set for both `tela_list_profiles` and
 - arguments must be exactly `{}`; non-object payloads are rejected with `wrong_type` and extra keys are rejected with `extra_key`
 - provider visibility binds to the calling connection's admitted `profile_id`
 - builtin audit attribution binds to the calling connection's admitted `profile_id`
+- profile-list entries are emitted in ascending `profile_id` order, with capability families emitted in ascending family-name order
 - regression coverage: `tests/shell/test_gateway.py::test_streamable_http_builtin_call_requires_admitted_session`, `tests/shell/test_gateway.py::test_streamable_http_builtin_call_accepts_only_exact_empty_object`, `tests/shell/test_builtin_tools.py::test_handle_list_providers_uses_bound_connection_profile_in_token_mode`
 
 ### 7.3 Session and Notification Forwarding

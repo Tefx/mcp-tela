@@ -74,6 +74,7 @@ The parent tela gateway exposes exactly two gateway-owned built-in MCP tools:
     - `tool_prefix` (string | null): configured prefix applied to exposed tool names
     - `tool_count` (int): number of tools exposed by this server after server-level filtering and posture filtering
     - `tool_names` (list[str]): post-filter/post-enforcement exposed tool names
+  - **Ordering:** provider entries are sorted by `provider_name`; each `tool_names` list is sorted by exposed tool name
 
 - `tela_list_profiles` — returns a list of configured profiles with their capabilities
   - **Input:** empty object `{}`
@@ -81,6 +82,7 @@ The parent tela gateway exposes exactly two gateway-owned built-in MCP tools:
     - `profile_id` (string): canonical profile identifier
     - `capabilities` (dict): family → posture mapping
     - `default` (bool): whether this is the default profile
+  - **Ordering:** profile entries are sorted by `profile_id`; capability families are emitted in sorted family-name order
 
 ## 4. Profile Capability Model
 
