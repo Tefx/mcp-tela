@@ -30,6 +30,7 @@ Thumbs.db
 
 # Testing
 .pytest_cache/
+.hypothesis/
 .coverage
 htmlcov/
 
@@ -42,6 +43,7 @@ htmlcov/
 .gemini/
 .claude/
 .opencode/
+.pi/
 opencode.json
 AGENTS.md
 CLAUDE.md
