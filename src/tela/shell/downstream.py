@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from mcp import types as mcp_types
 from mcp.shared.session import RequestResponder
 from typing import Literal
@@ -24,13 +23,19 @@ from tela.shell.downstream_clients import (
     _ClientHandle,
     _enumerate_tools,
     _open_client_for_server,
-    _validate_transport_mode,
 )
 from tela.shell.downstream_registry import DownstreamRegistry
 from tela.shell.result import Result
 from tela.shell.gateway_runtime import get_runtime_config
-from tela.core.classification import RuntimeEvent, RuntimeEventKind
-from tela.shell.adr008_registry_events import append_runtime_event_best_effort
+from tela.core.classification import RuntimeEventKind
+from tela.shell.downstream_startup import (
+    DownstreamStartupSnapshot,
+    ProviderStartupFailure,
+    degraded_reason_from_failures,
+    is_external_task_cancellation,
+    provider_event,
+    startup_failure_from_error,
+)
 
 # Recovery constants and functions live in _downstream_recovery.
 # Re-exported here for monkeypatching compatibility and public surface stability.
@@ -104,29 +109,6 @@ PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS = 30.0
 
 
 @dataclass(frozen=True)
-class ProviderStartupFailure:
-    """Diagnostic for one downstream provider startup failure."""
-
-    server_name: str
-    phase: str
-    reason: str
-    timeout: bool = False
-    elapsed_ms: float | None = None
-
-
-@dataclass(frozen=True)
-class DownstreamStartupSnapshot:
-    """Detached snapshot of the current/last downstream startup convergence."""
-
-    attempted_servers: tuple[str, ...]
-    successful_servers: tuple[str, ...]
-    failed_servers: dict[str, ProviderStartupFailure]
-    in_progress_servers: tuple[str, ...]
-    complete: bool
-    degraded_reason: str | None
-
-
-@dataclass(frozen=True)
 class _ConnectedServerData:
     """Temporary successful downstream startup result before registry publish."""
 
@@ -134,63 +116,6 @@ class _ConnectedServerData:
     raw_tools: list[dict]
     client_handle: _ClientHandle | None = None
     instructions: str | None = None
-
-
-# @invar:allow shell_result: pure timestamp formatting for best-effort diagnostic events
-# @shell_orchestration: timestamp creation belongs at runtime diagnostic boundary
-def _utc_timestamp() -> str:
-    """Return a UTC timestamp for downstream diagnostic events."""
-
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
-# @shell_orchestration: wraps runtime-event model construction and append side effect
-def _provider_event(
-    kind: RuntimeEventKind,
-    *,
-    server_name: str,
-    phase: str,
-    details: dict[str, object] | None = None,
-) -> None:
-    """Append one best-effort downstream provider startup event."""
-
-    payload: dict[str, object] = {"provider_name": server_name, "phase": phase}
-    if details:
-        payload.update(details)
-    append_runtime_event_best_effort(
-        RuntimeEvent(
-            kind=kind,
-            client_id=f"provider:{server_name}",
-            client_kind="downstream_provider",
-            timestamp=_utc_timestamp(),
-            details=payload,
-        )
-    )
-
-
-# @shell_orchestration: status diagnostic token formatting stays local to startup state
-def _failure_reason(failure: ProviderStartupFailure) -> Result[str, str]:
-    """Return a compact status degraded_reason token for one provider failure."""
-
-    suffix = "timeout" if failure.timeout else "failed"
-    return Result(value=f"provider_{failure.phase}_{suffix}:{failure.server_name}")
-
-
-# @shell_orchestration: aggregates shell-owned provider failure diagnostics for /status
-def _degraded_reason_from_failures(
-    failures: dict[str, ProviderStartupFailure],
-) -> Result[str | None, str]:
-    """Return stable semicolon-separated provider diagnostics for /status."""
-
-    if not failures:
-        return Result(value=None)
-    reasons: list[str] = []
-    for name in sorted(failures.keys()):
-        reason_result = _failure_reason(failures[name])
-        if reason_result.is_err or reason_result.value is None:
-            return Result(error=reason_result.error or "PROVIDER_FAILURE_REASON_ERROR")
-        reasons.append(reason_result.value)
-    return Result(value=";".join(reasons))
 
 
 # @shell_orchestration: mutates module-owned startup convergence diagnostics
@@ -228,9 +153,6 @@ def get_downstream_startup_snapshot() -> Result[DownstreamStartupSnapshot, str]:
     """Return detached downstream startup/convergence diagnostics."""
 
     failures = dict(_failed_servers)
-    degraded_reason_result = _degraded_reason_from_failures(failures)
-    if degraded_reason_result.is_err:
-        return Result(error=degraded_reason_result.error)
     return Result(
         value=DownstreamStartupSnapshot(
             attempted_servers=tuple(sorted(_attempted_servers)),
@@ -238,7 +160,7 @@ def get_downstream_startup_snapshot() -> Result[DownstreamStartupSnapshot, str]:
             failed_servers=failures,
             in_progress_servers=tuple(sorted(_in_progress_servers)),
             complete=_startup_complete,
-            degraded_reason=degraded_reason_result.value,
+            degraded_reason=degraded_reason_from_failures(failures),
         )
     )
 
@@ -292,7 +214,7 @@ async def _connect_server(
 ) -> Result[_ConnectedServerData, str]:
     """Open one downstream client and enumerate its tools with bounded phases."""
 
-    _provider_event(
+    provider_event(
         RuntimeEventKind.PROVIDER_STARTING,
         server_name=server_name,
         phase="initialize",
@@ -311,7 +233,7 @@ async def _connect_server(
         )
     except asyncio.TimeoutError:
         elapsed_ms = (time.monotonic() - initialize_started) * 1000.0
-        _provider_event(
+        provider_event(
             RuntimeEventKind.PROVIDER_TIMEOUT,
             server_name=server_name,
             phase="initialize",
@@ -327,10 +249,26 @@ async def _connect_server(
                 f"timeout_seconds={PROVIDER_INITIALIZE_TIMEOUT_SECONDS}"
             )
         )
+    except asyncio.CancelledError as exc:
+        if is_external_task_cancellation():
+            raise
+        elapsed_ms = (time.monotonic() - initialize_started) * 1000.0
+        provider_event(
+            RuntimeEventKind.PROVIDER_FAILED,
+            server_name=server_name,
+            phase="initialize",
+            details={"error": str(exc) or "cancelled", "elapsed_ms": elapsed_ms},
+        )
+        return Result(
+            error=(
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
+                f"provider_initialize_cancelled:{server_name} {exc}"
+            )
+        )
 
     if open_result.is_err:
         elapsed_ms = (time.monotonic() - initialize_started) * 1000.0
-        _provider_event(
+        provider_event(
             RuntimeEventKind.PROVIDER_FAILED,
             server_name=server_name,
             phase="initialize",
@@ -339,14 +277,14 @@ async def _connect_server(
         return Result(error=open_result.error)
     assert open_result.value is not None
     client_handle = open_result.value
-    _provider_event(
+    provider_event(
         RuntimeEventKind.PROVIDER_INITIALIZED,
         server_name=server_name,
         phase="initialize",
         details={"elapsed_ms": (time.monotonic() - initialize_started) * 1000.0},
     )
 
-    _provider_event(
+    provider_event(
         RuntimeEventKind.PROVIDER_TOOLS_LIST_STARTED,
         server_name=server_name,
         phase="tools_list",
@@ -360,7 +298,7 @@ async def _connect_server(
     except asyncio.TimeoutError:
         elapsed_ms = (time.monotonic() - tools_started) * 1000.0
         await _close_handle_best_effort(client_handle)
-        _provider_event(
+        provider_event(
             RuntimeEventKind.PROVIDER_TIMEOUT,
             server_name=server_name,
             phase="tools_list",
@@ -376,14 +314,28 @@ async def _connect_server(
                 f"timeout_seconds={PROVIDER_TOOLS_LIST_TIMEOUT_SECONDS}"
             )
         )
-    except asyncio.CancelledError:
+    except asyncio.CancelledError as exc:
         await _close_handle_best_effort(client_handle)
-        raise
+        if is_external_task_cancellation():
+            raise
+        elapsed_ms = (time.monotonic() - tools_started) * 1000.0
+        provider_event(
+            RuntimeEventKind.PROVIDER_FAILED,
+            server_name=server_name,
+            phase="tools_list",
+            details={"error": str(exc) or "cancelled", "elapsed_ms": elapsed_ms},
+        )
+        return Result(
+            error=(
+                f"{DOWNSTREAM_CONNECT_FAILED}: "
+                f"provider_tools_list_cancelled:{server_name} {exc}"
+            )
+        )
 
     if tools_result.is_err:
         elapsed_ms = (time.monotonic() - tools_started) * 1000.0
         await _close_handle_best_effort(client_handle)
-        _provider_event(
+        provider_event(
             RuntimeEventKind.PROVIDER_FAILED,
             server_name=server_name,
             phase="tools_list",
@@ -396,7 +348,7 @@ async def _connect_server(
             )
         )
     assert tools_result.value is not None
-    _provider_event(
+    provider_event(
         RuntimeEventKind.PROVIDER_TOOLS_LIST_COMPLETED,
         server_name=server_name,
         phase="tools_list",
@@ -461,24 +413,6 @@ async def _close_all_clients_locked() -> None:
             continue
 
 
-# @invar:allow shell_result: pure diagnostic classifier for shell-owned provider startup errors
-# @shell_orchestration: maps shell exception text into startup status diagnostics
-def _startup_failure_from_error(
-    server_name: str,
-    error: str | None,
-) -> ProviderStartupFailure:
-    """Classify a provider startup error into phase-aware diagnostics."""
-
-    message = error or "unknown"
-    if f"provider_initialize_timeout:{server_name}" in message:
-        return ProviderStartupFailure(server_name, "initialize", message, timeout=True)
-    if f"provider_tools_list_timeout:{server_name}" in message:
-        return ProviderStartupFailure(server_name, "tools_list", message, timeout=True)
-    if "enumeration failed" in message or "DOWNSTREAM_ENUMERATE_FAILED" in message:
-        return ProviderStartupFailure(server_name, "tools_list", message)
-    return ProviderStartupFailure(server_name, "initialize", message)
-
-
 # @invar:allow shell_result: returns registry object directly, not a failable I/O boundary.
 def get_registry() -> DownstreamRegistry:
     """Return the module-level downstream registry."""
@@ -533,7 +467,7 @@ async def connect_all(
             for idx, startup_result in enumerate(startup_results):
                 server_name = server_names_list[idx]
                 if startup_result.is_err:
-                    failures[server_name] = _startup_failure_from_error(
+                    failures[server_name] = startup_failure_from_error(
                         server_name, startup_result.error
                     )
                     continue

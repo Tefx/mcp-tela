@@ -159,7 +159,6 @@ Authoritative freeze for downstream work:
 - any future change to these ownership rules requires a separate architecture slice / ADR
 
 ### Startup coordination
-
 Startup coordination is distinct from single-server convergence.
 
 - `connect_all` owns process/session startup across the configured server set.
@@ -170,6 +169,10 @@ Startup coordination is distinct from single-server convergence.
 - Config-change orchestration may choose to call `disconnect_all` + `connect_all`
   as the safe whole-registry path; that policy decision is not part of the
   single-server convergence kernel.
+- Provider-owned internal `asyncio.CancelledError` during initialize or
+  `tools/list` is classified as that provider's startup failure and surfaces
+  through degraded status; only cancellation of the owning startup task
+  propagates as a gateway-level cancellation.
 
 ### Convergence and reload
 

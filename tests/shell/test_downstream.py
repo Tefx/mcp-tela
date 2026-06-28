@@ -16,6 +16,7 @@ Tests cover:
 from __future__ import annotations
 
 import asyncio
+from contextlib import AsyncExitStack
 from typing import Any
 
 import pytest
@@ -36,6 +37,7 @@ from tela.shell.downstream import (
     get_tool_server,
     re_enumerate,
 )
+from tela.shell.result import Result
 from tela.shell.gateway_runtime import get_runtime_config, set_runtime_config
 
 
@@ -361,6 +363,116 @@ def test_connect_all_empty_servers() -> None:
 
 
 # --- Remaining stubs ---
+
+
+def test_connect_all_degrades_when_provider_initialize_raises_internal_cancel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Provider-local CancelledError must not abort whole gateway startup."""
+    from tela.shell import downstream
+
+    class FakeSession:
+        pass
+
+    async def fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any = None,
+    ) -> Result[Any, str]:
+        if server_name == "bad":
+            raise asyncio.CancelledError("cancel scope from unavailable provider")
+        return Result(
+            value=downstream._ClientHandle(
+                session=FakeSession(),
+                stack=AsyncExitStack(),
+            )
+        )
+
+    async def fake_enumerate_tools(session: Any) -> Result[list[dict[str, Any]], str]:
+        return Result(value=[{"name": "good_tool", "inputSchema": {}}])
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", fake_open_client_for_server
+    )
+    monkeypatch.setattr(downstream, "_enumerate_tools", fake_enumerate_tools)
+
+    async def _run() -> None:
+        try:
+            result = await connect_all(
+                {
+                    "bad": ServerConfig(name="bad", url="http://127.0.0.1:1/mcp"),
+                    "good": ServerConfig(name="good", command="cmd"),
+                }
+            )
+            assert result.is_ok, result.error
+            tools = get_all_tools()
+            assert tools.is_ok and tools.value is not None
+            assert list(tools.value) == ["good"]
+            assert [tool.name for tool in tools.value["good"]] == ["good_tool"]
+            assert downstream.get_successful_servers().value == {"good"}
+            assert downstream.get_attempted_servers().value == {"bad", "good"}
+            snapshot = downstream.get_downstream_startup_snapshot()
+            assert snapshot.is_ok and snapshot.value is not None
+            assert "bad" in snapshot.value.failed_servers
+            assert snapshot.value.degraded_reason == "provider_initialize_failed:bad"
+        finally:
+            await disconnect_all()
+
+    asyncio.run(_run())
+
+
+def test_connect_all_degrades_when_provider_tools_list_raises_internal_cancel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Provider-local tools/list cancellation is isolated as degraded startup."""
+    from tela.shell import downstream
+
+    class FakeSession:
+        def __init__(self, server_name: str) -> None:
+            self.server_name = server_name
+
+    async def fake_open_client_for_server(
+        server_name: str,
+        server_config: ServerConfig,
+        message_handler: Any = None,
+    ) -> Result[Any, str]:
+        return Result(
+            value=downstream._ClientHandle(
+                session=FakeSession(server_name),
+                stack=AsyncExitStack(),
+            )
+        )
+
+    async def fake_enumerate_tools(session: FakeSession) -> Result[list[dict[str, Any]], str]:
+        if session.server_name == "bad":
+            raise asyncio.CancelledError("cancel scope during tools/list")
+        return Result(value=[{"name": "good_tool", "inputSchema": {}}])
+
+    monkeypatch.setattr(
+        downstream, "_open_client_for_server", fake_open_client_for_server
+    )
+    monkeypatch.setattr(downstream, "_enumerate_tools", fake_enumerate_tools)
+
+    async def _run() -> None:
+        try:
+            result = await connect_all(
+                {
+                    "bad": ServerConfig(name="bad", command="cmd"),
+                    "good": ServerConfig(name="good", command="cmd"),
+                }
+            )
+            assert result.is_ok, result.error
+            tools = get_all_tools()
+            assert tools.is_ok and tools.value is not None
+            assert list(tools.value) == ["good"]
+            snapshot = downstream.get_downstream_startup_snapshot()
+            assert snapshot.is_ok and snapshot.value is not None
+            assert "bad" in snapshot.value.failed_servers
+            assert snapshot.value.degraded_reason == "provider_tools_list_failed:bad"
+        finally:
+            await disconnect_all()
+
+    asyncio.run(_run())
 
 
 def test_call_tool_returns_downstream_unavailable_when_not_connected() -> None:
