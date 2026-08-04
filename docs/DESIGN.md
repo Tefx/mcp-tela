@@ -66,12 +66,21 @@ Consumers of `tela connect` and `tela serve` MUST NOT treat lockfile discovery a
 proof that downstreams are ready.
 
 ### Connection lifecycle
-
 1. `tela connect` → `POST /connect` with canonical request key `server_name` → server registers connection and returns `connection_id`
 2. Bridge active: stdio ↔ HTTP MCP session; the connect process is recorded as a client-neutral client attachment to the shared runtime
 3. Additional `tela connect` processes attach to the same shared runtime and appear together in `tela status --clients`
 4. `tela connect` exits or receives host transport EOF → `POST /disconnect` → server deregisters; the client side records `host_transport_closed` before provider-exit diagnostics
 5. Last connection gone + idle timeout → server auto-shuts down (if auto-started)
+
+Attachment registry mutation compacts terminal history deterministically. Records
+whose runtime state is `exited` expire
+after 14 days; retained terminal records are capped at 500 by removing the
+oldest heartbeat first. Active, initializing, recovering, idle, and unknown
+records are never removed to satisfy the terminal cap; mutation logs an
+`attachment_registry_nonterminal_overflow` diagnostic when those preserved
+records alone exceed 500. Status, doctor, and
+`GET /operator/clients` remain byte-for-byte read-only and never compact.
+Malformed registries fail closed without replacement.
 
 Idle shutdown is a server process lifecycle event, not a command to kill an already-attached host transport. Request-level idle/recovery failures must either recover the next request or fail only that request while keeping the provider loop alive for later client messages. Recovery budgets are per event/request so unrelated events do not accumulate stale exhaustion state.
 
@@ -549,7 +558,6 @@ Available tools:
 - Mitigate contradictions by suppressing a section, providing a per-server replacement string, or revising contract/docs explicitly.
 
 ## Invariants
-
 - one connection binds to one profile
 - profile ceilings are family-based
 - no tool override may elevate access beyond `capabilities[family]`
@@ -560,7 +568,8 @@ Available tools:
   `tela_list_providers`
 - each server instance stamps audit entries with a unique `instance_id`
 - tool metadata (`annotations`, `title`, `output_schema`) is preserved from downstream through upstream
-
+- every valid downstream `CallToolResult` is preserved through the upstream MCP boundary, including `isError=true` content; application-level errors do not trigger transport recovery
+- downstream application-error audits record bounded classification metadata and do not persist unrestricted provider content
 ## Shell Module Responsibilities
 
 ### `result.py`

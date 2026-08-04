@@ -385,15 +385,13 @@ Returns a current-endpoint `OperatorProbeSnapshot` observing runtime state witho
 **Contract**: Observation-only. Never invokes startup, recovery, registration, admission, disconnect, or session-release paths. `timeout_seconds` mirrors the CLI probe surface but does not perform retry loops or mutate state.
 
 #### `GET /operator/clients`
-
-Returns client attachments from the ADR-008 attachment registry. Read-only: does not register clients, admit sessions, disconnect, release sessions, recover, or rewrite registry contents.
+Returns client attachments from the ADR-008 attachment registry. Read-only: does not register clients, admit sessions, disconnect, release sessions, recover, compact terminal history, or rewrite registry contents. The registry bytes remain unchanged.
 
 **Auth**: Bearer token required.
 
 **Response**: JSON array of `ClientAttachment` objects.
 
 When the runtime is not active, returns an empty array to avoid fabricating remote client state for an absent endpoint.
-
 #### `GET /operator/audit`
 
 Returns a bounded cursor page from the audit store. Read-only: does not admit sessions, call tools, disconnect, recover, or mutate audit entries.
@@ -503,8 +501,7 @@ These fields are passed through unmodified from the downstream server and used f
 - Client-side validation (outputSchema)
 
 ### 7.2.2 `GET /status` Response Schema
-
-The status endpoint returns a `StatusResponse` containing gateway runtime state. Response fields have the following guarantees:
+The status endpoint returns a `StatusResponse` containing gateway runtime state. It is read-only: it does not compact or rewrite `client-attachments.json`, start recovery, or mutate connection state. Response fields have the following guarantees:
 
 **Authoritative Fields** (directly from runtime state):
 | Field | Type | Semantics |
@@ -841,19 +838,12 @@ _clients: dict[str, ClientSession]
   endpoint is unchanged; replaced only when reconnect is required.
 
 ### 9.4 Error handling contract
-
-- transport/session establishment errors are surfaced as structured
-  `TelaError(code="DOWNSTREAM_CONNECT_FAILED", ...)` with server context.
-- tool invocation on missing/unconnected server returns
-  `TelaError(code="DOWNSTREAM_NOT_CONNECTED", ...)`.
-- downstream tool execution failures are surfaced as
-  `TelaError(code="DOWNSTREAM_TOOL_CALL_FAILED", ...)` and include server/tool
-  context in `details`.
-- `connect_all` rejects tool-name conflicts across servers and tears down opened
-  sessions before returning conflict error.
-
+- transport/session establishment errors are surfaced as structured gateway-owned errors with server context.
+- tool invocation on a missing or unconnected server returns `DOWNSTREAM_UNAVAILABLE` and follows the ADR-006 recovery contract.
+- any valid downstream `CallToolResult`, including `isError=true`, is a successfully transported MCP response and passes through unchanged with its content and extension fields.
+- timeout, transport, protocol, malformed-response, authorization, and exhausted-recovery failures remain gateway-owned error paths; they are not synthesized from `CallToolResult.isError`.
+- `connect_all` rejects tool-name conflicts across servers and tears down opened sessions before returning conflict error.
 ### 9.5 Retry and Reconnection Semantics
-
 #### Startup: downstream connect failure
 
 `connect_all` uses `asyncio.gather` to connect all configured servers
@@ -871,27 +861,27 @@ If no provider connects successfully, startup convergence still completes and
 Tool-name conflicts among successful providers remain fail-closed: opened handles
 are closed, the registry is cleared, and `connect_all` returns `TOOL_CONFLICT`.
 
-#### Steady state: auto-reconnect on disconnect
+#### Steady state: failure-triggered recovery
 
-When a connected downstream server disconnects (the MCP client session raises
-an `Exception` in the message handler), the gateway automatically attempts
-reconnection via `_handle_reconnect`:
+The healthy path sends the tool call directly without a probe. Any valid
+`CallToolResult` is returned upstream unchanged. In particular,
+`CallToolResult(isError=true)` is an application-level result: Tela preserves its
+content and does not treat it as a liveness failure.
 
-1. Opens a new client session to the same server (`_open_client_for_server`).
-2. On success: swaps the new client handle into `_clients` and closes the old
-   handle best-effort.
-3. Re-enumerates tools from the new session.
-4. Routes the fresh tool list through the single-server convergence kernel
-   (`on_server_reconnect`) which resolves, registers, and checks for conflicts.
-5. On conflict: the previous tool list is preserved (rollback), a
-   `TOOL_CONFLICT` audit warning is written, and the reconnect update is rejected.
-6. On success: the registry is updated, and upstream clients are notified via
-   `tools/list_changed`.
+Only an eligible pre-dispatch disconnected-client exception starts per-server
+recovery:
 
-**No backoff or retry limit.** If the reconnect attempt fails (connection or
-enumeration), a warning is logged and no further automatic retry is scheduled.
-The server remains disconnected until the next event triggers reconnection
-(e.g., another disconnect exception, config reload, or manual re-enumeration).
+1. Open a new client session to the same server.
+2. Re-enumerate tools from the new session.
+3. Route the fresh tool list through the single-server convergence kernel
+   (`on_server_reconnect`) for resolution, registration, and conflict checks.
+4. Swap the accepted handle and close the old handle best-effort.
+5. Retry the original tool call once.
+6. Return any valid retry `CallToolResult` unchanged, including `isError=true`.
+
+Transport, protocol, timeout, malformed-response, convergence, and exhausted
+recovery failures remain Tela-owned errors. A retry never starts a second
+recovery cycle for the same original call.
 
 #### Hot reload: reconnect behavior on config change
 
@@ -916,7 +906,6 @@ can trigger reconnection by:
 - Restarting `tela serve`.
 - Modifying the config file (if a file watcher is configured).
 - Calling `gateway_reload_config_from_disk` programmatically.
-
 ### 9.6 Connection Reaper
 
 The connection reaper is a background async task that periodically removes
@@ -1169,7 +1158,6 @@ Populated only when `verdict == "deny"`. Machine-readable error classification:
 When `verdict == "allow"`, `error_code` is `null`.
 
 ### Additional error codes (non-audit, MCP/HTTP surface)
-
 | Error code | Surface | Condition |
 |------------|---------|-----------|
 | `GATEWAY_NOT_STARTED` | MCP + HTTP | Gateway runtime not initialized |
@@ -1178,8 +1166,7 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `invalid_tool_name` | MCP | Shared MCP tool name is not canonical snake_case |
 | `wrong_type` | MCP | Built-in tela tool received a non-object argument payload |
 | `extra_key` | MCP + HTTP | Built-in tela tool or `POST /connect` received unexpected keys |
-| `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream server not connected, call failed, or recovery exhausted (see ADR-006) |
-| `DOWNSTREAM_ERROR` | MCP | Downstream server returned `isError: true` |
+| `DOWNSTREAM_UNAVAILABLE` | MCP | Downstream transport is unavailable, malformed, or recovery is exhausted (see ADR-006). A valid `CallToolResult(isError=true)` is returned unchanged and is not a gateway error. |
 | `DOWNSTREAM_CONNECT_FAILED` | Startup | Transport connection or enumeration failed |
 | `NESTED_TELA_PREFIX_REQUIRED` | Startup | Downstream `tools/list` returned raw `tela_list_providers` or `tela_list_profiles` while `tool_prefix` is omitted/empty, or `nested_gateway: true` was configured without a non-empty prefix; configure a non-empty prefix and use `nested_gateway: true` or explicit raw-name `exclude_tools` |
 | `INITIALIZE_REJECTED` | MCP | Token validation failed, token profile is unknown, or no default profile |
@@ -1213,6 +1200,7 @@ When `verdict == "allow"`, `error_code` is `null`.
 | `AUDIT_WRITE_ERROR` | Runtime | Cannot write to audit JSONL file |
 | `AUDIT_QUERY_ERROR` | Runtime | Invalid timestamp format in query |
 
+Application-level tool failures remain allowed MCP results. Audit keeps denial-only fields (`denied_by`, `error_code`) unset and records only bounded response classification (for example `{"isError": true}`), never unrestricted downstream content.
 ### ADR-006 `DOWNSTREAM_UNAVAILABLE` Error Payload
 
 When recovery is attempted or considered, `TelaError.details` for `DOWNSTREAM_UNAVAILABLE` uses these field names per ADR-006:

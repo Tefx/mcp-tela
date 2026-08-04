@@ -132,37 +132,66 @@ def test_recovery_eligibility_classifier_rejects_broken_pipe(
     assert details.get("recovery_stage") == "not_attempted"
 
 
-def test_gap_recovery_eligibility_classifier_rejects_tool_error(
+def test_application_error_result_passes_through_without_recovery(
     fake_client_handle: downstream._ClientHandle,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """GAP EXPOSED: Downstream ToolError is NOT recovery eligible.
-
-    ADR-006 §Recovery Eligibility Table:
-    "McpError, ToolError, or any downstream application/tool error payload"
-    = NOT ELIGIBLE
-    "These are not liveness failures."
-
-    This test will FAIL until the eligibility classifier is implemented.
-    """
+    """A valid downstream application error remains a successful transport result."""
     from mcp.types import CallToolResult
+    from tela.shell import _downstream_recovery
+
+    recovery_called = False
+
+    async def _unexpected_recovery(
+        server_name: str,
+        *,
+        deadline_monotonic: float,
+    ) -> Result[None, TelaError]:
+        nonlocal recovery_called
+        _ = server_name, deadline_monotonic
+        recovery_called = True
+        return Result(value=None)
 
     downstream._clients["test_server"] = fake_client_handle
-    # Simulate a tool error response (isError=True)
+    downstream_payload = {
+        "isError": True,
+        "content": [
+            {
+                "type": "text",
+                "text": "provider validation failed",
+                "vendorNull": None,
+            }
+        ],
+        "structuredContent": {"valid": False, "nestedNull": None},
+        "_meta": {"trace": "downstream", "metaNull": None},
+        "vendorTop": None,
+    }
     fake_client_handle.session.call_tool = AsyncMock(
-        return_value=CallToolResult(isError=True, content=[])
+        return_value=CallToolResult.model_validate(downstream_payload)
+    )
+    monkeypatch.setattr(
+        _downstream_recovery,
+        "_recover_server_client",
+        _unexpected_recovery,
     )
 
     result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
 
-    assert result.is_err
-    details = result.error.details or {}
-
-    # GAP: Tool errors not classified as ineligible
-    # Per ADR-006, recovery_eligible should be False for tool errors
-    assert details.get("recovery_eligible") is not False, (
-        "GAP: Tool error not classified as recovery-ineligible. "
-        "Expected recovery_eligible=False per ADR-006 §Recovery Eligibility."
-    )
+    assert result.is_ok
+    assert result.value is not None
+    validated = CallToolResult.model_validate(result.value)
+    assert validated.isError is True
+    assert validated.content[0].type == "text"
+    assert validated.content[0].text == "provider validation failed"  # type: ignore[union-attr]
+    assert result.value["structuredContent"] == {
+        "valid": False,
+        "nestedNull": None,
+    }
+    assert result.value["_meta"] == {"trace": "downstream", "metaNull": None}
+    assert "vendorTop" in result.value and result.value["vendorTop"] is None
+    assert result.value["content"][0]["vendorNull"] is None
+    assert fake_client_handle.session.call_tool.await_count == 1
+    assert recovery_called is False
 
 
 # ==============================================================================
@@ -901,3 +930,58 @@ def test_full_recovery_sequence_retries_once_after_successful_recovery(
     assert result.is_ok
     assert result.value == {"content": [], "isError": False}
     assert call_sequence == ["call_tool", "recover", "retry"]
+
+
+def test_post_recovery_application_error_is_returned_without_second_recovery(
+    fake_client_handle: downstream._ClientHandle,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A retry that returns ``isError=true`` completes the one recovery cycle."""
+    from mcp.types import CallToolResult, TextContent
+    from tela.shell import _downstream_recovery
+
+    downstream._clients["test_server"] = fake_client_handle
+    fake_client_handle.session.call_tool.side_effect = RuntimeError(
+        "Client is not connected. Use the 'async with client:' context manager first."
+    )
+
+    refreshed_session = MagicMock()
+    refreshed_session.call_tool = AsyncMock(
+        return_value=CallToolResult(
+            isError=True,
+            content=[TextContent(type="text", text="provider rejected retry")],
+        )
+    )
+    refreshed_handle = downstream._ClientHandle(
+        session=refreshed_session,
+        stack=MagicMock(aclose=AsyncMock()),
+    )
+    recovery_calls = 0
+
+    async def _fake_recover_server_client(
+        server_name: str,
+        *,
+        deadline_monotonic: float,
+    ) -> Result[None, TelaError]:
+        nonlocal recovery_calls
+        _ = deadline_monotonic
+        recovery_calls += 1
+        downstream._clients[server_name] = refreshed_handle
+        return Result(value=None)
+
+    monkeypatch.setattr(
+        _downstream_recovery,
+        "_recover_server_client",
+        _fake_recover_server_client,
+    )
+
+    result = asyncio.run(downstream.call_tool("test_server", "tool_name", {}))
+
+    assert result.is_ok
+    assert result.value is not None
+    validated = CallToolResult.model_validate(result.value)
+    assert validated.isError is True
+    assert validated.content[0].text == "provider rejected retry"  # type: ignore[union-attr]
+    assert recovery_calls == 1
+    assert fake_client_handle.session.call_tool.await_count == 1
+    assert refreshed_session.call_tool.await_count == 1

@@ -188,8 +188,8 @@ def test_allowed_success_carries_response_at_l3() -> None:
     assert entry.response_content is not None
 
 
-def test_allowed_downstream_error_carries_error_response() -> None:
-    """Allowed calls with downstream error carry error as response_content."""
+def test_allowed_downstream_application_error_has_bounded_response_metadata() -> None:
+    """Application errors are allowed MCP results with bounded audit metadata."""
     entry = AuditEntry(
         timestamp="2026-01-01T00:00:00Z",
         level=AuditLevel.L3,
@@ -198,12 +198,12 @@ def test_allowed_downstream_error_carries_error_response() -> None:
         tool_name="read_file",
         server_name="fs",
         verdict=EnforcementVerdict.ALLOW,
-        error_code="DOWNSTREAM_ERROR",
-        response_content={"error": "server unavailable"},
+        response_content={"isError": True},
     )
     assert entry.verdict == EnforcementVerdict.ALLOW
-    assert entry.error_code == "DOWNSTREAM_ERROR"
-    assert entry.response_content is not None
+    assert entry.denied_by is None
+    assert entry.error_code is None
+    assert entry.response_content == {"isError": True}
 
 
 # --- Upstream emission trigger shapes ---

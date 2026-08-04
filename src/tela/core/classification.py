@@ -7,6 +7,7 @@ or leaves unclassified for the caller to apply a server default.
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -107,6 +108,97 @@ class AttachmentRegistry(BaseModel):
     model_config = {"extra": "forbid"}
 
     attachments: list[ClientAttachment] = Field(default_factory=list)
+
+
+@pre(
+    lambda registry, now, terminal_ttl, terminal_limit: (
+        isinstance(registry, AttachmentRegistry)
+        and isinstance(now, datetime)
+        and now.tzinfo is not None
+        and isinstance(terminal_ttl, timedelta)
+        and terminal_ttl >= timedelta(0)
+        and isinstance(terminal_limit, int)
+        and not isinstance(terminal_limit, bool)
+        and terminal_limit >= 0
+    )
+)
+@post(lambda result: isinstance(result, AttachmentRegistry))
+def compact_attachment_registry(
+    registry: AttachmentRegistry,
+    now: datetime,
+    terminal_ttl: timedelta,
+    terminal_limit: int,
+) -> AttachmentRegistry:
+    """Remove expired/excess terminal attachment history deterministically.
+
+    Terminal records are those whose runtime state is ``exited``. Non-terminal
+    records are preserved regardless of count. Timestamps that cannot be parsed
+    are retained rather than deleted from uncertain state. When the retained
+    terminal set exceeds ``terminal_limit``, the oldest timestamp is removed
+    first; ``client_id`` breaks timestamp ties so the result does not depend on
+    input ordering.
+
+    Examples:
+        >>> now = datetime(2026, 2, 1, tzinfo=UTC)
+        >>> active = ClientAttachment(client_id="active", client_kind="cli", display_state=AttachmentDisplayState.HEALTHY, runtime_state=RuntimeState.ACTIVE, recoverability=Recoverability.RECOVERABLE, connected_at="2026-01-01T00:00:00Z", last_heartbeat="2026-01-01T00:00:00Z")
+        >>> old = ClientAttachment(client_id="old", client_kind="cli", display_state=AttachmentDisplayState.EXITED, runtime_state=RuntimeState.EXITED, recoverability=Recoverability.NOT_RECOVERABLE, connected_at="2026-01-01T00:00:00Z", last_heartbeat="2026-01-01T00:00:00Z")
+        >>> recent = old.model_copy(update={"client_id": "recent", "last_heartbeat": "2026-01-31T00:00:00Z"})
+        >>> compacted = compact_attachment_registry(AttachmentRegistry(attachments=[old, active, recent]), now, timedelta(days=14), 1)
+        >>> [item.client_id for item in compacted.attachments]
+        ['active', 'recent']
+
+    Args:
+        registry: Attachment registry snapshot to compact.
+        now: Time authority used for deterministic TTL evaluation.
+        terminal_ttl: Maximum retained terminal-record age.
+        terminal_limit: Maximum retained terminal-record count.
+
+    Returns:
+        A new attachment registry with terminal-history policy applied.
+    """
+
+    def _timestamp(attachment: ClientAttachment) -> datetime | None:
+        try:
+            parsed = datetime.fromisoformat(
+                attachment.last_heartbeat.replace("Z", "+00:00")
+            )
+        except ValueError:
+            return None
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(UTC)
+
+    cutoff = now.astimezone(UTC) - terminal_ttl
+    non_terminal: list[tuple[int, ClientAttachment]] = []
+    retained_terminal: list[tuple[int, ClientAttachment, datetime | None]] = []
+    for index, attachment in enumerate(registry.attachments):
+        is_terminal = attachment.runtime_state == RuntimeState.EXITED
+        if not is_terminal:
+            non_terminal.append((index, attachment))
+            continue
+        timestamp = _timestamp(attachment)
+        if timestamp is not None and timestamp < cutoff:
+            continue
+        retained_terminal.append((index, attachment, timestamp))
+
+    if len(retained_terminal) > terminal_limit:
+        newest_first = sorted(
+            retained_terminal,
+            key=lambda item: (
+                item[2] is None,
+                item[2] or datetime.max.replace(tzinfo=UTC),
+                item[1].client_id,
+            ),
+            reverse=True,
+        )
+        retained_terminal = newest_first[:terminal_limit]
+
+    retained = non_terminal + [
+        (index, attachment)
+        for index, attachment, _timestamp_value in retained_terminal
+    ]
+    retained.sort(key=lambda item: item[0])
+    return AttachmentRegistry(attachments=[attachment for _, attachment in retained])
 
 
 class RuntimeEventKind(str, Enum):

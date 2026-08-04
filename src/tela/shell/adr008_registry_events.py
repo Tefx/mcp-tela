@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 import fcntl
 import json
+import logging
 import os
 from pathlib import Path
 import tempfile
@@ -17,14 +19,25 @@ from typing import IO, Iterator
 
 from pydantic import ValidationError
 
-from tela.core.classification import AttachmentRegistry, ClientAttachment, RuntimeEvent
+from tela.core.classification import (
+    AttachmentRegistry,
+    ClientAttachment,
+    RuntimeEvent,
+    RuntimeState,
+    compact_attachment_registry,
+)
 from tela.shell.result import Result
 
 ATTACHMENT_REGISTRY_FILENAME = "client-attachments.json"
+ATTACHMENT_REGISTRY_LOCK_FILENAME = "client-attachments.json.lock"
 RUNTIME_EVENTS_FILENAME = "runtime-events.jsonl"
 TELA_DIRECTORY_MODE = 0o700
 DIAGNOSTIC_FILE_MODE = 0o600
 MAX_RUNTIME_EVENT_BYTES = 16 * 1024
+ATTACHMENT_TERMINAL_TTL = timedelta(days=14)
+ATTACHMENT_TERMINAL_LIMIT = 500
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -72,6 +85,7 @@ def runtime_events_path() -> Result[Path, str]:
     return Result(value=Path.home() / ".tela" / RUNTIME_EVENTS_FILENAME)
 
 
+# @shell_complexity: stable sidecar locking must distinguish missing-before-lock, removed-during-lock, read failure, and parse failure without mutating the registry.
 def read_attachment_registry() -> Result[AttachmentRegistry, str]:
     """Read the ADR-008 attachment registry.
 
@@ -90,23 +104,36 @@ def read_attachment_registry() -> Result[AttachmentRegistry, str]:
     if path_result.value is None:
         return Result(error=path_result.error or "ATTACHMENT_REGISTRY_PATH_ERROR")
     path = path_result.value
+    if not path.exists():
+        return Result(value=AttachmentRegistry(attachments=[]))
     try:
-        with _open_existing_locked(path, fcntl.LOCK_SH) as handle:
-            if handle is None:
-                return Result(value=AttachmentRegistry(attachments=[]))
-            raw = handle.read()
+        # Do not create the sidecar from a read-only path. Mutation paths create
+        # it before the registry can exist; a legacy registry without the
+        # sidecar is read directly and remains byte-for-byte unchanged.
+        lock_path = path.parent / ATTACHMENT_REGISTRY_LOCK_FILENAME
+        if not lock_path.exists():
+            return _read_attachment_registry_path(path)
+        with _attachment_registry_lock(path, fcntl.LOCK_SH):
+            return _read_attachment_registry_path(path)
     except OSError as exc:
         return Result(error=f"ATTACHMENT_REGISTRY_READ_ERROR: {exc}")
 
+
+def _read_attachment_registry_path(path: Path) -> Result[AttachmentRegistry, str]:
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return Result(value=AttachmentRegistry(attachments=[]))
     return _decode_attachment_registry(raw)
 
 
 def write_attachment_registry(registry: AttachmentRegistry) -> Result[None, str]:
     """Atomically persist the ADR-008 attachment registry.
 
-    The registry file is written through a same-directory temporary file and
-    atomically replaced. The ``~/.tela`` directory mode is forced to ``0o700``
-    and the registry file mode is forced to ``0o600``.
+    Terminal history is compacted with the default retention policy, then the
+    registry file is written through a same-directory temporary file and
+    atomically replaced under a stable sidecar lock. The ``~/.tela`` directory
+    mode is forced to ``0o700`` and registry/lock file modes to ``0o600``.
 
     Args:
         registry: Attachment registry to persist.
@@ -129,7 +156,8 @@ def upsert_attachment_registry(
     """Insert or replace one attachment in the ADR-008 registry.
 
     Attachments are matched by ``client_id``. Missing registry files are treated
-    as empty before the upsert.
+    as empty before the upsert. Terminal history compaction runs inside the same
+    stable sidecar-locked mutation critical section before atomic replacement.
 
     Args:
         attachment: Attachment record to insert or replace.
@@ -148,18 +176,24 @@ def upsert_attachment_registry(
     path = path_result.value
     try:
         _ensure_tela_directory(path.parent)
-        with _locked_file(path, "a+", fcntl.LOCK_EX) as handle:
-            handle.seek(0)
-            raw = handle.read()
-            if raw:
-                decoded = _decode_attachment_registry(raw)
-                if decoded.is_err:
-                    return Result(error=decoded.error)
-                registry = decoded.value
-                if registry is None:
-                    return Result(error="ATTACHMENT_REGISTRY_PARSE_ERROR: empty decode")
-            else:
+        with _attachment_registry_lock(path, fcntl.LOCK_EX):
+            registry_missing = False
+            try:
+                raw = path.read_text(encoding="utf-8")
+            except FileNotFoundError:
+                registry_missing = True
+                raw = ""
+            registry: AttachmentRegistry
+            if registry_missing:
                 registry = AttachmentRegistry(attachments=[])
+            else:
+                decoded = _decode_attachment_registry(raw)
+                if decoded.is_err or decoded.value is None:
+                    return Result(
+                        error=decoded.error
+                        or "ATTACHMENT_REGISTRY_PARSE_ERROR: empty decode"
+                    )
+                registry = decoded.value
 
             next_attachments = [
                 item
@@ -167,7 +201,13 @@ def upsert_attachment_registry(
                 if item.client_id != attachment.client_id
             ]
             next_attachments.append(attachment)
-            next_registry = AttachmentRegistry(attachments=next_attachments)
+            next_registry = compact_attachment_registry(
+                AttachmentRegistry(attachments=next_attachments),
+                datetime.now(UTC),
+                ATTACHMENT_TERMINAL_TTL,
+                ATTACHMENT_TERMINAL_LIMIT,
+            )
+            _report_attachment_registry_overflow(next_registry)
             write_result = _replace_attachment_registry_under_lock(next_registry, path)
             if write_result.is_err:
                 return Result(error=write_result.error)
@@ -316,10 +356,36 @@ def _write_attachment_registry_locked(registry: AttachmentRegistry) -> Result[No
     path = path_result.value
     try:
         _ensure_tela_directory(path.parent)
-        with _locked_file(path, "a+", fcntl.LOCK_EX):
-            return _replace_attachment_registry_under_lock(registry, path)
+        with _attachment_registry_lock(path, fcntl.LOCK_EX):
+            compacted = compact_attachment_registry(
+                registry,
+                datetime.now(UTC),
+                ATTACHMENT_TERMINAL_TTL,
+                ATTACHMENT_TERMINAL_LIMIT,
+            )
+            _report_attachment_registry_overflow(compacted)
+            return _replace_attachment_registry_under_lock(compacted, path)
     except OSError as exc:
         return Result(error=f"ATTACHMENT_REGISTRY_WRITE_ERROR: {exc}")
+
+
+def _report_attachment_registry_overflow(registry: AttachmentRegistry) -> None:
+    """Warn when preserved nonterminal state alone exceeds the history limit."""
+
+    nonterminal_count = sum(
+        attachment.runtime_state != RuntimeState.EXITED
+        for attachment in registry.attachments
+    )
+    if nonterminal_count <= ATTACHMENT_TERMINAL_LIMIT:
+        return
+    logger.warning(
+        "%s",
+        {
+            "event": "attachment_registry_nonterminal_overflow",
+            "nonterminal_count": nonterminal_count,
+            "terminal_limit": ATTACHMENT_TERMINAL_LIMIT,
+        },
+    )
 
 
 def _replace_attachment_registry_under_lock(
@@ -396,6 +462,19 @@ def _open_existing_locked(
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
+# @shell_orchestration: context manager delegates stable sidecar file locking and keeps atomic registry replacements serialized across processes.
+@contextmanager
+def _attachment_registry_lock(
+    registry_path: Path,
+    lock_operation: int,
+) -> Iterator[IO[str]]:
+    """Lock a stable sidecar inode across atomic registry replacements."""
+
+    lock_path = registry_path.parent / ATTACHMENT_REGISTRY_LOCK_FILENAME
+    with _locked_file(lock_path, "a+", lock_operation) as handle:
+        yield handle
+
+
 @contextmanager
 def _locked_file(path: Path, mode: str, lock_operation: int) -> Iterator[IO[str]]:
     with path.open(mode, encoding="utf-8") as handle:
@@ -416,6 +495,9 @@ def _remove_temp_file(path: Path) -> None:
 
 __all__ = [
     "ATTACHMENT_REGISTRY_FILENAME",
+    "ATTACHMENT_REGISTRY_LOCK_FILENAME",
+    "ATTACHMENT_TERMINAL_LIMIT",
+    "ATTACHMENT_TERMINAL_TTL",
     "DIAGNOSTIC_FILE_MODE",
     "MAX_RUNTIME_EVENT_BYTES",
     "RUNTIME_EVENTS_FILENAME",

@@ -20,11 +20,13 @@ from tela.core.classification import (
     RuntimeEvent,
     RuntimeEventKind,
     RuntimeState,
+    AttachmentRegistry,
 )
 from tela.core.models import LockfileData
 from tela.shell import lockfile as lockfile_module
 from tela.shell.adr008_registry_events import (
     append_runtime_event,
+    attachment_registry_path,
     runtime_events_path,
     upsert_client_attachment,
 )
@@ -94,6 +96,40 @@ def test_doctor_passive_reads_cached_state_without_events(
     assert parsed["probe_performed"] is False
     assert parsed["recover_performed"] is False
     assert parsed["recovery"]["events_appended"] == []
+
+
+def test_doctor_passive_leaves_attachment_registry_bytes_unchanged(
+    monkeypatch,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
+    lockfile_path = tmp_path / "gateway.lock"
+    monkeypatch.setattr(lockfile_module, "LOCKFILE_PATH", lockfile_path)
+    _write_lockfile(lockfile_path, host="127.0.0.1", port=59999)
+    attachment = ClientAttachment(
+        client_id="terminal-history",
+        client_kind="test",
+        display_state=AttachmentDisplayState.EXITED,
+        runtime_state=RuntimeState.EXITED,
+        recoverability=Recoverability.NOT_RECOVERABLE,
+        connected_at="2020-01-01T00:00:00Z",
+        last_heartbeat="2020-01-01T00:00:00Z",
+    )
+    registry_path = attachment_registry_path().value
+    assert registry_path is not None
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    registry_path.write_text(
+        AttachmentRegistry(attachments=[attachment]).model_dump_json(),
+        encoding="utf-8",
+    )
+    before = registry_path.read_bytes()
+
+    result = doctor_command(json_output=True)
+
+    assert result.is_ok
+    _ = capsys.readouterr()
+    assert registry_path.read_bytes() == before
 
 
 def test_doctor_recover_already_ready_appends_probe_only(

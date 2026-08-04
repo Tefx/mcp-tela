@@ -433,10 +433,14 @@ def test_status_reads_do_not_mutate_registry(
     write_result = write_attachment_registry(registry)
     assert write_result.is_ok, f"Failed to write registry: {write_result.error}"
 
+    registry_path = tmp_path / ".tela" / "client-attachments.json"
+    bytes_before = registry_path.read_bytes()
+
     # Run status --clients (read-only operation)
     from tela.cli import main as cli_main
     exit_code = cli_main(["status", "--clients", "--json"])
     assert exit_code == 0
+    assert registry_path.read_bytes() == bytes_before
 
     # Re-read registry - all attachments must still be present
     reg_result = read_attachment_registry()

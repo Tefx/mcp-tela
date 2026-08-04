@@ -18,7 +18,6 @@ import logging
 import time
 from typing import Any, Literal
 
-from tela.core.errors import DOWNSTREAM_ERROR
 from tela.core.models import ServerConfig, TelaError
 from tela.core.recovery_helpers import (
     build_recovery_error as _build_recovery_error,
@@ -621,21 +620,10 @@ async def call_tool(
                         underlying_error=_get_exception_text(exc),
                     )
         else:
-            payload = downstream_result.model_dump(by_alias=True, exclude_none=True)
-            if downstream_result.isError:
-                return Result(
-                    error=TelaError(
-                        code=DOWNSTREAM_ERROR,
-                        message=(
-                            f"Downstream server '{server_name}' returned tool error for '{tool_name}'"
-                        ),
-                        details={
-                            "server_name": server_name,
-                            "tool_name": tool_name,
-                            "downstream": payload,
-                        },
-                    )
-                )
+            # A valid CallToolResult is a successfully transported MCP response.
+            # ``isError`` reports an application-level tool outcome and must pass
+            # through unchanged; only transport/protocol failures enter recovery.
+            payload = downstream_result.model_dump(mode="json", by_alias=True)
             return Result(value=payload)
 
     if not recovery_eligible:
@@ -765,27 +753,9 @@ async def call_tool(
             )
         )
 
-    retry_payload = retry_result.model_dump(by_alias=True, exclude_none=True)
-    if retry_result.isError:
-        _emit_recovery_diagnostic(
-            event="downstream_recovery_exhausted",
-            level="WARNING",
-            server_name=server_name,
-            tool_name=tool_name,
-            elapsed_ms=max(0.0, (time.monotonic() - recovery_started) * 1000.0),
-            recovery_stage=_RECOVERY_STAGE_RETRY_FAILED,
-            underlying_error="Retry returned downstream tool error",
-        )
-        return Result(
-            error=_build_recovery_error(
-                server_name,
-                recovery_attempted=True,
-                recovery_eligible=True,
-                recovery_stage=_RECOVERY_STAGE_RETRY_FAILED,
-                underlying_error="Retry returned downstream tool error",
-                config_missing=False,
-            )
-        )
+    # Recovery completed once the retried request produced a valid MCP result.
+    # Preserve application-level errors exactly as ordinary retry results.
+    retry_payload = retry_result.model_dump(mode="json", by_alias=True)
     _emit_recovery_diagnostic(
         event="downstream_recovery_succeeded",
         level="INFO",

@@ -278,6 +278,7 @@ class TestRemoteClientSurfaceIsAbsent:
         """
         # Setup endpoint and registry state from generated parameters
         from tela.shell.adr008_registry_events import (
+            attachment_registry_path,
             read_attachment_registry,
             upsert_client_attachment,
             write_attachment_registry,
@@ -323,6 +324,9 @@ class TestRemoteClientSurfaceIsAbsent:
             upsert_client_attachment(att)
 
         # Snapshot before endpoint call — used to prove read-only / non-mutation
+        registry_path_result = attachment_registry_path()
+        assert registry_path_result.value is not None
+        registry_bytes_before = registry_path_result.value.read_bytes()
         before_config = get_runtime_config()
         before_running = is_runtime_running()
         before_connections = get_runtime_connections_snapshot()
@@ -371,6 +375,7 @@ class TestRemoteClientSurfaceIsAbsent:
         after_running = is_runtime_running()
         after_connections = get_runtime_connections_snapshot()
         after_registry = read_attachment_registry()
+        assert registry_path_result.value.read_bytes() == registry_bytes_before
         if before_config.value is None:
             assert after_config.value is None, "Clients endpoint mutated runtime config from None"
         else:

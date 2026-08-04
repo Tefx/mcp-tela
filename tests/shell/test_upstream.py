@@ -1665,6 +1665,104 @@ def test_handle_tools_call_writes_audit_entry_on_success(
         set_runtime_config(None)
 
 
+def test_handle_tools_call_application_error_audit_is_bounded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Application errors stay allowed MCP results without copying provider text to audit."""
+    import asyncio
+
+    from tela.core.models import (
+        AuditConfig,
+        AuditLevel,
+        AuthConfig,
+        AuthMode,
+        ConnectionContext,
+        Posture,
+        ProfileConfig,
+        ResolvedTool,
+        ServerConfig,
+        TelaConfig,
+    )
+    from tela.shell.audit import clear_audit_entries, get_audit_entries
+    from tela.shell.downstream_registry import DownstreamRegistry
+    from tela.shell.gateway_runtime import set_runtime_config
+    from tela.shell.result import Result
+    from tela.shell.upstream import handle_tools_call
+
+    registry = DownstreamRegistry()
+    registry.register(
+        "telegram",
+        [
+            ResolvedTool(
+                name="send_message",
+                server_name="telegram",
+                family="telegram",
+                posture=Posture.READ_WRITE,
+            )
+        ],
+    )
+    payload = {
+        "content": [
+            {"type": "text", "text": "Telegram 400: can't parse entities"}
+        ],
+        "isError": True,
+    }
+
+    async def _fake_call_tool(
+        server_name: str,
+        tool_name: str,
+        arguments: dict,
+    ) -> Result[dict, object]:
+        _ = server_name, tool_name, arguments
+        return Result(value=payload)
+
+    monkeypatch.setattr("tela.shell.upstream.get_registry", lambda: registry)
+    monkeypatch.setattr("tela.shell.upstream.call_tool", _fake_call_tool)
+    clear_audit_entries()
+    set_runtime_config(
+        TelaConfig(
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            audit=AuditConfig(level=AuditLevel.L3),
+            servers={
+                "telegram": ServerConfig(
+                    name="telegram",
+                    command="cmd",
+                    default_posture=Posture.READ_WRITE,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    capabilities={"telegram": Posture.READ_WRITE},
+                    default=True,
+                )
+            },
+            resolved_default_profile="dev",
+        )
+    )
+    connection = ConnectionContext(
+        connection_id="c_app_error",
+        profile_id="dev",
+        connected_at="2026-01-01T00:00:00Z",
+    )
+
+    try:
+        result = asyncio.run(handle_tools_call(connection, "send_message", {}))
+        assert result.is_ok
+        assert result.value == payload
+        entries = get_audit_entries()
+        assert entries.is_ok and entries.value is not None
+        entry = entries.value[-1]
+        assert entry.verdict.value == "allow"
+        assert entry.denied_by is None
+        assert entry.error_code is None
+        assert entry.response_content == {"isError": True}
+        assert "Telegram 400" not in entry.model_dump_json()
+    finally:
+        clear_audit_entries()
+        set_runtime_config(None)
+
+
 def test_handle_tools_call_writes_audit_entry_on_denial(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

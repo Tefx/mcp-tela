@@ -7,6 +7,8 @@ in place.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from pydantic import ValidationError
 
@@ -21,6 +23,7 @@ from tela.core.classification import (
     classify_attachment_display_state,
     classify_recoverability,
     classify_runtime_state,
+    compact_attachment_registry,
 )
 
 
@@ -242,6 +245,135 @@ class TestAttachmentRegistry:
                 "attachments": [],
                 "extra_field": "not_allowed",
             })
+
+
+# --------------------------------------------------------------------
+# Attachment registry compaction tests
+# --------------------------------------------------------------------
+
+
+def _compaction_attachment(
+    client_id: str,
+    *,
+    runtime_state: RuntimeState,
+    last_heartbeat: datetime,
+    recoverability: Recoverability | None = None,
+) -> ClientAttachment:
+    terminal = runtime_state == RuntimeState.EXITED
+    return ClientAttachment(
+        client_id=client_id,
+        client_kind="cli",
+        display_state=(
+            AttachmentDisplayState.EXITED
+            if terminal
+            else AttachmentDisplayState.HEALTHY
+        ),
+        runtime_state=runtime_state,
+        recoverability=(
+            recoverability
+            if recoverability is not None
+            else (
+                Recoverability.NOT_RECOVERABLE
+                if terminal
+                else Recoverability.RECOVERABLE
+            )
+        ),
+        connected_at=last_heartbeat.isoformat(),
+        last_heartbeat=last_heartbeat.isoformat(),
+    )
+
+
+def test_compaction_expires_terminal_and_caps_oldest_deterministically() -> None:
+    now = datetime(2026, 8, 4, tzinfo=UTC)
+    active = [
+        _compaction_attachment(
+            f"active-{index}",
+            runtime_state=RuntimeState.ACTIVE,
+            last_heartbeat=now - timedelta(hours=1),
+        )
+        for index in range(100)
+    ]
+    recent = [
+        _compaction_attachment(
+            f"recent-{index:03d}",
+            runtime_state=RuntimeState.EXITED,
+            last_heartbeat=now - timedelta(days=1, seconds=index),
+        )
+        for index in range(600)
+    ]
+    expired = [
+        _compaction_attachment(
+            f"expired-{index:03d}",
+            runtime_state=RuntimeState.EXITED,
+            last_heartbeat=now - timedelta(days=30, seconds=index),
+        )
+        for index in range(600)
+    ]
+
+    result = compact_attachment_registry(
+        AttachmentRegistry(attachments=active + recent + expired),
+        now,
+        timedelta(days=14),
+        500,
+    )
+
+    ids = {attachment.client_id for attachment in result.attachments}
+    assert len(result.attachments) == 600
+    assert {attachment.client_id for attachment in active} <= ids
+    assert not any(client_id.startswith("expired-") for client_id in ids)
+    assert len([client_id for client_id in ids if client_id.startswith("recent-")]) == 500
+    assert "recent-000" in ids
+    assert "recent-499" in ids
+    assert "recent-500" not in ids
+
+
+def test_compaction_uses_client_id_to_break_equal_terminal_timestamps() -> None:
+    now = datetime(2026, 8, 4, tzinfo=UTC)
+    same_time = now - timedelta(days=1)
+    records = [
+        _compaction_attachment(
+            client_id,
+            runtime_state=RuntimeState.EXITED,
+            last_heartbeat=same_time,
+        )
+        for client_id in ["terminal-a", "terminal-c", "terminal-b"]
+    ]
+
+    result = compact_attachment_registry(
+        AttachmentRegistry(attachments=records),
+        now,
+        timedelta(days=14),
+        2,
+    )
+
+    assert [item.client_id for item in result.attachments] == [
+        "terminal-c",
+        "terminal-b",
+    ]
+
+
+def test_compaction_preserves_nonterminal_not_recoverable_overflow() -> None:
+    now = datetime(2026, 8, 4, tzinfo=UTC)
+    records = [
+        _compaction_attachment(
+            f"unknown-{index}",
+            runtime_state=RuntimeState.UNKNOWN,
+            recoverability=Recoverability.NOT_RECOVERABLE,
+            last_heartbeat=now - timedelta(days=30),
+        )
+        for index in range(600)
+    ]
+
+    result = compact_attachment_registry(
+        AttachmentRegistry(attachments=records),
+        now,
+        timedelta(days=14),
+        500,
+    )
+
+    assert [item.client_id for item in result.attachments] == [
+        item.client_id for item in records
+    ]
 
 
 # --------------------------------------------------------------------

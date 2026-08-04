@@ -993,6 +993,86 @@ def test_fastmcp_tools_call_enforces_and_strips_meta_real_downstream() -> None:
     asyncio.run(_scenario())
 
 
+def test_fastmcp_tools_call_preserves_downstream_application_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Gateway emits the valid downstream ``CallToolResult(isError=true)`` unchanged."""
+
+    async def _scenario() -> None:
+        tela = TelaConfig(
+            servers={
+                "telegram": ServerConfig(
+                    name="telegram",
+                    command="cmd",
+                    default_posture=Posture.READ_WRITE,
+                )
+            },
+            profiles={
+                "dev": ProfileConfig(
+                    name="dev",
+                    default=True,
+                    capabilities={"telegram": Posture.READ_WRITE},
+                )
+            },
+            auth=AuthConfig(mode=AuthMode.OPEN),
+            resolved_default_profile="dev",
+        )
+        config = GatewayStartupConfig(
+            transport=GatewayTransport.STDIO,
+            port=None,
+            auth_mode=AuthMode.OPEN,
+            default_profile="dev",
+        )
+        payload = {
+            "content": [
+                {"type": "text", "text": "Telegram 400: can't parse entities"}
+            ],
+            "isError": True,
+        }
+
+        async def _fake_handle_tools_call(
+            connection: ConnectionContext,
+            tool_name: str,
+            arguments: dict,
+        ) -> Result[dict, object]:
+            _ = connection, tool_name, arguments
+            return Result(value=payload)
+
+        monkeypatch.setattr(
+            "tela.shell.upstream.handle_tools_call",
+            _fake_handle_tools_call,
+        )
+        await gateway_start(
+            config,
+            tela_config=tela,
+            tool_lists={"telegram": [{"name": "send_message", "inputSchema": {}}]},
+        )
+        _setup_test_connection_with_session()
+        try:
+            handler_result = with_upstream_server(
+                lambda s: s._mcp_server.request_handlers[types.CallToolRequest]
+            )
+            assert handler_result.is_ok
+            response = await handler_result.value(
+                types.CallToolRequest(
+                    params=types.CallToolRequestParams(
+                        name="send_message",
+                        arguments={},
+                    )
+                )
+            )
+
+            assert response.root.isError is True  # type: ignore[union-attr]
+            assert response.root.content[0].text == (  # type: ignore[union-attr]
+                "Telegram 400: can't parse entities"
+            )
+            assert "DOWNSTREAM_ERROR" not in response.root.content[0].text  # type: ignore[union-attr]
+        finally:
+            await gateway_shutdown()
+
+    asyncio.run(_scenario())
+
+
 def test_fastmcp_profiles_resource_not_registered() -> None:
     """Legacy profile MCP resource must not be registered."""
 

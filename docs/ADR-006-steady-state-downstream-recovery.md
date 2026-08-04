@@ -330,7 +330,9 @@ Ineligible failure class:
 - timeout after dispatch is plausibly underway
 - connection reset / EOF / broken pipe where downstream execution may already
   have started
-- downstream tool returned an ordinary application/tool error
+- downstream tool returned an ordinary application/tool error; a valid
+  `CallToolResult(isError=true)` passes through unchanged as the upstream MCP
+  result and does not enter recovery
 - authorization, posture, or registry lookup failures upstream of transport
 
 If classification is ambiguous, the call MUST fail rather than retry.
@@ -364,7 +366,8 @@ updated explicitly.
 For one original tool call targeting one downstream server:
 
 1. Attempt the normal downstream call with the currently mapped server/tool.
-2. If the call succeeds, return normally.
+2. If the call returns any valid `CallToolResult`, return it unchanged,
+   including its content when `isError=true`.
 3. If the failure is not recovery-eligible, return the original failure as
    `DOWNSTREAM_UNAVAILABLE`.
 4. If the failure is recovery-eligible:
@@ -378,8 +381,10 @@ For one original tool call targeting one downstream server:
      convergence path
    - only after convergence accepts the reconnect result, retry the original
      tool call once
-5. If the retry succeeds, return that result.
-6. If recovery or the single retry fails, return `DOWNSTREAM_UNAVAILABLE`.
+5. If the retry returns any valid `CallToolResult`, return that result unchanged,
+   including `isError=true` application outcomes.
+6. If recovery or the single retry fails at the transport/protocol boundary,
+   return `DOWNSTREAM_UNAVAILABLE`.
 
 Any failure from the single retry is terminal for that original user call. The
 implementation MUST NOT reclassify the retry failure and MUST NOT start a second
@@ -481,7 +486,8 @@ latency and logs.
 
 Outward error compatibility is preserved:
 
-- success after recovery returns the ordinary tool payload
+- success after recovery returns the ordinary tool payload; a valid
+  application-level `isError=true` payload remains an ordinary MCP result
 - exhausted recovery returns `TelaError(code="DOWNSTREAM_UNAVAILABLE", ... )`
 
 Required diagnostic enrichment for exhausted recovery:

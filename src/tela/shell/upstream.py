@@ -143,6 +143,7 @@ async def _audit_tool_call(
     latency_ms: float,
     arguments: dict | None,
     held_meta: dict | None,
+    response_content: dict | None = None,
 ) -> None:
     """Write an audit entry for downstream tool calls when construction succeeds."""
 
@@ -155,6 +156,7 @@ async def _audit_tool_call(
         result=result,
         latency_ms=latency_ms,
         arguments=arguments,
+        response_content=response_content,
         meta=meta_result.value if meta_result.is_ok else None,
     )
     if audit_entry_result.is_ok and audit_entry_result.value is not None:
@@ -886,6 +888,8 @@ async def handle_tools_call(
         )
         return call_result
 
+    assert call_result.value is not None
+    application_error = call_result.value.get("isError") is True
     await _audit_tool_call(
         connection=connection,
         config_level=config.audit.level,
@@ -895,6 +899,10 @@ async def handle_tools_call(
         latency_ms=latency_ms,
         arguments=stripped_args,
         held_meta=held_meta,
+        # Record only bounded classification metadata. Downstream content may
+        # contain unrestricted provider text and remains confined to the MCP
+        # response instead of being copied into Tela's audit store.
+        response_content={"isError": True} if application_error else None,
     )
     return call_result
 

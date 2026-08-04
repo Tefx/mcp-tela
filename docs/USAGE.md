@@ -567,6 +567,11 @@ Or set `TELA_BEARER_TOKEN` as an environment variable instead of `--token`.
 - prefer `open` mode only for local trusted environments
 - prefer `token` mode for shared infrastructure
 
+### Attachment history retention
+
+`~/.tela/client-attachments.json` keeps live and uncertain attachment records for diagnostics. Registry mutations remove `exited` records older than 14 days, then retain at most the 500 newest unexpired `exited` records ordered by `last_heartbeat`. Nonterminal records never count toward that cap.
+
+Compaction occurs only while writing/upserting the registry. `tela status`, `tela status --clients`, passive `tela doctor`, and `GET /operator/clients` remain read-only and do not compact or rewrite the file. A malformed registry fails closed and remains unchanged.
 ## Multi-agent deployment patterns
 
 ### Pattern A: shared local gateway (default)
