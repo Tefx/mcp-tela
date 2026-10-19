@@ -472,10 +472,10 @@ Both layers are independent and apply simultaneously:
 
 Canonical contract note:
 
-- `../opifex` owns the shared CapabilityToken and `_meta` contracts
+- Tela owns CapabilityToken in `contracts/capability_token.schema.json` and `_meta` semantics in `docs/INTERFACES.md`
 - `token_version` is **explicit and required** at admission; no default or fallback
 - token-mode binding uses canonical `profile_id`; legacy shared token aliases are rejected fail-closed
-- `tela` is the verifier/enforcer and audit sink for those shared surfaces, not a second contract authority
+- Tela maintains, verifies, enforces, and audits those contracts in this repository
 
 ## Ownership Rules
 

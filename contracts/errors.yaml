@@ -1,4 +1,4 @@
-# Unified error codes for opifex ecosystem
+# Tela error codes
 # All CLI tools return these as exit codes or JSON error.code fields.
 #
 # Ranges:

@@ -1,5 +1,5 @@
 {
-  "$comment": "READ-ONLY MIRROR — DO NOT EDIT MANUALLY. Source of truth: ../opifex/contracts/tela_profile_list.schema.json",
+  "$comment": "Tela-owned contract. Update runtime validation, tests and interface documentation together.",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "TelaProfileList",
   "description": "Canonical shared payload for tela_list_profiles.",

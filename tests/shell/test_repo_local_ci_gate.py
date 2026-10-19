@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib.util
-import json
 import sys
 from pathlib import Path
 
@@ -87,227 +86,43 @@ def test_nested_gateway_docs_parity() -> None:
     assert "gateway-owned built-in MCP tools" in docs["confirmed"]
 
 
-def _seed_layout(tmp_path: Path) -> tuple[Path, Path, str]:
-    tela_root = tmp_path / "mcp-tela"
-    opifex_root = tmp_path / "opifex"
-    frozen_ref = "981a3294fe363ea137547ffa292829e21206e981"
-
-    _write(
-        tela_root / "design/opifex-frozen-authority-packet.json",
-        json.dumps(
-            {
-                "repository": "Tefx/opifex",
-                "ref": frozen_ref,
-                "packet_doc": "design/cross-repo-followup-packet.md",
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-    )
-    _write(opifex_root / "design/final-canonical-contract.md", "# contract\n")
-    _write(opifex_root / "design/cross-repo-followup-packet.md", "# packet\n")
-    _write(
-        opifex_root / "conformance/forbidden_vocabulary.yaml",
-        json.dumps(
-            {
-                "shared_forbidden_fields": ["profile_name", "tools_profile", "families"],
-                "forbidden_shared_tool_names": [{"pattern": r"^[a-z]+\.[a-z_]+$"}],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-    )
-    _write(
-        opifex_root / "conformance/shared_surfaces.yaml",
-        json.dumps(
-            {
-                "global_controls": {
-                    "frozen_followup_packet_ref": "design/cross-repo-followup-packet.md",
-                    "case_matrix_policy": {
-                        "minimum_coverage": [
-                            "happy_path",
-                            "missing_required",
-                            "wrong_type",
-                            "extra_key",
-                            "legacy_alias",
-                            "omit_vs_null",
-                            "bad_enum",
-                            "alternate_path_parity",
-                            "docs_example_parity",
-                        ],
-                        "coverage_states": ["covered", "not_applicable"],
-                    },
-                },
-                "gate_policy": {
-                    "switch_blocking": {"by_exposure": ["shared", "alternate", "local_runtime"]},
-                    "frozen_followup_packet_required_before_downstream_ci": True,
-                },
-                "frozen_followup_packet": {
-                    "packet_doc": "design/cross-repo-followup-packet.md",
-                    "required_before_downstream_ci": True,
-                },
-                "shared_surfaces": [
-                    {
-                        "id": "tela_initialize_token_mode",
-                        "owner_repo": "mcp-tela",
-                        "exposure": "shared",
-                        "case_matrix": [
-                            "conformance/case_matrix/mcp-tela/tela.initialize.token_mode.yaml"
-                        ],
-                    },
-                    {
-                        "id": "tela_tools_call_builtin_tela_list_providers",
-                        "owner_repo": "mcp-tela",
-                        "exposure": "supporting",
-                        "case_matrix": [
-                            "conformance/case_matrix/mcp-tela/tela.tools.call.builtin.tela_list_providers.yaml"
-                        ],
-                    },
-                ],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-    )
-    _write(
-        opifex_root / "conformance/case_matrix/mcp-tela/tela.initialize.token_mode.yaml",
-        json.dumps(
-            {
-                "surface_id": "tela_initialize_token_mode",
-                "coverage": {
-                    "happy_path": "covered",
-                    "missing_required": "covered",
-                    "wrong_type": "covered",
-                    "extra_key": "covered",
-                    "legacy_alias": "covered",
-                    "omit_vs_null": "covered",
-                    "bad_enum": "not_applicable",
-                    "alternate_path_parity": "covered",
-                    "docs_example_parity": "not_applicable",
-                },
-                "cases": [{"id": "happy_path", "class": "happy_path"}],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-    )
-    _write(
-        opifex_root
-        / "conformance/case_matrix/mcp-tela/tela.tools.call.builtin.tela_list_providers.yaml",
-        json.dumps(
-            {
-                "surface_id": "tela_tools_call_builtin_tela_list_providers",
-                "coverage": {
-                    "happy_path": "covered",
-                    "missing_required": "covered",
-                    "wrong_type": "not_applicable",
-                    "extra_key": "covered",
-                    "legacy_alias": "not_applicable",
-                    "omit_vs_null": "not_applicable",
-                    "bad_enum": "not_applicable",
-                    "alternate_path_parity": "covered",
-                    "docs_example_parity": "not_applicable",
-                },
-                "cases": [{"id": "happy_path", "class": "happy_path"}],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-    )
-    return tela_root, opifex_root, frozen_ref
-
-
-def test_load_authority_snapshot_derives_owned_and_blocking_scope(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(("code", "expect_success"), [(0, True), (5, True), (2, False)])
+def test_gate_propagates_real_subprocess_exit_status(
+    code: int, expect_success: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _load_gate_module()
-    tela_root, opifex_root, frozen_ref = _seed_layout(tmp_path)
-    monkeypatch.setattr(module, "PROJECT_ROOT", tela_root)
-    monkeypatch.setattr(module, "_resolve_opifex_root", lambda: opifex_root)
-    monkeypatch.setattr(
-        module,
-        "require_pinned_checkout",
-        lambda project_root, root: module.FrozenAuthorityPin(
-            repository="Tefx/opifex",
-            ref=frozen_ref,
-            packet_doc="design/cross-repo-followup-packet.md",
-        ),
-    )
-
-    snapshot = module.load_authority_snapshot()
-
-    assert snapshot.packet_repository == "Tefx/opifex"
-    assert snapshot.packet_ref == frozen_ref
-    assert snapshot.packet_doc == "design/cross-repo-followup-packet.md"
-    assert snapshot.owned_surface_ids == (
-        "tela_initialize_token_mode",
-        "tela_tools_call_builtin_tela_list_providers",
-    )
-    assert snapshot.blocking_surface_ids == ("tela_initialize_token_mode",)
-    assert snapshot.owned_case_matrix_paths == (
-        "conformance/case_matrix/mcp-tela/tela.initialize.token_mode.yaml",
-        "conformance/case_matrix/mcp-tela/tela.tools.call.builtin.tela_list_providers.yaml",
-    )
-    assert snapshot.owned_case_classes == ("happy_path",)
+    monkeypatch.setattr(module, "PROJECT_ROOT", tmp_path)
+    command = [sys.executable, "-c", f"raise SystemExit({code})"]
+    if code:
+        with pytest.raises(SystemExit) as exc:
+            module._run(command, expect_success=expect_success)
+        assert exc.value.code == code
+    else:
+        assert module._run(command, expect_success=True).returncode == 0
 
 
-def test_load_authority_snapshot_rejects_head_mismatch(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("detect_drift", [True, False])
+def test_expected_red_restores_readme_after_real_pytest(
+    detect_drift: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _load_gate_module()
-    tela_root, opifex_root, _ = _seed_layout(tmp_path)
-    monkeypatch.setattr(module, "PROJECT_ROOT", tela_root)
-    monkeypatch.setattr(module, "_resolve_opifex_root", lambda: opifex_root)
-    monkeypatch.setattr(
-        module,
-        "require_pinned_checkout",
-        lambda project_root, root: (_ for _ in ()).throw(
-            RuntimeError(
-                "OPIFEX_ROOT checkout does not match pinned authority ref: expected x, got y"
-            )
-        ),
+    original = "# Test project\n"
+    _write(tmp_path / "README.md", original)
+    # Exercise subprocess execution and restoration in an isolated checkout.
+    # The real documentation test is exercised by the repository gate itself.
+    assertion = (
+        "assert 'profile_name' not in Path('README.md').read_text()"
+        if detect_drift else "assert Path('README.md').exists()"
     )
-
-    with pytest.raises(RuntimeError, match="pinned authority ref"):
-        module.load_authority_snapshot()
-
-
-def test_load_authority_snapshot_rejects_case_matrix_missing_minimum_coverage(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    module = _load_gate_module()
-    tela_root, opifex_root, frozen_ref = _seed_layout(tmp_path)
-    broken_case_matrix = opifex_root / "conformance/case_matrix/mcp-tela/tela.initialize.token_mode.yaml"
-    broken_case_matrix.write_text(
-        json.dumps(
-            {
-                "surface_id": "tela_initialize_token_mode",
-                "coverage": {"happy_path": "covered"},
-                "cases": [{"id": "happy_path", "class": "happy_path"}],
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
+    _write(
+        tmp_path / "test_docs.py",
+        "from pathlib import Path\ndef test_docs():\n    " + assertion + "\n",
     )
-    monkeypatch.setattr(module, "PROJECT_ROOT", tela_root)
-    monkeypatch.setattr(module, "_resolve_opifex_root", lambda: opifex_root)
-    monkeypatch.setattr(module, "require_pinned_checkout", lambda project_root, root: None)
-    monkeypatch.setattr(
-        module,
-        "load_frozen_authority_pin",
-        lambda project_root: module.FrozenAuthorityPin(
-            repository="Tefx/opifex",
-            ref=frozen_ref,
-            packet_doc="design/cross-repo-followup-packet.md",
-        ),
-    )
-
-    with pytest.raises(RuntimeError, match="missing coverage key"):
-        module.load_authority_snapshot()
+    monkeypatch.setattr(module, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(module, "EXPECTED_RED_TEST", "test_docs.py::test_docs")
+    if detect_drift:
+        module.run_expected_red()
+    else:
+        with pytest.raises(SystemExit, match="Expected seeded drift to fail"):
+            module.run_expected_red()
+    assert (tmp_path / "README.md").read_text() == original

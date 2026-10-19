@@ -1,48 +1,36 @@
-# ADR-007: Opifex Canonical Contract Alignment
+# ADR-007: Tela Contract Ownership
 
 ## Status
 
-Accepted and implemented
+Accepted; revised after Tela became independent and Opifex was retired.
+The filename is retained for existing references to this decision.
 
 ## Context
 
-`mcp-tela` participates in a cross-repo contract where `../opifex` defines the
-shared meaning for token, profile-list, and `_meta` surfaces.
-
-The risks this ADR closes are:
-
-- local convenience names leaking into shared boundaries
-- repo-local docs or snapshots being mistaken for contract authority
-- independently distributed tela builds drifting from sibling repos
+Tela previously consumed schemas and conformance metadata from an external
+Opifex checkout. That repository is retired. Tela development, tests and CI
+must work from this checkout alone.
 
 ## Decision
 
-Choose strict canonical alignment.
-
-The architecture is:
-
-- `../opifex/contracts/capability_token.schema.json` is the only canonical
-  shared token schema
-- local packaged schemas may exist only as read-only mirrors under
-  `vendor/opifex/contracts/`
-- `profile_id` is the only canonical shared profile-binding identity
-- legacy alias fields are invalid on shared token and shared profile-list
-  boundaries
-- `_meta` remains audit/reference context only and never participates in
-  authentication or authorization decisions
-- tela verifies, enforces, and audits shared behavior but does not become a
-  second contract authority
+- Tela owns the schemas in `contracts/capability_token.schema.json` and
+  `contracts/tela_profile_list.schema.json`.
+- `docs/INTERFACES.md` defines admission, `_meta`, forwarding and operator
+  semantics; `docs/CONFIRMED-SURFACE-CONTRACT.md` defines surface classification.
+- `contracts/errors.yaml` defines error semantics.
+- `profile_id` remains the canonical profile-binding identity.
+- Legacy alias fields remain invalid on token and profile-list boundaries.
+- `_meta` remains audit/reference context only and does not participate in
+  authentication or authorization decisions.
+- Schema changes require matching runtime validation, behavioral tests and
+  interface documentation in the same change.
 
 ## Consequences
 
-- repo-facing docs must use canonical shared vocabulary only
-- examples and tests must frame retired shared names only as rejection cases,
-  never as active input or output shapes
-- release/distribution workflows may vendor read-only snapshots, but edit
-  authority stays in `../opifex`
+No sibling repository, external authority pin, or environment variable is
+required to run tests or CI. The former vendor mirrors are the editable
+Tela-owned contracts; duplicate schema copies are removed.
 
-## Complexity Cost Receipt
-
-1. **Parts Added**: read-only vendor mirrors and regression tests that enforce parity and authority hygiene
-2. **Simplest Alternative**: keep local editable schema copies and explain the preferred source in prose
-3. **The Defense**: that still leaves multiple plausible authorities, which is exactly the contract failure this ADR forbids
+The repo-local gate runs schema/runtime agreement checks, boundary rejection
+tests and documentation parity checks. Historical evidence retains its original
+references and does not impose current external prerequisites.

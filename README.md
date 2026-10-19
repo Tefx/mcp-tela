@@ -16,8 +16,9 @@ policy enforcement, and audit logging.
 
 ## Canonical contract note
 
-In composed deployments, `../opifex` is the canonical authority for shared
-CapabilityToken, `_meta`, and shared error semantics.
+Tela is independently maintained. This repository owns the CapabilityToken,
+profile-list, `_meta`, and error contracts. Schemas live in `contracts/`;
+`docs/INTERFACES.md` defines admission and forwarding semantics.
 
 - shared token binding identity is `profile_id`
 - legacy token alias fields are not canonical shared vocabulary
@@ -276,19 +277,12 @@ uv run pytest -q
 uv run pytest --doctest-modules src/tela/
 uv run invar guard --all
 uv sync --frozen --group dev
-AUTHORITY_REF=$(python - <<'PY'
-import json
-from pathlib import Path
-print(json.loads(Path("design/opifex-frozen-authority-packet.json").read_text())["ref"])
-PY
-)
-test "$(git -C ../opifex rev-parse HEAD)" = "$AUTHORITY_REF"
-OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
-OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
+uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
+uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
 ```
 
 See `docs/CI-REPO-LOCAL-SHARED-SURFACE-GATES.md` for the exact branch-protection
-job names and the opifex-authoritative repo-local gate scope.
+job names and the Tela-owned repo-local gate scope.
 
 ## Documentation
 

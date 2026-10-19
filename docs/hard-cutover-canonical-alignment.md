@@ -6,9 +6,9 @@ Complete
 
 ## Authority Chain
 
-- shared contract authority: `../opifex`
-- packaged local mirror: `vendor/opifex/contracts/` (read-only)
-- tela runtime responsibility: verify and enforce the canonical shared contract
+- contract authority: Tela-owned schemas under `contracts/`
+- runtime and surface semantics: `docs/INTERFACES.md` and `docs/CONFIRMED-SURFACE-CONTRACT.md`
+- tela runtime responsibility: verify and enforce these repository-owned contracts
 
 ## Final Canonical State
 
@@ -50,11 +50,11 @@ Alignment is complete only when all of the following remain true:
 
 1. CapabilityToken validation stays fully canonical
 2. shared profile enumeration stays canonical and fail-closed
-3. only one schema authority chain remains: `../opifex` → read-only vendor mirror
+3. schemas have one editable authority: `contracts/` in this repository
 4. docs, tests, and examples use canonical shared vocabulary only
 
 ## Complexity Cost Receipt
 
-1. **Parts Added**: none beyond the minimal vendor mirror, runtime validation, and regression tests required for conformance
+1. **Parts Added**: Tela-owned schemas, runtime validation, and regression tests required for conformance
 2. **Simplest Alternative**: keep multiple shared vocabularies and multiple schema copies
 3. **The Defense**: that would recreate contract drift and a second truth source, which the hard cut explicitly forbids

@@ -1451,7 +1451,17 @@ def run_bridge(
     previous_int = signal.getsignal(signal.SIGINT)
     previous_term = signal.getsignal(signal.SIGTERM)
 
+    handling_stop = False
+
     def _handle_stop(_signum: int, _frame: FrameType | None) -> None:
+        nonlocal handling_stop
+        # Python signal handlers can interrupt each other on the main thread.
+        # Claim shutdown before Event.set(): its Condition lock is nonrecursive.
+        # Keep the guard set through teardown so forwarded/repeated signals do
+        # not interrupt cleanup after the first KeyboardInterrupt is handled.
+        if handling_stop:
+            return
+        handling_stop = True
         stop_requested.set()
         raise KeyboardInterrupt("bridge interrupted by signal")
 

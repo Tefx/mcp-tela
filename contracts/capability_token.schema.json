@@ -1,8 +1,8 @@
 {
-  "$comment": "READ-ONLY MIRROR — DO NOT EDIT MANUALLY. Source of truth: ../opifex/contracts/capability_token.schema.json",
+  "$comment": "Tela-owned contract. Update runtime validation, tests and interface documentation together.",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "CapabilityToken",
-  "description": "Short-lived capability token. Issued by nervus at dispatch time, consumed by tela to bind a connection to a capability profile.",
+  "description": "Short-lived capability token presented by an upstream client to bind a Tela connection to a capability profile.",
   "type": "object",
   "required": ["token_id", "profile_id", "persona_ref", "instance_id", "issued_at", "expires_at", "token_version", "signature"],
   "properties": {

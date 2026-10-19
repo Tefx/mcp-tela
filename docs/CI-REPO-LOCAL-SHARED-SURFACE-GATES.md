@@ -1,64 +1,53 @@
-# Repo-Local Opifex Shared-Surface Gates
+# Repo-Local Tela Contract Gates
 
 ## Authority basis
 
-These repo-local jobs exist only to verify `mcp-tela` against the canonical and
-conformance inputs published by `opifex` at the frozen ref pinned in
-`design/opifex-frozen-authority-packet.json`:
+Tela owns its contracts. The gate requires only this checkout and the project's
+development dependencies:
 
-- `opifex/design/final-canonical-contract.md`
-- `opifex/conformance/shared_surfaces.yaml`
-- `opifex/conformance/forbidden_vocabulary.yaml`
-- the `opifex` `case_matrix` files referenced by `shared_surfaces.yaml`
+- `contracts/capability_token.schema.json`
+- `contracts/tela_profile_list.schema.json`
+- `contracts/errors.yaml`
+- `docs/INTERFACES.md`
+- `docs/CONFIRMED-SURFACE-CONTRACT.md`
 
-This repo does not reinterpret shared meaning locally. The workflow and gate
-script consume the frozen pin recorded in
-`design/opifex-frozen-authority-packet.json` and derive repo-local scope from
-`conformance/shared_surfaces.yaml` plus the referenced
-`conformance/case_matrix/mcp-tela/*` files.
+No sibling checkout, external Git pin, or authority environment variable is
+required. Historical Opifex references in archived evidence are provenance only.
 
 ## Required green checks
 
-The workflow `.github/workflows/opifex-shared-surface-gates.yml` exposes these
-branch-protection-ready job names:
+The workflow `.github/workflows/shared-surface-gates.yml` exposes:
 
-- `mcp-tela / opifex shared-surface expected-red`
-- `mcp-tela / opifex shared-surface green`
+- `mcp-tela / shared-surface expected-red`
+- `mcp-tela / shared-surface green`
 
-The expected-red job is intentionally green only when a seeded forbidden-vocabulary
-drift fails first. The green job is the steady-state repo-local gate.
+The expected-red job succeeds only when seeded forbidden-vocabulary drift fails
+the documentation check. It restores the original README in a `finally` block.
+The green job runs the contract and runtime groups declared by
+`scripts/ci/mcp_tela_shared_surface_gate.py`.
 
-## Trusted repo-local commands
+If branch protection still requires the retired workflow's Opifex-prefixed job
+names, replace those required checks with the names above in repository settings.
 
-Use the same commands locally and in CI:
+## Local commands
+
+Run expected-red separately from other tests: it temporarily edits README.
 
 ```bash
 uv sync --frozen --group dev
-AUTHORITY_REF=$(python - <<'PY'
-import json
-from pathlib import Path
-print(json.loads(Path("design/opifex-frozen-authority-packet.json").read_text())["ref"])
-PY
-)
-test "$(git -C ../opifex rev-parse HEAD)" = "$AUTHORITY_REF"
-OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
-OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
+uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
+uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
+uv run pytest -q
+uv run invar guard --all
 ```
 
-If `opifex` is checked out elsewhere, point `OPIFEX_ROOT` at that pinned checkout root.
+## Coverage
 
-## Shared surfaces covered
+- JSON schema validity and representative agreement with token and profile-list
+  runtime validation, including missing fields, extra keys, types and enums
+- fail-closed admission and profile-list handling across runtime paths
+- MCP tool naming, token binding and audit semantics
+- documentation/runtime surface parity
 
-The wrapper script verifies the `mcp-tela`-owned shared surfaces by reading the
-authoritative `shared_surfaces.yaml` entries, filtering by `owner_repo`,
-deriving switch-blocking scope from `gate_policy.switch_blocking.by_exposure`,
-and then resolving each owned surface's referenced `case_matrix` files under
-`opifex`. That authority-derived scope, not a local allowlist, determines which
-shared surfaces the repo-local gate must cover.
-
-The gate is intended to fail fast on:
-
-- forbidden shared vocabulary such as `profile_name`, `tools_profile`, and `families`
-- dotted or otherwise non-`snake_case` MCP surface names
-- schema/vendor drift against `opifex`
-- docs/runtime parity drift on the tela-owned shared surfaces above
+Profile-list runtime validation additionally rejects multiple default entries;
+that cross-entry constraint remains a runtime check.

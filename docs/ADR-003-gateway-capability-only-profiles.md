@@ -6,8 +6,9 @@ Accepted
 
 ## Scope
 
-This ADR covers the local tela profile model only. Shared token, `_meta`, and
-cross-repo contract authority are governed by ADR-007 and `../opifex`.
+This ADR covers the local tela profile model only. Token and `_meta` contracts
+are owned by Tela under `contracts/` and `docs/INTERFACES.md`; ADR-007 records
+the current contract ownership decision.
 
 ## Decision
 

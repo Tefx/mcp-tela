@@ -150,7 +150,7 @@ Supported modes:
 In token mode, a CapabilityToken binds the connection to one canonical tela
 profile identity via `profile_id`.
 
-**Canonical token validation** follows `../opifex/contracts/capability_token.schema.json`:
+**Canonical token validation** follows `contracts/capability_token.schema.json` in this repository:
 - `token_id` must match `^tok_`
 - `token_version` must equal `0.1.0` (**explicit and required**; no default, no fallback)
 - `issued_at` and `expires_at` must be RFC3339/JSON-schema `date-time` strings with timezone

@@ -346,8 +346,9 @@ auth:
 
 Use token mode for shared or production deployments.
 
-Canonical note: in composed deployments, the shared token contract is owned by
-`../opifex`. The canonical binding identity is `profile_id`, and shared token
+Canonical note: Tela owns the token contract in
+`contracts/capability_token.schema.json`. The canonical binding identity is
+`profile_id`, and shared token
 surfaces do not define any alternate binding field. `token_version` is explicit
 and required at admission; omission or mismatch is rejected fail-closed.
 
@@ -438,6 +439,12 @@ client attachment closure. `tela connect` exits, unregisters the bridge, records
 --probe` observes the current lockfile endpoint only and does not cold-start an
 absent runtime. `tela doctor` is passive without --recover; use `tela doctor --recover`
 when you want explicit recovery mutations and recovery events.
+
+**Termination signals**: During bridge registration or forwarding, `SIGINT` or
+`SIGTERM` requests shutdown. The first signal interrupts bridge work; repeated
+or mixed signals (including duplicates forwarded by `uv run`) are ignored by
+the bridge handler while shutdown is in progress. An attached bridge attempts
+best-effort disconnect before exit, and restores the previous signal handlers.
 
 **Session reset semantics**: When recovery succeeds and forwarding resumes,
 the bridge continues with the same `connection_id`. Downstream sessions are
@@ -816,15 +823,8 @@ uv run pytest -q
 uv run pytest --doctest-modules src/tela/
 uv run invar guard --all
 uv sync --frozen --group dev
-AUTHORITY_REF=$(python - <<'PY'
-import json
-from pathlib import Path
-print(json.loads(Path("design/opifex-frozen-authority-packet.json").read_text())["ref"])
-PY
-)
-test "$(git -C ../opifex rev-parse HEAD)" = "$AUTHORITY_REF"
-OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
-OPIFEX_ROOT=../opifex uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
+uv run python scripts/ci/mcp_tela_shared_surface_gate.py expected-red
+uv run python scripts/ci/mcp_tela_shared_surface_gate.py green
 ```
 
 For CI job names and branch-protection-ready repo-local shared-surface checks,

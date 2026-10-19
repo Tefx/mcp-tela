@@ -105,22 +105,23 @@ directly as a workaround. Use `vectl guide stuck` for troubleshooting.
 
 ## Shared Contract Discipline
 
-`mcp-tela` is the shared gateway/profile/token enforcement runtime. It is not
-allowed to redefine canonical contract meaning locally.
+`mcp-tela` is an independently maintained gateway/profile/token enforcement
+runtime. This repository owns its contracts; no external checkout is required.
 
 ### Canonical Inputs
 
 Before changing any shared surface, read:
 
-- `../opifex/design/final-canonical-contract.md`
-- `../opifex/contracts/capability_token.schema.json`
-- `../opifex/contracts/tela_profile_list.schema.json`
-- `../opifex/conformance/shared_surfaces.yaml`
-- `../opifex/conformance/case_matrix/mcp-tela/*`
+- `docs/INTERFACES.md`
+- `docs/CONFIRMED-SURFACE-CONTRACT.md`
+- `contracts/capability_token.schema.json`
+- `contracts/tela_profile_list.schema.json`
+- `contracts/errors.yaml`
+- relevant runtime and integration tests under `tests/`
 
 ### Hard Rules
 
-1. Do not invent local interpretations of shared fields.
+1. Keep schemas, runtime behavior, tests, and interface documentation consistent.
 2. Do not add compatibility aliases on shared surfaces.
 3. Do not accept-and-clean malformed shared input.
 4. Builtin, downstream, bridge, and HTTP paths must obey the same shared

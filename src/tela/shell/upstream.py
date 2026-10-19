@@ -197,8 +197,8 @@ def _invalid_reserved_client_info_key(
 ) -> str | None:
     """Return the first reserved top-level key that must be rejected.
 
-    Source: opifex/final-canonical-contract.md requires capability-token fields
-    to remain canonical-only on the shared token surface and forbids alias keys;
+    Source: docs/INTERFACES.md and contracts/capability_token.schema.json require
+    canonical capability-token fields on the token surface and forbid alias keys;
     this shell boundary therefore rejects conflicting top-level semantics instead
     of reinterpreting them.
     """

@@ -13,7 +13,7 @@ P1 operator recovery has two possible exposure postures:
 
 The relevant boundary is the HTTP/operator surface in `docs/INTERFACES.md` §7.2a: `GET /status` is readiness truth, `POST /connect` is lifecycle plumbing, and admission/retry decisions must not be inferred from passive probes or bridge-local state. `tela doctor` is passive unless `--recover` is supplied.
 
-`opifex` remains the canonical owner for shared PersonaSpec, JobSpec, CapabilityToken, and profile-list contract meaning. This decision must not redefine any of those shapes.
+Tela owns its CapabilityToken and profile-list contracts in `contracts/`. This operator-recovery decision does not change those shapes or introduce dependencies on external persona/job contracts.
 
 ## Decision
 
@@ -36,7 +36,7 @@ I chose CLI-only recovery because the current hard requirement is authority adju
 - `docs/INTERFACES.md` §7.2a keeps `GET /status` as an observation/readiness authority, not a mutation authority. CLI-only recovery preserves that split.
 - `POST /connect` remains lifecycle plumbing and cannot be repurposed as recovery.
 - The downstream call-path recovery from ADR-006 is failure-triggered tool-call recovery, not an operator status/probe side effect. This ADR does not expand that mechanism.
-- Opifex ownership invariants are preserved because this ADR consumes canonical token/profile/persona/job meanings without editing or reinterpreting them.
+- Token/profile contracts remain unchanged; their schemas and runtime semantics are maintained in this repository.
 
 ## Downstream Test and Docs Impacts
 
