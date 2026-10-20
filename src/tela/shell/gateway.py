@@ -608,9 +608,18 @@ def _create_upstream_server(
             instructions=merged_instructions,
             host=startup_config.host,
             port=startup_config.port,
+            # Tela owns connection liveness/reaping. Keep the SDK's new idle
+            # expiry and cumulative session cap from bypassing that authority.
+            session_idle_timeout=None,
+            max_sessions=None,
         )
     else:
-        server = FastMCP("tela-gateway", instructions=merged_instructions)
+        server = FastMCP(
+            "tela-gateway",
+            instructions=merged_instructions,
+            session_idle_timeout=None,
+            max_sessions=None,
+        )
     return Result(value=server)
 
 

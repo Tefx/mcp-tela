@@ -766,6 +766,27 @@ Common variables:
 
 ## Troubleshooting
 
+### MCP session not found after a long idle period
+
+The gateway disables the MCP SDK's default 30-minute session idle timer. Tela's
+connection reaper and gateway `--idle-timeout` still apply. If a session disappears
+(for example after a gateway restart), `tela connect` treats HTTP 404 on a
+session-bearing `POST /mcp` as rejection before execution, re-registers, initializes
+a fresh session, and safely retries the rejected request within its existing
+recovery budget. Subsequent requests keep the new session id. Interrupted tool
+calls with unknown execution status are still never automatically replayed.
+
+For a Git-installed runtime, refresh before restarting the shared gateway:
+
+```bash
+uvx --refresh --from git+https://github.com/Tefx/mcp-tela@main tela --help
+uvx --from git+https://github.com/Tefx/mcp-tela@main tela stop
+```
+
+Restart/reconnect MCP clients so their `tela connect` processes also load the new
+code. Their normal discovery/autostart flow starts the updated shared gateway;
+replacing cached files alone does not update Python processes already running.
+
 ### Slow or long-running tools
 
 Slow or long-running MCP tools (such as long-polling, large file operations, or human approvals) wait without a bridge-imposed timeout. Slow tools are not bridge recovery failures.

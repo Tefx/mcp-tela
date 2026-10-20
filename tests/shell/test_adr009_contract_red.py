@@ -657,6 +657,87 @@ def test_adr009_empty_2xx_request_or_batch_gets_forward_failed(
     assert "recovery" not in json.dumps(message).lower()
 
 
+@pytest.mark.parametrize("failure", ["expired", "exhausted", "ordinary_404"])
+def test_adr009_session_404_recovery_updates_stdio_state_and_stays_bounded(
+    monkeypatch: pytest.MonkeyPatch, failure: str
+) -> None:
+    module = _bridge_http_module()
+    requests = b"".join(
+        _request({"jsonrpc": "2.0", "id": method, "method": method})
+        for method in ("initialize", "tools/call", "ping")
+    )
+    output = io.BytesIO()
+    sent: list[tuple[str, str | None]] = []
+    initializations = 0
+    recoveries = 0
+    call_attempts = 0
+
+    def post(**kwargs: Any) -> Result[Any, Any]:
+        nonlocal initializations, call_attempts
+        payload = json.loads(kwargs["payload"])
+        method = payload["method"]
+        sent.append((method, kwargs["session_id"]))
+        session_id = None
+        if method == "initialize":
+            session_id = f"s-{initializations}"
+            initializations += 1
+        if method == "tools/call":
+            call_attempts += 1
+            if failure != "expired" or call_attempts == 1:
+                return Result(
+                    error=module.BridgeHttpError(
+                        phase="http_status",
+                        message="MCP_FORWARD_FAILED: http 404 Not Found",
+                        request_sent=True,
+                        mcp_admitted=None if failure == "ordinary_404" else False,
+                        status_code=404,
+                    )
+                )
+        return Result(
+            value=module.BridgeHttpResponse(
+                content_type="application/json",
+                body=json.dumps({"jsonrpc": "2.0", "id": payload["id"], "result": {"method": method}}).encode(),
+                session_id=session_id,
+            )
+        )
+
+    def recover() -> Result[tuple[str, str], str]:
+        nonlocal recoveries
+        recoveries += 1
+        if recoveries > 2:
+            return Result(error="BRIDGE_RECOVERY_EXHAUSTED: test recovery limit")
+        return Result(value=("http://127.0.0.1:1/mcp", "token"))
+
+    monkeypatch.setattr(connect_bridge, "post_mcp_http", post)
+    result = connect_bridge.forward_stdio_http(
+        mcp_url="http://127.0.0.1:1/mcp",
+        bearer_token="token",
+        bridge_connection_id="bridge_adr009",
+        should_stop=lambda: False,
+        stdin_buffer=io.BytesIO(requests),
+        stdout_buffer=output,
+        max_recovery_attempts=2,
+        recover_transport=recover,
+    )
+
+    assert result.is_ok
+    responses = _json_lines(output.getvalue())
+    assert [response["id"] for response in responses] == ["initialize", "tools/call", "ping"]
+    assert responses[-1]["result"] == {"method": "ping"}
+    if failure == "expired":
+        assert responses[1]["result"] == {"method": "tools/call"}
+        assert sent == [
+            ("initialize", None), ("tools/call", "s-0"),
+            ("initialize", None), ("tools/call", "s-1"), ("ping", "s-1"),
+        ]
+        assert recoveries == 1
+    else:
+        expected_code = "BRIDGE_RECOVERY_EXHAUSTED" if failure == "exhausted" else "MCP_FORWARD_FAILED"
+        assert responses[1]["error"]["data"] == {"code": expected_code}
+        assert recoveries == (3 if failure == "exhausted" else 0)
+        assert call_attempts == (3 if failure == "exhausted" else 1)
+
+
 def test_adr009_invalid_timeout_inputs_are_rejected_before_network() -> None:
     module = _bridge_http_module()
     for invalid in (0.0, -1.0, math.inf, math.nan):

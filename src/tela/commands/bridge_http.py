@@ -235,6 +235,9 @@ def post_mcp_http(
             )
 
         retryable_warming = response.status == 503 and is_503_retryable(body)
+        # Streamable HTTP rejects an unknown/expired session before dispatch.
+        # A 404 without a session id does not establish non-admission.
+        session_not_found = response.status == 404 and bool(session_id)
         status_message = f"HTTP_{response.status}: gateway warming"
         if not retryable_warming:
             status_detail = f"http {response.status}"
@@ -246,7 +249,7 @@ def post_mcp_http(
                 phase="http_status",
                 message=status_message,
                 request_sent=request_sent,
-                mcp_admitted=False if retryable_warming else None,
+                mcp_admitted=False if retryable_warming or session_not_found else None,
                 status_code=response.status,
                 retryable_warming=retryable_warming,
             )

@@ -250,12 +250,20 @@ Use `http.client.HTTPConnection` / `HTTPSConnection` directly:
    recovery can use the existing warming path. Otherwise return
    `BridgeHttpError(phase="http_status", request_sent=True, mcp_admitted=None,
    status_code=503, retryable_warming=False, ...)`.
-9. On any non-2xx, non-warming status, read the body for diagnostics and return
+9. On HTTP 404 for a request carrying a non-empty `mcp-session-id`, return
    `BridgeHttpError(phase="http_status", request_sent=True,
-   mcp_admitted=None, status_code=<status>, retryable_warming=False, ...)`.
-   Non-2xx bodies are not scanned for reconnect-required markers; only the
-   explicit warming 503 contract can prove non-admission at HTTP status level.
-10. Always close the HTTP connection in `finally`.
+   mcp_admitted=False, status_code=404, retryable_warming=False, ...)`.
+   Streamable HTTP defines this as an unknown/expired session: the transport
+   rejects the request before MCP handler execution. Re-register the bridge,
+   initialize without the old session id, and replay under the existing bounded
+   recovery budget, including `tools/call`. No response-body text matching is needed.
+10. On other non-2xx statuses, including 404 without a non-empty session id,
+    return `BridgeHttpError(phase="http_status", request_sent=True,
+    mcp_admitted=None, status_code=<status>, retryable_warming=False, ...)`.
+    Do not recover/replay. Non-2xx bodies are not scanned for reconnect-required
+    markers; the warming 503 contract and session-bearing 404 are the only HTTP
+    status-level non-admission signals.
+11. Always close the HTTP connection in `finally`.
 
 The `http.client` path is intentionally scoped to `/mcp`. Existing
 `retry_http_request` remains simpler for control-plane endpoints.
@@ -283,8 +291,9 @@ existing compact `_jsonrpc_error_response` shape from `connect_bridge.py`.
 
 Reconnect-required markers are recognized only after a successful 2xx MCP HTTP
 response has been parsed by `extract_response_messages(...)`. Non-2xx HTTP
-bodies are diagnostics only, except for the explicit warming 503 contract in the
-HTTP execution algorithm.
+bodies are diagnostics only, except for validating the explicit warming 503
+contract. A session-bearing HTTP 404 proves non-admission through Streamable HTTP
+status semantics, independently of body text.
 
 Within parsed 2xx MCP response messages, only gateway-owned JSON-RPC error
 envelopes prove bridge non-admission for this ADR. This ADR intentionally
@@ -315,7 +324,8 @@ The bridge must map every phase-aware result through this matrix. No string-only
 | Write failure after partial/unknown send | `phase="write"`, `request_sent=None` | `UNSAFE` | Request-level `MCP_RESPONSE_INTERRUPTED`; no replay. |
 | Write failure after partial/unknown send for notification | `phase="write"`, `request_sent=None` | notification | Diagnostic only; no JSON-RPC response and no retry. |
 | Warming 503 contract | `phase="http_status"`, `request_sent=True`, `mcp_admitted=False`, `retryable_warming=True` | request or notification | Bounded recovery/retry + send original frame once; gateway proved non-admission. |
-| Non-warming HTTP status | `phase="http_status"`, `retryable_warming=False` | any | Request-level `MCP_FORWARD_FAILED`; no bridge recovery. |
+| Session-bearing HTTP 404 | `phase="http_status"`, non-empty outgoing session id, `request_sent=True`, `mcp_admitted=False`, `status_code=404`, `retryable_warming=False` | request or notification | Bounded recovery, re-register, initialize with no session id, then send original frame once. |
+| Other non-warming HTTP status | `phase="http_status"`, `mcp_admitted=None`, `retryable_warming=False` | any | Request-level `MCP_FORWARD_FAILED`; no bridge recovery. |
 | 2xx empty body for notification | `BridgeHttpResponse.body == b""` and payload is notification | notification | Success; write no stdout frame. |
 | 2xx empty body for request or batch | `BridgeHttpResponse.body == b""` and payload is not notification | request or batch | Request-level `MCP_FORWARD_FAILED`; no recovery. |
 | Slow response with `response_timeout_seconds=None` | no error | any | Keep waiting. |
@@ -414,6 +424,7 @@ upstream stdio frame
 |---|---|
 | Gateway not listening before MCP request body send | Bounded recovery and send original frame once, preserving current startup behavior. |
 | Gateway warming returns contract 503 | `request_sent=True`, `mcp_admitted=False`; bounded recovery/retry and send original frame once. |
+| Existing MCP session is missing/expired and POST returns 404 | `request_sent=True`, `mcp_admitted=False`; re-register and initialize a new session before bounded replay, including `tools/call`. |
 | Slow long-poll or slow tool call with no response yet | Bridge waits; no recovery, no replay, no fixed cap. |
 | Explicit response deadline configured and expires | Request-level `MCP_REQUEST_TIMEOUT`; bridge stays alive. |
 | `tools/call` sent, connection drops before response | Request-level `MCP_RESPONSE_INTERRUPTED`; no automatic replay. |
@@ -510,6 +521,16 @@ The implementation is accepted only if all criteria pass:
 12. Tool-result text containing reconnect-like markers is forwarded as ordinary
     MCP content and never authorizes unsafe replay.
 13. `invar guard` passes, including Core contracts and doctests.
+14. A session-bearing `POST /mcp` 404 recovers, obtains a fresh session id, and
+    executes a rejected `tools/call` exactly once; subsequent frames use the new id.
+15. A 404 without a non-empty session id and other non-warming HTTP errors do not
+    authorize replay. Repeated session loss stays within the per-request recovery budget.
+16. Gateway creation uses `FastMCP(session_idle_timeout=None, max_sessions=None)`
+    with `mcp>=1.30.0,<2`. Tela's reaper and process idle timeout retain lifecycle
+    ownership; the SDK must not silently discard an otherwise live client's
+    idle session or impose its new cumulative 10,000-session admission cap.
+    Tela disconnect/reaping does not currently terminate SDK transports; disabling
+    the SDK cap preserves pre-1.30 admission behavior without expanding teardown scope.
 
 ## Validation matrix
 

@@ -234,6 +234,37 @@ def test_post_mcp_http_invalid_timeout_inputs_return_error_before_network(
     assert _FakeConnection.instances == []
 
 
+@pytest.mark.parametrize("session_id", [None, "", "session-in"])
+def test_post_mcp_http_404_proves_non_admission_only_with_session_id(
+    session_id: str | None,
+) -> None:
+    _FakeConnection.response = _FakeResponse(
+        status=404, body=b'{"error":{"message":"Session not found"}}', reason="Not Found"
+    )
+
+    result = _post(session_id=session_id)
+
+    assert result.is_err
+    assert result.error.phase == "http_status"
+    assert result.error.request_sent is True
+    assert result.error.mcp_admitted is (False if session_id else None)
+    assert result.error.status_code == 404
+    assert result.error.retryable_warming is False
+    assert _FakeConnection.instances[0].headers.get("mcp-session-id") == session_id
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 500, 503])
+def test_post_mcp_http_other_statuses_do_not_prove_non_admission(status: int) -> None:
+    _FakeConnection.response = _FakeResponse(status=status, body=b"error")
+
+    result = _post()
+
+    assert result.is_err
+    assert result.error.mcp_admitted is None
+    assert result.error.status_code == status
+    assert result.error.retryable_warming is False
+
+
 def test_post_mcp_http_warming_503_sets_non_admission_and_plain_non_2xx_does_not() -> None:
     _FakeConnection.response = _FakeResponse(status=503, body=b"warming", reason="Service Unavailable")
     warming = _post(is_503_retryable=lambda body: body == b"warming")

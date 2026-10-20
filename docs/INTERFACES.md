@@ -345,7 +345,7 @@ Current-slice admission boundary:
 - gateway runtime lifecycle plus `GET /status` is the sole readiness authority for bridge and operator consumers
 - `tela connect` may query or relay runtime readiness facts but must not create local readiness state, cached readiness truth, or competing lifecycle labels
 - `tela connect` readiness waiting must be driven by `GET /status` observations (status-driven polling) rather than fixed sleep intervals or bridge-local lifecycle guesses
-- retry is authorized only when the gateway emits the transient non-ready contract defined for `POST /mcp`; bridge consumers must not invent retry permission from other signals
+- readiness retry is authorized only when the gateway emits the transient non-ready contract defined for `POST /mcp`; bridge consumers must not invent readiness retry permission from other signals
 - `ready` and `degraded` are admission-eligible terminal startup states for the bridge; `degraded` means MCP traffic may proceed against the partial registry while operators can see `degraded_reason`
 - if `GET /status` continues to report `warming` or another non-admission state past the bounded wait policy, `tela connect` must exit cleanly and boundedly instead of looping indefinitely
 
@@ -484,6 +484,29 @@ Degraded-state admission behavior:
 - `tools/list` and `tools/call` operate on the currently registered partial tool registry; tools from failed providers are absent or unavailable rather than hidden behind a second readiness gate.
 - Bridge consumers may proceed on `ready` or `degraded`; they must surface/retain `degraded_reason` for operator diagnostics and must not treat degraded as authorization for indefinite retry.
 - Direct HTTP MCP clients should expect the same behavior: warming gets the machine-readable 503 above; degraded does not get a special HTTP admission response.
+
+### 7.2.1a MCP session lifetime and HTTP 404 recovery
+
+The upstream gateway requires `mcp>=1.30.0,<2` and creates FastMCP with
+`session_idle_timeout=None, max_sessions=None`. Tela's connection reaper and
+gateway process `--idle-timeout` own liveness; local attachment heartbeats are
+not MCP HTTP traffic and must not leave long-running clients subject to a
+separate SDK idle timer. The SDK's new 10,000-session admission cap is disabled
+to preserve pre-1.30 behavior: Tela's disconnect/reaper cleanup currently releases
+its own session registry without terminating the SDK transport.
+
+A `POST /mcp` carrying a non-empty `mcp-session-id` that receives HTTP `404`
+encountered the Streamable HTTP unknown/expired-session rejection before MCP
+handler execution. The bridge records `request_sent=True`, `mcp_admitted=False`
+and uses its existing per-request bounded recovery budget to re-register via
+`POST /connect`, initialize without a session id, then send the rejected frame
+once, including `tools/call`. Later frames retain the new session id. This path
+still performs normal readiness, authentication, profile binding, and audit checks.
+
+A 404 without a non-empty outgoing session id and other non-warming HTTP errors
+remain request-level `MCP_FORWARD_FAILED` without recovery. Unknown admission
+for an interrupted unsafe request remains `MCP_RESPONSE_INTERRUPTED` without
+replay. See ADR-009 for the complete lifecycle matrix.
 
 ### 7.2.2 Tool Metadata Passthrough
 

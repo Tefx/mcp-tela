@@ -891,7 +891,7 @@ def _forward_request_with_recovery(
             if error_text.startswith("MCP_REQUEST_TIMEOUT"):
                 return Result(error=error_text)
 
-            if http_error.phase == "http_status" and not http_error.retryable_warming:
+            if http_error.phase == "http_status" and http_error.mcp_admitted is not False:
                 return Result(error=error_text)
 
             can_recover_and_replay = (

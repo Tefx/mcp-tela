@@ -437,6 +437,14 @@ CLI entrypoints and bridge infrastructure:
 
 **Responsibility:** Bridge lifecycle, recovery orchestration, session ID handling, JSON-RPC error serialization, and integration with replay policy. Owns control-plane HTTP calls using `retry_http_request`.
 
+A session-bearing `POST /mcp` HTTP 404 is transport-level proof of non-admission.
+The bridge re-registers, initializes without the stale id, and replays the rejected
+frame under the existing per-request recovery budget, including `tools/call`.
+Other non-warming HTTP errors do not authorize recovery. Gateway FastMCP creation
+disables the SDK idle session timer and new cumulative session cap
+(`session_idle_timeout=None, max_sessions=None`); Tela's reaper and process idle
+timeout retain lifecycle ownership. ADR-009 defines the matrix.
+
 #### `bridge_http.py`
 
 **Responsibility:** MCP data-plane HTTP executor. Phase-aware (connect, write, response wait) using standard `http.client`. Enforces timeout isolation: connect/write use `HTTP_TIMEOUT_SECONDS`, while response wait uses `response_timeout_seconds=None` (unbounded). Evaluates contract 503 warming to prove non-admission.

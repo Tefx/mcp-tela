@@ -81,7 +81,8 @@ polling; fixed sleep delays are not an acceptable readiness authority.
 - The bridge remains a consumer of readiness truth only and must not create,
 cache, or relabel readiness state locally.
 - Retry is allowed only when the gateway emits the transient non-ready contract
-for `POST /mcp`; degraded status does not self-authorize retry.
+for `POST /mcp`; this readiness restriction does not apply to the session-recovery
+path in §1.4. Degraded status does not self-authorize retry.
 - `ready` and `degraded` are admission-eligible bridge states. In degraded mode,
 MCP traffic proceeds against the partial registry and operators rely on
 `degraded_reason` for diagnostics.
@@ -90,6 +91,23 @@ non-admission-eligible through the bounded wait policy, `tela connect` must exit
 cleanly and boundedly (bounded retry/exit behavior).
 - Discovery-before-readiness: lockfile may be written before downstream convergence
 completes; endpoint discoverability does not imply readiness.
+
+### 1.4 MCP session lifetime and recovery
+
+- Tela owns upstream session liveness through its connection reaper and gateway
+  process idle timeout. The SDK session idle timeout and cumulative session cap
+  are disabled (`session_idle_timeout=None`, `max_sessions=None`), preserving
+  admission behavior from before MCP 1.30.
+- `POST /mcp` with a non-empty `mcp-session-id` receiving HTTP `404` means the
+  Streamable HTTP transport rejected an unknown/expired session before MCP
+  execution (`request_sent=True`, `mcp_admitted=False`).
+- The bridge may use its existing bounded recovery budget to re-register,
+  initialize without the stale session id, and replay the rejected frame,
+  including `tools/call`. Later frames use the newly negotiated session id.
+- This session-recovery signal does not establish readiness or bypass normal
+  admission, token validation, profile binding, or audit attribution.
+- A 404 without a non-empty session id, other non-warming HTTP errors, and
+  interrupted unsafe requests with unknown admission do not authorize replay.
 
 ## 2. Tool vs resource rules
 
